@@ -60,13 +60,13 @@ const ThumbnailEditor: React.FC<ThumbnailEditorProps> = ({ project, onClose, onU
     // Reset image loaded state when preview URL changes
     useEffect(() => {
         setImageLoaded(false);
-        
+
         // Fallback timeout in case image load/error events don't fire
         if (previewUrl && !previewUrl.includes('data:image/svg+xml')) {
             const timeout = setTimeout(() => {
                 setImageLoaded(true);
             }, 5000); // 5 second timeout
-            
+
             return () => clearTimeout(timeout);
         }
     }, [previewUrl]);
@@ -127,34 +127,34 @@ const ThumbnailEditor: React.FC<ThumbnailEditorProps> = ({ project, onClose, onU
         console.log('[ThumbnailEditor] handleSelectFromLibrary called');
         console.log('[ThumbnailEditor] imageUrl:', imageUrl);
         console.log('[ThumbnailEditor] fileId:', fileId);
-        
+
         setSelectingImageId(fileId);
         setIsUploading(true);
-        
+
         try {
             // Fetch the image and convert to file
             console.log('[ThumbnailEditor] Fetching image...');
             const response = await fetch(imageUrl, { mode: 'cors' });
-            
+
             if (!response.ok) {
                 throw new Error(`Failed to fetch image: ${response.status} ${response.statusText}`);
             }
-            
+
             console.log('[ThumbnailEditor] Fetch response ok, getting blob...');
             const blob = await response.blob();
             console.log('[ThumbnailEditor] Blob size:', blob.size, 'type:', blob.type);
-            
+
             if (blob.size === 0) {
                 throw new Error('Fetched image is empty');
             }
-            
+
             const file = new File([blob], `thumbnail-${Date.now()}.png`, { type: blob.type || 'image/png' });
             console.log('[ThumbnailEditor] Created file:', file.name, file.size);
 
             console.log('[ThumbnailEditor] Calling updateProjectThumbnail...');
             await updateProjectThumbnail(project.id, file);
             console.log('[ThumbnailEditor] updateProjectThumbnail completed');
-            
+
             setPreviewUrl(imageUrl);
             showSuccess(t('superadmin.templateEditor.thumbnailUpdated', 'Thumbnail updated successfully'));
             onUpdate?.();
@@ -232,7 +232,7 @@ ${colorAnalysis}
 Return ONLY the prompt text, nothing else. Make it 1-2 sentences maximum.`;
 
             const projectId = activeProject?.id || project.id || 'thumbnail-prompt';
-            const response = await generateContentViaProxy(projectId, prompt, 'gemini-2.0-flash', {}, user?.uid);
+            const response = await generateContentViaProxy(projectId, prompt, 'gemini-2.5-flash', {}, user?.uid);
             const responseText = extractTextFromResponse(response);
 
             // Log successful API call
@@ -240,7 +240,7 @@ Return ONLY the prompt text, nothing else. Make it 1-2 sentences maximum.`;
                 logApiCall({
                     userId: user.uid,
                     projectId: activeProject?.id || project.id,
-                    model: 'gemini-2.0-flash',
+                    model: 'gemini-2.5-flash',
                     feature: 'thumbnail-prompt-suggestion',
                     success: true
                 });
@@ -253,7 +253,7 @@ Return ONLY the prompt text, nothing else. Make it 1-2 sentences maximum.`;
                 logApiCall({
                     userId: user.uid,
                     projectId: activeProject?.id || project.id,
-                    model: 'gemini-2.0-flash',
+                    model: 'gemini-2.5-flash',
                     feature: 'thumbnail-prompt-suggestion',
                     success: false,
                     errorMessage: error instanceof Error ? error.message : 'Unknown error'
@@ -292,7 +292,7 @@ Return ONLY the prompt text, nothing else. Make it 1-2 sentences maximum.`;
         console.log('[ThumbnailEditor] handleGenerateThumbnail called');
         console.log('[ThumbnailEditor] prompt:', thumbnailPrompt);
         console.log('[ThumbnailEditor] style:', thumbnailStyle);
-        
+
         if (!thumbnailPrompt.trim()) {
             console.log('[ThumbnailEditor] Empty prompt, returning');
             return;
@@ -329,7 +329,7 @@ Return ONLY the prompt text, nothing else. Make it 1-2 sentences maximum.`;
         console.log('[ThumbnailEditor] applyGeneratedThumbnail called');
         console.log('[ThumbnailEditor] generatedThumbnail:', generatedThumbnail?.substring(0, 100) + '...');
         console.log('[ThumbnailEditor] project.id:', project.id);
-        
+
         if (!generatedThumbnail) {
             console.log('[ThumbnailEditor] No generatedThumbnail, returning early');
             return;
@@ -338,7 +338,7 @@ Return ONLY the prompt text, nothing else. Make it 1-2 sentences maximum.`;
         setIsUploading(true);
         try {
             let blob: Blob;
-            
+
             // Handle data URLs (base64) directly
             if (generatedThumbnail.startsWith('data:')) {
                 console.log('[ThumbnailEditor] Converting data URL to blob...');
@@ -346,7 +346,7 @@ Return ONLY the prompt text, nothing else. Make it 1-2 sentences maximum.`;
                 const [header, base64Data] = generatedThumbnail.split(',');
                 const mimeMatch = header.match(/data:([^;]+)/);
                 const mimeType = mimeMatch ? mimeMatch[1] : 'image/png';
-                
+
                 // Convert base64 to binary
                 const binaryString = atob(base64Data);
                 const bytes = new Uint8Array(binaryString.length);
@@ -363,14 +363,14 @@ Return ONLY the prompt text, nothing else. Make it 1-2 sentences maximum.`;
                 blob = await response.blob();
                 console.log('[ThumbnailEditor] Blob size:', blob.size, 'type:', blob.type);
             }
-            
+
             const file = new File([blob], `thumbnail-${Date.now()}.png`, { type: blob.type || 'image/png' });
             console.log('[ThumbnailEditor] Created file:', file.name, file.size);
 
             console.log('[ThumbnailEditor] Calling updateProjectThumbnail...');
             await updateProjectThumbnail(project.id, file);
             console.log('[ThumbnailEditor] updateProjectThumbnail completed successfully');
-            
+
             showSuccess(t('superadmin.templateEditor.thumbnailUpdated', 'Thumbnail updated successfully'));
             onUpdate?.();
             onClose();
@@ -473,408 +473,408 @@ Return ONLY the prompt text, nothing else. Make it 1-2 sentences maximum.`;
                 </div>
 
                 {/* Tabs */}
-            <div className="flex border-b border-border">
-                <button
-                    onClick={() => setActiveTab('library')}
-                    className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium transition-colors ${activeTab === 'library'
-                        ? 'text-blue-500 border-b-2 border-blue-500 bg-blue-500/5'
-                        : 'text-muted-foreground hover:text-foreground'
-                        }`}
-                >
-                    <Grid className="w-4 h-4" />
-                    {t('superadmin.templateEditor.library', 'Library')}
-                </button>
-                <button
-                    onClick={() => setActiveTab('upload')}
-                    className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium transition-colors ${activeTab === 'upload'
-                        ? 'text-primary border-b-2 border-primary bg-primary/5'
-                        : 'text-muted-foreground hover:text-foreground'
-                        }`}
-                >
-                    <Upload className="w-4 h-4" />
-                    {t('common.upload', 'Upload')}
-                </button>
-                <button
-                    onClick={() => setActiveTab('generate')}
-                    className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium transition-colors ${activeTab === 'generate'
-                        ? 'text-purple-500 border-b-2 border-purple-500 bg-purple-500/5'
-                        : 'text-muted-foreground hover:text-foreground'
-                        }`}
-                >
-                    <Zap className="w-4 h-4" />
-                    {t('superadmin.templateEditor.generateIATitle', 'Generate with AI')}
-                </button>
-            </div>
+                <div className="flex border-b border-border">
+                    <button
+                        onClick={() => setActiveTab('library')}
+                        className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium transition-colors ${activeTab === 'library'
+                            ? 'text-blue-500 border-b-2 border-blue-500 bg-blue-500/5'
+                            : 'text-muted-foreground hover:text-foreground'
+                            }`}
+                    >
+                        <Grid className="w-4 h-4" />
+                        {t('superadmin.templateEditor.library', 'Library')}
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('upload')}
+                        className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium transition-colors ${activeTab === 'upload'
+                            ? 'text-primary border-b-2 border-primary bg-primary/5'
+                            : 'text-muted-foreground hover:text-foreground'
+                            }`}
+                    >
+                        <Upload className="w-4 h-4" />
+                        {t('common.upload', 'Upload')}
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('generate')}
+                        className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium transition-colors ${activeTab === 'generate'
+                            ? 'text-purple-500 border-b-2 border-purple-500 bg-purple-500/5'
+                            : 'text-muted-foreground hover:text-foreground'
+                            }`}
+                    >
+                        <Zap className="w-4 h-4" />
+                        {t('superadmin.templateEditor.generateIATitle', 'Generate with AI')}
+                    </button>
+                </div>
 
-            {/* Content */}
-            <div className="p-5 space-y-5 max-h-[60vh] overflow-y-auto">
-                {/* Current Thumbnail Preview with Color Swatches */}
-                <div className="relative aspect-video rounded-xl overflow-hidden bg-secondary">
-                    {previewUrl && !previewUrl.includes('data:image/svg+xml') ? (
-                        <>
-                            {!imageLoaded && (
-                                <div className="absolute inset-0 flex items-center justify-center bg-secondary">
-                                    <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                                </div>
-                            )}
-                            <img
-                                src={previewUrl}
-                                alt="Thumbnail preview"
-                                className={`w-full h-full object-cover transition-opacity duration-300 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
-                                onLoad={() => setImageLoaded(true)}
-                                onError={(e) => {
-                                    console.warn('Thumbnail image failed to load:', previewUrl);
-                                    setImageLoaded(true);
-                                }}
-                                crossOrigin="anonymous"
-                            />
-                        </>
-                    ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-secondary to-secondary/50">
-                            <div className="text-center">
-                                <ImageIcon className="w-12 h-12 text-muted-foreground/50 mx-auto mb-2" />
-                                <p className="text-sm text-muted-foreground">{t('superadmin.templateEditor.noThumbnail', 'No thumbnail')}</p>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Color Swatches - Bottom Right Corner */}
-                    {themeColors.length > 0 && (
-                        <div className="absolute bottom-3 right-3 flex gap-1">
-                            {themeColors.map((item, index) => (
-                                <div
-                                    key={index}
-                                    className="w-4 h-4 rounded-[4px] shadow-lg border border-white/30 transition-transform hover:scale-125"
-                                    style={{ backgroundColor: item.color }}
-                                    title={`${item.name}: ${item.color}`}
+                {/* Content */}
+                <div className="p-5 space-y-5 max-h-[60vh] overflow-y-auto">
+                    {/* Current Thumbnail Preview with Color Swatches */}
+                    <div className="relative aspect-video rounded-xl overflow-hidden bg-secondary">
+                        {previewUrl && !previewUrl.includes('data:image/svg+xml') ? (
+                            <>
+                                {!imageLoaded && (
+                                    <div className="absolute inset-0 flex items-center justify-center bg-secondary">
+                                        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                                    </div>
+                                )}
+                                <img
+                                    src={previewUrl}
+                                    alt="Thumbnail preview"
+                                    className={`w-full h-full object-cover transition-opacity duration-300 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
+                                    onLoad={() => setImageLoaded(true)}
+                                    onError={(e) => {
+                                        console.warn('Thumbnail image failed to load:', previewUrl);
+                                        setImageLoaded(true);
+                                    }}
+                                    crossOrigin="anonymous"
                                 />
+                            </>
+                        ) : (
+                            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-secondary to-secondary/50">
+                                <div className="text-center">
+                                    <ImageIcon className="w-12 h-12 text-muted-foreground/50 mx-auto mb-2" />
+                                    <p className="text-sm text-muted-foreground">{t('superadmin.templateEditor.noThumbnail', 'No thumbnail')}</p>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Color Swatches - Bottom Right Corner */}
+                        {themeColors.length > 0 && (
+                            <div className="absolute bottom-3 right-3 flex gap-1">
+                                {themeColors.map((item, index) => (
+                                    <div
+                                        key={index}
+                                        className="w-4 h-4 rounded-[4px] shadow-lg border border-white/30 transition-transform hover:scale-125"
+                                        style={{ backgroundColor: item.color }}
+                                        title={`${item.name}: ${item.color}`}
+                                    />
+                                ))}
+                            </div>
+                        )}
+
+                        {/* Upload/Generate Overlay */}
+                        {(isUploading || isGeneratingThumbnail) && (
+                            <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center">
+                                <Loader2 className="w-8 h-8 text-white animate-spin" />
+                                <p className="text-white text-sm mt-2">
+                                    {isGeneratingThumbnail ? t('superadmin.templateEditor.generating', 'Generating...') : t('common.uploading', 'Uploading...')}
+                                </p>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Color Legend */}
+                    {themeColors.length > 0 && (
+                        <div className="flex flex-wrap gap-2">
+                            {themeColors.map((item, index) => (
+                                <div key={index} className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                                    <div
+                                        className="w-3 h-3 rounded-[3px] border border-border"
+                                        style={{ backgroundColor: item.color }}
+                                    />
+                                    <span>{item.name}</span>
+                                </div>
                             ))}
                         </div>
                     )}
 
-                    {/* Upload/Generate Overlay */}
-                    {(isUploading || isGeneratingThumbnail) && (
-                        <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center">
-                            <Loader2 className="w-8 h-8 text-white animate-spin" />
-                            <p className="text-white text-sm mt-2">
-                                {isGeneratingThumbnail ? t('superadmin.templateEditor.generating', 'Generating...') : t('common.uploading', 'Uploading...')}
-                            </p>
+                    {/* Library Tab */}
+                    {activeTab === 'library' && (
+                        <div className="space-y-4">
+                            {/* Source Toggle & Search */}
+                            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                                <div className="flex space-x-2 bg-secondary p-1 rounded-lg">
+                                    <button
+                                        onClick={() => setLibrarySource('global')}
+                                        className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors flex items-center gap-1.5 ${librarySource === 'global' ? 'bg-blue-500 text-white' : 'text-muted-foreground hover:text-foreground'}`}
+                                    >
+                                        <Globe size={12} /> {t('superadmin.templateEditor.globalLibrary', 'Global Library')}
+                                    </button>
+                                    <button
+                                        onClick={() => setLibrarySource('user')}
+                                        className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors ${librarySource === 'user' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+                                    >
+                                        {t('superadmin.templateEditor.myUploads', 'My Uploads')}
+                                    </button>
+                                </div>
+
+                                {/* Search */}
+                                <div className="flex items-center gap-2 w-full sm:w-48 bg-editor-border/40 rounded-lg px-3 py-1.5">
+                                    <Search size={14} className="text-editor-text-secondary flex-shrink-0" />
+                                    <input
+                                        type="text"
+                                        value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                        placeholder={t('common.search', 'Search...')}
+                                        className="flex-1 bg-transparent outline-none text-xs min-w-0"
+                                    />
+                                    {searchQuery && (
+                                        <button onClick={() => setSearchQuery('')} className="text-editor-text-secondary hover:text-editor-text-primary flex-shrink-0">
+                                            <X size={12} />
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Images Grid */}
+                            <div className="max-h-[280px] overflow-y-auto pr-1 custom-scrollbar">
+                                {imageFiles.length > 0 ? (
+                                    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
+                                        {imageFiles.map(file => {
+                                            const isSelecting = selectingImageId === file.id;
+                                            const isSelected = previewUrl === file.downloadURL;
+
+                                            return (
+                                                <button
+                                                    key={file.id}
+                                                    type="button"
+                                                    onClick={() => {
+                                                        if (!isSelecting && !isUploading) {
+                                                            handleSelectFromLibrary(file.downloadURL, file.id);
+                                                        }
+                                                    }}
+                                                    disabled={isUploading}
+                                                    className={`aspect-square rounded-lg overflow-hidden border-2 cursor-pointer group relative transition-all hover:scale-105 disabled:cursor-wait ${isSelected
+                                                        ? 'border-primary ring-2 ring-primary/50'
+                                                        : 'border-transparent hover:border-primary/50'
+                                                        }`}
+                                                >
+                                                    <img
+                                                        src={file.downloadURL}
+                                                        alt={file.name}
+                                                        className="w-full h-full object-cover transition-transform group-hover:scale-110"
+                                                    />
+                                                    {isSelecting ? (
+                                                        <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                                                            <Loader2 className="w-6 h-6 text-white animate-spin" />
+                                                        </div>
+                                                    ) : isSelected ? (
+                                                        <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
+                                                            <div className="bg-primary text-primary-foreground rounded-full p-1.5">
+                                                                <Check size={16} />
+                                                            </div>
+                                                        </div>
+                                                    ) : (
+                                                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                                            <span className="text-white text-xs font-bold">{t('common.select', 'Select')}</span>
+                                                        </div>
+                                                    )}
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                ) : searchQuery ? (
+                                    <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
+                                        <Search size={32} className="mb-2 opacity-50" />
+                                        <p className="text-sm">{t('common.noResults', 'No results found')}</p>
+                                        <button
+                                            onClick={() => setSearchQuery('')}
+                                            className="text-primary hover:underline text-xs mt-2"
+                                        >
+                                            {t('common.clearSearch', 'Clear search')}
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <div className="flex flex-col items-center justify-center py-8 text-muted-foreground border-2 border-dashed border-border rounded-xl">
+                                        <ImageIcon size={32} className="mb-2 opacity-50" />
+                                        <p className="text-sm">
+                                            {librarySource === 'user'
+                                                ? t('superadmin.templateEditor.noUserImages', 'No images in your library')
+                                                : t('superadmin.templateEditor.noGlobalImages', 'No global images available')
+                                            }
+                                        </p>
+                                        {librarySource === 'user' && (
+                                            <button
+                                                onClick={() => setActiveTab('upload')}
+                                                className="text-primary hover:underline text-xs mt-2"
+                                            >
+                                                {t('superadmin.templateEditor.uploadOne', 'Upload one now')}
+                                            </button>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Upload Tab */}
+                    {activeTab === 'upload' && (
+                        <div
+                            className={`
+                                relative border-2 border-dashed rounded-xl p-8 transition-all cursor-pointer
+                                ${dragActive
+                                    ? 'border-primary bg-primary/5'
+                                    : 'border-border hover:border-primary/50 hover:bg-secondary/50'
+                                }
+                            `}
+                            onDragEnter={handleDrag}
+                            onDragLeave={handleDrag}
+                            onDragOver={handleDrag}
+                            onDrop={handleDrop}
+                            onClick={() => fileInputRef.current?.click()}
+                        >
+                            <input
+                                ref={fileInputRef}
+                                type="file"
+                                accept="image/*"
+                                onChange={handleInputChange}
+                                className="hidden"
+                            />
+
+                            <div className="flex flex-col items-center gap-3 text-center">
+                                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                                    <Upload className="w-6 h-6 text-primary" />
+                                </div>
+                                <div>
+                                    <p className="text-sm font-medium text-foreground">
+                                        {t('superadmin.templateEditor.clickOrDrag', 'Drag & drop or click to upload')}
+                                    </p>
+                                    <p className="text-xs text-muted-foreground mt-1">
+                                        PNG, JPG, WebP up to 5MB
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Generate Tab */}
+                    {activeTab === 'generate' && (
+                        <div className="space-y-4 p-4 bg-gradient-to-r from-purple-900/10 to-pink-900/10 rounded-xl border border-purple-500/20">
+                            <div className="flex items-center gap-2 mb-3">
+                                <Sparkles className="w-4 h-4 text-purple-400" />
+                                <span className="text-sm font-medium text-purple-300">
+                                    {t('superadmin.templateEditor.generatorTitle', 'AI Thumbnail Generator')}
+                                </span>
+                            </div>
+
+                            {/* Prompt Input */}
+                            <div>
+                                <div className="flex justify-between items-center mb-1">
+                                    <label className="text-xs text-muted-foreground">
+                                        {t('superadmin.templateEditor.promptLabel', 'Prompt')}
+                                    </label>
+                                    <div className="flex gap-2">
+                                        <button
+                                            type="button"
+                                            onClick={generatePromptSuggestion}
+                                            disabled={isEnhancingPrompt}
+                                            className="flex items-center gap-1 text-xs text-purple-400 hover:text-purple-300 disabled:opacity-50"
+                                            title={t('superadmin.templateEditor.autoGenerate', 'Auto-generate prompt from template')}
+                                        >
+                                            {isEnhancingPrompt ? (
+                                                <Loader2 className="w-3 h-3 animate-spin" />
+                                            ) : (
+                                                <Sparkles className="w-3 h-3" />
+                                            )}
+                                            {t('superadmin.templateEditor.suggest', 'Suggest')}
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={handleEnhancePrompt}
+                                            disabled={isEnhancingPrompt || !thumbnailPrompt}
+                                            className="flex items-center gap-1 text-xs text-primary hover:text-foreground disabled:opacity-50"
+                                        >
+                                            {isEnhancingPrompt ? (
+                                                <Loader2 className="w-3 h-3 animate-spin" />
+                                            ) : (
+                                                <Wand2 className="w-3 h-3" />
+                                            )}
+                                            {t('superadmin.templateEditor.enhance', 'Enhance')}
+                                        </button>
+                                    </div>
+                                </div>
+                                <textarea
+                                    value={thumbnailPrompt}
+                                    onChange={(e) => setThumbnailPrompt(e.target.value)}
+                                    placeholder={t('superadmin.templateEditor.describeThumbnail', 'Describe the thumbnail you want to generate...')}
+                                    className="w-full bg-background border border-border rounded-lg p-3 text-sm text-foreground focus:ring-2 focus:ring-purple-500 outline-none resize-none h-24"
+                                />
+                            </div>
+
+                            {/* Style Selector */}
+                            <div>
+                                <label className="block text-xs text-muted-foreground mb-2">
+                                    {t('superadmin.templateEditor.styleLabel', 'Style')}
+                                </label>
+                                <div className="flex flex-wrap gap-2">
+                                    {THUMBNAIL_STYLES.map((s) => (
+                                        <button
+                                            key={s.value}
+                                            type="button"
+                                            onClick={() => setThumbnailStyle(s.value)}
+                                            className={`px-3 py-1.5 text-xs rounded-full transition-colors ${thumbnailStyle === s.value
+                                                ? 'bg-purple-600 text-white'
+                                                : 'bg-secondary text-muted-foreground hover:bg-secondary/70'
+                                                }`}
+                                        >
+                                            {s.label}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Generate Button */}
+                            <button
+                                type="button"
+                                onClick={handleGenerateThumbnail}
+                                disabled={isGeneratingThumbnail || !thumbnailPrompt.trim()}
+                                className="w-full py-2.5 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-medium rounded-lg hover:from-purple-700 hover:to-pink-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
+                            >
+                                {isGeneratingThumbnail ? (
+                                    <>
+                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                        {t('superadmin.templateEditor.generating', 'Generating...')}
+                                    </>
+                                ) : (
+                                    <>
+                                        <Zap className="w-4 h-4" />
+                                        {t('superadmin.templateEditor.generateImage', 'Generate Thumbnail')}
+                                    </>
+                                )}
+                            </button>
+
+                            {/* Regenerate hint */}
+                            {generatedThumbnail && (
+                                <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+                                    <RefreshCw className="w-3 h-3" />
+                                    <span>{t('superadmin.templateEditor.regenerate', 'Click generate again to try a new image')}</span>
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>
 
-                {/* Color Legend */}
-                {themeColors.length > 0 && (
-                    <div className="flex flex-wrap gap-2">
-                        {themeColors.map((item, index) => (
-                            <div key={index} className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                                <div
-                                    className="w-3 h-3 rounded-[3px] border border-border"
-                                    style={{ backgroundColor: item.color }}
-                                />
-                                <span>{item.name}</span>
-                            </div>
-                        ))}
-                    </div>
-                )}
-
-                {/* Library Tab */}
-                {activeTab === 'library' && (
-                    <div className="space-y-4">
-                        {/* Source Toggle & Search */}
-                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                            <div className="flex space-x-2 bg-secondary p-1 rounded-lg">
-                                <button
-                                    onClick={() => setLibrarySource('global')}
-                                    className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors flex items-center gap-1.5 ${librarySource === 'global' ? 'bg-blue-500 text-white' : 'text-muted-foreground hover:text-foreground'}`}
-                                >
-                                    <Globe size={12} /> {t('superadmin.templateEditor.globalLibrary', 'Global Library')}
-                                </button>
-                                <button
-                                    onClick={() => setLibrarySource('user')}
-                                    className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors ${librarySource === 'user' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}
-                                >
-                                    {t('superadmin.templateEditor.myUploads', 'My Uploads')}
-                                </button>
-                            </div>
-
-                            {/* Search */}
-                            <div className="flex items-center gap-2 w-full sm:w-48 bg-editor-border/40 rounded-lg px-3 py-1.5">
-                                <Search size={14} className="text-editor-text-secondary flex-shrink-0" />
-                                <input
-                                    type="text"
-                                    value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                    placeholder={t('common.search', 'Search...')}
-                                    className="flex-1 bg-transparent outline-none text-xs min-w-0"
-                                />
-                                {searchQuery && (
-                                    <button onClick={() => setSearchQuery('')} className="text-editor-text-secondary hover:text-editor-text-primary flex-shrink-0">
-                                        <X size={12} />
-                                    </button>
-                                )}
-                            </div>
-                        </div>
-
-                        {/* Images Grid */}
-                        <div className="max-h-[280px] overflow-y-auto pr-1 custom-scrollbar">
-                            {imageFiles.length > 0 ? (
-                                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
-                                    {imageFiles.map(file => {
-                                        const isSelecting = selectingImageId === file.id;
-                                        const isSelected = previewUrl === file.downloadURL;
-                                        
-                                        return (
-                                            <button
-                                                key={file.id}
-                                                type="button"
-                                                onClick={() => {
-                                                    if (!isSelecting && !isUploading) {
-                                                        handleSelectFromLibrary(file.downloadURL, file.id);
-                                                    }
-                                                }}
-                                                disabled={isUploading}
-                                                className={`aspect-square rounded-lg overflow-hidden border-2 cursor-pointer group relative transition-all hover:scale-105 disabled:cursor-wait ${isSelected
-                                                    ? 'border-primary ring-2 ring-primary/50'
-                                                    : 'border-transparent hover:border-primary/50'
-                                                    }`}
-                                            >
-                                                <img
-                                                    src={file.downloadURL}
-                                                    alt={file.name}
-                                                    className="w-full h-full object-cover transition-transform group-hover:scale-110"
-                                                />
-                                                {isSelecting ? (
-                                                    <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-                                                        <Loader2 className="w-6 h-6 text-white animate-spin" />
-                                                    </div>
-                                                ) : isSelected ? (
-                                                    <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
-                                                        <div className="bg-primary text-primary-foreground rounded-full p-1.5">
-                                                            <Check size={16} />
-                                                        </div>
-                                                    </div>
-                                                ) : (
-                                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                                        <span className="text-white text-xs font-bold">{t('common.select', 'Select')}</span>
-                                                    </div>
-                                                )}
-                                            </button>
-                                        );
-                                    })}
-                                </div>
-                            ) : searchQuery ? (
-                                <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
-                                    <Search size={32} className="mb-2 opacity-50" />
-                                    <p className="text-sm">{t('common.noResults', 'No results found')}</p>
-                                    <button
-                                        onClick={() => setSearchQuery('')}
-                                        className="text-primary hover:underline text-xs mt-2"
-                                    >
-                                        {t('common.clearSearch', 'Clear search')}
-                                    </button>
-                                </div>
-                            ) : (
-                                <div className="flex flex-col items-center justify-center py-8 text-muted-foreground border-2 border-dashed border-border rounded-xl">
-                                    <ImageIcon size={32} className="mb-2 opacity-50" />
-                                    <p className="text-sm">
-                                        {librarySource === 'user'
-                                            ? t('superadmin.templateEditor.noUserImages', 'No images in your library')
-                                            : t('superadmin.templateEditor.noGlobalImages', 'No global images available')
-                                        }
-                                    </p>
-                                    {librarySource === 'user' && (
-                                        <button
-                                            onClick={() => setActiveTab('upload')}
-                                            className="text-primary hover:underline text-xs mt-2"
-                                        >
-                                            {t('superadmin.templateEditor.uploadOne', 'Upload one now')}
-                                        </button>
-                                    )}
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                )}
-
-                {/* Upload Tab */}
-                {activeTab === 'upload' && (
-                    <div
-                        className={`
-                                relative border-2 border-dashed rounded-xl p-8 transition-all cursor-pointer
-                                ${dragActive
-                                ? 'border-primary bg-primary/5'
-                                : 'border-border hover:border-primary/50 hover:bg-secondary/50'
-                            }
-                            `}
-                        onDragEnter={handleDrag}
-                        onDragLeave={handleDrag}
-                        onDragOver={handleDrag}
-                        onDrop={handleDrop}
-                        onClick={() => fileInputRef.current?.click()}
-                    >
-                        <input
-                            ref={fileInputRef}
-                            type="file"
-                            accept="image/*"
-                            onChange={handleInputChange}
-                            className="hidden"
-                        />
-
-                        <div className="flex flex-col items-center gap-3 text-center">
-                            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                                <Upload className="w-6 h-6 text-primary" />
-                            </div>
-                            <div>
-                                <p className="text-sm font-medium text-foreground">
-                                    {t('superadmin.templateEditor.clickOrDrag', 'Drag & drop or click to upload')}
-                                </p>
-                                <p className="text-xs text-muted-foreground mt-1">
-                                    PNG, JPG, WebP up to 5MB
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                {/* Generate Tab */}
-                {activeTab === 'generate' && (
-                    <div className="space-y-4 p-4 bg-gradient-to-r from-purple-900/10 to-pink-900/10 rounded-xl border border-purple-500/20">
-                        <div className="flex items-center gap-2 mb-3">
-                            <Sparkles className="w-4 h-4 text-purple-400" />
-                            <span className="text-sm font-medium text-purple-300">
-                                {t('superadmin.templateEditor.generatorTitle', 'AI Thumbnail Generator')}
-                            </span>
-                        </div>
-
-                        {/* Prompt Input */}
-                        <div>
-                            <div className="flex justify-between items-center mb-1">
-                                <label className="text-xs text-muted-foreground">
-                                    {t('superadmin.templateEditor.promptLabel', 'Prompt')}
-                                </label>
-                                <div className="flex gap-2">
-                                    <button
-                                        type="button"
-                                        onClick={generatePromptSuggestion}
-                                        disabled={isEnhancingPrompt}
-                                        className="flex items-center gap-1 text-xs text-purple-400 hover:text-purple-300 disabled:opacity-50"
-                                        title={t('superadmin.templateEditor.autoGenerate', 'Auto-generate prompt from template')}
-                                    >
-                                        {isEnhancingPrompt ? (
-                                            <Loader2 className="w-3 h-3 animate-spin" />
-                                        ) : (
-                                            <Sparkles className="w-3 h-3" />
-                                        )}
-                                        {t('superadmin.templateEditor.suggest', 'Suggest')}
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={handleEnhancePrompt}
-                                        disabled={isEnhancingPrompt || !thumbnailPrompt}
-                                        className="flex items-center gap-1 text-xs text-primary hover:text-foreground disabled:opacity-50"
-                                    >
-                                        {isEnhancingPrompt ? (
-                                            <Loader2 className="w-3 h-3 animate-spin" />
-                                        ) : (
-                                            <Wand2 className="w-3 h-3" />
-                                        )}
-                                        {t('superadmin.templateEditor.enhance', 'Enhance')}
-                                    </button>
-                                </div>
-                            </div>
-                            <textarea
-                                value={thumbnailPrompt}
-                                onChange={(e) => setThumbnailPrompt(e.target.value)}
-                                placeholder={t('superadmin.templateEditor.describeThumbnail', 'Describe the thumbnail you want to generate...')}
-                                className="w-full bg-background border border-border rounded-lg p-3 text-sm text-foreground focus:ring-2 focus:ring-purple-500 outline-none resize-none h-24"
-                            />
-                        </div>
-
-                        {/* Style Selector */}
-                        <div>
-                            <label className="block text-xs text-muted-foreground mb-2">
-                                {t('superadmin.templateEditor.styleLabel', 'Style')}
-                            </label>
-                            <div className="flex flex-wrap gap-2">
-                                {THUMBNAIL_STYLES.map((s) => (
-                                    <button
-                                        key={s.value}
-                                        type="button"
-                                        onClick={() => setThumbnailStyle(s.value)}
-                                        className={`px-3 py-1.5 text-xs rounded-full transition-colors ${thumbnailStyle === s.value
-                                            ? 'bg-purple-600 text-white'
-                                            : 'bg-secondary text-muted-foreground hover:bg-secondary/70'
-                                            }`}
-                                    >
-                                        {s.label}
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-
-                        {/* Generate Button */}
-                        <button
-                            type="button"
-                            onClick={handleGenerateThumbnail}
-                            disabled={isGeneratingThumbnail || !thumbnailPrompt.trim()}
-                            className="w-full py-2.5 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-medium rounded-lg hover:from-purple-700 hover:to-pink-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
-                        >
-                            {isGeneratingThumbnail ? (
-                                <>
-                                    <Loader2 className="w-4 h-4 animate-spin" />
-                                    {t('superadmin.templateEditor.generating', 'Generating...')}
-                                </>
-                            ) : (
-                                <>
-                                    <Zap className="w-4 h-4" />
-                                    {t('superadmin.templateEditor.generateImage', 'Generate Thumbnail')}
-                                </>
-                            )}
-                        </button>
-
-                        {/* Regenerate hint */}
-                        {generatedThumbnail && (
-                            <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
-                                <RefreshCw className="w-3 h-3" />
-                                <span>{t('superadmin.templateEditor.regenerate', 'Click generate again to try a new image')}</span>
-                            </div>
-                        )}
-                    </div>
-                )}
-            </div>
-
-            {/* Footer */}
-            <div className="flex justify-end gap-3 p-5 border-t border-border bg-secondary/30">
-                <button
-                    onClick={onClose}
-                    className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-                >
-
-                    {t('common.cancel', 'Cancel')}
-                </button>
-                {generatedThumbnail ? (
-                    <button
-                        onClick={applyGeneratedThumbnail}
-                        disabled={isUploading}
-                        className="px-4 py-2 text-sm font-medium bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:from-purple-700 hover:to-pink-700 transition-colors disabled:opacity-50 flex items-center gap-2"
-                    >
-                        {isUploading ? (
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                        ) : (
-                            <Zap className="w-4 h-4" />
-                        )}
-                        {t('common.save', 'Save')}
-                    </button>
-                ) : (
+                {/* Footer */}
+                <div className="flex justify-end gap-3 p-5 border-t border-border bg-secondary/30">
                     <button
                         onClick={onClose}
-                        className="px-4 py-2 text-sm font-medium bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
+                        className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
                     >
-                        {t('common.save', 'Save')}
+
+                        {t('common.cancel', 'Cancel')}
                     </button>
-                )}
-            </div>
+                    {generatedThumbnail ? (
+                        <button
+                            onClick={applyGeneratedThumbnail}
+                            disabled={isUploading}
+                            className="px-4 py-2 text-sm font-medium bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:from-purple-700 hover:to-pink-700 transition-colors disabled:opacity-50 flex items-center gap-2"
+                        >
+                            {isUploading ? (
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                                <Zap className="w-4 h-4" />
+                            )}
+                            {t('common.save', 'Save')}
+                        </button>
+                    ) : (
+                        <button
+                            onClick={onClose}
+                            className="px-4 py-2 text-sm font-medium bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
+                        >
+                            {t('common.save', 'Save')}
+                        </button>
+                    )}
+                </div>
             </div>
         </div>
     );

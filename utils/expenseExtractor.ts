@@ -14,12 +14,12 @@ export const extractExpenseFromReceipt = async (_file: File): Promise<Partial<Ex
     // Vision API features require proxy extension to support image uploads
     // For now, return a placeholder that prompts manual entry
     console.warn('⚠️ Receipt scanning requires Vision API proxy extension. Manual entry required.');
-    
+
     throw new Error(
         'La función de escaneo de recibos está temporalmente deshabilitada. ' +
         'Por favor, ingresa los datos del gasto manualmente.'
     );
-    
+
     /* 
     // Original implementation (requires Vision API with direct access):
     const ai = await getGoogleGenAI();
@@ -41,7 +41,7 @@ export const extractExpenseFromReceipt = async (_file: File): Promise<Partial<Ex
     `;
 
     const response = await ai.models.generateContent({
-        model: 'gemini-2.0-flash',
+        model: 'gemini-2.5-flash',
         contents: [{
             role: 'user',
             parts: [

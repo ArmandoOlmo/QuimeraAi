@@ -74,12 +74,12 @@ export const processIncomingMessage = functions.https.onCall(async (data, contex
     try {
         // Find project and its owner
         const projectConfig = await getProjectChatConfig(projectId);
-        
+
         if (!projectConfig) {
-            return { 
-                success: false, 
+            return {
+                success: false,
                 error: 'Project not found or chat not configured',
-                shouldEscalate: true 
+                shouldEscalate: true
             };
         }
 
@@ -88,8 +88,8 @@ export const processIncomingMessage = functions.https.onCall(async (data, contex
 
         // Get conversation history for context
         const conversationHistory = await getConversationHistory(
-            projectId, 
-            message.senderId, 
+            projectId,
+            message.senderId,
             message.channel
         );
 
@@ -144,7 +144,7 @@ export const sendOutboundMessage = functions.https.onCall(async (data, context) 
     try {
         // Get channel configuration
         const channelConfig = await getChannelConfig(projectId, channel);
-        
+
         if (!channelConfig || !channelConfig.enabled) {
             return { success: false, error: `${channel} channel not configured or disabled` };
         }
@@ -192,7 +192,7 @@ async function generateAIResponse(
     conversationHistory: Array<{ role: string; content: string }>
 ): Promise<ProcessedResponse> {
     const apiKey = GEMINI_CONFIG.apiKey;
-    
+
     if (!apiKey) {
         console.error('Gemini API key not configured');
         return {
@@ -205,7 +205,7 @@ async function generateAIResponse(
 
     try {
         const genAI = new GoogleGenerativeAI(apiKey);
-        const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+        const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
         // Build system prompt
         const systemPrompt = buildSystemPrompt(config, message.channel);
@@ -309,15 +309,15 @@ async function getProjectChatConfig(projectId: string): Promise<ProjectChatConfi
     try {
         // Find project across all users
         const usersSnapshot = await db.collection('users').get();
-        
+
         for (const userDoc of usersSnapshot.docs) {
             const projectRef = db.collection('users').doc(userDoc.id).collection('projects').doc(projectId);
             const projectDoc = await projectRef.get();
-            
+
             if (projectDoc.exists) {
                 const projectData = projectDoc.data();
                 const aiConfig = projectData?.aiAssistantConfig;
-                
+
                 if (!aiConfig) return null;
 
                 return {
@@ -334,7 +334,7 @@ async function getProjectChatConfig(projectId: string): Promise<ProjectChatConfi
                 };
             }
         }
-        
+
         return null;
     } catch (error) {
         console.error('Error getting project config:', error);
@@ -346,17 +346,17 @@ async function getChannelConfig(projectId: string, channel: SocialChannel): Prom
     try {
         // Find project and get channel config
         const usersSnapshot = await db.collection('users').get();
-        
+
         for (const userDoc of usersSnapshot.docs) {
             const projectRef = db.collection('users').doc(userDoc.id).collection('projects').doc(projectId);
             const projectDoc = await projectRef.get();
-            
+
             if (projectDoc.exists) {
                 const aiConfig = projectDoc.data()?.aiAssistantConfig;
                 return aiConfig?.socialChannels?.[channel] || null;
             }
         }
-        
+
         return null;
     } catch (error) {
         console.error('Error getting channel config:', error);
@@ -365,8 +365,8 @@ async function getChannelConfig(projectId: string, channel: SocialChannel): Prom
 }
 
 async function storeMessage(
-    projectId: string, 
-    message: IncomingMessage, 
+    projectId: string,
+    message: IncomingMessage,
     direction: 'inbound' | 'outbound',
     recipientId?: string
 ): Promise<void> {
@@ -445,7 +445,7 @@ async function sendFacebookMessage(config: any, recipientId: string, message: st
         );
 
         const data = await response.json();
-        
+
         if (data.error) {
             return { success: false, error: data.error.message };
         }
@@ -476,7 +476,7 @@ async function sendWhatsAppMessage(config: any, recipientId: string, message: st
         );
 
         const data = await response.json();
-        
+
         if (data.error) {
             return { success: false, error: data.error.message };
         }
@@ -502,7 +502,7 @@ async function sendInstagramMessage(config: any, recipientId: string, message: s
         );
 
         const data = await response.json();
-        
+
         if (data.error) {
             return { success: false, error: data.error.message };
         }

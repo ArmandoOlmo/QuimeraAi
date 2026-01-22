@@ -27,7 +27,7 @@ import { useAdmin } from '../../../contexts/admin';
 import { useToast } from '../../../contexts/ToastContext';
 import { useFiles } from '../../../contexts/files';
 import { AppArticle, AppArticleCategory } from '../../../types/appContent';
-import { 
+import {
     ArrowLeft, Save, Globe, Type, Loader2, Sparkles,
     MoreVertical, Calendar, Check, X as XIcon, Link as LinkIcon,
     Star, Tag
@@ -64,7 +64,7 @@ const ModernAppArticleEditor: React.FC<ModernAppArticleEditorProps> = ({ article
     const { getPrompt } = useAdmin();
     const { showToast } = useToast();
     const { uploadImageAndGetURL } = useFiles();
-    
+
     // Form State
     const [title, setTitle] = useState(article?.title || '');
     const [slug, setSlug] = useState(article?.slug || '');
@@ -76,7 +76,7 @@ const ModernAppArticleEditor: React.FC<ModernAppArticleEditorProps> = ({ article
     const [tags, setTags] = useState<string[]>(article?.tags || []);
     const [tagInput, setTagInput] = useState('');
     const [author, setAuthor] = useState(article?.author || 'Quimera Team');
-    
+
     // SEO
     const [metaTitle, setMetaTitle] = useState(article?.seo?.metaTitle || '');
     const [metaDescription, setMetaDescription] = useState(article?.seo?.metaDescription || '');
@@ -87,11 +87,11 @@ const ModernAppArticleEditor: React.FC<ModernAppArticleEditorProps> = ({ article
     const [isSaving, setIsSaving] = useState(false);
     const [isAiWorking, setIsAiWorking] = useState(false);
     const [lastSaved, setLastSaved] = useState<Date | null>(null);
-    
+
     // Link Modal
     const [showLinkModal, setShowLinkModal] = useState(false);
     const [linkUrl, setLinkUrl] = useState('');
-    
+
     const contentFileInputRef = useRef<HTMLInputElement>(null);
     const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -242,7 +242,7 @@ const ModernAppArticleEditor: React.FC<ModernAppArticleEditorProps> = ({ article
             if (!isAutoSave) showToast("El título es requerido", 'error');
             return;
         }
-        
+
         let finalSlug = slug.trim();
         if (!finalSlug) {
             finalSlug = title;
@@ -252,11 +252,11 @@ const ModernAppArticleEditor: React.FC<ModernAppArticleEditorProps> = ({ article
         setIsSaving(true);
         try {
             const currentContent = editor?.getHTML() || '';
-            
+
             // Calculate read time (approx 200 words per minute)
             const wordCount = currentContent.replace(/<[^>]*>/g, '').split(/\s+/).length;
             const readTime = Math.max(1, Math.ceil(wordCount / 200));
-            
+
             const articleData: AppArticle = {
                 id: article?.id || '',
                 title,
@@ -281,10 +281,10 @@ const ModernAppArticleEditor: React.FC<ModernAppArticleEditorProps> = ({ article
                     metaKeywords: tags,
                 }
             };
-            
+
             await saveArticle(articleData);
             setLastSaved(new Date());
-            
+
             if (!isAutoSave) {
                 showToast(status === 'published' ? '¡Artículo publicado!' : 'Artículo guardado', 'success');
                 setTimeout(() => onClose(), 500);
@@ -304,19 +304,19 @@ const ModernAppArticleEditor: React.FC<ModernAppArticleEditorProps> = ({ article
             editor.state.selection.to,
             ' '
         );
-        
+
         if (!selectedText && command !== 'continue') {
             showToast("Por favor selecciona texto primero", 'warning');
             return;
         }
 
         setIsAiWorking(true);
-        let modelName = 'gemini-2.0-flash-exp';
-        
+        let modelName = 'gemini-2.5-flash';
+
         try {
             let promptConfig;
             let populatedPrompt = "";
-            
+
             if (command === 'continue') {
                 const context = editor?.getText().slice(-1000) || title;
                 promptConfig = getPrompt('cms-continue-writing');
@@ -345,7 +345,7 @@ const ModernAppArticleEditor: React.FC<ModernAppArticleEditorProps> = ({ article
             }
 
             const response = await generateContentViaProxy('app-article-editor', populatedPrompt, modelName, {}, user?.uid);
-            
+
             if (user) {
                 logApiCall({
                     userId: user.uid,
@@ -355,9 +355,9 @@ const ModernAppArticleEditor: React.FC<ModernAppArticleEditorProps> = ({ article
                     success: true
                 });
             }
-            
+
             const result = extractTextFromResponse(response).trim();
-            
+
             if (command === 'continue') {
                 editor?.chain().focus().insertContent(result).run();
             } else {
@@ -384,11 +384,11 @@ const ModernAppArticleEditor: React.FC<ModernAppArticleEditorProps> = ({ article
 
     const generateSEO = async () => {
         setIsAiWorking(true);
-        let modelName = 'gemini-2.0-flash-exp';
-        
+        let modelName = 'gemini-2.5-flash';
+
         try {
             const contentPreview = editor?.getText().substring(0, 2000) || '';
-            
+
             const promptConfig = getPrompt('cms-generate-seo');
             let populatedPrompt = "";
 
@@ -403,14 +403,14 @@ const ModernAppArticleEditor: React.FC<ModernAppArticleEditorProps> = ({ article
 
             const response = await generateContentViaProxy('app-article-seo', populatedPrompt, modelName, {}, user?.uid);
             let responseText = extractTextFromResponse(response);
-            
+
             // Clean markdown code blocks if present
             if (responseText.startsWith('```json')) {
                 responseText = responseText.replace(/^```json\n?/, '').replace(/\n?```$/, '');
             } else if (responseText.startsWith('```')) {
                 responseText = responseText.replace(/^```\n?/, '').replace(/\n?```$/, '');
             }
-            
+
             if (user) {
                 logApiCall({
                     userId: user.uid,
@@ -420,7 +420,7 @@ const ModernAppArticleEditor: React.FC<ModernAppArticleEditorProps> = ({ article
                     success: true
                 });
             }
-            
+
             const data = JSON.parse(responseText);
             setMetaTitle(data.seoTitle || data.metaTitle);
             setMetaDescription(data.seoDescription || data.metaDescription);
@@ -438,16 +438,16 @@ const ModernAppArticleEditor: React.FC<ModernAppArticleEditorProps> = ({ article
             }
             showToast("Error al generar SEO", 'error');
             console.error(error);
-        } finally { 
-            setIsAiWorking(false); 
+        } finally {
+            setIsAiWorking(false);
         }
     };
 
     return (
         <div className="flex h-screen bg-background text-foreground">
             {/* General App Sidebar - Collapsed by default */}
-            <DashboardSidebar 
-                isMobileOpen={isMobileSidebarOpen} 
+            <DashboardSidebar
+                isMobileOpen={isMobileSidebarOpen}
                 onClose={() => setIsMobileSidebarOpen(false)}
                 defaultCollapsed={true}
             />
@@ -457,8 +457,8 @@ const ModernAppArticleEditor: React.FC<ModernAppArticleEditorProps> = ({ article
                 {/* Use the same SimpleEditorHeader as the rest of the app */}
                 <SimpleEditorHeader />
 
-                <input 
-                    type="file" 
+                <input
+                    type="file"
                     ref={contentFileInputRef}
                     onChange={handleImageUpload}
                     className="hidden"
@@ -512,7 +512,7 @@ const ModernAppArticleEditor: React.FC<ModernAppArticleEditorProps> = ({ article
                             <ArrowLeft size={20} />
                         </button>
                         <div className="h-6 w-px bg-border"></div>
-                        <input 
+                        <input
                             value={title}
                             onChange={(e) => setTitle(e.target.value)}
                             placeholder="Título del artículo..."
@@ -542,22 +542,22 @@ const ModernAppArticleEditor: React.FC<ModernAppArticleEditorProps> = ({ article
                 <div className="flex flex-1 overflow-hidden">
                     {/* Main Editor */}
                     <div className="flex-1 flex flex-col min-w-0 bg-muted/30">
-                        <EditorMenuBar 
-                            editor={editor} 
+                        <EditorMenuBar
+                            editor={editor}
                             onImageUpload={triggerImageUpload}
                             onAICommand={handleAICommand}
                             isAiWorking={isAiWorking}
                         />
-                        
+
                         <div className="flex-1 overflow-y-auto p-8 flex justify-center bg-background">
                             <div className="w-full max-w-[900px] min-h-[800px]">
                                 <EditorContent editor={editor} />
-                                <EditorBubbleMenu 
-                                    editor={editor} 
+                                <EditorBubbleMenu
+                                    editor={editor}
                                     onAICommand={handleAICommand}
                                     onLinkClick={openLinkModal}
                                 />
-                                <SlashCommands 
+                                <SlashCommands
                                     editor={editor}
                                     onImageUpload={triggerImageUpload}
                                     onAICommand={handleAICommand}
@@ -573,7 +573,7 @@ const ModernAppArticleEditor: React.FC<ModernAppArticleEditorProps> = ({ article
                                 <h3 className="font-bold text-lg mb-1 flex items-center"><Type className="mr-2 text-primary" /> Configuración</h3>
                                 <p className="text-xs text-muted-foreground">Configura metadata y apariencia del artículo.</p>
                             </div>
-                            
+
                             <div className="space-y-6">
                                 {/* URL Slug */}
                                 <div>
@@ -677,7 +677,7 @@ const ModernAppArticleEditor: React.FC<ModernAppArticleEditorProps> = ({ article
                                         <h4 className="font-bold text-sm flex items-center"><Globe size={16} className="mr-2" /> SEO</h4>
                                         <button onClick={generateSEO} disabled={isAiWorking} className="text-xs font-bold text-yellow-400 hover:text-yellow-300 flex items-center"><Sparkles size={12} className="mr-1" /> Auto-Gen</button>
                                     </div>
-                                    
+
                                     <div className="space-y-4">
                                         <div>
                                             <label className="block text-xs font-medium text-muted-foreground mb-1">Meta Title</label>

@@ -221,7 +221,7 @@ CRITERIOS DE URGENCIA:
         const response = await generateContentViaProxy(
             projectName || 'lead-intent-analysis',
             prompt,
-            'gemini-2.0-flash-exp',
+            'gemini-2.5-flash',
             { temperature: 0.3, maxOutputTokens: 500 },
             userId
         );

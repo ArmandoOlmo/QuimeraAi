@@ -34,7 +34,7 @@ const ContentCreatorAssistant: React.FC<ContentCreatorAssistantProps> = ({ onClo
         setIsGenerating(true);
         setStep('generating');
 
-        let modelToUse = 'gemini-2.0-flash-exp'; // Default fallback - declared outside try for error logging
+        let modelToUse = 'gemini-2.5-flash'; // Default fallback - declared outside try for error logging
 
         try {
             // Get dynamic prompt
@@ -246,8 +246,8 @@ const ContentCreatorAssistant: React.FC<ContentCreatorAssistantProps> = ({ onClo
                                             key={t}
                                             onClick={() => setTone(t)}
                                             className={`p-3 rounded-lg border text-sm font-medium transition-all ${tone === t
-                                                    ? 'bg-primary text-primary-foreground border-primary'
-                                                    : 'bg-card border-border hover:border-primary/50'
+                                                ? 'bg-primary text-primary-foreground border-primary'
+                                                : 'bg-card border-border hover:border-primary/50'
                                                 }`}
                                         >
                                             {t}

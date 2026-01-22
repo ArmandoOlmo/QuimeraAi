@@ -18,7 +18,7 @@ import { Highlight } from '@tiptap/extension-highlight';
 import { useEditor as useEditorContext } from '../../../contexts/EditorContext';
 import { useCMS } from '../../../contexts/cms';
 import { CMSPost } from '../../../types';
-import { 
+import {
     ArrowLeft, Save, Globe, Type, Loader2, Sparkles,
     MoreVertical, Calendar, Check, X as XIcon, Link as LinkIcon
 } from 'lucide-react';
@@ -42,7 +42,7 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
     const { saveCMSPost } = useCMS();
     // Use EditorContext for other utilities
     const { handleApiError, hasApiKey, promptForKeySelection, uploadImageAndGetURL, getPrompt, activeProject, user } = useEditorContext();
-    
+
     // Form State
     const [title, setTitle] = useState(post?.title || '');
     const [slug, setSlug] = useState(post?.slug || '');
@@ -58,15 +58,15 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
     const [isSaving, setIsSaving] = useState(false);
     const [isAiWorking, setIsAiWorking] = useState(false);
     const [lastSaved, setLastSaved] = useState<Date | null>(null);
-    
+
     // Link Modal
     const [showLinkModal, setShowLinkModal] = useState(false);
     const [linkUrl, setLinkUrl] = useState('');
-    
+
     // Content Image Picker Modal
     const [showContentImagePicker, setShowContentImagePicker] = useState(false);
     const [contentImageUrl, setContentImageUrl] = useState('');
-    
+
     const contentFileInputRef = useRef<HTMLInputElement>(null);
     const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -170,7 +170,7 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
         // Open the ImagePicker modal instead of the file input
         setShowContentImagePicker(true);
     };
-    
+
     // Handle image selection from ImagePicker for content
     const handleContentImageSelect = (url: string) => {
         if (url && editor) {
@@ -216,7 +216,7 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
             if (!isAutoSave) alert("Title is required");
             return;
         }
-        
+
         let finalSlug = slug.trim();
         if (!finalSlug) {
             finalSlug = title;
@@ -226,7 +226,7 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
         setIsSaving(true);
         try {
             const currentContent = editor?.getHTML() || '';
-            
+
             const postData: CMSPost = {
                 id: post?.id || '',
                 title,
@@ -243,7 +243,7 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
             };
             await saveCMSPost(postData);
             setLastSaved(new Date());
-            
+
             if (!isAutoSave) {
                 // Show success message or close
                 setTimeout(() => onClose(), 500);
@@ -258,17 +258,17 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
 
     // --- AI Logic ---
     const handleAICommand = async (command: string) => {
-        if (hasApiKey === false) { 
-            await promptForKeySelection(); 
-            return; 
+        if (hasApiKey === false) {
+            await promptForKeySelection();
+            return;
         }
-        
+
         const selectedText = editor?.state.doc.textBetween(
             editor.state.selection.from,
             editor.state.selection.to,
             ' '
         );
-        
+
         if (!selectedText && command !== 'continue') {
             alert("Please select some text first.");
             return;
@@ -278,7 +278,7 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
         try {
             let promptConfig;
             let populatedPrompt = "";
-            
+
             if (command === 'continue') {
                 const context = editor?.getText().slice(-1000) || title;
                 promptConfig = getPrompt('cms-continue-writing');
@@ -303,11 +303,11 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
                 }
             }
 
-            const modelName = promptConfig?.model || 'gemini-2.0-flash-exp';
+            const modelName = promptConfig?.model || 'gemini-2.5-flash';
 
             const projectId = activeProject?.id || 'modern-cms-editor';
             const response = await generateContentViaProxy(projectId, populatedPrompt, modelName, {}, user?.uid);
-            
+
             // Log successful API call
             if (user) {
                 logApiCall({
@@ -318,9 +318,9 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
                     success: true
                 });
             }
-            
+
             const result = extractTextFromResponse(response).trim();
-            
+
             if (command === 'continue') {
                 editor?.chain().focus().insertContent(result).run();
             } else {
@@ -352,10 +352,10 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
         setIsAiWorking(true);
         try {
             const contentPreview = editor?.getText().substring(0, 2000) || '';
-            
+
             const promptConfig = getPrompt('cms-generate-seo');
             let populatedPrompt = "";
-            let modelName = 'gemini-2.0-flash-exp';
+            let modelName = 'gemini-2.5-flash';
 
             if (promptConfig) {
                 populatedPrompt = promptConfig.template
@@ -369,7 +369,7 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
             const projectId = activeProject?.id || 'modern-cms-seo';
             const response = await generateContentViaProxy(projectId, populatedPrompt, modelName, {}, user?.uid);
             const responseText = extractTextFromResponse(response);
-            
+
             // Log successful API call
             if (user) {
                 logApiCall({
@@ -380,7 +380,7 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
                     success: true
                 });
             }
-            
+
             const data = JSON.parse(responseText);
             setSeoTitle(data.seoTitle);
             setSeoDescription(data.seoDescription);
@@ -396,18 +396,18 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
                     errorMessage: error instanceof Error ? error.message : 'Unknown error'
                 });
             }
-            handleApiError(error); 
-            console.error(error); 
-        } finally { 
-            setIsAiWorking(false); 
+            handleApiError(error);
+            console.error(error);
+        } finally {
+            setIsAiWorking(false);
         }
     };
 
     return (
         <div className="flex h-screen bg-background text-foreground">
             {/* General App Sidebar - Collapsed by default */}
-            <DashboardSidebar 
-                isMobileOpen={isMobileSidebarOpen} 
+            <DashboardSidebar
+                isMobileOpen={isMobileSidebarOpen}
                 onClose={() => setIsMobileSidebarOpen(false)}
                 defaultCollapsed={true}
             />
@@ -417,8 +417,8 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
                 {/* Use the same SimpleEditorHeader as the rest of the app */}
                 <SimpleEditorHeader />
 
-                <input 
-                    type="file" 
+                <input
+                    type="file"
                     ref={contentFileInputRef}
                     onChange={handleImageUpload}
                     className="hidden"
@@ -483,7 +483,7 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
                             <ArrowLeft size={20} />
                         </button>
                         <div className="h-6 w-px bg-border"></div>
-                        <input 
+                        <input
                             value={title}
                             onChange={(e) => setTitle(e.target.value)}
                             placeholder="Enter Post Title..."
@@ -513,22 +513,22 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
                 <div className="flex flex-1 overflow-hidden">
                     {/* Main Editor */}
                     <div className="flex-1 flex flex-col min-w-0 bg-muted/30">
-                        <EditorMenuBar 
-                            editor={editor} 
+                        <EditorMenuBar
+                            editor={editor}
                             onImageUpload={triggerImageUpload}
                             onAICommand={handleAICommand}
                             isAiWorking={isAiWorking}
                         />
-                        
+
                         <div className="flex-1 overflow-y-auto p-8 flex justify-center bg-background">
                             <div className="w-full max-w-[900px] min-h-[800px]">
                                 <EditorContent editor={editor} />
-                                <EditorBubbleMenu 
-                                    editor={editor} 
+                                <EditorBubbleMenu
+                                    editor={editor}
                                     onAICommand={handleAICommand}
                                     onLinkClick={openLinkModal}
                                 />
-                                <SlashCommands 
+                                <SlashCommands
                                     editor={editor}
                                     onImageUpload={triggerImageUpload}
                                     onAICommand={handleAICommand}
@@ -544,7 +544,7 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
                                 <h3 className="font-bold text-lg mb-1 flex items-center"><Type className="mr-2 text-primary" /> Post Settings</h3>
                                 <p className="text-xs text-muted-foreground">Configure metadata and appearance.</p>
                             </div>
-                            
+
                             <div className="space-y-6">
                                 <div>
                                     <label className="block text-xs font-bold text-muted-foreground uppercase mb-2">URL Slug</label>
@@ -566,7 +566,7 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
                                         <h4 className="font-bold text-sm flex items-center"><Globe size={16} className="mr-2" /> SEO Settings</h4>
                                         <button onClick={generateSEO} disabled={isAiWorking} className="text-xs font-bold text-yellow-400 hover:text-yellow-300 flex items-center"><Sparkles size={12} className="mr-1" /> Auto-Gen</button>
                                     </div>
-                                    
+
                                     <div className="space-y-4">
                                         <div>
                                             <label className="block text-xs font-medium text-muted-foreground mb-1">SEO Title</label>

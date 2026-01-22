@@ -50,11 +50,11 @@ const generateSessionId = () => `session_${Date.now()}_${Math.random().toString(
 const LandingChatbotWidget: React.FC = () => {
     const { t } = useTranslation();
     const adminContext = useSafeAdmin();
-    
+
     // Extract values safely with fallbacks
     const landingChatbotConfig = adminContext?.landingChatbotConfig;
     const designTokens = adminContext?.designTokens;
-    
+
     // Debug logging
     console.log('[LandingChatbotWidget] Rendering, isActive:', true, 'path:', typeof window !== 'undefined' ? window.location.pathname : 'SSR');
 
@@ -116,7 +116,7 @@ Personalidad:
             ...(landingChatbotConfig?.knowledgeBase || {}),
         },
     };
-    
+
     // State
     const [isOpen, setIsOpen] = useState(false);
     const [messages, setMessages] = useState<Message[]>([]);
@@ -127,12 +127,12 @@ Personalidad:
     const [leadCaptured, setLeadCaptured] = useState(false);
     const [sessionId] = useState(generateSessionId);
     const [hasShownProactive, setHasShownProactive] = useState(false);
-    
+
     // Refs
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
     const proactiveTimerRef = useRef<NodeJS.Timeout | null>(null);
-    
+
     // Determine color source (support both new and legacy format)
     const colorSource = (config.appearance as any).colorSource || ((config.appearance as any).useAppColors ? 'app' : 'custom');
     const customColors: LandingChatbotColors = config.appearance.customColors || defaultChatbotColors;
@@ -154,14 +154,14 @@ Personalidad:
             buttonIcon: '#ffffff',
             primary: designTokens.colors?.primary || '#6366f1',
             mutedText: designTokens.colors['muted-foreground'] || '#71717a',
-          }
+        }
         : customColors;
 
     // Get button icon based on config
     const getButtonIcon = () => {
         const iconSize = 28;
         const iconColor = colors?.buttonIcon;
-        
+
         switch (config.appearance.buttonIcon) {
             case 'chat':
                 return <MessageSquare size={iconSize} style={{ color: iconColor }} />;
@@ -194,7 +194,7 @@ Personalidad:
     // Debug: Log excluded path check
     const excluded = isExcludedPath();
     console.log('[LandingChatbotWidget] isActive:', config.isActive, 'isExcludedPath:', excluded);
-    
+
     // Don't render if inactive or on excluded path
     if (!config.isActive || excluded) {
         console.log('[LandingChatbotWidget] Not rendering - isActive:', config.isActive, 'excluded:', excluded);
@@ -219,7 +219,7 @@ Personalidad:
                 content: config.welcomeMessage,
                 timestamp: new Date()
             }]);
-            
+
         }
     }, [isOpen, config.welcomeMessage]);
 
@@ -260,14 +260,14 @@ Personalidad:
     // Build system prompt
     const buildSystemPrompt = (): string => {
         const { knowledgeBase, personality } = config;
-        
+
         let prompt = personality.systemPrompt + '\n\n';
-        
+
         // Add company info
         if (knowledgeBase.companyInfo) {
             prompt += `## Información de la Empresa\n${knowledgeBase.companyInfo}\n\n`;
         }
-        
+
         // Add product features
         if (knowledgeBase.productFeatures.length > 0) {
             prompt += '## Funcionalidades del Producto\n';
@@ -276,7 +276,7 @@ Personalidad:
             });
             prompt += '\n';
         }
-        
+
         // Add pricing plans
         if (knowledgeBase.pricingPlans.length > 0) {
             prompt += '## Planes y Precios\n';
@@ -288,7 +288,7 @@ Personalidad:
             });
             prompt += '\n';
         }
-        
+
         // Add FAQs
         if (knowledgeBase.faqs.length > 0) {
             prompt += '## Preguntas Frecuentes\n';
@@ -296,7 +296,7 @@ Personalidad:
                 prompt += `**P: ${faq.question}**\nR: ${faq.answer}\n\n`;
             });
         }
-        
+
         // Add personality settings
         prompt += `\n## Estilo de Comunicación
 - Tono: ${personality.tone}
@@ -335,8 +335,8 @@ Personalidad:
 
         // Check for lead capture triggers
         const messageCount = messages.filter(m => m.role === 'user').length + 1;
-        const shouldCaptureLead = config.leadCapture.enabled && 
-            !leadCaptured && 
+        const shouldCaptureLead = config.leadCapture.enabled &&
+            !leadCaptured &&
             (messageCount >= config.leadCapture.triggerAfterMessages || hasHighIntentKeyword(userMessage));
 
         try {
@@ -351,10 +351,10 @@ Personalidad:
             if (isProxyMode()) {
                 // Use proxy for AI calls
                 // Build a full prompt with system instructions and conversation history
-                const conversationContext = messages.map(m => 
+                const conversationContext = messages.map(m =>
                     `${m.role === 'user' ? 'Usuario' : 'Asistente'}: ${m.content}`
                 ).join('\n');
-                
+
                 const fullPrompt = `${systemPrompt}
 
 ${conversationContext ? `Historial de conversación:\n${conversationContext}\n\n` : ''}Usuario: ${userMessage}
@@ -364,7 +364,7 @@ Asistente:`;
                 const result = await generateContentViaProxy(
                     'quimera-chat-landing', // Use pattern that's allowed in Cloud Function
                     fullPrompt,
-                    'gemini-2.0-flash-exp',
+                    'gemini-2.5-flash',
                     {
                         temperature: config.behavior.temperature,
                         maxOutputTokens: config.behavior.maxTokens,
@@ -378,7 +378,7 @@ Asistente:`;
                     throw new Error('API key not configured');
                 }
                 const model = genAI.getGenerativeModel({
-                    model: 'gemini-2.0-flash-exp',
+                    model: 'gemini-2.5-flash',
                     systemInstruction: systemPrompt
                 });
                 const chat = model.startChat({
@@ -513,12 +513,12 @@ Asistente:`;
     // Closed state - Floating button like GlobalAiAssistant
     if (!isOpen) {
         return ReactDOM.createPortal(
-            <button 
-                onClick={() => setIsOpen(true)} 
+            <button
+                onClick={() => setIsOpen(true)}
                 className={`fixed z-[99999] p-3 shadow-2xl hover:scale-110 transition-transform border-4 border-white/20 flex items-center justify-center group ${getButtonStyleClasses()} ${config.appearance.pulseEffect ? 'animate-pulse' : ''}`}
-                style={{ 
+                style={{
                     ...getPositionStyle(),
-                    backgroundColor: colors?.buttonBackground 
+                    backgroundColor: colors?.buttonBackground
                 }}
                 title={`Chat con ${config.agentName}`}
             >
@@ -541,7 +541,7 @@ Asistente:`;
             }}
         >
             {/* Header - Like GlobalAiAssistant */}
-            <div 
+            <div
                 className="p-4 flex justify-between items-center shrink-0 cursor-pointer"
                 style={{ backgroundColor: colors?.headerBackground }}
             >
@@ -569,8 +569,8 @@ Asistente:`;
                     </div>
                 </div>
                 <div className="flex gap-1 items-center">
-                    <button 
-                        onClick={() => setIsOpen(false)} 
+                    <button
+                        onClick={() => setIsOpen(false)}
                         className="p-1.5 hover:bg-white/20 rounded-md transition-colors"
                     >
                         <X size={18} style={{ color: colors?.headerText }} />
@@ -599,14 +599,13 @@ Asistente:`;
                                     )}
                                 </div>
                             )}
-                            
+
                             {/* Message bubble */}
                             <div
-                                className={`max-w-[80%] p-3.5 rounded-2xl text-sm leading-relaxed shadow-sm ${
-                                    message.role === 'user'
+                                className={`max-w-[80%] p-3.5 rounded-2xl text-sm leading-relaxed shadow-sm ${message.role === 'user'
                                         ? 'rounded-tr-sm'
                                         : 'rounded-tl-sm border'
-                                }`}
+                                    }`}
                                 style={{
                                     backgroundColor: message.role === 'user' ? colors?.userBubbleBackground : colors?.background,
                                     color: message.role === 'user' ? colors?.userBubbleText : colors?.botBubbleText,
@@ -636,10 +635,10 @@ Asistente:`;
                                     {message.content}
                                 </ReactMarkdown>
                             </div>
-                            
+
                             {/* User avatar */}
                             {message.role === 'user' && (
-                                <div 
+                                <div
                                     className="w-8 h-8 rounded-full flex items-center justify-center ml-2 shrink-0 overflow-hidden border"
                                     style={{ backgroundColor: `${colors?.inputBackground}80`, borderColor: colors?.inputBorder }}
                                 >
@@ -648,7 +647,7 @@ Asistente:`;
                             )}
                         </div>
                     ))}
-                    
+
                     {/* Loading indicator - Like GlobalAiAssistant */}
                     {isLoading && (
                         <div className="flex justify-start">
@@ -674,7 +673,7 @@ Asistente:`;
 
                     {/* Lead capture form */}
                     {showLeadForm && (
-                        <div 
+                        <div
                             className="p-4 rounded-xl border shadow-sm"
                             style={{ backgroundColor: colors?.background, borderColor: colors?.inputBorder }}
                         >
@@ -688,8 +687,8 @@ Asistente:`;
                                     value={leadFormData.name}
                                     onChange={(e) => setLeadFormData(prev => ({ ...prev, name: e.target.value }))}
                                     className="w-full px-3 py-2 rounded-lg border text-sm outline-none focus:ring-2 transition-all"
-                                    style={{ 
-                                        backgroundColor: colors?.inputBackground, 
+                                    style={{
+                                        backgroundColor: colors?.inputBackground,
                                         borderColor: colors?.inputBorder,
                                         color: colors?.inputText
                                     }}
@@ -701,8 +700,8 @@ Asistente:`;
                                     value={leadFormData.email}
                                     onChange={(e) => setLeadFormData(prev => ({ ...prev, email: e.target.value }))}
                                     className="w-full px-3 py-2 rounded-lg border text-sm outline-none focus:ring-2 transition-all"
-                                    style={{ 
-                                        backgroundColor: colors?.inputBackground, 
+                                    style={{
+                                        backgroundColor: colors?.inputBackground,
                                         borderColor: colors?.inputBorder,
                                         color: colors?.inputText
                                     }}
@@ -713,8 +712,8 @@ Asistente:`;
                                     value={leadFormData.phone || ''}
                                     onChange={(e) => setLeadFormData(prev => ({ ...prev, phone: e.target.value }))}
                                     className="w-full px-3 py-2 rounded-lg border text-sm outline-none focus:ring-2 transition-all"
-                                    style={{ 
-                                        backgroundColor: colors?.inputBackground, 
+                                    style={{
+                                        backgroundColor: colors?.inputBackground,
                                         borderColor: colors?.inputBorder,
                                         color: colors?.inputText
                                     }}
@@ -744,14 +743,14 @@ Asistente:`;
                 </div>
 
                 {/* Input area - Like GlobalAiAssistant */}
-                <div 
+                <div
                     className="p-4 border-t shrink-0"
                     style={{ backgroundColor: colors?.background, borderColor: colors?.inputBorder }}
                 >
-                    <div 
+                    <div
                         className="flex items-center gap-2 p-1.5 rounded-full border transition-all focus-within:ring-2"
-                        style={{ 
-                            backgroundColor: `${colors?.inputBackground}50`, 
+                        style={{
+                            backgroundColor: `${colors?.inputBackground}50`,
                             borderColor: colors?.inputBorder,
                         }}
                     >
@@ -764,7 +763,7 @@ Asistente:`;
                         >
                             <X size={18} />
                         </button>
-                        
+
                         <input
                             ref={inputRef}
                             type="text"
@@ -776,7 +775,7 @@ Asistente:`;
                             className="flex-1 bg-transparent px-2 text-sm outline-none"
                             style={{ color: colors?.inputText }}
                         />
-                        
+
                         {/* Send button */}
                         <button
                             onClick={() => sendMessage(inputValue)}
@@ -787,7 +786,7 @@ Asistente:`;
                             <Send size={18} />
                         </button>
                     </div>
-                    
+
                     {/* Footer info */}
                     <div className="mt-2 flex justify-between items-center px-2">
                         <p className="text-[10px] flex items-center" style={{ color: colors?.mutedText }}>

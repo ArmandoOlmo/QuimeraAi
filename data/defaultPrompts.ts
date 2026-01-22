@@ -781,7 +781,7 @@ Generate or rewrite content for the specific UI element described below. Ensure 
 Provide ONLY the enhanced prompt text, without explanations or formatting. Make it detailed, evocative, and optimized for professional image generation.
 
 **Enhanced Prompt:**`,
-    model: 'gemini-2.0-flash',
+    model: 'gemini-2.5-flash',
     version: 2,
   },
 
@@ -849,7 +849,7 @@ Return a JSON object with the following fields:
 
 Make sure the content is engaging, well-structured, and valuable for the target audience.
 Output ONLY valid JSON without any markdown formatting or code blocks.`,
-    model: 'gemini-2.0-flash-exp',
+    model: 'gemini-2.5-flash',
     version: 1
   },
 

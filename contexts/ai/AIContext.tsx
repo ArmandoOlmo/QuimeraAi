@@ -17,12 +17,12 @@ interface AIContextType {
     hasApiKey: boolean | null;
     promptForKeySelection: () => Promise<void>;
     handleApiError: (error: any) => void;
-    
+
     // AI Assistant Config (Project Level)
     aiAssistantConfig: AiAssistantConfig;
     setAiAssistantConfig: React.Dispatch<React.SetStateAction<AiAssistantConfig>>;
     saveAiAssistantConfig: (config: AiAssistantConfig, projectId?: string) => Promise<void>;
-    
+
     // Image Generation
     generateImage: (prompt: string, options?: {
         aspectRatio?: string;
@@ -37,14 +37,14 @@ interface AIContextType {
         referenceImage?: string;
         referenceImages?: string[];
     }) => Promise<string>;
-    
+
     // Batch Image Generation
     generateProjectImagesWithProgress: (
         project: Project,
         imagePrompts: Record<string, string>,
         onProgress: (current: number, total: number, section: string, imageUrl?: string) => void
     ) => Promise<{ success: boolean; generatedImages: Record<string, string>; failedPaths: string[] }>;
-    
+
     // Prompt Enhancement
     enhancePrompt: (draftPrompt: string, referenceImages?: string[]) => Promise<string>;
 }
@@ -70,10 +70,10 @@ const defaultAiAssistantConfig: AiAssistantConfig = {
 
 export const AIProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const { user } = useAuth();
-    
+
     // API Key State
     const [hasApiKey, setHasApiKey] = useState<boolean | null>(null);
-    
+
     // AI Assistant Config
     const [aiAssistantConfig, setAiAssistantConfig] = useState<AiAssistantConfig>(defaultAiAssistantConfig);
 
@@ -159,7 +159,7 @@ export const AIProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     // Save AI assistant config (persists to Firestore if projectId is provided)
     const saveAiAssistantConfig = async (config: AiAssistantConfig, projectId?: string) => {
         setAiAssistantConfig(config);
-        
+
         // Persist to Firestore if we have projectId and user
         if (projectId && user) {
             try {
@@ -255,7 +255,7 @@ export const AIProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
             }
 
             const response = await genAI.models.generateContent({
-                model: 'gemini-2.0-flash-exp',
+                model: 'gemini-2.5-flash',
                 contents: enhancedPrompt,
                 config: {
                     responseModalities: [Modality.TEXT, Modality.IMAGE],
@@ -264,7 +264,7 @@ export const AIProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
 
             await logApiCall({
                 endpoint: 'gemini/generateContent',
-                model: 'gemini-2.0-flash-exp',
+                model: 'gemini-2.5-flash',
                 promptTokens: enhancedPrompt.length,
                 completionTokens: 0,
                 totalTokens: enhancedPrompt.length,
@@ -315,7 +315,7 @@ export const AIProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
         for (let i = 0; i < paths.length; i++) {
             const path = paths[i];
             const prompt = imagePrompts[path];
-            
+
             onProgress(i + 1, total, path);
 
             try {
@@ -370,13 +370,13 @@ Enhanced prompt:`;
             }
 
             const response = await genAI.models.generateContent({
-                model: 'gemini-2.0-flash-exp',
+                model: 'gemini-2.5-flash',
                 contents: systemPrompt,
             });
 
             await logApiCall({
                 endpoint: 'gemini/generateContent',
-                model: 'gemini-2.0-flash-exp',
+                model: 'gemini-2.5-flash',
                 promptTokens: systemPrompt.length,
                 completionTokens: 100,
                 totalTokens: systemPrompt.length + 100,

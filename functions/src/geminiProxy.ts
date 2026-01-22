@@ -96,14 +96,10 @@ function isValidUserId(userId: string): boolean {
  * SECURITY: Validate model name
  */
 const ALLOWED_MODELS = [
-    // Gemini 2.5 series (latest)
+    // Gemini 2.5 series (latest - recommended)
     'gemini-2.5-flash',
     'gemini-2.5-flash-lite',
     'gemini-2.5-pro',
-    // Gemini 2.0 series
-    'gemini-2.0-flash',
-    'gemini-2.0-flash-lite',
-    'gemini-2.0-flash-exp',
     // Gemini 3.0 preview models (experimental)
     'gemini-3-pro-preview',
     'gemini-3-pro-image-preview',
@@ -111,10 +107,7 @@ const ALLOWED_MODELS = [
     'gemini-1.5-flash',
     'gemini-1.5-pro',
     // Native Gemini image generation models
-    'gemini-2.0-flash-exp-image-generation',
-    'gemini-2.0-flash-preview-image-generation',
     'gemini-2.5-flash-image',
-    'gemini-2.0-flash-image',
     // Image generation models - Imagen (may require Vertex AI)
     'imagen-3.0-generate-001',
     'imagen-3.0-fast-generate-001',
@@ -349,26 +342,20 @@ async function getProjectData(projectId: string, userId?: string): Promise<Proje
  * ~$0.01 USD real cost per credit
  */
 const AI_CREDIT_COSTS = {
-    // Gemini 2.5 series (latest)
+    // Gemini 2.5 series (latest - recommended)
     'gemini-2.5-flash': 1,              // ~$0.01 per request
     'gemini-2.5-flash-lite': 1,         // ~$0.01 per request
     'gemini-2.5-pro': 3,                // ~$0.03 per request
-    // Gemini 2.0 series
-    'gemini-2.0-flash': 1,              // ~$0.01 per request
-    'gemini-2.0-flash-lite': 1,         // ~$0.01 per request
-    'gemini-2.0-flash-exp': 1,          // ~$0.01 per request
     // Gemini 3.0 preview models (experimental)
     'gemini-3-pro-preview': 3,          // ~$0.03 per request
     'gemini-3-pro-image-preview': 4,    // ~$0.04 per request
     // Legacy models
     'gemini-1.5-flash': 1,              // ~$0.01 per request
     'gemini-1.5-pro': 2,                // ~$0.02 per request
-    // Image generation - Imagen 3.0
+    // Image generation
     'gemini-2.5-flash-image': 4,        // ~$0.04 per image
-    'gemini-2.0-flash-image': 4,        // ~$0.04 per image
     'imagen-3.0-generate-001': 4,       // ~$0.04 per image
     'imagen-3.0-fast-generate-001': 2,  // ~$0.02 per image
-    // Image generation - Imagen 4.0
     'imagen-4.0-generate-001': 4,       // ~$0.04 per image
     'imagen-4.0-ultra-generate-001': 6, // ~$0.06 per image (highest quality)
     'imagen-4.0-fast-generate-001': 2,  // ~$0.02 per image

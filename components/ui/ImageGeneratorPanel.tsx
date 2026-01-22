@@ -2,9 +2,9 @@ import React, { useState, useRef } from 'react';
 import { useAI } from '../../contexts/ai';
 import { useFiles } from '../../contexts/files';
 import { useTranslation } from 'react-i18next';
-import { 
-    Zap, Loader2, Wand2, X, Download, Upload, Image as ImageIcon, Plus, 
-    AlertTriangle, Sparkles, Brain, Users, Thermometer, Eye, Flame, Layers, 
+import {
+    Zap, Loader2, Wand2, X, Download, Upload, Image as ImageIcon, Plus,
+    AlertTriangle, Sparkles, Brain, Users, Thermometer, Eye, Flame, Layers,
     Rocket, ChevronDown, Check, Settings2, Palette, Camera, Sun, CheckCircle2
 } from 'lucide-react';
 
@@ -120,7 +120,7 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
         {
             id: 'vision',
             label: 'Quimera Vision',
-            value: 'gemini-2.0-flash-exp',
+            value: 'gemini-2.5-flash',
             description: t('editor.quimeraVisionDesc', { defaultValue: 'Balanced quality and speed' }),
             icon: Layers,
             badge: null,
@@ -317,7 +317,7 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
         setSavedToLibrary(false);
         setSavedImageUrl(null);
         setShowImageDetail(false);
-        
+
         try {
             const options = {
                 aspectRatio,
@@ -340,7 +340,7 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
 
             const imageDataUrl = await generateImage(prompt, options);
             setGeneratedImage(imageDataUrl);
-            
+
             // Save the prompt and options used for the detail modal
             setGeneratedPrompt(prompt);
             setGeneratedOptions({
@@ -350,10 +350,10 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
                 resolution,
                 negativePrompt: negativePrompt.trim() || undefined,
             });
-            
+
             // Automatically save to library after successful generation
             await saveToLibrary(imageDataUrl, prompt);
-            
+
         } catch (error) {
             console.error(error);
             alert(t('editor.generationFailed'));
@@ -408,7 +408,7 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
                         </div>
                     </div>
                     {onClose && (
-                        <button 
+                        <button
                             onClick={onClose}
                             className="p-2 rounded-lg hover:bg-editor-border text-editor-text-secondary hover:text-editor-text-primary transition-colors"
                         >
@@ -433,8 +433,8 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
                                 onClick={() => setSelectedModel(model.value)}
                                 className={`
                                     relative p-3 rounded-xl border-2 transition-all duration-200 text-left group
-                                    ${isSelected 
-                                        ? `border-transparent bg-gradient-to-br ${model.color} text-white shadow-lg scale-[1.02]` 
+                                    ${isSelected
+                                        ? `border-transparent bg-gradient-to-br ${model.color} text-white shadow-lg scale-[1.02]`
                                         : 'border-editor-border bg-editor-bg hover:border-editor-text-secondary hover:bg-editor-panel-bg'
                                     }
                                 `}
@@ -442,9 +442,8 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
                                 <div className="flex items-start justify-between mb-1.5">
                                     <IconComponent size={16} className={isSelected ? 'text-white' : 'text-editor-text-secondary group-hover:text-editor-accent'} />
                                     {model.badge && (
-                                        <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${
-                                            isSelected ? 'bg-white/20 text-white' : 'bg-editor-accent/10 text-editor-accent'
-                                        }`}>
+                                        <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${isSelected ? 'bg-white/20 text-white' : 'bg-editor-accent/10 text-editor-accent'
+                                            }`}>
                                             {model.badge}
                                         </span>
                                     )}
@@ -531,8 +530,8 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
                             <div
                                 className={`
                                     border-2 border-dashed rounded-xl p-3 transition-all cursor-pointer
-                                    ${isDragging 
-                                        ? 'border-editor-accent bg-editor-accent/10' 
+                                    ${isDragging
+                                        ? 'border-editor-accent bg-editor-accent/10'
                                         : 'border-editor-border hover:border-editor-text-secondary hover:bg-editor-panel-bg/50'
                                     }
                                 `}
@@ -591,8 +590,8 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
                                             onClick={() => setAspectRatio(ratio.value)}
                                             className={`
                                                 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all
-                                                ${aspectRatio === ratio.value 
-                                                    ? 'bg-editor-accent text-editor-bg' 
+                                                ${aspectRatio === ratio.value
+                                                    ? 'bg-editor-accent text-editor-bg'
                                                     : 'bg-editor-panel-bg text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border'
                                                 }
                                             `}
@@ -615,8 +614,8 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
                                             onClick={() => setResolution(res.value as '1K' | '2K' | '4K')}
                                             className={`
                                                 flex-1 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all
-                                                ${resolution === res.value 
-                                                    ? 'bg-editor-accent text-editor-bg' 
+                                                ${resolution === res.value
+                                                    ? 'bg-editor-accent text-editor-bg'
                                                     : 'bg-editor-panel-bg text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border'
                                                 }
                                             `}
@@ -668,9 +667,9 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
                                     {t('editor.advancedControls', { defaultValue: 'Advanced Settings' })}
                                 </span>
                             </div>
-                            <ChevronDown 
-                                size={16} 
-                                className={`text-editor-text-secondary transition-transform duration-200 ${showAdvanced ? 'rotate-180' : ''}`} 
+                            <ChevronDown
+                                size={16}
+                                className={`text-editor-text-secondary transition-transform duration-200 ${showAdvanced ? 'rotate-180' : ''}`}
                             />
                         </button>
 
@@ -700,8 +699,8 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
                                                         onClick={() => setThinkingLevel(level.value)}
                                                         className={`
                                                             flex-1 px-2 py-1.5 rounded-lg text-xs font-medium transition-all
-                                                            ${thinkingLevel === level.value 
-                                                                ? 'bg-editor-accent text-editor-bg' 
+                                                            ${thinkingLevel === level.value
+                                                                ? 'bg-editor-accent text-editor-bg'
                                                                 : 'bg-editor-bg text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border'
                                                             }
                                                         `}
@@ -725,8 +724,8 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
                                                     onClick={() => setPersonGeneration('allow_adult')}
                                                     className={`
                                                         flex-1 px-2 py-1.5 rounded-lg text-xs font-medium transition-all
-                                                        ${personGeneration === 'allow_adult' 
-                                                            ? 'bg-editor-accent text-editor-bg' 
+                                                        ${personGeneration === 'allow_adult'
+                                                            ? 'bg-editor-accent text-editor-bg'
                                                             : 'bg-editor-bg text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border'
                                                         }
                                                     `}
@@ -737,8 +736,8 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
                                                     onClick={() => setPersonGeneration('dont_allow')}
                                                     className={`
                                                         flex-1 px-2 py-1.5 rounded-lg text-xs font-medium transition-all
-                                                        ${personGeneration === 'dont_allow' 
-                                                            ? 'bg-editor-accent text-editor-bg' 
+                                                        ${personGeneration === 'dont_allow'
+                                                            ? 'bg-editor-accent text-editor-bg'
                                                             : 'bg-editor-bg text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border'
                                                         }
                                                     `}
@@ -855,8 +854,8 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
                             className={`
                                 w-full py-3.5 rounded-xl font-bold text-sm transition-all duration-200
                                 flex items-center justify-center gap-2 shadow-lg
-                                ${isGenerating || !prompt 
-                                    ? 'bg-editor-border text-editor-text-secondary cursor-not-allowed' 
+                                ${isGenerating || !prompt
+                                    ? 'bg-editor-border text-editor-text-secondary cursor-not-allowed'
                                     : `bg-gradient-to-r ${currentModel.color} text-white hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]`
                                 }
                             `}
@@ -895,17 +894,17 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
                                 </p>
                             </div>
                         ) : generatedImage ? (
-                            <div 
+                            <div
                                 className="w-full h-full flex items-center justify-center relative cursor-pointer group"
                                 onClick={() => setShowImageDetail(true)}
                                 role="button"
                                 tabIndex={0}
                                 onKeyDown={(e) => e.key === 'Enter' && setShowImageDetail(true)}
                             >
-                                <img 
-                                    src={generatedImage} 
-                                    alt="Generated" 
-                                    className="max-w-full max-h-full object-contain transition-transform group-hover:scale-[1.02]" 
+                                <img
+                                    src={generatedImage}
+                                    alt="Generated"
+                                    className="max-w-full max-h-full object-contain transition-transform group-hover:scale-[1.02]"
                                 />
                                 {/* Hover overlay */}
                                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-all duration-200 flex items-center justify-center">
@@ -954,7 +953,7 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
                                     <>
                                         <CheckCircle2 size={14} className="text-green-500" />
                                         <span className="text-xs font-medium text-green-500">
-                                            {destination === 'global' 
+                                            {destination === 'global'
                                                 ? t('editor.savedToGlobalLibrary', { defaultValue: 'Saved to global library' })
                                                 : t('editor.savedToLibrary', { defaultValue: 'Saved to library' })
                                             }
@@ -1009,20 +1008,20 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
 
             {/* Image Detail Modal */}
             {showImageDetail && generatedImage && (
-                <div 
+                <div
                     className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in"
                     onClick={() => setShowImageDetail(false)}
                 >
-                    <div 
+                    <div
                         className="bg-editor-bg border border-editor-border rounded-2xl shadow-2xl max-w-5xl w-full max-h-[90vh] overflow-hidden flex flex-col lg:flex-row animate-scale-in"
                         onClick={(e) => e.stopPropagation()}
                     >
                         {/* Image Preview */}
                         <div className="flex-1 min-h-[300px] lg:min-h-0 bg-black/50 flex items-center justify-center p-4">
-                            <img 
-                                src={generatedImage} 
-                                alt="Generated" 
-                                className="max-w-full max-h-[60vh] lg:max-h-[80vh] object-contain rounded-lg shadow-xl" 
+                            <img
+                                src={generatedImage}
+                                alt="Generated"
+                                className="max-w-full max-h-[60vh] lg:max-h-[80vh] object-contain rounded-lg shadow-xl"
                             />
                         </div>
 
@@ -1036,7 +1035,7 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
                                         {t('editor.imageDetails', { defaultValue: 'Image Details' })}
                                     </h3>
                                 </div>
-                                <button 
+                                <button
                                     onClick={() => setShowImageDetail(false)}
                                     className="p-1.5 rounded-lg hover:bg-editor-border text-editor-text-secondary hover:text-editor-text-primary transition-colors"
                                 >
@@ -1138,7 +1137,7 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
                                             <>
                                                 <CheckCircle2 size={16} className="text-green-500" />
                                                 <span className="text-sm font-medium text-green-500">
-                                                    {destination === 'global' 
+                                                    {destination === 'global'
                                                         ? t('editor.savedToGlobalLibrary', { defaultValue: 'Saved to global library' })
                                                         : t('editor.savedToLibrary', { defaultValue: 'Saved to project library' })
                                                     }

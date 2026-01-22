@@ -37,7 +37,7 @@ const AppContentCreatorAssistant: React.FC<AppContentCreatorAssistantProps> = ({
     const { user } = useAuth();
     const { saveArticle } = useAppContent();
     const { getPrompt } = useAdmin();
-    
+
     const [step, setStep] = useState<Step>('topic');
     const [topic, setTopic] = useState('');
     const [audience, setAudience] = useState('');
@@ -52,7 +52,7 @@ const AppContentCreatorAssistant: React.FC<AppContentCreatorAssistantProps> = ({
         setIsGenerating(true);
         setStep('generating');
 
-        let modelToUse = 'gemini-2.0-flash-exp';
+        let modelToUse = 'gemini-2.5-flash';
 
         try {
             // Get dynamic prompt
@@ -274,8 +274,8 @@ const AppContentCreatorAssistant: React.FC<AppContentCreatorAssistantProps> = ({
                                             key={cat.value}
                                             onClick={() => setCategory(cat.value)}
                                             className={`p-3 rounded-lg border text-sm font-medium transition-all ${category === cat.value
-                                                    ? 'bg-primary text-primary-foreground border-primary'
-                                                    : 'bg-card border-border hover:border-primary/50'
+                                                ? 'bg-primary text-primary-foreground border-primary'
+                                                : 'bg-card border-border hover:border-primary/50'
                                                 }`}
                                         >
                                             {cat.label}
@@ -305,8 +305,8 @@ const AppContentCreatorAssistant: React.FC<AppContentCreatorAssistantProps> = ({
                                             key={t}
                                             onClick={() => setTone(t)}
                                             className={`p-3 rounded-lg border text-sm font-medium transition-all ${tone === t
-                                                    ? 'bg-primary text-primary-foreground border-primary'
-                                                    : 'bg-card border-border hover:border-primary/50'
+                                                ? 'bg-primary text-primary-foreground border-primary'
+                                                : 'bg-card border-border hover:border-primary/50'
                                                 }`}
                                         >
                                             {t}
@@ -359,7 +359,7 @@ const AppContentCreatorAssistant: React.FC<AppContentCreatorAssistantProps> = ({
                                     <span className="text-xs font-bold text-muted-foreground uppercase">{t('contentManagement.title', 'Título')}</span>
                                     <h3 className="text-xl font-bold">{generatedArticle.title || 'Sin título'}</h3>
                                 </div>
-                                
+
                                 <div className="flex gap-2 flex-wrap">
                                     <span className="px-2 py-1 text-xs font-medium bg-primary/10 text-primary rounded-full">
                                         {generatedArticle.category || category}

@@ -33,19 +33,19 @@ interface CoolorsImporterProps {
 const parseCoolorsUrl = (input: string): string[] | null => {
     // Limpiar el input
     const cleaned = input.trim().toLowerCase();
-    
+
     // Regex para extraer colores HEX (grupos de 6 caracteres hex separados por -)
     const colorPattern = /([a-f0-9]{6}(?:-[a-f0-9]{6})*)/;
     const match = cleaned.match(colorPattern);
-    
+
     if (!match) return null;
-    
+
     const colorsString = match[1];
     const colors = colorsString.split('-').map(c => `#${c.toUpperCase()}`);
-    
+
     // Validar que tengamos al menos 3 colores y máximo 10
     if (colors?.length < 3 || colors?.length > 10) return null;
-    
+
     return colors;
 };
 
@@ -129,17 +129,17 @@ Examples of good names:
 Respond ONLY with the name, no explanations or quotes. Just the words of the name.`;
 };
 
-const CoolorsImporter: React.FC<CoolorsImporterProps> = ({ 
-    onPaletteGenerated, 
+const CoolorsImporter: React.FC<CoolorsImporterProps> = ({
+    onPaletteGenerated,
     projectId: propProjectId,
-    generatePaletteName = false 
+    generatePaletteName = false
 }) => {
     const { t } = useTranslation();
     const { activeProject } = useProject();
-    
+
     // Use provided projectId, or fall back to active project, or use a default for AI calls
     const effectiveProjectId = propProjectId || activeProject?.id || 'template-editor';
-    
+
     const [inputUrl, setInputUrl] = useState('');
     const [parsedColors, setParsedColors] = useState<string[] | null>(null);
     const [isLoading, setIsLoading] = useState(false);
@@ -151,7 +151,7 @@ const CoolorsImporter: React.FC<CoolorsImporterProps> = ({
         setInputUrl(value);
         setError(null);
         setSuccess(false);
-        
+
         if (value.trim()) {
             const colors = parseCoolorsUrl(value);
             setParsedColors(colors);
@@ -207,7 +207,7 @@ const CoolorsImporter: React.FC<CoolorsImporterProps> = ({
 
         // Ordenar colores por luminosidad
         const sortedByLuminance = [...colors].sort((a, b) => getLuminance(a) - getLuminance(b));
-        
+
         // Ordenar por saturación para encontrar el más vibrante
         const sortedBySaturation = [...colors].sort((a, b) => getSaturation(b) - getSaturation(a));
 
@@ -224,13 +224,13 @@ const CoolorsImporter: React.FC<CoolorsImporterProps> = ({
 
         // Background y Surface
         const background = isDarkTheme ? darkest : lightest;
-        const surface = sortedByLuminance[isDarkTheme ? 1 : sortedByLuminance.length - 2] || 
-                       (isDarkTheme ? adjustLuminance(darkest, 1.3) : adjustLuminance(lightest, 0.95));
+        const surface = sortedByLuminance[isDarkTheme ? 1 : sortedByLuminance.length - 2] ||
+            (isDarkTheme ? adjustLuminance(darkest, 1.3) : adjustLuminance(lightest, 0.95));
 
         // ============================================
         // COLORES DE TEXTO - Derivados de la paleta
         // ============================================
-        
+
         // Para dark theme: buscar colores claros de la paleta
         // Para light theme: buscar colores oscuros de la paleta
         let textColor: string;
@@ -281,8 +281,8 @@ const CoolorsImporter: React.FC<CoolorsImporterProps> = ({
         }
 
         // Border: derivar del fondo
-        const borderColor = isDarkTheme 
-            ? adjustLuminance(background, 1.8) 
+        const borderColor = isDarkTheme
+            ? adjustLuminance(background, 1.8)
             : adjustLuminance(background, 0.85);
 
         return {
@@ -303,11 +303,11 @@ const CoolorsImporter: React.FC<CoolorsImporterProps> = ({
     // Generate simple palette name based on colors (English fallback)
     const generateSimplePaletteName = (colors: string[]): string => {
         if (!colors || colors?.length === 0) return 'Custom Palette';
-        
+
         // Analyze all colors to determine the theme
         let totalR = 0, totalG = 0, totalB = 0;
         let darkCount = 0, lightCount = 0;
-        
+
         colors?.forEach(color => {
             const hex = color.replace('#', '').toLowerCase();
             const r = parseInt(hex.substr(0, 2), 16);
@@ -316,20 +316,20 @@ const CoolorsImporter: React.FC<CoolorsImporterProps> = ({
             totalR += r;
             totalG += g;
             totalB += b;
-            
+
             const luminance = 0.299 * r + 0.587 * g + 0.114 * b;
             if (luminance < 100) darkCount++;
             if (luminance > 180) lightCount++;
         });
-        
+
         const avgR = totalR / colors?.length;
         const avgG = totalG / colors?.length;
         const avgB = totalB / colors?.length;
-        
+
         // Determine theme based on averages
         if (darkCount >= colors?.length / 2) return 'Midnight Theme';
         if (lightCount >= colors?.length / 2) return 'Light Breeze';
-        
+
         // Determine by dominant color
         if (avgR > avgG + 30 && avgR > avgB + 30) {
             if (avgR > 180) return 'Coral Sunset';
@@ -350,12 +350,12 @@ const CoolorsImporter: React.FC<CoolorsImporterProps> = ({
         if (avgR > 180 && avgG > 100 && avgB > 100 && avgR > avgG && avgR > avgB) {
             return 'Rose Garden';
         }
-        
+
         // Mixed color palettes
         if (Math.abs(avgR - avgG) < 40 && Math.abs(avgG - avgB) < 40) {
             return 'Neutral Tones';
         }
-        
+
         return 'Creative Blend';
     };
 
@@ -363,24 +363,24 @@ const CoolorsImporter: React.FC<CoolorsImporterProps> = ({
     const generatePaletteNameWithAI = async (colors: string[]): Promise<string> => {
         try {
             const prompt = generatePaletteNamePrompt(colors);
-            
+
             // Timeout de 8 segundos para el nombre
             const timeoutPromise = new Promise<never>((_, reject) => {
                 setTimeout(() => reject(new Error('timeout')), 8000);
             });
-            
+
             const response = await Promise.race([
                 generateContentViaProxy(
                     effectiveProjectId,
                     prompt,
-                    'gemini-2.0-flash',
+                    'gemini-2.5-flash',
                     { temperature: 0.8, maxOutputTokens: 50 }
                 ),
                 timeoutPromise
             ]);
-            
+
             const text = extractTextFromResponse(response);
-            
+
             if (text) {
                 // Limpiar el texto - quitar comillas, puntos, saltos de línea, etc.
                 const cleanName = text.trim()
@@ -391,7 +391,7 @@ const CoolorsImporter: React.FC<CoolorsImporterProps> = ({
                     .replace(/^Name:\s*/i, '')
                     .replace(/^Palette:\s*/i, '')
                     .trim();
-                
+
                 if (cleanName && cleanName.length > 2 && cleanName.length < 50) {
                     return cleanName;
                 }
@@ -399,7 +399,7 @@ const CoolorsImporter: React.FC<CoolorsImporterProps> = ({
         } catch (err) {
             // AI failed, will use fallback
         }
-        
+
         return generateSimplePaletteName(colors);
     };
 
@@ -415,17 +415,17 @@ const CoolorsImporter: React.FC<CoolorsImporterProps> = ({
 
         try {
             const globalColors = generateFallbackPalette(parsedColors);
-            
+
             // Generar nombre con AI solo si se requiere (templates)
             let paletteName: string | undefined;
             if (generatePaletteName) {
                 paletteName = await generatePaletteNameWithAI(parsedColors);
                 console.log('🎨 Palette name generated:', paletteName);
             }
-            
+
             // Pasar todos los colores originales de la paleta para acceso rápido en el selector
             await onPaletteGenerated(globalColors, parsedColors, paletteName);
-            
+
             setSuccess(true);
             setTimeout(() => {
                 setInputUrl('');
@@ -460,23 +460,23 @@ const CoolorsImporter: React.FC<CoolorsImporterProps> = ({
 
             try {
                 const prompt = generateAIPrompt(parsedColors);
-                
+
                 const response = await Promise.race([
                     generateContentViaProxy(
                         effectiveProjectId,
                         prompt,
-                        'gemini-2.0-flash',
+                        'gemini-2.5-flash',
                         { temperature: 0.3 }
                     ),
                     timeoutPromise
                 ]);
 
                 const text = extractTextFromResponse(response);
-                
+
                 if (!text) {
                     throw new Error('Respuesta vacía de AI');
                 }
-                
+
                 // Parsear la respuesta JSON
                 const jsonMatch = text.match(/\{[\s\S]*\}/);
                 if (!jsonMatch) {
@@ -484,13 +484,13 @@ const CoolorsImporter: React.FC<CoolorsImporterProps> = ({
                 }
 
                 const generatedPalette = JSON.parse(jsonMatch[0]);
-                
+
                 // Validar que tenga todas las propiedades necesarias
                 const requiredKeys: (keyof GlobalColors)[] = [
                     'primary', 'secondary', 'accent', 'background', 'surface',
                     'text', 'textMuted', 'heading', 'border', 'success', 'error'
                 ];
-                
+
                 for (const key of requiredKeys) {
                     if (!generatedPalette[key] || !/^#[0-9A-Fa-f]{6}$/i.test(generatedPalette[key])) {
                         throw new Error(`Color inválido para: ${key}`);
@@ -510,20 +510,20 @@ const CoolorsImporter: React.FC<CoolorsImporterProps> = ({
                     success: generatedPalette.success,
                     error: generatedPalette.error,
                 };
-                
+
                 // Usar el nombre generado por AI si existe
                 const aiPaletteName = generatedPalette.paletteName || generateSimplePaletteName(parsedColors);
-                
+
                 // Aplicar la paleta con nombre de AI
                 await onPaletteGenerated(globalColors, parsedColors, aiPaletteName);
-                
+
                 setSuccess(true);
                 setTimeout(() => {
                     setInputUrl('');
                     setParsedColors(null);
                     setSuccess(false);
                 }, 2000);
-                
+
                 return; // Salir exitosamente
             } catch (aiError) {
                 console.warn('AI generation failed, using fallback:', aiError);
@@ -534,7 +534,7 @@ const CoolorsImporter: React.FC<CoolorsImporterProps> = ({
             // Aplicar la paleta con fallback - pasar todos los colores originales para acceso rápido
             const fallbackName = generateSimplePaletteName(parsedColors);
             await onPaletteGenerated(globalColors, parsedColors, fallbackName);
-            
+
             setSuccess(true);
             setTimeout(() => {
                 setInputUrl('');
@@ -626,11 +626,10 @@ const CoolorsImporter: React.FC<CoolorsImporterProps> = ({
                 <button
                     onClick={handleApplyDirectly}
                     disabled={!parsedColors || parsedColors.length < 3 || isLoading}
-                    className={`w-full flex items-center justify-center gap-2 py-3 px-4 rounded-lg font-medium text-sm transition-all ${
-                        parsedColors && parsedColors.length >= 3 && !isLoading
+                    className={`w-full flex items-center justify-center gap-2 py-3 px-4 rounded-lg font-medium text-sm transition-all ${parsedColors && parsedColors.length >= 3 && !isLoading
                             ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white hover:from-emerald-600 hover:to-teal-600 shadow-lg hover:shadow-xl'
                             : 'bg-editor-border text-editor-text-secondary cursor-not-allowed'
-                    }`}
+                        }`}
                 >
                     {isLoading ? (
                         <>
@@ -649,11 +648,10 @@ const CoolorsImporter: React.FC<CoolorsImporterProps> = ({
                 <button
                     onClick={handleGeneratePalette}
                     disabled={!parsedColors || parsedColors.length < 3 || isLoading}
-                    className={`w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg font-medium text-sm transition-all ${
-                        parsedColors && parsedColors.length >= 3 && !isLoading
+                    className={`w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg font-medium text-sm transition-all ${parsedColors && parsedColors.length >= 3 && !isLoading
                             ? 'bg-editor-bg border border-purple-500/50 text-purple-400 hover:bg-purple-500/10'
                             : 'bg-editor-bg border border-editor-border text-editor-text-secondary/50 cursor-not-allowed'
-                    }`}
+                        }`}
                 >
                     <Wand2 size={16} />
                     {t('coolorsImporter.generateAI', 'Optimizar con AI')}

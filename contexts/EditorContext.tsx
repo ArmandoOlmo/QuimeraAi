@@ -3390,7 +3390,7 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
             let generatedTitle = fileName; // Default fallback
             try {
                 const titleResponse = await ai.models.generateContent({
-                    model: 'gemini-2.0-flash',
+                    model: 'gemini-2.5-flash',
                     contents: [
                         {
                             text: 'Generate a short, descriptive title (maximum 5 words) for this image. Only respond with the title, nothing else. No quotes, no explanation.'
