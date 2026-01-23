@@ -2321,7 +2321,7 @@ const GlobalAiAssistant: React.FC = () => {
         let dataStructureContext = "Active Project Data Structure: None (No project loaded).";
         if (dataRef.current) {
             const keys = Object.keys(dataRef.current).filter(k => typeof dataRef.current[k] === 'object').join(', ');
-            dataStructureContext = `ACTIVE PROJECT DATA STRUCTURE:\n- Available Sections: [${keys}]\n- To edit content, use 'update_site_content' with 'path' (e.g. 'hero.headline', 'features.title') and 'value'.\n- To open a section in the editor, use 'select_section'.`;
+            dataStructureContext = `ACTIVE PROJECT DATA STRUCTURE:\n- Available Sections: [${keys}]\n- SCHEMA DATA HINTS:\n  * Simple Props (Text/Colors/Toggles): Use 'update_site_content'. Text is at root (e.g. 'hero.headline'), Colors in '.colors' (e.g. 'hero.colors.background').\n  * Lists/Arrays (Testimonials, Menu Items, Features): Use 'manage_section_items' (actions: add, update, remove, reorder).\n  * Images: Use 'update_site_content' with 'imageUrl' path or generate new ones.`;
         }
 
         const activeContext = `STATE: Active Project: ${activeProject ? `${activeProject.name} (ID: ${activeProject.id})` : "None"}. View: ${viewRef.current}.`;
