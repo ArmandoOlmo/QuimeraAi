@@ -2559,7 +2559,23 @@ You: "✓ Made the hero button green and increased its size"
     const startLiveSession = async () => {
         if (hasApiKey === false) { await promptForKeySelection(); return; }
         setIsConnecting(true);
+
         try {
+            // STEP 1: Request microphone permission FIRST (before WebSocket)
+            // This gives the user time to accept without the connection timing out
+            console.log('[Voice Mode] Requesting microphone permission...');
+            let micStream: MediaStream;
+            try {
+                micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                console.log('[Voice Mode] Microphone access granted');
+            } catch (micErr: any) {
+                console.error('[Voice Mode] Microphone access denied:', micErr);
+                setIsConnecting(false);
+                alert(`No se pudo acceder al micrófono: ${micErr?.message || 'Permiso denegado'}. Por favor, permite el acceso al micrófono en tu navegador.`);
+                return; // Exit early - don't even try to connect WebSocket
+            }
+
+            // STEP 2: Now set up audio contexts
             const ai = await getGoogleGenAI();
             const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
             const outputCtx = new AudioContextClass({ sampleRate: 24000 });
@@ -2567,7 +2583,9 @@ You: "✓ Made the hero button green and increased its size"
             audioContextRef.current = outputCtx;
             inputAudioContextRef.current = inputCtx;
             nextStartTimeRef.current = outputCtx.currentTime;
+            streamRef.current = micStream;
 
+            // STEP 3: Connect to WebSocket (microphone is already available)
             const sessionPromise = ai.live.connect({
                 model: 'gemini-2.5-flash-native-audio-preview-09-2025',
                 config: {
@@ -2578,33 +2596,27 @@ You: "✓ Made the hero button green and increased its size"
                 },
                 callbacks: {
                     onopen: async () => {
+                        console.log('[Voice Mode] WebSocket connected');
                         setIsConnecting(false);
                         setIsLiveActive(true);
                         isConnectedRef.current = true;
-                        try {
-                            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                            streamRef.current = stream;
-                            const source = inputCtx.createMediaStreamSource(stream);
-                            const processor = inputCtx.createScriptProcessor(4096, 1, 1);
-                            processorRef.current = processor;
-                            processor.onaudioprocess = (e) => {
+
+                        // Set up audio processing with the already-granted microphone stream
+                        const source = inputCtx.createMediaStreamSource(micStream);
+                        const processor = inputCtx.createScriptProcessor(4096, 1, 1);
+                        processorRef.current = processor;
+                        processor.onaudioprocess = (e) => {
+                            if (!isConnectedRef.current) return;
+                            const inputData = e.inputBuffer.getChannelData(0);
+                            const pcm16 = floatTo16BitPCM(inputData);
+                            const base64Data = bytesToBase64(new Uint8Array(pcm16));
+                            sessionPromise.then(session => {
                                 if (!isConnectedRef.current) return;
-                                const inputData = e.inputBuffer.getChannelData(0);
-                                const pcm16 = floatTo16BitPCM(inputData);
-                                const base64Data = bytesToBase64(new Uint8Array(pcm16));
-                                sessionPromise.then(session => {
-                                    if (!isConnectedRef.current) return;
-                                    try { session.sendRealtimeInput({ media: { mimeType: 'audio/pcm;rate=16000', data: base64Data } }); } catch (err) { }
-                                });
-                            };
-                            source.connect(processor);
-                            processor.connect(inputCtx.destination);
-                        } catch (micErr: any) {
-                            console.error('[Voice Mode] Microphone access error:', micErr);
-                            const errorMessage = micErr?.message || 'Unknown error';
-                            alert(`No se pudo acceder al micrófono: ${errorMessage}. Por favor, permite el acceso al micrófono en tu navegador.`);
-                            stopLiveSession();
-                        }
+                                try { session.sendRealtimeInput({ media: { mimeType: 'audio/pcm;rate=16000', data: base64Data } }); } catch (err) { }
+                            });
+                        };
+                        source.connect(processor);
+                        processor.connect(inputCtx.destination);
                     },
                     onmessage: async (message: LiveServerMessage) => {
                         if (message.serverContent?.interrupted) {
