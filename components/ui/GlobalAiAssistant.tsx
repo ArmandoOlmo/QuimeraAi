@@ -3228,13 +3228,13 @@ You: "✓ Made the hero button green and increased its size"
                             .filter(([_, visible]) => visible)
                             .map(([section]) => section)
                             .slice(0, 10);
-                        const heroData = dataRef.current?.hero;
+
                         viewContext = `User is in the WEBSITE EDITOR for "${currentProject?.name || 'unknown'}".
-They can edit sections, change content, colors, fonts, and styling.
-AVAILABLE ACTIONS: edit text, change colors, show/hide sections, add items to lists (features, testimonials, etc.)`;
-                        availableData = `Visible sections: ${visibleSections.join(', ') || 'none'}
-Hero headline: "${heroData?.headline || 'not set'}"
-Hero subheadline: "${heroData?.subheadline || 'not set'}"`;
+They can edit sections, change content, colors, fonts, and styling.`;
+
+                        // We rely on the full schema in system prompt, but adding visible sections helps context
+                        availableData = `Visible sections on canvas: ${visibleSections.join(', ') || 'none'}
+(See SYSTEM PROMPT for full data schema/paths)`;
                         break;
 
                     case 'email':
