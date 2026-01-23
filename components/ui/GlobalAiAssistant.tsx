@@ -2659,19 +2659,35 @@ You: "✓ Made the hero button green and increased its size"
                             if (!isConnectedRef.current) return;
                             sessionPromise.then(session => {
                                 console.log('[Voice Mode] 🤖 Triggering initial greeting...');
+                                // Debug: Inspect available session methods
                                 try {
-                                    // Send a text message to the model to prompt it to speak first
-                                    // Using 'user' role to simulate a user arrival/prompt
+                                    const methods = Object.getOwnPropertyNames(Object.getPrototypeOf(session));
+                                    console.log('[Voice Mode] Session methods:', methods);
+                                } catch (e) { console.log('[Voice Mode] Could not inspect session proto'); }
+
+                                try {
+                                    // Detect Language (User preference or Browser default)
+                                    const userLang = navigator.language || 'es-ES';
+                                    const isSpanish = userLang.toLowerCase().includes('es');
+
+                                    const greetingPrompt = isSpanish
+                                        ? "La sesión ha iniciado. IMPORTANTE: Saluda al usuario corta y amablemente en ESPAÑOL y pregúntale qué desea hacer hoy."
+                                        : "Voice session started. IMPORTANT: Greet the user briefly in ENGLISH and ask what they want to do today.";
+
+                                    // Try standard 'send' method first
                                     if (typeof (session as any).send === 'function') {
+                                        console.log(`[Voice Mode] Sending greeting prompt (${isSpanish ? 'ES' : 'EN'})...`);
                                         (session as any).send({
                                             clientContent: {
                                                 turns: [{
                                                     role: 'user',
-                                                    parts: [{ text: "La conexión de voz se ha establecido. Por favor saluda al usuario brevemente y pregúntale en qué puedes ayudarle hoy con su proyecto." }]
+                                                    parts: [{ text: greetingPrompt }]
                                                 }],
                                                 turnComplete: true
                                             }
                                         });
+                                    } else {
+                                        console.warn('[Voice Mode] session.send not found!');
                                     }
                                 } catch (err) {
                                     console.error('[Voice Mode] Failed to trigger greeting:', err);
