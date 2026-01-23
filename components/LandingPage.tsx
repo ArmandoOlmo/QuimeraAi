@@ -37,25 +37,25 @@ import { usePublicProducts } from '../hooks/usePublicProducts';
 // Importación centralizada de componentes de ecommerce
 // Estos componentes funcionan tanto en Landing Page como en Ecommerce
 import {
-    ProductSearchPage,
-    ProductDetailPage,
-    FeaturedProducts,
-    CategoryGrid,
-    ProductHero,
-    SaleCountdown,
-    TrustBadges,
-    RecentlyViewed,
-    ProductReviews,
-    CollectionBanner,
-    ProductBundle,
-    AnnouncementBar,
-    CartDrawer,
-    CheckoutPageEnhanced,
+  ProductSearchPage,
+  ProductDetailPage,
+  FeaturedProducts,
+  CategoryGrid,
+  ProductHero,
+  SaleCountdown,
+  TrustBadges,
+  RecentlyViewed,
+  ProductReviews,
+  CollectionBanner,
+  ProductBundle,
+  AnnouncementBar,
+  CartDrawer,
+  CheckoutPageEnhanced,
 } from './ecommerce';
 import { StorefrontCartProvider, useSafeStorefrontCart } from './ecommerce/context';
 
 // Store view types for hash routing
-type StoreView = 
+type StoreView =
   | { type: 'none' }
   | { type: 'store' }
   | { type: 'category'; slug: string }
@@ -63,84 +63,103 @@ type StoreView =
   | { type: 'checkout' };
 
 const fontStacks: Record<FontFamily, string> = {
-    roboto: "'Roboto', sans-serif",
-    'open-sans': "'Open Sans', sans-serif",
-    lato: "'Lato', sans-serif",
-    'slabo-27px': "'Slabo 27px', serif",
-    oswald: "'Oswald', sans-serif",
-    'source-sans-pro': "'Source Sans Pro', sans-serif",
-    montserrat: "'Montserrat', sans-serif",
-    raleway: "'Raleway', sans-serif",
-    'pt-sans': "'PT Sans', sans-serif",
-    merriweather: "'Merriweather', serif",
-    lora: "'Lora', serif",
-    ubuntu: "'Ubuntu', sans-serif",
-    'playfair-display': "'Playfair Display', serif",
-    'crimson-text': "'Crimson Text', serif",
-    poppins: "'Poppins', sans-serif",
-    arvo: "'Arvo', serif",
-    mulish: "'Mulish', sans-serif",
-    'noto-sans': "'Noto Sans', sans-serif",
-    'noto-serif': "'Noto Serif', serif",
-    inconsolata: "'Inconsolata', monospace",
-    'indie-flower': "'Indie Flower', cursive",
-    cabin: "'Cabin', sans-serif",
-    'fira-sans': "'Fira Sans', sans-serif",
-    pacifico: "'Pacifico', cursive",
-    'josefin-sans': "'Josefin Sans', sans-serif",
-    anton: "'Anton', sans-serif",
-    'yanone-kaffeesatz': "'Yanone Kaffeesatz', sans-serif",
-    arimo: "'Arimo', sans-serif",
-    lobster: "'Lobster', cursive",
-    'bree-serif': "'Bree Serif', serif",
-    vollkorn: "'Vollkorn', serif",
-    abel: "'Abel', sans-serif",
-    'archivo-narrow': "'Archivo Narrow', sans-serif",
-    'francois-one': "'Francois One', sans-serif",
-    signika: "'Signika', sans-serif",
-    oxygen: "'Oxygen', sans-serif",
-    quicksand: "'Quicksand', sans-serif",
-    'pt-serif': "'PT Serif', serif",
-    bitter: "'Bitter', serif",
-    'exo-2': "'Exo 2', sans-serif",
-    'varela-round': "'Varela Round', sans-serif",
-    dosis: "'Dosis', sans-serif",
-    'noticia-text': "'Noticia Text', serif",
-    'titillium-web': "'Titillium Web', sans-serif",
-    nobile: "'Nobile', sans-serif",
-    cardo: "'Cardo', serif",
-    asap: "'Asap', sans-serif",
-    questrial: "'Questrial', sans-serif",
-    'dancing-script': "'Dancing Script', cursive",
-    'amatic-sc': "'Amatic SC', cursive",
+  roboto: "'Roboto', sans-serif",
+  'open-sans': "'Open Sans', sans-serif",
+  lato: "'Lato', sans-serif",
+  'slabo-27px': "'Slabo 27px', serif",
+  oswald: "'Oswald', sans-serif",
+  'source-sans-pro': "'Source Sans Pro', sans-serif",
+  montserrat: "'Montserrat', sans-serif",
+  raleway: "'Raleway', sans-serif",
+  'pt-sans': "'PT Sans', sans-serif",
+  merriweather: "'Merriweather', serif",
+  lora: "'Lora', serif",
+  ubuntu: "'Ubuntu', sans-serif",
+  'playfair-display': "'Playfair Display', serif",
+  'crimson-text': "'Crimson Text', serif",
+  poppins: "'Poppins', sans-serif",
+  arvo: "'Arvo', serif",
+  mulish: "'Mulish', sans-serif",
+  'noto-sans': "'Noto Sans', sans-serif",
+  'noto-serif': "'Noto Serif', serif",
+  inconsolata: "'Inconsolata', monospace",
+  'indie-flower': "'Indie Flower', cursive",
+  cabin: "'Cabin', sans-serif",
+  'fira-sans': "'Fira Sans', sans-serif",
+  pacifico: "'Pacifico', cursive",
+  'josefin-sans': "'Josefin Sans', sans-serif",
+  anton: "'Anton', sans-serif",
+  'yanone-kaffeesatz': "'Yanone Kaffeesatz', sans-serif",
+  arimo: "'Arimo', sans-serif",
+  lobster: "'Lobster', cursive",
+  'bree-serif': "'Bree Serif', serif",
+  vollkorn: "'Vollkorn', serif",
+  abel: "'Abel', sans-serif",
+  'archivo-narrow': "'Archivo Narrow', sans-serif",
+  'francois-one': "'Francois One', sans-serif",
+  signika: "'Signika', sans-serif",
+  oxygen: "'Oxygen', sans-serif",
+  quicksand: "'Quicksand', sans-serif",
+  'pt-serif': "'PT Serif', serif",
+  bitter: "'Bitter', serif",
+  'exo-2': "'Exo 2', sans-serif",
+  'varela-round': "'Varela Round', sans-serif",
+  dosis: "'Dosis', sans-serif",
+  'noticia-text': "'Noticia Text', serif",
+  'titillium-web': "'Titillium Web', sans-serif",
+  nobile: "'Nobile', sans-serif",
+  cardo: "'Cardo', serif",
+  asap: "'Asap', sans-serif",
+  questrial: "'Questrial', sans-serif",
+  'dancing-script': "'Dancing Script', cursive",
+  'amatic-sc': "'Amatic SC', cursive",
 };
+
+// Import useSafeEditor
+import { useSafeEditor } from '../contexts/EditorContext';
+
+// ... (rest of imports)
 
 // Inner component that uses the cart context
 const LandingPageContent: React.FC = () => {
   const authContext = useSafeAuth();
   const user = authContext?.user ?? null;
   const { activeSection, onSectionSelect } = useUI();
-  const { data, theme, componentOrder, sectionVisibility, activeProjectId, pages, activePage } = useProject();
+
+  // Context resolution: Prefer EditorContext data for real-time updates when in editor
+  const editorContext = useSafeEditor();
+  const projectContext = useProject();
+
+  const isEditorMode = editorContext?.view === 'editor' && !!editorContext?.data;
+
+  const data = (isEditorMode ? editorContext!.data : projectContext.data) || projectContext.data;
+  const theme = (isEditorMode ? editorContext!.theme : projectContext.theme) || projectContext.theme;
+  const componentOrder = (isEditorMode ? editorContext!.componentOrder : projectContext.componentOrder) || projectContext.componentOrder;
+  const sectionVisibility = (isEditorMode ? editorContext!.sectionVisibility : projectContext.sectionVisibility) || projectContext.sectionVisibility;
+  const { activeProjectId, pages, activePage } = projectContext;
+
   const { cmsPosts, isLoadingCMS, menus } = useCMS();
   const { componentStatus, customComponents, componentStyles } = useAdmin();
   const [activePost, setActivePost] = useState<CMSPost | null>(null);
   const [isRouting, setIsRouting] = useState(false);
-  
+
   // Store view state for ecommerce hash routing
   const [storeView, setStoreView] = useState<StoreView>({ type: 'none' });
 
   // Load products from public store (storeId = projectId)
   const { products: storefrontProducts, isLoading: isLoadingProducts } = usePublicProducts(activeProjectId);
-  
+
   // Cart context - available when wrapped in StorefrontCartProvider
   // Uses safe version that returns defaults when not in provider
   const cart = useSafeStorefrontCart();
 
   // Multi-page architecture: Use active page's sections if available
   const effectiveComponentOrder = useMemo(() => {
+    // If not in editor mode (public view), use activePage sections
     if (activePage?.sections?.length) {
       return activePage.sections;
     }
+    // Fallback to componentOrder (either from editor or project context)
     return componentOrder;
   }, [activePage, componentOrder]);
 
@@ -162,11 +181,11 @@ const LandingPageContent: React.FC = () => {
     const headerFont = fontStacks[theme.fontFamilyHeader];
     const bodyFont = fontStacks[theme.fontFamilyBody];
     const buttonFont = fontStacks[theme.fontFamilyButton];
-    
+
     root.style.setProperty('--font-header', headerFont);
     root.style.setProperty('--font-body', bodyFont);
     root.style.setProperty('--font-button', buttonFont);
-    
+
     // All Caps variables
     root.style.setProperty('--headings-transform', theme.headingsAllCaps ? 'uppercase' : 'none');
     root.style.setProperty('--headings-spacing', theme.headingsAllCaps ? '0.05em' : 'normal');
@@ -179,290 +198,290 @@ const LandingPageContent: React.FC = () => {
   // Handle routing for Articles, Store and Sections
   // Supports both real paths (/tienda, /blog/slug) and anchor scrolling (/#features)
   useEffect(() => {
-      const handleNavigation = () => {
-          const path = window.location.pathname;
-          const hash = window.location.hash;
-          const decodedHash = decodeURIComponent(hash);
+    const handleNavigation = () => {
+      const path = window.location.pathname;
+      const hash = window.location.hash;
+      const decodedHash = decodeURIComponent(hash);
 
-          // Reset all views first
-          setActivePost(null);
-          setStoreView({ type: 'none' });
+      // Reset all views first
+      setActivePost(null);
+      setStoreView({ type: 'none' });
+      setIsRouting(false);
+
+      // ========================================
+      // REAL PATH ROUTING (Shopify/Wix style)
+      // ========================================
+
+      // Blog article routing: /blog/slug
+      if (path.startsWith('/blog/') && path !== '/blog/') {
+        setIsRouting(true);
+        const slug = path.replace('/blog/', '');
+        const post = cmsPosts.find(p => p.slug === slug);
+
+        if (post) {
+          setActivePost(post);
+          window.scrollTo(0, 0);
           setIsRouting(false);
+        } else {
+          if (!isLoadingCMS && cmsPosts.length > 0) {
+            console.warn(`Article with slug "${slug}" not found.`);
+            setIsRouting(false);
+          }
+        }
+        return;
+      }
 
-          // ========================================
-          // REAL PATH ROUTING (Shopify/Wix style)
-          // ========================================
-          
-          // Blog article routing: /blog/slug
-          if (path.startsWith('/blog/') && path !== '/blog/') {
-              setIsRouting(true);
-              const slug = path.replace('/blog/', '');
-              const post = cmsPosts.find(p => p.slug === slug);
-              
-              if (post) {
-                  setActivePost(post);
-                  window.scrollTo(0, 0);
-                  setIsRouting(false);
-              } else {
-                  if (!isLoadingCMS && cmsPosts.length > 0) {
-                      console.warn(`Article with slug "${slug}" not found.`);
-                      setIsRouting(false);
-                  }
-              }
-              return;
-          }
-          
-          // Store routing: /tienda
-          if (path === '/tienda' || path === '/tienda/') {
-              setStoreView({ type: 'store' });
-              window.scrollTo(0, 0);
-              return;
-          }
-          
-          // Store category routing: /tienda/categoria/slug
-          if (path.startsWith('/tienda/categoria/')) {
-              const slug = path.replace('/tienda/categoria/', '').replace(/\/$/, '');
-              setStoreView({ type: 'category', slug });
-              window.scrollTo(0, 0);
-              return;
-          }
-          
-          // Store product routing: /tienda/producto/slug
-          if (path.startsWith('/tienda/producto/')) {
-              const slug = path.replace('/tienda/producto/', '').replace(/\/$/, '');
-              setStoreView({ type: 'product', slug });
-              window.scrollTo(0, 0);
-              return;
-          }
-          
-          // Checkout routing: /checkout
-          if (path === '/checkout' || path === '/checkout/') {
-              setStoreView({ type: 'checkout' });
-              window.scrollTo(0, 0);
-              return;
-          }
+      // Store routing: /tienda
+      if (path === '/tienda' || path === '/tienda/') {
+        setStoreView({ type: 'store' });
+        window.scrollTo(0, 0);
+        return;
+      }
 
-          // ========================================
-          // LEGACY HASH ROUTING (backward compatibility)
-          // ========================================
-          
-          // Article routing: #article:slug (legacy)
-          if (decodedHash.startsWith('#article:')) {
-              setIsRouting(true);
-              const slug = decodedHash.replace('#article:', '').trim();
-              const post = cmsPosts.find(p => p.slug === slug);
-              
-              if (post) {
-                  setActivePost(post);
-                  window.scrollTo(0, 0);
-                  setIsRouting(false);
-              } else {
-                  if (!isLoadingCMS && cmsPosts.length > 0) {
-                      console.warn(`Article with slug "${slug}" not found.`);
-                      setIsRouting(false);
-                  }
-              }
-              return;
-          }
-          
-          // Store routing: #store (legacy)
-          if (decodedHash === '#store') {
-              setStoreView({ type: 'store' });
-              window.scrollTo(0, 0);
-              return;
-          }
-          
-          if (decodedHash.startsWith('#store/category/')) {
-              const slug = decodedHash.replace('#store/category/', '');
-              setStoreView({ type: 'category', slug });
-              window.scrollTo(0, 0);
-              return;
-          }
-          
-          if (decodedHash.startsWith('#store/product/')) {
-              const slug = decodedHash.replace('#store/product/', '');
-              setStoreView({ type: 'product', slug });
-              window.scrollTo(0, 0);
-              return;
-          }
-          
-          if (decodedHash === '#checkout') {
-              setStoreView({ type: 'checkout' });
-              window.scrollTo(0, 0);
-              return;
-          }
-          
-          // ========================================
-          // ANCHOR SCROLL (/#section format)
-          // ========================================
-          if (hash.length > 1) {
-              setTimeout(() => {
-                  const id = hash.substring(1);
-                  const element = document.getElementById(id);
-                  if (element) {
-                      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                  }
-              }, 100);
-          }
-      };
+      // Store category routing: /tienda/categoria/slug
+      if (path.startsWith('/tienda/categoria/')) {
+        const slug = path.replace('/tienda/categoria/', '').replace(/\/$/, '');
+        setStoreView({ type: 'category', slug });
+        window.scrollTo(0, 0);
+        return;
+      }
 
-      // Check initial path/hash
-      handleNavigation();
+      // Store product routing: /tienda/producto/slug
+      if (path.startsWith('/tienda/producto/')) {
+        const slug = path.replace('/tienda/producto/', '').replace(/\/$/, '');
+        setStoreView({ type: 'product', slug });
+        window.scrollTo(0, 0);
+        return;
+      }
 
-      // Listen for changes
-      window.addEventListener('hashchange', handleNavigation);
-      window.addEventListener('popstate', handleNavigation);
-      return () => {
-          window.removeEventListener('hashchange', handleNavigation);
-          window.removeEventListener('popstate', handleNavigation);
-      };
+      // Checkout routing: /checkout
+      if (path === '/checkout' || path === '/checkout/') {
+        setStoreView({ type: 'checkout' });
+        window.scrollTo(0, 0);
+        return;
+      }
+
+      // ========================================
+      // LEGACY HASH ROUTING (backward compatibility)
+      // ========================================
+
+      // Article routing: #article:slug (legacy)
+      if (decodedHash.startsWith('#article:')) {
+        setIsRouting(true);
+        const slug = decodedHash.replace('#article:', '').trim();
+        const post = cmsPosts.find(p => p.slug === slug);
+
+        if (post) {
+          setActivePost(post);
+          window.scrollTo(0, 0);
+          setIsRouting(false);
+        } else {
+          if (!isLoadingCMS && cmsPosts.length > 0) {
+            console.warn(`Article with slug "${slug}" not found.`);
+            setIsRouting(false);
+          }
+        }
+        return;
+      }
+
+      // Store routing: #store (legacy)
+      if (decodedHash === '#store') {
+        setStoreView({ type: 'store' });
+        window.scrollTo(0, 0);
+        return;
+      }
+
+      if (decodedHash.startsWith('#store/category/')) {
+        const slug = decodedHash.replace('#store/category/', '');
+        setStoreView({ type: 'category', slug });
+        window.scrollTo(0, 0);
+        return;
+      }
+
+      if (decodedHash.startsWith('#store/product/')) {
+        const slug = decodedHash.replace('#store/product/', '');
+        setStoreView({ type: 'product', slug });
+        window.scrollTo(0, 0);
+        return;
+      }
+
+      if (decodedHash === '#checkout') {
+        setStoreView({ type: 'checkout' });
+        window.scrollTo(0, 0);
+        return;
+      }
+
+      // ========================================
+      // ANCHOR SCROLL (/#section format)
+      // ========================================
+      if (hash.length > 1) {
+        setTimeout(() => {
+          const id = hash.substring(1);
+          const element = document.getElementById(id);
+          if (element) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        }, 100);
+      }
+    };
+
+    // Check initial path/hash
+    handleNavigation();
+
+    // Listen for changes
+    window.addEventListener('hashchange', handleNavigation);
+    window.addEventListener('popstate', handleNavigation);
+    return () => {
+      window.removeEventListener('hashchange', handleNavigation);
+      window.removeEventListener('popstate', handleNavigation);
+    };
   }, [cmsPosts, isLoadingCMS]);
 
   const handleBackToHome = () => {
-      window.history.pushState({}, '', '/');
-      setActivePost(null);
-      setStoreView({ type: 'none' });
-      window.scrollTo(0, 0);
+    window.history.pushState({}, '', '/');
+    setActivePost(null);
+    setStoreView({ type: 'none' });
+    window.scrollTo(0, 0);
   };
 
   // Store navigation handlers - use real paths
   const handleNavigateToStore = useCallback(() => {
-      window.history.pushState({}, '', '/tienda');
-      setStoreView({ type: 'store' });
-      window.scrollTo(0, 0);
+    window.history.pushState({}, '', '/tienda');
+    setStoreView({ type: 'store' });
+    window.scrollTo(0, 0);
   }, []);
 
   const handleNavigateToCategory = useCallback((categorySlug: string) => {
-      window.history.pushState({}, '', `/tienda/categoria/${categorySlug}`);
-      setStoreView({ type: 'category', slug: categorySlug });
-      window.scrollTo(0, 0);
+    window.history.pushState({}, '', `/tienda/categoria/${categorySlug}`);
+    setStoreView({ type: 'category', slug: categorySlug });
+    window.scrollTo(0, 0);
   }, []);
 
   const handleNavigateToProduct = useCallback((productSlug: string) => {
-      window.history.pushState({}, '', `/tienda/producto/${productSlug}`);
-      setStoreView({ type: 'product', slug: productSlug });
-      window.scrollTo(0, 0);
+    window.history.pushState({}, '', `/tienda/producto/${productSlug}`);
+    setStoreView({ type: 'product', slug: productSlug });
+    window.scrollTo(0, 0);
   }, []);
 
   const handleNavigateToCheckout = useCallback(() => {
-      window.history.pushState({}, '', '/checkout');
-      setStoreView({ type: 'checkout' });
-      window.scrollTo(0, 0);
+    window.history.pushState({}, '', '/checkout');
+    setStoreView({ type: 'checkout' });
+    window.scrollTo(0, 0);
   }, []);
 
   // Universal navigation handler for Header links
   const handleLinkNavigation = useCallback((href: string) => {
-      // Reset views
-      setActivePost(null);
-      setStoreView({ type: 'none' });
+    // Reset views
+    setActivePost(null);
+    setStoreView({ type: 'none' });
 
-      // Home page
-      if (href === '/' || href === '') {
-          window.scrollTo({ top: 0, behavior: 'smooth' });
-          return;
-      }
+    // Home page
+    if (href === '/' || href === '') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
 
-      // Anchor scroll (/#section or #section)
-      if (href.startsWith('/#') || (href.startsWith('#') && !href.startsWith('#article:') && !href.startsWith('#store'))) {
-          const id = href.replace('/#', '').replace('#', '');
-          setTimeout(() => {
-              const element = document.getElementById(id);
-              if (element) {
-                  element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-              }
-          }, 100);
-          return;
-      }
-
-      // Blog article: /blog/slug
-      if (href.startsWith('/blog/')) {
-          const slug = href.replace('/blog/', '').replace(/\/$/, '');
-          const post = cmsPosts.find(p => p.slug === slug);
-          if (post) {
-              setActivePost(post);
-              window.scrollTo(0, 0);
-          }
-          return;
-      }
-
-      // Store: /tienda
-      if (href === '/tienda' || href === '/tienda/') {
-          setStoreView({ type: 'store' });
-          window.scrollTo(0, 0);
-          return;
-      }
-
-      // Store category: /tienda/categoria/slug
-      if (href.startsWith('/tienda/categoria/')) {
-          const slug = href.replace('/tienda/categoria/', '').replace(/\/$/, '');
-          setStoreView({ type: 'category', slug });
-          window.scrollTo(0, 0);
-          return;
-      }
-
-      // Store product: /tienda/producto/slug
-      if (href.startsWith('/tienda/producto/')) {
-          const slug = href.replace('/tienda/producto/', '').replace(/\/$/, '');
-          setStoreView({ type: 'product', slug });
-          window.scrollTo(0, 0);
-          return;
-      }
-
-      // Checkout
-      if (href === '/checkout' || href === '/checkout/') {
-          setStoreView({ type: 'checkout' });
-          window.scrollTo(0, 0);
-          return;
-      }
-
-      // Legacy hash support
-      if (href.startsWith('#article:')) {
-          const slug = href.replace('#article:', '').trim();
-          const post = cmsPosts.find(p => p.slug === slug);
-          if (post) {
-              setActivePost(post);
-              window.scrollTo(0, 0);
-          }
-          return;
-      }
-
-      if (href === '#store') {
-          setStoreView({ type: 'store' });
-          window.scrollTo(0, 0);
-          return;
-      }
-
-      if (href.startsWith('#store/category/')) {
-          const slug = href.replace('#store/category/', '');
-          setStoreView({ type: 'category', slug });
-          window.scrollTo(0, 0);
-          return;
-      }
-
-      if (href.startsWith('#store/product/')) {
-          const slug = href.replace('#store/product/', '');
-          setStoreView({ type: 'product', slug });
-          window.scrollTo(0, 0);
-          return;
-      }
-
-      // External URLs - open in new tab
-      if (href.startsWith('http://') || href.startsWith('https://')) {
-          window.open(href, '_blank');
-          return;
-      }
-
-      // Fallback: try to scroll to element by ID
-      const id = href.replace(/^\//, '').replace(/\/$/, '');
-      const element = document.getElementById(id);
-      if (element) {
+    // Anchor scroll (/#section or #section)
+    if (href.startsWith('/#') || (href.startsWith('#') && !href.startsWith('#article:') && !href.startsWith('#store'))) {
+      const id = href.replace('/#', '').replace('#', '');
+      setTimeout(() => {
+        const element = document.getElementById(id);
+        if (element) {
           element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 100);
+      return;
+    }
+
+    // Blog article: /blog/slug
+    if (href.startsWith('/blog/')) {
+      const slug = href.replace('/blog/', '').replace(/\/$/, '');
+      const post = cmsPosts.find(p => p.slug === slug);
+      if (post) {
+        setActivePost(post);
+        window.scrollTo(0, 0);
       }
+      return;
+    }
+
+    // Store: /tienda
+    if (href === '/tienda' || href === '/tienda/') {
+      setStoreView({ type: 'store' });
+      window.scrollTo(0, 0);
+      return;
+    }
+
+    // Store category: /tienda/categoria/slug
+    if (href.startsWith('/tienda/categoria/')) {
+      const slug = href.replace('/tienda/categoria/', '').replace(/\/$/, '');
+      setStoreView({ type: 'category', slug });
+      window.scrollTo(0, 0);
+      return;
+    }
+
+    // Store product: /tienda/producto/slug
+    if (href.startsWith('/tienda/producto/')) {
+      const slug = href.replace('/tienda/producto/', '').replace(/\/$/, '');
+      setStoreView({ type: 'product', slug });
+      window.scrollTo(0, 0);
+      return;
+    }
+
+    // Checkout
+    if (href === '/checkout' || href === '/checkout/') {
+      setStoreView({ type: 'checkout' });
+      window.scrollTo(0, 0);
+      return;
+    }
+
+    // Legacy hash support
+    if (href.startsWith('#article:')) {
+      const slug = href.replace('#article:', '').trim();
+      const post = cmsPosts.find(p => p.slug === slug);
+      if (post) {
+        setActivePost(post);
+        window.scrollTo(0, 0);
+      }
+      return;
+    }
+
+    if (href === '#store') {
+      setStoreView({ type: 'store' });
+      window.scrollTo(0, 0);
+      return;
+    }
+
+    if (href.startsWith('#store/category/')) {
+      const slug = href.replace('#store/category/', '');
+      setStoreView({ type: 'category', slug });
+      window.scrollTo(0, 0);
+      return;
+    }
+
+    if (href.startsWith('#store/product/')) {
+      const slug = href.replace('#store/product/', '');
+      setStoreView({ type: 'product', slug });
+      window.scrollTo(0, 0);
+      return;
+    }
+
+    // External URLs - open in new tab
+    if (href.startsWith('http://') || href.startsWith('https://')) {
+      window.open(href, '_blank');
+      return;
+    }
+
+    // Fallback: try to scroll to element by ID
+    const id = href.replace(/^\//, '').replace(/\/$/, '');
+    const element = document.getElementById(id);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
   }, [cmsPosts]);
 
   // Check if we're showing a store view
   const isStoreViewActive = storeView.type !== 'none';
-  
+
   // Helper function to render custom components
   const renderCustomComponent = (customComponentId: string) => {
     const customComp = customComponents.find(c => c.id === customComponentId);
@@ -471,17 +490,17 @@ const LandingPageContent: React.FC = () => {
     // Merge custom component styles with base data and componentStyles
     const baseComponentData = data[customComp.baseComponent];
     const baseStyles = componentStyles[customComp.baseComponent as keyof typeof componentStyles];
-    
+
     // Merge colors with priority: base data < base styles < custom styles
     const mergedColors = {
       ...baseComponentData?.colors,
       ...baseStyles?.colors,
       ...customComp.styles?.colors
     };
-    
+
     // Derive missing colors from palette
     const derivedColors = deriveColorsFromPalette(mergedColors, customComp.baseComponent);
-    
+
     const mergedData = {
       ...baseComponentData,
       ...baseStyles,
@@ -561,22 +580,22 @@ const LandingPageContent: React.FC = () => {
     if (!componentData && styles) return styles;
     // If only data exists (no default styles), return data
     if (!styles) return componentData;
-    
+
     // First merge the colors: defaults, then user/template colors
     const mergedColors = {
       ...styles.colors,         // default colors first
       ...componentData.colors   // user/template color changes override
     };
-    
+
     // Derive any missing colors from the template palette
     const derivedColors = deriveColorsFromPalette(mergedColors, componentKey);
-    
+
     // Merge cornerGradient if it exists in styles (defaults first, then user changes)
     const mergedCornerGradient = (styles as any).cornerGradient ? {
       ...(styles as any).cornerGradient,    // default cornerGradient values
       ...(componentData as any).cornerGradient  // user cornerGradient changes override
     } : (componentData as any).cornerGradient;
-    
+
     return {
       ...styles,           // defaults first
       ...componentData,    // user changes override defaults
@@ -650,9 +669,9 @@ const LandingPageContent: React.FC = () => {
 
     const componentData = ecommerceDataMap[componentKey];
     if (!componentData) return true; // Si no es un componente de ecommerce, mostrar siempre
-    
+
     const visibleIn = componentData.visibleIn || 'both'; // Por defecto 'both'
-    
+
     return visibleIn === 'both' || visibleIn === context;
   }, [
     mergedFeaturedProductsData,
@@ -669,7 +688,7 @@ const LandingPageContent: React.FC = () => {
 
   const componentsMap: Record<PageSection, React.ReactNode> = {
     hero: (
-      mergedHeroData.heroVariant === 'modern' 
+      mergedHeroData.heroVariant === 'modern'
         ? <HeroModern {...mergedHeroData} borderRadius={mergedHeroData.buttonBorderRadius || theme.buttonBorderRadius} onNavigate={handleLinkNavigation} />
         : mergedHeroData.heroVariant === 'gradient'
           ? <HeroGradient {...mergedHeroData} borderRadius={mergedHeroData.buttonBorderRadius || theme.buttonBorderRadius} onNavigate={handleLinkNavigation} />
@@ -708,28 +727,28 @@ const LandingPageContent: React.FC = () => {
     colors: null, // Global colors are managed via theme settings
     // Ecommerce section components
     featuredProducts: mergedFeaturedProductsData ? (
-      <FeaturedProducts 
-        data={mergedFeaturedProductsData} 
+      <FeaturedProducts
+        data={mergedFeaturedProductsData}
         storeId={activeProjectId || undefined}
         onProductClick={handleNavigateToProduct}
       />
     ) : null,
     categoryGrid: mergedCategoryGridData ? (
-      <CategoryGrid 
+      <CategoryGrid
         data={mergedCategoryGridData}
         storeId={activeProjectId || undefined}
         onCategoryClick={handleNavigateToCategory}
       />
     ) : null,
     productHero: mergedProductHeroData ? (
-      <ProductHero 
+      <ProductHero
         data={mergedProductHeroData}
         storeId={activeProjectId || undefined}
         onProductClick={handleNavigateToProduct}
       />
     ) : null,
     saleCountdown: mergedSaleCountdownData ? (
-      <SaleCountdown 
+      <SaleCountdown
         data={mergedSaleCountdownData}
         storeId={activeProjectId || undefined}
         onProductClick={handleNavigateToProduct}
@@ -739,7 +758,7 @@ const LandingPageContent: React.FC = () => {
       <TrustBadges data={mergedTrustBadgesData} />
     ) : null,
     recentlyViewed: mergedRecentlyViewedData ? (
-      <RecentlyViewed 
+      <RecentlyViewed
         data={mergedRecentlyViewedData}
         storeId={activeProjectId || undefined}
         onProductClick={handleNavigateToProduct}
@@ -749,13 +768,13 @@ const LandingPageContent: React.FC = () => {
       <ProductReviews data={mergedProductReviewsData} />
     ) : null,
     collectionBanner: mergedCollectionBannerData ? (
-      <CollectionBanner 
+      <CollectionBanner
         data={mergedCollectionBannerData}
         onCollectionClick={handleNavigateToCategory}
       />
     ) : null,
     productBundle: mergedProductBundleData ? (
-      <ProductBundle 
+      <ProductBundle
         data={mergedProductBundleData}
         storeId={activeProjectId || undefined}
         onProductClick={handleNavigateToProduct}
@@ -767,7 +786,7 @@ const LandingPageContent: React.FC = () => {
     // Store settings is a config section, not a visual component
     storeSettings: null,
   };
-  
+
   // Font variables are now injected directly into :root via useEffect above
   // This ensures Tailwind's font-header, font-body, and font-button classes work correctly
 
@@ -780,13 +799,13 @@ const LandingPageContent: React.FC = () => {
         return menu.items.map(i => ({ text: i.text, href: i.href }));
       }
     }
-    
+
     // 2. Generate from pages if available (multi-page architecture)
     if (pages && pages.length > 0) {
       const navPages = pages
         .filter(p => p.showInNavigation)
         .sort((a, b) => (a.navigationOrder || 0) - (b.navigationOrder || 0));
-      
+
       if (navPages.length > 0) {
         return navPages.map(p => ({
           text: p.title,
@@ -795,23 +814,23 @@ const LandingPageContent: React.FC = () => {
         }));
       }
     }
-    
+
     // 3. Fall back to manual links
     return mergedHeaderData.links;
   }, [mergedHeaderData.menuId, mergedHeaderData.links, menus, pages]);
 
   // Resolve Footer Columns dynamically
   const resolvedFooterData: FooterData = {
-      ...mergedFooterData,
-      linkColumns: mergedFooterData.linkColumns.map(col => {
-          if (col.menuId) {
-              const menu = menus.find(m => m.id === col.menuId);
-              if (menu) {
-                  return { ...col, links: menu.items.map(i => ({ text: i.text, href: i.href })) };
-              }
-          }
-          return col;
-      })
+    ...mergedFooterData,
+    linkColumns: mergedFooterData.linkColumns.map(col => {
+      if (col.menuId) {
+        const menu = menus.find(m => m.id === col.menuId);
+        if (menu) {
+          return { ...col, links: menu.items.map(i => ({ text: i.text, href: i.href })) };
+        }
+      }
+      return col;
+    })
   };
 
   const isArticleHash = typeof window !== 'undefined' && window.location.hash.startsWith('#article:');
@@ -821,19 +840,19 @@ const LandingPageContent: React.FC = () => {
 
   // Use theme pageBackground with smart fallback based on globalColors or hero background
   // Priority: pageBackground > globalColors.background > hero background > default
-  const pageBackgroundColor = theme?.pageBackground 
-    || theme?.globalColors?.background 
-    || data?.hero?.colors?.background 
+  const pageBackgroundColor = theme?.pageBackground
+    || theme?.globalColors?.background
+    || data?.hero?.colors?.background
     || '#0f172a'; // Default to modern dark slate instead of white
 
   return (
-    <div 
-        className={`text-slate-200 overflow-x-hidden transition-colors duration-500`}
-        // Use inline style for background color to handle dynamic values safely
-        // The `bg-[color]` utility doesn't handle undefined values gracefully in runtime CSS generation
-        // Note: Removed font-body class from here - each component applies its own font class
+    <div
+      className={`text-slate-200 overflow-x-hidden transition-colors duration-500`}
+    // Use inline style for background color to handle dynamic values safely
+    // The `bg-[color]` utility doesn't handle undefined values gracefully in runtime CSS generation
+    // Note: Removed font-body class from here - each component applies its own font class
     >
-        <style>{`
+      <style>{`
             :root {
                 --site-base-bg: ${pageBackgroundColor};
                 --site-surface-bg: ${theme?.globalColors?.surface || pageBackgroundColor};
@@ -842,16 +861,16 @@ const LandingPageContent: React.FC = () => {
         `}</style>
 
       {/* Header is always visible - forceSolid when in store view (no hero behind) */}
-      <Header 
-        {...mergedHeaderData} 
-        links={headerLinks} 
+      <Header
+        {...mergedHeaderData}
+        links={headerLinks}
         forceSolid={isStoreViewActive}
         showCart={storefrontProducts.length > 0}
         cartItemCount={cart.itemCount}
         onCartClick={cart.toggleCart}
         onNavigate={handleLinkNavigation}
       />
-      
+
       {/* Cart Drawer - only when store has products */}
       {storefrontProducts.length > 0 && (
         <CartDrawer
@@ -886,310 +905,310 @@ const LandingPageContent: React.FC = () => {
           }}
         />
       )}
-      
+
       <main className="min-h-screen bg-site-base relative">
         {/* 1. Loading State */}
         {showArticleLoading && (
-            <div className="min-h-[60vh] flex flex-col items-center justify-center text-editor-text-secondary">
-                <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4"></div>
-                <p>Loading article...</p>
-            </div>
+          <div className="min-h-[60vh] flex flex-col items-center justify-center text-editor-text-secondary">
+            <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4"></div>
+            <p>Loading article...</p>
+          </div>
         )}
 
         {/* 2. Article View */}
         {!showArticleLoading && activePost && (
-            <BlogPost 
-                post={activePost} 
-                theme={theme} 
-                onBack={handleBackToHome}
-                backgroundColor={pageBackgroundColor}
-                textColor={data.hero?.colors?.text || '#ffffff'}
-                accentColor={data.hero?.colors?.primary || '#4f46e5'}
-            />
+          <BlogPost
+            post={activePost}
+            theme={theme}
+            onBack={handleBackToHome}
+            backgroundColor={pageBackgroundColor}
+            textColor={data.hero?.colors?.text || '#ffffff'}
+            accentColor={data.hero?.colors?.primary || '#4f46e5'}
+          />
         )}
 
         {/* 3. 404 State (Article hash but no post found after loading) */}
         {!showArticleLoading && isArticleHash && !activePost && !isLoadingCMS && (
-             <div className="min-h-[60vh] flex flex-col items-center justify-center text-center px-4">
-                <h2 className="text-3xl font-bold text-site-heading mb-4">Article Not Found</h2>
-                <p className="text-site-body mb-8">The article you are looking for does not exist or has been removed.</p>
-                <button 
-                    onClick={handleBackToHome}
-                    className="bg-primary text-primary-foreground px-6 py-3 rounded-lg font-bold hover:opacity-90 transition-all"
-                >
-                    Back to Home
-                </button>
-            </div>
+          <div className="min-h-[60vh] flex flex-col items-center justify-center text-center px-4">
+            <h2 className="text-3xl font-bold text-site-heading mb-4">Article Not Found</h2>
+            <p className="text-site-body mb-8">The article you are looking for does not exist or has been removed.</p>
+            <button
+              onClick={handleBackToHome}
+              className="bg-primary text-primary-foreground px-6 py-3 rounded-lg font-bold hover:opacity-90 transition-all"
+            >
+              Back to Home
+            </button>
+          </div>
         )}
 
         {/* 4. Store View - All Products */}
         {storeView.type === 'store' && activeProjectId && (
-            <>
-                {/* Ecommerce Section Components (above products) */}
-                {effectiveComponentOrder
-                    .filter(key => {
-                        const ecommerceSections: PageSection[] = ['announcementBar', 'productHero', 'featuredProducts', 'categoryGrid', 'saleCountdown', 'collectionBanner'];
-                        return ecommerceSections.includes(key as PageSection) && 
-                               componentStatus[key as PageSection] && 
-                               effectiveSectionVisibility[key as PageSection] &&
-                               isEcommerceComponentVisibleIn(key as PageSection, 'store');
-                    })
-                    .map(key => (
-                        <div 
-                            id={key} 
-                            key={key} 
-                            className={`w-full cursor-pointer transition-all duration-200 ${activeSection === key ? 'ring-2 ring-primary ring-offset-2 ring-offset-transparent z-10 relative' : 'hover:ring-2 hover:ring-primary/30 hover:ring-offset-2 hover:ring-offset-transparent'}`}
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                onSectionSelect(key as PageSection);
-                            }}
-                        >
-                            {componentsMap[key as PageSection]}
-                        </div>
-                    ))
-                }
+          <>
+            {/* Ecommerce Section Components (above products) */}
+            {effectiveComponentOrder
+              .filter(key => {
+                const ecommerceSections: PageSection[] = ['announcementBar', 'productHero', 'featuredProducts', 'categoryGrid', 'saleCountdown', 'collectionBanner'];
+                return ecommerceSections.includes(key as PageSection) &&
+                  componentStatus[key as PageSection] &&
+                  effectiveSectionVisibility[key as PageSection] &&
+                  isEcommerceComponentVisibleIn(key as PageSection, 'store');
+              })
+              .map(key => (
+                <div
+                  id={key}
+                  key={key}
+                  className={`w-full cursor-pointer transition-all duration-200 ${activeSection === key ? 'ring-2 ring-primary ring-offset-2 ring-offset-transparent z-10 relative' : 'hover:ring-2 hover:ring-primary/30 hover:ring-offset-2 hover:ring-offset-transparent'}`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onSectionSelect(key as PageSection);
+                  }}
+                >
+                  {componentsMap[key as PageSection]}
+                </div>
+              ))
+            }
 
-                {/* Main Product Search */}
-                <ProductSearchPage
-                    storeId={activeProjectId}
-                    onProductClick={handleNavigateToProduct}
-                    primaryColor={theme.globalColors?.primary || '#6366f1'}
-                    embedded={true}
-                    title="Tienda"
-                    showFilterSidebar={data.storeSettings?.showFilterSidebar !== false}
-                    showSearchBar={data.storeSettings?.showSearchBar !== false}
-                    showSortOptions={data.storeSettings?.showSortOptions !== false}
-                    showViewModeToggle={data.storeSettings?.showViewModeToggle !== false}
-                    defaultViewMode={data.storeSettings?.defaultViewMode || 'grid'}
-                    productsPerPage={data.storeSettings?.productsPerPage || 12}
-                    gridColumns={data.storeSettings?.gridColumns || 4}
-                    cardStyle={data.storeSettings?.cardStyle || 'modern'}
-                    borderRadius={data.storeSettings?.borderRadius || 'xl'}
-                    cardGap={data.storeSettings?.cardGap || 'md'}
-                    paddingY={data.storeSettings?.paddingY || 'md'}
-                    paddingX={data.storeSettings?.paddingX || 'md'}
-                    themeColors={{
-                        background: 'transparent',
-                        text: data.storeSettings?.colors?.text || theme.globalColors?.text || '#94a3b8',
-                        heading: data.storeSettings?.colors?.heading || theme.globalColors?.heading || '#ffffff',
-                        cardBackground: data.storeSettings?.colors?.cardBackground || theme.globalColors?.surface || '#1e293b',
-                        cardText: data.storeSettings?.colors?.cardText || theme.globalColors?.text || '#94a3b8',
-                        border: data.storeSettings?.colors?.borderColor || theme.globalColors?.border || '#334155',
-                        priceColor: data.storeSettings?.colors?.priceColor || theme.globalColors?.heading || '#ffffff',
-                        salePriceColor: data.storeSettings?.colors?.salePriceColor || '#ef4444',
-                        mutedText: data.storeSettings?.colors?.text || theme.globalColors?.text || '#64748b',
-                    }}
-                />
+            {/* Main Product Search */}
+            <ProductSearchPage
+              storeId={activeProjectId}
+              onProductClick={handleNavigateToProduct}
+              primaryColor={theme.globalColors?.primary || '#6366f1'}
+              embedded={true}
+              title="Tienda"
+              showFilterSidebar={data.storeSettings?.showFilterSidebar !== false}
+              showSearchBar={data.storeSettings?.showSearchBar !== false}
+              showSortOptions={data.storeSettings?.showSortOptions !== false}
+              showViewModeToggle={data.storeSettings?.showViewModeToggle !== false}
+              defaultViewMode={data.storeSettings?.defaultViewMode || 'grid'}
+              productsPerPage={data.storeSettings?.productsPerPage || 12}
+              gridColumns={data.storeSettings?.gridColumns || 4}
+              cardStyle={data.storeSettings?.cardStyle || 'modern'}
+              borderRadius={data.storeSettings?.borderRadius || 'xl'}
+              cardGap={data.storeSettings?.cardGap || 'md'}
+              paddingY={data.storeSettings?.paddingY || 'md'}
+              paddingX={data.storeSettings?.paddingX || 'md'}
+              themeColors={{
+                background: 'transparent',
+                text: data.storeSettings?.colors?.text || theme.globalColors?.text || '#94a3b8',
+                heading: data.storeSettings?.colors?.heading || theme.globalColors?.heading || '#ffffff',
+                cardBackground: data.storeSettings?.colors?.cardBackground || theme.globalColors?.surface || '#1e293b',
+                cardText: data.storeSettings?.colors?.cardText || theme.globalColors?.text || '#94a3b8',
+                border: data.storeSettings?.colors?.borderColor || theme.globalColors?.border || '#334155',
+                priceColor: data.storeSettings?.colors?.priceColor || theme.globalColors?.heading || '#ffffff',
+                salePriceColor: data.storeSettings?.colors?.salePriceColor || '#ef4444',
+                mutedText: data.storeSettings?.colors?.text || theme.globalColors?.text || '#64748b',
+              }}
+            />
 
-                {/* Ecommerce Section Components (below products) */}
-                {effectiveComponentOrder
-                    .filter(key => {
-                        const ecommerceSectionsBelow: PageSection[] = ['trustBadges', 'recentlyViewed', 'productReviews', 'productBundle'];
-                        return ecommerceSectionsBelow.includes(key as PageSection) && 
-                               componentStatus[key as PageSection] && 
-                               effectiveSectionVisibility[key as PageSection] &&
-                               isEcommerceComponentVisibleIn(key as PageSection, 'store');
-                    })
-                    .map(key => (
-                        <div 
-                            id={key} 
-                            key={key} 
-                            className={`w-full cursor-pointer transition-all duration-200 ${activeSection === key ? 'ring-2 ring-primary ring-offset-2 ring-offset-transparent z-10 relative' : 'hover:ring-2 hover:ring-primary/30 hover:ring-offset-2 hover:ring-offset-transparent'}`}
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                onSectionSelect(key as PageSection);
-                            }}
-                        >
-                            {componentsMap[key as PageSection]}
-                        </div>
-                    ))
-                }
-            </>
+            {/* Ecommerce Section Components (below products) */}
+            {effectiveComponentOrder
+              .filter(key => {
+                const ecommerceSectionsBelow: PageSection[] = ['trustBadges', 'recentlyViewed', 'productReviews', 'productBundle'];
+                return ecommerceSectionsBelow.includes(key as PageSection) &&
+                  componentStatus[key as PageSection] &&
+                  effectiveSectionVisibility[key as PageSection] &&
+                  isEcommerceComponentVisibleIn(key as PageSection, 'store');
+              })
+              .map(key => (
+                <div
+                  id={key}
+                  key={key}
+                  className={`w-full cursor-pointer transition-all duration-200 ${activeSection === key ? 'ring-2 ring-primary ring-offset-2 ring-offset-transparent z-10 relative' : 'hover:ring-2 hover:ring-primary/30 hover:ring-offset-2 hover:ring-offset-transparent'}`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onSectionSelect(key as PageSection);
+                  }}
+                >
+                  {componentsMap[key as PageSection]}
+                </div>
+              ))
+            }
+          </>
         )}
 
         {/* 5. Store View - Category */}
         {storeView.type === 'category' && activeProjectId && (
-            <>
-                {/* Announcement Bar for category view */}
-                {componentStatus['announcementBar' as PageSection] && effectiveSectionVisibility['announcementBar' as PageSection] && isEcommerceComponentVisibleIn('announcementBar', 'store') && (
-                    <div 
-                        id="announcementBar" 
-                        className={`w-full cursor-pointer transition-all duration-200 ${activeSection === 'announcementBar' ? 'ring-2 ring-primary ring-offset-2 ring-offset-transparent z-10 relative' : 'hover:ring-2 hover:ring-primary/30 hover:ring-offset-2 hover:ring-offset-transparent'}`}
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            onSectionSelect('announcementBar' as PageSection);
-                        }}
-                    >
-                        {componentsMap['announcementBar' as PageSection]}
-                    </div>
-                )}
+          <>
+            {/* Announcement Bar for category view */}
+            {componentStatus['announcementBar' as PageSection] && effectiveSectionVisibility['announcementBar' as PageSection] && isEcommerceComponentVisibleIn('announcementBar', 'store') && (
+              <div
+                id="announcementBar"
+                className={`w-full cursor-pointer transition-all duration-200 ${activeSection === 'announcementBar' ? 'ring-2 ring-primary ring-offset-2 ring-offset-transparent z-10 relative' : 'hover:ring-2 hover:ring-primary/30 hover:ring-offset-2 hover:ring-offset-transparent'}`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onSectionSelect('announcementBar' as PageSection);
+                }}
+              >
+                {componentsMap['announcementBar' as PageSection]}
+              </div>
+            )}
 
-                <ProductSearchPage
-                    storeId={activeProjectId}
-                    onProductClick={handleNavigateToProduct}
-                    initialCategory={storeView.slug}
-                    primaryColor={theme.globalColors?.primary || '#6366f1'}
-                    embedded={true}
-                    showFilterSidebar={data.storeSettings?.showFilterSidebar !== false}
-                    showSearchBar={data.storeSettings?.showSearchBar !== false}
-                    showSortOptions={data.storeSettings?.showSortOptions !== false}
-                    showViewModeToggle={data.storeSettings?.showViewModeToggle !== false}
-                    defaultViewMode={data.storeSettings?.defaultViewMode || 'grid'}
-                    productsPerPage={data.storeSettings?.productsPerPage || 12}
-                    gridColumns={data.storeSettings?.gridColumns || 4}
-                    cardStyle={data.storeSettings?.cardStyle || 'modern'}
-                    borderRadius={data.storeSettings?.borderRadius || 'xl'}
-                    cardGap={data.storeSettings?.cardGap || 'md'}
-                    paddingY={data.storeSettings?.paddingY || 'md'}
-                    paddingX={data.storeSettings?.paddingX || 'md'}
-                    themeColors={{
-                        background: 'transparent',
-                        text: data.storeSettings?.colors?.text || theme.globalColors?.text || '#94a3b8',
-                        heading: data.storeSettings?.colors?.heading || theme.globalColors?.heading || '#ffffff',
-                        cardBackground: data.storeSettings?.colors?.cardBackground || theme.globalColors?.surface || '#1e293b',
-                        cardText: data.storeSettings?.colors?.cardText || theme.globalColors?.text || '#94a3b8',
-                        border: data.storeSettings?.colors?.borderColor || theme.globalColors?.border || '#334155',
-                        priceColor: data.storeSettings?.colors?.priceColor || theme.globalColors?.heading || '#ffffff',
-                        salePriceColor: data.storeSettings?.colors?.salePriceColor || '#ef4444',
-                        mutedText: data.storeSettings?.colors?.text || theme.globalColors?.text || '#64748b',
-                    }}
-                />
+            <ProductSearchPage
+              storeId={activeProjectId}
+              onProductClick={handleNavigateToProduct}
+              initialCategory={storeView.slug}
+              primaryColor={theme.globalColors?.primary || '#6366f1'}
+              embedded={true}
+              showFilterSidebar={data.storeSettings?.showFilterSidebar !== false}
+              showSearchBar={data.storeSettings?.showSearchBar !== false}
+              showSortOptions={data.storeSettings?.showSortOptions !== false}
+              showViewModeToggle={data.storeSettings?.showViewModeToggle !== false}
+              defaultViewMode={data.storeSettings?.defaultViewMode || 'grid'}
+              productsPerPage={data.storeSettings?.productsPerPage || 12}
+              gridColumns={data.storeSettings?.gridColumns || 4}
+              cardStyle={data.storeSettings?.cardStyle || 'modern'}
+              borderRadius={data.storeSettings?.borderRadius || 'xl'}
+              cardGap={data.storeSettings?.cardGap || 'md'}
+              paddingY={data.storeSettings?.paddingY || 'md'}
+              paddingX={data.storeSettings?.paddingX || 'md'}
+              themeColors={{
+                background: 'transparent',
+                text: data.storeSettings?.colors?.text || theme.globalColors?.text || '#94a3b8',
+                heading: data.storeSettings?.colors?.heading || theme.globalColors?.heading || '#ffffff',
+                cardBackground: data.storeSettings?.colors?.cardBackground || theme.globalColors?.surface || '#1e293b',
+                cardText: data.storeSettings?.colors?.cardText || theme.globalColors?.text || '#94a3b8',
+                border: data.storeSettings?.colors?.borderColor || theme.globalColors?.border || '#334155',
+                priceColor: data.storeSettings?.colors?.priceColor || theme.globalColors?.heading || '#ffffff',
+                salePriceColor: data.storeSettings?.colors?.salePriceColor || '#ef4444',
+                mutedText: data.storeSettings?.colors?.text || theme.globalColors?.text || '#64748b',
+              }}
+            />
 
-                {/* Trust badges and recently viewed for category view */}
-                {effectiveComponentOrder
-                    .filter(key => {
-                        const ecommerceSectionsBelow: PageSection[] = ['trustBadges', 'recentlyViewed'];
-                        return ecommerceSectionsBelow.includes(key as PageSection) && 
-                               componentStatus[key as PageSection] && 
-                               effectiveSectionVisibility[key as PageSection] &&
-                               isEcommerceComponentVisibleIn(key as PageSection, 'store');
-                    })
-                    .map(key => (
-                        <div 
-                            id={key} 
-                            key={key} 
-                            className={`w-full cursor-pointer transition-all duration-200 ${activeSection === key ? 'ring-2 ring-primary ring-offset-2 ring-offset-transparent z-10 relative' : 'hover:ring-2 hover:ring-primary/30 hover:ring-offset-2 hover:ring-offset-transparent'}`}
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                onSectionSelect(key as PageSection);
-                            }}
-                        >
-                            {componentsMap[key as PageSection]}
-                        </div>
-                    ))
-                }
-            </>
+            {/* Trust badges and recently viewed for category view */}
+            {effectiveComponentOrder
+              .filter(key => {
+                const ecommerceSectionsBelow: PageSection[] = ['trustBadges', 'recentlyViewed'];
+                return ecommerceSectionsBelow.includes(key as PageSection) &&
+                  componentStatus[key as PageSection] &&
+                  effectiveSectionVisibility[key as PageSection] &&
+                  isEcommerceComponentVisibleIn(key as PageSection, 'store');
+              })
+              .map(key => (
+                <div
+                  id={key}
+                  key={key}
+                  className={`w-full cursor-pointer transition-all duration-200 ${activeSection === key ? 'ring-2 ring-primary ring-offset-2 ring-offset-transparent z-10 relative' : 'hover:ring-2 hover:ring-primary/30 hover:ring-offset-2 hover:ring-offset-transparent'}`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onSectionSelect(key as PageSection);
+                  }}
+                >
+                  {componentsMap[key as PageSection]}
+                </div>
+              ))
+            }
+          </>
         )}
 
         {/* 6. Store View - Product Detail */}
         {storeView.type === 'product' && activeProjectId && (
-            <>
-                <ProductDetailPage
-                    storeId={activeProjectId}
-                    productSlug={storeView.slug}
-                    onNavigateToStore={handleNavigateToStore}
-                    onNavigateToCategory={handleNavigateToCategory}
-                    onNavigateToProduct={handleNavigateToProduct}
-                    onAddToCart={(product, quantity, variant) => cart.addItem(product, quantity, variant)}
-                    colors={data?.productDetailPage?.colors}
-                />
+          <>
+            <ProductDetailPage
+              storeId={activeProjectId}
+              productSlug={storeView.slug}
+              onNavigateToStore={handleNavigateToStore}
+              onNavigateToCategory={handleNavigateToCategory}
+              onNavigateToProduct={handleNavigateToProduct}
+              onAddToCart={(product, quantity, variant) => cart.addItem(product, quantity, variant)}
+              colors={data?.productDetailPage?.colors}
+            />
 
-                {/* Ecommerce components for product detail view */}
-                {effectiveComponentOrder
-                    .filter(key => {
-                        const productDetailSections: PageSection[] = ['recentlyViewed', 'productReviews', 'productBundle', 'trustBadges'];
-                        return productDetailSections.includes(key as PageSection) && 
-                               componentStatus[key as PageSection] && 
-                               effectiveSectionVisibility[key as PageSection] &&
-                               isEcommerceComponentVisibleIn(key as PageSection, 'store');
-                    })
-                    .map(key => (
-                        <div 
-                            id={key} 
-                            key={key} 
-                            className={`w-full cursor-pointer transition-all duration-200 ${activeSection === key ? 'ring-2 ring-primary ring-offset-2 ring-offset-transparent z-10 relative' : 'hover:ring-2 hover:ring-primary/30 hover:ring-offset-2 hover:ring-offset-transparent'}`}
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                onSectionSelect(key as PageSection);
-                            }}
-                        >
-                            {componentsMap[key as PageSection]}
-                        </div>
-                    ))
-                }
-            </>
+            {/* Ecommerce components for product detail view */}
+            {effectiveComponentOrder
+              .filter(key => {
+                const productDetailSections: PageSection[] = ['recentlyViewed', 'productReviews', 'productBundle', 'trustBadges'];
+                return productDetailSections.includes(key as PageSection) &&
+                  componentStatus[key as PageSection] &&
+                  effectiveSectionVisibility[key as PageSection] &&
+                  isEcommerceComponentVisibleIn(key as PageSection, 'store');
+              })
+              .map(key => (
+                <div
+                  id={key}
+                  key={key}
+                  className={`w-full cursor-pointer transition-all duration-200 ${activeSection === key ? 'ring-2 ring-primary ring-offset-2 ring-offset-transparent z-10 relative' : 'hover:ring-2 hover:ring-primary/30 hover:ring-offset-2 hover:ring-offset-transparent'}`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onSectionSelect(key as PageSection);
+                  }}
+                >
+                  {componentsMap[key as PageSection]}
+                </div>
+              ))
+            }
+          </>
         )}
 
         {/* 6.5. Store View - Checkout */}
         {storeView.type === 'checkout' && activeProjectId && (
-            <CheckoutPageEnhanced
-                storeId={activeProjectId}
-                onSuccess={(orderId) => {
-                    // Navigate to order confirmation or back to store
-                    cart.clearCart();
-                    handleNavigateToStore();
-                }}
-                onBack={handleNavigateToStore}
-                onNavigateToStore={handleNavigateToStore}
-            />
+          <CheckoutPageEnhanced
+            storeId={activeProjectId}
+            onSuccess={(orderId) => {
+              // Navigate to order confirmation or back to store
+              cart.clearCart();
+              handleNavigateToStore();
+            }}
+            onBack={handleNavigateToStore}
+            onNavigateToStore={handleNavigateToStore}
+          />
         )}
 
         {/* 7. Home View (Sections) - Only show when not in article or store view */}
         {!isArticleHash && !activePost && !isStoreViewActive && (
-            <>
-                {effectiveComponentOrder
-                .filter(key => {
-                    // Lista de componentes de ecommerce que deben verificar visibilidad
-                    const ecommerceComponents: PageSection[] = [
-                        'featuredProducts', 'categoryGrid', 'productHero', 'saleCountdown',
-                        'trustBadges', 'recentlyViewed', 'productReviews', 'collectionBanner',
-                        'productBundle', 'announcementBar'
-                    ];
-                    
-                    const isEcommerce = ecommerceComponents.includes(key as PageSection);
-                    const baseVisibility = componentStatus[key as PageSection] && 
-                                           effectiveSectionVisibility[key as PageSection] && 
-                                           key !== 'footer' && 
-                                           key !== 'chatbot' &&
-                                           key !== 'header'; // Header is rendered separately
-                    
-                    // Para componentes de ecommerce, verificar también visibleIn
-                    if (isEcommerce) {
-                        return baseVisibility && isEcommerceComponentVisibleIn(key as PageSection, 'landing');
-                    }
-                    
-                    return baseVisibility;
-                })
-                .map(key => {
-                    return (
-                        <div 
-                            id={key} 
-                            key={key} 
-                            className={`w-full cursor-pointer transition-all duration-200 ${activeSection === key ? 'ring-2 ring-primary ring-offset-2 ring-offset-transparent z-10 relative' : 'hover:ring-2 hover:ring-primary/30 hover:ring-offset-2 hover:ring-offset-transparent'}`}
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                onSectionSelect(key as PageSection);
-                            }}
-                        >
-                        {componentsMap[key as PageSection]}
-                        </div>
-                    )
-                })}
-            </>
+          <>
+            {effectiveComponentOrder
+              .filter(key => {
+                // Lista de componentes de ecommerce que deben verificar visibilidad
+                const ecommerceComponents: PageSection[] = [
+                  'featuredProducts', 'categoryGrid', 'productHero', 'saleCountdown',
+                  'trustBadges', 'recentlyViewed', 'productReviews', 'collectionBanner',
+                  'productBundle', 'announcementBar'
+                ];
+
+                const isEcommerce = ecommerceComponents.includes(key as PageSection);
+                const baseVisibility = componentStatus[key as PageSection] &&
+                  effectiveSectionVisibility[key as PageSection] &&
+                  key !== 'footer' &&
+                  key !== 'chatbot' &&
+                  key !== 'header'; // Header is rendered separately
+
+                // Para componentes de ecommerce, verificar también visibleIn
+                if (isEcommerce) {
+                  return baseVisibility && isEcommerceComponentVisibleIn(key as PageSection, 'landing');
+                }
+
+                return baseVisibility;
+              })
+              .map(key => {
+                return (
+                  <div
+                    id={key}
+                    key={key}
+                    className={`w-full cursor-pointer transition-all duration-200 ${activeSection === key ? 'ring-2 ring-primary ring-offset-2 ring-offset-transparent z-10 relative' : 'hover:ring-2 hover:ring-primary/30 hover:ring-offset-2 hover:ring-offset-transparent'}`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onSectionSelect(key as PageSection);
+                    }}
+                  >
+                    {componentsMap[key as PageSection]}
+                  </div>
+                )
+              })}
+          </>
         )}
       </main>
-      
+
       {/* Footer - Always visible on all pages including articles */}
       {!showArticleLoading && componentStatus.footer && effectiveSectionVisibility.footer && (
-         <div 
-            id="footer" 
-            className={`w-full cursor-pointer transition-all duration-200 ${activeSection === 'footer' ? 'ring-2 ring-primary ring-offset-2 ring-offset-transparent z-10 relative' : 'hover:ring-2 hover:ring-primary/30 hover:ring-offset-2 hover:ring-offset-transparent'}`}
-            onClick={(e) => {
-                 e.stopPropagation();
-                 onSectionSelect('footer' as PageSection);
-            }}
+        <div
+          id="footer"
+          className={`w-full cursor-pointer transition-all duration-200 ${activeSection === 'footer' ? 'ring-2 ring-primary ring-offset-2 ring-offset-transparent z-10 relative' : 'hover:ring-2 hover:ring-primary/30 hover:ring-offset-2 hover:ring-offset-transparent'}`}
+          onClick={(e) => {
+            e.stopPropagation();
+            onSectionSelect('footer' as PageSection);
+          }}
         >
-            <Footer {...resolvedFooterData} onNavigate={handleLinkNavigation} />
+          <Footer {...resolvedFooterData} onNavigate={handleLinkNavigation} />
         </div>
       )}
 
@@ -1202,7 +1221,7 @@ const LandingPageContent: React.FC = () => {
 // Main LandingPage component that wraps content in StorefrontCartProvider
 const LandingPage: React.FC = () => {
   const { activeProjectId } = useProject();
-  
+
   // Always wrap in StorefrontCartProvider when we have a project
   // The cart will just be empty if no products exist
   if (activeProjectId) {
@@ -1212,7 +1231,7 @@ const LandingPage: React.FC = () => {
       </StorefrontCartProvider>
     );
   }
-  
+
   // Fallback when no project (shouldn't happen but safe)
   return <LandingPageContent />;
 };
