@@ -2599,7 +2599,12 @@ You: "✓ Made the hero button green and increased its size"
                             };
                             source.connect(processor);
                             processor.connect(inputCtx.destination);
-                        } catch (micErr) { stopLiveSession(); alert("Could not access microphone."); }
+                        } catch (micErr: any) {
+                            console.error('[Voice Mode] Microphone access error:', micErr);
+                            const errorMessage = micErr?.message || 'Unknown error';
+                            alert(`No se pudo acceder al micrófono: ${errorMessage}. Por favor, permite el acceso al micrófono en tu navegador.`);
+                            stopLiveSession();
+                        }
                     },
                     onmessage: async (message: LiveServerMessage) => {
                         if (message.serverContent?.interrupted) {
@@ -2643,10 +2648,11 @@ You: "✓ Made the hero button green and increased its size"
                 }
             });
             sessionRef.current = sessionPromise;
-        } catch (error) {
+        } catch (error: any) {
+            console.error('[Voice Mode] Failed to start session:', error);
             handleApiError(error);
             setIsConnecting(false);
-            alert("Failed to start voice session.");
+            alert(`Error al iniciar sesión de voz: ${error?.message || 'Error desconocido'}. Por favor, intenta de nuevo.`);
         }
     };
 
@@ -3284,73 +3290,241 @@ Now provide a brief response to the user about what was done.`;
 
     useEffect(() => { return () => stopLiveSession(); }, []);
 
-    if (!isOpen) return (
-        <button onClick={() => setIsOpen(true)} className="fixed bottom-6 right-6 z-50 bg-primary text-primary-foreground p-3 rounded-full shadow-2xl hover:scale-110 transition-transform border-4 border-background animate-pulse-slow flex items-center justify-center group" title="Open Global Assistant">
-            <img src={LOGO_URL} alt="Quimera" className="w-10 h-10 object-contain group-hover:rotate-12 transition-transform" />
-            <div className="absolute top-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
-        </button>
-    );
-
-    return (
-        <div className={`fixed z-[60] bg-card border border-border shadow-2xl transition-all duration-300 flex flex-col overflow-hidden ${isExpanded ? 'inset-4 rounded-2xl' : 'bottom-6 right-6 w-[400px] h-[600px] rounded-2xl'}`}>
-            <div className="p-4 flex justify-between items-center bg-primary text-primary-foreground shrink-0 cursor-pointer" onDoubleClick={() => setIsExpanded(!isExpanded)}>
-                <div className="flex items-center gap-3">
-                    <div className="relative"><img src={LOGO_URL} alt="Quimera Logo" className="w-10 h-10 object-contain bg-white/10 rounded-full p-1 border border-white/20" /><div className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-primary ${isLiveActive ? 'bg-red-500 animate-pulse' : 'bg-green-400'}`}></div></div>
-                    <div><h3 className="font-bold text-sm leading-tight">Quimera Assistant</h3><p className="text-[10px] opacity-90 font-medium">{isLiveActive ? 'Listening...' : 'Online'}</p></div>
+    // =========================================================================
+    // FOOTER TRIGGER BAR (Always visible - shows voice-active state inline)
+    // =========================================================================
+    const footerTriggerContent = (
+        <div className="fixed bottom-6 inset-x-0 z-50 px-6 pointer-events-none">
+            <div className={`assistant-footer-trigger pointer-events-auto mx-auto flex items-center gap-3 px-5 py-3 backdrop-blur-lg border rounded-full shadow-xl transition-all max-w-md w-full ${isLiveActive ? 'bg-primary/20 border-primary/50 animate-pulse' : 'bg-card/95 border-border hover:shadow-2xl'}`}>
+                {/* Logo with voice-active indicator */}
+                <div className="relative shrink-0">
+                    {isLiveActive && (
+                        <>
+                            {/* Sound wave rings when voice is active */}
+                            <div className="absolute inset-0 w-9 h-9 rounded-full border border-primary/50 animate-ping" style={{ animationDuration: '1.5s' }} />
+                            <div className="absolute inset-0 w-9 h-9 rounded-full border border-primary/30 animate-ping" style={{ animationDuration: '1.5s', animationDelay: '0.5s' }} />
+                        </>
+                    )}
+                    <img src={LOGO_URL} alt="Quimera" className={`w-9 h-9 object-contain transition-transform ${isLiveActive ? 'scale-110' : 'group-hover:scale-110'}`} />
+                    <div className={`absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-card ${isLiveActive ? 'bg-red-500 animate-pulse' : 'bg-green-500'}`} />
                 </div>
-                <div className="flex gap-1 items-center">
-                    <button onClick={() => setIsExpanded(!isExpanded)} className="p-1.5 hover:bg-white/20 rounded-md transition-colors">{isExpanded ? <Minimize2 size={18} /> : <Maximize2 size={18} />}</button>
-                    <button onClick={() => { setIsOpen(false); stopLiveSession(); }} className="p-1.5 hover:bg-white/20 rounded-md transition-colors"><ChevronDown size={18} /></button>
+
+                {/* Content area - shows voice visualizer when active, otherwise input placeholder */}
+                <div className="flex-1">
+                    {isLiveActive ? (
+                        <div className="flex items-center gap-2">
+                            {/* Mini audio visualizer bars */}
+                            <div className="flex items-end gap-0.5 h-5">
+                                {visualizerLevels.slice(0, 8).map((height, i) => (
+                                    <div
+                                        key={i}
+                                        className="w-1 bg-primary rounded-full transition-all duration-75"
+                                        style={{ height: `${Math.max(4, height / 3)}px` }}
+                                    />
+                                ))}
+                            </div>
+                            <span className="text-sm text-primary font-medium flex items-center gap-1.5">
+                                <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+                                Escuchando...
+                            </span>
+                        </div>
+                    ) : (
+                        <button onClick={() => setIsOpen(true)} className="w-full text-left group">
+                            <p className="text-sm text-muted-foreground group-hover:text-foreground transition-colors truncate">
+                                Pregunta a Quimera...
+                            </p>
+                        </button>
+                    )}
+                </div>
+
+                {/* Action icons */}
+                <div className="flex items-center gap-2 shrink-0">
+                    {globalAssistantConfig.enableLiveVoice && (
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                if (isLiveActive) {
+                                    stopLiveSession();
+                                } else {
+                                    startLiveSession();
+                                }
+                            }}
+                            className={`p-2 rounded-full transition-all ${isLiveActive ? 'bg-red-500/20 text-red-500 hover:bg-red-500/30' : 'hover:bg-primary/10 text-muted-foreground hover:text-primary'}`}
+                        >
+                            {isLiveActive ? <PhoneOff size={18} /> : <Mic size={18} />}
+                        </button>
+                    )}
+                    {!isLiveActive && (
+                        <button onClick={() => setIsOpen(true)} className="p-2 rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors">
+                            <Send size={16} />
+                        </button>
+                    )}
                 </div>
             </div>
-            <div className="flex-1 flex flex-col bg-background overflow-hidden relative">
-                {isLiveActive && (
-                    <div className="absolute inset-0 z-20 bg-background/95 backdrop-blur-sm flex flex-col items-center justify-center text-foreground animate-fade-in-up">
-                        <div className="w-32 h-32 rounded-full bg-primary/10 flex items-center justify-center mb-8 relative"><div className="absolute inset-0 rounded-full border border-primary/30 animate-ping opacity-30"></div><img src={LOGO_URL} alt="Quimera Logo" className="w-20 h-20 object-contain drop-shadow-[0_0_15px_rgba(var(--primary),0.5)]" /></div>
-                        <div className="flex items-center gap-1.5 h-16 mb-8">{visualizerLevels.map((height, i) => <div key={i} className="w-2 bg-primary rounded-full transition-all duration-75" style={{ height: `${height}px`, opacity: 0.5 + (height / 50) }} />)}</div>
-                        <p className="text-lg font-medium mb-2">Listening...</p>
-                        <p className="text-xs text-muted-foreground text-center max-w-xs mb-8">Ask me to change colors, manage leads, update content, or create assets.</p>
-                        <button onClick={stopLiveSession} className="px-6 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-500 rounded-full text-sm font-bold transition-colors flex items-center border border-red-500/50"><PhoneOff size={16} className="mr-2" /> End Voice Session</button>
+        </div>
+    );
+
+    // =========================================================================
+    // DRAWER CONTENT (Bottom sheet with chat)
+    // =========================================================================
+    const drawerContent = (
+        <div className={`fixed z-[60] bg-card border border-border shadow-2xl rounded-3xl flex flex-col overflow-hidden transition-all duration-300 animate-drawer-slide-up ${isExpanded ? 'inset-4' : 'bottom-6 left-4 right-4 md:left-auto md:right-6 md:w-[420px] h-[65vh] md:h-[550px]'}`}>
+            {/* Drawer Header */}
+            <div className="p-4 flex justify-between items-center bg-primary text-primary-foreground shrink-0">
+                {/* Handle for mobile */}
+                <div className="absolute top-2 left-1/2 -translate-x-1/2 md:hidden">
+                    <div className="drawer-handle" />
+                </div>
+
+                <div className="flex items-center gap-3">
+                    <div className="relative">
+                        <img src={LOGO_URL} alt="Quimera Logo" className="w-10 h-10 object-contain bg-white/10 rounded-full p-1 border border-white/20" />
+                        <div className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-primary ${isLiveActive ? 'bg-red-500 animate-pulse' : 'bg-green-400'}`} />
+                    </div>
+                    <div>
+                        <h3 className="font-bold text-sm leading-tight">Quimera Assistant</h3>
+                        <p className="text-[10px] opacity-90 font-medium">
+                            {isLiveActive ? 'Escuchando...' : activeProject ? `En: ${activeProject.name}` : 'Dashboard Mode'}
+                        </p>
+                    </div>
+                </div>
+
+                <div className="flex gap-1 items-center">
+                    <button onClick={() => setIsExpanded(!isExpanded)} className="p-1.5 hover:bg-white/20 rounded-md transition-colors hidden md:flex">
+                        {isExpanded ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
+                    </button>
+                    <button onClick={() => { setIsOpen(false); stopLiveSession(); }} className="p-1.5 hover:bg-white/20 rounded-md transition-colors">
+                        <ChevronDown size={18} />
+                    </button>
+                </div>
+            </div>
+
+            {/* Messages Area */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-background/50">
+                {messages.map((msg, idx) => (
+                    <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                        {msg.role === 'model' && !msg.isToolOutput && (
+                            <div className="w-8 h-8 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center mr-2 shrink-0 overflow-hidden">
+                                <img src={LOGO_URL} alt="Bot" className="w-5 h-5 object-contain" />
+                            </div>
+                        )}
+                        <div className={`max-w-[85%] p-3.5 rounded-2xl text-sm leading-relaxed shadow-sm ${msg.role === 'user'
+                            ? 'bg-primary text-primary-foreground rounded-tr-sm'
+                            : msg.isToolOutput
+                                ? 'bg-secondary/50 text-muted-foreground text-xs font-mono border border-dashed border-border w-full'
+                                : 'bg-card text-foreground border border-border rounded-tl-sm'
+                            }`}>
+                            {msg.role === 'model' && !msg.isToolOutput ? <ReactMarkdown>{msg.text}</ReactMarkdown> : msg.text}
+                        </div>
+                        {msg.role === 'user' && (
+                            <div className="w-8 h-8 rounded-full bg-secondary/50 border border-border flex items-center justify-center ml-2 shrink-0 overflow-hidden">
+                                {user?.photoURL ? <img src={user.photoURL} alt="User" className="w-full h-full object-cover" /> : <UserIcon size={16} className="text-muted-foreground" />}
+                            </div>
+                        )}
+                    </div>
+                ))}
+
+                {/* Executing Commands */}
+                {isExecutingCommands && (
+                    <div className="flex justify-start">
+                        <div className="w-8 h-8 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center mr-2 shrink-0 overflow-hidden">
+                            <img src={LOGO_URL} alt="Bot" className="w-5 h-5 object-contain animate-pulse" />
+                        </div>
+                        <div className="bg-card border border-border px-4 py-3 rounded-2xl rounded-tl-sm shadow-sm flex items-center gap-2 text-sm text-muted-foreground">
+                            <Loader2 size={14} className="animate-spin text-primary" />
+                            <span>Ejecutando acciones...</span>
+                        </div>
                     </div>
                 )}
-                <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar bg-secondary/5">
-                    {messages.map((msg, idx) => (
-                        <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                            {msg.role === 'model' && !msg.isToolOutput && <div className="w-8 h-8 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center mr-2 shrink-0 overflow-hidden"><img src={LOGO_URL} alt="Bot" className="w-5 h-5 object-contain" /></div>}
-                            <div className={`max-w-[85%] p-3.5 rounded-2xl text-sm leading-relaxed shadow-sm ${msg.role === 'user' ? 'bg-primary text-primary-foreground rounded-tr-sm' : msg.isToolOutput ? 'bg-secondary/50 text-muted-foreground text-xs font-mono border border-dashed border-border w-full' : 'bg-card text-foreground border border-border rounded-tl-sm'}`}>
-                                {msg.role === 'model' && !msg.isToolOutput ? <ReactMarkdown>{msg.text}</ReactMarkdown> : msg.text}
-                            </div>
-                            {msg.role === 'user' && <div className="w-8 h-8 rounded-full bg-secondary/50 border border-border flex items-center justify-center ml-2 shrink-0 overflow-hidden">{user?.photoURL ? <img src={user.photoURL} alt="User" className="w-full h-full object-cover" /> : <UserIcon size={16} className="text-muted-foreground" />}</div>}
+
+                {/* Thinking */}
+                {isThinking && (
+                    <div className="flex justify-start">
+                        <div className="w-8 h-8 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center mr-2 shrink-0 overflow-hidden">
+                            <img src={LOGO_URL} alt="Bot" className="w-5 h-5 object-contain" />
                         </div>
-                    ))}
-                    {isExecutingCommands && (
-                        <div className="flex justify-start">
-                            <div className="w-8 h-8 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center mr-2 shrink-0 overflow-hidden">
-                                <img src={LOGO_URL} alt="Bot" className="w-5 h-5 object-contain animate-pulse" />
-                            </div>
-                            <div className="bg-card border border-border px-4 py-3 rounded-2xl rounded-tl-sm shadow-sm flex items-center gap-2 text-sm text-muted-foreground">
-                                <Loader2 size={14} className="animate-spin text-primary" />
-                                <span>Ejecutando acciones...</span>
-                            </div>
+                        <div className="bg-card border border-border px-4 py-3 rounded-2xl rounded-tl-sm shadow-sm flex items-center gap-2 text-sm text-muted-foreground">
+                            <Loader2 size={14} className="animate-spin text-primary" />
+                            <span>Pensando...</span>
                         </div>
-                    )}
-                    {isThinking && <div className="flex justify-start"><div className="w-8 h-8 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center mr-2 shrink-0 overflow-hidden"><img src={LOGO_URL} alt="Bot" className="w-5 h-5 object-contain" /></div><div className="bg-card border border-border px-4 py-3 rounded-2xl rounded-tl-sm shadow-sm flex items-center gap-2 text-sm text-muted-foreground"><Loader2 size={14} className="animate-spin text-primary" /><span>Thinking...</span></div></div>}
-                    <div ref={messagesEndRef} />
-                </div>
-                <div className="p-4 bg-card border-t border-border shrink-0">
-                    <div className="flex items-center gap-2 bg-secondary/30 p-1.5 rounded-full border border-border focus-within:ring-2 focus-within:ring-primary/50 transition-all">
-                        <button onClick={() => setMessages([])} className="p-2 text-muted-foreground hover:text-red-500 hover:bg-secondary rounded-full transition-colors" title="Clear Chat"><Trash2 size={18} /></button>
-                        <input ref={inputRef} value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleTextSend()} placeholder="Type a message..." className="flex-1 bg-transparent px-2 text-sm outline-none text-foreground placeholder:text-muted-foreground/50" disabled={isLiveActive} />
-                        {globalAssistantConfig.enableLiveVoice && <button onClick={startLiveSession} disabled={isConnecting || isLiveActive || hasApiKey === false} className={`p-2 rounded-full transition-all ${isConnecting ? 'text-muted-foreground animate-spin' : 'text-muted-foreground hover:text-primary hover:bg-primary/10'}`} title="Start Voice Mode (requires API key)">{isConnecting ? <Loader2 size={20} /> : <Mic size={20} />}</button>}
-                        <button onClick={handleTextSend} disabled={!input.trim() || isThinking || isLiveActive} className="p-2 bg-primary text-primary-foreground rounded-full hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed shadow-md transition-all hover:scale-105"><Send size={18} /></button>
                     </div>
-                    <div className="mt-2 flex justify-between items-center px-2">
-                        <p className="text-[10px] text-muted-foreground flex items-center"><span className={`w-1.5 h-1.5 rounded-full mr-1.5 ${activeProject ? 'bg-green-500' : 'bg-gray-400'}`}></span> {activeProject ? `Active: ${activeProject.name}` : 'Dashboard Mode'}</p>
-                        <div className="flex items-center gap-2">{(userDocument?.role === 'owner' || userDocument?.role === 'superadmin') && <Shield size={10} className="text-yellow-500" />}<p className="text-[10px] text-muted-foreground">{userDocument?.role === 'owner' ? 'Owner Access' : userDocument?.role === 'superadmin' ? 'Admin Access' : 'User Access'}</p></div>
+                )}
+
+                <div ref={messagesEndRef} />
+            </div>
+
+            {/* Input Area */}
+            <div className="p-4 bg-card border-t border-border shrink-0 safe-area-inset-bottom">
+                <div className="flex items-center gap-2 bg-secondary/30 p-1.5 rounded-full border border-border focus-within:ring-2 focus-within:ring-primary/50 transition-all">
+                    <button onClick={() => setMessages([])} className="p-2 text-muted-foreground hover:text-red-500 hover:bg-secondary rounded-full transition-colors" title="Clear Chat">
+                        <Trash2 size={18} />
+                    </button>
+                    <input
+                        ref={inputRef}
+                        value={input}
+                        onChange={(e) => setInput(e.target.value)}
+                        onKeyDown={(e) => e.key === 'Enter' && handleTextSend()}
+                        placeholder="Escribe un mensaje..."
+                        className="flex-1 bg-transparent px-2 text-sm outline-none text-foreground placeholder:text-muted-foreground/50"
+                        disabled={isLiveActive}
+                        autoFocus
+                    />
+                    {globalAssistantConfig.enableLiveVoice && (
+                        <button
+                            onClick={startLiveSession}
+                            disabled={isConnecting || isLiveActive || hasApiKey === false}
+                            className={`p-2 rounded-full transition-all ${isConnecting ? 'text-muted-foreground animate-spin' : 'text-muted-foreground hover:text-primary hover:bg-primary/10'}`}
+                            title="Iniciar modo de voz"
+                        >
+                            {isConnecting ? <Loader2 size={20} /> : <Mic size={20} />}
+                        </button>
+                    )}
+                    <button
+                        onClick={handleTextSend}
+                        disabled={!input.trim() || isThinking || isLiveActive}
+                        className="p-2 bg-primary text-primary-foreground rounded-full hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed shadow-md transition-all hover:scale-105"
+                    >
+                        <Send size={18} />
+                    </button>
+                </div>
+
+                {/* Status Bar */}
+                <div className="mt-2 flex justify-between items-center px-2">
+                    <p className="text-[10px] text-muted-foreground flex items-center">
+                        <span className={`w-1.5 h-1.5 rounded-full mr-1.5 ${activeProject ? 'bg-green-500' : 'bg-gray-400'}`} />
+                        {activeProject ? `Activo: ${activeProject.name}` : 'Dashboard Mode'}
+                    </p>
+                    <div className="flex items-center gap-2">
+                        {(userDocument?.role === 'owner' || userDocument?.role === 'superadmin') && <Shield size={10} className="text-yellow-500" />}
+                        <p className="text-[10px] text-muted-foreground">
+                            {userDocument?.role === 'owner' ? 'Owner' : userDocument?.role === 'superadmin' ? 'Admin' : 'Usuario'}
+                        </p>
                     </div>
                 </div>
             </div>
         </div>
+    );
+
+    // =========================================================================
+    // MAIN RENDER
+    // =========================================================================
+    return (
+        <>
+            {/* Footer Trigger - Shows when drawer is closed (works with voice active too) */}
+            {!isOpen && footerTriggerContent}
+
+            {/* Drawer - Shows when open (also works during voice mode) */}
+            {isOpen && (
+                <>
+                    {/* Backdrop */}
+                    <div
+                        className="fixed inset-0 z-[55] bg-black/30 backdrop-blur-sm animate-fade-in"
+                        onClick={() => setIsOpen(false)}
+                    />
+                    {drawerContent}
+                </>
+            )}
+        </>
     );
 };
 
