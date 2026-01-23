@@ -416,7 +416,7 @@ export const AppointmentDetailDrawer: React.FC<AppointmentDetailDrawerProps> = (
                         icon={Users}
                         isActive={activeTab === 'participants'}
                         onClick={() => setActiveTab('participants')}
-                        badge={appointment.participants.length}
+                        badge={appointment.participants?.length || 0}
                     />
                     <TabButton
                         id="notes"
@@ -459,21 +459,21 @@ export const AppointmentDetailDrawer: React.FC<AppointmentDetailDrawerProps> = (
                                 </h4>
                                 <div className="flex items-start gap-3 p-3 bg-secondary/30 rounded-xl">
                                     <div className="p-2 bg-secondary rounded-lg">
-                                        {appointment.location.type === 'virtual' && <Video size={18} className="text-primary" />}
-                                        {appointment.location.type === 'physical' && <MapPin size={18} className="text-primary" />}
-                                        {appointment.location.type === 'phone' && <Phone size={18} className="text-primary" />}
+                                        {appointment.location?.type === 'virtual' && <Video size={18} className="text-primary" />}
+                                        {appointment.location?.type === 'physical' && <MapPin size={18} className="text-primary" />}
+                                        {appointment.location?.type === 'phone' && <Phone size={18} className="text-primary" />}
                                     </div>
                                     <div className="flex-1">
                                         <p className="font-medium text-foreground">
-                                            {appointment.location.type === 'virtual' && 'Reunión virtual'}
-                                            {appointment.location.type === 'physical' && 'Reunión presencial'}
-                                            {appointment.location.type === 'phone' && 'Llamada telefónica'}
+                                            {appointment.location?.type === 'virtual' && 'Reunión virtual'}
+                                            {appointment.location?.type === 'physical' && 'Reunión presencial'}
+                                            {appointment.location?.type === 'phone' && 'Llamada telefónica'}
                                         </p>
                                         <p className="text-sm text-muted-foreground">
-                                            {appointment.location.meetingUrl || appointment.location.address || appointment.location.phoneNumber || 'Sin detalles'}
+                                            {appointment.location?.meetingUrl || appointment.location?.address || appointment.location?.phoneNumber || 'Sin detalles'}
                                         </p>
                                     </div>
-                                    {appointment.location.meetingUrl && (
+                                    {appointment.location?.meetingUrl && (
                                         <a
                                             href={appointment.location.meetingUrl}
                                             target="_blank"
@@ -531,7 +531,7 @@ export const AppointmentDetailDrawer: React.FC<AppointmentDetailDrawerProps> = (
                                     {t('appointments.remindersLabel')}
                                 </h4>
                                 <div className="space-y-2">
-                                    {appointment.reminders.map(reminder => (
+                                    {appointment.reminders?.map(reminder => (
                                         <div
                                             key={reminder.id}
                                             className="flex items-center gap-3 p-2 bg-secondary/30 rounded-lg"
@@ -558,7 +558,7 @@ export const AppointmentDetailDrawer: React.FC<AppointmentDetailDrawerProps> = (
                     {/* Participants Tab */}
                     {activeTab === 'participants' && (
                         <div className="space-y-4 animate-fade-in">
-                            {appointment.participants.map(participant => (
+                            {appointment.participants?.map(participant => (
                                 <div
                                     key={participant.id}
                                     className="flex items-center gap-4 p-4 bg-secondary/30 rounded-xl"
@@ -607,7 +607,7 @@ export const AppointmentDetailDrawer: React.FC<AppointmentDetailDrawerProps> = (
                                 </div>
                             ))}
 
-                            {appointment.participants.length === 0 && (
+                            {(!appointment.participants || appointment.participants.length === 0) && (
                                 <div className="text-center py-8">
                                     <Users className="mx-auto h-12 w-12 text-muted-foreground/30 mb-3" />
                                     <p className="text-sm text-muted-foreground">

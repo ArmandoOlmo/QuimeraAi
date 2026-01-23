@@ -1180,3 +1180,35 @@ export const getUsageStats = functions.https.onRequest(async (req, res) => {
         res.status(500).json({ error: 'Internal server error' });
     }
 });
+
+/**
+ * SECURE: Get Gemini API Key for authenticated users
+ * This allows the frontend to get the key for WebSocket connections (Voice Mode)
+ * while keeping it hidden from unauthenticated users.
+ */
+export const getGeminiApiKey = functions.https.onCall(async (data, context) => {
+    // SECURITY: strictly require authentication
+    if (!context.auth) {
+        throw new functions.https.HttpsError(
+            'unauthenticated',
+            'You must be logged in to access this resource.'
+        );
+    }
+
+    const userId = context.auth.uid;
+    console.log(`[getGeminiApiKey] Vending API key to user: ${userId}`);
+
+    // Optional: Check for rate limits or permissions here if needed
+
+    const apiKey = GEMINI_CONFIG.apiKey;
+    if (!apiKey) {
+        console.error('[getGeminiApiKey] API key not configured');
+        throw new functions.https.HttpsError(
+            'internal',
+            'Service configuration error'
+        );
+    }
+
+    return { apiKey };
+});
+

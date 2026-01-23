@@ -12,7 +12,7 @@ if (!admin.apps.length) {
 }
 
 import { getWidgetConfig, submitWidgetLead, trackWidgetAnalytics } from './widgetApi';
-import { generateContent, streamContent, getUsageStats, generateImage } from './geminiProxy';
+import { generateContent, streamContent, getUsageStats, generateImage, getGeminiApiKey } from './geminiProxy';
 import { textToSpeech, getVoices, voiceChat } from './voiceProxy';
 import {
     createPaymentIntent,
@@ -234,7 +234,8 @@ export const gemini = {
     generate: generateContent,
     stream: streamContent,
     usage: getUsageStats,
-    image: generateImage
+    image: generateImage,
+    getApiKey: getGeminiApiKey
 };
 
 // Export Voice proxy functions (Google Cloud TTS)

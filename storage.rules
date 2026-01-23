@@ -134,6 +134,18 @@ service firebase.storage {
     }
     
     // ============================================
+    // ADMIN ASSETS (for admin-uploaded content like article images)
+    // SECURED: Only admin roles can manage admin assets
+    // ============================================
+    
+    match /admin/{allPaths=**} {
+      allow read: if true;
+      // Only admin roles can write admin assets
+      allow write: if isAdmin() 
+        && isValidSize(50 * 1024 * 1024); // 50MB max per file
+    }
+    
+    // ============================================
     // DEFAULT: Deny all other paths
     // ============================================
     

@@ -102,6 +102,30 @@ export const NewsProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   }, []);
 
+  // Helper to remove undefined fields recursively (Firestore doesn't accept undefined values)
+  const removeUndefinedFields = (obj: Record<string, unknown>): Record<string, unknown> => {
+    const cleaned: Record<string, unknown> = { ...obj };
+    Object.keys(cleaned).forEach(key => {
+      const value = cleaned[key];
+      if (value === undefined) {
+        delete cleaned[key];
+      } else if (value !== null && typeof value === 'object' && !Array.isArray(value)) {
+        // Recursively clean nested objects
+        cleaned[key] = removeUndefinedFields(value as Record<string, unknown>);
+      } else if (Array.isArray(value)) {
+        // Filter out undefined from arrays and clean nested objects
+        cleaned[key] = value
+          .filter(item => item !== undefined)
+          .map(item =>
+            item !== null && typeof item === 'object'
+              ? removeUndefinedFields(item as Record<string, unknown>)
+              : item
+          );
+      }
+    });
+    return cleaned;
+  };
+
   const createNews = useCallback(
     async (newsData: Omit<NewsItem, 'id' | 'createdAt' | 'updatedAt' | 'views' | 'clicks'>): Promise<string> => {
       if (!user) throw new Error('User not authenticated');
@@ -117,7 +141,10 @@ export const NewsProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           createdBy: user.uid,
         };
 
-        const docRef = await addDoc(collection(db, NEWS_COLLECTION), newItem);
+        // Remove undefined fields before saving to Firestore
+        const cleanedItem = removeUndefinedFields(newItem as Record<string, unknown>);
+
+        const docRef = await addDoc(collection(db, NEWS_COLLECTION), cleanedItem);
         const createdItem = { ...newItem, id: docRef.id } as NewsItem;
 
         setNewsItems(prev => [createdItem, ...prev]);
@@ -142,7 +169,10 @@ export const NewsProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           updatedBy: user.uid,
         };
 
-        await updateDoc(docRef, updateData);
+        // Remove undefined fields before saving to Firestore
+        const cleanedData = removeUndefinedFields(updateData as Record<string, unknown>);
+
+        await updateDoc(docRef, cleanedData);
 
         setNewsItems(prev =>
           prev.map(item => (item.id === id ? { ...item, ...updateData } : item))
@@ -185,7 +215,10 @@ export const NewsProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           createdBy: user.uid,
         };
 
-        const docRef = await addDoc(collection(db, NEWS_COLLECTION), duplicate);
+        // Remove undefined fields before saving to Firestore
+        const cleanedDuplicate = removeUndefinedFields(duplicate as Record<string, unknown>);
+
+        const docRef = await addDoc(collection(db, NEWS_COLLECTION), cleanedDuplicate);
         const createdItem = { ...duplicate, id: docRef.id } as NewsItem;
 
         setNewsItems(prev => [createdItem, ...prev]);

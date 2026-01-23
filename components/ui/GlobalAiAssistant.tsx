@@ -20,7 +20,7 @@ import { generateContentViaProxy, extractTextFromResponse, generateMultimodalCon
 import { captureCurrentView } from '../../utils/visionUtils';
 import { PROMPT_TEMPLATES, compileTemplates, getDefaultEnabledTemplates } from '../../data/promptTemplates';
 import { logApiCall } from '../../services/apiLoggingService';
-import { db, collection, doc, addDoc, updateDoc, deleteDoc, getDoc, setDoc, serverTimestamp } from '../../firebase';
+import { db, collection, doc, addDoc, updateDoc, deleteDoc, getDoc, setDoc, serverTimestamp, query, where, getDocs, limit, orderBy } from '../../firebase';
 import { Timestamp } from 'firebase/firestore';
 import { dateToTimestamp } from '../dashboard/appointments/utils/appointmentHelpers';
 import { useTranslation } from 'react-i18next';
@@ -221,6 +221,22 @@ const TOOLS: FunctionDeclaration[] = [
     // Tools to focus list items inside Properties
     ...SECTION_ITEM_TOOLS,
     {
+        name: 'deep_search',
+        description: 'Search for ANY entity across the entire application (Products, Orders, Leads, Posts, etc.). Use this to find IDs or details.',
+        parameters: {
+            type: Type.OBJECT,
+            properties: {
+                query: { type: Type.STRING, description: 'Search term (e.g. "invoice 123", "John Doe", "blue shirt")' },
+                entities: {
+                    type: Type.ARRAY,
+                    items: { type: Type.STRING, enum: ['products', 'orders', 'leads', 'posts', 'appointments', 'campaigns'] },
+                    description: 'Specific entities to search (optional, defaults to all)'
+                }
+            },
+            required: ['query']
+        }
+    },
+    {
         name: 'select_section',
         description: 'Open the editor controls for a specific website section/component and focus it in the sidebar.',
         parameters: {
@@ -259,8 +275,8 @@ const TOOLS: FunctionDeclaration[] = [
         parameters: {
             type: Type.OBJECT,
             properties: {
-                action: { type: Type.STRING, enum: ['create', 'update', 'delete'] },
-                id: { type: Type.STRING, description: 'Post ID (for update/delete).' },
+                action: { type: Type.STRING, enum: ['create', 'update', 'delete', 'get'] },
+                id: { type: Type.STRING, description: 'Post ID (required for update/delete/get).' },
                 title: { type: Type.STRING },
                 content: { type: Type.STRING },
                 status: { type: Type.STRING, enum: ['draft', 'published'] }
@@ -270,11 +286,11 @@ const TOOLS: FunctionDeclaration[] = [
     },
     {
         name: 'manage_lead',
-        description: 'Manage CRM leads.',
+        description: 'Manage CRM leads. Use this to MOVE leads (e.g. "move lead to negotiation" -> update status), change status, or update details.',
         parameters: {
             type: Type.OBJECT,
             properties: {
-                action: { type: Type.STRING, enum: ['create', 'update', 'delete'] },
+                action: { type: Type.STRING, enum: ['create', 'update', 'delete', 'get'] },
                 id: { type: Type.STRING },
                 name: { type: Type.STRING },
                 email: { type: Type.STRING },
@@ -509,7 +525,7 @@ const TOOLS: FunctionDeclaration[] = [
         parameters: {
             type: Type.OBJECT,
             properties: {
-                action: { type: Type.STRING, enum: ['create', 'update', 'delete', 'status'] },
+                action: { type: Type.STRING, enum: ['create', 'update', 'delete', 'status', 'get'] },
                 id: { type: Type.STRING },
                 title: { type: Type.STRING },
                 description: { type: Type.STRING },
@@ -538,7 +554,7 @@ const TOOLS: FunctionDeclaration[] = [
         parameters: {
             type: Type.OBJECT,
             properties: {
-                action: { type: Type.STRING, enum: ['create', 'update', 'delete'] },
+                action: { type: Type.STRING, enum: ['create', 'update', 'delete', 'get'] },
                 projectId: { type: Type.STRING, description: 'Optional override; defaults to active project id.' },
                 campaignId: { type: Type.STRING },
                 campaign: { type: Type.OBJECT, description: 'Campaign fields (name, subject, type, content, audienceType, status, etc.)' }
@@ -565,7 +581,7 @@ const TOOLS: FunctionDeclaration[] = [
         parameters: {
             type: Type.OBJECT,
             properties: {
-                action: { type: Type.STRING, enum: ['create', 'update', 'delete'] },
+                action: { type: Type.STRING, enum: ['create', 'update', 'delete', 'get'] },
                 productId: { type: Type.STRING },
                 projectId: { type: Type.STRING, description: 'Optional override; defaults to active project id.' },
                 product: { type: Type.OBJECT, description: 'Product fields to set/merge' }
@@ -575,15 +591,16 @@ const TOOLS: FunctionDeclaration[] = [
     },
     {
         name: 'ecommerce_order',
-        description: 'Update order status in the active project store.',
+        description: 'Manage/Get orders in the active project store.',
         parameters: {
             type: Type.OBJECT,
             properties: {
+                action: { type: Type.STRING, enum: ['update_status', 'get'] },
                 orderId: { type: Type.STRING },
                 projectId: { type: Type.STRING, description: 'Optional override; defaults to active project id.' },
                 status: { type: Type.STRING, description: 'Order status (pending, paid, shipped, delivered, cancelled, refunded, etc.)' }
             },
-            required: ['orderId', 'status']
+            required: ['action']
         }
     },
     {
@@ -592,7 +609,7 @@ const TOOLS: FunctionDeclaration[] = [
         parameters: {
             type: Type.OBJECT,
             properties: {
-                action: { type: Type.STRING, enum: ['create', 'update', 'delete'] },
+                action: { type: Type.STRING, enum: ['create', 'update', 'delete', 'get'] },
                 projectId: { type: Type.STRING, description: 'Optional override; defaults to active project id.' },
                 expenseId: { type: Type.STRING },
                 expense: { type: Type.OBJECT, description: 'Expense fields (date, supplier, category, subtotal, tax, total, currency, items, status, originalFileUrl)' }
@@ -1222,6 +1239,7 @@ const GlobalAiAssistant: React.FC = () => {
         else if (toolName === 'update_site_content' || toolName === 'manage_sections' || toolName === 'manage_section_items' || toolName === 'change_theme')
             scopeId = 'editor';
         else if (toolName === 'load_project' || toolName === 'create_website') scopeId = 'websites';
+        else if (toolName === 'deep_search') scopeId = 'search';
 
         // If unknown tool or unmapped, allow (we'll tighten this once all tools are mapped in settings)
         if (!scopeId) return { allowed: true };
@@ -1762,6 +1780,102 @@ const GlobalAiAssistant: React.FC = () => {
                 return result;
             }
 
+            // --- DEEP SEARCH ---
+            else if (name === 'deep_search') {
+                const q = String(args?.query || '').toLowerCase().trim();
+                const entities = args?.entities || ['products', 'orders', 'leads', 'posts', 'appointments', 'campaigns'];
+                const projectId = activeProjectRef.current?.id;
+                const uid = user?.uid;
+
+                if (!uid) return { error: "User not authenticated." };
+                if (!q) return { result: "Please provide a search query." };
+
+                const results: any = {};
+                let searchSummary = `Found matches for "${q}":`;
+
+                // 1. In-Memory Search (Leads, CMS) -> Fast
+                if (entities.includes('leads') && leadsRef.current) {
+                    const matches = leadsRef.current
+                        .filter(l => l.name.toLowerCase().includes(q) || l.email.toLowerCase().includes(q))
+                        .slice(0, 10)
+                        .map(l => ({ id: l.id, name: l.name, email: l.email, status: l.status }));
+                    if (matches.length > 0) results.leads = matches;
+                }
+
+                if (entities.includes('posts') && cmsPostsRef.current) {
+                    const matches = cmsPostsRef.current
+                        .filter(p => p.title.toLowerCase().includes(q))
+                        .slice(0, 10)
+                        .map(p => ({ id: p.id, title: p.title, status: p.status }));
+                    if (matches.length > 0) results.posts = matches;
+                }
+
+                // 2. Firestore Search (Products, Orders, Appointments) -> Async
+                // We user limit() to avoid fetching too much, effectively doing a "recent + filter" 
+                // because we assume the item is likely relevant or recent. 
+                // Real deep search would require a dedicated search service (e.g. Algolia/Elastic).
+                if (projectId) {
+                    const fetchAndFilter = async (collectionPath: string, filterFn: (data: any) => boolean, mapFn: (data: any) => any) => {
+                        try {
+                            const ref = collection(db, collectionPath);
+                            // Fetch recent 50 documents
+                            const qSnap = await getDocs(query(ref, limit(50)));
+                            const matches = qSnap.docs
+                                .map(d => ({ id: d.id, ...d.data() }))
+                                .filter(filterFn)
+                                .map(mapFn)
+                                .slice(0, 5); // Return top 5 matches per category
+                            return matches.length > 0 ? matches : null;
+                        } catch (e) {
+                            console.error(`Search error for ${collectionPath}:`, e);
+                            return null;
+                        }
+                    };
+
+                    if (entities.includes('products')) {
+                        const hits = await fetchAndFilter(
+                            `users/${uid}/stores/${projectId}/products`,
+                            (p: any) => p.name?.toLowerCase().includes(q),
+                            (p: any) => ({ id: p.id, name: p.name, price: p.price, stock: p.inventory?.quantity })
+                        );
+                        if (hits) results.products = hits;
+                    }
+
+                    if (entities.includes('orders')) {
+                        const hits = await fetchAndFilter(
+                            `users/${uid}/stores/${projectId}/orders`,
+                            (o: any) => o.id.toLowerCase().includes(q) || o.customer?.name?.toLowerCase().includes(q) || o.customer?.email?.toLowerCase().includes(q),
+                            (o: any) => ({ id: o.id, customer: o.customer?.name, total: o.total, status: o.status, date: o.createdAt?.toDate?.() || o.createdAt })
+                        );
+                        if (hits) results.orders = hits;
+                    }
+
+                    if (entities.includes('appointments')) {
+                        const hits = await fetchAndFilter(
+                            `users/${uid}/projects/${projectId}/appointments`,
+                            (a: any) => a.title?.toLowerCase().includes(q) || a.description?.toLowerCase().includes(q),
+                            (a: any) => ({ id: a.id, title: a.title, start: a.startDate?.toDate?.() || a.startDate, status: a.status })
+                        );
+                        if (hits) results.appointments = hits;
+                    }
+
+                    if (entities.includes('campaigns')) {
+                        const hits = await fetchAndFilter(
+                            `users/${uid}/projects/${projectId}/emailCampaigns`,
+                            (c: any) => c.name?.toLowerCase().includes(q) || c.subject?.toLowerCase().includes(q),
+                            (c: any) => ({ id: c.id, name: c.name, subject: c.subject, status: c.status })
+                        );
+                        if (hits) results.campaigns = hits;
+                    }
+                }
+
+                if (Object.keys(results).length === 0) {
+                    return { result: `No matches found for "${q}". Try a different term or entity.` };
+                }
+
+                return { result: JSON.stringify(results, null, 2) };
+            }
+
             // --- CONTENT MANAGER TOOLS ---
             else if (name === 'manage_cms_post') {
                 const { action, id, title, content, status } = args;
@@ -1797,6 +1911,11 @@ const GlobalAiAssistant: React.FC = () => {
                     if (!id) return { error: "Post ID required." };
                     await deleteCMSPostRef.current(id);
                     return { result: "Post deleted." };
+                } else if (action === 'get') {
+                    if (!id) return { error: "Post ID required." };
+                    const found = cmsPostsRef.current.find(p => p.id === id);
+                    if (!found) return { error: "Post not found." };
+                    return { result: JSON.stringify(found, null, 2) };
                 }
             }
 
@@ -1823,6 +1942,11 @@ const GlobalAiAssistant: React.FC = () => {
                     if (!id) return { error: "Lead ID required." };
                     await deleteLeadRef.current(id);
                     return { result: "Lead deleted." };
+                } else if (action === 'get') {
+                    if (!id) return { error: "Lead ID required." };
+                    const found = leadsRef.current.find(l => l.id === id);
+                    if (!found) return { error: "Lead not found." };
+                    return { result: JSON.stringify(found, null, 2) };
                 }
             }
 
@@ -2107,6 +2231,13 @@ const GlobalAiAssistant: React.FC = () => {
                     return { result: "Appointment deleted." };
                 }
 
+                if (action === 'get') {
+                    if (!id) return { error: "id required for get." };
+                    const docSnap = await getDoc(doc(db, appointmentsPath, id));
+                    if (!docSnap.exists()) return { error: "Appointment not found." };
+                    return { result: JSON.stringify({ id: docSnap.id, ...docSnap.data() }, null, 2) };
+                }
+
                 return { error: "Invalid action for manage_appointment." };
             }
 
@@ -2158,6 +2289,14 @@ const GlobalAiAssistant: React.FC = () => {
                     if (!campaignId) return { error: "campaignId required for delete." };
                     await deleteDoc(doc(db, campaignsPath, campaignId));
                     return { result: "Campaign deleted." };
+                }
+
+                if (action === 'get') {
+                    const campaignId = args?.campaignId as string | undefined;
+                    if (!campaignId) return { error: "campaignId required." };
+                    const docSnap = await getDoc(doc(db, campaignsPath, campaignId));
+                    if (!docSnap.exists()) return { error: "Campaign not found." };
+                    return { result: JSON.stringify({ id: docSnap.id, ...docSnap.data() }, null, 2) };
                 }
 
                 return { error: "Invalid action for email_campaign." };
@@ -2255,24 +2394,47 @@ const GlobalAiAssistant: React.FC = () => {
                     return { result: "Product deleted." };
                 }
 
+                if (action === 'get') {
+                    const productId = args?.productId as string | undefined;
+                    if (!productId) return { error: "productId required." };
+                    const docSnap = await getDoc(doc(db, productsPath, productId));
+                    if (!docSnap.exists()) return { error: "Product not found." };
+                    return { result: JSON.stringify({ id: docSnap.id, ...docSnap.data() }, null, 2) };
+                }
+
                 return { error: "Invalid action for ecommerce_product." };
             }
             else if (name === 'ecommerce_order') {
                 if (!user?.uid) return { error: "Not authenticated." };
+                const action = (args?.action || 'update_status') as string;
                 const orderId = args?.orderId as string;
-                const status = args?.status as string;
                 const projectId = (args?.projectId as string | undefined) || activeProjectRef.current?.id;
                 if (!projectId) return { error: "No active project. Load a project first." };
                 const ordersPath = `users/${user.uid}/stores/${projectId}/orders`;
 
-                const updateData: any = { status, updatedAt: serverTimestamp() };
-                if (status === 'cancelled') updateData.cancelledAt = serverTimestamp();
-                if (status === 'refunded') updateData.refundedAt = serverTimestamp();
-                if (status === 'shipped') updateData.shippedAt = serverTimestamp();
-                if (status === 'delivered') updateData.deliveredAt = serverTimestamp();
+                if (action === 'update_status') {
+                    const status = args?.status as string;
+                    if (!orderId) return { error: "orderId required." };
+                    if (!status) return { error: "status required." };
 
-                await updateDoc(doc(db, ordersPath, orderId), updateData);
-                return { result: "Order status updated." };
+                    const updateData: any = { status, updatedAt: serverTimestamp() };
+                    if (status === 'cancelled') updateData.cancelledAt = serverTimestamp();
+                    if (status === 'refunded') updateData.refundedAt = serverTimestamp();
+                    if (status === 'shipped') updateData.shippedAt = serverTimestamp();
+                    if (status === 'delivered') updateData.deliveredAt = serverTimestamp();
+
+                    await updateDoc(doc(db, ordersPath, orderId), updateData);
+                    return { result: "Order status updated." };
+                }
+
+                if (action === 'get') {
+                    if (!orderId) return { error: "orderId required." };
+                    const docSnap = await getDoc(doc(db, ordersPath, orderId));
+                    if (!docSnap.exists()) return { error: "Order not found." };
+                    return { result: JSON.stringify({ id: docSnap.id, ...docSnap.data() }, null, 2) };
+                }
+
+                return { error: "Invalid action for ecommerce_order." };
             }
 
             // --- FINANCE ---
@@ -2300,6 +2462,13 @@ const GlobalAiAssistant: React.FC = () => {
                     if (!expenseId) return { error: "expenseId required for delete." };
                     await deleteDoc(doc(db, expensesPath, expenseId));
                     return { result: "Expense deleted." };
+                }
+
+                if (action === 'get') {
+                    if (!expenseId) return { error: "expenseId required." };
+                    const docSnap = await getDoc(doc(db, expensesPath, expenseId));
+                    if (!docSnap.exists()) return { error: "Expense not found." };
+                    return { result: JSON.stringify({ id: docSnap.id, ...docSnap.data() }, null, 2) };
                 }
                 return { error: "Invalid action for finance_expense." };
             }
@@ -2354,6 +2523,8 @@ const GlobalAiAssistant: React.FC = () => {
             ? `Recent Leads: ${leadsRef.current.slice(0, LIMIT).map(l => `"${l.name}" (${l.status}, ID:${l.id})`).join(', ')}.`
             : "CRM: Empty.";
 
+        const crmInstructions = `CRM HELP: To "move" a lead means to update its status. Statuses: new, contacted, qualified, negotiation, won, lost.`;
+
         const domainsContext = domainsRef.current.length > 0
             ? `Domains: ${domainsRef.current.map(d => `"${d.name}" (ID:${d.id})`).join(', ')}.`
             : "Domains: Empty.";
@@ -2391,7 +2562,8 @@ const GlobalAiAssistant: React.FC = () => {
             : "";
 
         // 5. Compile final instruction
-        return `${baseInstruction}\n\n${templatesInstruction}\n\n${scopeText}\n\n${projectContext}\n${dataStructureContext}\n${cmsContext}\n${leadsContext}\n${domainsContext}\n${componentsContext}\n${customContext}\n${activeContext}`;
+        // 5. Compile final instruction
+        return `${baseInstruction}\n\n${templatesInstruction}\n\n${scopeText}\n\n${crmInstructions}\n\n${projectContext}\n${dataStructureContext}\n${cmsContext}\n${leadsContext}\n${domainsContext}\n${componentsContext}\n${customContext}\n${activeContext}`;
     };
 
     // DEPRECATED: Old hardcoded content (now in prompt templates)

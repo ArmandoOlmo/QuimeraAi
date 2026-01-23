@@ -15,6 +15,7 @@ import FileHistory from './FileHistory';
 import FilterChip from './FilterChip';
 import EmptyState from './EmptyState';
 import UpgradeBanner from './UpgradeBanner';
+import NewsUpdates from './NewsUpdates';
 import { Plus, Menu, Search, LayoutGrid, Globe, Images, List, ArrowUpDown, CheckCircle, FileEdit, X, Loader2, Sparkles, MousePointerClick, Palette, Rocket, LayoutTemplate, BookOpen, ArrowLeft } from 'lucide-react';
 import { trackSearchPerformed, trackFilterApplied, trackSortChanged, trackViewModeChanged, trackDashboardView } from '../../utils/analytics';
 import { useInfiniteScroll, paginateArray, hasMoreItems } from '../../hooks/useInfiniteScroll';
@@ -576,7 +577,8 @@ const Dashboard: React.FC = () => {
                                 {/* Only show section header on Dashboard view, since Websites view has it in main header */}
                                 {isDashboard && (
                                     <div className="flex items-center justify-between mb-6">
-                                        <h2 className="text-2xl font-bold text-foreground flex items-center">
+                                        <h2 className="text-2xl font-bold text-foreground flex items-center gap-3">
+                                            <LayoutGrid className="text-primary" size={24} />
                                             {t('dashboard.recentProjects')}
                                         </h2>
                                         {allUserProjects.length > 0 && (
@@ -743,7 +745,8 @@ const Dashboard: React.FC = () => {
                         {isDashboard && (
                             <section>
                                 <div className="flex items-center justify-between mb-6">
-                                    <h2 className="text-2xl font-bold text-foreground flex items-center">
+                                    <h2 className="text-2xl font-bold text-foreground flex items-center gap-3">
+                                        <LayoutTemplate className="text-primary" size={24} />
                                         {t('dashboard.startFromTemplate')}
                                     </h2>
                                 </div>
@@ -752,6 +755,13 @@ const Dashboard: React.FC = () => {
                                         <ProjectCard key={template.id} project={template} />
                                     ))}
                                 </div>
+                            </section>
+                        )}
+
+                        {/* News & Updates Section - Show on Dashboard (after templates) */}
+                        {isDashboard && (
+                            <section className="w-full">
+                                <NewsUpdates maxItems={4} />
                             </section>
                         )}
 

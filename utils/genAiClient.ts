@@ -20,7 +20,7 @@ let cachedApiKey: string | null = null;
 const getProcessApiKey = (): string | null => {
     // Only check for API key if NOT using proxy (development mode with key)
     // In production, shouldUseProxy() always returns true, so this won't be used
-    
+
     try {
         if (typeof import.meta !== 'undefined' && import.meta.env) {
             const metaEnv = import.meta.env as any;
@@ -32,7 +32,7 @@ const getProcessApiKey = (): string | null => {
     } catch (e) {
         // Ignore errors
     }
-    
+
     return null;
 };
 
@@ -52,15 +52,35 @@ export const syncApiKeyFromAiStudio = async (): Promise<string | null> => {
 
 export const fetchGoogleApiKey = async (): Promise<string> => {
     if (cachedApiKey) return cachedApiKey;
-    
-    const key = getProcessApiKey();
-    if (key) {
-        cachedApiKey = key;
-        return key;
+
+    // 1. Try environment variable (dev mode)
+    const envKey = getProcessApiKey();
+    if (envKey) {
+        cachedApiKey = envKey;
+        return envKey;
     }
-    
+
+    // 2. Try fetching from backend (production/secure mode)
+    try {
+        console.log('🔐 Fetching Gemini API Key from secure backend...');
+        const { getFunctionsInstance, httpsCallable } = await import('../firebase');
+        const functions = await getFunctionsInstance();
+        const getApiKey = httpsCallable(functions, 'gemini-getApiKey');
+
+        const result = await getApiKey();
+        const data = result.data as { apiKey: string };
+
+        if (data && data.apiKey) {
+            console.log('✅ Successfully retrieved Gemini API Key from backend');
+            cachedApiKey = data.apiKey;
+            return data.apiKey;
+        }
+    } catch (error) {
+        console.error('❌ Failed to fetch Gemini API Key from backend:', error);
+    }
+
     throw new Error(
-        '🔐 API key not available. In production, use the secure proxy functions instead of direct API calls.'
+        '🔐 API key not available. Please ensure you are logged in to use the Voice Assistant.'
     );
 };
 
