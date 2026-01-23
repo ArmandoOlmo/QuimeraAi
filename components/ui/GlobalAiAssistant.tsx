@@ -3461,7 +3461,7 @@ Now provide a brief response to the user about what was done.`;
                     ) : (
                         <button onClick={() => setIsOpen(true)} className="w-full text-left group">
                             <p className="text-sm text-muted-foreground group-hover:text-foreground transition-colors truncate">
-                                Pregunta a Quimera...
+                                {i18n.language.startsWith('es') ? "Pregunta a Quibo..." : "Ask Quibo..."}
                             </p>
                         </button>
                     )}
