@@ -1663,16 +1663,39 @@ const GlobalAiAssistant: React.FC = () => {
             else if (name === 'load_project') {
                 const identifier = args['identifier'];
                 const target = normalizeText(identifier);
+                console.log(`[Tool] load_project: searching for '${identifier}' (target: '${target}')`);
+
+                // Enhanced search strategy for voice input
                 const project = projectsRef.current.find(p => {
+                    // 1. Direct match (ID or Exact Name)
+                    if (p.id === identifier) return true;
+
                     const pName = normalizeText(p.name);
-                    return p.id === identifier || pName === target || pName.includes(target) || target.includes(pName);
+                    if (pName === target) return true;
+                    if (pName.includes(target)) return true;
+                    if (target.includes(pName)) return true;
+
+                    // 2. Token-based fuzzy match (useful for voice transcription errors)
+                    // e.g. "closets ways" vs "CVlosets Ways"
+                    const targetTokens = target.split(/\s+/).filter(t => t.length > 2);
+                    const nameTokens = pName.split(/\s+/).filter(t => t.length > 2);
+
+                    if (targetTokens.length === 0 || nameTokens.length === 0) return false;
+
+                    // Check if *any* significant token matches exactly
+                    const hasTokenMatch = targetTokens.some(tt => nameTokens.includes(tt));
+                    if (hasTokenMatch) return true;
+
+                    return false;
                 });
+
                 if (project) {
                     if (activeProjectRef.current?.id === project.id) {
                         const result = { result: `Project '${project.name}' is already active.` };
                         console.log(`[Tool Result] ${name}`, result);
                         return result;
                     }
+                    console.log(`[Tool] Project found: ${project.name} (${project.id})`);
                     loadProjectRef.current(project.id);
                     activeProjectRef.current = project;
                     dataRef.current = project.data;
@@ -1680,10 +1703,8 @@ const GlobalAiAssistant: React.FC = () => {
                     console.log(`[Tool Result] ${name}`, result);
                     return result;
                 } else {
-                    const available = projectsRef.current.slice(0, 5).map(p => p.name).join(', ');
-                    const result = { error: `Project not found. Available: ${available}...` };
-                    console.log(`[Tool Result] ${name}`, result);
-                    return result;
+                    console.log(`[Tool] Project NOT found. Available projects: ${projectsRef.current.map(p => p.name).join(', ')}`);
+                    return { error: `Project '${identifier}' not found. Ask user to list available projects.` };
                 }
             }
             else if (name === 'create_website') {
@@ -2290,10 +2311,14 @@ const GlobalAiAssistant: React.FC = () => {
             ? `Domains: ${domainsRef.current.map(d => `"${d.name}" (ID:${d.id})`).join(', ')}.`
             : "Domains: Empty.";
 
-        const projectList = projectsRef.current.slice(0, 15).map(p => `"${p.name}"`).join(', ');
-        const projectContext = `Projects: [${projectList}].`;
+        // Enhanced Project Context: Include ID and limited description/URL if available, increase limit
+        const projectList = projectsRef.current
+            .slice(0, 50) // Increased limit to ensure we catch user's recent projects
+            .map(p => `"${p.name}" (ID: ${p.id}${p.url ? `, URL: ${p.url}` : ''})`)
+            .join(', ');
+        const projectContext = `Available Projects: [${projectList}].`;
 
-        const activeContext = `STATE: Active Project: ${activeProject ? activeProject.name : "None"}. View: ${viewRef.current}.`;
+        const activeContext = `STATE: Active Project: ${activeProject ? `${activeProject.name} (ID: ${activeProject.id})` : "None"}. View: ${viewRef.current}.`;
 
         // Components context
         const enabledComponents = Object.entries(componentStatusRef.current || {})
