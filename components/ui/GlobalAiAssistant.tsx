@@ -2314,9 +2314,15 @@ const GlobalAiAssistant: React.FC = () => {
         // Enhanced Project Context: Include ID and limited description/URL if available, increase limit
         const projectList = projectsRef.current
             .slice(0, 50) // Increased limit to ensure we catch user's recent projects
-            .map(p => `"${p.name}" (ID: ${p.id}${p.url ? `, URL: ${p.url}` : ''})`)
+            .map(p => `"${p.name}" (ID: ${p.id}${(p as any).url ? `, URL: ${(p as any).url}` : ''})`)
             .join(', ');
         const projectContext = `Available Projects: [${projectList}].`;
+
+        let dataStructureContext = "Active Project Data Structure: None (No project loaded).";
+        if (dataRef.current) {
+            const keys = Object.keys(dataRef.current).filter(k => typeof dataRef.current[k] === 'object').join(', ');
+            dataStructureContext = `ACTIVE PROJECT DATA STRUCTURE:\n- Available Sections: [${keys}]\n- To edit content, use 'update_site_content' with 'path' (e.g. 'hero.headline', 'features.title') and 'value'.\n- To open a section in the editor, use 'select_section'.`;
+        }
 
         const activeContext = `STATE: Active Project: ${activeProject ? `${activeProject.name} (ID: ${activeProject.id})` : "None"}. View: ${viewRef.current}.`;
 
@@ -2338,7 +2344,7 @@ const GlobalAiAssistant: React.FC = () => {
             : "";
 
         // 5. Compile final instruction
-        return `${baseInstruction}\n\n${templatesInstruction}\n\n${scopeText}\n\n${projectContext}\n${cmsContext}\n${leadsContext}\n${domainsContext}\n${componentsContext}\n${customContext}\n${activeContext}`;
+        return `${baseInstruction}\n\n${templatesInstruction}\n\n${scopeText}\n\n${projectContext}\n${dataStructureContext}\n${cmsContext}\n${leadsContext}\n${domainsContext}\n${componentsContext}\n${customContext}\n${activeContext}`;
     };
 
     // DEPRECATED: Old hardcoded content (now in prompt templates)
