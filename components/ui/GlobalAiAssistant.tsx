@@ -959,6 +959,45 @@ async function decodeAudioData(
     return buffer;
 }
 
+// Helper to generate compact schema for AI to prevent hallucinations
+const generateDataSchema = (data: any): string => {
+    if (!data) return "No data available";
+
+    const lines: string[] = [];
+    Object.keys(data).forEach(sectionKey => {
+        const section = data[sectionKey];
+        if (typeof section !== 'object' || section === null) return;
+        if (sectionKey === 'activePage' || sectionKey === 'pages') return; // Skip complex internal objects
+
+        const props: string[] = [];
+        Object.keys(section).forEach(propKey => {
+            const val = section[propKey];
+            const type = typeof val;
+
+            if (type === 'string' || type === 'number' || type === 'boolean') {
+                props.push(propKey);
+            } else if (type === 'object' && val !== null && !Array.isArray(val)) {
+                // Nested object (recurse one level specifically for colors/styles)
+                const subKeys = Object.keys(val);
+                if (subKeys.length > 0) {
+                    // Compact format: colors.{bg,text}
+                    // Truncate if too many subkeys
+                    const displayKeys = subKeys.length > 8 ? subKeys.slice(0, 8).concat('...') : subKeys;
+                    props.push(`${propKey}.{${displayKeys.join(',')}}`);
+                }
+            } else if (Array.isArray(val)) {
+                props.push(`${propKey}[]`);
+            }
+        });
+
+        // Only add sections that have properties
+        if (props.length > 0) {
+            lines.push(`- ${sectionKey}: [${props.join(', ')}]`);
+        }
+    });
+    return lines.join('\n');
+};
+
 function floatTo16BitPCM(float32Array: Float32Array): ArrayBuffer {
     const buffer = new ArrayBuffer(float32Array.length * 2);
     const view = new DataView(buffer);
@@ -1701,8 +1740,8 @@ const GlobalAiAssistant: React.FC = () => {
                     dataRef.current = project.data;
 
                     // Generate context immediately for the AI to know what it can edit
-                    const keys = Object.keys(project.data).filter(k => typeof project.data[k] === 'object').join(', ');
-                    const dataContext = `DATA STRUCTURE for ${project.name}:\n- Sections: [${keys}]\n- SCHEMA DATA HINTS:\n  * Simple Props (Text/Colors): Use 'update_site_content'. Text is at root (e.g. 'hero.headline'), Colors in '.colors' (e.g. 'hero.colors.background').\n  * Lists (Menu, Features): Use 'manage_section_items'.`;
+                    const schema = generateDataSchema(project.data);
+                    const dataContext = `DATA STRUCTURE for ${project.name} (Available Paths):\n${schema}\n- Use 'update_site_content' for single values.\n- Use 'manage_section_items' for arrays/lists.`;
 
                     const result = { result: `Project '${project.name}' loaded successfully.\n${dataContext}` };
                     console.log(`[Tool Result] ${name}`, result);
@@ -2325,8 +2364,8 @@ const GlobalAiAssistant: React.FC = () => {
 
         let dataStructureContext = "Active Project Data Structure: None (No project loaded).";
         if (dataRef.current) {
-            const keys = Object.keys(dataRef.current).filter(k => typeof dataRef.current[k] === 'object').join(', ');
-            dataStructureContext = `ACTIVE PROJECT DATA STRUCTURE:\n- Available Sections: [${keys}]\n- SCHEMA DATA HINTS:\n  * Simple Props (Text/Colors/Toggles): Use 'update_site_content'. Text is at root (e.g. 'hero.headline'), Colors in '.colors' (e.g. 'hero.colors.background').\n  * Lists/Arrays (Testimonials, Menu Items, Features): Use 'manage_section_items' (actions: add, update, remove, reorder).\n  * Images: Use 'update_site_content' with 'imageUrl' path or generate new ones.`;
+            const schema = generateDataSchema(dataRef.current);
+            dataStructureContext = `ACTIVE PROJECT DATA STRUCTURE (AVAILABLE PATHS):\n${schema}\n\nEDITING RULES:\n1. Use 'update_site_content' with 'path' matching the schema (e.g. 'hero.headline', 'hero.colors.primary').\n2. Use 'manage_section_items' for paths ending in [] (e.g. 'features.items[]') to add/remove list items.\n3. Do NOT invent keys not shown in the schema.`;
         }
 
         const activeContext = `STATE: Active Project: ${activeProject ? `${activeProject.name} (ID: ${activeProject.id})` : "None"}. View: ${viewRef.current}.`;
