@@ -16,7 +16,8 @@ import ReactMarkdown from 'react-markdown';
 import { initialData } from '../../data/initialData';
 import { LeadStatus, CMSPost, Lead, PageData } from '../../types';
 import { getGoogleGenAI } from '../../utils/genAiClient';
-import { generateContentViaProxy, extractTextFromResponse } from '../../utils/geminiProxyClient';
+import { generateContentViaProxy, extractTextFromResponse, generateMultimodalContentViaProxy } from '../../utils/geminiProxyClient';
+import { captureCurrentView } from '../../utils/visionUtils';
 import { PROMPT_TEMPLATES, compileTemplates, getDefaultEnabledTemplates } from '../../data/promptTemplates';
 import { logApiCall } from '../../services/apiLoggingService';
 import { db, collection, doc, addDoc, updateDoc, deleteDoc, getDoc, setDoc, serverTimestamp } from '../../firebase';
@@ -1022,7 +1023,7 @@ const GlobalAiAssistant: React.FC = () => {
     const {
         userDocument, setAdminView, data, setData, themeMode, setThemeMode, loadProject, activeProject,
         hasApiKey, promptForKeySelection, handleApiError, globalAssistantConfig,
-        theme, setTheme, viewId, toggleSidebar,
+        theme, setTheme,
         getPrompt, addNewProject,
         updateSeoConfig,
         componentStatus, customComponents
@@ -2678,6 +2679,25 @@ You: "✓ Made the hero button green and increased its size"
                         setIsLiveActive(true);
                         isConnectedRef.current = true;
 
+                        // Capture and send initial visual context
+                        captureCurrentView().then(screenCapture => {
+                            if (screenCapture && isConnectedRef.current) {
+                                console.log('[Voice Mode] Sending initial screen context...');
+                                sessionPromise.then(session => {
+                                    try {
+                                        session.sendRealtimeInput({
+                                            media: {
+                                                mimeType: "image/jpeg",
+                                                data: screenCapture
+                                            }
+                                        });
+                                    } catch (e) {
+                                        console.error('[Voice Mode] Failed to send initial screen context:', e);
+                                    }
+                                });
+                            }
+                        });
+
                         // Set up audio processing with the already-granted microphone stream
                         const source = inputCtx.createMediaStreamSource(micStream);
                         const processor = inputCtx.createScriptProcessor(4096, 1, 1);
@@ -3357,11 +3377,34 @@ User: ${userMsg}`;
                 const chatModel = promptConfig?.model || 'gemini-2.5-flash';
                 // Ensure minimum 2048 tokens to avoid MAX_TOKENS truncation with empty content
                 const configuredMaxTokens = Math.max(2048, typeof globalAssistantConfig?.maxTokens === 'number' ? globalAssistantConfig.maxTokens : 2048);
-
-                const response = await generateContentViaProxy(proxyProjectId, fullPrompt, chatModel, {
+                const proxyConfig = {
                     temperature: typeof globalAssistantConfig?.temperature === 'number' ? globalAssistantConfig.temperature : 0.7,
                     maxOutputTokens: configuredMaxTokens
-                }, user?.uid);
+                };
+
+                // Capture screen context for text chat
+                let response;
+                const screenCapture = await captureCurrentView();
+
+                if (screenCapture) {
+                    console.log('[Global Assistant] Sending request with visual context...');
+                    response = await generateMultimodalContentViaProxy(
+                        proxyProjectId,
+                        fullPrompt,
+                        [{ mimeType: "image/jpeg", data: screenCapture }],
+                        chatModel,
+                        proxyConfig,
+                        user?.uid
+                    );
+                } else {
+                    response = await generateContentViaProxy(
+                        proxyProjectId,
+                        fullPrompt,
+                        chatModel,
+                        proxyConfig,
+                        user?.uid
+                    );
+                }
 
                 let responseText = extractTextFromResponse(response).trim();
                 console.log('[Global Assistant] Proxy Response:', responseText?.substring(0, 300));
@@ -3424,17 +3467,11 @@ Now provide a brief response to the user about what was done.`;
     // FOOTER TRIGGER BAR (Always visible - shows voice-active state inline)
     // =========================================================================
     const footerTriggerContent = (
-        <div className="fixed bottom-6 inset-x-0 z-50 px-6 pointer-events-none">
+        <div id="global-ai-assistant-footer" className="fixed bottom-6 inset-x-0 z-50 px-6 pointer-events-none">
             <div className={`assistant-footer-trigger pointer-events-auto mx-auto flex items-center gap-3 px-5 py-3 backdrop-blur-lg border rounded-full shadow-xl transition-all max-w-md w-full ${isLiveActive ? 'bg-primary/20 border-primary/50 animate-pulse' : 'bg-card/95 border-border hover:shadow-2xl'}`}>
                 {/* Logo with voice-active indicator */}
                 <div className="relative shrink-0">
-                    {isLiveActive && (
-                        <>
-                            {/* Sound wave rings when voice is active */}
-                            <div className="absolute inset-0 w-9 h-9 rounded-full border border-primary/50 animate-ping" style={{ animationDuration: '1.5s' }} />
-                            <div className="absolute inset-0 w-9 h-9 rounded-full border border-primary/30 animate-ping" style={{ animationDuration: '1.5s', animationDelay: '0.5s' }} />
-                        </>
-                    )}
+
                     <img src={LOGO_URL} alt="Quimera" className={`w-9 h-9 object-contain transition-transform ${isLiveActive ? 'scale-110' : 'group-hover:scale-110'}`} />
                     <div className={`absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-card ${isLiveActive ? 'bg-red-500 animate-pulse' : 'bg-green-500'}`} />
                 </div>
@@ -3498,7 +3535,7 @@ Now provide a brief response to the user about what was done.`;
     // DRAWER CONTENT (Bottom sheet with chat)
     // =========================================================================
     const drawerContent = (
-        <div className={`fixed z-[10000] bg-card border border-border shadow-2xl rounded-3xl flex flex-col overflow-hidden transition-all duration-300 animate-drawer-slide-up ${isExpanded ? 'inset-4' : 'bottom-6 left-4 right-4 md:left-auto md:right-6 md:w-[420px] h-[65vh] md:h-[550px]'}`}>
+        <div id="global-ai-assistant-drawer" className={`fixed z-[10000] bg-card border border-border shadow-2xl rounded-3xl flex flex-col overflow-hidden transition-all duration-300 animate-drawer-slide-up ${isExpanded ? 'inset-4' : 'bottom-6 left-4 right-4 md:left-auto md:right-6 md:w-[420px] h-[65vh] md:h-[550px]'}`}>
             {/* Drawer Header */}
             <div className="p-4 flex justify-between items-center bg-primary text-primary-foreground shrink-0">
                 {/* Handle for mobile */}
@@ -3561,7 +3598,7 @@ Now provide a brief response to the user about what was done.`;
                             <img src={LOGO_URL} alt="Bot" className="w-5 h-5 object-contain animate-pulse" />
                         </div>
                         <div className="bg-card border border-border px-4 py-3 rounded-2xl rounded-tl-sm shadow-sm flex items-center gap-2 text-sm text-muted-foreground">
-                            <Loader2 size={14} className="animate-spin text-primary" />
+                            <img src="https://firebasestorage.googleapis.com/v0/b/quimeraai.firebasestorage.app/o/quimera%2Fquimeralogo.png?alt=media&token=82368c1c-0f63-42b7-831f-72780006f032" alt="Loading..." className="w-4 h-4 object-contain animate-pulse" />
                             <span>Ejecutando acciones...</span>
                         </div>
                     </div>
@@ -3574,7 +3611,7 @@ Now provide a brief response to the user about what was done.`;
                             <img src={LOGO_URL} alt="Bot" className="w-5 h-5 object-contain" />
                         </div>
                         <div className="bg-card border border-border px-4 py-3 rounded-2xl rounded-tl-sm shadow-sm flex items-center gap-2 text-sm text-muted-foreground">
-                            <Loader2 size={14} className="animate-spin text-primary" />
+                            <img src="https://firebasestorage.googleapis.com/v0/b/quimeraai.firebasestorage.app/o/quimera%2Fquimeralogo.png?alt=media&token=82368c1c-0f63-42b7-831f-72780006f032" alt="Loading..." className="w-4 h-4 object-contain animate-pulse" />
                             <span>Pensando...</span>
                         </div>
                     </div>
@@ -3603,10 +3640,10 @@ Now provide a brief response to the user about what was done.`;
                         <button
                             onClick={startLiveSession}
                             disabled={isConnecting || isLiveActive || hasApiKey === false}
-                            className={`p-2 rounded-full transition-all ${isConnecting ? 'text-muted-foreground animate-spin' : 'text-muted-foreground hover:text-primary hover:bg-primary/10'}`}
+                            className={`p-2 rounded-full transition-all ${isConnecting ? 'text-muted-foreground' : 'text-muted-foreground hover:text-primary hover:bg-primary/10'}`}
                             title="Iniciar modo de voz"
                         >
-                            {isConnecting ? <Loader2 size={20} /> : <Mic size={20} />}
+                            {isConnecting ? <img src="https://firebasestorage.googleapis.com/v0/b/quimeraai.firebasestorage.app/o/quimera%2Fquimeralogo.png?alt=media&token=82368c1c-0f63-42b7-831f-72780006f032" alt="Connecting..." className="w-5 h-5 object-contain animate-pulse" /> : <Mic size={20} />}
                         </button>
                     )}
                     <button

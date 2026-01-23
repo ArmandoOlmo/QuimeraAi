@@ -30,7 +30,11 @@ const StorefrontApp = lazyWithRetry(() => import('./components/ecommerce/Storefr
 // Minimal loading fallback for lazy components
 const MinimalLoader = () => (
   <div className="flex items-center justify-center min-h-screen bg-background">
-    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+    <img
+      src="https://firebasestorage.googleapis.com/v0/b/quimeraai.firebasestorage.app/o/quimera%2Fquimeralogo.png?alt=media&token=82368c1c-0f63-42b7-831f-72780006f032"
+      alt="Loading..."
+      className="w-12 h-12 object-contain animate-pulse"
+    />
   </div>
 );
 

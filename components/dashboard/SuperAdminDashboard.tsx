@@ -8,7 +8,7 @@ import {
     Shield, Users, LayoutTemplate, Bot, BarChart3, Puzzle,
     ArrowLeft, Menu, Image, MessageSquare, PackageSearch, Palette,
     FlaskConical, Languages, Search, FileText, FolderOpen,
-    Navigation, Star, Settings, Grid3x3, List, X, Sparkles, Zap
+    Navigation, Star, Settings, Grid3x3, List, X, Sparkles, Zap, Newspaper
 } from 'lucide-react';
 import DashboardSidebar from './DashboardSidebar';
 import AdminViewLayout from './admin/AdminViewLayout';
@@ -34,6 +34,7 @@ import ChangelogManagement from './admin/ChangelogManagement';
 import GlobalTrackingPixels from './admin/GlobalTrackingPixels';
 import GlobalChatbotPromptsSettings from './admin/GlobalChatbotPromptsSettings';
 import ExecutionModeToggle from './admin/ExecutionModeToggle';
+import NewsManagement from './admin/NewsManagement';
 
 // Types
 type AdminFeature = {
@@ -72,6 +73,7 @@ const ADMIN_ROUTES: Record<string, string> = {
     'landing-chatbot': ROUTES.ADMIN_LANDING_CHATBOT,
     'changelog': ROUTES.ADMIN_CHANGELOG,
     'global-tracking-pixels': ROUTES.ADMIN_GLOBAL_TRACKING_PIXELS,
+    'news': ROUTES.ADMIN_NEWS,
 };
 
 // Components
@@ -228,6 +230,7 @@ const SuperAdminDashboard = () => {
         { id: 'subscriptions', title: t('superadmin.subscriptions'), description: t('superadmin.subscriptionsDesc'), icon: <Sparkles size={24} />, category: 'core', route: ROUTES.ADMIN_SUBSCRIPTIONS, isNew: true, allowedRoles: ['owner', 'superadmin'] },
 
         // Content Management
+        { id: 'news', title: t('admin.news.title', 'Noticias y Novedades'), description: t('superadmin.newsDesc', 'Gestionar noticias y actualizaciones para el dashboard'), icon: <Newspaper size={24} />, category: 'content', route: ROUTES.ADMIN_NEWS, isNew: true, allowedRoles: ['owner', 'superadmin', 'admin'] },
         { id: 'templates', title: t('superadmin.websiteTemplates'), description: t('superadmin.websiteTemplatesDesc'), icon: <LayoutTemplate size={24} />, category: 'content', route: ROUTES.ADMIN_TEMPLATES, allowedRoles: ['owner', 'superadmin', 'admin'] },
         { id: 'components', title: t('superadmin.components'), description: t('superadmin.componentsDesc'), icon: <Puzzle size={24} />, category: 'content', route: ROUTES.ADMIN_COMPONENTS, allowedRoles: ['owner', 'superadmin', 'admin'] },
         { id: 'content', title: t('superadmin.contentManagement'), description: t('superadmin.contentManagementDesc'), icon: <FileText size={24} />, category: 'content', route: ROUTES.ADMIN_CONTENT, allowedRoles: ['owner', 'superadmin', 'admin'] },
@@ -310,6 +313,7 @@ const SuperAdminDashboard = () => {
     if (adminView === 'landing-chatbot') return <LandingChatbotAdmin onBack={handleBack} />;
     if (adminView === 'global-tracking-pixels') return <GlobalTrackingPixels onBack={handleBack} />;
     if (adminView === 'execution-mode') return <ExecutionModeToggle onBack={handleBack} />;
+    if (adminView === 'news') return <NewsManagement onBack={handleBack} />;
     if (adminView === 'design-tokens') return <AdminViewLayout title={t('superadmin.designTokensTitle')} onBack={handleBack}><DesignTokensEditor /></AdminViewLayout>;
     if (adminView === 'analytics') return <AdminViewLayout title={t('superadmin.componentAnalyticsTitle')} onBack={handleBack} noPadding><AnalyticsDashboard /></AdminViewLayout>;
 

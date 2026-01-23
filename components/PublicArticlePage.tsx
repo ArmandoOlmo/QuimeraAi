@@ -51,6 +51,7 @@ const CATEGORY_LABELS: Record<AppArticleCategory, string> = {
   'announcement': 'Announcement',
   'guide': 'Guide',
   'update': 'Product Update',
+  'help': 'Help Center',
 };
 
 const PublicArticlePage: React.FC<PublicArticlePageProps> = ({
@@ -63,7 +64,7 @@ const PublicArticlePage: React.FC<PublicArticlePageProps> = ({
 }) => {
   const { t } = useTranslation();
   const appContent = useSafeAppContent();
-  
+
   const articles = appContent?.articles || [];
   const isLoading = appContent?.isLoadingArticles || false;
 
@@ -76,9 +77,9 @@ const PublicArticlePage: React.FC<PublicArticlePageProps> = ({
   const relatedArticles = useMemo(() => {
     if (!article) return [];
     return articles
-      .filter(a => 
-        a.id !== article.id && 
-        a.status === 'published' && 
+      .filter(a =>
+        a.id !== article.id &&
+        a.status === 'published' &&
         (a.category === article.category || a.tags.some(tag => article.tags.includes(tag)))
       )
       .slice(0, 3);
@@ -87,17 +88,17 @@ const PublicArticlePage: React.FC<PublicArticlePageProps> = ({
   // Convert Markdown to HTML and sanitize
   const sanitizedContent = useMemo(() => {
     if (!article || !article.content) return '';
-    
+
     try {
       // Detect Markdown by common patterns
-      const isMarkdown = article.content.trim().startsWith('#') || 
-                         article.content.includes('\n##') ||
-                         article.content.includes('\n- ') ||
-                         article.content.includes('\n* ') ||
-                         article.content.includes('```');
-      
+      const isMarkdown = article.content.trim().startsWith('#') ||
+        article.content.includes('\n##') ||
+        article.content.includes('\n- ') ||
+        article.content.includes('\n* ') ||
+        article.content.includes('```');
+
       let htmlContent: string;
-      
+
       if (isMarkdown) {
         // Parse markdown to HTML
         const parsed = marked.parse(article.content);
@@ -107,7 +108,7 @@ const PublicArticlePage: React.FC<PublicArticlePageProps> = ({
         const containsHtmlTags = /<[a-z][\s\S]*>/i.test(article.content);
         htmlContent = containsHtmlTags ? article.content : marked.parse(article.content) as string;
       }
-      
+
       return sanitizeHtml(htmlContent);
     } catch (error) {
       console.error('Error parsing article content:', error);
@@ -144,7 +145,7 @@ const PublicArticlePage: React.FC<PublicArticlePageProps> = ({
   if (isLoading) {
     return (
       <div className="min-h-screen bg-[#0A0A0A] text-white flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-yellow-400 border-t-transparent rounded-full animate-spin" />
+        <img src="https://firebasestorage.googleapis.com/v0/b/quimeraai.firebasestorage.app/o/quimera%2Fquimeralogo.png?alt=media&token=82368c1c-0f63-42b7-831f-72780006f032" alt="Loading..." className="w-8 h-8 object-contain animate-pulse" />
       </div>
     );
   }
@@ -218,8 +219,8 @@ const PublicArticlePage: React.FC<PublicArticlePageProps> = ({
       <div className="relative">
         {article.featuredImage ? (
           <div className="relative h-[40vh] sm:h-[50vh] overflow-hidden">
-            <img 
-              src={article.featuredImage} 
+            <img
+              src={article.featuredImage}
               alt={article.title}
               className="w-full h-full object-cover"
             />
@@ -338,7 +339,7 @@ const PublicArticlePage: React.FC<PublicArticlePageProps> = ({
 
         {/* Content */}
         <article className="max-w-3xl mx-auto py-12">
-          <div 
+          <div
             className="prose prose-lg prose-invert max-w-none
               prose-headings:font-bold prose-headings:text-white
               prose-p:text-gray-300 prose-p:leading-relaxed

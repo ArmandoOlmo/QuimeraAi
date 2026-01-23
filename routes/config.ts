@@ -125,6 +125,7 @@ export const ROUTES = {
   ADMIN_GLOBAL_TRACKING_PIXELS: '/admin/global-tracking-pixels',
   ADMIN_CHATBOT_PROMPTS: '/admin/chatbot-prompts',
   ADMIN_EXECUTION_MODE: '/admin/execution-mode',
+  ADMIN_NEWS: '/admin/news',
 } as const;
 
 // =============================================================================
@@ -783,6 +784,17 @@ export const routeConfigs: RouteConfig[] = [
     requiresAuth: true,
     requiresEmailVerified: true,
     roles: ['owner', 'superadmin'],
+    parent: ROUTES.SUPERADMIN,
+  },
+  {
+    path: ROUTES.ADMIN_NEWS,
+    view: 'superadmin',
+    adminView: 'news',
+    type: 'admin',
+    title: 'News & Updates',
+    requiresAuth: true,
+    requiresEmailVerified: true,
+    roles: ['owner', 'superadmin', 'admin'],
     parent: ROUTES.SUPERADMIN,
   },
 ];

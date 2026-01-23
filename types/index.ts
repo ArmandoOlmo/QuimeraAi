@@ -55,6 +55,9 @@ export * from './appContent';
 // Landing Chatbot Types (Chatbot público de Quimera.ai)
 export * from './landingChatbot';
 
+// News & Updates Types (Dashboard news feed)
+export * from './news';
+
 
 
 

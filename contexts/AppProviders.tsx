@@ -26,6 +26,7 @@ import { AppContentProvider } from './appContent';
 import { UpgradeProvider } from './UpgradeContext';
 import { PlansProvider } from './PlansContext';
 import { AgencyProvider } from './agency/AgencyContext';
+import { NewsProvider } from './news';
 
 interface AppProvidersProps {
     children: ReactNode;
@@ -52,9 +53,11 @@ export const AppProviders: React.FC<AppProvidersProps> = ({ children }) => {
                                                             <DomainsProvider>
                                                                 <AIProvider>
                                                                     <AgencyProvider>
-                                                                        <UpgradeProvider>
-                                                                            {children}
-                                                                        </UpgradeProvider>
+                                                                        <NewsProvider>
+                                                                            <UpgradeProvider>
+                                                                                {children}
+                                                                            </UpgradeProvider>
+                                                                        </NewsProvider>
                                                                     </AgencyProvider>
                                                                 </AIProvider>
                                                             </DomainsProvider>

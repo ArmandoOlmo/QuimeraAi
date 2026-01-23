@@ -11,10 +11,10 @@ interface GeneratingStateProps {
     imageProgress?: ImageGenerationProgress;
 }
 
-const GeneratingState: React.FC<GeneratingStateProps> = ({ 
-    statusText, 
+const GeneratingState: React.FC<GeneratingStateProps> = ({
+    statusText,
     phase = 'content',
-    imageProgress 
+    imageProgress
 }) => {
     const { t } = useTranslation();
 
@@ -26,9 +26,9 @@ const GeneratingState: React.FC<GeneratingStateProps> = ({
                 <div className="relative w-24 h-24 mb-6">
                     <div className="absolute inset-0 rounded-full bg-yellow-400/20 animate-ping"></div>
                     <div className="absolute inset-0 rounded-full bg-yellow-400/10 animate-pulse"></div>
-                    <img 
-                        src={QUIMERA_LOGO} 
-                        alt="Quimera AI" 
+                    <img
+                        src={QUIMERA_LOGO}
+                        alt="Quimera AI"
                         className="relative w-full h-full object-contain drop-shadow-[0_0_20px_rgba(250,204,21,0.5)] animate-pulse"
                     />
                 </div>
@@ -56,7 +56,7 @@ const GeneratingState: React.FC<GeneratingStateProps> = ({
             <div className="w-16 h-16 rounded-full bg-yellow-400/20 flex items-center justify-center mb-6">
                 <ImageIcon className="w-8 h-8 text-yellow-400 animate-pulse" />
             </div>
-            
+
             <h2 className="text-2xl font-bold text-white mb-2">
                 {t('imageGeneration.generatingImages')}
             </h2>
@@ -73,7 +73,7 @@ const GeneratingState: React.FC<GeneratingStateProps> = ({
                     <span className="text-sm font-bold text-yellow-400">{progressPercentage}%</span>
                 </div>
                 <div className="h-3 bg-white/10 rounded-full overflow-hidden">
-                    <div 
+                    <div
                         className="h-full bg-gradient-to-r from-yellow-400 to-orange-500 transition-all duration-500 ease-out"
                         style={{ width: `${progressPercentage}%` }}
                     />
@@ -84,7 +84,7 @@ const GeneratingState: React.FC<GeneratingStateProps> = ({
             {progress.currentSection && (
                 <div className="bg-editor-panel-bg px-4 py-2 rounded-lg mb-6">
                     <p className="text-editor-text-primary animate-pulse flex items-center gap-2">
-                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <img src={QUIMERA_LOGO} alt="Loading..." className="w-4 h-4 object-contain animate-pulse" />
                         {t('imageGeneration.generatingSection', { section: progress.currentSection })}
                     </p>
                 </div>
@@ -106,12 +106,12 @@ const GeneratingState: React.FC<GeneratingStateProps> = ({
                     </p>
                     <div className="grid grid-cols-4 gap-2">
                         {progress.completedImages.slice(-8).map((url, index) => (
-                            <div 
+                            <div
                                 key={index}
                                 className="aspect-square rounded-lg overflow-hidden bg-white/5 ring-1 ring-white/10"
                             >
-                                <img 
-                                    src={url} 
+                                <img
+                                    src={url}
                                     alt={`Generated ${index + 1}`}
                                     className="w-full h-full object-cover animate-fade-in"
                                 />
@@ -120,7 +120,7 @@ const GeneratingState: React.FC<GeneratingStateProps> = ({
                         {/* Placeholder for current generating */}
                         {progress.current < progress.total && (
                             <div className="aspect-square rounded-lg bg-white/5 ring-1 ring-white/10 flex items-center justify-center">
-                                <Loader2 className="w-4 h-4 text-yellow-400 animate-spin" />
+                                <img src={QUIMERA_LOGO} alt="Generating..." className="w-6 h-6 object-contain animate-pulse" />
                             </div>
                         )}
                     </div>
