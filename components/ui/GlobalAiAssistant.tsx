@@ -3526,16 +3526,7 @@ Now provide a brief response to the user about what was done.`;
             {!isOpen && footerTriggerContent}
 
             {/* Drawer - Shows when open (also works during voice mode) */}
-            {isOpen && (
-                <>
-                    {/* Backdrop */}
-                    <div
-                        className="fixed inset-0 z-[55] bg-black/30 backdrop-blur-sm animate-fade-in"
-                        onClick={() => setIsOpen(false)}
-                    />
-                    {drawerContent}
-                </>
-            )}
+            {isOpen && drawerContent}
         </>
     );
 };
