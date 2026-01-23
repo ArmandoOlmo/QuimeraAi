@@ -2653,6 +2653,31 @@ You: "✓ Made the hero button green and increased its size"
                         };
                         source.connect(processor);
                         processor.connect(inputCtx.destination);
+
+                        // TRIGGER INITIAL GREETING AFTER 2 SECONDS
+                        setTimeout(() => {
+                            if (!isConnectedRef.current) return;
+                            sessionPromise.then(session => {
+                                console.log('[Voice Mode] 🤖 Triggering initial greeting...');
+                                try {
+                                    // Send a text message to the model to prompt it to speak first
+                                    // Using 'user' role to simulate a user arrival/prompt
+                                    if (typeof (session as any).send === 'function') {
+                                        (session as any).send({
+                                            clientContent: {
+                                                turns: [{
+                                                    role: 'user',
+                                                    parts: [{ text: "La conexión de voz se ha establecido. Por favor saluda al usuario brevemente y pregúntale en qué puedes ayudarle hoy con su proyecto." }]
+                                                }],
+                                                turnComplete: true
+                                            }
+                                        });
+                                    }
+                                } catch (err) {
+                                    console.error('[Voice Mode] Failed to trigger greeting:', err);
+                                }
+                            });
+                        }, 2000);
                     },
                     onmessage: async (message: LiveServerMessage) => {
                         if (message.serverContent?.interrupted) {
