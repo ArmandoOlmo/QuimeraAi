@@ -9,6 +9,7 @@ import { Pencil, Trash2, Copy, Clock, Loader2, MoreVertical, ExternalLink, Downl
 import { trackProjectOpened, trackProjectDeleted } from '../../utils/analytics';
 import { downloadProjectAsJSON } from '../../utils/projectExporter';
 import ThumbnailEditor from '../ui/ThumbnailEditor';
+import Modal from '../ui/Modal';
 
 interface ProjectCardProps {
   project: Project;
@@ -29,6 +30,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
   const [isDeleting, setIsDeleting] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [showThumbnailEditor, setShowThumbnailEditor] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   const isTemplate = project.status === 'Template';
@@ -103,32 +105,30 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
 
   const projectLabel = `${project.name} - ${project.status} ${isTemplate ? 'template' : 'project'}`;
 
-  const handleDeleteClick = async (e: React.MouseEvent) => {
+  const handleDeleteClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     setShowMenu(false); // Close menu immediately
+    setShowDeleteConfirm(true);
+  };
 
+  const handleConfirmDelete = async () => {
     if (isDeleting) return;
 
-    const confirmMsg = isTemplate
-      ? t('project.deleteConfirm.template')
-      : t('project.deleteConfirm.project', { name: project.name });
-
-    if (window.confirm(confirmMsg)) {
-      setIsDeleting(true);
-      try {
-        // Track analytics before deletion
-        if (!isTemplate) {
-          trackProjectDeleted(project.id, project.name);
-        }
-
-        await deleteProject(project.id);
-        // Component will unmount on success as parent list updates via Context
-      } catch (err: any) {
-        console.error("Deletion failed", err);
-        setIsDeleting(false);
-        const errorMessage = err?.message || t('project.deleteError');
-        alert(errorMessage);
+    setIsDeleting(true);
+    try {
+      // Track analytics before deletion
+      if (!isTemplate) {
+        trackProjectDeleted(project.id, project.name);
       }
+
+      await deleteProject(project.id);
+      // Component will unmount on success as parent list updates via Context
+    } catch (err: any) {
+      console.error("Deletion failed", err);
+      setIsDeleting(false);
+      setShowDeleteConfirm(false); // Close modal on error
+      const errorMessage = err?.message || t('project.deleteError');
+      alert(errorMessage);
     }
   };
 
@@ -375,6 +375,39 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
         />,
         document.body
       )}
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        isOpen={showDeleteConfirm}
+        onClose={() => !isDeleting && setShowDeleteConfirm(false)}
+        maxWidth="max-w-md"
+      >
+        <div className="p-6">
+          <h3 className="text-xl font-bold mb-4">{t('common.confirm')}</h3>
+          <p className="text-gray-400 mb-6">
+            {isTemplate
+              ? t('project.deleteConfirm.template')
+              : t('project.deleteConfirm.project', { name: project.name })}
+          </p>
+          <div className="flex justify-end gap-3">
+            <button
+              onClick={() => setShowDeleteConfirm(false)}
+              disabled={isDeleting}
+              className="px-4 py-2 rounded-lg hover:bg-white/10 transition-colors"
+            >
+              {t('common.cancel')}
+            </button>
+            <button
+              onClick={handleConfirmDelete}
+              disabled={isDeleting}
+              className="px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white transition-colors flex items-center gap-2"
+            >
+              {isDeleting && <Loader2 className="w-4 h-4 animate-spin" />}
+              {t('common.delete')}
+            </button>
+          </div>
+        </div>
+      </Modal>
     </article>
   );
 };

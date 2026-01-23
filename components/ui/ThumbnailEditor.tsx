@@ -33,7 +33,7 @@ const ThumbnailEditor: React.FC<ThumbnailEditorProps> = ({ project, onClose, onU
 
     const { user } = useAuth();
     const { generateImage, enhancePrompt, hasApiKey, promptForKeySelection, handleApiError } = useAI();
-    const { files, globalFiles } = useFiles();
+    const { files, globalFiles, fetchGlobalFiles } = useFiles();
     const { updateProjectThumbnail, activeProject } = useProject();
     const { success: showSuccess, error: showError } = useToast();
     const [isUploading, setIsUploading] = useState(false);
@@ -56,6 +56,13 @@ const ThumbnailEditor: React.FC<ThumbnailEditorProps> = ({ project, onClose, onU
     const [librarySource, setLibrarySource] = useState<'user' | 'global'>('global');
     const [searchQuery, setSearchQuery] = useState('');
     const [selectingImageId, setSelectingImageId] = useState<string | null>(null);
+
+    // Fetch global files when tab and source are selected
+    useEffect(() => {
+        if (activeTab === 'library' && librarySource === 'global') {
+            fetchGlobalFiles();
+        }
+    }, [activeTab, librarySource, fetchGlobalFiles]);
 
     // Reset image loaded state when preview URL changes
     useEffect(() => {
