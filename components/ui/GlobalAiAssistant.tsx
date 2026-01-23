@@ -1699,7 +1699,12 @@ const GlobalAiAssistant: React.FC = () => {
                     loadProjectRef.current(project.id);
                     activeProjectRef.current = project;
                     dataRef.current = project.data;
-                    const result = { result: `Project '${project.name}' loaded.` };
+
+                    // Generate context immediately for the AI to know what it can edit
+                    const keys = Object.keys(project.data).filter(k => typeof project.data[k] === 'object').join(', ');
+                    const dataContext = `DATA STRUCTURE for ${project.name}:\n- Sections: [${keys}]\n- SCHEMA DATA HINTS:\n  * Simple Props (Text/Colors): Use 'update_site_content'. Text is at root (e.g. 'hero.headline'), Colors in '.colors' (e.g. 'hero.colors.background').\n  * Lists (Menu, Features): Use 'manage_section_items'.`;
+
+                    const result = { result: `Project '${project.name}' loaded successfully.\n${dataContext}` };
                     console.log(`[Tool Result] ${name}`, result);
                     return result;
                 } else {
