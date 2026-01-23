@@ -515,7 +515,7 @@ Asistente:`;
         return ReactDOM.createPortal(
             <button
                 onClick={() => setIsOpen(true)}
-                className={`fixed z-[99999] p-3 shadow-2xl hover:scale-110 transition-transform border-4 border-white/20 flex items-center justify-center group ${getButtonStyleClasses()} ${config.appearance.pulseEffect ? 'animate-pulse' : ''}`}
+                className={`fixed z-[9999] p-3 shadow-2xl hover:scale-110 transition-transform border-4 border-white/20 flex items-center justify-center group ${getButtonStyleClasses()} ${config.appearance.pulseEffect ? 'animate-pulse' : ''}`}
                 style={{
                     ...getPositionStyle(),
                     backgroundColor: colors?.buttonBackground
@@ -533,7 +533,7 @@ Asistente:`;
     // Open state - Chat window like GlobalAiAssistant
     const widgetContent = (
         <div
-            className="fixed z-[99999] bg-card border border-border shadow-2xl transition-all duration-300 flex flex-col overflow-hidden rounded-2xl"
+            className="fixed z-[9999] bg-card border border-border shadow-2xl transition-all duration-300 flex flex-col overflow-hidden rounded-2xl"
             style={{
                 ...getPositionStyle(),
                 width: sizeClasses.width.includes('[') ? sizeClasses.width.match(/\d+/)?.[0] + 'px' : '400px',
@@ -603,8 +603,8 @@ Asistente:`;
                             {/* Message bubble */}
                             <div
                                 className={`max-w-[80%] p-3.5 rounded-2xl text-sm leading-relaxed shadow-sm ${message.role === 'user'
-                                        ? 'rounded-tr-sm'
-                                        : 'rounded-tl-sm border'
+                                    ? 'rounded-tr-sm'
+                                    : 'rounded-tl-sm border'
                                     }`}
                                 style={{
                                     backgroundColor: message.role === 'user' ? colors?.userBubbleBackground : colors?.background,

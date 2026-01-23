@@ -22,6 +22,7 @@ import { logApiCall } from '../../services/apiLoggingService';
 import { db, collection, doc, addDoc, updateDoc, deleteDoc, getDoc, setDoc, serverTimestamp } from '../../firebase';
 import { Timestamp } from 'firebase/firestore';
 import { dateToTimestamp } from '../dashboard/appointments/utils/appointmentHelpers';
+import { useTranslation } from 'react-i18next';
 // ... existing imports ...
 
 // --- Types ---
@@ -1017,10 +1018,11 @@ const normalizeText = (str: string) => {
 const LOGO_URL = "https://firebasestorage.googleapis.com/v0/b/quimeraai.firebasestorage.app/o/quimera%2Fquimeralogo.png?alt=media&token=82368c1c-0f63-42b7-831f-72780006f032";
 
 const GlobalAiAssistant: React.FC = () => {
+    const { t, i18n } = useTranslation();
     const {
         userDocument, setAdminView, data, setData, themeMode, setThemeMode, loadProject, activeProject,
         hasApiKey, promptForKeySelection, handleApiError, globalAssistantConfig,
-        theme, setTheme,
+        theme, setTheme, viewId, toggleSidebar,
         getPrompt, addNewProject,
         updateSeoConfig,
         componentStatus, customComponents
@@ -3496,7 +3498,7 @@ Now provide a brief response to the user about what was done.`;
     // DRAWER CONTENT (Bottom sheet with chat)
     // =========================================================================
     const drawerContent = (
-        <div className={`fixed z-[60] bg-card border border-border shadow-2xl rounded-3xl flex flex-col overflow-hidden transition-all duration-300 animate-drawer-slide-up ${isExpanded ? 'inset-4' : 'bottom-6 left-4 right-4 md:left-auto md:right-6 md:w-[420px] h-[65vh] md:h-[550px]'}`}>
+        <div className={`fixed z-[10000] bg-card border border-border shadow-2xl rounded-3xl flex flex-col overflow-hidden transition-all duration-300 animate-drawer-slide-up ${isExpanded ? 'inset-4' : 'bottom-6 left-4 right-4 md:left-auto md:right-6 md:w-[420px] h-[65vh] md:h-[550px]'}`}>
             {/* Drawer Header */}
             <div className="p-4 flex justify-between items-center bg-primary text-primary-foreground shrink-0">
                 {/* Handle for mobile */}
@@ -3592,7 +3594,7 @@ Now provide a brief response to the user about what was done.`;
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && handleTextSend()}
-                        placeholder="Escribe un mensaje..."
+                        placeholder={i18n.language.startsWith('es') ? "Pregunta a Quibo..." : "Ask Quibo..."}
                         className="flex-1 bg-transparent px-2 text-sm outline-none text-foreground placeholder:text-muted-foreground/50"
                         disabled={isLiveActive}
                         autoFocus
