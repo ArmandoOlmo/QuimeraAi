@@ -90,44 +90,65 @@ export async function publishProject(options: PublishOptions): Promise<PublishRe
         // =========================================================================
         // PASO 1: Obtener el proyecto (desde snapshot o Firestore)
         // =========================================================================
-        const projectPath = tenantId
-            ? ['tenants', tenantId, 'projects', projectId]
-            : ['users', userId, 'projects', projectId];
-
-        let project: Project;
+        let project: Project | null = null;
 
         if (projectSnapshot) {
             // USE SNAPSHOT DIRECTLY (from editor - single source of truth)
-            console.log(`📸 [PublishService] Using snapshot from editor (not reading from Firestore)`);
+            console.log(`📸 [PublishService] Using snapshot from editor`);
             project = projectSnapshot as Project;
+        } else {
+            // FALLBACK: Read from Firestore
+            // Try primary path first
+            const primaryPath = tenantId
+                ? ['tenants', tenantId, 'projects', projectId]
+                : ['users', userId, 'projects', projectId];
 
-            // Optionally save the snapshot to Firestore first (as draft)
-            if (saveDraftFirst) {
-                console.log(`💾 [PublishService] Saving draft to Firestore first...`);
-                const projectRef = doc(db, ...projectPath);
-                // Filter out undefined values (Firestore doesn't accept undefined)
-                const draftData: Record<string, any> = {
-                    lastUpdated: new Date().toISOString(),
-                };
-                for (const [key, value] of Object.entries(projectSnapshot)) {
-                    if (value !== undefined) {
-                        draftData[key] = value;
+            console.log(`📂 [PublishService] Reading project from primary path: ${primaryPath.join('/')}`);
+            const primaryRef = doc(db, primaryPath[0], ...primaryPath.slice(1));
+            const primarySnap = await getDoc(primaryRef);
+
+            if (primarySnap.exists()) {
+                project = { id: primarySnap.id, ...primarySnap.data() } as Project;
+            } else {
+                // Secondary path (try the other one to be robust)
+                // If tenantId was provided, try user path as fallback
+                // If no tenantId, we can only try the user path (which we already did)
+                if (tenantId) {
+                    const fallbackPath = ['users', userId, 'projects', projectId];
+                    console.log(`📂 [PublishService] Not found in tenant. Trying user path: ${fallbackPath.join('/')}`);
+                    const fallbackRef = doc(db, fallbackPath[0], ...fallbackPath.slice(1));
+                    const fallbackSnap = await getDoc(fallbackRef);
+                    if (fallbackSnap.exists()) {
+                        project = { id: fallbackSnap.id, ...fallbackSnap.data() } as Project;
                     }
                 }
-                await setDoc(projectRef, draftData, { merge: true });
-                console.log(`✅ [PublishService] Draft saved to ${projectPath.join('/')}`);
             }
-        } else {
-            // FALLBACK: Read from Firestore (for cases like admin deploying another user's project)
-            console.log(`📂 [PublishService] Reading project from Firestore (no snapshot provided)`);
-            const projectRef = doc(db, ...projectPath);
-            const projectSnap = await getDoc(projectRef);
+        }
 
-            if (!projectSnap.exists()) {
-                throw new Error(`Project ${projectId} not found at path: ${projectPath.join('/')}`);
+        if (!project) {
+            throw new Error(`Project ${projectId} not found in user or tenant path.`);
+        }
+
+        // Update projectPath for snapshot saving if needed
+        const finalProjectPath = (project as any).tenantId
+            ? ['tenants', (project as any).tenantId, 'projects', projectId]
+            : ['users', userId, 'projects', projectId];
+
+        if (projectSnapshot && saveDraftFirst) {
+            console.log(`💾 [PublishService] Saving draft to Firestore first...`);
+            // Correctly spread the path into the doc function
+            const projectRef = doc(db, finalProjectPath[0], ...finalProjectPath.slice(1));
+            // Filter out undefined values (Firestore doesn't accept undefined)
+            const draftData: Record<string, any> = {
+                lastUpdated: new Date().toISOString(),
+            };
+            for (const [key, value] of Object.entries(projectSnapshot)) {
+                if (value !== undefined) {
+                    draftData[key] = value;
+                }
             }
-
-            project = { id: projectSnap.id, ...projectSnap.data() } as Project;
+            await setDoc(projectRef, draftData, { merge: true });
+            console.log(`✅ [PublishService] Draft saved to ${finalProjectPath.join('/')}`);
         }
 
         console.log(`📋 [PublishService] Project ready: "${project.name}"`);
@@ -194,7 +215,7 @@ export async function publishProject(options: PublishOptions): Promise<PublishRe
             // === METADATA DE PUBLICACIÓN ===
             publishedAt,
             updatedAt: publishedAt,
-            sourceProjectPath: projectPath.join('/'),
+            sourceProjectPath: finalProjectPath.join('/'),
 
             // === FAVICON ===
             faviconUrl: project.faviconUrl || null,
@@ -237,7 +258,7 @@ export async function publishProject(options: PublishOptions): Promise<PublishRe
                 // For now, let's try a workaround by deleting and recreating if we're the actual owner.
 
                 // First, check if this is actually our project in the source collection
-                const sourceProjectRef = doc(db, ...projectPath);
+                const sourceProjectRef = doc(db, finalProjectPath[0], ...finalProjectPath.slice(1));
                 const sourceProjectSnap = await getDoc(sourceProjectRef);
 
                 if (sourceProjectSnap.exists()) {
@@ -391,7 +412,7 @@ async function publishCMSData(
             ? ['tenants', tenantId, 'projects', projectId, 'posts']
             : ['users', userId, 'projects', projectId, 'posts'];
 
-        const privatePostsRef = collection(db, ...projectPostsPath);
+        const privatePostsRef = collection(db, projectPostsPath[0], ...projectPostsPath.slice(1));
         const postsSnapshot = await getDocs(privatePostsRef);
 
         if (!postsSnapshot.empty) {

@@ -2815,12 +2815,13 @@ const Controls: React.FC = () => {
           <div className="flex gap-2 flex-wrap">
             <button
               onClick={() => {
-                const monHours = data.footer.contactInfo?.businessHours?.monday || { isOpen: true, openTime: '09:00', closeTime: '17:00' };
+                const businessHours = data.footer.contactInfo?.businessHours || {};
+                const monHours = businessHours.monday || { isOpen: true, openTime: '09:00', closeTime: '17:00' };
                 const newHours: any = {};
                 ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'].forEach(day => {
                   newHours[day] = { ...monHours };
                 });
-                setNestedData('footer.contactInfo.businessHours', { ...(data.footer.contactInfo?.businessHours || {}), ...newHours });
+                setNestedData('footer.contactInfo.businessHours', { ...businessHours, ...newHours });
               }}
               className="text-xs px-2 py-1 bg-editor-accent/20 text-editor-accent rounded hover:bg-editor-accent/30 transition-colors"
             >
@@ -2828,7 +2829,8 @@ const Controls: React.FC = () => {
             </button>
             <button
               onClick={() => {
-                const monHours = data.footer.contactInfo?.businessHours?.monday || { isOpen: true, openTime: '09:00', closeTime: '17:00' };
+                const businessHours = data.footer.contactInfo?.businessHours || {};
+                const monHours = businessHours.monday || { isOpen: true, openTime: '09:00', closeTime: '17:00' };
                 const newHours: any = {};
                 ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].forEach(day => {
                   newHours[day] = { ...monHours };
@@ -2852,20 +2854,26 @@ const Controls: React.FC = () => {
               { key: 'saturday', label: 'Sat' },
               { key: 'sunday', label: 'Sun' },
             ].map(({ key, label }) => {
-              const dayHours = data.footer.contactInfo?.businessHours?.[key as keyof typeof data.footer.contactInfo.businessHours] || { isOpen: false, openTime: '09:00', closeTime: '17:00' };
+              // Safer access to potentially undefined nested objects
+              const contactInfo = data.footer.contactInfo || {};
+              const businessHours = contactInfo.businessHours || {};
+              const dayHours = businessHours[key as keyof typeof businessHours] || { isOpen: false, openTime: '09:00', closeTime: '17:00' };
+
               return (
                 <div key={key} className="flex items-center gap-2">
                   <span className="w-10 text-xs font-medium text-editor-text-secondary">{label}</span>
                   <button
                     onClick={() => {
-                      // When toggling ON, initialize with default times
+                      // When toggling, we need to handle the case where contactInfo or businessHours don't exist yet
                       if (!dayHours.isOpen) {
+                        // Turning ON: Set the full object to ensure structure exists
                         setNestedData(`footer.contactInfo.businessHours.${key}`, {
                           isOpen: true,
                           openTime: dayHours.openTime || '09:00',
                           closeTime: dayHours.closeTime || '17:00'
                         });
                       } else {
+                        // Turning OFF: Just update the flag
                         setNestedData(`footer.contactInfo.businessHours.${key}.isOpen`, false);
                       }
                     }}

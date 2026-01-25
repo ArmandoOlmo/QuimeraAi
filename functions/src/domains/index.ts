@@ -9,10 +9,10 @@
  * - Cloudflare DNS API integration
  */
 
-export { 
-    addCustomDomain, 
-    removeCustomDomain, 
-    updateDomainStatus, 
+export {
+    addCustomDomain,
+    removeCustomDomain,
+    updateDomainStatus,
     syncDomainMapping,
     setupExternalDomainWithCloudflare,
     verifyExternalDomainNameservers,
@@ -22,9 +22,9 @@ export { verifyDomainDNS, checkDomainSSL } from './dnsVerification';
 export { onDomainCreate, onDomainDelete, scheduledDNSCheck } from './domainTriggers';
 
 // Name.com Reseller API
-export { 
-    checkDomainAvailability, 
-    searchDomainSuggestions, 
+export {
+    checkDomainAvailability,
+    searchDomainSuggestions,
     purchaseDomain,
     getDomainPricing,
     createDomainCheckoutSession,
@@ -40,6 +40,13 @@ export {
 
 // Cloudflare Worker API (for automatic domain routing)
 export { addWorkerDomain } from './cloudflareWorkerApi';
+
+// Cloud Run Admin API (for automatic domain mapping with SSL)
+export {
+    createDomainMapping,
+    checkDomainMappingStatus,
+    setupFullDomainMapping
+} from './cloudRunApi';
 
 
 

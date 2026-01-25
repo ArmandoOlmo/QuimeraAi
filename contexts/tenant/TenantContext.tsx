@@ -36,6 +36,7 @@ import {
     onSnapshot,
     serverTimestamp,
     writeBatch,
+    Timestamp,
 } from '../../firebase';
 import { useAuth } from '../core/AuthContext';
 
@@ -53,7 +54,7 @@ interface TenantContextType {
 
     // Tenant Actions
     switchTenant: (tenantId: string) => Promise<void>;
-    createTenant: (data: CreateTenantData) => Promise<string>;
+    createTenant: (data: CreateTenantData, skipSwitch?: boolean) => Promise<string>;
     updateTenant: (tenantId: string, data: Partial<Tenant>) => Promise<void>;
     deleteTenant: (tenantId: string) => Promise<void>;
 
@@ -68,7 +69,7 @@ interface TenantContextType {
     currentRole: AgencyRole | null;
 
     // Sub-client Actions (for agencies)
-    createSubClient: (data: CreateTenantData) => Promise<string>;
+    createSubClient: (data: CreateTenantData, initialUsers?: { email: string, name: string, role: AgencyRole }[]) => Promise<string>;
     getSubClients: () => Promise<Tenant[]>;
 
     // Refresh
@@ -330,7 +331,7 @@ export const TenantProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     // CREATE TENANT
     // ==========================================================================
 
-    const createTenant = useCallback(async (data: CreateTenantData): Promise<string> => {
+    const createTenant = useCallback(async (data: CreateTenantData, skipSwitch = false): Promise<string> => {
         if (!user) throw new Error('User not authenticated');
 
         const slug = generateSlug(data.name);
@@ -394,8 +395,10 @@ export const TenantProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         // Refresh user tenants
         await loadUserTenants(user.uid);
 
-        // Switch to new tenant
-        await loadTenant(tenantId);
+        // Switch to new tenant if not skipped
+        if (!skipSwitch) {
+            await loadTenant(tenantId);
+        }
 
         return tenantId;
     }, [user, userDocument, loadUserTenants, loadTenant]);
@@ -588,7 +591,10 @@ export const TenantProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     // CREATE SUB-CLIENT (FOR AGENCIES)
     // ==========================================================================
 
-    const createSubClient = useCallback(async (data: CreateTenantData): Promise<string> => {
+    const createSubClient = useCallback(async (
+        data: CreateTenantData,
+        initialUsers?: { email: string, name: string, role: AgencyRole }[]
+    ): Promise<string> => {
         if (!currentTenant || !currentMembership) {
             throw new Error('No hay workspace activo');
         }
@@ -606,12 +612,45 @@ export const TenantProvider: React.FC<{ children: ReactNode }> = ({ children }) 
             throw new Error(`Has alcanzado el límite de ${maxSubClients} sub-clientes`);
         }
 
-        // Create the sub-client tenant
+        // Create the sub-client tenant, skip switching
         const subClientId = await createTenant({
             ...data,
             type: 'agency_client',
             parentTenantId: currentTenant.id,
             plan: 'free', // Sub-clients use parent's resources
+        }, true);
+
+        // Handle initial users by creating invitations
+        if (initialUsers && initialUsers.length > 0) {
+            for (const newUser of initialUsers) {
+                const token = `${Date.now().toString(36)}-${Math.random().toString(36).substring(2)}`;
+                const inviteData: any = {
+                    tenantId: subClientId,
+                    email: newUser.email.toLowerCase(),
+                    role: newUser.role,
+                    invitedBy: user?.uid || '',
+                    invitedByName: userDocument?.name || user?.displayName || '',
+                    token,
+                    message: `Bienvenido a ${data.name}`,
+                    expiresAt: Timestamp.fromMillis(Date.now() + 7 * 24 * 60 * 60 * 1000),
+                    status: 'pending',
+                    createdAt: serverTimestamp(),
+                    tenantName: data.name,
+                };
+                await addDoc(collection(db, 'tenantInvites'), inviteData);
+            }
+        }
+
+        // Log agency activity
+        await addDoc(collection(db, 'agencyActivity'), {
+            agencyTenantId: currentTenant.id,
+            type: 'client_created',
+            clientTenantId: subClientId,
+            clientName: data.name,
+            description: `Se creó el nuevo cliente: ${data.name}`,
+            timestamp: serverTimestamp(),
+            createdBy: user?.uid,
+            createdByName: userDocument?.name || user?.displayName || '',
         });
 
         // Update parent tenant's sub-client count
@@ -621,7 +660,7 @@ export const TenantProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         });
 
         return subClientId;
-    }, [currentTenant, currentMembership, createTenant]);
+    }, [currentTenant, currentMembership, createTenant, user, userDocument]);
 
     // ==========================================================================
     // GET SUB-CLIENTS

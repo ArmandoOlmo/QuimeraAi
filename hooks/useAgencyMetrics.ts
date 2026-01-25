@@ -6,7 +6,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { db } from '../firebase';
 import { collection, query, where, onSnapshot, getDocs, Timestamp } from 'firebase/firestore';
-import type { Tenant, TenantUsage } from '../types/multiTenant';
+import type { Tenant, TenantUsage, TenantStatus } from '../types/multiTenant';
 
 // =============================================================================
 // TYPES
@@ -29,7 +29,7 @@ export interface UpcomingRenewal {
     renewalDate: Date;
     daysUntilRenewal: number;
     monthlyPrice?: number;
-    status: 'active' | 'trial';
+    status: TenantStatus;
 }
 
 export interface AggregatedMetrics {
@@ -136,27 +136,27 @@ export function useAgencyMetrics(agencyTenantId: string) {
                 usage: number;
                 limit: number;
             }> = [
-                {
-                    resource: 'projects',
-                    usage: client.usage.projectCount || 0,
-                    limit: client.limits.maxProjects,
-                },
-                {
-                    resource: 'storage',
-                    usage: client.usage.storageUsedGB || 0,
-                    limit: client.limits.maxStorageGB,
-                },
-                {
-                    resource: 'aiCredits',
-                    usage: client.usage.aiCreditsUsed || 0,
-                    limit: client.limits.maxAiCredits,
-                },
-                {
-                    resource: 'users',
-                    usage: client.usage.userCount || 0,
-                    limit: client.limits.maxUsers,
-                },
-            ];
+                    {
+                        resource: 'projects',
+                        usage: client.usage.projectCount || 0,
+                        limit: client.limits.maxProjects,
+                    },
+                    {
+                        resource: 'storage',
+                        usage: client.usage.storageUsedGB || 0,
+                        limit: client.limits.maxStorageGB,
+                    },
+                    {
+                        resource: 'aiCredits',
+                        usage: client.usage.aiCreditsUsed || 0,
+                        limit: client.limits.maxAiCredits,
+                    },
+                    {
+                        resource: 'users',
+                        usage: client.usage.userCount || 0,
+                        limit: client.limits.maxUsers,
+                    },
+                ];
 
             checks.forEach(check => {
                 if (check.limit <= 0) return;  // Skip unlimited resources
@@ -251,12 +251,16 @@ export function useAgencyMetrics(agencyTenantId: string) {
 
                 setSubClients(clients);
 
-                // Calculate derived data
-                const metrics = calculateMetrics(clients);
+                // Calculate base metrics (usage and billing from tenant docs)
+                const baseMetrics = calculateMetrics(clients);
                 const alerts = detectAlerts(clients);
                 const renewals = calculateRenewals(clients);
 
-                setAggregatedMetrics(metrics);
+                setAggregatedMetrics(prev => ({
+                    ...prev,
+                    ...baseMetrics,
+                    activeSubClients: clients.filter(c => c.status === 'active').length,
+                }));
                 setResourceAlerts(alerts);
                 setUpcomingRenewals(renewals);
 
@@ -271,6 +275,66 @@ export function useAgencyMetrics(agencyTenantId: string) {
 
         return () => unsubscribe();
     }, [agencyTenantId, calculateMetrics, detectAlerts, calculateRenewals]);
+
+    // Aggregate Leads and Revenue (Async)
+    useEffect(() => {
+        if (subClients.length === 0) return;
+
+        const aggregateAsyncMetrics = async () => {
+            try {
+                const clientIds = subClients.map(c => c.id);
+                // Firestore 'in' query limit is 30. If more, we need to chunk or query individually.
+                // For simplicity and to be robust, we'll chunk if needed.
+                const chunks = [];
+                for (let i = 0; i < clientIds.length; i += 30) {
+                    chunks.push(clientIds.slice(i, i + 30));
+                }
+
+                let totalLeads = 0;
+                let totalRevenue = 0;
+
+                const now = new Date();
+                const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+                const startTimestamp = Timestamp.fromDate(startOfMonth);
+
+                for (const chunk of chunks) {
+                    // Fetch Leads
+                    const leadsQ = query(
+                        collection(db, 'leads'),
+                        where('tenantId', 'in', chunk),
+                        where('createdAt', '>=', startTimestamp)
+                    );
+                    const leadsSnap = await getDocs(leadsQ);
+                    totalLeads += leadsSnap.size;
+
+                    // Fetch Revenue (Orders)
+                    const ordersQ = query(
+                        collection(db, 'orders'),
+                        where('tenantId', 'in', chunk),
+                        where('status', 'in', ['paid', 'completed']),
+                        where('createdAt', '>=', startTimestamp)
+                    );
+                    const ordersSnap = await getDocs(ordersQ);
+                    ordersSnap.forEach(doc => {
+                        totalRevenue += (doc.data().total || 0);
+                    });
+                }
+
+                setAggregatedMetrics(prev => ({
+                    ...prev,
+                    totalLeads,
+                    totalRevenue,
+                }));
+            } catch (err) {
+                console.error('Error aggregating async agency metrics:', err);
+            }
+        };
+
+        aggregateAsyncMetrics();
+        // Refresh every 5 minutes or when subClients change significantly
+        const interval = setInterval(aggregateAsyncMetrics, 5 * 60 * 1000);
+        return () => clearInterval(interval);
+    }, [subClients]);
 
     // Fetch recent activity
     useEffect(() => {

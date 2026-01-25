@@ -37,7 +37,7 @@ interface DomainsContextType {
     deployDomain: (domainId: string, provider?: 'vercel' | 'cloudflare' | 'netlify' | 'cloud_run' | 'custom') => Promise<boolean>;
     getDomainDeploymentLogs: (domainId: string) => DeploymentLog[];
     refetch: () => Promise<void>;
-    
+
     // Project info
     hasActiveProject: boolean;
     activeProjectId: string | null;
@@ -131,7 +131,7 @@ export const DomainsProvider: React.FC<{ children: ReactNode }> = ({ children })
     // Helper to add deployment log (project-scoped)
     const addDeploymentLog = useCallback(async (logData: Omit<DeploymentLog, 'id' | 'projectId'>) => {
         if (!user || !activeProjectId) return;
-        
+
         const logsPath = `users/${user.uid}/projects/${activeProjectId}/deploymentLogs`;
         await addDoc(collection(db, logsPath), {
             ...logData,
@@ -140,57 +140,105 @@ export const DomainsProvider: React.FC<{ children: ReactNode }> = ({ children })
     }, [user, activeProjectId]);
 
     // Add domain (syncs to both user collection and global customDomains)
+    // Now also creates Cloud Run domain mapping for automatic SSL
     const addDomain = async (domain: Domain) => {
         if (!user) return;
 
         try {
-            const domainsCol = collection(db, 'users', user.uid, 'domains');
-            
-            // Don't save the temporary "id" field - Firestore will generate the real ID
+            // Don't save the temporary "id" field - Firestore will generate the real ID (now we use name)
             const { id: _tempId, ...domainDataWithoutId } = domain;
-            
+
             // Ensure projectId is set (use active project if not specified)
             const projectIdToUse = domain.projectId || activeProjectId;
-            
+
             // Store projectUserId and projectTenantId for cross-user deployment support
             // If not provided, default to current user/tenant
             const projectUserIdToUse = domain.projectUserId || user.uid;
             const projectTenantIdToUse = domain.projectTenantId || currentTenantId || null;
-            
-            const docRef = await addDoc(domainsCol, {
+
+            // Normalize domain for use as ID
+            const normalizedDomain = domain.name.toLowerCase().replace(/^www\./, '');
+            const domainId = normalizedDomain; // Use the domain itself as ID to prevent duplicates
+
+            await setDoc(doc(db, 'users', user.uid, 'domains', domainId), {
                 ...domainDataWithoutId,
                 projectId: projectIdToUse,
                 projectUserId: projectUserIdToUse,
                 projectTenantId: projectTenantIdToUse,
                 createdAt: new Date().toISOString(),
-                status: 'pending',
-            });
+                status: 'ssl_pending', // Start with SSL pending since we're creating mapping
+            }, { merge: true });
 
-            // Use Firestore's generated ID
-            const newDomain = { 
-                ...domainDataWithoutId, 
-                id: docRef.id, 
+            // Use the domain as the ID
+            const newDomain = {
+                ...domainDataWithoutId,
+                id: domainId,
                 projectId: projectIdToUse,
                 projectUserId: projectUserIdToUse,
                 projectTenantId: projectTenantIdToUse,
+                status: 'ssl_pending',
             } as Domain;
-            setDomains(prev => [newDomain, ...prev]);
+
+            // Check if it already exists in state to avoid duplicate UI entries before refetch
+            setDomains(prev => {
+                const filtered = prev.filter(d => d.id !== domainId);
+                return [newDomain, ...filtered];
+            });
 
             // Sync to global customDomains collection for domain resolution
-            const normalizedDomain = domain.name.toLowerCase().replace(/^www\./, '');
             await setDoc(doc(db, 'customDomains', normalizedDomain), {
                 domain: normalizedDomain,
                 projectId: projectIdToUse || null,
                 projectUserId: projectUserIdToUse,
                 projectTenantId: projectTenantIdToUse,
                 userId: user.uid, // Who created the domain entry
-                status: 'pending',
-                sslStatus: 'pending',
+                status: 'ssl_pending',
+                sslStatus: 'provisioning',
                 dnsVerified: false,
+                cloudRunTarget: 'quimera-ssr-575386543550.us-central1.run.app',
                 createdAt: new Date().toISOString(),
                 updatedAt: new Date().toISOString(),
             }, { merge: true });
-            console.log(`✅ [DomainsContext] Domain added with ID: ${docRef.id}, projectId: ${projectIdToUse}, projectUserId: ${projectUserIdToUse}`);
+
+            console.log(`✅ [DomainsContext] Domain added with ID: ${domainId}, projectId: ${projectIdToUse}`);
+
+            // ============================================
+            // AUTOMATIC: Create Cloud Run domain mapping for SSL
+            // This happens in the background - no user action required
+            // ============================================
+            try {
+                console.log(`🔐 [DomainsContext] Creating Cloud Run domain mapping for: ${normalizedDomain}`);
+                const { setupFullDomainMapping } = await import('../../services/domainService');
+                const mappingResult = await setupFullDomainMapping(normalizedDomain, projectIdToUse || undefined);
+
+                if (mappingResult.success) {
+                    console.log(`✅ [DomainsContext] Cloud Run mapping created:`, mappingResult);
+
+                    // Update status based on result
+                    const newStatus = mappingResult.cloudRunStatus === 'ready' ? 'active' : 'ssl_pending';
+                    await updateDoc(doc(db, 'users', user.uid, 'domains', domainId), {
+                        status: newStatus,
+                        sslStatus: mappingResult.cloudRunStatus === 'ready' ? 'active' : 'provisioning',
+                        cloudRunMappingCreated: true,
+                        cloudflareConfigured: mappingResult.cloudflareConfigured,
+                        cloudflareNameservers: mappingResult.nameservers || null,
+                    });
+
+                    // Update local state
+                    setDomains(prev => prev.map(d =>
+                        d.id === domainId
+                            ? { ...d, status: newStatus, sslStatus: mappingResult.cloudRunStatus === 'ready' ? 'active' : 'provisioning' }
+                            : d
+                    ));
+                } else {
+                    console.warn(`⚠️ [DomainsContext] Cloud Run mapping failed:`, mappingResult.error);
+                    // Domain still added, but SSL needs manual setup
+                }
+            } catch (mappingError: any) {
+                console.error(`❌ [DomainsContext] Cloud Run mapping error:`, mappingError);
+                // Domain still added, user can retry verification later
+            }
+
         } catch (error) {
             console.error("[DomainsContext] Error adding domain:", error);
             throw error;
@@ -209,7 +257,7 @@ export const DomainsProvider: React.FC<{ children: ReactNode }> = ({ children })
 
             // Get the domain to sync
             const domain = domains.find(d => d.id === id);
-            
+
             setDomains(prev => prev.map(d =>
                 d.id === id ? { ...d, ...data } : d
             ));
@@ -223,7 +271,7 @@ export const DomainsProvider: React.FC<{ children: ReactNode }> = ({ children })
                     sslStatus: data.sslStatus || domain.sslStatus || 'pending',
                     updatedAt: new Date().toISOString(),
                 };
-                
+
                 // Also sync projectUserId and projectTenantId if provided
                 if (data.projectUserId !== undefined) {
                     syncData.projectUserId = data.projectUserId;
@@ -231,7 +279,7 @@ export const DomainsProvider: React.FC<{ children: ReactNode }> = ({ children })
                 if (data.projectTenantId !== undefined) {
                     syncData.projectTenantId = data.projectTenantId;
                 }
-                
+
                 await setDoc(doc(db, 'customDomains', normalizedDomain), syncData, { merge: true });
                 console.log(`✅ [DomainsContext] Domain updated in customDomains: ${normalizedDomain} -> projectId: ${data.projectId || domain.projectId}`);
             }
@@ -249,31 +297,31 @@ export const DomainsProvider: React.FC<{ children: ReactNode }> = ({ children })
         }
 
         console.log(`🗑️ [DomainsContext] Deleting domain: ${id}`);
-        
+
         const domain = domains.find(d => d.id === id);
         const domainName = domain?.name;
         const normalizedDomain = domainName ? domainName.toLowerCase().trim().replace(/^www\./, '') : null;
-        
+
         // Simple delete without complex transactions
         const domainRef = doc(db, 'users', user.uid, 'domains', id);
-        
+
         try {
             // Just delete - simple approach
             await deleteDoc(domainRef);
             console.log(`✅ [DomainsContext] deleteDoc executed`);
-            
+
         } catch (firestoreError: any) {
             console.error("❌ [DomainsContext] Delete failed:", firestoreError);
-            
+
             // If it's an internal Firestore error, try to clear cache
             if (firestoreError.message?.includes('INTERNAL ASSERTION')) {
                 console.log("🔧 [DomainsContext] Firestore internal error - cache may be corrupted");
                 throw new Error("Error interno de Firestore. Por favor limpia el cache del navegador (DevTools > Application > Clear site data)");
             }
-            
+
             throw new Error(`Error eliminando: ${firestoreError?.message || 'Error desconocido'}`);
         }
-            
+
         // Delete from customDomains
         if (normalizedDomain) {
             try {
@@ -283,7 +331,7 @@ export const DomainsProvider: React.FC<{ children: ReactNode }> = ({ children })
                 console.warn(`⚠️ [DomainsContext] customDomains delete warning:`, e);
             }
         }
-        
+
         // Update local state
         setDomains(prev => prev.filter(d => d.id !== id));
         console.log(`🎉 [DomainsContext] Domain deleted: ${domainName}`);
@@ -306,29 +354,64 @@ export const DomainsProvider: React.FC<{ children: ReactNode }> = ({ children })
             if (!domain) return false;
 
             console.log(`🔍 [DomainsContext] Verifying domain: ${domain.name}`);
-            
+
             const normalizedDomain = domain.name.toLowerCase().trim().replace(/^www\./, '');
 
             // Update status to verifying
             await updateDomain(id, { status: 'verifying' });
 
-            // REAL VERIFICATION: Try to fetch the domain
+            // ============================================
+            // 1. AUTO-RECOVERY: Check/Create Cloud Run Mapping
+            // Ensure backend mapping exists before testing URL
+            // ============================================
+            try {
+                console.log(`🔧 [DomainsContext] Checking Cloud Run mapping status...`);
+                const { checkCloudRunDomainMappingStatus, createCloudRunDomainMapping } = await import('../../services/domainService');
+                const mappingStatus = await checkCloudRunDomainMappingStatus(normalizedDomain);
+
+                if (!mappingStatus.exists) {
+                    console.log(`⚠️ [DomainsContext] Cloud Run mapping missing. Attempting to create...`);
+                    const createResult = await createCloudRunDomainMapping(normalizedDomain);
+                    if (createResult.success) {
+                        console.log(`✅ [DomainsContext] Cloud Run mapping created successfully`);
+                        await updateDomain(id, {
+                            cloudRunMappingCreated: true,
+                            sslStatus: 'provisioning',
+                            status: 'ssl_pending' // Force SSL pending status so UI shows provisioning
+                        });
+                        // Return early - let SSL verify in background, or wait for next user verify
+                        // But we can continue to try HTTP check just in case
+                    }
+                } else if (mappingStatus.ready) {
+                    console.log(`✅ [DomainsContext] Cloud Run mapping is READY`);
+                    await updateDomain(id, { sslStatus: 'active' });
+                } else {
+                    console.log(`⏳ [DomainsContext] Cloud Run mapping exists but pending: ${mappingStatus.certificateStatus}`);
+                    await updateDomain(id, { sslStatus: 'provisioning' });
+                }
+            } catch (e) {
+                console.warn("⚠️ [DomainsContext] Failed to check/recover Cloud Run status:", e);
+            }
+
+            // ============================================
+            // 2. REAL VERIFICATION: Try to fetch the domain
             // This checks if DNS is configured and SSL is working
+            // ============================================
             try {
                 const testUrl = `https://${normalizedDomain}`;
                 console.log(`🔍 [DomainsContext] Testing URL: ${testUrl}`);
-                
-                const response = await fetch(testUrl, { 
+
+                const response = await fetch(testUrl, {
                     method: 'HEAD',
                     mode: 'no-cors', // Allow cross-origin
                     cache: 'no-cache'
                 });
-                
+
                 // If we get here without error, the domain is reachable
                 // Note: no-cors mode always returns opaque response, so we can't check status
                 // But if fetch succeeds, DNS + SSL are working
                 console.log(`✅ [DomainsContext] Domain ${normalizedDomain} is reachable`);
-                
+
                 // Domain is working - mark as active
                 await setDoc(doc(db, 'customDomains', normalizedDomain), {
                     domain: normalizedDomain,
@@ -351,7 +434,7 @@ export const DomainsProvider: React.FC<{ children: ReactNode }> = ({ children })
 
             } catch (fetchError: any) {
                 console.log(`⏳ [DomainsContext] Domain ${normalizedDomain} not ready yet: ${fetchError.message}`);
-                
+
                 // Domain not ready yet - keep as pending
                 await updateDomain(id, {
                     status: 'pending',
@@ -414,7 +497,7 @@ export const DomainsProvider: React.FC<{ children: ReactNode }> = ({ children })
             // Handle Cloud Run / Custom / Quimera (SSR Mapping)
             if (provider === 'cloud_run' || provider === 'custom' || domain.provider === 'Quimera') {
                 const normalizedDomain = domain.name.toLowerCase().trim().replace(/^www\./, '');
-                
+
                 console.log(`📡 [DomainsContext] Publishing project using centralized service...`);
 
                 // ============================================
@@ -448,7 +531,7 @@ export const DomainsProvider: React.FC<{ children: ReactNode }> = ({ children })
                 // STEP 2: PUBLISH USING CENTRALIZED SERVICE
                 // ============================================
                 const { publishProject: publishToService } = await import('../../services/publishService');
-                
+
                 const publishResult = await publishToService({
                     userId: projectUserId,
                     projectId: domain.projectId,

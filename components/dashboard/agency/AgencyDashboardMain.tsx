@@ -9,6 +9,7 @@ import { Building2, Menu, CreditCard, FileText, UserPlus, Package, LayoutDashboa
 import { useRouter } from '../../../hooks/useRouter';
 import { ROUTES } from '../../../routes/config';
 import { useAgency } from '../../../contexts/agency/AgencyContext';
+import { useTenant } from '../../../contexts/tenant/TenantContext';
 import DashboardSidebar from '../DashboardSidebar';
 import { AgencyOverview } from './AgencyOverview';
 import { BillingSettings } from './BillingSettings';
@@ -22,6 +23,7 @@ const AgencyDashboardMain: React.FC = () => {
     const { t } = useTranslation();
     const { path, navigate } = useRouter();
     const { subClients, loadingClients } = useAgency();
+    const { createSubClient } = useTenant();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
     // Determine active tab from URL
@@ -227,10 +229,31 @@ const AgencyDashboardMain: React.FC = () => {
                                         </div>
                                         <ClientIntakeForm
                                             onSubmit={async (data) => {
-                                                console.log('Creating client:', data);
-                                                // Mock API call
-                                                await new Promise(resolve => setTimeout(resolve, 1000));
-                                                handleTabChange('overview');
+                                                try {
+                                                    console.log('Creating client:', data);
+
+                                                    await createSubClient(
+                                                        {
+                                                            name: data.businessName,
+                                                            type: 'agency_client',
+                                                            branding: {
+                                                                primaryColor: data.primaryColor,
+                                                                secondaryColor: data.secondaryColor,
+                                                                companyName: data.businessName,
+                                                            }
+                                                        },
+                                                        data.initialUsers.map(u => ({
+                                                            email: u.email,
+                                                            name: u.name,
+                                                            role: (u.role === 'client_admin' || u.role === 'client_user') ? 'client' : u.role
+                                                        })) as { email: string, name: string, role: string }[] as any // Simple fix for type mismatch in this specific context
+                                                    );
+
+                                                    handleTabChange('overview');
+                                                } catch (error) {
+                                                    console.error('Error creating client:', error);
+                                                    throw error; // Re-throw to be caught by the form's error handler
+                                                }
                                             }}
                                             onCancel={() => handleTabChange('overview')}
                                         />

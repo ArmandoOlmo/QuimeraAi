@@ -6,7 +6,7 @@
 // =============================================================================
 // DOMAIN MANAGEMENT
 // =============================================================================
-export type DomainStatus = 'active' | 'pending' | 'verifying' | 'ssl_pending' | 'error' | 'deploying' | 'deployed';
+export type DomainStatus = 'active' | 'pending' | 'verifying' | 'ssl_pending' | 'error' | 'deploying' | 'deployed' | 'pending_nameservers';
 export type SSLStatus = 'pending' | 'provisioning' | 'active' | 'error';
 export type DeploymentProvider = 'vercel' | 'cloudflare' | 'netlify' | 'cloud_run' | 'custom' | null;
 
@@ -63,6 +63,19 @@ export interface Domain {
     verifiedAt?: string;
     lastVerifiedAt?: string;
     verificationAttempts?: number;
+    // Infrastructure
+    cloudRunMappingCreated?: boolean;
+    cloudRunMappingStatus?: string; // e.g. 'ready', 'pending', 'error'
+    cloudRunError?: string; // Additional error details for UI
+    cloudflareConfigured?: boolean;
+    cloudflareNameservers?: string[];
+    // Load Balancer Configuration (Modern SaaS model)
+    useLoadBalancer?: boolean;
+    loadBalancerIp?: string;
+    dnsConfig?: {
+        aRecord: string;
+        cnameRecord: string;
+    };
 }
 
 // =============================================================================
@@ -102,7 +115,7 @@ export const CLOUD_RUN_DNS_CONFIG = {
     // Direct Cloud Run URL - works without GCP domain mapping
     // Users should use CNAME records pointing to this
     cloudRunUrl: 'quimera-ssr-575386543550.us-central1.run.app',
-    
+
     // Legacy: Google's global load balancer IPs (requires GCP domain mapping)
     // These ONLY work if domain is mapped in Google Cloud Console
     aRecords: [
@@ -132,23 +145,3 @@ export interface DNSVerificationResult {
     error?: string;
     checkedAt: string;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

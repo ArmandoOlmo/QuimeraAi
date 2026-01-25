@@ -130,7 +130,7 @@ export function getDNSConfiguration(): typeof CLOUD_RUN_DNS_CONFIG {
  */
 export function generateRequiredDNSRecords(verificationToken?: string): DNSRecord[] {
     const config = CLOUD_RUN_DNS_CONFIG;
-    
+
     const records: DNSRecord[] = [
         {
             type: 'A',
@@ -324,7 +324,121 @@ export async function migrateExistingDomainToCloudflare(
     }
 }
 
+// =============================================================================
+// CLOUD RUN DOMAIN MAPPING (Automatic SSL)
+// =============================================================================
 
+export interface DomainMappingResult {
+    success: boolean;
+    domain: string;
+    status?: string;
+    message?: string;
+    error?: string;
+}
+
+export interface FullDomainSetupResult {
+    success: boolean;
+    domain: string;
+    cloudRunStatus: string;
+    cloudflareConfigured: boolean;
+    nameservers?: string[] | null;
+    dnsInstructions?: {
+        aRecords: string[];
+        cnameTarget: string;
+        message: string;
+    };
+    message: string;
+    error?: string;
+}
+
+/**
+ * Create Cloud Run domain mapping for automatic SSL certificate
+ * This is required for end-to-end SSL with custom domains
+ */
+export async function createCloudRunDomainMapping(
+    domain: string
+): Promise<DomainMappingResult> {
+    try {
+        const functions = await getFunctionsInstance();
+        const createFn = httpsCallable<
+            { domain: string },
+            DomainMappingResult
+        >(functions, 'domains-createMapping');
+
+        const result = await createFn({ domain });
+        return result.data;
+
+    } catch (error: any) {
+        console.error('[DomainService] Error creating Cloud Run mapping:', error);
+        return {
+            success: false,
+            domain,
+            error: error.message || 'Failed to create domain mapping'
+        };
+    }
+}
+
+/**
+ * Check Cloud Run domain mapping status
+ */
+export async function checkCloudRunDomainMappingStatus(domain: string): Promise<{
+    domain: string;
+    exists: boolean;
+    ready: boolean;
+    certificateStatus?: string;
+    error?: string;
+}> {
+    try {
+        const functions = await getFunctionsInstance();
+        const checkFn = httpsCallable<
+            { domain: string },
+            { domain: string; exists: boolean; ready: boolean; certificateStatus?: string; error?: string }
+        >(functions, 'domains-checkMappingStatus');
+
+        const result = await checkFn({ domain });
+        return result.data;
+
+    } catch (error: any) {
+        console.error('[DomainService] Error checking domain mapping status:', error);
+        return {
+            domain,
+            exists: false,
+            ready: false,
+            error: error.message || 'Failed to check status'
+        };
+    }
+}
+
+/**
+ * Full domain setup: Creates both Cloud Run mapping (SSL) and Cloudflare zone (DNS)
+ * This is the "one-click" solution for external domains
+ */
+export async function setupFullDomainMapping(
+    domain: string,
+    projectId?: string
+): Promise<FullDomainSetupResult> {
+    try {
+        const functions = await getFunctionsInstance();
+        const setupFn = httpsCallable<
+            { domain: string; projectId?: string },
+            FullDomainSetupResult
+        >(functions, 'domains-setupFull');
+
+        const result = await setupFn({ domain, projectId });
+        return result.data;
+
+    } catch (error: any) {
+        console.error('[DomainService] Error in full domain setup:', error);
+        return {
+            success: false,
+            domain,
+            cloudRunStatus: 'error',
+            cloudflareConfigured: false,
+            message: error.message || 'Failed to setup domain',
+            error: error.message
+        };
+    }
+}
 
 
 

@@ -124,7 +124,11 @@ import {
     // External domain setup (simplified flow via Cloudflare)
     setupExternalDomainWithCloudflare,
     verifyExternalDomainNameservers,
-    migrateToCloudflare
+    migrateToCloudflare,
+    // Cloud Run Admin API (automatic domain mapping with SSL)
+    createDomainMapping,
+    checkDomainMappingStatus,
+    setupFullDomainMapping
 } from './domains';
 
 // Social Channels functions
@@ -343,7 +347,11 @@ export const domains = {
     // External domain setup (simplified via Cloudflare)
     setupExternalWithCloudflare: setupExternalDomainWithCloudflare,
     verifyExternalNameservers: verifyExternalDomainNameservers,
-    migrateToCloudflare
+    migrateToCloudflare,
+    // Cloud Run Admin API (automatic domain mapping with SSL)
+    createMapping: createDomainMapping,
+    checkMappingStatus: checkDomainMappingStatus,
+    setupFull: setupFullDomainMapping
 };
 
 // Export Social Channels functions
@@ -541,6 +549,10 @@ export {
     syncDomainMapping,
     // Cloudflare Worker API
     addWorkerDomain,
+    // Cloud Run Admin API (automatic domain mapping with SSL)
+    createDomainMapping,
+    checkDomainMappingStatus,
+    setupFullDomainMapping,
     // Social Channels exports
     facebookWebhook,
     facebookWebhookVerify,

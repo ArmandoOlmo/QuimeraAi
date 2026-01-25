@@ -3554,12 +3554,21 @@ User: ${userMsg}`;
                     maxOutputTokens: configuredMaxTokens
                 };
 
-                // Capture screen context for text chat
+                // Capture screen context for text chat ONLY if needed (optimization)
                 let response;
-                const screenCapture = await captureCurrentView();
+                const lowerMsg = userMsg.toLowerCase();
+                const needsVision = [
+                    'mira', 'ver', 'pantalla', 'esto', 'que es', 'analiza', // Spanish
+                    'look', 'see', 'screen', 'this', 'what is', 'analyze'   // English
+                ].some(keyword => lowerMsg.includes(keyword));
+
+                // If vision is needed, we capture. Otherwise we skip for speed.
+                const screenCapture = needsVision ? await captureCurrentView() : null;
 
                 if (screenCapture) {
-                    console.log('[Global Assistant] Sending request with visual context...');
+                    console.log('[Global Assistant] Sending request WITH visual context (requested by user)...');
+                    console.time('[Global Assistant] LLM Vision Latency');
+                    // Notify user we are looking (optional UI feedback could go here)
                     response = await generateMultimodalContentViaProxy(
                         proxyProjectId,
                         fullPrompt,
@@ -3568,7 +3577,10 @@ User: ${userMsg}`;
                         proxyConfig,
                         user?.uid
                     );
+                    console.timeEnd('[Global Assistant] LLM Vision Latency');
                 } else {
+                    console.log('[Global Assistant] Sending text-only request (fast path)...');
+                    console.time('[Global Assistant] LLM Text Latency');
                     response = await generateContentViaProxy(
                         proxyProjectId,
                         fullPrompt,
@@ -3576,6 +3588,7 @@ User: ${userMsg}`;
                         proxyConfig,
                         user?.uid
                     );
+                    console.timeEnd('[Global Assistant] LLM Text Latency');
                 }
 
                 let responseText = extractTextFromResponse(response).trim();
@@ -3593,7 +3606,17 @@ User: ${userMsg}`;
                         const { result, error } = await executeTool(toolCall.name, toolCall.args || {}, 'chat');
                         const feedback = result || error || "Done";
 
-                        // Send the tool result back to get final response
+                        // OPTIMIZATION: If the tool executed successfully and gave a clear result, 
+                        // skip the confirmation LLM call to save ~2-3 seconds.
+                        if (result && !error) {
+                            console.log('[Global Assistant] Skipping confirmation LLM call (Optimization)');
+                            setIsExecutingCommands(false);
+                            setIsThinking(false);
+                            setMessages(prev => [...prev, { role: 'model', text: `✅ ${result}` }]);
+                            return;
+                        }
+
+                        // Only do follow-up if there was an error or ambiguous result that needs explanation
                         const followUpPrompt = `${fullPrompt}
 
 Assistant called tool: ${toolCall.name}
