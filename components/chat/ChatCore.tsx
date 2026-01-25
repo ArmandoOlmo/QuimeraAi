@@ -1885,7 +1885,7 @@ ${suggestAvailableSlots()}
                                 <div className="flex gap-2">
                                     <input
                                         type="email"
-                                        placeholder="tu@email.com"
+                                        placeholder={t('auth.emailPlaceholder')}
                                         value={quickLeadEmail}
                                         onChange={(e) => setQuickLeadEmail(e.target.value)}
                                         required
@@ -2165,7 +2165,7 @@ ${suggestAvailableSlots()}
                                         color: appearance.colors?.inputText,
                                         '--tw-ring-color': appearance.colors?.primaryColor + '40'
                                     } as React.CSSProperties}
-                                    placeholder="Tu nombre"
+                                    placeholder={t('landingChatbot.appointmentForm.namePlaceholder')}
                                     required
                                 />
                             </div>
@@ -2185,7 +2185,7 @@ ${suggestAvailableSlots()}
                                         color: appearance.colors?.inputText,
                                         '--tw-ring-color': appearance.colors?.primaryColor + '40'
                                     } as React.CSSProperties}
-                                    placeholder="tu@email.com"
+                                    placeholder={t('auth.emailPlaceholder')}
                                     required
                                 />
                             </div>
@@ -2205,7 +2205,7 @@ ${suggestAvailableSlots()}
                                         color: appearance.colors?.inputText,
                                         '--tw-ring-color': appearance.colors?.primaryColor + '40'
                                     } as React.CSSProperties}
-                                    placeholder="(opcional)"
+                                    placeholder={t('landingChatbot.appointmentForm.phonePlaceholder')}
                                 />
                             </div>
 
@@ -2265,12 +2265,12 @@ ${suggestAvailableSlots()}
                                             '--tw-ring-color': appearance.colors?.primaryColor + '40'
                                         } as React.CSSProperties}
                                     >
-                                        <option value="15">15 min</option>
-                                        <option value="30">30 min</option>
-                                        <option value="45">45 min</option>
-                                        <option value="60">1 hora</option>
-                                        <option value="90">1.5 horas</option>
-                                        <option value="120">2 horas</option>
+                                        <option value="15">{t('landingChatbot.appointmentForm.durations.15min')}</option>
+                                        <option value="30">{t('landingChatbot.appointmentForm.durations.30min')}</option>
+                                        <option value="45">{t('landingChatbot.appointmentForm.durations.45min')}</option>
+                                        <option value="60">{t('landingChatbot.appointmentForm.durations.1hour')}</option>
+                                        <option value="90">{t('landingChatbot.appointmentForm.durations.1half')}</option>
+                                        <option value="120">{t('landingChatbot.appointmentForm.durations.2hours')}</option>
                                     </select>
                                 </div>
                                 <div>
@@ -2288,12 +2288,12 @@ ${suggestAvailableSlots()}
                                             '--tw-ring-color': appearance.colors?.primaryColor + '40'
                                         } as React.CSSProperties}
                                     >
-                                        <option value="consultation">Consulta</option>
-                                        <option value="meeting">Reunión</option>
-                                        <option value="service">Servicio</option>
-                                        <option value="followup">Seguimiento</option>
-                                        <option value="demo">Demo</option>
-                                        <option value="other">Otro</option>
+                                        <option value="consultation">{t('landingChatbot.appointmentForm.types.consultation')}</option>
+                                        <option value="meeting">{t('landingChatbot.appointmentForm.types.meeting')}</option>
+                                        <option value="service">{t('landingChatbot.appointmentForm.types.service')}</option>
+                                        <option value="followup">{t('landingChatbot.appointmentForm.types.followup')}</option>
+                                        <option value="demo">{t('landingChatbot.appointmentForm.types.demo')}</option>
+                                        <option value="other">{t('landingChatbot.appointmentForm.types.other')}</option>
                                     </select>
                                 </div>
                             </div>
@@ -2312,7 +2312,7 @@ ${suggestAvailableSlots()}
                                         color: appearance.colors?.inputText,
                                         '--tw-ring-color': appearance.colors?.primaryColor + '40'
                                     } as React.CSSProperties}
-                                    placeholder="¿En qué podemos ayudarte?"
+                                    placeholder={t('landingChatbot.appointmentForm.notesPlaceholder')}
                                     rows={2}
                                 />
                             </div>
@@ -2326,12 +2326,12 @@ ${suggestAvailableSlots()}
                                 {isCreatingAppointment ? (
                                     <>
                                         <Loader2 size={14} className="animate-spin" />
-                                        Agendando...
+                                        {t('landingChatbot.appointmentForm.scheduling')}
                                     </>
                                 ) : (
                                     <>
                                         <Calendar size={14} />
-                                        Confirmar Cita
+                                        {t('landingChatbot.appointmentForm.confirm')}
                                     </>
                                 )}
                             </button>

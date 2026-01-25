@@ -4,6 +4,7 @@
  */
 
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
     ShoppingBag,
     CreditCard,
@@ -63,6 +64,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
     storeName = 'Tu Tienda',
     requiresShipping = true,
 }) => {
+    const { t } = useTranslation();
     const [currentStep, setCurrentStep] = useState<CheckoutStep>('information');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -177,9 +179,9 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
     };
 
     const steps = [
-        { id: 'information', label: 'Información', icon: User },
-        ...(requiresShipping ? [{ id: 'shipping', label: 'Envío', icon: Truck }] : []),
-        { id: 'payment', label: 'Pago', icon: CreditCard },
+        { id: 'information', label: t('ecommerce.storefront.checkout.stepInfo'), icon: User },
+        ...(requiresShipping ? [{ id: 'shipping', label: t('ecommerce.storefront.checkout.stepShipping'), icon: Truck }] : []),
+        { id: 'payment', label: t('ecommerce.storefront.checkout.stepPayment'), icon: CreditCard },
     ];
 
     const currentStepIndex = steps.findIndex((s) => s.id === currentStep);
@@ -195,14 +197,14 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
                             className="flex items-center gap-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
                         >
                             <ChevronLeft size={20} />
-                            <span>Volver al carrito</span>
+                            <span>{t('ecommerce.storefront.checkout.backToCart')}</span>
                         </button>
                         <h1 className="text-xl font-bold text-gray-900 dark:text-white">
                             {storeName}
                         </h1>
                         <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400">
                             <Lock size={16} />
-                            <span className="text-sm">Pago seguro</span>
+                            <span className="text-sm">{t('ecommerce.storefront.checkout.securePayment')}</span>
                         </div>
                     </div>
                 </div>
@@ -269,13 +271,13 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
                             <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm space-y-6">
                                 <h2 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
                                     <User size={20} style={{ color: primaryColor }} />
-                                    Información de Contacto
+                                    {t('ecommerce.storefront.checkout.contactInfo')}
                                 </h2>
 
                                 <div className="grid gap-4">
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                            Email *
+                                            {t('ecommerce.storefront.checkout.email')} *
                                         </label>
                                         <div className="relative">
                                             <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
@@ -293,7 +295,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
                                     <div className="grid sm:grid-cols-2 gap-4">
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                                Nombre *
+                                                {t('ecommerce.storefront.checkout.firstName')} *
                                             </label>
                                             <input
                                                 type="text"
@@ -305,7 +307,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
                                         </div>
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                                Apellido *
+                                                {t('ecommerce.storefront.checkout.lastName')} *
                                             </label>
                                             <input
                                                 type="text"
@@ -319,7 +321,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
 
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                            Teléfono
+                                            {t('ecommerce.storefront.checkout.phone')}
                                         </label>
                                         <div className="relative">
                                             <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
@@ -335,27 +337,27 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
 
                                 <h2 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2 pt-4">
                                     <MapPin size={20} style={{ color: primaryColor }} />
-                                    Dirección de Envío
+                                    {t('ecommerce.storefront.checkout.shippingAddress')}
                                 </h2>
 
                                 <div className="grid gap-4">
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                            Dirección *
+                                            {t('ecommerce.storefront.checkout.address')} *
                                         </label>
                                         <input
                                             type="text"
                                             value={formData.address1}
                                             onChange={(e) => updateFormData('address1', e.target.value)}
                                             required
-                                            placeholder="Calle y número"
+                                            placeholder={t('ecommerce.storefront.checkout.addressPlaceholder')}
                                             className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2"
                                         />
                                     </div>
 
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                            Apartamento, suite, etc. (opcional)
+                                            {t('ecommerce.storefront.checkout.addressOptional')}
                                         </label>
                                         <input
                                             type="text"
@@ -368,7 +370,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
                                     <div className="grid sm:grid-cols-3 gap-4">
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                                Ciudad *
+                                                {t('ecommerce.storefront.checkout.city')} *
                                             </label>
                                             <input
                                                 type="text"
@@ -380,7 +382,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
                                         </div>
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                                Estado *
+                                                {t('ecommerce.storefront.checkout.state')} *
                                             </label>
                                             <input
                                                 type="text"
@@ -392,7 +394,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
                                         </div>
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                                C.P. *
+                                                {t('ecommerce.storefront.checkout.zipCode')} *
                                             </label>
                                             <input
                                                 type="text"
@@ -406,17 +408,17 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
 
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                            País *
+                                            {t('ecommerce.storefront.checkout.country')} *
                                         </label>
                                         <select
                                             value={formData.country}
                                             onChange={(e) => updateFormData('country', e.target.value)}
                                             className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2"
                                         >
-                                            <option value="México">México</option>
-                                            <option value="Estados Unidos">Estados Unidos</option>
-                                            <option value="Canadá">Canadá</option>
-                                            <option value="España">España</option>
+                                            <option value="México">{t('ecommerce.storefront.checkout.countries.mexico')}</option>
+                                            <option value="Estados Unidos">{t('ecommerce.storefront.checkout.countries.usa')}</option>
+                                            <option value="Canadá">{t('ecommerce.storefront.checkout.countries.canada')}</option>
+                                            <option value="España">{t('ecommerce.storefront.checkout.countries.spain')}</option>
                                         </select>
                                     </div>
                                 </div>
@@ -427,7 +429,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
                                     className="w-full py-3 rounded-lg text-white font-bold disabled:opacity-50 transition-colors"
                                     style={{ backgroundColor: primaryColor }}
                                 >
-                                    Continuar al {requiresShipping ? 'envío' : 'pago'}
+                                    {requiresShipping ? t('ecommerce.storefront.checkout.continueToShipping') : t('ecommerce.storefront.checkout.continueToPayment')}
                                 </button>
                             </div>
                         )}
@@ -437,7 +439,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
                             <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm space-y-6">
                                 <h2 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
                                     <Truck size={20} style={{ color: primaryColor }} />
-                                    Método de Envío
+                                    {t('ecommerce.storefront.checkout.shippingMethod')}
                                 </h2>
 
                                 <div className="space-y-3">
@@ -455,15 +457,15 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
                                             />
                                             <div>
                                                 <p className="font-medium text-gray-900 dark:text-white">
-                                                    Envío estándar
+                                                    {t('ecommerce.storefront.checkout.standardShipping')}
                                                 </p>
                                                 <p className="text-sm text-gray-500 dark:text-gray-400">
-                                                    5-7 días hábiles
+                                                    {t('ecommerce.storefront.checkout.businessDays')}
                                                 </p>
                                             </div>
                                         </div>
                                         <span className="font-bold text-gray-900 dark:text-white">
-                                            {shippingCost === 0 ? 'Gratis' : `${currencySymbol}${shippingCost.toFixed(2)}`}
+                                            {shippingCost === 0 ? t('ecommerce.storefront.cart.free') : `${currencySymbol}${shippingCost.toFixed(2)}`}
                                         </span>
                                     </label>
                                 </div>
@@ -473,14 +475,14 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
                                         onClick={() => setCurrentStep('information')}
                                         className="flex-1 py-3 rounded-lg border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-bold hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                                     >
-                                        Volver
+                                        {t('ecommerce.storefront.checkout.back')}
                                     </button>
                                     <button
                                         onClick={handleNextStep}
                                         className="flex-1 py-3 rounded-lg text-white font-bold transition-colors"
                                         style={{ backgroundColor: primaryColor }}
                                     >
-                                        Continuar al pago
+                                        {t('ecommerce.storefront.checkout.continueToPayment')}
                                     </button>
                                 </div>
                             </div>
@@ -491,7 +493,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
                             <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm space-y-6">
                                 <h2 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
                                     <CreditCard size={20} style={{ color: primaryColor }} />
-                                    Método de Pago
+                                    {t('ecommerce.storefront.checkout.paymentMethod')}
                                 </h2>
 
                                 <div className="space-y-3">
@@ -514,10 +516,10 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
                                         />
                                         <div className="flex-1">
                                             <p className="font-medium text-gray-900 dark:text-white">
-                                                Tarjeta de crédito o débito
+                                                {t('ecommerce.storefront.checkout.creditDebit')}
                                             </p>
                                             <p className="text-sm text-gray-500 dark:text-gray-400">
-                                                Visa, Mastercard, American Express
+                                                {t('ecommerce.storefront.checkout.creditDebitBrands')}
                                             </p>
                                         </div>
                                         <CreditCard className="text-gray-400" size={24} />
@@ -542,10 +544,10 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
                                         />
                                         <div className="flex-1">
                                             <p className="font-medium text-gray-900 dark:text-white">
-                                                PayPal
+                                                {t('ecommerce.storefront.checkout.paypal')}
                                             </p>
                                             <p className="text-sm text-gray-500 dark:text-gray-400">
-                                                Paga con tu cuenta PayPal
+                                                {t('ecommerce.storefront.checkout.paypalDesc')}
                                             </p>
                                         </div>
                                     </label>
@@ -569,10 +571,10 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
                                         />
                                         <div className="flex-1">
                                             <p className="font-medium text-gray-900 dark:text-white">
-                                                Pago contra entrega
+                                                {t('ecommerce.storefront.checkout.cashOnDelivery')}
                                             </p>
                                             <p className="text-sm text-gray-500 dark:text-gray-400">
-                                                Paga cuando recibas tu pedido
+                                                {t('ecommerce.storefront.checkout.cashOnDeliveryDesc')}
                                             </p>
                                         </div>
                                         <Truck className="text-gray-400" size={24} />
@@ -582,13 +584,13 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
                                 {/* Notes */}
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                        Notas del pedido (opcional)
+                                        {t('ecommerce.storefront.checkout.orderNotes')}
                                     </label>
                                     <textarea
                                         value={formData.notes}
                                         onChange={(e) => updateFormData('notes', e.target.value)}
                                         rows={3}
-                                        placeholder="Instrucciones especiales para la entrega..."
+                                        placeholder={t('ecommerce.storefront.checkout.orderNotesPlaceholder')}
                                         className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2"
                                     />
                                 </div>
@@ -598,7 +600,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
                                         onClick={() => setCurrentStep(requiresShipping ? 'shipping' : 'information')}
                                         className="flex-1 py-3 rounded-lg border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-bold hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                                     >
-                                        Volver
+                                        {t('ecommerce.storefront.checkout.back')}
                                     </button>
                                     <button
                                         onClick={handleSubmit}
@@ -609,12 +611,12 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
                                         {isSubmitting ? (
                                             <>
                                                 <Loader2 className="animate-spin" size={20} />
-                                                Procesando...
+                                                {t('ecommerce.storefront.checkout.processing')}
                                             </>
                                         ) : (
                                             <>
                                                 <Lock size={18} />
-                                                Pagar {currencySymbol}{total.toFixed(2)}
+                                                {t('ecommerce.storefront.checkout.pay')} {currencySymbol}{total.toFixed(2)}
                                             </>
                                         )}
                                     </button>
@@ -628,7 +630,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
                         <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm sticky top-32">
                             <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                                 <ShoppingBag size={20} style={{ color: primaryColor }} />
-                                Resumen ({itemCount} {itemCount === 1 ? 'producto' : 'productos'})
+                                {t('ecommerce.storefront.checkout.orderSummary')} ({itemCount} {itemCount === 1 ? t('ecommerce.storefront.cart.product') : t('ecommerce.storefront.cart.products')})
                             </h3>
 
                             {/* Items */}
@@ -674,27 +676,27 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
                             {/* Totals */}
                             <div className="border-t border-gray-200 dark:border-gray-700 pt-4 space-y-2">
                                 <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400">
-                                    <span>Subtotal</span>
+                                    <span>{t('ecommerce.storefront.cart.subtotal')}</span>
                                     <span>{currencySymbol}{subtotal.toFixed(2)}</span>
                                 </div>
                                 {discountAmount > 0 && (
                                     <div className="flex justify-between text-sm text-green-600">
-                                        <span>Descuento ({discountCode})</span>
+                                        <span>{t('ecommerce.storefront.cart.discount')} ({discountCode})</span>
                                         <span>-{currencySymbol}{discountAmount.toFixed(2)}</span>
                                     </div>
                                 )}
                                 <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400">
-                                    <span>Envío</span>
-                                    <span>{shippingCost === 0 ? 'Gratis' : `${currencySymbol}${shippingCost.toFixed(2)}`}</span>
+                                    <span>{t('ecommerce.storefront.cart.shipping')}</span>
+                                    <span>{shippingCost === 0 ? t('ecommerce.storefront.cart.free') : `${currencySymbol}${shippingCost.toFixed(2)}`}</span>
                                 </div>
                                 {taxAmount > 0 && (
                                     <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400">
-                                        <span>Impuestos</span>
+                                        <span>{t('ecommerce.storefront.checkout.taxes')}</span>
                                         <span>{currencySymbol}{taxAmount.toFixed(2)}</span>
                                     </div>
                                 )}
                                 <div className="flex justify-between text-lg font-bold text-gray-900 dark:text-white pt-2 border-t border-gray-200 dark:border-gray-700">
-                                    <span>Total</span>
+                                    <span>{t('ecommerce.storefront.cart.total')}</span>
                                     <span>{currencySymbol}{total.toFixed(2)}</span>
                                 </div>
                             </div>

@@ -4,6 +4,7 @@
  */
 
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { X, Send, Loader2, AlertCircle, CheckCircle } from 'lucide-react';
 import RatingStars from './RatingStars';
 import { ReviewColors } from './ReviewSummary';
@@ -43,6 +44,7 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
     primaryColor,
     colors: propColors,
 }) => {
+    const { t } = useTranslation();
     // Merge colors
     const colors = {
         ...defaultColors,
@@ -80,27 +82,27 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
 
         // Validation
         if (rating === 0) {
-            setError('Por favor selecciona una calificación');
+            setError(t('ecommerce.storefront.reviews.errors.selectRating'));
             return;
         }
 
         if (!title.trim()) {
-            setError('Por favor escribe un título');
+            setError(t('ecommerce.storefront.reviews.errors.writeTitle'));
             return;
         }
 
         if (!comment.trim()) {
-            setError('Por favor escribe tu opinión');
+            setError(t('ecommerce.storefront.reviews.errors.writeOpinion'));
             return;
         }
 
         if (!customerName.trim()) {
-            setError('Por favor escribe tu nombre');
+            setError(t('ecommerce.storefront.reviews.errors.writeName'));
             return;
         }
 
         if (!customerEmail.trim() || !customerEmail.includes('@')) {
-            setError('Por favor escribe un email válido');
+            setError(t('ecommerce.storefront.reviews.errors.validEmail'));
             return;
         }
 
@@ -123,7 +125,7 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
                 handleClose();
             }, 2000);
         } else {
-            setError(result.error || 'Error al enviar la reseña');
+            setError(result.error || t('ecommerce.storefront.reviews.errors.submitFailed'));
         }
     };
 
@@ -148,11 +150,11 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
                     style={{ borderColor: colors?.border }}
                 >
                     <div>
-                        <h2 
+                        <h2
                             className="text-xl font-bold"
                             style={{ color: colors?.heading }}
                         >
-                            Escribir una reseña
+                            {t('ecommerce.storefront.reviews.writeReview')}
                         </h2>
                         <p className="text-sm mt-1" style={{ color: colors?.mutedText }}>
                             {productName}
@@ -177,14 +179,14 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
                             >
                                 <CheckCircle size={32} style={{ color: colors?.primary }} />
                             </div>
-                            <h3 
+                            <h3
                                 className="text-xl font-bold mb-2"
                                 style={{ color: colors?.heading }}
                             >
-                                ¡Gracias por tu reseña!
+                                {t('ecommerce.storefront.reviews.thankYou')}
                             </h3>
                             <p style={{ color: colors?.mutedText }}>
-                                Tu reseña será revisada y publicada pronto.
+                                {t('ecommerce.storefront.reviews.reviewPending')}
                             </p>
                         </div>
                     ) : (
@@ -199,11 +201,11 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
 
                             {/* Rating */}
                             <div>
-                                <label 
+                                <label
                                     className="block text-sm font-medium mb-3"
                                     style={{ color: colors?.text }}
                                 >
-                                    Calificación *
+                                    {t('ecommerce.storefront.reviews.rating')} *
                                 </label>
                                 <RatingStars
                                     rating={rating}
@@ -214,59 +216,59 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
                                 />
                                 {rating > 0 && (
                                     <p className="text-sm mt-2" style={{ color: colors?.mutedText }}>
-                                        {rating === 5 && '¡Excelente!'}
-                                        {rating === 4 && 'Muy bueno'}
-                                        {rating === 3 && 'Regular'}
-                                        {rating === 2 && 'Malo'}
-                                        {rating === 1 && 'Muy malo'}
+                                        {rating === 5 && t('ecommerce.storefront.reviews.ratingExcellent')}
+                                        {rating === 4 && t('ecommerce.storefront.reviews.ratingVeryGood')}
+                                        {rating === 3 && t('ecommerce.storefront.reviews.ratingAverage')}
+                                        {rating === 2 && t('ecommerce.storefront.reviews.ratingBad')}
+                                        {rating === 1 && t('ecommerce.storefront.reviews.ratingVeryBad')}
                                     </p>
                                 )}
                             </div>
 
                             {/* Title */}
                             <div>
-                                <label 
+                                <label
                                     className="block text-sm font-medium mb-2"
                                     style={{ color: colors?.text }}
                                 >
-                                    Título de tu reseña *
+                                    {t('ecommerce.storefront.reviews.reviewTitle')} *
                                 </label>
                                 <input
                                     type="text"
                                     value={title}
                                     onChange={(e) => setTitle(e.target.value)}
-                                    placeholder="Resume tu experiencia en pocas palabras"
+                                    placeholder={t('ecommerce.storefront.reviews.reviewTitlePlaceholder')}
                                     maxLength={100}
                                     className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2"
-                                    style={{ 
-                                        borderColor: colors?.border, 
+                                    style={{
+                                        borderColor: colors?.border,
                                         backgroundColor: colors?.cardBackground,
                                         color: colors?.heading,
-                                        '--tw-ring-color': colors?.primary 
+                                        '--tw-ring-color': colors?.primary
                                     } as React.CSSProperties}
                                 />
                             </div>
 
                             {/* Comment */}
                             <div>
-                                <label 
+                                <label
                                     className="block text-sm font-medium mb-2"
                                     style={{ color: colors?.text }}
                                 >
-                                    Tu opinión *
+                                    {t('ecommerce.storefront.reviews.yourOpinion')} *
                                 </label>
                                 <textarea
                                     value={comment}
                                     onChange={(e) => setComment(e.target.value)}
-                                    placeholder="Cuéntanos qué te pareció el producto..."
+                                    placeholder={t('ecommerce.storefront.reviews.yourOpinionPlaceholder')}
                                     rows={4}
                                     maxLength={1000}
                                     className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 resize-none"
-                                    style={{ 
-                                        borderColor: colors?.border, 
+                                    style={{
+                                        borderColor: colors?.border,
                                         backgroundColor: colors?.cardBackground,
                                         color: colors?.heading,
-                                        '--tw-ring-color': colors?.primary 
+                                        '--tw-ring-color': colors?.primary
                                     } as React.CSSProperties}
                                 />
                                 <p className="text-xs mt-1 text-right" style={{ color: colors?.mutedText }}>
@@ -276,51 +278,51 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
 
                             {/* Customer Name */}
                             <div>
-                                <label 
+                                <label
                                     className="block text-sm font-medium mb-2"
                                     style={{ color: colors?.text }}
                                 >
-                                    Tu nombre *
+                                    {t('ecommerce.storefront.reviews.yourName')} *
                                 </label>
                                 <input
                                     type="text"
                                     value={customerName}
                                     onChange={(e) => setCustomerName(e.target.value)}
-                                    placeholder="¿Cómo te llamas?"
+                                    placeholder={t('ecommerce.storefront.reviews.yourNamePlaceholder')}
                                     maxLength={50}
                                     className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2"
-                                    style={{ 
-                                        borderColor: colors?.border, 
+                                    style={{
+                                        borderColor: colors?.border,
                                         backgroundColor: colors?.cardBackground,
                                         color: colors?.heading,
-                                        '--tw-ring-color': colors?.primary 
+                                        '--tw-ring-color': colors?.primary
                                     } as React.CSSProperties}
                                 />
                             </div>
 
                             {/* Customer Email */}
                             <div>
-                                <label 
+                                <label
                                     className="block text-sm font-medium mb-2"
                                     style={{ color: colors?.text }}
                                 >
-                                    Tu email *
+                                    {t('ecommerce.storefront.reviews.yourEmail')} *
                                 </label>
                                 <input
                                     type="email"
                                     value={customerEmail}
                                     onChange={(e) => setCustomerEmail(e.target.value)}
-                                    placeholder="tu@email.com"
+                                    placeholder={t('auth.emailPlaceholder')}
                                     className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2"
-                                    style={{ 
-                                        borderColor: colors?.border, 
+                                    style={{
+                                        borderColor: colors?.border,
                                         backgroundColor: colors?.cardBackground,
                                         color: colors?.heading,
-                                        '--tw-ring-color': colors?.primary 
+                                        '--tw-ring-color': colors?.primary
                                     } as React.CSSProperties}
                                 />
                                 <p className="text-xs mt-1" style={{ color: colors?.mutedText }}>
-                                    No se mostrará públicamente
+                                    {t('ecommerce.storefront.reviews.emailPrivate')}
                                 </p>
                             </div>
 
@@ -334,12 +336,12 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
                                 {isSubmitting ? (
                                     <>
                                         <Loader2 className="animate-spin" size={20} />
-                                        Enviando...
+                                        {t('ecommerce.storefront.reviews.submitting')}
                                     </>
                                 ) : (
                                     <>
                                         <Send size={20} />
-                                        Enviar reseña
+                                        {t('ecommerce.storefront.reviews.submitReview')}
                                     </>
                                 )}
                             </button>

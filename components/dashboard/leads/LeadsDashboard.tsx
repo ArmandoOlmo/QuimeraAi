@@ -393,66 +393,7 @@ const LeadsDashboard: React.FC = () => {
     // Calculate derived state
 
     // Create test lead with conversation - SOLO PARA DEMOSTRACIÓN
-    useEffect(() => {
-        const createTestLead = async () => {
-            // Solo crear si hay menos de 3 leads para no saturar
-            if (leads.length < 15 && addLead) {
-                const testLeadExists = leads.some(l => l.email === 'demo-chatbot@quimera.com');
 
-                if (!testLeadExists) {
-                    await addLead({
-                        name: "María González",
-                        email: "demo-chatbot@quimera.com",
-                        phone: "+1 (555) 123-4567",
-                        company: "Tech Solutions Inc",
-                        status: 'new',
-                        source: 'chatbot-widget',
-                        value: 15000,
-                        leadScore: 85,
-                        conversationTranscript: `Usuario: Hola, buenos días
-
-Bot: ¡Hola María! 👋 Bienvenida a Quimera. Soy tu asistente virtual. ¿En qué puedo ayudarte hoy?
-
-Usuario: Necesito un sitio web para mi empresa de tecnología
-
-Bot: ¡Excelente! Me encantaría ayudarte con eso. Cuéntame más sobre tu empresa y qué tipo de sitio web tienes en mente.
-
-Usuario: Somos una empresa de desarrollo de software y necesitamos un sitio corporativo moderno con portafolio de proyectos
-
-Bot: Perfecto, entiendo. Un sitio corporativo con portafolio es una excelente forma de mostrar tu trabajo. ¿Tienes alguna idea sobre el diseño o funcionalidades específicas que necesitas?
-
-Usuario: Sí, necesitamos que tenga una sección de blog, formulario de contacto, y que sea responsive. También queremos integrar nuestro sistema CRM
-
-Bot: Genial, esas son características muy importantes. La integración con CRM es clave para gestionar leads. ¿Qué presupuesto tienes estimado para este proyecto?
-
-Usuario: Tenemos un presupuesto de alrededor de $15,000
-
-Bot: Perfecto, ese presupuesto es adecuado para un proyecto de esta envergadura. ¿Cuándo te gustaría tener el sitio listo?
-
-Usuario: Idealmente en 2-3 meses. ¿Es posible?
-
-Bot: Sí, definitivamente es un timeline razonable. Te conectaré con uno de nuestros especialistas para que podamos discutir los detalles específicos y crear una propuesta personalizada. ¿Te parece bien si te contactamos mañana?
-
-Usuario: Perfecto, me parece bien
-
-Bot: ¡Excelente! Hemos registrado tu información. Un miembro de nuestro equipo se pondrá en contacto contigo mañana. ¿Hay algo más en lo que pueda ayudarte?
-
-Usuario: No, eso es todo por ahora. Gracias
-
-Bot: ¡Gracias a ti María! Que tengas un excelente día. 🚀`,
-                        tags: ['chatbot-widget', 'high-priority', 'demo'],
-                        notes: 'Lead demo creado automáticamente para mostrar funcionalidad de conversación del chatbot',
-                        aiAnalysis: 'Cliente interesado en sitio web corporativo con integración CRM. Presupuesto confirmado de $15,000. Timeline de 2-3 meses. Alto potencial de conversión.',
-                        aiScore: 85,
-                        recommendedAction: 'Contact within 24 hours'
-                    });
-                    console.log('✅ Lead de demostración creado con conversación del chatbot');
-                }
-            }
-        };
-
-        createTestLead();
-    }, [leads, addLead]);
 
     // --- Analytics Calculations ---
     const stats = useMemo(() => {

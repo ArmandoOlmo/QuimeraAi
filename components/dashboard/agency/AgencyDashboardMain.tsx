@@ -5,7 +5,7 @@
 
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Building2, Menu, CreditCard, FileText, UserPlus, Package, LayoutDashboard, ArrowLeft } from 'lucide-react';
+import { Building2, Menu, CreditCard, FileText, UserPlus, Package, LayoutDashboard } from 'lucide-react';
 import { useRouter } from '../../../hooks/useRouter';
 import { ROUTES } from '../../../routes/config';
 import { useAgency } from '../../../contexts/agency/AgencyContext';
@@ -140,16 +140,7 @@ const AgencyDashboardMain: React.FC = () => {
                         </div>
                     </div>
 
-                    {/* Right Section - Back Button */}
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                        <button
-                            onClick={() => navigate(ROUTES.DASHBOARD)}
-                            className="flex items-center gap-2 h-9 px-3 rounded-lg bg-secondary/50 hover:bg-secondary text-sm font-medium transition-all text-muted-foreground hover:text-foreground"
-                        >
-                            <ArrowLeft className="w-4 h-4" />
-                            <span className="hidden sm:inline">{t('common.back', 'Volver')}</span>
-                        </button>
-                    </div>
+                    {/* Right Section - Back Button - REMOVED */}
                 </header>
 
                 {/* Mobile Tabs */}

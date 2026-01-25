@@ -6,6 +6,7 @@
  */
 
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import {
     X,
     ShoppingCart,
@@ -73,6 +74,7 @@ const CartDrawer: React.FC<CartDrawerProps> = ({
     storeId = '',
     colors,
 }) => {
+    const { t } = useTranslation();
     // Use unified colors system - primaryColor prop serves as fallback
     const globalColors = useGlobalStorefrontColors(storeId);
     const themeAccent = primaryColor || globalColors.primary || '#4f46e5';
@@ -157,12 +159,12 @@ const CartDrawer: React.FC<CartDrawerProps> = ({
         try {
             const result = await onApplyDiscount(discountInput.trim().toUpperCase());
             if (!result.valid) {
-                setDiscountError(result.error || 'Código inválido');
+                setDiscountError(result.error || t('ecommerce.storefront.cart.invalidCode'));
             } else {
                 setDiscountInput('');
             }
         } catch (error) {
-            setDiscountError('Error al aplicar el código');
+            setDiscountError(t('ecommerce.storefront.cart.applyError'));
         } finally {
             setIsApplyingDiscount(false);
         }
@@ -195,17 +197,17 @@ const CartDrawer: React.FC<CartDrawerProps> = ({
                     <div className="flex items-center gap-3">
                         <ShoppingCart size={24} style={{ color: effectiveColors.accent }} />
                         <div>
-                            <h2 
+                            <h2
                                 className="text-lg font-bold"
                                 style={{ color: effectiveColors.heading }}
                             >
-                                Tu Carrito
+                                {t('ecommerce.storefront.cart.title')}
                             </h2>
-                            <p 
+                            <p
                                 className="text-sm"
                                 style={{ color: effectiveColors.text }}
                             >
-                                {itemCount} {itemCount === 1 ? 'producto' : 'productos'}
+                                {itemCount} {itemCount === 1 ? t('ecommerce.storefront.cart.product') : t('ecommerce.storefront.cart.products')}
                             </p>
                         </div>
                     </div>
@@ -220,15 +222,15 @@ const CartDrawer: React.FC<CartDrawerProps> = ({
 
                 {/* Free Shipping Progress */}
                 {freeShippingThreshold > 0 && remainingForFreeShipping > 0 && items.length > 0 && (
-                    <div 
+                    <div
                         className="px-4 py-3 border-b"
-                        style={{ 
+                        style={{
                             backgroundColor: effectiveColors.cardBackground,
-                            borderColor: effectiveColors.borderColor 
+                            borderColor: effectiveColors.borderColor
                         }}
                     >
                         <p className="text-sm mb-2" style={{ color: effectiveColors.text }}>
-                            ¡Te faltan <span className="font-bold" style={{ color: effectiveColors.accent }}>{currencySymbol}{remainingForFreeShipping.toFixed(2)}</span> para envío gratis!
+                            {t('ecommerce.storefront.cart.freeShippingProgress', { amount: `${currencySymbol}${remainingForFreeShipping.toFixed(2)}` })}
                         </p>
                         <div 
                             className="h-2 rounded-full overflow-hidden"
@@ -250,24 +252,24 @@ const CartDrawer: React.FC<CartDrawerProps> = ({
                     {items.length === 0 ? (
                         <div className="flex flex-col items-center justify-center h-full text-center">
                             <ShoppingBag className="mb-4" size={64} style={{ color: effectiveColors.borderColor }} />
-                            <h3 
+                            <h3
                                 className="text-lg font-medium mb-2"
                                 style={{ color: effectiveColors.heading }}
                             >
-                                Tu carrito está vacío
+                                {t('ecommerce.storefront.cart.empty')}
                             </h3>
                             <p className="mb-6" style={{ color: effectiveColors.text }}>
-                                Agrega productos para comenzar
+                                {t('ecommerce.storefront.cart.emptyMessage')}
                             </p>
                             <button
                                 onClick={onClose}
                                 className="px-6 py-2 rounded-lg font-medium transition-colors"
-                                style={{ 
-                                    backgroundColor: effectiveColors.buttonBackground, 
-                                    color: effectiveColors.buttonText 
+                                style={{
+                                    backgroundColor: effectiveColors.buttonBackground,
+                                    color: effectiveColors.buttonText
                                 }}
                             >
-                                Seguir comprando
+                                {t('ecommerce.storefront.cart.continueShopping')}
                             </button>
                         </div>
                     ) : (
@@ -385,13 +387,13 @@ const CartDrawer: React.FC<CartDrawerProps> = ({
                                             type="text"
                                             value={discountInput}
                                             onChange={(e) => setDiscountInput(e.target.value.toUpperCase())}
-                                            placeholder="Código de descuento"
+                                            placeholder={t('ecommerce.storefront.cart.discountCode')}
                                             className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2"
-                                            style={{ 
+                                            style={{
                                                 borderColor: effectiveColors.borderColor,
                                                 backgroundColor: effectiveColors.background,
                                                 color: effectiveColors.heading,
-                                                '--tw-ring-color': effectiveColors.accent 
+                                                '--tw-ring-color': effectiveColors.accent
                                             } as React.CSSProperties}
                                         />
                                     </div>
@@ -399,12 +401,12 @@ const CartDrawer: React.FC<CartDrawerProps> = ({
                                         onClick={handleApplyDiscount}
                                         disabled={isApplyingDiscount || !discountInput.trim()}
                                         className="px-4 py-2 rounded-lg font-medium disabled:opacity-50 transition-colors"
-                                        style={{ 
-                                            backgroundColor: effectiveColors.buttonBackground, 
-                                            color: effectiveColors.buttonText 
+                                        style={{
+                                            backgroundColor: effectiveColors.buttonBackground,
+                                            color: effectiveColors.buttonText
                                         }}
                                     >
-                                        {isApplyingDiscount ? '...' : 'Aplicar'}
+                                        {isApplyingDiscount ? '...' : t('ecommerce.storefront.cart.apply')}
                                     </button>
                                 </div>
                                 {discountError && (
@@ -434,29 +436,29 @@ const CartDrawer: React.FC<CartDrawerProps> = ({
                         {/* Totals */}
                         <div className="space-y-2 text-sm">
                             <div className="flex justify-between" style={{ color: effectiveColors.text }}>
-                                <span>Subtotal</span>
+                                <span>{t('ecommerce.storefront.cart.subtotal')}</span>
                                 <span>{currencySymbol}{subtotal.toFixed(2)}</span>
                             </div>
                             {discountAmount > 0 && (
                                 <div className="flex justify-between text-green-600">
-                                    <span>Descuento</span>
+                                    <span>{t('ecommerce.storefront.cart.discount')}</span>
                                     <span>-{currencySymbol}{discountAmount.toFixed(2)}</span>
                                 </div>
                             )}
                             {freeShippingThreshold > 0 && remainingForFreeShipping === 0 && (
                                 <div className="flex justify-between text-green-600">
-                                    <span>Envío</span>
-                                    <span>Gratis</span>
+                                    <span>{t('ecommerce.storefront.cart.shipping')}</span>
+                                    <span>{t('ecommerce.storefront.cart.free')}</span>
                                 </div>
                             )}
-                            <div 
+                            <div
                                 className="flex justify-between text-lg font-bold pt-2 border-t"
-                                style={{ 
+                                style={{
                                     color: effectiveColors.heading,
-                                    borderColor: effectiveColors.borderColor 
+                                    borderColor: effectiveColors.borderColor
                                 }}
                             >
-                                <span>Total</span>
+                                <span>{t('ecommerce.storefront.cart.total')}</span>
                                 <span>{currencySymbol}{total.toFixed(2)}</span>
                             </div>
                         </div>
@@ -465,12 +467,12 @@ const CartDrawer: React.FC<CartDrawerProps> = ({
                         <button
                             onClick={onCheckout}
                             className="w-full py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-transform hover:scale-[1.02] active:scale-[0.98]"
-                            style={{ 
-                                backgroundColor: effectiveColors.buttonBackground, 
-                                color: effectiveColors.buttonText 
+                            style={{
+                                backgroundColor: effectiveColors.buttonBackground,
+                                color: effectiveColors.buttonText
                             }}
                         >
-                            Ir al Checkout
+                            {t('ecommerce.storefront.cart.checkout')}
                             <ArrowRight size={20} />
                         </button>
 
@@ -479,7 +481,7 @@ const CartDrawer: React.FC<CartDrawerProps> = ({
                             className="w-full py-2 transition-colors hover:opacity-70"
                             style={{ color: effectiveColors.text }}
                         >
-                            Seguir comprando
+                            {t('ecommerce.storefront.cart.continueShopping')}
                         </button>
                     </div>
                 )}

@@ -11,7 +11,8 @@ import ColorControl from './ColorControl';
 import TabbedControls from './TabbedControls';
 import ImagePicker from './ImagePicker';
 import { usePublicProducts } from '../../hooks/usePublicProducts';
-import { X, Check, Search, ChevronDown, ChevronUp, ChevronRight, FolderOpen, Package, Image as ImageIcon, Loader2, SlidersHorizontal, ShoppingBag, ShoppingCart, LayoutGrid, Maximize2, Palette, Info, Grid, List, MessageCircle, Trash2, Plus } from 'lucide-react';
+import { useCMS } from '../../contexts/cms/CMSContext';
+import { X, Check, Search, ChevronDown, ChevronUp, ChevronRight, FolderOpen, Package, Image as ImageIcon, Loader2, SlidersHorizontal, ShoppingBag, ShoppingCart, LayoutGrid, Maximize2, Palette, Info, Grid, List, MessageCircle, Trash2, Plus, FileText, Scale } from 'lucide-react';
 
 // Helper Components (same as in Controls.tsx)
 const Input = ({ label, className, ...props }: React.InputHTMLAttributes<HTMLInputElement> & { label?: string }) => (
@@ -353,14 +354,14 @@ const ProductSelector: React.FC<ProductSelectorProps> = ({ selectedIds, onChange
     );
 };
 
-interface SingleProductSelectorProps {
+export interface SingleProductSelectorProps {
     selectedProductId: string | undefined;
     onSelect: (productId: string | undefined) => void;
     storeId: string;
     label?: string;
 }
 
-const SingleProductSelector: React.FC<SingleProductSelectorProps> = ({ selectedProductId, onSelect, storeId, label = 'Producto Destacado' }) => {
+export const SingleProductSelector: React.FC<SingleProductSelectorProps> = ({ selectedProductId, onSelect, storeId, label = 'Producto Destacado' }) => {
     const { t } = useTranslation();
     const [isExpanded, setIsExpanded] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
@@ -515,7 +516,7 @@ const SingleProductSelector: React.FC<SingleProductSelectorProps> = ({ selectedP
     );
 };
 
-interface SingleCollectionSelectorProps {
+export interface SingleCollectionSelectorProps {
     selectedCollectionId: string | undefined;
     onSelect: (collectionId: string | undefined) => void;
     storeId: string;
@@ -523,7 +524,7 @@ interface SingleCollectionSelectorProps {
     label?: string;
 }
 
-const SingleCollectionSelector: React.FC<SingleCollectionSelectorProps> = ({
+export const SingleCollectionSelector: React.FC<SingleCollectionSelectorProps> = ({
     selectedCollectionId,
     storeId,
     gridCategories,
@@ -860,7 +861,7 @@ export const useFeaturedProductsControls = ({ data, setNestedData, storeId = '' 
                 <Palette size={14} />
                 {t('editor.controls.ecommerce.sectionColors', 'Section Colors')}
             </h5>
-            
+
             <div className="grid grid-cols-2 gap-3">
                 <ColorControl
                     label={t('editor.controls.ecommerce.background', 'Background')}
@@ -890,7 +891,7 @@ export const useFeaturedProductsControls = ({ data, setNestedData, storeId = '' 
             <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
                 {t('editor.controls.ecommerce.cardColors', 'Card Colors')}
             </h5>
-            
+
             <div className="grid grid-cols-2 gap-3">
                 <ColorControl
                     label={t('editor.controls.ecommerce.cardBackground', 'Card Background')}
@@ -910,7 +911,7 @@ export const useFeaturedProductsControls = ({ data, setNestedData, storeId = '' 
             <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
                 {t('editor.controls.ecommerce.buttonColors', 'Button Colors')}
             </h5>
-            
+
             <div className="grid grid-cols-2 gap-3">
                 <ColorControl
                     label={t('editor.controls.ecommerce.buttonBackground', 'Button BG')}
@@ -930,7 +931,7 @@ export const useFeaturedProductsControls = ({ data, setNestedData, storeId = '' 
             <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
                 {t('editor.controls.ecommerce.badgeColors', 'Badge Colors')}
             </h5>
-            
+
             <div className="grid grid-cols-2 gap-3">
                 <ColorControl
                     label={t('editor.controls.ecommerce.badgeBackground', 'Badge BG')}
@@ -950,7 +951,7 @@ export const useFeaturedProductsControls = ({ data, setNestedData, storeId = '' 
             <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
                 {t('editor.controls.ecommerce.priceColors', 'Price Colors')}
             </h5>
-            
+
             <div className="grid grid-cols-2 gap-3">
                 <ColorControl
                     label={t('editor.controls.ecommerce.priceColor', 'Price')}
@@ -1055,7 +1056,7 @@ export const useCategoryGridControls = ({ data, setNestedData, storeId = '' }: E
                 <Palette size={14} />
                 {t('editor.controls.ecommerce.sectionColors', 'Section Colors')}
             </h5>
-            
+
             <div className="grid grid-cols-2 gap-3">
                 <ColorControl
                     label={t('editor.controls.ecommerce.background', 'Background')}
@@ -1085,7 +1086,7 @@ export const useCategoryGridControls = ({ data, setNestedData, storeId = '' }: E
             <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
                 {t('editor.controls.ecommerce.cardColors', 'Card Colors')}
             </h5>
-            
+
             <div className="grid grid-cols-2 gap-3">
                 <ColorControl
                     label={t('editor.controls.ecommerce.cardBackground', 'Card Background')}
@@ -1105,7 +1106,7 @@ export const useCategoryGridControls = ({ data, setNestedData, storeId = '' }: E
             <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
                 {t('editor.controls.ecommerce.overlayColors', 'Overlay Colors')}
             </h5>
-            
+
             <div className="grid grid-cols-2 gap-3">
                 <ColorControl
                     label={t('editor.controls.ecommerce.overlayStart', 'Overlay Start')}
@@ -1147,7 +1148,7 @@ export const useCategoryGridControls = ({ data, setNestedData, storeId = '' }: E
                     showXl
                 />
             </div>
-            
+
             <BorderRadiusSelector
                 label={t('editor.controls.ecommerce.cardRadius', 'Card Radius')}
                 value={d.borderRadius || 'xl'}
@@ -1230,7 +1231,7 @@ export const useProductHeroControls = ({ data, setNestedData, storeId = '' }: Ec
                 <Palette size={14} />
                 {t('editor.controls.ecommerce.sectionColors', 'Section Colors')}
             </h5>
-            
+
             <div className="grid grid-cols-2 gap-3">
                 <ColorControl
                     label={t('editor.controls.ecommerce.background', 'Background')}
@@ -1250,7 +1251,7 @@ export const useProductHeroControls = ({ data, setNestedData, storeId = '' }: Ec
             <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
                 {t('editor.controls.ecommerce.textColors', 'Text Colors')}
             </h5>
-            
+
             <div className="grid grid-cols-2 gap-3">
                 <ColorControl
                     label={t('editor.controls.ecommerce.heading', 'Heading')}
@@ -1275,7 +1276,7 @@ export const useProductHeroControls = ({ data, setNestedData, storeId = '' }: Ec
             <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
                 {t('editor.controls.ecommerce.buttonColors', 'Button Colors')}
             </h5>
-            
+
             <div className="grid grid-cols-2 gap-3">
                 <ColorControl
                     label={t('editor.controls.ecommerce.buttonBackground', 'Button BG')}
@@ -1295,7 +1296,7 @@ export const useProductHeroControls = ({ data, setNestedData, storeId = '' }: Ec
             <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
                 {t('editor.controls.ecommerce.badgeColors', 'Badge Colors')}
             </h5>
-            
+
             <div className="grid grid-cols-2 gap-3">
                 <ColorControl
                     label={t('editor.controls.ecommerce.badgeBackground', 'Badge BG')}
@@ -1380,7 +1381,7 @@ export const useTrustBadgesControls = ({ data, setNestedData }: EcommerceControl
                 <Palette size={14} />
                 {t('editor.controls.ecommerce.sectionColors', 'Section Colors')}
             </h5>
-            
+
             <div className="grid grid-cols-2 gap-3">
                 <ColorControl
                     label={t('editor.controls.ecommerce.background', 'Background')}
@@ -1516,7 +1517,7 @@ export const useSaleCountdownControls = ({ data, setNestedData, storeId = '' }: 
                 <Palette size={14} />
                 {t('editor.controls.ecommerce.sectionColors', 'Section Colors')}
             </h5>
-            
+
             <div className="grid grid-cols-2 gap-3">
                 <ColorControl
                     label={t('editor.controls.ecommerce.background', 'Background')}
@@ -1546,7 +1547,7 @@ export const useSaleCountdownControls = ({ data, setNestedData, storeId = '' }: 
             <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
                 {t('editor.controls.ecommerce.countdownColors', 'Countdown Colors')}
             </h5>
-            
+
             <div className="grid grid-cols-2 gap-3">
                 <ColorControl
                     label={t('editor.controls.ecommerce.countdownBackground', 'Countdown BG')}
@@ -1566,7 +1567,7 @@ export const useSaleCountdownControls = ({ data, setNestedData, storeId = '' }: 
             <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
                 {t('editor.controls.ecommerce.buttonColors', 'Button Colors')}
             </h5>
-            
+
             <div className="grid grid-cols-2 gap-3">
                 <ColorControl
                     label={t('editor.controls.ecommerce.buttonBackground', 'Button BG')}
@@ -1586,7 +1587,7 @@ export const useSaleCountdownControls = ({ data, setNestedData, storeId = '' }: 
             <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
                 {t('editor.controls.ecommerce.badgeColors', 'Badge Colors')}
             </h5>
-            
+
             <div className="grid grid-cols-2 gap-3">
                 <ColorControl
                     label={t('editor.controls.ecommerce.badgeBackground', 'Badge BG')}
@@ -1837,7 +1838,7 @@ export const useAnnouncementBarControls = ({ data, setNestedData, storeId = '' }
                         onChange={(v) => setNestedData('announcementBar.pauseOnHover', v)}
                     />
                     <SliderControl
-                        label={d.variant === 'scrolling' 
+                        label={d.variant === 'scrolling'
                             ? t('editor.controls.ecommerce.scrollSpeed', 'Scroll Speed (seconds)')
                             : t('editor.controls.ecommerce.rotationSpeed', 'Rotation Speed (ms)')
                         }
@@ -1859,7 +1860,7 @@ export const useAnnouncementBarControls = ({ data, setNestedData, storeId = '' }
                 <Palette size={14} />
                 {t('editor.controls.ecommerce.colors', 'Colors')}
             </h5>
-            
+
             <div className="grid grid-cols-2 gap-3">
                 <ColorControl
                     label={t('editor.controls.ecommerce.background', 'Background')}
@@ -1945,7 +1946,7 @@ export const useCollectionBannerControls = ({ data, setNestedData, storeId = '' 
     if (!data?.collectionBanner) return null;
 
     const d = data.collectionBanner;
-    
+
     // Get categoryGrid categories for the collection selector
     const gridCategories = data?.categoryGrid?.categories || [];
 
@@ -1958,7 +1959,7 @@ export const useCollectionBannerControls = ({ data, setNestedData, storeId = '' 
                 onChange={(url) => setNestedData('collectionBanner.backgroundImageUrl', url)}
                 storeId={storeId}
             />
-            
+
             <Input
                 label={t('editor.controls.ecommerce.title', 'Title')}
                 value={d.title || ''}
@@ -1970,20 +1971,20 @@ export const useCollectionBannerControls = ({ data, setNestedData, storeId = '' 
                 onChange={(e) => setNestedData('collectionBanner.description', e.target.value)}
                 rows={3}
             />
-            
+
             <hr className="border-editor-border/50" />
-            
+
             {/* Button Configuration */}
             <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
                 {t('editor.controls.ecommerce.buttonConfig', 'Configuración del Botón')}
             </h5>
-            
+
             <Input
                 label={t('editor.controls.ecommerce.buttonText', 'Button Text')}
                 value={d.buttonText || ''}
                 onChange={(e) => setNestedData('collectionBanner.buttonText', e.target.value)}
             />
-            
+
             {/* Collection Selector */}
             {storeId && (
                 <SingleCollectionSelector
@@ -2000,7 +2001,7 @@ export const useCollectionBannerControls = ({ data, setNestedData, storeId = '' 
                     label={t('editor.controls.ecommerce.linkToCollection', 'Enlazar a Colección')}
                 />
             )}
-            
+
             {/* Custom URL - only show if no collection selected */}
             {!d.collectionId && (
                 <Input
@@ -2020,7 +2021,7 @@ export const useCollectionBannerControls = ({ data, setNestedData, storeId = '' 
                 <Palette size={14} />
                 {t('editor.controls.ecommerce.sectionColors', 'Section Colors')}
             </h5>
-            
+
             <div className="grid grid-cols-2 gap-3">
                 <ColorControl
                     label={t('editor.controls.ecommerce.background', 'Background')}
@@ -2040,7 +2041,7 @@ export const useCollectionBannerControls = ({ data, setNestedData, storeId = '' 
             <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
                 {t('editor.controls.ecommerce.textColors', 'Text Colors')}
             </h5>
-            
+
             <div className="grid grid-cols-2 gap-3">
                 <ColorControl
                     label={t('editor.controls.ecommerce.heading', 'Heading')}
@@ -2065,7 +2066,7 @@ export const useCollectionBannerControls = ({ data, setNestedData, storeId = '' 
             <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
                 {t('editor.controls.ecommerce.buttonColors', 'Button Colors')}
             </h5>
-            
+
             <div className="grid grid-cols-2 gap-3">
                 <ColorControl
                     label={t('editor.controls.ecommerce.buttonBackground', 'Button BG')}
@@ -2142,7 +2143,7 @@ export const useRecentlyViewedControls = ({ data, setNestedData }: EcommerceCont
                 <Palette size={14} />
                 {t('editor.controls.ecommerce.sectionColors', 'Section Colors')}
             </h5>
-            
+
             <div className="grid grid-cols-2 gap-3">
                 <ColorControl
                     label={t('editor.controls.ecommerce.background', 'Background')}
@@ -2172,7 +2173,7 @@ export const useRecentlyViewedControls = ({ data, setNestedData }: EcommerceCont
             <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
                 {t('editor.controls.ecommerce.cardColors', 'Card Colors')}
             </h5>
-            
+
             <div className="grid grid-cols-2 gap-3">
                 <ColorControl
                     label={t('editor.controls.ecommerce.cardBackground', 'Card Background')}
@@ -2243,7 +2244,7 @@ export const useProductReviewsControls = ({ data, setNestedData }: EcommerceCont
                 <Palette size={14} />
                 {t('editor.controls.ecommerce.sectionColors', 'Section Colors')}
             </h5>
-            
+
             <div className="grid grid-cols-2 gap-3">
                 <ColorControl
                     label={t('editor.controls.ecommerce.background', 'Background')}
@@ -2273,7 +2274,7 @@ export const useProductReviewsControls = ({ data, setNestedData }: EcommerceCont
             <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
                 {t('editor.controls.ecommerce.cardColors', 'Card Colors')}
             </h5>
-            
+
             <div className="grid grid-cols-2 gap-3">
                 <ColorControl
                     label={t('editor.controls.ecommerce.cardBackground', 'Card Background')}
@@ -2293,7 +2294,7 @@ export const useProductReviewsControls = ({ data, setNestedData }: EcommerceCont
             <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
                 {t('editor.controls.ecommerce.reviewColors', 'Review Colors')}
             </h5>
-            
+
             <div className="grid grid-cols-2 gap-3">
                 <ColorControl
                     label={t('editor.controls.ecommerce.starColor', 'Star Color')}
@@ -2370,7 +2371,7 @@ export const useProductBundleControls = ({ data, setNestedData, storeId = '' }: 
                 <Palette size={14} />
                 {t('editor.controls.ecommerce.sectionColors', 'Section Colors')}
             </h5>
-            
+
             <div className="grid grid-cols-2 gap-3">
                 <ColorControl
                     label={t('editor.controls.ecommerce.background', 'Background')}
@@ -2400,7 +2401,7 @@ export const useProductBundleControls = ({ data, setNestedData, storeId = '' }: 
             <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
                 {t('editor.controls.ecommerce.cardColors', 'Card Colors')}
             </h5>
-            
+
             <div className="grid grid-cols-2 gap-3">
                 <ColorControl
                     label={t('editor.controls.ecommerce.cardBackground', 'Card Background')}
@@ -2420,7 +2421,7 @@ export const useProductBundleControls = ({ data, setNestedData, storeId = '' }: 
             <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
                 {t('editor.controls.ecommerce.priceColors', 'Price Colors')}
             </h5>
-            
+
             <div className="grid grid-cols-2 gap-3">
                 <ColorControl
                     label={t('editor.controls.ecommerce.priceColor', 'Price')}
@@ -2440,7 +2441,7 @@ export const useProductBundleControls = ({ data, setNestedData, storeId = '' }: 
             <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
                 {t('editor.controls.ecommerce.buttonColors', 'Button Colors')}
             </h5>
-            
+
             <div className="grid grid-cols-2 gap-3">
                 <ColorControl
                     label={t('editor.controls.ecommerce.buttonBackground', 'Button BG')}
@@ -2460,7 +2461,7 @@ export const useProductBundleControls = ({ data, setNestedData, storeId = '' }: 
             <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
                 {t('editor.controls.ecommerce.badgeColors', 'Badge Colors')}
             </h5>
-            
+
             <div className="grid grid-cols-2 gap-3">
                 <ColorControl
                     label={t('editor.controls.ecommerce.badgeBackground', 'Badge BG')}
@@ -2536,7 +2537,7 @@ export const useStoreSettingsControls = ({ data, setNestedData }: EcommerceContr
                 <Palette size={14} />
                 {t('editor.controls.ecommerce.storeColors', 'Store Colors')}
             </h5>
-            
+
             <div className="grid grid-cols-2 gap-3">
                 <ColorControl
                     label={t('editor.controls.ecommerce.background', 'Background')}
@@ -2566,7 +2567,7 @@ export const useStoreSettingsControls = ({ data, setNestedData }: EcommerceContr
             <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
                 {t('editor.controls.ecommerce.cardColors', 'Card Colors')}
             </h5>
-            
+
             <div className="grid grid-cols-2 gap-3">
                 <ColorControl
                     label={t('editor.controls.ecommerce.cardBackground', 'Card Background')}
@@ -2586,7 +2587,7 @@ export const useStoreSettingsControls = ({ data, setNestedData }: EcommerceContr
             <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
                 {t('editor.controls.ecommerce.buttonColors', 'Button Colors')}
             </h5>
-            
+
             <div className="grid grid-cols-2 gap-3">
                 <ColorControl
                     label={t('editor.controls.ecommerce.buttonBackground', 'Button BG')}
@@ -2606,7 +2607,7 @@ export const useStoreSettingsControls = ({ data, setNestedData }: EcommerceContr
             <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
                 {t('editor.controls.ecommerce.priceAndBadgeColors', 'Price & Badge')}
             </h5>
-            
+
             <div className="grid grid-cols-2 gap-3">
                 <ColorControl
                     label={t('editor.controls.ecommerce.priceColor', 'Price')}
@@ -2649,4 +2650,141 @@ export const useStoreSettingsControls = ({ data, setNestedData }: EcommerceContr
     );
 
     return { contentTab, styleTab };
+};
+
+interface SingleContentSelectorProps {
+    selectedContentPath: string | undefined;
+    onSelect: (path: string | undefined) => void;
+    label?: string;
+}
+
+export const SingleContentSelector: React.FC<SingleContentSelectorProps> = ({
+    selectedContentPath,
+    onSelect,
+    label = 'Contenido'
+}) => {
+    const { t } = useTranslation();
+    const [isExpanded, setIsExpanded] = useState(false);
+    const [searchTerm, setSearchTerm] = useState('');
+
+    // Use CMS Context for project-specific content
+    const { cmsPosts } = useCMS();
+
+    // Filter items
+    const filteredArticles = cmsPosts.filter(a =>
+        (a.status === 'published') &&
+        a.title.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    const selectContent = (path: string | undefined) => {
+        onSelect(path);
+        setIsExpanded(false);
+    };
+
+    // Find selected item details for display
+    const getSelectedItem = () => {
+        if (!selectedContentPath) return null;
+
+        // Check articles
+        if (selectedContentPath.startsWith('/blog/')) {
+            const slug = selectedContentPath.split('/').pop();
+            const article = cmsPosts.find(a => a.slug === slug);
+            if (article) return { name: article.title, type: 'article', icon: <FileText size={14} /> };
+        }
+
+        return { name: selectedContentPath, type: 'unknown', icon: <Info size={14} /> };
+    };
+
+    const selectedItem = getSelectedItem();
+
+    return (
+        <div className="mb-4">
+            <label className="block text-xs font-bold text-editor-text-secondary mb-2 uppercase tracking-wider flex items-center gap-1.5">
+                <FileText size={14} />
+                {label}
+            </label>
+
+            {/* Selected Content Display */}
+            {selectedItem && (
+                <div className="flex items-center gap-3 mb-2 p-2 bg-editor-accent/10 border border-editor-accent/30 rounded-lg">
+                    <div className="w-8 h-8 rounded bg-editor-accent/20 flex items-center justify-center flex-shrink-0 text-editor-accent">
+                        {selectedItem.icon}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-editor-text-primary truncate">{selectedItem.name}</p>
+                        <p className="text-xs text-editor-text-secondary truncate">
+                            {selectedItem.type === 'article' ? 'Artículo de Blog' : 'Contenido'}
+                        </p>
+                    </div>
+                    <button
+                        onClick={() => selectContent(undefined)}
+                        className="p-1 hover:bg-red-500/20 rounded text-red-400 hover:text-red-300 transition-colors"
+                        title="Quitar contenido"
+                    >
+                        <X size={16} />
+                    </button>
+                </div>
+            )}
+
+            {/* Expand/Collapse Button */}
+            <button
+                onClick={() => setIsExpanded(!isExpanded)}
+                className="w-full flex items-center justify-between bg-editor-panel-bg border border-editor-border rounded-md px-3 py-2 text-sm text-editor-text-primary hover:bg-editor-bg transition-colors"
+                title={isExpanded ? "Ocultar panel" : "Mostrar panel de selección"}
+            >
+                <span className="flex items-center gap-2">
+                    {isExpanded ? 'Ocultar contenido' : selectedItem ? 'Cambiar contenido' : 'Seleccionar contenido'}
+                </span>
+                {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+            </button>
+
+            {/* Content List */}
+            {isExpanded && (
+                <div className="mt-2 border border-editor-border rounded-md overflow-hidden bg-editor-panel-bg">
+                    {/* Search */}
+                    <div className="p-2 border-b border-editor-border">
+                        <div className="flex items-center gap-1.5 bg-editor-border/40 rounded-md px-2 py-1.5">
+                            <Search size={14} className="text-editor-text-secondary flex-shrink-0" />
+                            <input
+                                type="text"
+                                placeholder="Buscar artículos..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="flex-1 bg-transparent outline-none text-xs min-w-0"
+                            />
+                            {searchTerm && (
+                                <button onClick={() => setSearchTerm('')} className="text-editor-text-secondary hover:text-editor-text-primary flex-shrink-0">
+                                    <X size={12} />
+                                </button>
+                            )}
+                        </div>
+                    </div>
+
+                    <div className="max-h-[200px] overflow-y-auto">
+                        {filteredArticles.length === 0 ? (
+                            <div className="p-4 text-center text-editor-text-secondary text-sm">
+                                No hay artículos publicados.
+                            </div>
+                        ) : (
+                            filteredArticles.map(article => (
+                                <button
+                                    key={article.id}
+                                    onClick={() => selectContent(`/blog/${article.slug}`)}
+                                    className={`w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-editor-bg transition-colors ${selectedContentPath === `/blog/${article.slug}` ? 'bg-editor-accent/10' : ''}`}
+                                >
+                                    <div className="w-8 h-8 rounded bg-editor-accent/20 flex items-center justify-center flex-shrink-0">
+                                        <FileText size={14} className="text-editor-accent" />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-sm text-editor-text-primary truncate">{article.title}</p>
+                                        <p className="text-xs text-editor-text-secondary truncate">{article.slug}</p>
+                                    </div>
+                                </button>
+                            ))
+                        )}
+                    </div>
+                </div>
+            )}
+        </div>
+    );
 };

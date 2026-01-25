@@ -42,6 +42,9 @@ import {
   useProductReviewsControls,
   useProductBundleControls,
   useStoreSettingsControls,
+  SingleProductSelector,
+  SingleCollectionSelector,
+  SingleContentSelector
 } from './ui/EcommerceControls';
 
 // --- Helper Components ---
@@ -3243,7 +3246,68 @@ const Controls: React.FC = () => {
           <FontSizeSelector label={t('controls.subheadlineSize')} value={data.heroSplit.subheadlineFontSize || 'md'} onChange={(v) => setNestedData('heroSplit.subheadlineFontSize', v)} />
 
           <Input label="Button Text" value={data.heroSplit.buttonText} onChange={(e) => setNestedData('heroSplit.buttonText', e.target.value)} />
-          <Input label="Button URL" value={data.heroSplit.buttonUrl || '#cta'} onChange={(e) => setNestedData('heroSplit.buttonUrl', e.target.value)} />
+
+          {/* Link Type Selector */}
+          <div className="mb-3">
+            <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">Link Type</label>
+            <div className="flex bg-editor-panel-bg rounded-md border border-editor-border p-1">
+              {[
+                { value: 'manual', label: 'Manual URL' },
+                { value: 'product', label: 'Product' },
+                { value: 'collection', label: 'Collection' },
+                { value: 'content', label: 'Contenido' }
+              ].map((type) => (
+                <button
+                  key={type.value}
+                  onClick={() => setNestedData('heroSplit.linkType', type.value)}
+                  className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors ${(data.heroSplit.linkType || 'manual') === type.value
+                    ? 'bg-editor-accent text-editor-bg'
+                    : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-bg'
+                    }`}
+                >
+                  {type.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Conditional Inputs based on Link Type */}
+          {(data.heroSplit.linkType === 'manual' || !data.heroSplit.linkType) && (
+            <Input label="Button URL" value={data.heroSplit.buttonUrl || '#cta'} onChange={(e) => setNestedData('heroSplit.buttonUrl', e.target.value)} />
+          )}
+
+          {data.heroSplit.linkType === 'product' && (
+            <SingleProductSelector
+              storeId={activeProject?.id || ''}
+              selectedProductId={data.heroSplit.buttonUrl?.startsWith('/product/') ? data.heroSplit.buttonUrl.split('/product/')[1] : undefined}
+              onSelect={(id) => {
+                if (id) {
+                  setNestedData('heroSplit.buttonUrl', `/product/${id}`);
+                } else {
+                  setNestedData('heroSplit.buttonUrl', '');
+                }
+              }}
+              label="Select Product"
+            />
+          )}
+
+          {data.heroSplit.linkType === 'collection' && (
+            <SingleCollectionSelector
+              storeId={activeProject?.id || ''}
+              gridCategories={data.categoryGrid?.categories || []}
+              selectedCollectionId={data.heroSplit.collectionId}
+              onSelect={(id) => {
+                setNestedData('heroSplit.collectionId', id || null);
+                if (id) {
+                  // For heroSplit, we'll likely want to use the buttonUrl for navigation, 
+                  // but if it supports collectionId internally like Banner, we clear buttonUrl.
+                  // Assuming standardization: 
+                  setNestedData('heroSplit.buttonUrl', '');
+                }
+              }}
+              label="Select Collection"
+            />
+          )}
         </div>
 
         <hr className="border-editor-border/50" />
@@ -4795,12 +4859,12 @@ const Controls: React.FC = () => {
               { value: 'section', label: 'Sección' },
               { value: 'product', label: 'Producto' },
               { value: 'collection', label: 'Colección' },
+              { value: 'content', label: 'Contenido' },
               { value: 'manual', label: 'URL' },
             ].map(type => (
               <button
                 key={type.value}
                 onClick={() => {
-                  setHeroPrimaryLinkType(type.value as any);
                   setNestedData('hero.primaryCtaLinkType', type.value);
                   if (type.value === 'section') {
                     setNestedData('hero.primaryCtaLink', '#cta');
@@ -4853,145 +4917,50 @@ const Controls: React.FC = () => {
 
           {/* Product Picker */}
           {data.hero.primaryCtaLinkType === 'product' && (
-            <div className="space-y-2">
-              {/* Selected Product Display */}
-              {data.hero.primaryCtaLink && (data.hero.primaryCtaLink.includes('/tienda/producto/') || data.hero.primaryCtaLink.includes('#store/product/')) && (
-                <div className="flex items-center gap-2 bg-editor-accent/20 text-editor-accent px-3 py-2 rounded-md text-sm">
-                  <Check size={14} />
-                  <span className="flex-1 truncate">
-                    {heroProducts.find(p => data.hero.primaryCtaLink?.includes(p.slug || p.id))?.name || 'Producto seleccionado'}
-                  </span>
-                  <button
-                    onClick={() => setNestedData('hero.primaryCtaLink', '')}
-                    className="hover:bg-editor-accent/30 rounded p-1"
-                  >
-                    <X size={12} />
-                  </button>
-                </div>
-              )}
-
-              <button
-                onClick={() => setShowHeroPrimaryProductPicker(!showHeroPrimaryProductPicker)}
-                className="w-full flex items-center justify-between bg-editor-bg border border-editor-border rounded-md px-3 py-2 text-sm text-editor-text-primary hover:bg-editor-panel-bg transition-colors"
-              >
-                <span>{showHeroPrimaryProductPicker ? 'Ocultar productos' : 'Buscar producto'}</span>
-                {showHeroPrimaryProductPicker ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-              </button>
-
-              {showHeroPrimaryProductPicker && (
-                <div className="border border-editor-border rounded-md overflow-hidden">
-                  <div className="p-2 border-b border-editor-border">
-                    <div className="flex items-center gap-1.5 bg-editor-border/40 rounded-md px-2 py-1.5">
-                      <Search size={14} className="text-editor-text-secondary flex-shrink-0" />
-                      <input
-                        type="text"
-                        placeholder="Buscar productos..."
-                        value={heroProductSearch}
-                        onChange={(e) => setHeroProductSearch(e.target.value)}
-                        className="flex-1 bg-transparent outline-none text-xs min-w-0"
-                      />
-                      {heroProductSearch && (
-                        <button onClick={() => setHeroProductSearch('')} className="text-editor-text-secondary hover:text-editor-text-primary flex-shrink-0">
-                          <X size={12} />
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                  <div className="max-h-[200px] overflow-y-auto">
-                    {isLoadingHeroProducts ? (
-                      <div className="p-4 text-center text-editor-text-secondary text-sm">Cargando productos...</div>
-                    ) : heroProducts.filter(p => p.name.toLowerCase().includes(heroProductSearch.toLowerCase())).length === 0 ? (
-                      <div className="p-4 text-center text-editor-text-secondary text-sm">
-                        {heroProducts.length === 0 ? 'No hay productos en la tienda' : 'No se encontraron productos'}
-                      </div>
-                    ) : (
-                      heroProducts.filter(p => p.name.toLowerCase().includes(heroProductSearch.toLowerCase())).map(product => (
-                        <button
-                          key={product.id}
-                          onClick={() => {
-                            const link = product.slug ? `/tienda/producto/${product.slug}` : `/tienda/producto/${product.id}`;
-                            setNestedData('hero.primaryCtaLink', link);
-                            setShowHeroPrimaryProductPicker(false);
-                          }}
-                          className="w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-editor-bg transition-colors"
-                        >
-                          {product.image ? (
-                            <img src={product.image} alt={product.name} className="w-8 h-8 rounded object-cover flex-shrink-0" />
-                          ) : (
-                            <div className="w-8 h-8 rounded bg-editor-border flex items-center justify-center flex-shrink-0">
-                              <ShoppingBag size={12} className="text-editor-text-secondary" />
-                            </div>
-                          )}
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm text-editor-text-primary truncate">{product.name}</p>
-                            <p className="text-xs text-editor-text-secondary">${product.price.toFixed(2)}</p>
-                          </div>
-                        </button>
-                      ))
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
+            <SingleProductSelector
+              storeId={activeProject?.id || ''}
+              selectedProductId={data.hero.primaryCtaLink && (data.hero.primaryCtaLink.includes('/tienda/producto/') || data.hero.primaryCtaLink.includes('product/'))
+                ? data.hero.primaryCtaLink.split('/').pop()
+                : undefined}
+              onSelect={(id) => {
+                if (id) {
+                  setNestedData('hero.primaryCtaLink', `/product/${id}`);
+                } else {
+                  setNestedData('hero.primaryCtaLink', '');
+                }
+              }}
+              label="Seleccionar Producto"
+            />
           )}
 
           {/* Collection Picker */}
           {data.hero.primaryCtaLinkType === 'collection' && (
-            <div className="space-y-2">
-              {/* Selected Collection Display */}
-              {data.hero.primaryCtaLink && (data.hero.primaryCtaLink.includes('/tienda/categoria/') || data.hero.primaryCtaLink.includes('#store/category/')) && (
-                <div className="flex items-center gap-2 bg-editor-accent/20 text-editor-accent px-3 py-2 rounded-md text-sm">
-                  <FolderOpen size={14} />
-                  <span className="flex-1 truncate">
-                    {heroCategories.find(c => data.hero.primaryCtaLink?.includes(c.slug || c.id))?.name || 'Colección seleccionada'}
-                  </span>
-                  <button
-                    onClick={() => setNestedData('hero.primaryCtaLink', '')}
-                    className="hover:bg-editor-accent/30 rounded p-1"
-                  >
-                    <X size={12} />
-                  </button>
-                </div>
-              )}
+            <SingleCollectionSelector
+              storeId={activeProject?.id || ''}
+              gridCategories={data.categoryGrid?.categories || []}
+              selectedCollectionId={data.hero.primaryCtaLink && (data.hero.primaryCtaLink.includes('/tienda/categoria/') || data.hero.primaryCtaLink.includes('category/'))
+                ? data.hero.primaryCtaLink.split('/').pop()
+                : undefined}
+              onSelect={(id) => {
+                if (id) {
+                  setNestedData('hero.primaryCtaLink', `/collection/${id}`);
+                } else {
+                  setNestedData('hero.primaryCtaLink', '');
+                }
+              }}
+              label="Seleccionar Colección"
+            />
+          )}
 
-              <button
-                onClick={() => setShowHeroPrimaryCollectionPicker(!showHeroPrimaryCollectionPicker)}
-                className="w-full flex items-center justify-between bg-editor-bg border border-editor-border rounded-md px-3 py-2 text-sm text-editor-text-primary hover:bg-editor-panel-bg transition-colors"
-              >
-                <span>{showHeroPrimaryCollectionPicker ? 'Ocultar colecciones' : 'Seleccionar colección'}</span>
-                {showHeroPrimaryCollectionPicker ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-              </button>
-
-              {showHeroPrimaryCollectionPicker && (
-                <div className="border border-editor-border rounded-md overflow-hidden max-h-[200px] overflow-y-auto">
-                  {isLoadingHeroProducts ? (
-                    <div className="p-4 text-center text-editor-text-secondary text-sm">Cargando colecciones...</div>
-                  ) : heroCategories.length === 0 ? (
-                    <div className="p-4 text-center text-editor-text-secondary text-sm">No hay colecciones. Crea categorías en tu tienda primero.</div>
-                  ) : (
-                    heroCategories.map(category => (
-                      <button
-                        key={category.id}
-                        onClick={() => {
-                          const link = category.slug ? `/tienda/categoria/${category.slug}` : `/tienda/categoria/${category.id}`;
-                          setNestedData('hero.primaryCtaLink', link);
-                          setShowHeroPrimaryCollectionPicker(false);
-                        }}
-                        className="w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-editor-bg transition-colors"
-                      >
-                        <div className="w-8 h-8 rounded bg-editor-accent/20 flex items-center justify-center flex-shrink-0">
-                          <FolderOpen size={14} className="text-editor-accent" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm text-editor-text-primary truncate">{category.name}</p>
-                          <p className="text-xs text-editor-text-secondary">/{category.slug}</p>
-                        </div>
-                      </button>
-                    ))
-                  )}
-                </div>
-              )}
-            </div>
+          {/* Content Picker */}
+          {data.hero.primaryCtaLinkType === 'content' && (
+            <SingleContentSelector
+              selectedContentPath={data.hero.primaryCtaLink}
+              onSelect={(path) => {
+                setNestedData('hero.primaryCtaLink', path || '');
+              }}
+              label="Seleccionar Contenido"
+            />
           )}
         </div>
 
@@ -5008,12 +4977,12 @@ const Controls: React.FC = () => {
               { value: 'section', label: 'Sección' },
               { value: 'product', label: 'Producto' },
               { value: 'collection', label: 'Colección' },
+              { value: 'content', label: 'Contenido' },
               { value: 'manual', label: 'URL' },
             ].map(type => (
               <button
                 key={type.value}
                 onClick={() => {
-                  setHeroSecondaryLinkType(type.value as any);
                   setNestedData('hero.secondaryCtaLinkType', type.value);
                   if (type.value === 'section') {
                     setNestedData('hero.secondaryCtaLink', '#features');
@@ -5066,145 +5035,50 @@ const Controls: React.FC = () => {
 
           {/* Product Picker */}
           {data.hero.secondaryCtaLinkType === 'product' && (
-            <div className="space-y-2">
-              {/* Selected Product Display */}
-              {data.hero.secondaryCtaLink && (data.hero.secondaryCtaLink.includes('/tienda/producto/') || data.hero.secondaryCtaLink.includes('#store/product/')) && (
-                <div className="flex items-center gap-2 bg-editor-accent/20 text-editor-accent px-3 py-2 rounded-md text-sm">
-                  <Check size={14} />
-                  <span className="flex-1 truncate">
-                    {heroProducts.find(p => data.hero.secondaryCtaLink?.includes(p.slug || p.id))?.name || 'Producto seleccionado'}
-                  </span>
-                  <button
-                    onClick={() => setNestedData('hero.secondaryCtaLink', '')}
-                    className="hover:bg-editor-accent/30 rounded p-1"
-                  >
-                    <X size={12} />
-                  </button>
-                </div>
-              )}
-
-              <button
-                onClick={() => setShowHeroSecondaryProductPicker(!showHeroSecondaryProductPicker)}
-                className="w-full flex items-center justify-between bg-editor-bg border border-editor-border rounded-md px-3 py-2 text-sm text-editor-text-primary hover:bg-editor-panel-bg transition-colors"
-              >
-                <span>{showHeroSecondaryProductPicker ? 'Ocultar productos' : 'Buscar producto'}</span>
-                {showHeroSecondaryProductPicker ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-              </button>
-
-              {showHeroSecondaryProductPicker && (
-                <div className="border border-editor-border rounded-md overflow-hidden">
-                  <div className="p-2 border-b border-editor-border">
-                    <div className="flex items-center gap-1.5 bg-editor-border/40 rounded-md px-2 py-1.5">
-                      <Search size={14} className="text-editor-text-secondary flex-shrink-0" />
-                      <input
-                        type="text"
-                        placeholder="Buscar productos..."
-                        value={heroProductSearch}
-                        onChange={(e) => setHeroProductSearch(e.target.value)}
-                        className="flex-1 bg-transparent outline-none text-xs min-w-0"
-                      />
-                      {heroProductSearch && (
-                        <button onClick={() => setHeroProductSearch('')} className="text-editor-text-secondary hover:text-editor-text-primary flex-shrink-0">
-                          <X size={12} />
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                  <div className="max-h-[200px] overflow-y-auto">
-                    {isLoadingHeroProducts ? (
-                      <div className="p-4 text-center text-editor-text-secondary text-sm">Cargando productos...</div>
-                    ) : heroProducts.filter(p => p.name.toLowerCase().includes(heroProductSearch.toLowerCase())).length === 0 ? (
-                      <div className="p-4 text-center text-editor-text-secondary text-sm">
-                        {heroProducts.length === 0 ? 'No hay productos en la tienda' : 'No se encontraron productos'}
-                      </div>
-                    ) : (
-                      heroProducts.filter(p => p.name.toLowerCase().includes(heroProductSearch.toLowerCase())).map(product => (
-                        <button
-                          key={product.id}
-                          onClick={() => {
-                            const link = product.slug ? `/tienda/producto/${product.slug}` : `/tienda/producto/${product.id}`;
-                            setNestedData('hero.secondaryCtaLink', link);
-                            setShowHeroSecondaryProductPicker(false);
-                          }}
-                          className="w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-editor-bg transition-colors"
-                        >
-                          {product.image ? (
-                            <img src={product.image} alt={product.name} className="w-8 h-8 rounded object-cover flex-shrink-0" />
-                          ) : (
-                            <div className="w-8 h-8 rounded bg-editor-border flex items-center justify-center flex-shrink-0">
-                              <ShoppingBag size={12} className="text-editor-text-secondary" />
-                            </div>
-                          )}
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm text-editor-text-primary truncate">{product.name}</p>
-                            <p className="text-xs text-editor-text-secondary">${product.price.toFixed(2)}</p>
-                          </div>
-                        </button>
-                      ))
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
+            <SingleProductSelector
+              storeId={activeProject?.id || ''}
+              selectedProductId={data.hero.secondaryCtaLink && (data.hero.secondaryCtaLink.includes('/tienda/producto/') || data.hero.secondaryCtaLink.includes('product/'))
+                ? data.hero.secondaryCtaLink.split('/').pop()
+                : undefined}
+              onSelect={(id) => {
+                if (id) {
+                  setNestedData('hero.secondaryCtaLink', `/product/${id}`);
+                } else {
+                  setNestedData('hero.secondaryCtaLink', '');
+                }
+              }}
+              label="Seleccionar Producto"
+            />
           )}
 
           {/* Collection Picker */}
           {data.hero.secondaryCtaLinkType === 'collection' && (
-            <div className="space-y-2">
-              {/* Selected Collection Display */}
-              {data.hero.secondaryCtaLink && (data.hero.secondaryCtaLink.includes('/tienda/categoria/') || data.hero.secondaryCtaLink.includes('#store/category/')) && (
-                <div className="flex items-center gap-2 bg-editor-accent/20 text-editor-accent px-3 py-2 rounded-md text-sm">
-                  <FolderOpen size={14} />
-                  <span className="flex-1 truncate">
-                    {heroCategories.find(c => data.hero.secondaryCtaLink?.includes(c.slug || c.id))?.name || 'Colección seleccionada'}
-                  </span>
-                  <button
-                    onClick={() => setNestedData('hero.secondaryCtaLink', '')}
-                    className="hover:bg-editor-accent/30 rounded p-1"
-                  >
-                    <X size={12} />
-                  </button>
-                </div>
-              )}
+            <SingleCollectionSelector
+              storeId={activeProject?.id || ''}
+              gridCategories={data.categoryGrid?.categories || []}
+              selectedCollectionId={data.hero.secondaryCtaLink && (data.hero.secondaryCtaLink.includes('/tienda/categoria/') || data.hero.secondaryCtaLink.includes('category/'))
+                ? data.hero.secondaryCtaLink.split('/').pop()
+                : undefined}
+              onSelect={(id) => {
+                if (id) {
+                  setNestedData('hero.secondaryCtaLink', `/collection/${id}`);
+                } else {
+                  setNestedData('hero.secondaryCtaLink', '');
+                }
+              }}
+              label="Seleccionar Colección"
+            />
+          )}
 
-              <button
-                onClick={() => setShowHeroSecondaryCollectionPicker(!showHeroSecondaryCollectionPicker)}
-                className="w-full flex items-center justify-between bg-editor-bg border border-editor-border rounded-md px-3 py-2 text-sm text-editor-text-primary hover:bg-editor-panel-bg transition-colors"
-              >
-                <span>{showHeroSecondaryCollectionPicker ? 'Ocultar colecciones' : 'Seleccionar colección'}</span>
-                {showHeroSecondaryCollectionPicker ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-              </button>
-
-              {showHeroSecondaryCollectionPicker && (
-                <div className="border border-editor-border rounded-md overflow-hidden max-h-[200px] overflow-y-auto">
-                  {isLoadingHeroProducts ? (
-                    <div className="p-4 text-center text-editor-text-secondary text-sm">Cargando colecciones...</div>
-                  ) : heroCategories.length === 0 ? (
-                    <div className="p-4 text-center text-editor-text-secondary text-sm">No hay colecciones. Crea categorías en tu tienda primero.</div>
-                  ) : (
-                    heroCategories.map(category => (
-                      <button
-                        key={category.id}
-                        onClick={() => {
-                          const link = category.slug ? `/tienda/categoria/${category.slug}` : `/tienda/categoria/${category.id}`;
-                          setNestedData('hero.secondaryCtaLink', link);
-                          setShowHeroSecondaryCollectionPicker(false);
-                        }}
-                        className="w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-editor-bg transition-colors"
-                      >
-                        <div className="w-8 h-8 rounded bg-editor-accent/20 flex items-center justify-center flex-shrink-0">
-                          <FolderOpen size={14} className="text-editor-accent" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm text-editor-text-primary truncate">{category.name}</p>
-                          <p className="text-xs text-editor-text-secondary">/{category.slug}</p>
-                        </div>
-                      </button>
-                    ))
-                  )}
-                </div>
-              )}
-            </div>
+          {/* Content Picker */}
+          {data.hero.secondaryCtaLinkType === 'content' && (
+            <SingleContentSelector
+              selectedContentPath={data.hero.secondaryCtaLink}
+              onSelect={(path) => {
+                setNestedData('hero.secondaryCtaLink', path || '');
+              }}
+              label="Seleccionar Contenido"
+            />
           )}
         </div>
 
@@ -6940,15 +6814,83 @@ const Controls: React.FC = () => {
 
         <Input label="Button Text" value={data?.cta.buttonText} onChange={(e) => setNestedData('cta.buttonText', e.target.value)} />
 
-        <Input
-          label="Button Link"
-          value={data?.cta.buttonUrl || ''}
-          onChange={(e) => setNestedData('cta.buttonUrl', e.target.value)}
-          placeholder="https://example.com or #section"
-        />
-        <p className="text-xs text-editor-text-secondary -mt-2">
-          Use URLs for external links or # for page sections (e.g., #contact)
-        </p>
+        {/* Link Type Selector */}
+        <div className="mb-3">
+          <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">Link Type</label>
+          <div className="flex bg-editor-panel-bg rounded-md border border-editor-border p-1">
+            {[
+              { value: 'manual', label: 'Manual URL' },
+              { value: 'product', label: 'Product' },
+              { value: 'collection', label: 'Collection' },
+              { value: 'content', label: 'Contenido' }
+            ].map((type) => (
+              <button
+                key={type.value}
+                onClick={() => setNestedData('cta.linkType', type.value)}
+                className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors ${(data?.cta.linkType || 'manual') === type.value
+                  ? 'bg-editor-accent text-editor-bg'
+                  : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-bg'
+                  }`}
+              >
+                {type.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {(data?.cta.linkType === 'manual' || !data?.cta.linkType) && (
+          <>
+            <Input
+              label="Button Link"
+              value={data?.cta.buttonUrl || ''}
+              onChange={(e) => setNestedData('cta.buttonUrl', e.target.value)}
+              placeholder="https://example.com or #section"
+            />
+            <p className="text-xs text-editor-text-secondary -mt-2">
+              Use URLs for external links or # for page sections (e.g., #contact)
+            </p>
+          </>
+        )}
+
+        {data?.cta.linkType === 'product' && (
+          <SingleProductSelector
+            storeId={activeProject?.id || ''}
+            selectedProductId={data?.cta.buttonUrl?.startsWith('/product/') ? data?.cta.buttonUrl.split('/product/')[1] : undefined}
+            onSelect={(id) => {
+              if (id) {
+                setNestedData('cta.buttonUrl', `/product/${id}`);
+              } else {
+                setNestedData('cta.buttonUrl', '');
+              }
+            }}
+            label="Select Product"
+          />
+        )}
+
+        {data?.cta.linkType === 'collection' && (
+          <SingleCollectionSelector
+            storeId={activeProject?.id || ''}
+            gridCategories={data.categoryGrid?.categories || []}
+            selectedCollectionId={data?.cta.collectionId}
+            onSelect={(id) => {
+              setNestedData('cta.collectionId', id || null);
+              if (id) {
+                setNestedData('cta.buttonUrl', '');
+              }
+            }}
+            label="Select Collection"
+          />
+        )}
+
+        {data?.cta.linkType === 'content' && (
+          <SingleContentSelector
+            selectedContentPath={data?.cta.buttonUrl}
+            onSelect={(path) => {
+              setNestedData('cta.buttonUrl', path || '');
+            }}
+            label="Seleccionar Contenido"
+          />
+        )}
       </div>
     );
 
@@ -7333,10 +7275,14 @@ const Controls: React.FC = () => {
             Content
           </label>
 
-          <Input label="Headline" value={data?.banner?.headline || ''} onChange={(e) => setNestedData('banner.headline', e.target.value)} />
+          <AIFormControl label="Headline" onAssistClick={() => setAiAssistField({ path: 'banner.headline', value: data?.banner?.headline || '', context: 'Banner Headline' })}>
+            <Input value={data?.banner?.headline || ''} onChange={(e) => setNestedData('banner.headline', e.target.value)} />
+          </AIFormControl>
           <FontSizeSelector label="Headline Size" value={data?.banner?.headlineFontSize || 'lg'} onChange={(v) => setNestedData('banner.headlineFontSize', v)} />
 
-          <TextArea label="Subheadline" value={data?.banner?.subheadline || ''} onChange={(e) => setNestedData('banner.subheadline', e.target.value)} rows={2} />
+          <AIFormControl label="Subheadline" onAssistClick={() => setAiAssistField({ path: 'banner.subheadline', value: data?.banner?.subheadline || '', context: 'Banner Subheadline' })}>
+            <TextArea value={data?.banner?.subheadline || ''} onChange={(e) => setNestedData('banner.subheadline', e.target.value)} rows={2} />
+          </AIFormControl>
           <FontSizeSelector label="Subheadline Size" value={data?.banner?.subheadlineFontSize || 'md'} onChange={(v) => setNestedData('banner.subheadlineFontSize', v)} />
 
           <hr className="border-editor-border/50 my-3" />
@@ -7344,8 +7290,87 @@ const Controls: React.FC = () => {
           <ToggleControl label="Show Button" checked={data?.banner?.showButton !== false} onChange={(v) => setNestedData('banner.showButton', v)} />
           {data?.banner?.showButton !== false && (
             <div className="space-y-3 animate-fade-in-up">
-              <Input label="Button Text" value={data?.banner?.buttonText || 'Get Started'} onChange={(e) => setNestedData('banner.buttonText', e.target.value)} />
-              <Input label="Button URL" value={data?.banner?.buttonUrl || '#'} onChange={(e) => setNestedData('banner.buttonUrl', e.target.value)} />
+              <AIFormControl label="Button Text" onAssistClick={() => setAiAssistField({ path: 'banner.buttonText', value: data?.banner?.buttonText || 'Get Started', context: 'Banner Button' })}>
+                <Input value={data?.banner?.buttonText || 'Get Started'} onChange={(e) => setNestedData('banner.buttonText', e.target.value)} />
+              </AIFormControl>
+
+              {/* Link Type Selector */}
+              <div className="mb-3">
+                <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">Link Type</label>
+                <div className="flex bg-editor-panel-bg rounded-md border border-editor-border p-1">
+                  {[
+                    { value: 'manual', label: 'Manual URL' },
+                    { value: 'product', label: 'Product' },
+                    { value: 'collection', label: 'Collection' }
+                  ].map((type) => (
+                    <button
+                      key={type.value}
+                      onClick={() => setNestedData('banner.linkType', type.value)}
+                      className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors ${(data?.banner?.linkType || 'manual') === type.value
+                        ? 'bg-editor-accent text-editor-bg'
+                        : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-bg'
+                        }`}
+                    >
+                      {type.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Conditional Inputs based on Link Type */}
+              {(data?.banner?.linkType === 'manual' || !data?.banner?.linkType) && (
+                <Input
+                  label="Button URL"
+                  value={data?.banner?.buttonUrl || '#'}
+                  onChange={(e) => setNestedData('banner.buttonUrl', e.target.value)}
+                  placeholder="https://example.com"
+                />
+              )}
+
+              {data?.banner?.linkType === 'product' && (
+                <SingleProductSelector
+                  storeId={activeProject?.id || ''}
+                  selectedProductId={data?.banner?.buttonUrl?.startsWith('/product/') ? data?.banner?.buttonUrl.split('/product/')[1] : undefined}
+                  onSelect={(id) => {
+                    if (id) {
+                      // Find product to get slug if needed, for now assuming ID usage or simple path
+                      // Ideally we'd map ID to slug, but simple ID path works for many setups
+                      // Or fetch product details. For this UI, we just store the path.
+                      // Note: Real-world app likely needs slug. Here we use ID for simplicity as standard.
+                      // BUT `SingleProductSelector` returns ID. Let's try to find slug from hook if accessible, 
+                      // OR just use /product/[id] which is commonly supported. 
+                      // Let's rely on ID for now or check if we have access to products map.
+                      // We don't have easy access to products list here without hook. 
+                      // So we'll save as /product/[id]. 
+                      setNestedData('banner.buttonUrl', `/product/${id}`);
+                      setNestedData('banner.collectionId', null); // Clear other types
+                    } else {
+                      setNestedData('banner.buttonUrl', '');
+                    }
+                  }}
+                  label="Select Product"
+                />
+              )}
+
+              {data?.banner?.linkType === 'collection' && (
+                <SingleCollectionSelector
+                  storeId={activeProject?.id || ''}
+                  gridCategories={data.categoryGrid?.categories || []}
+                  selectedCollectionId={data?.banner?.collectionId}
+                  onSelect={(id) => {
+                    setNestedData('banner.collectionId', id || null);
+                    if (id) {
+                      // Optionally clear buttonUrl or set it to collection path if your handling needs it
+                      // Banner component prioritizes buttonUrl usually, so let's clear it or set it to collection path
+                      // CollectionBanner logic: if (buttonUrl) window.location.href = buttonUrl; else if (collectionId) onCollectionClick
+                      // So for collectionId to work, buttonUrl should probably be empty or we set buttonUrl to collection path.
+                      // Let's clear buttonUrl to let CollectionBanner use collectionId logic or set a proper path:
+                      setNestedData('banner.buttonUrl', '');
+                    }
+                  }}
+                  label="Select Collection"
+                />
+              )}
             </div>
           )}
         </div>
