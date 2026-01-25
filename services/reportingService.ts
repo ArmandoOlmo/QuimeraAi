@@ -70,9 +70,10 @@ export class ReportingService {
     /**
      * Get metrics for a single client
      */
-    private async getClientMetrics(
+    async getClientMetrics(
         client: Tenant,
-        dateRange: ReportDateRange
+        dateRange: ReportDateRange,
+        includeTrends: boolean = true
     ): Promise<ClientMetrics> {
         const startTimestamp = Timestamp.fromDate(dateRange.start);
         const endTimestamp = Timestamp.fromDate(dateRange.end);
@@ -96,22 +97,19 @@ export class ReportingService {
         // Get resource usage
         const usage = client.usage || this.getDefaultUsage();
 
-        // Calculate trends (vs previous period)
-        const previousDateRange = this.getPreviousPeriodRange(dateRange);
-        const previousMetrics = await this.getClientMetrics(client, previousDateRange);
+        // Calculate trends (vs previous period) if requested
+        let trends = {
+            leadsChange: 0,
+            visitsChange: 0,
+            revenueChange: 0,
+            emailPerformanceChange: 0,
+        };
 
-        return {
-            clientId: client.id,
-            clientName: client.name,
-            ...leadsData,
-            ...trafficData,
-            ...salesData,
-            ...emailData,
-            aiCreditsUsed: usage.aiCreditsUsed || 0,
-            storageUsedGB: usage.storageUsedGB || 0,
-            activeUsers: usage.userCount || 0,
-            activeProjects: usage.projectCount || 0,
-            trends: {
+        if (includeTrends) {
+            const previousDateRange = this.getPreviousPeriodRange(dateRange);
+            const previousMetrics = await this.getClientMetrics(client, previousDateRange, false);
+
+            trends = {
                 leadsChange: this.calculatePercentageChange(
                     leadsData.totalLeads,
                     previousMetrics.totalLeads
@@ -128,7 +126,21 @@ export class ReportingService {
                     emailData.openRate,
                     previousMetrics.openRate
                 ),
-            },
+            };
+        }
+
+        return {
+            clientId: client.id,
+            clientName: client.name,
+            ...leadsData,
+            ...trafficData,
+            ...salesData,
+            ...emailData,
+            aiCreditsUsed: usage.aiCreditsUsed || 0,
+            storageUsedGB: usage.storageUsedGB || 0,
+            activeUsers: usage.userCount || 0,
+            activeProjects: usage.projectCount || 0,
+            trends,
         };
     }
 
@@ -293,7 +305,7 @@ export class ReportingService {
             avgConversionRate:
                 clientMetrics.length > 0
                     ? clientMetrics.reduce((sum, c) => sum + c.conversionRate, 0) /
-                      clientMetrics.length
+                    clientMetrics.length
                     : 0,
             totalAiCreditsUsed: clientMetrics.reduce((sum, c) => sum + c.aiCreditsUsed, 0),
             totalStorageUsedGB: clientMetrics.reduce((sum, c) => sum + c.storageUsedGB, 0),
@@ -342,17 +354,17 @@ export class ReportingService {
         const avgLeadsGrowth =
             clientMetrics.length > 0
                 ? clientMetrics.reduce((sum, c) => sum + c.trends.leadsChange, 0) /
-                  clientMetrics.length
+                clientMetrics.length
                 : 0;
         const avgRevenueGrowth =
             clientMetrics.length > 0
                 ? clientMetrics.reduce((sum, c) => sum + c.trends.revenueChange, 0) /
-                  clientMetrics.length
+                clientMetrics.length
                 : 0;
         const avgTrafficGrowth =
             clientMetrics.length > 0
                 ? clientMetrics.reduce((sum, c) => sum + c.trends.visitsChange, 0) /
-                  clientMetrics.length
+                clientMetrics.length
                 : 0;
 
         return {

@@ -28,23 +28,23 @@ export type NavbarLayout = 'classic' | 'minimal' | 'center' | 'stack';
 export type NavLinkHoverStyle = 'simple' | 'underline' | 'bracket' | 'highlight' | 'glow';
 
 // Estilos de navegación con las 9 nuevas variantes
-export type NavbarStyle = 
-  // Originales
-  | 'sticky-solid' 
-  | 'sticky-transparent' 
-  | 'floating'
-  // NUEVOS: Edge-to-edge (lisos de lado a lado, sin curvas)
-  | 'edge-solid'           // Sólido completo de borde a borde
-  | 'edge-minimal'         // Minimalista de borde a borde  
-  | 'edge-bordered'        // Con línea inferior de borde a borde
-  // NUEVOS: Flotantes
-  | 'floating-pill'        // Flotante con bordes redondeados tipo píldora
-  | 'floating-glass'       // Flotante con efecto cristal/blur
-  | 'floating-shadow'      // Flotante con sombra pronunciada
-  // NUEVOS: Transparentes
-  | 'transparent-blur'     // Transparente con blur backdrop
-  | 'transparent-bordered' // Transparente con borde sutil
-  | 'transparent-gradient'; // Transparente con gradiente inferior
+export type NavbarStyle =
+    // Originales
+    | 'sticky-solid'
+    | 'sticky-transparent'
+    | 'floating'
+    // NUEVOS: Edge-to-edge (lisos de lado a lado, sin curvas)
+    | 'edge-solid'           // Sólido completo de borde a borde
+    | 'edge-minimal'         // Minimalista de borde a borde  
+    | 'edge-bordered'        // Con línea inferior de borde a borde
+    // NUEVOS: Flotantes
+    | 'floating-pill'        // Flotante con bordes redondeados tipo píldora
+    | 'floating-glass'       // Flotante con efecto cristal/blur
+    | 'floating-shadow'      // Flotante con sombra pronunciada
+    // NUEVOS: Transparentes
+    | 'transparent-blur'     // Transparente con blur backdrop
+    | 'transparent-bordered' // Transparente con borde sutil
+    | 'transparent-gradient'; // Transparente con gradiente inferior
 
 export interface NavLink {
     text: string;
@@ -111,16 +111,16 @@ export interface HeroData {
     paddingX: PaddingSize;
     sectionBorderSize: BorderSize;
     sectionBorderColor: string;
-    colors: { 
-        primary: string; 
-        secondary: string; 
-        background: string; 
-        text: string; 
-        heading: string; 
-        buttonBackground?: string; 
-        buttonText?: string; 
-        secondaryButtonBackground?: string; 
-        secondaryButtonText?: string; 
+    colors: {
+        primary: string;
+        secondary: string;
+        background: string;
+        text: string;
+        heading: string;
+        buttonBackground?: string;
+        buttonText?: string;
+        secondaryButtonBackground?: string;
+        secondaryButtonText?: string;
     };
     // Secondary button style options
     secondaryButtonStyle?: 'solid' | 'outline' | 'ghost';
@@ -257,9 +257,9 @@ export interface SlideshowData {
     items: SlideItem[];
     paddingY: PaddingSize;
     paddingX: PaddingSize;
-    colors: { 
-        background: string; 
-        heading: string; 
+    colors: {
+        background: string;
+        heading: string;
         arrowBackground?: string;
         arrowText?: string;
         dotActive?: string;
@@ -309,14 +309,14 @@ export interface PricingData {
     paddingY: PaddingSize;
     paddingX: PaddingSize;
     cardBorderRadius?: BorderRadiusSize;
-    colors: { 
-        background: string; 
-        accent: string; 
-        borderColor: string; 
-        text: string; 
-        heading: string; 
+    colors: {
+        background: string;
+        accent: string;
+        borderColor: string;
+        text: string;
+        heading: string;
         description?: string;
-        buttonBackground?: string; 
+        buttonBackground?: string;
         buttonText?: string;
         checkmarkColor?: string;
         cardBackground?: string;
@@ -350,11 +350,11 @@ export interface FaqData {
     paddingY: PaddingSize;
     paddingX: PaddingSize;
     faqVariant?: 'classic' | 'cards' | 'gradient' | 'minimal';
-    colors: { 
-        background: string; 
-        accent: string; 
-        borderColor: string; 
-        text: string; 
+    colors: {
+        background: string;
+        accent: string;
+        borderColor: string;
+        text: string;
         heading: string;
         description?: string;
         cardBackground?: string;
@@ -384,14 +384,14 @@ export interface LeadsData {
     cardBorderRadius?: BorderRadiusSize;
     inputBorderRadius?: BorderRadiusSize;
     buttonBorderRadius?: BorderRadiusSize;
-    colors: { 
-        background: string; 
-        accent: string; 
-        borderColor: string; 
-        text: string; 
-        heading: string; 
+    colors: {
+        background: string;
+        accent: string;
+        borderColor: string;
+        text: string;
+        heading: string;
         description?: string;
-        buttonBackground?: string; 
+        buttonBackground?: string;
         buttonText?: string;
         cardBackground?: string;
         inputBackground?: string;
@@ -417,14 +417,14 @@ export interface NewsletterData {
     buttonText: string;
     paddingY: PaddingSize;
     paddingX: PaddingSize;
-    colors: { 
-        background: string; 
-        accent: string; 
-        borderColor: string; 
-        text: string; 
-        heading: string; 
+    colors: {
+        background: string;
+        accent: string;
+        borderColor: string;
+        text: string;
+        heading: string;
         description?: string;
-        buttonBackground?: string; 
+        buttonBackground?: string;
         buttonText?: string;
         cardBackground?: string;
         cardHeading?: string;
@@ -450,15 +450,15 @@ export interface CtaData {
     buttonUrl?: string;
     paddingY: PaddingSize;
     paddingX: PaddingSize;
-    colors: { 
+    colors: {
         background?: string;
-        gradientStart: string; 
-        gradientEnd: string; 
-        text: string; 
-        heading: string; 
+        gradientStart: string;
+        gradientEnd: string;
+        text: string;
+        heading: string;
         description?: string;
-        buttonBackground?: string; 
-        buttonText?: string; 
+        buttonBackground?: string;
+        buttonText?: string;
     };
     titleFontSize?: FontSize;
     descriptionFontSize?: FontSize;
@@ -483,12 +483,12 @@ export interface PortfolioData {
     items: PortfolioItem[];
     paddingY: PaddingSize;
     paddingX: PaddingSize;
-    colors: { 
-        background: string; 
-        accent: string; 
-        borderColor: string; 
-        text: string; 
-        heading: string; 
+    colors: {
+        background: string;
+        accent: string;
+        borderColor: string;
+        text: string;
+        heading: string;
         description?: string;
         // Card colors
         cardBackground?: string;
@@ -513,7 +513,7 @@ export interface PortfolioData {
 // =============================================================================
 // SERVICES
 // =============================================================================
-export type ServiceIcon = 
+export type ServiceIcon =
     // Development & Technology
     | 'code' | 'code2' | 'terminal' | 'cpu' | 'database' | 'server' | 'cloud' | 'wifi' | 'globe' | 'smartphone' | 'monitor'
     // Design & Creative
@@ -734,6 +734,8 @@ export interface FooterData {
     logoImageUrl?: string;
     // Contact Information
     contactInfo?: FooterContactInfo;
+    // Branding settings
+    hideBranding?: boolean;
 }
 
 // =============================================================================
@@ -789,11 +791,11 @@ export interface MenuData {
     items: MenuItem[];
     paddingY: PaddingSize;
     paddingX: PaddingSize;
-    colors: { 
-        background: string; 
-        accent: string; 
-        borderColor: string; 
-        text: string; 
+    colors: {
+        background: string;
+        accent: string;
+        borderColor: string;
+        text: string;
         heading: string;
         description?: string;
         cardBackground?: string;
@@ -1431,7 +1433,7 @@ export interface StoreSettingsData {
     variant?: StoreSettingsVariant;
     /** Dónde mostrar este componente: 'landing', 'store', o 'both' (default) */
     visibleIn?: ComponentVisibilityContext;
-    
+
     // === Display Options ===
     /** Show/hide the filter sidebar in product search. Default: true */
     showFilterSidebar?: boolean;
@@ -1453,7 +1455,7 @@ export interface StoreSettingsData {
     showWishlist?: boolean;
     /** Show compare button. Default: false */
     showCompare?: boolean;
-    
+
     // === Layout Options ===
     /** Default view mode. Default: 'grid' */
     defaultViewMode?: StoreSettingsVariant;
@@ -1469,12 +1471,12 @@ export interface StoreSettingsData {
     showPagination?: boolean;
     /** Infinite scroll instead of pagination. Default: false */
     infiniteScroll?: boolean;
-    
+
     // === Spacing ===
     paddingY?: PaddingSize;
     paddingX?: PaddingSize;
     cardGap?: 'sm' | 'md' | 'lg';
-    
+
     // === Colors (inherit from global or override) ===
     colors?: {
         background?: string;
@@ -1492,7 +1494,7 @@ export interface StoreSettingsData {
         borderColor?: string;
         starColor?: string;
     };
-    
+
     // === Cart Drawer Colors ===
     cartDrawerColors?: {
         background: string;
@@ -1506,7 +1508,7 @@ export interface StoreSettingsData {
         priceColor: string;
         borderColor: string;
     };
-    
+
     // Animation
     animationType?: AnimationType;
     cornerGradient?: CornerGradientConfig;
@@ -1797,7 +1799,7 @@ export interface PageData {
     announcementBar?: AnnouncementBarData;
     // Product Detail Page - colors for the product detail view
     productDetailPage?: ProductDetailPageData;
-    
+
     // ==========================================================================
     // DYNAMIC PAGE SECTIONS (Multi-page architecture)
     // ==========================================================================

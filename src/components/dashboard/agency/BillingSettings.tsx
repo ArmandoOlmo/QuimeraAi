@@ -18,18 +18,15 @@ interface StripeConnectStatus {
   isConnected: boolean;
   accountId?: string;
   detailsSubmitted?: boolean;
-  chargesEnabled?: boolean;
-  payoutsEnabled?: boolean;
 }
 
 interface SubClient {
   id: string;
   name: string;
   billing?: {
+    plan?: string;
     monthlyPrice?: number;
     status?: string;
-    paymentMethod?: string;
-    nextBillingDate?: Date;
   };
 }
 
@@ -73,7 +70,7 @@ export function BillingSettings() {
 
     } catch (error: any) {
       console.error('Error loading billing data:', error);
-      toast.error(t('dashboard.agency.errorLoadingData'));
+      toast.error('Error al cargar datos de facturación');
     } finally {
       setLoading(false);
     }
@@ -82,360 +79,93 @@ export function BillingSettings() {
   const handleConnectStripe = async () => {
     try {
       setLoading(true);
-      const createAccount = httpsCallable(functions, 'agencyBilling-createStripeConnectAccount');
-      const result = await createAccount({ tenantId: currentTenant?.id }) as any;
-
-      if (result.data.onboardingUrl) {
-        // Redirect to Stripe onboarding
-        window.location.href = result.data.onboardingUrl;
-      } else {
-        toast.success(t('dashboard.agency.billingPage.configuring'));
-        await loadBillingData();
-      }
+      const connectStripe = httpsCallable(functions, 'agencyBilling-createConnectAccount');
+      const result = await connectStripe({ tenantId: currentTenant?.id });
+      const { url } = result.data as { url: string };
+      window.location.href = url;
     } catch (error: any) {
       console.error('Error connecting Stripe:', error);
-      toast.error('Error: ' + error.message);
-    } finally {
+      toast.error('Error al conectar con Stripe');
       setLoading(false);
     }
   };
 
-  const handleOpenStripeDashboard = async () => {
+  const handleUpdatePrice = async (clientId: string) => {
     try {
-      const createLoginLink = httpsCallable(functions, 'stripeConnect-createLoginLink');
-      const result = await createLoginLink({ accountId: stripeStatus.accountId }) as any;
-
-      if (result.data.url) {
-        window.open(result.data.url, '_blank');
-      }
-    } catch (error: any) {
-      console.error('Error opening Stripe dashboard:', error);
-      toast.error('Error al abrir dashboard');
-    }
-  };
-
-  const handleSetupClientBilling = async (clientId: string, monthlyPrice: number) => {
-    try {
-      setLoading(true);
-      const setup = httpsCallable(functions, 'agencyBilling-setupClientBilling');
-      await setup({
-        clientTenantId: clientId,
-        monthlyPrice,
-        paymentMethodId: 'pm_test_card', // TODO: Replace with actual payment method selection
-      });
-
-      toast.success('Facturación configurada exitosamente');
+      const updatePrice = httpsCallable(functions, 'agencyBilling-updateClientPrice');
+      await updatePrice({ clientId, price: editingPrice });
+      setSubClients(prev => prev.map(c => c.id === clientId ? { ...c, billing: { ...c.billing, monthlyPrice: editingPrice } } : c));
       setEditingClientId(null);
-      await loadBillingData();
-    } catch (error: any) {
-      console.error('Error setting up billing:', error);
-      toast.error('Error: ' + error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleUpdatePrice = async (clientId: string, newPrice: number) => {
-    try {
-      setLoading(true);
-      const update = httpsCallable(functions, 'agencyBilling-updateClientMonthlyPrice');
-      await update({
-        clientTenantId: clientId,
-        newMonthlyPrice: newPrice,
-      });
-
-      toast.success('Precio actualizado exitosamente');
-      setEditingClientId(null);
-      await loadBillingData();
-    } catch (error: any) {
-      console.error('Error updating price:', error);
-      toast.error('Error: ' + error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleCancelSubscription = async (clientId: string) => {
-    if (!confirm(t('common.confirm'))) {
-      return;
-    }
-
-    try {
-      setLoading(true);
-      const cancel = httpsCallable(functions, 'agencyBilling-cancelClientSubscription');
-      await cancel({ clientTenantId: clientId });
-
-      toast.success('Facturación cancelada');
-      await loadBillingData();
-    } catch (error: any) {
-      console.error('Error canceling subscription:', error);
-      toast.error('Error: ' + error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleGenerateInvoice = async (clientId: string) => {
-    try {
-      setLoading(true);
-      const generate = httpsCallable(functions, 'agencyBilling-generateClientInvoice');
-      const result = await generate({ clientTenantId: clientId }) as any;
-
-      if (result.data.invoiceUrl) {
-        window.open(result.data.invoiceUrl, '_blank');
-        toast.success('Invoice generado');
-      }
-    } catch (error: any) {
-      console.error('Error generating invoice:', error);
-      toast.error('Error: ' + error.message);
-    } finally {
-      setLoading(false);
+      toast.success('Precio actualizado');
+    } catch (error) {
+      toast.error('Error al actualizar precio');
     }
   };
 
   if (loading && !stripeStatus.isConnected) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      {/* Stripe Connect Setup */}
-      <Card>
-        <div className="p-6">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                {t('dashboard.agency.billingPage.stripeConnectTitle')}
-              </h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                {t('dashboard.agency.billingPage.stripeConnectSubtitle')}
-              </p>
-            </div>
-            {stripeStatus.isConnected && (
-              <Badge variant="success">
-                {t('dashboard.agency.billingPage.accountActive')}
-              </Badge>
-            )}
+      <Card className="p-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-lg font-semibold">Stripe Connect</h3>
+            <p className="text-sm text-muted-foreground">
+              Configura tu cuenta de Stripe para recibir pagos de tus clientes.
+            </p>
           </div>
-
-          {!stripeStatus.isConnected ? (
-            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-              <p className="text-sm text-blue-800 dark:text-blue-200 mb-4">
-                {t('dashboard.agency.billingPage.completeStripeSetupDesc')}
-              </p>
-              <Button onClick={handleConnectStripe} disabled={loading}>
-                <CreditCard className="w-4 h-4 mr-2" />
-                {t('dashboard.agency.billingPage.connectWithStripe')}
-              </Button>
-            </div>
+          {stripeStatus.isConnected ? (
+            <Badge variant="success" className="bg-green-100 text-green-800">Conectado</Badge>
           ) : (
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
-                  <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">Account ID</p>
-                  <p className="text-sm font-mono text-gray-900 dark:text-white">
-                    {stripeStatus.accountId}
-                  </p>
-                </div>
-                <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
-                  <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">Estado</p>
-                  <div className="flex items-center gap-2">
-                    <Badge variant={stripeStatus.chargesEnabled ? 'success' : 'warning'}>
-                      {stripeStatus.chargesEnabled ? t('dashboard.agency.billingPage.enabled') : t('dashboard.agency.billingPage.pending')}
-                    </Badge>
-                    {!stripeStatus.detailsSubmitted && (
-                      <span className="text-xs text-yellow-600 dark:text-yellow-400">
-                        {t('dashboard.agency.billingPage.completeInStripe')}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex gap-2">
-                <Button variant="outline" onClick={handleOpenStripeDashboard}>
-                  <ExternalLink className="w-4 h-4 mr-2" />
-                  {t('dashboard.agency.billingPage.viewInStripe')}
-                </Button>
-                {!stripeStatus.detailsSubmitted && (
-                  <Button onClick={handleConnectStripe}>
-                    {t('dashboard.agency.billingPage.completeStripeSetup')}
-                  </Button>
-                )}
-              </div>
-            </div>
+            <Button onClick={handleConnectStripe} disabled={loading}>
+              Conectar con Stripe
+            </Button>
           )}
         </div>
       </Card>
 
-      {/* Client Billing Management */}
-      {stripeStatus.isConnected && (
-        <Card>
-          <div className="p-6">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-              {t('dashboard.agency.billingPage.tabClients')}
-            </h3>
-
-            {subClients.length === 0 ? (
-              <div className="text-center py-8">
-                <DollarSign className="w-12 h-12 mx-auto text-gray-400 mb-4" />
-                <p className="text-gray-600 dark:text-gray-400">
-                  {t('common.noResults')}
-                </p>
-                <p className="text-sm text-gray-500 dark:text-gray-500 mt-2">
-                  Crea tu primer sub-cliente para configurar facturación
-                </p>
+      <Card className="p-6">
+        <h3 className="text-lg font-semibold mb-4">Gestión de Clientes</h3>
+        <div className="space-y-4">
+          {subClients.map(client => (
+            <div key={client.id} className="flex items-center justify-between p-4 border rounded-lg">
+              <div>
+                <p className="font-medium">{client.name}</p>
+                <p className="text-sm text-muted-foreground">{client.billing?.plan || 'Plan No Configurado'}</p>
               </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead className="bg-gray-50 dark:bg-gray-800">
-                    <tr>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                        {t('dashboard.agency.reports.table.client')}
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                        {t('dashboard.agency.newClientPage.monthlyPriceUsd')}
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                        Estado
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                        {t('dashboard.agency.billingPage.nextPayout')}
-                      </th>
-                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                        {t('common.actions')}
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-800">
-                    {subClients.map((client) => (
-                      <tr key={client.id}>
-                        <td className="px-4 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900 dark:text-white">
-                            {client.name}
-                          </div>
-                        </td>
-                        <td className="px-4 py-4 whitespace-nowrap">
-                          {editingClientId === client.id ? (
-                            <div className="flex items-center gap-2">
-                              <Input
-                                type="number"
-                                value={editingPrice}
-                                onChange={(e) => setEditingPrice(Number(e.target.value))}
-                                className="w-24"
-                                min="0"
-                                step="1"
-                              />
-                              <Button
-                                size="sm"
-                                onClick={() => handleUpdatePrice(client.id, editingPrice)}
-                              >
-                                {t('common.save')}
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => setEditingClientId(null)}
-                              >
-                                {t('common.cancel')}
-                              </Button>
-                            </div>
-                          ) : (
-                            <div className="flex items-center gap-2">
-                              <span className="text-sm text-gray-900 dark:text-white">
-                                ${client.billing?.monthlyPrice || 0}{t('dashboard.agency.billingPage.perMonth')}
-                              </span>
-                              {client.billing?.monthlyPrice && (
-                                <button
-                                  onClick={() => {
-                                    setEditingClientId(client.id);
-                                    setEditingPrice(client.billing?.monthlyPrice || 0);
-                                  }}
-                                  className="text-xs text-primary-600 hover:text-primary-700"
-                                >
-                                  {t('common.edit')}
-                                </button>
-                              )}
-                            </div>
-                          )}
-                        </td>
-                        <td className="px-4 py-4 whitespace-nowrap">
-                          <Badge
-                            variant={
-                              client.billing?.status === 'active'
-                                ? 'success'
-                                : client.billing?.status === 'payment_failed'
-                                  ? 'error'
-                                  : 'default'
-                            }
-                          >
-                            {client.billing?.status || t('dashboard.agency.billingPage.notConfigured')}
-                          </Badge>
-                        </td>
-                        <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
-                          {client.billing?.nextBillingDate
-                            ? new Date(client.billing.nextBillingDate).toLocaleDateString()
-                            : '-'}
-                        </td>
-                        <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium">
-                          <div className="flex items-center justify-end gap-2">
-                            {!client.billing?.monthlyPrice ? (
-                              <Button
-                                size="sm"
-                                onClick={() => {
-                                  setEditingClientId(client.id);
-                                  setEditingPrice(50);
-                                }}
-                              >
-                                <Plus className="w-3 h-3 mr-1" />
-                                {t('common.add')}
-                              </Button>
-                            ) : (
-                              <>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => handleGenerateInvoice(client.id)}
-                                >
-                                  Invoice
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => handleCancelSubscription(client.id)}
-                                >
-                                  {t('common.cancel')}
-                                </Button>
-                              </>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              <div className="flex items-center gap-4">
+                {editingClientId === client.id ? (
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="number"
+                      value={editingPrice}
+                      onChange={(e) => setEditPrice(e.target.value)}
+                      className="w-24"
+                    />
+                    <Button size="sm" onClick={() => handleUpdatePrice(client.id)}>Guardar</Button>
+                    <Button size="sm" variant="ghost" onClick={() => setEditingClientId(null)}>Cancelar</Button>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <span className="font-semibold">${client.billing?.monthlyPrice || 0}/mes</span>
+                    <Button size="sm" variant="outline" onClick={() => {
+                      setEditingClientId(client.id);
+                      setEditingPrice(client.billing?.monthlyPrice || 0);
+                    }}>Editar</Button>
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-        </Card>
-      )}
-
-      {/* Info Card */}
-      <Card>
-        <div className="p-6">
-          <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">
-            {t('dashboard.agency.addonsPage.importantInfo')}
-          </h4>
-          <ul className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
-            <li>• {t('dashboard.agency.billingPage.benefit1')}</li>
-            <li>• {t('dashboard.agency.billingPage.benefit3')}</li>
-            <li>• {t('dashboard.agency.billingPage.benefit2')}</li>
-          </ul>
+            </div>
+          ))}
+          {subClients.length === 0 && (
+            <p className="text-center text-muted-foreground py-4">No hay clientes configurados.</p>
+          )}
         </div>
       </Card>
     </div>

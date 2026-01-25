@@ -39,6 +39,8 @@ export function ClientBillingManager() {
     const [editPrice, setEditPrice] = useState<string>('');
     const [setupModalClient, setSetupModalClient] = useState<string | null>(null);
     const [setupPrice, setSetupPrice] = useState<string>('');
+    const [editLimitsClient, setEditLimitsClient] = useState<string | null>(null);
+    const [editLimits, setEditLimits] = useState<any>(null);
     const [processingAction, setProcessingAction] = useState<string | null>(null);
 
     useEffect(() => {
@@ -56,9 +58,35 @@ export function ClientBillingManager() {
                 ? new Date((client.billing.nextBillingDate as any).seconds * 1000)
                 : undefined,
             subscriptionId: client.billing?.stripeSubscriptionId,
+            limits: client.limits,
         }));
 
         setClientsBilling(billingInfo);
+    };
+
+    const handleUpdateLimits = async () => {
+        if (!editLimitsClient || !editLimits) return;
+
+        setProcessingAction(editLimitsClient);
+        setError(null);
+
+        try {
+            const updateLimits = httpsCallable(functions, 'updateTenantLimits');
+            await updateLimits({
+                tenantId: editLimitsClient,
+                limits: editLimits,
+            });
+
+            setEditLimitsClient(null);
+            setEditLimits(null);
+            loadClientsBilling();
+            alert('Límites actualizados exitosamente');
+        } catch (err: any) {
+            console.error('Error updating limits:', err);
+            setError(err.message || 'Error al actualizar límites');
+        } finally {
+            setProcessingAction(null);
+        }
     };
 
     const handleSetupBilling = async (clientId: string) => {
@@ -250,6 +278,9 @@ export function ClientBillingManager() {
                                 <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">
                                     Próxima Factura
                                 </th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">
+                                    Límites
+                                </th>
                                 <th className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase">
                                     Acciones
                                 </th>
@@ -338,6 +369,14 @@ export function ClientBillingManager() {
                                         {formatDate(client.nextBillingDate)}
                                     </td>
 
+                                    {/* Limits */}
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                        <div className="text-xs text-muted-foreground space-y-1">
+                                            <div>Proyectos: <span className="text-foreground font-medium">{client.limits?.maxProjects || 0}</span></div>
+                                            <div>AI Credits: <span className="text-foreground font-medium">{client.limits?.maxAiCredits || 0}</span></div>
+                                        </div>
+                                    </td>
+
                                     {/* Actions */}
                                     <td className="px-6 py-4 whitespace-nowrap text-right">
                                         <div className="flex items-center justify-end gap-2">
@@ -351,6 +390,18 @@ export function ClientBillingManager() {
                                                 </button>
                                             ) : (
                                                 <>
+                                                    {client.status === 'active' && (
+                                                        <button
+                                                            onClick={() => {
+                                                                setEditLimitsClient(client.clientId);
+                                                                setEditLimits({ ...(client as any).limits });
+                                                            }}
+                                                            className="p-2 text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300"
+                                                            title="Editar límites"
+                                                        >
+                                                            <Settings className="h-4 w-4" />
+                                                        </button>
+                                                    )}
                                                     {client.status === 'active' && (
                                                         <button
                                                             onClick={() => {
@@ -405,6 +456,102 @@ export function ClientBillingManager() {
                     </div>
                 )}
             </div>
+
+            {/* Edit Limits Modal */}
+            {editLimitsClient && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                    <div className="bg-card rounded-lg shadow-xl max-w-md w-full mx-4">
+                        <div className="px-6 py-4 border-b border-border">
+                            <h3 className="text-lg font-semibold text-foreground">
+                                Gestionar Límites del Plan
+                            </h3>
+                        </div>
+
+                        <div className="p-6 space-y-4">
+                            <p className="text-sm text-muted-foreground mb-4">
+                                Ajusta los límites de recursos para{' '}
+                                <span className="font-medium text-foreground">
+                                    {clientsBilling.find(c => c.clientId === editLimitsClient)?.clientName}
+                                </span>
+                            </p>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-xs font-medium text-muted-foreground uppercase mb-1">
+                                        Proyectos Máx.
+                                    </label>
+                                    <input
+                                        type="number"
+                                        value={editLimits?.maxProjects || 0}
+                                        onChange={(e) => setEditLimits({ ...editLimits, maxProjects: parseInt(e.target.value) })}
+                                        className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:ring-2 focus:ring-primary"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-medium text-muted-foreground uppercase mb-1">
+                                        Usuarios Máx.
+                                    </label>
+                                    <input
+                                        type="number"
+                                        value={editLimits?.maxUsers || 0}
+                                        onChange={(e) => setEditLimits({ ...editLimits, maxUsers: parseInt(e.target.value) })}
+                                        className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:ring-2 focus:ring-primary"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-medium text-muted-foreground uppercase mb-1">
+                                        Almacenamiento (GB)
+                                    </label>
+                                    <input
+                                        type="number"
+                                        value={editLimits?.maxStorageGB || 0}
+                                        onChange={(e) => setEditLimits({ ...editLimits, maxStorageGB: parseFloat(e.target.value) })}
+                                        className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:ring-2 focus:ring-primary"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-medium text-muted-foreground uppercase mb-1">
+                                        Créditos AI Máx.
+                                    </label>
+                                    <input
+                                        type="number"
+                                        value={editLimits?.maxAiCredits || 0}
+                                        onChange={(e) => setEditLimits({ ...editLimits, maxAiCredits: parseInt(e.target.value) })}
+                                        className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:ring-2 focus:ring-primary"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="px-6 py-4 border-t border-border flex justify-end gap-3">
+                            <button
+                                onClick={() => {
+                                    setEditLimitsClient(null);
+                                    setEditLimits(null);
+                                }}
+                                className="px-4 py-2 text-foreground hover:bg-muted rounded-lg transition-colors"
+                                disabled={processingAction === editLimitsClient}
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                onClick={handleUpdateLimits}
+                                disabled={processingAction === editLimitsClient}
+                                className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors inline-flex items-center gap-2"
+                            >
+                                {processingAction === editLimitsClient ? (
+                                    <>
+                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                        Guardando...
+                                    </>
+                                ) : (
+                                    'Guardar Cambios'
+                                )}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Setup Modal */}
             {setupModalClient && (

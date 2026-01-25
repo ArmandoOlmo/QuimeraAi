@@ -258,15 +258,7 @@ const LeadCard: React.FC<LeadCardProps> = ({ lead, onDragStart, onClick, onDelet
             )}
 
             {/* Conversation Transcript Preview */}
-            {(() => {
-                // Debug: log para ver qué leads tienen conversación
-                if ((lead.source === 'chatbot' || lead.source === 'chatbot-widget' || lead.source === 'quimera-chat') && !lead.conversationTranscript) {
-                    console.log(`[DEBUG] Lead ${lead.name} (${lead.source}) NO tiene conversationTranscript:`, lead);
-                }
-                return null;
-            })()}
             {lead.conversationTranscript && (() => {
-                console.log(`[DEBUG] Lead ${lead.name} TIENE conversación con ${lead.conversationTranscript.length} caracteres`);
                 const messages = lead.conversationTranscript.split('\n').filter(line => line.trim());
                 const messageCount = messages.length;
                 const lastUserMessage = messages.reverse().find(msg =>

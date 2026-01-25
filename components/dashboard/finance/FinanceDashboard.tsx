@@ -46,7 +46,7 @@ const FinanceDashboard: React.FC = () => {
             const response = await generateContentViaProxy(projectId, prompt, 'gemini-2.5-flash', {
                 temperature: _options?.temperature || 0.7
             }, user?.uid);
-            
+
             // Log successful API call
             if (user) {
                 logApiCall({
@@ -57,7 +57,7 @@ const FinanceDashboard: React.FC = () => {
                     success: true
                 });
             }
-            
+
             return extractTextFromResponse(response);
         } catch (error) {
             // Log failed API call
@@ -146,7 +146,7 @@ const FinanceDashboard: React.FC = () => {
             return;
         }
 
-        const expensesRef = collection(db, 'users', userId, 'projects', projectId, 'finance', 'expenses');
+        const expensesRef = collection(db, 'users', userId, 'projects', projectId, 'finance_expenses');
         const q = query(expensesRef, orderBy('date', 'desc'));
         const unsubscribe = onSnapshot(
             q,
@@ -203,7 +203,7 @@ const FinanceDashboard: React.FC = () => {
                 createdAt: serverTimestamp()
             };
 
-            const expensesRef = collection(db, 'users', userId, 'projects', projectId, 'finance', 'expenses');
+            const expensesRef = collection(db, 'users', userId, 'projects', projectId, 'finance_expenses');
             const docRef = await addDoc(expensesRef, { ...newExpense, updatedAt: serverTimestamp() });
             setSelectedExpense({ id: docRef.id, ...newExpense } as ExpenseRecord);
 
@@ -221,7 +221,7 @@ const FinanceDashboard: React.FC = () => {
         const projectId = activeProject?.id;
         if (!userId || !projectId) return;
         if (!confirm(t('financeDashboard.deleteConfirm'))) return;
-        await deleteDoc(doc(db, 'users', userId, 'projects', projectId, 'finance', 'expenses', id));
+        await deleteDoc(doc(db, 'users', userId, 'projects', projectId, 'finance_expenses', id));
         if (selectedExpense?.id === id) setSelectedExpense(null);
     }, [user?.uid, activeProject?.id, selectedExpense?.id]);
 
@@ -229,7 +229,7 @@ const FinanceDashboard: React.FC = () => {
         const userId = user?.uid;
         const projectId = activeProject?.id;
         if (!userId || !projectId) return;
-        await updateDoc(doc(db, 'users', userId, 'projects', projectId, 'finance', 'expenses', id), {
+        await updateDoc(doc(db, 'users', userId, 'projects', projectId, 'finance_expenses', id), {
             ...updates,
             updatedAt: serverTimestamp(),
         } as any);

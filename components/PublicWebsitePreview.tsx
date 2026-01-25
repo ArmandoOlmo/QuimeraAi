@@ -1627,24 +1627,45 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
       )}
 
       {/* Powered by badge */}
-      <div className="fixed bottom-4 right-4 z-40">
-        <a
-          href="https://quimera.ai"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center gap-2 px-3 py-2 bg-black/80 backdrop-blur-sm rounded-full text-xs text-white/70 hover:text-white transition-colors shadow-lg"
-        >
-          <img
-            src="https://firebasestorage.googleapis.com/v0/b/quimeraai.firebasestorage.app/o/quimera%2Fquimeralogo.png?alt=media&token=82368c1c-0f63-42b7-831f-72780006f032"
-            alt="Quimera"
-            className="w-4 h-4"
-          />
-          <span>Made with Quimera</span>
-        </a>
-      </div>
+      {!mergedData.footer?.hideBranding && (
+        <div style={{ position: 'fixed', bottom: '100px', right: '20px', zIndex: 2147483647, pointerEvents: 'auto' }}>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              padding: '12px 24px',
+              backgroundColor: '#000000',
+              border: '2px solid #ffffff',
+              borderRadius: '9999px',
+              boxShadow: '0 10px 30px rgba(0,0,0,0.8)',
+              cursor: 'default'
+            }}
+          >
+            <div className="relative flex h-3 w-3">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-3 w-3 bg-yellow-400"></span>
+            </div>
+            <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '15px', color: '#ffffff', fontWeight: 700, whiteSpace: 'nowrap' }}>
+              Made with <a
+                href="https://quimera.ai"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  color: '#facc15',
+                  fontWeight: 900,
+                  textDecoration: 'underline',
+                  textUnderlineOffset: '4px',
+                  transition: 'all 0.2s ease'
+                }}
+                className="hover:text-white"
+              >Quimera.ai</a>
+            </span>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
 export default PublicWebsitePreview;
-

@@ -501,7 +501,10 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
         >
           {/* Header / Logo - Enhanced for mobile */}
           <div className="relative h-[72px] lg:h-[80px] flex items-center justify-between px-4 lg:px-0 lg:justify-center border-b border-border/50 lg:border-none flex-shrink-0">
-            <div className={`flex items-center gap-3 transition-all duration-300 ${isCollapsed ? 'lg:px-0 lg:justify-center lg:gap-0' : 'lg:px-6'}`}>
+            <div
+              onClick={() => navigate(ROUTES.DASHBOARD)}
+              className={`flex items-center gap-3 transition-all duration-300 cursor-pointer ${isCollapsed ? 'lg:px-0 lg:justify-center lg:gap-0' : 'lg:px-6'}`}
+            >
               {/* Logo Image */}
               <img
                 src="https://firebasestorage.googleapis.com/v0/b/quimeraai.firebasestorage.app/o/quimera%2Fquimeralogo.png?alt=media&token=82368c1c-0f63-42b7-831f-72780006f032"
