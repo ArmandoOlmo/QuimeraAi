@@ -1,3 +1,11 @@
+export interface ExpenseItem {
+  description: string;
+  quantity?: number;
+  unitPrice?: number;
+  total?: number;
+  category?: string;
+}
+
 export interface ExpenseRecord {
   id: string;
   date: string;        // YYYY-MM-DD
@@ -7,7 +15,7 @@ export interface ExpenseRecord {
   tax: number;         // IVA u otros impuestos
   total: number;
   currency: string;    // MXN, USD, etc.
-  items?: string[];    // Lista opcional de ítems comprados
+  items?: (string | ExpenseItem)[];    // Lista de ítems comprados
   confidence: number;  // Nivel de confianza de la IA (0-1)
   status: 'pending' | 'approved' | 'rejected';
   originalFileUrl?: string; // URL opcional de la imagen original

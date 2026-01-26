@@ -96,10 +96,14 @@ function isValidUserId(userId: string): boolean {
  * SECURITY: Validate model name
  */
 const ALLOWED_MODELS = [
-    // Gemini 2.5 series (latest - recommended)
+    // Gemini 2.5 series (latest)
     'gemini-2.5-flash',
     'gemini-2.5-flash-lite',
     'gemini-2.5-pro',
+    // Gemini 2.0 series
+    'gemini-2.0-flash',
+    'gemini-2.0-flash-lite',
+    'gemini-2.0-flash-exp',
     // Gemini 3.0 preview models (experimental)
     'gemini-3-pro-preview',
     'gemini-3-pro-image-preview',
@@ -107,7 +111,10 @@ const ALLOWED_MODELS = [
     'gemini-1.5-flash',
     'gemini-1.5-pro',
     // Native Gemini image generation models
+    'gemini-2.0-flash-exp-image-generation',
+    'gemini-2.0-flash-preview-image-generation',
     'gemini-2.5-flash-image',
+    'gemini-2.0-flash-image',
     // Image generation models - Imagen (may require Vertex AI)
     'imagen-3.0-generate-001',
     'imagen-3.0-fast-generate-001',
@@ -342,20 +349,26 @@ async function getProjectData(projectId: string, userId?: string): Promise<Proje
  * ~$0.01 USD real cost per credit
  */
 const AI_CREDIT_COSTS = {
-    // Gemini 2.5 series (latest - recommended)
+    // Gemini 2.5 series (latest)
     'gemini-2.5-flash': 1,              // ~$0.01 per request
     'gemini-2.5-flash-lite': 1,         // ~$0.01 per request
     'gemini-2.5-pro': 3,                // ~$0.03 per request
+    // Gemini 2.0 series
+    'gemini-2.0-flash': 1,              // ~$0.01 per request
+    'gemini-2.0-flash-lite': 1,         // ~$0.01 per request
+    'gemini-2.0-flash-exp': 1,          // ~$0.01 per request
     // Gemini 3.0 preview models (experimental)
     'gemini-3-pro-preview': 3,          // ~$0.03 per request
     'gemini-3-pro-image-preview': 4,    // ~$0.04 per request
     // Legacy models
     'gemini-1.5-flash': 1,              // ~$0.01 per request
     'gemini-1.5-pro': 2,                // ~$0.02 per request
-    // Image generation
+    // Image generation - Imagen 3.0
     'gemini-2.5-flash-image': 4,        // ~$0.04 per image
+    'gemini-2.0-flash-image': 4,        // ~$0.04 per image
     'imagen-3.0-generate-001': 4,       // ~$0.04 per image
     'imagen-3.0-fast-generate-001': 2,  // ~$0.02 per image
+    // Image generation - Imagen 4.0
     'imagen-4.0-generate-001': 4,       // ~$0.04 per image
     'imagen-4.0-ultra-generate-001': 6, // ~$0.06 per image (highest quality)
     'imagen-4.0-fast-generate-001': 2,  // ~$0.02 per image
@@ -1180,35 +1193,3 @@ export const getUsageStats = functions.https.onRequest(async (req, res) => {
         res.status(500).json({ error: 'Internal server error' });
     }
 });
-
-/**
- * SECURE: Get Gemini API Key for authenticated users
- * This allows the frontend to get the key for WebSocket connections (Voice Mode)
- * while keeping it hidden from unauthenticated users.
- */
-export const getGeminiApiKey = functions.https.onCall(async (data, context) => {
-    // SECURITY: strictly require authentication
-    if (!context.auth) {
-        throw new functions.https.HttpsError(
-            'unauthenticated',
-            'You must be logged in to access this resource.'
-        );
-    }
-
-    const userId = context.auth.uid;
-    console.log(`[getGeminiApiKey] Vending API key to user: ${userId}`);
-
-    // Optional: Check for rate limits or permissions here if needed
-
-    const apiKey = GEMINI_CONFIG.apiKey;
-    if (!apiKey) {
-        console.error('[getGeminiApiKey] API key not configured');
-        throw new functions.https.HttpsError(
-            'internal',
-            'Service configuration error'
-        );
-    }
-
-    return { apiKey };
-});
-

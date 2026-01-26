@@ -3,54 +3,73 @@
  * REST API for managing sub-client tenants
  */
 
-import * as express from 'express';
+import express from 'express';
 import * as admin from 'firebase-admin';
 import * as functions from 'firebase-functions';
-import { authenticateApiKey, requirePermission, logUsage, errorHandler } from './middleware/auth';
+import {
+  authenticateApiKey,
+  requirePermission,
+  errorHandler,
+  notFoundHandler,
+  corsMiddleware,
+  requestLogger,
+  AuthenticatedRequest,
+} from './middleware/auth';
 
 const db = admin.firestore();
 const router = express.Router();
-
-// Apply authentication to all routes
-router.use(authenticateApiKey);
-router.use(logUsage);
 
 // ============================================================================
 // HELPER FUNCTIONS
 // ============================================================================
 
-async function checkSubClientLimit(agencyTenantId: string): Promise<{ canCreate: boolean; current: number; limit: number }> {
-  const agencyDoc = await db.collection('tenants').doc(agencyTenantId).get();
-  const agencyData = agencyDoc.data()!;
-
-  const currentSubClients = await db.collection('tenants')
-    .where('ownerTenantId', '==', agencyTenantId)
-    .where('status', 'in', ['active', 'trial'])
-    .count()
-    .get();
-
-  const current = currentSubClients.data().count;
-
-  const baseLimits: Record<string, number> = {
-    agency: 10,
-    agency_plus: 25,
-    enterprise: 9999,
-  };
-
-  const baseLimit = baseLimits[agencyData.subscriptionPlan] || 10;
-  const addonsLimit = agencyData.billing?.addons?.extraSubClients || 0;
-  const totalLimit = baseLimit + addonsLimit;
-
-  return { canCreate: current < totalLimit, current, limit: totalLimit };
-}
-
+/**
+ * Generate slug from name
+ */
 function slugify(text: string): string {
   return text
     .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
     .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '');
+    .replace(/(^-|-$)/g, '');
+}
+
+/**
+ * Check if agency has reached sub-client limit
+ */
+async function checkSubClientLimit(
+  agencyTenantId: string
+): Promise<{ canCreate: boolean; current: number; limit: number }> {
+  const subClientsSnapshot = await db
+    .collection('tenants')
+    .where('ownerTenantId', '==', agencyTenantId)
+    .where('status', 'in', ['active', 'trial'])
+    .get();
+
+  const current = subClientsSnapshot.size;
+
+  const agencyDoc = await db.collection('tenants').doc(agencyTenantId).get();
+  const agencyData = agencyDoc.data();
+
+  const limit = agencyData?.limits?.maxSubClients || 5;
+
+  return { canCreate: current < limit, current, limit };
+}
+
+/**
+ * Verify tenant belongs to the authenticated agency
+ */
+async function verifyTenantOwnership(
+  tenantId: string,
+  agencyTenantId: string
+): Promise<boolean> {
+  const tenantDoc = await db.collection('tenants').doc(tenantId).get();
+
+  if (!tenantDoc.exists) {
+    return false;
+  }
+
+  const tenantData = tenantDoc.data();
+  return tenantData?.ownerTenantId === agencyTenantId;
 }
 
 // ============================================================================
@@ -58,471 +77,566 @@ function slugify(text: string): string {
 // ============================================================================
 
 /**
- * GET /api/v1/tenants
- * List all sub-clients
+ * POST /tenants
+ * Create a new sub-client tenant
  */
-router.get('/tenants', requirePermission('read_tenants'), async (req, res) => {
-  try {
-    const { tenantId: agencyTenantId } = (req as any).apiAuth;
+router.post(
+  '/tenants',
+  requirePermission('create_tenants'),
+  async (req: AuthenticatedRequest, res: express.Response) => {
+    try {
+      const { name, email, industry, features, branding } = req.body;
 
-    // Parse pagination parameters
-    const limit = Math.min(parseInt(req.query.limit as string) || 50, 100);
-    const offset = parseInt(req.query.offset as string) || 0;
-    const status = req.query.status as string;
-
-    // Build query
-    let query = db.collection('tenants')
-      .where('ownerTenantId', '==', agencyTenantId)
-      .orderBy('createdAt', 'desc')
-      .limit(limit)
-      .offset(offset);
-
-    // Filter by status if provided
-    if (status) {
-      query = query.where('status', '==', status) as any;
-    }
-
-    const tenantsSnapshot = await query.get();
-
-    // Get total count
-    const totalCount = await db.collection('tenants')
-      .where('ownerTenantId', '==', agencyTenantId)
-      .count()
-      .get();
-
-    const tenants = tenantsSnapshot.docs.map(doc => ({
-      id: doc.id,
-      name: doc.data().name,
-      slug: doc.data().slug,
-      status: doc.data().status,
-      industry: doc.data().industry,
-      contactEmail: doc.data().contactEmail,
-      createdAt: doc.data().createdAt?.toDate().toISOString(),
-      usage: doc.data().usage,
-      limits: doc.data().limits,
-    }));
-
-    res.json({
-      success: true,
-      data: tenants,
-      pagination: {
-        total: totalCount.data().count,
-        limit,
-        offset,
-        hasMore: offset + tenants.length < totalCount.data().count,
-      },
-    });
-  } catch (error: any) {
-    functions.logger.error('Error listing tenants', { error: error.message });
-    res.status(500).json({ error: 'Failed to list tenants', message: error.message });
-  }
-});
-
-/**
- * POST /api/v1/tenants
- * Create new sub-client
- */
-router.post('/tenants', requirePermission('create_tenants'), async (req, res) => {
-  try {
-    const { tenantId: agencyTenantId } = (req as any).apiAuth;
-    const { name, email, industry, features = [] } = req.body;
-
-    if (!name || !email) {
-      res.status(400).json({
-        error: 'Missing required fields',
-        message: 'name and email are required',
-      });
-      return;
-    }
-
-    // Check sub-client limit
-    const limitCheck = await checkSubClientLimit(agencyTenantId);
-
-    if (!limitCheck.canCreate) {
-      res.status(400).json({
-        error: 'Sub-client limit reached',
-        message: `You have reached your limit of ${limitCheck.limit} sub-clients`,
-        current: limitCheck.current,
-        limit: limitCheck.limit,
-      });
-      return;
-    }
-
-    // Create tenant
-    const newTenant = await db.collection('tenants').add({
-      name,
-      slug: slugify(name),
-      type: 'agency_client',
-      ownerTenantId: agencyTenantId,
-      ownerUserId: null,
-      subscriptionPlan: 'agency',
-      status: 'trial',
-      industry: industry || 'other',
-      contactEmail: email,
-      branding: {
-        companyName: name,
-        primaryColor: '#3B82F6',
-        secondaryColor: '#10B981',
-      },
-      settings: {
-        enabledFeatures: features,
-        defaultLanguage: 'es',
-      },
-      limits: {
-        maxProjects: 10,
-        maxUsers: 5,
-        maxAiCredits: 1000,
-        maxStorageGB: 10,
-      },
-      usage: {
-        projects: 0,
-        users: 0,
-        aiCreditsUsed: 0,
-        storageUsed: 0,
-      },
-      createdAt: admin.firestore.FieldValue.serverTimestamp(),
-      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-    });
-
-    // Record activity
-    await db.collection('agencyActivity').add({
-      agencyTenantId,
-      type: 'client_created',
-      clientTenantId: newTenant.id,
-      clientName: name,
-      source: 'api',
-      timestamp: admin.firestore.FieldValue.serverTimestamp(),
-    });
-
-    functions.logger.info('Tenant created via API', { tenantId: newTenant.id, agencyTenantId });
-
-    res.status(201).json({
-      success: true,
-      data: {
-        id: newTenant.id,
-        name,
-        status: 'created',
-      },
-    });
-  } catch (error: any) {
-    functions.logger.error('Error creating tenant', { error: error.message });
-    res.status(500).json({ error: 'Failed to create tenant', message: error.message });
-  }
-});
-
-/**
- * GET /api/v1/tenants/:id
- * Get specific tenant details
- */
-router.get('/tenants/:id', requirePermission('read_tenants'), async (req, res) => {
-  try {
-    const { tenantId: agencyTenantId } = (req as any).apiAuth;
-    const { id } = req.params;
-
-    const tenantDoc = await db.collection('tenants').doc(id).get();
-
-    if (!tenantDoc.exists) {
-      res.status(404).json({ error: 'Tenant not found' });
-      return;
-    }
-
-    const tenantData = tenantDoc.data()!;
-
-    // Verify ownership
-    if (tenantData.ownerTenantId !== agencyTenantId) {
-      res.status(403).json({ error: 'Access denied' });
-      return;
-    }
-
-    res.json({
-      success: true,
-      data: {
-        id: tenantDoc.id,
-        name: tenantData.name,
-        slug: tenantData.slug,
-        status: tenantData.status,
-        type: tenantData.type,
-        industry: tenantData.industry,
-        contactEmail: tenantData.contactEmail,
-        contactPhone: tenantData.contactPhone,
-        branding: tenantData.branding,
-        settings: tenantData.settings,
-        limits: tenantData.limits,
-        usage: tenantData.usage,
-        billing: tenantData.billing ? {
-          monthlyPrice: tenantData.billing.monthlyPrice,
-          status: tenantData.billing.status,
-          nextBillingDate: tenantData.billing.nextBillingDate?.toDate().toISOString(),
-        } : null,
-        createdAt: tenantData.createdAt?.toDate().toISOString(),
-        updatedAt: tenantData.updatedAt?.toDate().toISOString(),
-      },
-    });
-  } catch (error: any) {
-    functions.logger.error('Error getting tenant', { error: error.message });
-    res.status(500).json({ error: 'Failed to get tenant', message: error.message });
-  }
-});
-
-/**
- * PATCH /api/v1/tenants/:id
- * Update tenant
- */
-router.patch('/tenants/:id', requirePermission('update_tenants'), async (req, res) => {
-  try {
-    const { tenantId: agencyTenantId } = (req as any).apiAuth;
-    const { id } = req.params;
-
-    const tenantDoc = await db.collection('tenants').doc(id).get();
-
-    if (!tenantDoc.exists) {
-      res.status(404).json({ error: 'Tenant not found' });
-      return;
-    }
-
-    const tenantData = tenantDoc.data()!;
-
-    // Verify ownership
-    if (tenantData.ownerTenantId !== agencyTenantId) {
-      res.status(403).json({ error: 'Access denied' });
-      return;
-    }
-
-    // Only allow updating certain fields
-    const allowedFields = ['name', 'industry', 'contactEmail', 'contactPhone', 'status'];
-    const updates: any = {
-      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-    };
-
-    for (const field of allowedFields) {
-      if (req.body[field] !== undefined) {
-        updates[field] = req.body[field];
+      if (!name || !email) {
+        res.status(400).json({
+          error: 'Missing required fields',
+          message: 'name and email are required',
+        });
+        return;
       }
+
+      // Validate email format
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        res.status(400).json({
+          error: 'Invalid email',
+          message: 'Please provide a valid email address',
+        });
+        return;
+      }
+
+      const agencyTenantId = req.apiAuth!.tenantId;
+
+      // Check sub-client limit
+      const limitCheck = await checkSubClientLimit(agencyTenantId);
+      if (!limitCheck.canCreate) {
+        res.status(400).json({
+          error: 'Sub-client limit reached',
+          message: `You have reached the maximum of ${limitCheck.limit} sub-clients. Upgrade your plan or add more slots.`,
+          current: limitCheck.current,
+          limit: limitCheck.limit,
+        });
+        return;
+      }
+
+      // Create tenant
+      const slug = slugify(name);
+      const tenantRef = await db.collection('tenants').add({
+        name,
+        slug,
+        type: 'agency_client',
+        ownerTenantId: agencyTenantId,
+        ownerUserId: null,
+        subscriptionPlan: 'agency',
+        status: 'trial',
+        industry: industry || 'other',
+        settings: {
+          enabledFeatures: features || [],
+          defaultLanguage: 'es',
+        },
+        branding: branding || {
+          companyName: name,
+          logo: '',
+          primaryColor: '#3B82F6',
+          secondaryColor: '#10B981',
+        },
+        contactInfo: {
+          email,
+        },
+        usage: {
+          projects: 0,
+          users: 0,
+          leads: 0,
+          products: 0,
+          storageUsed: 0,
+          aiCreditsUsed: 0,
+          emailsSent: 0,
+        },
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        createdBy: 'api',
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+
+      // Log activity
+      await db.collection('agencyActivity').add({
+        agencyTenantId,
+        type: 'client_created',
+        clientTenantId: tenantRef.id,
+        clientName: name,
+        metadata: {
+          createdViaApi: true,
+        },
+        createdBy: 'api',
+        timestamp: admin.firestore.FieldValue.serverTimestamp(),
+      });
+
+      res.status(201).json({
+        id: tenantRef.id,
+        name,
+        slug,
+        status: 'trial',
+        createdAt: new Date().toISOString(),
+      });
+    } catch (error: any) {
+      console.error('Error creating tenant:', error);
+      res.status(500).json({
+        error: 'Failed to create tenant',
+        message: error.message,
+      });
     }
+  }
+);
 
-    // Update slug if name changed
-    if (updates.name) {
-      updates.slug = slugify(updates.name);
+/**
+ * GET /tenants
+ * List all sub-client tenants
+ */
+router.get(
+  '/tenants',
+  requirePermission('read_tenants'),
+  async (req: AuthenticatedRequest, res: express.Response) => {
+    try {
+      const agencyTenantId = req.apiAuth!.tenantId;
+
+      // Query parameters
+      const limit = parseInt(req.query.limit as string) || 50;
+      const offset = parseInt(req.query.offset as string) || 0;
+      const status = req.query.status as string;
+
+      let query = db
+        .collection('tenants')
+        .where('ownerTenantId', '==', agencyTenantId)
+        .orderBy('createdAt', 'desc')
+        .limit(limit)
+        .offset(offset);
+
+      if (status) {
+        query = query.where('status', '==', status) as any;
+      }
+
+      const tenantsSnapshot = await query.get();
+
+      const tenants = tenantsSnapshot.docs.map((doc) => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          name: data.name,
+          slug: data.slug,
+          status: data.status,
+          industry: data.industry,
+          contactEmail: data.contactInfo?.email,
+          features: data.settings?.enabledFeatures || [],
+          usage: data.usage,
+          createdAt: data.createdAt?.toDate().toISOString(),
+        };
+      });
+
+      // Get total count
+      const totalSnapshot = await db
+        .collection('tenants')
+        .where('ownerTenantId', '==', agencyTenantId)
+        .count()
+        .get();
+
+      res.json({
+        tenants,
+        pagination: {
+          total: totalSnapshot.data().count,
+          limit,
+          offset,
+          hasMore: offset + limit < totalSnapshot.data().count,
+        },
+      });
+    } catch (error: any) {
+      console.error('Error listing tenants:', error);
+      res.status(500).json({
+        error: 'Failed to list tenants',
+        message: error.message,
+      });
     }
+  }
+);
 
-    await tenantDoc.ref.update(updates);
+/**
+ * GET /tenants/:id
+ * Get details of a specific tenant
+ */
+router.get(
+  '/tenants/:id',
+  requirePermission('read_tenants'),
+  async (req: AuthenticatedRequest, res: express.Response) => {
+    try {
+      const { id } = req.params as { id: string };
+      const agencyTenantId = req.apiAuth!.tenantId;
 
-    functions.logger.info('Tenant updated via API', { tenantId: id, agencyTenantId });
+      // Verify ownership
+      const isOwner = await verifyTenantOwnership(id, agencyTenantId);
+      if (!isOwner) {
+        res.status(403).json({
+          error: 'Access denied',
+          message: 'This tenant does not belong to your agency',
+        });
+        return;
+      }
 
-    res.json({
-      success: true,
-      data: {
+      const tenantDoc = await db.collection('tenants').doc(id).get();
+
+      if (!tenantDoc.exists) {
+        res.status(404).json({
+          error: 'Tenant not found',
+          message: `Tenant with ID ${id} does not exist`,
+        });
+        return;
+      }
+
+      const data = tenantDoc.data()!;
+
+      res.json({
+        id: tenantDoc.id,
+        name: data.name,
+        slug: data.slug,
+        status: data.status,
+        industry: data.industry,
+        subscriptionPlan: data.subscriptionPlan,
+        contactInfo: data.contactInfo,
+        branding: data.branding,
+        settings: data.settings,
+        usage: data.usage,
+        limits: data.limits,
+        createdAt: data.createdAt?.toDate().toISOString(),
+        updatedAt: data.updatedAt?.toDate().toISOString(),
+      });
+    } catch (error: any) {
+      console.error('Error getting tenant:', error);
+      res.status(500).json({
+        error: 'Failed to get tenant',
+        message: error.message,
+      });
+    }
+  }
+);
+
+/**
+ * PATCH /tenants/:id
+ * Update a tenant
+ */
+router.patch(
+  '/tenants/:id',
+  requirePermission('update_tenants'),
+  async (req: AuthenticatedRequest, res: express.Response) => {
+    try {
+      const { id } = req.params as { id: string };
+      const agencyTenantId = req.apiAuth!.tenantId;
+
+      // Verify ownership
+      const isOwner = await verifyTenantOwnership(id, agencyTenantId);
+      if (!isOwner) {
+        res.status(403).json({
+          error: 'Access denied',
+          message: 'This tenant does not belong to your agency',
+        });
+        return;
+      }
+
+      const { name, status, industry, features, branding, contactInfo } =
+        req.body;
+
+      const updates: any = {
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      };
+
+      if (name) updates.name = name;
+      if (status) updates.status = status;
+      if (industry) updates.industry = industry;
+      if (features) updates['settings.enabledFeatures'] = features;
+      if (branding) updates.branding = { ...updates.branding, ...branding };
+      if (contactInfo)
+        updates.contactInfo = { ...updates.contactInfo, ...contactInfo };
+
+      await db.collection('tenants').doc(id).update(updates);
+
+      // Log activity
+      await db.collection('agencyActivity').add({
+        agencyTenantId,
+        type: 'client_updated',
+        clientTenantId: id,
+        metadata: {
+          updatedViaApi: true,
+          updatedFields: Object.keys(updates),
+        },
+        createdBy: 'api',
+        timestamp: admin.firestore.FieldValue.serverTimestamp(),
+      });
+
+      res.json({
         id,
-        ...updates,
-      },
-    });
-  } catch (error: any) {
-    functions.logger.error('Error updating tenant', { error: error.message });
-    res.status(500).json({ error: 'Failed to update tenant', message: error.message });
+        message: 'Tenant updated successfully',
+        updated: Object.keys(updates),
+      });
+    } catch (error: any) {
+      console.error('Error updating tenant:', error);
+      res.status(500).json({
+        error: 'Failed to update tenant',
+        message: error.message,
+      });
+    }
   }
-});
+);
 
 /**
- * DELETE /api/v1/tenants/:id
- * Delete (soft delete) tenant
+ * DELETE /tenants/:id
+ * Delete a tenant
  */
-router.delete('/tenants/:id', requirePermission('delete_tenants'), async (req, res) => {
-  try {
-    const { tenantId: agencyTenantId } = (req as any).apiAuth;
-    const { id } = req.params;
+router.delete(
+  '/tenants/:id',
+  requirePermission('delete_tenants'),
+  async (req: AuthenticatedRequest, res: express.Response) => {
+    try {
+      const { id } = req.params as { id: string };
+      const agencyTenantId = req.apiAuth!.tenantId;
 
-    const tenantDoc = await db.collection('tenants').doc(id).get();
+      // Verify ownership
+      const isOwner = await verifyTenantOwnership(id, agencyTenantId);
+      if (!isOwner) {
+        res.status(403).json({
+          error: 'Access denied',
+          message: 'This tenant does not belong to your agency',
+        });
+        return;
+      }
 
-    if (!tenantDoc.exists) {
-      res.status(404).json({ error: 'Tenant not found' });
-      return;
+      const tenantDoc = await db.collection('tenants').doc(id).get();
+      const tenantData = tenantDoc.data();
+
+      // Soft delete - just mark as deleted
+      await db.collection('tenants').doc(id).update({
+        status: 'deleted',
+        deletedAt: admin.firestore.FieldValue.serverTimestamp(),
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+
+      // Log activity
+      await db.collection('agencyActivity').add({
+        agencyTenantId,
+        type: 'client_deleted',
+        clientTenantId: id,
+        clientName: tenantData?.name,
+        metadata: {
+          deletedViaApi: true,
+        },
+        createdBy: 'api',
+        timestamp: admin.firestore.FieldValue.serverTimestamp(),
+      });
+
+      res.json({
+        id,
+        message: 'Tenant deleted successfully',
+      });
+    } catch (error: any) {
+      console.error('Error deleting tenant:', error);
+      res.status(500).json({
+        error: 'Failed to delete tenant',
+        message: error.message,
+      });
     }
-
-    const tenantData = tenantDoc.data()!;
-
-    // Verify ownership
-    if (tenantData.ownerTenantId !== agencyTenantId) {
-      res.status(403).json({ error: 'Access denied' });
-      return;
-    }
-
-    // Soft delete (mark as deleted)
-    await tenantDoc.ref.update({
-      status: 'deleted',
-      deletedAt: admin.firestore.FieldValue.serverTimestamp(),
-      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-    });
-
-    // Record activity
-    await db.collection('agencyActivity').add({
-      agencyTenantId,
-      type: 'client_deleted',
-      clientTenantId: id,
-      clientName: tenantData.name,
-      source: 'api',
-      timestamp: admin.firestore.FieldValue.serverTimestamp(),
-    });
-
-    functions.logger.info('Tenant deleted via API', { tenantId: id, agencyTenantId });
-
-    res.json({
-      success: true,
-      message: 'Tenant deleted successfully',
-    });
-  } catch (error: any) {
-    functions.logger.error('Error deleting tenant', { error: error.message });
-    res.status(500).json({ error: 'Failed to delete tenant', message: error.message });
   }
-});
+);
 
 /**
- * POST /api/v1/tenants/:id/members
- * Add member to tenant
+ * POST /tenants/:id/members
+ * Add a member to a tenant
  */
-router.post('/tenants/:id/members', requirePermission('manage_members'), async (req, res) => {
-  try {
-    const { tenantId: agencyTenantId } = (req as any).apiAuth;
-    const { id } = req.params;
-    const { email, role = 'client', name } = req.body;
+router.post(
+  '/tenants/:id/members',
+  requirePermission('manage_members'),
+  async (req: AuthenticatedRequest, res: express.Response) => {
+    try {
+      const { id } = req.params as { id: string };
+      const agencyTenantId = req.apiAuth!.tenantId;
+      const { email, name, role } = req.body;
 
-    if (!email) {
-      res.status(400).json({ error: 'Missing required field: email' });
-      return;
+      if (!email || !name) {
+        res.status(400).json({
+          error: 'Missing required fields',
+          message: 'email and name are required',
+        });
+        return;
+      }
+
+      // Verify ownership
+      const isOwner = await verifyTenantOwnership(id, agencyTenantId);
+      if (!isOwner) {
+        res.status(403).json({
+          error: 'Access denied',
+          message: 'This tenant does not belong to your agency',
+        });
+        return;
+      }
+
+      // Create invitation
+      const inviteRef = await db.collection('tenantInvites').add({
+        tenantId: id,
+        email,
+        name,
+        role: role || 'client',
+        invitedBy: 'api',
+        status: 'pending',
+        token: Math.random().toString(36).substring(2, 15),
+        expiresAt: admin.firestore.Timestamp.fromDate(
+          new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+        ),
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+
+      res.status(201).json({
+        inviteId: inviteRef.id,
+        email,
+        name,
+        role: role || 'client',
+        status: 'pending',
+        message: 'Invitation created successfully',
+      });
+    } catch (error: any) {
+      console.error('Error adding member:', error);
+      res.status(500).json({
+        error: 'Failed to add member',
+        message: error.message,
+      });
     }
-
-    const tenantDoc = await db.collection('tenants').doc(id).get();
-
-    if (!tenantDoc.exists) {
-      res.status(404).json({ error: 'Tenant not found' });
-      return;
-    }
-
-    const tenantData = tenantDoc.data()!;
-
-    // Verify ownership
-    if (tenantData.ownerTenantId !== agencyTenantId) {
-      res.status(403).json({ error: 'Access denied' });
-      return;
-    }
-
-    // Create invitation
-    const inviteToken = `invite_${id}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-
-    await db.collection('tenantInvites').add({
-      tenantId: id,
-      email,
-      name: name || email,
-      role,
-      inviteToken,
-      status: 'pending',
-      source: 'api',
-      expiresAt: admin.firestore.Timestamp.fromDate(
-        new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-      ),
-      createdAt: admin.firestore.FieldValue.serverTimestamp(),
-    });
-
-    functions.logger.info('Member invite created via API', { tenantId: id, email });
-
-    res.status(201).json({
-      success: true,
-      message: 'Invitation sent',
-      inviteToken,
-    });
-  } catch (error: any) {
-    functions.logger.error('Error adding member', { error: error.message });
-    res.status(500).json({ error: 'Failed to add member', message: error.message });
   }
-});
+);
 
 /**
- * GET /api/v1/tenants/:id/usage
- * Get tenant resource usage
+ * GET /tenants/:id/usage
+ * Get resource usage for a tenant
  */
-router.get('/tenants/:id/usage', requirePermission('read_tenants'), async (req, res) => {
-  try {
-    const { tenantId: agencyTenantId } = (req as any).apiAuth;
-    const { id } = req.params;
+router.get(
+  '/tenants/:id/usage',
+  requirePermission('read_tenants'),
+  async (req: AuthenticatedRequest, res: express.Response) => {
+    try {
+      const { id } = req.params as { id: string };
+      const agencyTenantId = req.apiAuth!.tenantId;
 
-    const tenantDoc = await db.collection('tenants').doc(id).get();
+      // Verify ownership
+      const isOwner = await verifyTenantOwnership(id, agencyTenantId);
+      if (!isOwner) {
+        res.status(403).json({
+          error: 'Access denied',
+          message: 'This tenant does not belong to your agency',
+        });
+        return;
+      }
 
-    if (!tenantDoc.exists) {
-      res.status(404).json({ error: 'Tenant not found' });
-      return;
-    }
+      const tenantDoc = await db.collection('tenants').doc(id).get();
 
-    const tenantData = tenantDoc.data()!;
+      if (!tenantDoc.exists) {
+        res.status(404).json({
+          error: 'Tenant not found',
+        });
+        return;
+      }
 
-    // Verify ownership
-    if (tenantData.ownerTenantId !== agencyTenantId) {
-      res.status(403).json({ error: 'Access denied' });
-      return;
-    }
+      const data = tenantDoc.data()!;
+      const usage = data.usage || {};
+      const limits = data.limits || {};
 
-    const usage = tenantData.usage || {};
-    const limits = tenantData.limits || {};
+      // Calculate percentages
+      const percentages: any = {};
+      if (limits.maxProjects) {
+        percentages.projects = ((usage.projects || 0) / limits.maxProjects) * 100;
+      }
+      if (limits.maxStorageGB) {
+        percentages.storage =
+          ((usage.storageUsed || 0) / limits.maxStorageGB) * 100;
+      }
+      if (limits.maxAiCredits) {
+        percentages.aiCredits =
+          ((usage.aiCreditsUsed || 0) / limits.maxAiCredits) * 100;
+      }
+      if (limits.maxLeads) {
+        percentages.leads = ((usage.leads || 0) / limits.maxLeads) * 100;
+      }
 
-    // Calculate percentages
-    const percentages: Record<string, number> = {};
-    for (const [key, value] of Object.entries(usage)) {
-      const limitKey = `max${key.charAt(0).toUpperCase() + key.slice(1)}`;
-      const limit = limits[limitKey] || 0;
-      percentages[key] = limit > 0 ? (value as number / limit) * 100 : 0;
-    }
-
-    res.json({
-      success: true,
-      data: {
+      res.json({
         tenantId: id,
         usage,
         limits,
         percentages,
-        alerts: Object.entries(percentages)
-          .filter(([_, percent]) => percent > 80)
-          .map(([resource, percent]) => ({
-            resource,
-            percent: Math.round(percent),
-            level: percent > 95 ? 'critical' : 'warning',
-          })),
-      },
-    });
-  } catch (error: any) {
-    functions.logger.error('Error getting usage', { error: error.message });
-    res.status(500).json({ error: 'Failed to get usage', message: error.message });
+        alerts: {
+          highUsage: Object.values(percentages).some((p: any) => p > 80),
+          criticalUsage: Object.values(percentages).some((p: any) => p > 95),
+        },
+      });
+    } catch (error: any) {
+      console.error('Error getting usage:', error);
+      res.status(500).json({
+        error: 'Failed to get usage',
+        message: error.message,
+      });
+    }
   }
-});
+);
 
 /**
- * POST /api/v1/tenants/:id/reports
- * Generate report for specific tenant (or call consolidated report)
+ * POST /tenants/:id/reports
+ * Generate a report for a tenant
  */
-router.post('/tenants/:id/reports', requirePermission('generate_reports'), async (req, res) => {
-  try {
-    const { tenantId: agencyTenantId } = (req as any).apiAuth;
-    const { id } = req.params;
+router.post(
+  '/tenants/:id/reports',
+  requirePermission('generate_reports'),
+  async (req: AuthenticatedRequest, res: express.Response) => {
+    try {
+      const { id } = req.params as { id: string };
+      const agencyTenantId = req.apiAuth!.tenantId;
+      const { startDate, endDate, metrics } = req.body;
 
-    // TODO: Implement actual report generation
-    // This would integrate with the generateConsolidatedReport function
+      // Verify ownership
+      const isOwner = await verifyTenantOwnership(id, agencyTenantId);
+      if (!isOwner) {
+        res.status(403).json({
+          error: 'Access denied',
+          message: 'This tenant does not belong to your agency',
+        });
+        return;
+      }
 
-    res.status(501).json({
-      error: 'Not implemented',
-      message: 'Report generation endpoint is under development',
-    });
-  } catch (error: any) {
-    functions.logger.error('Error generating report', { error: error.message });
-    res.status(500).json({ error: 'Failed to generate report', message: error.message });
+      // TODO: Implement actual report generation
+      // For now, return a placeholder
+
+      res.status(202).json({
+        message: 'Report generation started',
+        reportId: 'report_' + Date.now(),
+        status: 'processing',
+        estimatedTime: '2-3 minutes',
+      });
+    } catch (error: any) {
+      console.error('Error generating report:', error);
+      res.status(500).json({
+        error: 'Failed to generate report',
+        message: error.message,
+      });
+    }
   }
-});
-
-// Apply error handler
-router.use(errorHandler);
+);
 
 // ============================================================================
-// EXPORT
+// APPLY MIDDLEWARE AND EXPORT
 // ============================================================================
 
-// Create Express app and mount router
-const app = express.default ? express.default() : (express as any)();
+const app: express.Application = express();
+
+// Middleware
+app.use(corsMiddleware);
+app.use(requestLogger);
+app.use(express.json());
+app.use(authenticateApiKey);
+
+// Routes
 app.use('/api/v1', router);
 
+// Error handlers
+app.use(notFoundHandler);
+app.use(errorHandler);
+
+// Export as Cloud Function
 export const tenantsApi = functions.https.onRequest(app);

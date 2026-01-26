@@ -35,6 +35,7 @@ import {
     APPOINTMENT_TYPE_CONFIGS,
     APPOINTMENT_PRIORITY_CONFIGS,
     DEFAULT_REMINDERS,
+    getAppointmentTypeConfig,
 } from '../../../../types';
 import { Lead } from '../../../../types';
 import Modal from '../../../ui/Modal';
@@ -198,8 +199,6 @@ interface BasicsStepProps {
 }
 
 const BasicsStep: React.FC<BasicsStepProps> = ({ data, onChange }) => {
-    const TypeIcon = APPOINTMENT_TYPE_CONFIGS[data.type]?.icon;
-
     return (
         <div className="space-y-6 animate-fade-in-up">
             {/* Title */}
@@ -222,7 +221,7 @@ const BasicsStep: React.FC<BasicsStepProps> = ({ data, onChange }) => {
                 <label className="block text-sm font-semibold text-foreground mb-3">
                     Tipo de cita
                 </label>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3">
                     {Object.entries(APPOINTMENT_TYPE_CONFIGS).map(([key, config]) => {
                         const isSelected = data.type === key;
                         return (
@@ -263,6 +262,46 @@ const BasicsStep: React.FC<BasicsStepProps> = ({ data, onChange }) => {
                             </button>
                         );
                     })}
+                </div>
+
+                {/* Custom Type Input */}
+                <div className="relative">
+                    <label className="block text-xs font-medium text-muted-foreground mb-1.5 ml-1">
+                        O escribe un tipo personalizado
+                    </label>
+                    <div className="relative">
+                        <input
+                            type="text"
+                            value={Object.keys(APPOINTMENT_TYPE_CONFIGS).includes(data.type) ? '' : data.type}
+                            onChange={(e) => {
+                                const val = e.target.value;
+                                if (val) onChange({ type: val as AppointmentType });
+                            }}
+                            placeholder="Ej. Entrevista, Coaching, Terapia..."
+                            className={`
+                                w-full h-10 bg-secondary/50 border rounded-xl px-4 pl-10 text-sm
+                                outline-none focus:ring-2 focus:ring-primary/50 transition-all
+                                ${!Object.keys(APPOINTMENT_TYPE_CONFIGS).includes(data.type) && data.type
+                                    ? 'border-primary text-foreground'
+                                    : 'border-border text-muted-foreground'
+                                }
+                            `}
+                        />
+                        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                            <Sparkles size={14} />
+                        </div>
+                    </div>
+                    {/* Display current custom type if selected */}
+                    {!Object.keys(APPOINTMENT_TYPE_CONFIGS).includes(data.type) && data.type && (
+                        <div className="mt-2 p-2 bg-primary/10 border border-primary/20 rounded-lg flex items-center gap-2">
+                            <div className="w-6 h-6 rounded bg-primary text-primary-foreground flex items-center justify-center">
+                                <span className="text-xs font-bold">#</span>
+                            </div>
+                            <span className="text-sm font-medium text-foreground">
+                                Tipo seleccionado: <span className="text-primary">{data.type}</span>
+                            </span>
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -308,7 +347,7 @@ const BasicsStep: React.FC<BasicsStepProps> = ({ data, onChange }) => {
                     className="w-full bg-secondary/50 border border-border rounded-xl px-4 py-3 text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all resize-none"
                 />
             </div>
-        </div>
+        </div >
     );
 };
 

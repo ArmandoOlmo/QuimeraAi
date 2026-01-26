@@ -1,11 +1,11 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useFiles } from '../../contexts/files';
 import { useAI } from '../../contexts/ai';
 import { useProject } from '../../contexts/project';
 import { useToast } from '../../contexts/ToastContext';
 import { usePublicProducts } from '../../hooks/usePublicProducts';
-import { Image, Upload, Zap, Grid, X, Check, Loader2, Wand2, Search, Brain, Users, Thermometer, Sparkles, Eye, Flame, Layers, Rocket, FolderOpen, ShoppingBag, Maximize2 } from 'lucide-react';
+import { Image, Upload, Zap, Grid, X, Check, Loader2, Wand2, Search, Brain, Users, Thermometer, Sparkles, Eye, Flame, Layers, Rocket, FolderOpen, ShoppingBag, Maximize2, Plus } from 'lucide-react';
 import DragDropZone from './DragDropZone';
 import { searchFiles } from '../../utils/fileHelpers';
 import ImageDetailModal from './ImageDetailModal';
@@ -107,6 +107,11 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
     const [negativePrompt, setNegativePrompt] = useState('');
     const [showAdvanced, setShowAdvanced] = useState(false);
 
+    // Reference Images State
+    const [referenceImages, setReferenceImages] = useState<string[]>([]);
+    const [isDraggingRef, setIsDraggingRef] = useState(false);
+    const referenceFileInputRef = useRef<HTMLInputElement>(null);
+
     // Detailed preview state
     const [previewFile, setPreviewFile] = useState<FileRecord | null>(null);
 
@@ -136,6 +141,76 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
         return new File([u8arr], filename, { type: mime });
     };
 
+    // Helper function to convert File to base64 data URL
+    const fileToBase64 = (file: File): Promise<string> => {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result as string);
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+        });
+    };
+
+    // Reference images handlers
+    const processReferenceFiles = async (files: FileList | File[]) => {
+        const remainingSlots = 14 - referenceImages.length;
+        if (remainingSlots <= 0) {
+            showError(t('dashboard.imagePicker.maxReferences', 'Maximum 14 reference images'));
+            return;
+        }
+
+        const filesToProcess = Array.from(files).slice(0, remainingSlots);
+        const successfulBase64s: string[] = [];
+
+        for (const file of filesToProcess) {
+            if (file.type.startsWith('image/')) {
+                try {
+                    const base64DataUrl = await fileToBase64(file);
+                    if (base64DataUrl) {
+                        successfulBase64s.push(base64DataUrl);
+                    }
+                } catch (error) {
+                    console.error(`Error converting ${file.name} to base64:`, error);
+                }
+            }
+        }
+
+        if (successfulBase64s.length > 0) {
+            setReferenceImages(prev => [...prev, ...successfulBase64s]);
+        }
+    };
+
+    const handleReferenceImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files) {
+            processReferenceFiles(e.target.files);
+        }
+    };
+
+    const handleRefDragOver = (e: React.DragEvent) => {
+        e.preventDefault();
+        setIsDraggingRef(true);
+    };
+
+    const handleRefDragLeave = (e: React.DragEvent) => {
+        e.preventDefault();
+        setIsDraggingRef(false);
+    };
+
+    const handleRefDrop = (e: React.DragEvent) => {
+        e.preventDefault();
+        setIsDraggingRef(false);
+        if (e.dataTransfer.files) {
+            processReferenceFiles(e.dataTransfer.files);
+        }
+    };
+
+    const handleRemoveReferenceImage = (index: number) => {
+        setReferenceImages(prev => prev.filter((_, i) => i !== index));
+        if (referenceFileInputRef.current) {
+            referenceFileInputRef.current.value = '';
+        }
+    };
+
     const handleGenerate = async () => {
         if (!prompt.trim()) return;
         setIsGenerating(true);
@@ -149,6 +224,7 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
                 personGeneration,
                 temperature,
                 negativePrompt: negativePrompt.trim() || undefined,
+                referenceImages: referenceImages.length > 0 ? referenceImages : undefined,
             };
             console.log('✨ [ImagePicker] Quimera options:', options);
             const imageDataUrl = await generateImage(prompt, options);
@@ -512,11 +588,11 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
                                                 {/* Prompt */}
                                                 <div>
                                                     <div className="flex justify-between items-center mb-2">
-                                                        <label className="block text-sm font-bold text-white">{t('dashboard.imagePicker.prompt')}</label>
+                                                        <label className="block text-sm font-bold text-editor-text-primary">{t('dashboard.imagePicker.prompt')}</label>
                                                         <button
                                                             onClick={handleEnhancePrompt}
                                                             disabled={isEnhancing || !prompt}
-                                                            className="flex items-center text-xs text-editor-accent hover:text-white transition-colors disabled:opacity-50"
+                                                            className="flex items-center text-xs text-editor-accent hover:text-editor-text-primary transition-colors disabled:opacity-50"
                                                             title={t('dashboard.imagePicker.enhanceTooltip')}
                                                         >
                                                             {isEnhancing ? <Loader2 size={12} className="animate-spin mr-1" /> : <Wand2 size={12} className="mr-1" />}
@@ -527,7 +603,7 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
                                                         value={prompt}
                                                         onChange={(e) => setPrompt(e.target.value)}
                                                         placeholder={t('dashboard.imagePicker.promptPlaceholder')}
-                                                        className="w-full bg-editor-panel-bg border-2 border-editor-border rounded-lg p-3 text-sm text-white focus:border-editor-accent outline-none resize-none h-40 transition-colors"
+                                                        className="w-full bg-editor-panel-bg border-2 border-editor-border rounded-lg p-3 text-sm text-editor-text-primary focus:border-editor-accent outline-none resize-none h-40 transition-colors"
                                                     />
                                                 </div>
 
@@ -539,8 +615,70 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
                                                         value={negativePrompt}
                                                         onChange={(e) => setNegativePrompt(e.target.value)}
                                                         placeholder={t('dashboard.imagePicker.negativePromptPlaceholder')}
-                                                        className="w-full bg-editor-panel-bg border border-editor-border rounded-md px-3 py-1.5 text-xs text-white focus:outline-none focus:border-editor-accent"
+                                                        className="w-full bg-editor-panel-bg border border-editor-border rounded-md px-3 py-1.5 text-xs text-editor-text-primary focus:outline-none focus:border-editor-accent"
                                                     />
+                                                </div>
+
+                                                {/* Reference Images */}
+                                                <div>
+                                                    <div className="flex items-center justify-between mb-2">
+                                                        <label className="block text-xs font-bold text-editor-text-secondary uppercase">
+                                                            {t('dashboard.imagePicker.referenceImages', 'Reference Images')}
+                                                        </label>
+                                                        <span className="text-xs text-editor-text-secondary bg-editor-panel-bg px-2 py-0.5 rounded-full">
+                                                            {referenceImages.length}/14
+                                                        </span>
+                                                    </div>
+                                                    <input
+                                                        type="file"
+                                                        ref={referenceFileInputRef}
+                                                        accept="image/*"
+                                                        multiple
+                                                        onChange={handleReferenceImageUpload}
+                                                        className="hidden"
+                                                    />
+                                                    <div
+                                                        className={`
+                                                            border-2 border-dashed rounded-lg p-2 transition-all cursor-pointer
+                                                            ${isDraggingRef
+                                                                ? 'border-editor-accent bg-editor-accent/10'
+                                                                : 'border-editor-border hover:border-editor-text-secondary hover:bg-editor-panel-bg/50'
+                                                            }
+                                                        `}
+                                                        onDragOver={handleRefDragOver}
+                                                        onDragLeave={handleRefDragLeave}
+                                                        onDrop={handleRefDrop}
+                                                        onClick={() => referenceFileInputRef.current?.click()}
+                                                    >
+                                                        {referenceImages.length > 0 ? (
+                                                            <div className="flex flex-wrap gap-1.5" onClick={(e) => e.stopPropagation()}>
+                                                                {referenceImages.map((img, idx) => (
+                                                                    <div key={idx} className="relative w-10 h-10 rounded-md overflow-hidden group border border-editor-border">
+                                                                        <img src={img} alt={`Ref ${idx}`} className="w-full h-full object-cover" />
+                                                                        <button
+                                                                            onClick={() => handleRemoveReferenceImage(idx)}
+                                                                            className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
+                                                                        >
+                                                                            <X size={12} className="text-white" />
+                                                                        </button>
+                                                                    </div>
+                                                                ))}
+                                                                {referenceImages.length < 14 && (
+                                                                    <button
+                                                                        onClick={() => referenceFileInputRef.current?.click()}
+                                                                        className="w-10 h-10 flex items-center justify-center border border-dashed border-editor-border rounded-md hover:border-editor-accent hover:bg-editor-panel-bg text-editor-text-secondary hover:text-editor-accent transition-all"
+                                                                    >
+                                                                        <Plus size={14} />
+                                                                    </button>
+                                                                )}
+                                                            </div>
+                                                        ) : (
+                                                            <div className="flex flex-col items-center py-2 text-editor-text-secondary">
+                                                                <Upload size={16} className="mb-1" />
+                                                                <span className="text-[10px] font-medium">{t('dashboard.imagePicker.clickOrDragRef', 'Click or drag images')}</span>
+                                                            </div>
+                                                        )}
+                                                    </div>
                                                 </div>
 
                                                 {/* Aspect Ratio */}
@@ -565,7 +703,7 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
                                                     <select
                                                         value={style}
                                                         onChange={(e) => setStyle(e.target.value)}
-                                                        className="w-full bg-editor-panel-bg border border-editor-border rounded-md px-3 py-1.5 text-xs text-white focus:outline-none focus:border-editor-accent"
+                                                        className="w-full bg-editor-panel-bg border border-editor-border rounded-md px-3 py-1.5 text-xs text-editor-text-primary focus:outline-none focus:border-editor-accent"
                                                     >
                                                         {STYLES.map(s => (
                                                             <option key={s} value={s}>{s}</option>
@@ -724,7 +862,7 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
                                                             }
                                                         }}
                                                         disabled={isSavingGenerated}
-                                                        className="flex items-center gap-2 bg-editor-accent text-editor-bg px-6 py-2 rounded-lg font-bold shadow-lg transform transition-all hover:scale-105 hover:bg-white disabled:opacity-50"
+                                                        className="flex items-center gap-2 bg-editor-accent text-editor-bg px-6 py-2 rounded-lg font-bold shadow-lg transform transition-all hover:scale-105 hover:bg-editor-panel-bg hover:text-editor-accent disabled:opacity-50"
                                                     >
                                                         {isSavingGenerated ? <Loader2 className="animate-spin" size={18} /> : <Check size={18} />} {t('dashboard.imagePicker.useThisImage')}
                                                     </button>

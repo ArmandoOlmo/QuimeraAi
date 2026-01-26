@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useEditor, EditorContent } from '@tiptap/react';
 import { StarterKit } from '@tiptap/starter-kit';
 import './editor-styles.css';
@@ -38,6 +39,7 @@ interface ModernCMSEditorProps {
 }
 
 const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
+    const { t } = useTranslation();
     // Use CMSContext for posts (scoped to active project)
     const { saveCMSPost } = useCMS();
     // Use EditorContext for other utilities
@@ -275,6 +277,7 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
         }
 
         setIsAiWorking(true);
+        let modelName = 'gemini-2.5-flash';
         try {
             let promptConfig;
             let populatedPrompt = "";
@@ -303,7 +306,7 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
                 }
             }
 
-            const modelName = promptConfig?.model || 'gemini-2.5-flash';
+            modelName = promptConfig?.model || 'gemini-2.5-flash';
 
             const projectId = activeProject?.id || 'modern-cms-editor';
             const response = await generateContentViaProxy(projectId, populatedPrompt, modelName, {}, user?.uid);
@@ -350,12 +353,12 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
     const generateSEO = async () => {
         if (hasApiKey === false) { await promptForKeySelection(); return; }
         setIsAiWorking(true);
+        let modelName = 'gemini-2.5-flash';
         try {
             const contentPreview = editor?.getText().substring(0, 2000) || '';
 
             const promptConfig = getPrompt('cms-generate-seo');
             let populatedPrompt = "";
-            let modelName = 'gemini-2.5-flash';
 
             if (promptConfig) {
                 populatedPrompt = promptConfig.template
@@ -415,7 +418,7 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
             {/* Main Content Area */}
             <div className="flex flex-col flex-1 min-w-0">
                 {/* Use the same SimpleEditorHeader as the rest of the app */}
-                <SimpleEditorHeader />
+                <SimpleEditorHeader showSaveButton={false} showPublishButton={false} />
 
                 <input
                     type="file"
@@ -429,12 +432,12 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
                 {showLinkModal && (
                     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
                         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-6 w-96">
-                            <h3 className="text-lg font-bold mb-4 text-gray-900 dark:text-gray-100">Edit Link</h3>
+                            <h3 className="text-lg font-bold mb-4 text-gray-900 dark:text-gray-100">{t('cms_editor.editLink')}</h3>
                             <input
                                 type="url"
                                 value={linkUrl}
                                 onChange={(e) => setLinkUrl(e.target.value)}
-                                placeholder="https://example.com"
+                                placeholder={t('cms_editor.linkPlaceholder')}
                                 className="w-full bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg px-4 py-2 mb-4 focus:ring-2 focus:ring-primary outline-none text-gray-900 dark:text-gray-100"
                                 autoFocus
                                 onKeyDown={(e) => e.key === 'Enter' && applyLink()}
@@ -444,20 +447,20 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
                                     onClick={removeLink}
                                     className="text-sm text-red-500 hover:text-red-600 font-medium"
                                 >
-                                    Remove Link
+                                    {t('cms_editor.removeLink')}
                                 </button>
                                 <div className="flex gap-2">
                                     <button
                                         onClick={() => setShowLinkModal(false)}
                                         className="px-4 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-lg text-gray-900 dark:text-gray-100"
                                     >
-                                        Cancel
+                                        {t('common.cancel')}
                                     </button>
                                     <button
                                         onClick={applyLink}
                                         className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:opacity-90"
                                     >
-                                        Apply
+                                        {t('common.apply')}
                                     </button>
                                 </div>
                             </div>
@@ -471,7 +474,7 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
                         value={contentImageUrl}
                         onChange={handleContentImageSelect}
                         onClose={() => setShowContentImagePicker(false)}
-                        label="Insert Image"
+                        label={t('cms_editor.insertImage')}
                         defaultOpen={true}
                     />
                 )}
@@ -486,7 +489,7 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
                         <input
                             value={title}
                             onChange={(e) => setTitle(e.target.value)}
-                            placeholder="Enter Post Title..."
+                            placeholder={t('cms_editor.titlePlaceholder')}
                             className="bg-transparent text-xl font-bold placeholder:text-muted-foreground/50 focus:outline-none flex-1 text-foreground"
                         />
                     </div>
@@ -494,15 +497,15 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
                         {lastSaved && (
                             <span className="text-xs text-muted-foreground flex items-center gap-1">
                                 <Check size={12} className="text-green-500" />
-                                Saved {lastSaved.toLocaleTimeString()}
+                                {t('cms_editor.saved', { time: lastSaved.toLocaleTimeString() })}
                             </span>
                         )}
                         <div className="flex items-center bg-secondary rounded-lg p-1 text-xs font-medium">
-                            <button onClick={() => setStatus('draft')} className={`px-3 py-1.5 rounded-md transition-all ${status === 'draft' ? 'bg-background shadow text-foreground' : 'text-muted-foreground hover:text-foreground'}`}>Draft</button>
-                            <button onClick={() => setStatus('published')} className={`px-3 py-1.5 rounded-md transition-all ${status === 'published' ? 'bg-green-500/20 text-green-400' : 'text-muted-foreground hover:text-foreground'}`}>Published</button>
+                            <button onClick={() => setStatus('draft')} className={`px-3 py-1.5 rounded-md transition-all ${status === 'draft' ? 'bg-background shadow text-foreground' : 'text-muted-foreground hover:text-foreground'}`}>{t('cms_editor.draft')}</button>
+                            <button onClick={() => setStatus('published')} className={`px-3 py-1.5 rounded-md transition-all ${status === 'published' ? 'bg-green-500/20 text-green-400' : 'text-muted-foreground hover:text-foreground'}`}>{t('cms_editor.published')}</button>
                         </div>
                         <button onClick={handleSave} disabled={isSaving} className="flex items-center gap-2 bg-primary text-primary-foreground px-5 py-2 rounded-lg font-bold hover:opacity-90 transition-all disabled:opacity-50 shadow-md">
-                            {isSaving ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />} Save
+                            {isSaving ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />} {t('cms_editor.save')}
                         </button>
                         <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className={`p-2 rounded-lg transition-colors ${isSidebarOpen ? 'bg-accent text-accent-foreground' : 'text-muted-foreground hover:bg-secondary'}`}>
                             <MoreVertical size={20} />
@@ -541,40 +544,40 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
                     {isSidebarOpen && (
                         <aside className="w-80 bg-card border-l border-border overflow-y-auto p-6 shrink-0 shadow-xl">
                             <div className="mb-6">
-                                <h3 className="font-bold text-lg mb-1 flex items-center"><Type className="mr-2 text-primary" /> Post Settings</h3>
-                                <p className="text-xs text-muted-foreground">Configure metadata and appearance.</p>
+                                <h3 className="font-bold text-lg mb-1 flex items-center"><Type className="mr-2 text-primary" /> {t('cms_editor.postSettings')}</h3>
+                                <p className="text-xs text-muted-foreground">{t('cms_editor.metaDescription')}</p>
                             </div>
 
                             <div className="space-y-6">
                                 <div>
-                                    <label className="block text-xs font-bold text-muted-foreground uppercase mb-2">URL Slug</label>
+                                    <label className="block text-xs font-bold text-muted-foreground uppercase mb-2">{t('cms_editor.urlSlug')}</label>
                                     <input value={slug} onChange={(e) => setSlug(e.target.value)} className="w-full bg-secondary/50 border border-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-primary outline-none text-foreground" />
                                 </div>
 
                                 <div>
-                                    <label className="block text-xs font-bold text-muted-foreground uppercase mb-2">Featured Image</label>
+                                    <label className="block text-xs font-bold text-muted-foreground uppercase mb-2">{t('cms_editor.featuredImage')}</label>
                                     <ImagePicker label="" value={featuredImage} onChange={setFeaturedImage} />
                                 </div>
 
                                 <div>
-                                    <label className="block text-xs font-bold text-muted-foreground uppercase mb-2">Excerpt</label>
-                                    <textarea value={excerpt} onChange={(e) => setExcerpt(e.target.value)} rows={4} className="w-full bg-secondary/50 border border-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-primary outline-none resize-none text-foreground" placeholder="Short summary for listings..." />
+                                    <label className="block text-xs font-bold text-muted-foreground uppercase mb-2">{t('cms_editor.excerpt')}</label>
+                                    <textarea value={excerpt} onChange={(e) => setExcerpt(e.target.value)} rows={4} className="w-full bg-secondary/50 border border-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-primary outline-none resize-none text-foreground" placeholder={t('cms_editor.excerptPlaceholder')} />
                                 </div>
 
                                 <div className="pt-6 border-t border-border">
                                     <div className="flex justify-between items-center mb-4">
-                                        <h4 className="font-bold text-sm flex items-center"><Globe size={16} className="mr-2" /> SEO Settings</h4>
-                                        <button onClick={generateSEO} disabled={isAiWorking} className="text-xs font-bold text-yellow-400 hover:text-yellow-300 flex items-center"><Sparkles size={12} className="mr-1" /> Auto-Gen</button>
+                                        <h4 className="font-bold text-sm flex items-center"><Globe size={16} className="mr-2" /> {t('cms_editor.seoSettings')}</h4>
+                                        <button onClick={generateSEO} disabled={isAiWorking} className="text-xs font-bold text-yellow-400 hover:text-yellow-300 flex items-center"><Sparkles size={12} className="mr-1" /> {t('cms_editor.autoGen')}</button>
                                     </div>
 
                                     <div className="space-y-4">
                                         <div>
-                                            <label className="block text-xs font-medium text-muted-foreground mb-1">SEO Title</label>
-                                            <input value={seoTitle} onChange={(e) => setSeoTitle(e.target.value)} className="w-full bg-secondary/50 border border-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-primary outline-none text-foreground" placeholder="Max 60 characters" />
+                                            <label className="block text-xs font-medium text-muted-foreground mb-1">{t('cms_editor.seoTitle')}</label>
+                                            <input value={seoTitle} onChange={(e) => setSeoTitle(e.target.value)} className="w-full bg-secondary/50 border border-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-primary outline-none text-foreground" placeholder={t('cms_editor.seoTitlePlaceholder')} />
                                         </div>
                                         <div>
-                                            <label className="block text-xs font-medium text-muted-foreground mb-1">Meta Description</label>
-                                            <textarea value={seoDescription} onChange={(e) => setSeoDescription(e.target.value)} rows={4} className="w-full bg-secondary/50 border border-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-primary outline-none resize-none text-foreground" placeholder="Max 160 characters" />
+                                            <label className="block text-xs font-medium text-muted-foreground mb-1">{t('cms_editor.seoDescription')}</label>
+                                            <textarea value={seoDescription} onChange={(e) => setSeoDescription(e.target.value)} rows={4} className="w-full bg-secondary/50 border border-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-primary outline-none resize-none text-foreground" placeholder={t('cms_editor.seoDescPlaceholder')} />
                                         </div>
                                     </div>
                                 </div>
@@ -588,4 +591,3 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
 };
 
 export default ModernCMSEditor;
-

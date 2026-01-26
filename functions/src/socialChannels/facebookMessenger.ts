@@ -116,7 +116,7 @@ async function processMessagingEvent(pageId: string, event: any): Promise<void> 
 
     // Find project associated with this page
     const projectConfig = await findProjectByPageId(pageId);
-
+    
     if (!projectConfig) {
         console.log(`No project found for page ID: ${pageId}`);
         return;
@@ -244,7 +244,7 @@ async function generateAndSendResponse(
     try {
         // Get AI config
         const aiConfig = projectConfig.aiAssistantConfig;
-
+        
         if (!aiConfig || !aiConfig.isActive) {
             return { success: false, error: 'AI assistant not active' };
         }
@@ -254,7 +254,7 @@ async function generateAndSendResponse(
 
         // Generate AI response using Cloud Function
         const { processIncomingMessage } = await import('./messageProcessor');
-
+        
         // Call the processor
         const response = await processMessageInternal(projectConfig, {
             channel: 'facebook',
@@ -301,7 +301,7 @@ async function processMessageInternal(
 ): Promise<{ success: boolean; response?: string; error?: string }> {
     // Import Gemini (lazily to avoid cold start issues)
     const { GoogleGenerativeAI } = await import('@google/generative-ai');
-
+    
     const apiKey = GEMINI_CONFIG.apiKey;
     if (!apiKey) {
         console.error('[Facebook Webhook] GEMINI_API_KEY not configured');
@@ -310,10 +310,10 @@ async function processMessageInternal(
 
     try {
         const genAI = new GoogleGenerativeAI(apiKey);
-        const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+        const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
 
         const aiConfig = projectConfig.aiAssistantConfig;
-
+        
         // Build prompt
         const systemPrompt = `You are ${aiConfig.agentName}, a ${aiConfig.tone?.toLowerCase() || 'professional'} AI assistant.
 
@@ -364,18 +364,18 @@ YOUR RESPONSE:`;
 async function findProjectByPageId(pageId: string): Promise<any | null> {
     try {
         const usersSnapshot = await db.collection('users').get();
-
+        
         for (const userDoc of usersSnapshot.docs) {
             const projectsSnapshot = await db
                 .collection('users')
                 .doc(userDoc.id)
                 .collection('projects')
                 .get();
-
+            
             for (const projectDoc of projectsSnapshot.docs) {
                 const data = projectDoc.data();
                 const fbConfig = data.aiAssistantConfig?.socialChannels?.facebook;
-
+                
                 if (fbConfig?.pageId === pageId && fbConfig?.enabled) {
                     return {
                         projectId: projectDoc.id,
@@ -387,7 +387,7 @@ async function findProjectByPageId(pageId: string): Promise<any | null> {
                 }
             }
         }
-
+        
         return null;
     } catch (error) {
         console.error('Error finding project:', error);
@@ -401,12 +401,12 @@ async function getSenderProfile(senderId: string, accessToken: string): Promise<
             `https://graph.facebook.com/v18.0/${senderId}?fields=first_name,last_name,profile_pic&access_token=${accessToken}`
         );
         const data = await response.json();
-
+        
         if (data.error) {
             console.warn('Error getting sender profile:', data.error);
             return null;
         }
-
+        
         return {
             name: `${data.first_name || ''} ${data.last_name || ''}`.trim(),
             profilePic: data.profile_pic,
@@ -431,7 +431,7 @@ async function sendFacebookMessage(accessToken: string, recipientId: string, mes
     );
 
     const data = await response.json();
-
+    
     if (data.error) {
         throw new Error(data.error.message);
     }

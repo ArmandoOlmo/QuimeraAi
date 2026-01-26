@@ -58,6 +58,7 @@ import { CreateAppointmentModal } from './components/CreateAppointmentModal';
 import { AppointmentDetailDrawer } from './components/AppointmentDetailDrawer';
 import { GoogleCalendarConnect } from './components/GoogleCalendarConnect';
 import { AIPreparationPanel } from './components/AIPreparationPanel';
+import { CalendarToolbar } from './components/CalendarToolbar';
 
 // Import views
 import { CalendarWeekView } from './views/CalendarWeekView';
@@ -516,7 +517,7 @@ const AppointmentsDashboard: React.FC = () => {
                                     {/* Dropdown */}
                                     {isProjectSelectorOpen && (
                                         <>
-                                            <div 
+                                            <div
                                                 className="fixed inset-0 z-40"
                                                 onClick={() => setIsProjectSelectorOpen(false)}
                                             />
@@ -527,7 +528,7 @@ const AppointmentsDashboard: React.FC = () => {
                                                         Cambio rápido
                                                     </p>
                                                 </div>
-                                                
+
                                                 {/* Recent Projects */}
                                                 {projects.filter(p => p.status !== 'Template').slice(0, 5).map((project) => (
                                                     <button
@@ -536,9 +537,8 @@ const AppointmentsDashboard: React.FC = () => {
                                                             handleProjectSelect(project.id);
                                                             setIsProjectSelectorOpen(false);
                                                         }}
-                                                        className={`w-full flex items-center gap-3 px-4 py-2.5 hover:bg-muted transition-colors ${
-                                                            project.id === effectiveProjectId ? 'bg-primary/10' : ''
-                                                        }`}
+                                                        className={`w-full flex items-center gap-3 px-4 py-2.5 hover:bg-muted transition-colors ${project.id === effectiveProjectId ? 'bg-primary/10' : ''
+                                                            }`}
                                                     >
                                                         <div className="w-8 h-6 rounded overflow-hidden bg-muted flex-shrink-0">
                                                             {project.thumbnailUrl ? (
@@ -600,31 +600,6 @@ const AppointmentsDashboard: React.FC = () => {
                             </div>
                         </div>
 
-                        {/* View Mode Toggle */}
-                        <div className="flex items-center bg-secondary/50 rounded-lg sm:rounded-xl p-0.5 sm:p-1">
-                            {[
-                                { id: 'day' as ViewMode, icon: CalendarDays, label: 'Día' },
-                                { id: 'week' as ViewMode, icon: CalendarRange, label: 'Semana' },
-                                { id: 'month' as ViewMode, icon: Grid, label: 'Mes' },
-                                { id: 'list' as ViewMode, icon: List, label: 'Lista' },
-                            ].map(({ id, icon: Icon, label }) => (
-                                <button
-                                    key={id}
-                                    onClick={() => setViewMode(id)}
-                                    title={label}
-                                    className={`
-                                        p-1.5 sm:p-2 rounded-md sm:rounded-lg transition-all duration-200
-                                        ${viewMode === id
-                                            ? 'bg-background text-primary shadow-sm'
-                                            : 'text-muted-foreground hover:text-foreground'
-                                        }
-                                    `}
-                                >
-                                    <Icon size={16} className="sm:w-[18px] sm:h-[18px]" />
-                                </button>
-                            ))}
-                        </div>
-
                         {/* Google Calendar */}
                         <button
                             onClick={() => setShowGoogleCalendar(!showGoogleCalendar)}
@@ -641,99 +616,28 @@ const AppointmentsDashboard: React.FC = () => {
                                 {isGoogleConnected ? 'Sincronizado' : 'Google'}
                             </span>
                         </button>
-
-                        {/* Create Button */}
-                        <button
-                            onClick={() => {
-                                setCreateModalInitialDate(undefined);
-                                setCreateModalInitialHour(undefined);
-                                setIsCreateModalOpen(true);
-                            }}
-                            className="h-8 sm:h-9 px-2.5 sm:px-4 bg-primary text-primary-foreground rounded-lg sm:rounded-xl font-semibold text-xs sm:text-sm flex items-center gap-1.5 sm:gap-2 hover:opacity-90 transition-opacity shadow-sm"
-                        >
-                            <Plus size={16} className="sm:w-[18px] sm:h-[18px]" />
-                            <span className="hidden sm:inline">Nueva</span>
-                        </button>
                     </div>
                 </header>
 
-                {/* Secondary Header - Navigation & Filters */}
-                <div className="px-3 sm:px-6 py-2 sm:py-3 border-b border-border/50 flex items-center justify-between bg-background/80 backdrop-blur-sm">
-                    {/* Date Navigation */}
-                    <div className="flex items-center gap-1 sm:gap-2">
-                        <button
-                            onClick={() => navigateDate('prev')}
-                            className="p-1.5 sm:p-2 hover:bg-secondary rounded-lg text-muted-foreground hover:text-foreground transition-colors"
-                        >
-                            <ChevronLeft size={18} className="sm:w-5 sm:h-5" />
-                        </button>
-
-                        <button
-                            onClick={() => navigateDate('today')}
-                            className="px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-secondary rounded-lg transition-colors"
-                        >
-                            Hoy
-                        </button>
-
-                        <button
-                            onClick={() => navigateDate('next')}
-                            className="p-1.5 sm:p-2 hover:bg-secondary rounded-lg text-muted-foreground hover:text-foreground transition-colors"
-                        >
-                            <ChevronRight size={18} className="sm:w-5 sm:h-5" />
-                        </button>
-
-                        <h2 className="ml-1 sm:ml-2 text-sm sm:text-lg font-bold text-foreground capitalize line-clamp-1 max-w-[120px] sm:max-w-none">
-                            {getDateLabel()}
-                        </h2>
-                    </div>
-
-                    {/* Search & Filters */}
-                    <div className="flex items-center gap-1 sm:gap-2">
-                        {/* Search */}
-                        <div className="hidden sm:flex items-center gap-2 w-32 sm:w-48 lg:w-64 bg-editor-border/40 rounded-lg px-3 py-2">
-                            <Search className="w-4 h-4 text-editor-text-secondary flex-shrink-0" />
-                            <input
-                                type="text"
-                                placeholder="Buscar..."
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                className="flex-1 bg-transparent outline-none text-sm min-w-0"
-                            />
-                            {searchQuery && (
-                                <button onClick={() => setSearchQuery('')} className="text-editor-text-secondary hover:text-editor-text-primary flex-shrink-0">
-                                    <X size={16} />
-                                </button>
-                            )}
-                        </div>
-
-                        {/* Filter Button */}
-                        <button
-                            onClick={() => setShowFilters(!showFilters)}
-                            className={`
-                                h-8 sm:h-9 px-2 sm:px-3 rounded-xl flex items-center gap-1 sm:gap-2 text-sm font-medium transition-colors
-                                ${showFilters || Object.values(filters).some(v => v && (Array.isArray(v) ? v.length > 0 : true))
-                                    ? 'bg-primary/10 text-primary'
-                                    : 'text-muted-foreground hover:text-foreground hover:bg-secondary'
-                                }
-                            `}
-                        >
-                            <Filter size={16} />
-                        </button>
-
-                        {/* Refresh */}
-                        <button
-                            onClick={refresh}
-                            disabled={isLoading}
-                            className="h-8 w-8 sm:h-9 sm:w-9 flex items-center justify-center rounded-xl text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors disabled:opacity-50"
-                        >
-                            {isLoading ? (
-                                <Loader2 size={16} className="sm:w-[18px] sm:h-[18px] animate-spin" />
-                            ) : (
-                                <RefreshCw size={16} className="sm:w-[18px] sm:h-[18px]" />
-                            )}
-                        </button>
-                    </div>
-                </div>
+                {/* Toolbar */}
+                <CalendarToolbar
+                    currentDate={currentDate}
+                    viewMode={viewMode}
+                    onViewModeChange={setViewMode}
+                    onNavigate={navigateDate}
+                    dateLabel={getDateLabel()}
+                    onSearch={setSearchQuery}
+                    searchQuery={searchQuery}
+                    onToggleFilters={() => setShowFilters(!showFilters)}
+                    showFilters={showFilters}
+                    onRefresh={refresh}
+                    isLoading={isLoading}
+                    onCreateClick={() => {
+                        setCreateModalInitialDate(undefined);
+                        setCreateModalInitialHour(undefined);
+                        setIsCreateModalOpen(true);
+                    }}
+                />
 
                 {/* Filters Panel */}
                 {showFilters && (

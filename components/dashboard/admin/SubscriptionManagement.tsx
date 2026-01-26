@@ -76,6 +76,7 @@ import {
     archivePlan,
     restorePlan,
     initializePlansInFirestore,
+    syncPlansFromHardcoded,
     getPlanStatistics,
     StoredPlan,
     PlanStats,
@@ -124,9 +125,9 @@ const DailyUsageChart: React.FC<{ data: Array<{ date: string; credits: number }>
     const chartHeight = 200;
     const chartWidth = 600;
     const maxCredits = Math.max(...data.map(d => d.credits), 1);
-    
+
     const barWidth = chartWidth / data.length - 4;
-    
+
     return (
         <div className="bg-editor-panel-bg p-6 rounded-xl border border-editor-border">
             <h3 className="text-lg font-semibold text-editor-text-primary mb-4 flex items-center gap-2">
@@ -140,7 +141,7 @@ const DailyUsageChart: React.FC<{ data: Array<{ date: string; credits: number }>
                         const x = i * (barWidth + 4) + 2;
                         const y = chartHeight - barHeight;
                         const isToday = i === data.length - 1;
-                        
+
                         return (
                             <g key={i} className="group">
                                 <rect
@@ -194,7 +195,7 @@ const DailyUsageChart: React.FC<{ data: Array<{ date: string; credits: number }>
  */
 const OperationDistributionChart: React.FC<{ data: Record<string, number> }> = ({ data }) => {
     const total = Object.values(data).reduce((sum, val) => sum + val, 0);
-    
+
     const operationLabels: Record<string, string> = {
         image_generation: 'Imágenes',
         image_generation_fast: 'Imágenes Rápidas',
@@ -210,7 +211,7 @@ const OperationDistributionChart: React.FC<{ data: Record<string, number> }> = (
         email_generation: 'Emails',
         translation: 'Traducciones',
     };
-    
+
     const operationColors: Record<string, string> = {
         image_generation: '#8b5cf6',
         image_generation_fast: '#a78bfa',
@@ -226,11 +227,11 @@ const OperationDistributionChart: React.FC<{ data: Record<string, number> }> = (
         email_generation: '#84cc16',
         translation: '#a855f7',
     };
-    
+
     const sortedData = Object.entries(data)
         .sort((a, b) => b[1] - a[1])
         .slice(0, 8);
-    
+
     return (
         <div className="bg-editor-panel-bg p-6 rounded-xl border border-editor-border">
             <h3 className="text-lg font-semibold text-editor-text-primary mb-4 flex items-center gap-2">
@@ -241,7 +242,7 @@ const OperationDistributionChart: React.FC<{ data: Record<string, number> }> = (
                 {sortedData.map(([operation, count]) => {
                     const percentage = total > 0 ? (count / total) * 100 : 0;
                     const color = operationColors[operation] || '#6b7280';
-                    
+
                     return (
                         <div key={operation}>
                             <div className="flex items-center justify-between mb-1">
@@ -272,15 +273,15 @@ const OperationDistributionChart: React.FC<{ data: Record<string, number> }> = (
 /**
  * Card de distribución de planes
  */
-const PlanDistributionCard: React.FC<{ 
+const PlanDistributionCard: React.FC<{
     planStats: Record<string, PlanStats>;
     plans: Record<string, StoredPlan>;
 }> = ({ planStats, plans }) => {
     const total = Object.values(planStats).reduce((sum, stat) => sum + stat.activeSubscribers, 0);
-    
+
     // Usar los planes cargados o fallback a SUBSCRIPTION_PLANS
     const plansToShow = Object.keys(plans).length > 0 ? plans : SUBSCRIPTION_PLANS;
-    
+
     return (
         <div className="bg-editor-panel-bg p-6 rounded-xl border border-editor-border">
             <h3 className="text-lg font-semibold text-editor-text-primary mb-4 flex items-center gap-2">
@@ -291,7 +292,7 @@ const PlanDistributionCard: React.FC<{
                 {Object.entries(plansToShow).map(([planId, plan]) => {
                     const count = planStats[planId]?.activeSubscribers || 0;
                     const percentage = total > 0 ? (count / total) * 100 : 0;
-                    
+
                     return (
                         <div key={planId} className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
@@ -331,9 +332,9 @@ const AddCreditsModal: React.FC<{
     const [credits, setCredits] = useState(100);
     const [reason, setReason] = useState('');
     const [isLoading, setIsLoading] = useState(false);
-    
+
     if (!isOpen || !tenant) return null;
-    
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsLoading(true);
@@ -346,7 +347,7 @@ const AddCreditsModal: React.FC<{
             setIsLoading(false);
         }
     };
-    
+
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
             <div className="bg-editor-panel-bg rounded-xl border border-editor-border w-full max-w-md p-6">
@@ -362,7 +363,7 @@ const AddCreditsModal: React.FC<{
                         <X className="w-5 h-5" />
                     </button>
                 </div>
-                
+
                 <div className="mb-4 p-3 bg-editor-bg rounded-lg">
                     <p className="text-sm text-editor-text-secondary">Tenant</p>
                     <p className="text-editor-text-primary font-medium">{tenant.tenantName}</p>
@@ -370,7 +371,7 @@ const AddCreditsModal: React.FC<{
                         Credits actuales: {tenant.creditsRemaining.toLocaleString()} / {tenant.creditsIncluded.toLocaleString()}
                     </p>
                 </div>
-                
+
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
                         <label className="block text-sm text-editor-text-secondary mb-2">
@@ -402,7 +403,7 @@ const AddCreditsModal: React.FC<{
                             placeholder="O ingresa una cantidad personalizada"
                         />
                     </div>
-                    
+
                     <div>
                         <label className="block text-sm text-editor-text-secondary mb-2">
                             Razón (opcional)
@@ -415,7 +416,7 @@ const AddCreditsModal: React.FC<{
                             placeholder="Ej: Compensación por problema técnico"
                         />
                     </div>
-                    
+
                     <div className="flex gap-3 pt-4">
                         <button
                             type="button"
@@ -448,7 +449,7 @@ const TenantRow: React.FC<{
 }> = ({ tenant, onAddCredits, onViewDetails }) => {
     const usageColor = getUsageColor(tenant.usagePercentage);
     const plan = SUBSCRIPTION_PLANS[tenant.planId];
-    
+
     return (
         <tr className="border-b border-editor-border hover:bg-editor-bg transition-colors">
             <td className="p-4">
@@ -530,18 +531,18 @@ const SubscriptionManagement: React.FC<SubscriptionManagementProps> = ({ onBack 
     const [isRefreshing, setIsRefreshing] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-    
+
     // Data states
     const [globalStats, setGlobalStats] = useState<GlobalStats | null>(null);
     const [tenants, setTenants] = useState<TenantCreditsData[]>([]);
     const [recentTransactions, setRecentTransactions] = useState<AiCreditTransaction[]>([]);
-    
+
     // UI states
     const [searchQuery, setSearchQuery] = useState('');
     const [filterPlan, setFilterPlan] = useState<SubscriptionPlanId | 'all'>('all');
     const [sortBy, setSortBy] = useState<'usage' | 'name' | 'remaining'>('usage');
     const [activeTab, setActiveTab] = useState<'overview' | 'tenants' | 'transactions' | 'plans'>('overview');
-    
+
     // Plans states
     const [plans, setPlans] = useState<Record<string, StoredPlan>>({});
     const [planStats, setPlanStats] = useState<Record<string, PlanStats>>({});
@@ -552,21 +553,21 @@ const SubscriptionManagement: React.FC<SubscriptionManagementProps> = ({ onBack 
         isOpen: boolean;
         tenant: TenantCreditsData | null;
     }>({ isOpen: false, tenant: null });
-    
+
     const [planEditorModal, setPlanEditorModal] = useState<{
         isOpen: boolean;
         plan: StoredPlan | null;
     }>({ isOpen: false, plan: null });
-    
+
     // Cargar datos
     const loadData = useCallback(async () => {
         try {
             setError(null);
-            
+
             // Cargar uso de credits de todos los tenants
             const usageSnapshot = await getDocs(collection(db, 'aiCreditsUsage'));
             const usageData: TenantCreditsData[] = [];
-            
+
             let totalCreditsUsed = 0;
             let totalCreditsAllocated = 0;
             let tenantsNearLimit = 0;
@@ -576,11 +577,11 @@ const SubscriptionManagement: React.FC<SubscriptionManagementProps> = ({ onBack 
             };
             const usageByOperation: Record<string, number> = {};
             const dailyUsageMap: Record<string, number> = {};
-            
+
             for (const doc of usageSnapshot.docs) {
                 const data = doc.data() as AiCreditsUsage;
                 const tenantId = doc.id;
-                
+
                 // Obtener nombre del tenant
                 let tenantName = tenantId;
                 try {
@@ -593,11 +594,11 @@ const SubscriptionManagement: React.FC<SubscriptionManagementProps> = ({ onBack 
                 } catch (e) {
                     // Ignore
                 }
-                
+
                 const usagePercentage = data.creditsIncluded > 0
                     ? Math.round((data.creditsUsed / data.creditsIncluded) * 100)
                     : 0;
-                
+
                 // Determinar plan basado en credits incluidos
                 let planId: SubscriptionPlanId = 'free';
                 for (const [id, plan] of Object.entries(SUBSCRIPTION_PLANS)) {
@@ -606,7 +607,7 @@ const SubscriptionManagement: React.FC<SubscriptionManagementProps> = ({ onBack 
                         break;
                     }
                 }
-                
+
                 usageData.push({
                     tenantId,
                     tenantName,
@@ -616,22 +617,22 @@ const SubscriptionManagement: React.FC<SubscriptionManagementProps> = ({ onBack 
                     creditsRemaining: data.creditsRemaining || 0,
                     usagePercentage,
                 });
-                
+
                 // Actualizar estadísticas globales
                 totalCreditsUsed += data.creditsUsed || 0;
                 totalCreditsAllocated += data.creditsIncluded || 0;
                 planDistribution[planId]++;
-                
+
                 if (usagePercentage >= 80 && usagePercentage < 100) tenantsNearLimit++;
                 if (usagePercentage >= 100) tenantsOverLimit++;
-                
+
                 // Agregar uso por operación
                 if (data.usageByOperation) {
                     for (const [op, count] of Object.entries(data.usageByOperation)) {
                         usageByOperation[op] = (usageByOperation[op] || 0) + (count as number);
                     }
                 }
-                
+
                 // Agregar uso diario
                 if (data.dailyUsage) {
                     for (const day of data.dailyUsage) {
@@ -639,18 +640,18 @@ const SubscriptionManagement: React.FC<SubscriptionManagementProps> = ({ onBack 
                     }
                 }
             }
-            
+
             // Convertir uso diario a array ordenado
             const dailyUsage = Object.entries(dailyUsageMap)
                 .map(([date, credits]) => ({ date, credits }))
                 .sort((a, b) => a.date.localeCompare(b.date))
                 .slice(-30);
-            
+
             // Calcular promedio de uso
             const averageUsagePercentage = usageData.length > 0
                 ? Math.round(usageData.reduce((sum, t) => sum + t.usagePercentage, 0) / usageData.length)
                 : 0;
-            
+
             setGlobalStats({
                 totalTenants: usageData.length,
                 totalCreditsUsed,
@@ -662,9 +663,9 @@ const SubscriptionManagement: React.FC<SubscriptionManagementProps> = ({ onBack 
                 usageByOperation,
                 dailyUsage,
             });
-            
+
             setTenants(usageData);
-            
+
             // Cargar transacciones recientes
             const transactionsSnapshot = await getDocs(
                 query(
@@ -673,22 +674,22 @@ const SubscriptionManagement: React.FC<SubscriptionManagementProps> = ({ onBack 
                     limit(50)
                 )
             );
-            
+
             const transactions: AiCreditTransaction[] = transactionsSnapshot.docs.map(doc => ({
                 id: doc.id,
                 ...doc.data(),
             } as AiCreditTransaction));
-            
+
             setRecentTransactions(transactions);
-            
+
             // Cargar planes desde Firestore
             const loadedPlans = await getAllPlans();
             setPlans(loadedPlans);
-            
+
             // Cargar estadísticas de planes
             const stats = await getPlanStatistics();
             setPlanStats(stats);
-            
+
         } catch (err) {
             console.error('Error loading subscription data:', err);
             setError('Error al cargar los datos de suscripciones');
@@ -697,23 +698,23 @@ const SubscriptionManagement: React.FC<SubscriptionManagementProps> = ({ onBack 
             setIsRefreshing(false);
         }
     }, []);
-    
+
     useEffect(() => {
         loadData();
     }, [loadData]);
-    
+
     const handleRefresh = () => {
         setIsRefreshing(true);
         loadData();
     };
-    
+
     const handleAddCredits = async (tenantId: string, credits: number, reason: string) => {
         const success = await addCredits(tenantId, credits, 'manual', { reason });
         if (success) {
             await loadData();
         }
     };
-    
+
     // Plan handlers
     const handleSavePlan = async (plan: StoredPlan) => {
         const result = await savePlan(plan, user?.uid);
@@ -727,7 +728,7 @@ const SubscriptionManagement: React.FC<SubscriptionManagementProps> = ({ onBack 
             throw new Error(result.error);
         }
     };
-    
+
     const handleArchivePlan = async (planId: string) => {
         if (!confirm('¿Estás seguro de archivar este plan? Los usuarios existentes no serán afectados.')) return;
         const result = await archivePlan(planId, user?.uid);
@@ -740,7 +741,7 @@ const SubscriptionManagement: React.FC<SubscriptionManagementProps> = ({ onBack 
             setError(result.error || 'Error al archivar el plan');
         }
     };
-    
+
     const handleRestorePlan = async (planId: string) => {
         const result = await restorePlan(planId, user?.uid);
         if (result.success) {
@@ -749,7 +750,7 @@ const SubscriptionManagement: React.FC<SubscriptionManagementProps> = ({ onBack 
             setError(result.error || 'Error al restaurar el plan');
         }
     };
-    
+
     const handleInitializePlans = async () => {
         if (!confirm('¿Inicializar los planes en Firestore? Esto solo funciona si no hay planes existentes.')) return;
         setIsRefreshing(true);
@@ -761,7 +762,24 @@ const SubscriptionManagement: React.FC<SubscriptionManagementProps> = ({ onBack 
         }
         setIsRefreshing(false);
     };
-    
+
+    const handleSyncPlansFromCode = async () => {
+        if (!confirm('¿Sincronizar los planes del código a Firestore? Esto actualizará los planes existentes y creará nuevos planes como "Hobby".')) return;
+        setIsRefreshing(true);
+        try {
+            const result = await syncPlansFromHardcoded(user?.uid);
+            if (result.success) {
+                await loadData();
+                alert(`Sincronización completada: ${result.plansCreated} creados, ${result.plansUpdated} actualizados`);
+            } else {
+                setError(result.error || 'Error al sincronizar planes');
+            }
+        } catch (err) {
+            setError('Error al sincronizar planes desde el código');
+        }
+        setIsRefreshing(false);
+    };
+
     // Filtrar y ordenar tenants
     const filteredTenants = tenants
         .filter(t => {
@@ -781,7 +799,7 @@ const SubscriptionManagement: React.FC<SubscriptionManagementProps> = ({ onBack 
                     return 0;
             }
         });
-    
+
     if (isLoading) {
         return (
             <div className="flex h-screen bg-editor-bg items-center justify-center">
@@ -792,7 +810,7 @@ const SubscriptionManagement: React.FC<SubscriptionManagementProps> = ({ onBack 
             </div>
         );
     }
-    
+
     return (
         <>
             <AddCreditsModal
@@ -801,10 +819,10 @@ const SubscriptionManagement: React.FC<SubscriptionManagementProps> = ({ onBack 
                 tenant={addCreditsModal.tenant}
                 onAddCredits={handleAddCredits}
             />
-            
+
             <div className="flex h-screen bg-editor-bg text-editor-text-primary">
                 <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
-                
+
                 <div className="flex-1 flex flex-col overflow-hidden">
                     {/* Header */}
                     <header className="h-14 bg-editor-bg border-b border-editor-border flex-shrink-0 flex items-center justify-between px-4 sm:px-6 sticky top-0 z-10">
@@ -828,7 +846,7 @@ const SubscriptionManagement: React.FC<SubscriptionManagementProps> = ({ onBack 
                                 </h1>
                             </div>
                         </div>
-                        
+
                         <div className="flex items-center gap-2">
                             <button
                                 onClick={handleRefresh}
@@ -839,7 +857,7 @@ const SubscriptionManagement: React.FC<SubscriptionManagementProps> = ({ onBack 
                             </button>
                         </div>
                     </header>
-                    
+
                     {/* Tabs */}
                     <div className="px-4 sm:px-6 border-b border-editor-border">
                         <div className="flex gap-1">
@@ -866,7 +884,7 @@ const SubscriptionManagement: React.FC<SubscriptionManagementProps> = ({ onBack 
                             ))}
                         </div>
                     </div>
-                    
+
                     {/* Content */}
                     <main className="flex-1 p-4 sm:p-6 overflow-y-auto">
                         {error && (
@@ -881,7 +899,7 @@ const SubscriptionManagement: React.FC<SubscriptionManagementProps> = ({ onBack 
                                 </button>
                             </div>
                         )}
-                        
+
                         {/* Overview Tab */}
                         {activeTab === 'overview' && globalStats && (
                             <div className="space-y-6">
@@ -908,16 +926,16 @@ const SubscriptionManagement: React.FC<SubscriptionManagementProps> = ({ onBack 
                                         icon={<AlertCircle className="w-6 h-6" />}
                                     />
                                 </div>
-                                
+
                                 {/* Charts */}
                                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                                     <DailyUsageChart data={globalStats.dailyUsage} />
                                     <OperationDistributionChart data={globalStats.usageByOperation} />
                                 </div>
-                                
+
                                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                                     <PlanDistributionCard planStats={planStats} plans={plans} />
-                                    
+
                                     {/* Alertas */}
                                     <div className="lg:col-span-2 bg-editor-panel-bg p-6 rounded-xl border border-editor-border">
                                         <h3 className="text-lg font-semibold text-editor-text-primary mb-4 flex items-center gap-2">
@@ -966,7 +984,7 @@ const SubscriptionManagement: React.FC<SubscriptionManagementProps> = ({ onBack 
                                 </div>
                             </div>
                         )}
-                        
+
                         {/* Tenants Tab */}
                         {activeTab === 'tenants' && (
                             <div className="space-y-4">
@@ -1002,7 +1020,7 @@ const SubscriptionManagement: React.FC<SubscriptionManagementProps> = ({ onBack 
                                         <option value="remaining">Ordenar por restantes</option>
                                     </select>
                                 </div>
-                                
+
                                 {/* Table */}
                                 <div className="bg-editor-panel-bg rounded-xl border border-editor-border overflow-hidden">
                                     <div className="overflow-x-auto">
@@ -1032,7 +1050,7 @@ const SubscriptionManagement: React.FC<SubscriptionManagementProps> = ({ onBack 
                                             </tbody>
                                         </table>
                                     </div>
-                                    
+
                                     {filteredTenants.length === 0 && (
                                         <div className="p-8 text-center text-editor-text-secondary">
                                             No se encontraron tenants
@@ -1041,7 +1059,7 @@ const SubscriptionManagement: React.FC<SubscriptionManagementProps> = ({ onBack 
                                 </div>
                             </div>
                         )}
-                        
+
                         {/* Transactions Tab */}
                         {activeTab === 'transactions' && (
                             <div className="space-y-4">
@@ -1086,7 +1104,7 @@ const SubscriptionManagement: React.FC<SubscriptionManagementProps> = ({ onBack 
                                             </div>
                                         ))}
                                     </div>
-                                    
+
                                     {recentTransactions.length === 0 && (
                                         <div className="p-8 text-center text-editor-text-secondary">
                                             No hay transacciones recientes
@@ -1095,7 +1113,7 @@ const SubscriptionManagement: React.FC<SubscriptionManagementProps> = ({ onBack 
                                 </div>
                             </div>
                         )}
-                        
+
                         {/* Plans Tab */}
                         {activeTab === 'plans' && (
                             <div className="space-y-6">
@@ -1134,6 +1152,15 @@ const SubscriptionManagement: React.FC<SubscriptionManagementProps> = ({ onBack 
                                             </button>
                                         )}
                                         <button
+                                            onClick={handleSyncPlansFromCode}
+                                            disabled={isRefreshing}
+                                            className="px-4 py-2 rounded-lg bg-cyan-500/20 text-cyan-400 text-sm font-medium hover:bg-cyan-500/30 transition-colors flex items-center gap-2"
+                                            title="Sincronizar planes del código a Firestore (crea Hobby y actualiza Free)"
+                                        >
+                                            <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                                            Sync desde Código
+                                        </button>
+                                        <button
                                             onClick={() => setPlanEditorModal({ isOpen: true, plan: null })}
                                             className="px-4 py-2 rounded-lg bg-editor-accent text-white text-sm font-medium hover:opacity-90 transition-colors flex items-center gap-2"
                                         >
@@ -1142,7 +1169,7 @@ const SubscriptionManagement: React.FC<SubscriptionManagementProps> = ({ onBack 
                                         </button>
                                     </div>
                                 </div>
-                                
+
                                 {/* Plans Grid */}
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                     {Object.values(plans)
@@ -1150,7 +1177,7 @@ const SubscriptionManagement: React.FC<SubscriptionManagementProps> = ({ onBack 
                                         .sort((a, b) => (a.price?.monthly || 0) - (b.price?.monthly || 0))
                                         .map(plan => {
                                             const stats = planStats[plan.id];
-                                            
+
                                             return (
                                                 <div
                                                     key={plan.id}
@@ -1221,7 +1248,7 @@ const SubscriptionManagement: React.FC<SubscriptionManagementProps> = ({ onBack 
                                                             {plan.description}
                                                         </p>
                                                     </div>
-                                                    
+
                                                     {/* Pricing */}
                                                     <div className="p-4 border-b border-editor-border">
                                                         <div className="flex items-baseline gap-1">
@@ -1236,7 +1263,7 @@ const SubscriptionManagement: React.FC<SubscriptionManagementProps> = ({ onBack 
                                                             </p>
                                                         )}
                                                     </div>
-                                                    
+
                                                     {/* Key Limits */}
                                                     <div className="p-4 space-y-2">
                                                         <div className="flex items-center justify-between text-sm">
@@ -1267,7 +1294,7 @@ const SubscriptionManagement: React.FC<SubscriptionManagementProps> = ({ onBack 
                                                             </span>
                                                         </div>
                                                     </div>
-                                                    
+
                                                     {/* Stats */}
                                                     {stats && (
                                                         <div className="px-4 pb-4">
@@ -1297,7 +1324,7 @@ const SubscriptionManagement: React.FC<SubscriptionManagementProps> = ({ onBack 
                                             );
                                         })}
                                 </div>
-                                
+
                                 {Object.keys(plans).length === 0 && (
                                     <div className="bg-editor-panel-bg rounded-xl border border-editor-border p-8 text-center">
                                         <Layers className="w-12 h-12 text-editor-text-secondary mx-auto mb-4" />
@@ -1328,7 +1355,7 @@ const SubscriptionManagement: React.FC<SubscriptionManagementProps> = ({ onBack 
                     </main>
                 </div>
             </div>
-            
+
             {/* Plan Editor Modal */}
             <UnifiedPlanEditor
                 isOpen={planEditorModal.isOpen}

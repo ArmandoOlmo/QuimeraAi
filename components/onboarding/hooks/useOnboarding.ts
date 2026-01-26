@@ -2355,6 +2355,7 @@ TEMPLATE #${t.index}: "${t.name}"
         updateServices,
         updateTemplateSelection,
         updateContactInfo,
+        updateLanguage: (language: string) => updateProgress({ language }),
 
         // Ecommerce Updates
         updateEcommerceSettings,
@@ -2378,6 +2379,7 @@ TEMPLATE #${t.index}: "${t.name}"
         loadProgress,
         clearProgress,
     };
+
 };
 
 export default useOnboarding;

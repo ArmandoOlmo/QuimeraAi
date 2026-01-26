@@ -1561,6 +1561,132 @@
       "actions": "Actions"
     }
   },
+  "cms_editor": {
+    "postSettings": "Post Settings",
+    "metaDescription": "Configure metadata and appearance.",
+    "urlSlug": "URL Slug",
+    "featuredImage": "Featured Image",
+    "excerpt": "Excerpt",
+    "excerptPlaceholder": "Short summary for listings...",
+    "seoSettings": "SEO Settings",
+    "autoGen": "Auto-Gen",
+    "seoTitle": "SEO Title",
+    "seoTitlePlaceholder": "Max 60 characters",
+    "seoDescription": "Meta Description",
+    "seoDescPlaceholder": "Max 160 characters",
+    "draft": "Draft",
+    "published": "Published",
+    "save": "Save",
+    "saved": "Saved {{time}}",
+    "titlePlaceholder": "Enter Post Title...",
+    "editLink": "Edit Link",
+    "linkPlaceholder": "https://example.com",
+    "removeLink": "Remove Link",
+    "insertImage": "Insert Image",
+    "toolbar": {
+      "undo": "Undo",
+      "redo": "Redo",
+      "paragraph": "Paragraph",
+      "h1": "Heading 1",
+      "h2": "Heading 2",
+      "h3": "Heading 3",
+      "quote": "Quote",
+      "bold": "Bold",
+      "italic": "Italic",
+      "underline": "Underline",
+      "strikethrough": "Strikethrough",
+      "code": "Code",
+      "textColor": "Text Color",
+      "highlight": "Highlight",
+      "removeHighlight": "Remove Highlight",
+      "alignLeft": "Align Left",
+      "alignCenter": "Center",
+      "alignRight": "Align Right",
+      "alignJustify": "Justify",
+      "bulletList": "Bullet List",
+      "numberedList": "Numbered List",
+      "table": "Insert Table",
+      "horizontalLine": "Horizontal Line",
+      "clearFormatting": "Clear Formatting"
+    },
+    "commands": {
+      "title": "Commands",
+      "h1Desc": "Large section heading",
+      "h2Desc": "Medium section heading",
+      "h3Desc": "Small section heading",
+      "ulDesc": "Create a bullet list",
+      "olDesc": "Create a numbered list",
+      "quoteDesc": "Insert a quote block",
+      "codeDesc": "Insert a code block",
+      "imageDesc": "Upload an image",
+      "tableDesc": "Insert a table",
+      "hrDesc": "Insert a horizontal line",
+      "aiContinueDesc": "Let AI continue writing",
+      "aiImproveDesc": "Improve selected text"
+    },
+    "assistant": {
+      "ai": "AI",
+      "improve": "Improve",
+      "fix": "Fix",
+      "continue": "Continue"
+    },
+    "errors": {
+      "failedToSave": "Failed to save",
+      "titleRequired": "Title is required",
+      "uploadFailed": "Failed to upload image.",
+      "aiGenerationFailed": "AI generation failed. Please try again.",
+      "selectTextFirst": "Please select some text first."
+    }
+  },
+  "cms_assistant": {
+    "title": "AI Content Assistant",
+    "subtitle": "Step-by-step guided creation",
+    "stepTopic": "What do you want to write about today?",
+    "stepTopicDesc": "Tell me the main topic, an idea, or even a provisional title.",
+    "topicPlaceholder": "e.g., The benefits of yoga for developers...",
+    "stepDetails": "Additional details",
+    "audienceLabel": "Who is it for? (Audience)",
+    "audiencePlaceholder": "e.g., Beginners, Experts, Potential customers...",
+    "toneLabel": "What is the desired tone?",
+    "tones": {
+      "professional": "Professional",
+      "friendly": "Friendly",
+      "persuasive": "Persuasive",
+      "informative": "Informative",
+      "inspirational": "Inspirational",
+      "funny": "Funny",
+      "minimalist": "Minimalist"
+    },
+    "generating": "AI is writing...",
+    "generatingDesc": "Structuring your article, creating engaging titles, and drafting content.",
+    "success": "Content generated successfully!",
+    "successDesc": "Review the summary before taking it to the editor.",
+    "previewTitle": "Title",
+    "previewExcerpt": "Summary",
+    "previewContent": "Content preview",
+    "noContent": "No content generated",
+    "retry": "Retry",
+    "back": "Back",
+    "next": "Next",
+    "generateDraft": "Generate Draft",
+    "openInEditor": "Open in Editor",
+    "errorGenerating": "There was an error generating the content. Please try again."
+  },
+  "cms_assistant_step2": {
+    "title": "Structure and Style",
+    "subtitle": "Define how you want the content to be generated.",
+    "lengthLabel": "Desired length",
+    "lengths": {
+      "short": "Short (~300 words)",
+      "medium": "Medium (~600 words)",
+      "long": "Long (+1000 words)"
+    },
+    "includeImages": "Include space for images",
+    "includeFaq": "Include FAQ section",
+    "includeSeo": "Include SEO metadata",
+    "generate": "Generate Content",
+    "back": "Back"
+  },
   "aiAssistant": {
     "title": "AI Assistant",
     "chatbot": "Chatbot",
@@ -1797,6 +1923,55 @@
     "trendAnalysis": "Trend Analysis",
     "analyzeDesc": "Predict future expenses and find savings opportunities",
     "analyzeTrends": "Analyze Trends",
+    "recategorizing": "Recategorizing...",
+    "pending": "Pending",
+    "recentActivity": "Recent Activity",
+    "noRecentActivity": "No recent activity",
+    "viewAllMovements": "View all movements →",
+    "aiAlerts": "AI Alerts",
+    "goToAnalysis": "Go to Analysis →",
+    "upload": {
+      "title": "Upload your Invoice or Receipt",
+      "description": "AI will automatically extract the information and categorize the expense",
+      "processing": "Processing with AI..."
+    },
+    "charts": {
+      "expenses": "Expenses",
+      "average": "Average",
+      "waitingForData": "Waiting for expense data..."
+    },
+    "filters": {
+      "allCategories": "All Categories",
+      "time": {
+        "thisMonth": "This Month",
+        "lastMonth": "Last Month",
+        "last90Days": "Last 90 Days",
+        "thisYear": "This Year",
+        "all": "All",
+        "custom": "Custom"
+      }
+    },
+    "details": {
+      "totalAmount": "Total Amount",
+      "verifiedApproved": "Verified and Approved",
+      "pendingReview": "Pending Review",
+      "selectMovement": "Select a Movement",
+      "selectMovementDesc": "Click on any record in the table to view and edit its details."
+    },
+    "items": {
+      "detected": "Detected Items",
+      "scanTag": "AI SCAN",
+      "description": "Item description",
+      "quantity": "Qty:",
+      "uncategorized": "Uncategorized",
+      "noItems": "No individual items detected."
+    },
+    "analysis": {
+      "generatedReport": "Generated Report",
+      "predictiveAnalysis": "Predictive Analysis",
+      "noDataTitle": "No Data to Analyze",
+      "noDataDesc": "Upload some receipts first to unlock AI analytics."
+    },
     "categories": {
       "office": "Office",
       "marketing": "Marketing",

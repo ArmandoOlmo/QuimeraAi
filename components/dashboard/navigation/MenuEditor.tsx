@@ -300,16 +300,16 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onClose, isNew, projectId
                         <span className="text-sm font-semibold">Articles</span>
                     </div>
                     <div className="p-2 border-b border-border">
-                        <div className="flex items-center gap-1.5 bg-editor-border/40 rounded px-2 py-1">
-                            <Search size={12} className="text-editor-text-secondary flex-shrink-0" />
+                        <div className="flex items-center gap-1.5 bg-secondary/50 border border-border rounded px-2 py-1">
+                            <Search size={12} className="text-muted-foreground flex-shrink-0" />
                             <input
-                                className="flex-1 bg-transparent outline-none text-xs min-w-0"
+                                className="flex-1 bg-transparent outline-none text-xs min-w-0 text-foreground placeholder:text-muted-foreground"
                                 placeholder="Search articles..."
                                 value={articleSearch}
                                 onChange={(e) => setArticleSearch(e.target.value)}
                             />
                             {articleSearch && (
-                                <button onClick={() => setArticleSearch('')} className="text-editor-text-secondary hover:text-editor-text-primary flex-shrink-0">
+                                <button onClick={() => setArticleSearch('')} className="text-muted-foreground hover:text-foreground flex-shrink-0">
                                     <X size={12} />
                                 </button>
                             )}
@@ -455,16 +455,16 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onClose, isNew, projectId
                         <span className="text-sm font-semibold">Products</span>
                     </div>
                     <div className="p-2 border-b border-border">
-                        <div className="flex items-center gap-1.5 bg-editor-border/40 rounded px-2 py-1">
-                            <Search size={12} className="text-editor-text-secondary flex-shrink-0" />
+                        <div className="flex items-center gap-1.5 bg-secondary/50 border border-border rounded px-2 py-1">
+                            <Search size={12} className="text-muted-foreground flex-shrink-0" />
                             <input
-                                className="flex-1 bg-transparent outline-none text-xs min-w-0"
+                                className="flex-1 bg-transparent outline-none text-xs min-w-0 text-foreground placeholder:text-muted-foreground"
                                 placeholder="Search products..."
                                 value={productSearch}
                                 onChange={(e) => setProductSearch(e.target.value)}
                             />
                             {productSearch && (
-                                <button onClick={() => setProductSearch('')} className="text-editor-text-secondary hover:text-editor-text-primary flex-shrink-0">
+                                <button onClick={() => setProductSearch('')} className="text-muted-foreground hover:text-foreground flex-shrink-0">
                                     <X size={12} />
                                 </button>
                             )}
@@ -499,7 +499,7 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onClose, isNew, projectId
         <div className="flex h-screen bg-background text-foreground">
             <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
 
-            <div className="flex-1 flex flex-col overflow-hidden relative bg-[#f6f6f7] dark:bg-background black:bg-background">
+            <div className="flex-1 flex flex-col overflow-hidden relative bg-background">
                 {/* Header */}
                 <header className="h-14 px-6 border-b border-border flex items-center justify-between bg-card/50 backdrop-blur-sm z-20 sticky top-0">
                     <div className="flex items-center gap-4">
@@ -536,7 +536,7 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onClose, isNew, projectId
                         <button
                             onClick={handleSave}
                             disabled={isSaving}
-                            className="flex items-center gap-1.5 h-9 px-3 rounded-md text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40 disabled:opacity-50"
+                            className="flex items-center gap-1.5 h-9 px-3 rounded-md text-sm font-medium transition-all text-muted-foreground hover:text-foreground hover:bg-secondary disabled:opacity-50"
                         >
                             {isSaving && <Loader2 className="w-4 h-4 animate-spin" />}
                             Save
@@ -548,7 +548,7 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onClose, isNew, projectId
                     <div className="max-w-4xl mx-auto space-y-6">
 
                         {/* Title Section */}
-                        <div className="bg-white dark:bg-card black:bg-card border border-border rounded-xl shadow-sm p-6">
+                        <div className="bg-card border border-border rounded-xl shadow-sm p-6">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
                                     <label className="block text-sm font-medium text-foreground mb-2">Title</label>
@@ -576,7 +576,7 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onClose, isNew, projectId
 
                         {/* Preview Section */}
                         {items.length > 0 && (
-                            <div className="bg-white dark:bg-card black:bg-card border border-border rounded-xl shadow-sm p-6">
+                            <div className="bg-card border border-border rounded-xl shadow-sm p-6">
                                 <div className="flex items-center justify-between mb-4">
                                     <h3 className="text-md font-semibold text-foreground">Preview</h3>
                                     <span className="text-xs text-muted-foreground">{items.length} {items.length === 1 ? 'item' : 'items'}</span>
@@ -600,7 +600,7 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onClose, isNew, projectId
                         )}
 
                         {/* Menu Items Section */}
-                        <div className="bg-white dark:bg-card black:bg-card border border-border rounded-xl shadow-sm">
+                        <div className="bg-card border border-border rounded-xl shadow-sm">
                             <div className="p-6 border-b border-border">
                                 <h3 className="text-md font-semibold text-foreground">Menu items</h3>
                             </div>
@@ -614,7 +614,7 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onClose, isNew, projectId
                                     items.map((item, index) => (
                                         <div
                                             key={item.id}
-                                            className={`bg - white dark: bg - card black: bg - card relative transition - all duration - 200 ${draggedIndex === index ? 'opacity-50 bg-secondary/20' : ''} ${draggedIndex !== null && draggedIndex !== index ? 'border-t-2 border-transparent hover:border-primary/50' : ''} `}
+                                            className={`bg-card relative transition-all duration-200 ${draggedIndex === index ? 'opacity-50 bg-secondary/20' : ''} ${draggedIndex !== null && draggedIndex !== index ? 'border-t-2 border-transparent hover:border-primary/50' : ''}`}
                                             draggable
                                             onDragStart={(e) => handleDragStart(e, index)}
                                             onDragOver={(e) => handleDragOver(e, index)}
@@ -636,7 +636,7 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onClose, isNew, projectId
                                                                     type="text"
                                                                     value={item.text}
                                                                     onChange={(e) => updateMenuItem(item.id, { text: e.target.value })}
-                                                                    className="w-full px-3 py-2 bg-white dark:bg-black black:bg-neutral-900 border border-border rounded-md text-sm focus:ring-1 focus:ring-primary outline-none"
+                                                                    className="w-full px-3 py-2 bg-secondary/30 border border-border rounded-md text-sm focus:ring-1 focus:ring-primary outline-none"
                                                                 />
                                                             </div>
                                                             <div className="relative">
@@ -654,7 +654,7 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onClose, isNew, projectId
                                                                         }}
                                                                         onFocus={() => setLinkPickerOpenId(item.id)}
                                                                         placeholder="Paste a link or search"
-                                                                        className="w-full pl-9 pr-3 py-2 bg-white dark:bg-black black:bg-neutral-900 border border-border rounded-md text-sm focus:ring-1 focus:ring-primary outline-none"
+                                                                        className="w-full pl-9 pr-3 py-2 bg-secondary/30 border border-border rounded-md text-sm focus:ring-1 focus:ring-primary outline-none"
                                                                     />
                                                                 </div>
 
@@ -673,7 +673,7 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onClose, isNew, projectId
                                                     </div>
                                                     <div className="mt-4 flex justify-between">
                                                         <button onClick={() => deleteMenuItem(item.id)} className="text-red-500 text-sm flex items-center hover:underline"><Trash2 size={14} className="mr-1" /> Delete</button>
-                                                        <button onClick={() => setEditingItemId(null)} className="bg-white dark:bg-secondary black:bg-secondary border border-border px-3 py-1.5 rounded text-sm font-medium hover:bg-gray-50 dark:hover:bg-secondary/80">Done</button>
+                                                        <button onClick={() => setEditingItemId(null)} className="bg-secondary/50 border border-border px-3 py-1.5 rounded text-sm font-medium hover:bg-secondary">Done</button>
                                                     </div>
                                                 </div>
                                             ) : (
@@ -688,7 +688,7 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onClose, isNew, projectId
                                                     <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                                         <button
                                                             onClick={() => setEditingItemId(item.id)}
-                                                            className="px-3 py-1.5 text-xs font-medium border border-border rounded-md bg-white dark:bg-black black:bg-neutral-900 hover:bg-secondary/50 transition-colors"
+                                                            className="px-3 py-1.5 text-xs font-medium border border-border rounded-md bg-secondary/30 hover:bg-secondary/50 transition-colors"
                                                         >
                                                             Edit
                                                         </button>

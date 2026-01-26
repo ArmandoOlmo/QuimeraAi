@@ -9,9 +9,15 @@ import { LayoutDashboard, Check, CloudUpload, Globe, SlidersHorizontal, Menu, Ar
 
 interface SimpleEditorHeaderProps {
   onOpenMobileMenu?: () => void;
+  showSaveButton?: boolean;
+  showPublishButton?: boolean;
 }
 
-const SimpleEditorHeader: React.FC<SimpleEditorHeaderProps> = ({ onOpenMobileMenu }) => {
+const SimpleEditorHeader: React.FC<SimpleEditorHeaderProps> = ({
+  onOpenMobileMenu,
+  showSaveButton = true,
+  showPublishButton = true,
+}) => {
   const { t } = useTranslation();
   const { isSidebarOpen, setIsSidebarOpen } = useUI();
   const { activeProject, renameActiveProject, saveProject, publishProject, isEditingTemplate, exitTemplateEditor } = useProject();
@@ -64,7 +70,7 @@ const SimpleEditorHeader: React.FC<SimpleEditorHeaderProps> = ({ onOpenMobileMen
     saveProject();
     setSaveState('saved');
     setTimeout(() => {
-        setSaveState('idle');
+      setSaveState('idle');
     }, 2500);
   };
 
@@ -81,7 +87,7 @@ const SimpleEditorHeader: React.FC<SimpleEditorHeaderProps> = ({ onOpenMobileMen
       <div className="flex items-center gap-2 md:gap-4 min-w-0 flex-1">
         {/* Mobile Menu Button - Opens DashboardSidebar */}
         {onOpenMobileMenu && (
-          <button 
+          <button
             onClick={onOpenMobileMenu}
             className="h-10 w-10 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary/80 active:bg-secondary rounded-xl transition-colors touch-manipulation lg:hidden"
             title={t('common.menu')}
@@ -92,20 +98,19 @@ const SimpleEditorHeader: React.FC<SimpleEditorHeaderProps> = ({ onOpenMobileMen
         )}
 
         {/* Dashboard Button - More prominent on mobile */}
-        <button 
-          title={t('editor.goToDashboard')} 
+        <button
+          title={t('editor.goToDashboard')}
           className="h-10 w-10 md:h-9 md:w-9 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary/80 active:bg-secondary rounded-xl md:rounded-full transition-colors touch-manipulation"
           onClick={handleGoToDashboard}
         >
           <LayoutDashboard className="w-5 h-5 md:w-4 md:h-4" />
         </button>
-        
+
         {/* Mobile Controls Button - Editor Controls Panel */}
-        <button 
+        <button
           onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-          className={`h-10 w-10 md:h-9 md:w-9 flex items-center justify-center hover:bg-secondary/80 rounded-xl md:rounded-full transition-colors touch-manipulation md:hidden ${
-            isSidebarOpen ? 'text-primary bg-primary/10' : 'text-muted-foreground hover:text-foreground'
-          }`}
+          className={`h-10 w-10 md:h-9 md:w-9 flex items-center justify-center hover:bg-secondary/80 rounded-xl md:rounded-full transition-colors touch-manipulation md:hidden ${isSidebarOpen ? 'text-primary bg-primary/10' : 'text-muted-foreground hover:text-foreground'
+            }`}
           title={t('editor.toggleControls')}
           aria-label={t('editor.toggleControls')}
           aria-pressed={isSidebarOpen}
@@ -116,7 +121,7 @@ const SimpleEditorHeader: React.FC<SimpleEditorHeaderProps> = ({ onOpenMobileMen
         {/* Project Name - Hidden on mobile (already shown in BrowserPreview) */}
         <div className="hidden md:flex items-center gap-2">
           <Globe className="text-primary" size={24} aria-hidden="true" />
-          
+
           {/* Project Name */}
           {isEditingName ? (
             <input
@@ -151,66 +156,69 @@ const SimpleEditorHeader: React.FC<SimpleEditorHeaderProps> = ({ onOpenMobileMen
         </button>
 
         {/* Save Button */}
-        <button
-          title={saveState === 'idle' ? t('editor.saveChanges') : t('editor.saved')}
-          onClick={handleSaveClick}
-          disabled={saveState === 'saved'}
-          className="flex items-center gap-2 h-9 px-4 rounded-lg text-sm font-medium transition-all text-muted-foreground hover:text-foreground hover:bg-border/40 disabled:text-green-500 disabled:hover:bg-transparent"
-        >
-          {saveState === 'idle' ? (
-            <CloudUpload className="w-4 h-4" />
-          ) : (
-            <Check className="w-4 h-4" />
-          )}
-          <span className="hidden lg:inline">
-            {saveState === 'idle' ? t('common.save') : t('editor.saved')}
-          </span>
-        </button>
+        {showSaveButton && (
+          <button
+            title={saveState === 'idle' ? t('editor.saveChanges') : t('editor.saved')}
+            onClick={handleSaveClick}
+            disabled={saveState === 'saved'}
+            className="flex items-center gap-2 h-9 px-4 rounded-lg text-sm font-medium transition-all text-muted-foreground hover:text-foreground hover:bg-border/40 disabled:text-green-500 disabled:hover:bg-transparent"
+          >
+            {saveState === 'idle' ? (
+              <CloudUpload className="w-4 h-4" />
+            ) : (
+              <Check className="w-4 h-4" />
+            )}
+            <span className="hidden lg:inline">
+              {saveState === 'idle' ? t('common.save') : t('editor.saved')}
+            </span>
+          </button>
+        )}
 
         {/* Publish Button */}
-        <button 
-          onClick={async () => {
-            if (!publishProject) {
-              console.error('[SimpleEditorHeader] publishProject not available');
-              return;
-            }
-            
-            setPublishState('publishing');
-            try {
-              const success = await publishProject();
-              setPublishState(success ? 'published' : 'error');
-              setTimeout(() => setPublishState('idle'), 3000);
-            } catch (error) {
-              console.error('[SimpleEditorHeader] Error publishing:', error);
-              setPublishState('error');
-              setTimeout(() => setPublishState('idle'), 3000);
-            }
-          }}
-          disabled={publishState === 'publishing'}
-          className={`font-medium text-sm h-9 px-3 transition-colors flex items-center gap-1.5 ${
-            publishState === 'published' 
-              ? 'text-green-500' 
+        {showPublishButton && (
+          <button
+            onClick={async () => {
+              if (!publishProject) {
+                console.error('[SimpleEditorHeader] publishProject not available');
+                return;
+              }
+
+              setPublishState('publishing');
+              try {
+                const success = await publishProject();
+                setPublishState(success ? 'published' : 'error');
+                setTimeout(() => setPublishState('idle'), 3000);
+              } catch (error) {
+                console.error('[SimpleEditorHeader] Error publishing:', error);
+                setPublishState('error');
+                setTimeout(() => setPublishState('idle'), 3000);
+              }
+            }}
+            disabled={publishState === 'publishing'}
+            className={`font-medium text-sm h-9 px-3 transition-colors flex items-center gap-1.5 ${publishState === 'published'
+              ? 'text-green-500'
               : publishState === 'error'
                 ? 'text-red-500'
                 : 'text-primary hover:text-primary/80'
-          } ${publishState === 'publishing' ? 'opacity-50 cursor-wait' : ''}`}
-        >
-          {publishState === 'publishing' ? (
-            <>
-              <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-              <span className="hidden sm:inline">{t('editor.publishing', 'Publicando...')}</span>
-            </>
-          ) : publishState === 'published' ? (
-            <>
-              <Check className="w-4 h-4" />
-              <span className="hidden sm:inline">{t('editor.published', '¡Publicado!')}</span>
-            </>
-          ) : publishState === 'error' ? (
-            <span>{t('editor.publishError', 'Error')}</span>
-          ) : (
-            t('editor.publish')
-          )}
-        </button>
+              } ${publishState === 'publishing' ? 'opacity-50 cursor-wait' : ''}`}
+          >
+            {publishState === 'publishing' ? (
+              <>
+                <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                <span className="hidden sm:inline">{t('editor.publishing', 'Publicando...')}</span>
+              </>
+            ) : publishState === 'published' ? (
+              <>
+                <Check className="w-4 h-4" />
+                <span className="hidden sm:inline">{t('editor.published', '¡Publicado!')}</span>
+              </>
+            ) : publishState === 'error' ? (
+              <span>{t('editor.publishError', 'Error')}</span>
+            ) : (
+              t('editor.publish')
+            )}
+          </button>
+        )}
       </div>
     </header>
   );

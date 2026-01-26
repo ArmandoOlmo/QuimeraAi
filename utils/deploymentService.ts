@@ -481,24 +481,6 @@ const generateStaticHTML = (project: Project): string => {
     ${cartDrawerHtml}
     ${cartScript}
 
-    <!-- Powered by Quimera.ai -->
-    ${!data.footer?.hideBranding ? `
-    <div style="position: fixed; bottom: 100px; right: 20px; z-index: 2147483647; pointer-events: auto !important;">
-        <div style="display: flex; align-items: center; gap: 12px; padding: 12px 24px; background-color: #000000; border: 2px solid #ffffff; border-radius: 9999px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); cursor: default;">
-            <span style="display: block; width: 12px; height: 12px; background-color: #facc15; border-radius: 50%; box-shadow: 0 0 15px #facc15; animation: pulse 2s infinite;"></span>
-            <span style="font-family: 'Inter', sans-serif; font-size: 15px; color: #ffffff; font-weight: 700; white-space: nowrap;">
-                Made with <a href="https://quimera.ai" target="_blank" rel="noopener noreferrer" style="color: #facc15; font-weight: 900; text-decoration: underline; text-underline-offset: 4px; transition: all 0.2s ease;" onmouseover="this.style.color='#ffffff';" onmouseout="this.style.color='#facc15';">Quimera.ai</a>
-            </span>
-        </div>
-        <style>
-            @keyframes pulse {
-                0% { transform: scale(1); opacity: 1; }
-                50% { transform: scale(1.3); opacity: 0.7; }
-                100% { transform: scale(1); opacity: 1; }
-            }
-        </style>
-    </div>
-    ` : ''}
 </body>
 </html>`;
 };

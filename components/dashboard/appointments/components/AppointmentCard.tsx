@@ -28,12 +28,14 @@ import {
     Trash2,
     Copy,
     Bell,
+    Hash,
 } from 'lucide-react';
 import {
     Appointment,
     AppointmentType,
     APPOINTMENT_TYPE_CONFIGS,
     APPOINTMENT_STATUS_CONFIGS,
+    getAppointmentTypeConfig,
 } from '../../../../types';
 import {
     formatTime,
@@ -54,11 +56,11 @@ import {
 
 interface AppointmentCardProps {
     appointment: Appointment;
-    onClick?: () => void;
+    onClick?: (e?: React.MouseEvent) => void;
     onEdit?: () => void;
     onDelete?: () => void;
     onJoin?: () => void;
-    variant?: 'default' | 'compact' | 'minimal';
+    variant?: 'default' | 'compact' | 'minimal' | 'fresha';
     showActions?: boolean;
     className?: string;
     animationDelay?: number;
@@ -68,15 +70,20 @@ interface AppointmentCardProps {
 // ICON MAP
 // =============================================================================
 
-const TYPE_ICONS: Record<AppointmentType, React.ElementType> = {
-    call: Phone,
-    video_call: Video,
-    in_person: MapPin,
-    demo: Play,
-    consultation: MessageSquare,
-    follow_up: RefreshCw,
-    discovery: Search,
-    closing: Trophy,
+const ICON_MAP: Record<string, React.ElementType> = {
+    Phone,
+    Video,
+    MapPin,
+    Play,
+    MessageSquare,
+    RefreshCw,
+    Search,
+    Trophy,
+    Hash,
+    Clock,
+    Users,
+    Check,
+    X,
 };
 
 // =============================================================================
@@ -98,9 +105,9 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
     const [showMenu, setShowMenu] = useState(false);
     const [isHovered, setIsHovered] = useState(false);
 
-    const typeConfig = APPOINTMENT_TYPE_CONFIGS[appointment.type] || APPOINTMENT_TYPE_CONFIGS.video_call;
+    const typeConfig = getAppointmentTypeConfig(appointment.type);
     const statusConfig = APPOINTMENT_STATUS_CONFIGS[appointment.status] || APPOINTMENT_STATUS_CONFIGS.scheduled;
-    const TypeIcon = TYPE_ICONS[appointment.type] || Video;
+    const TypeIcon = ICON_MAP[typeConfig.icon] || Video;
 
     const startDate = timestampToDate(appointment.startDate);
     const endDate = timestampToDate(appointment.endDate);
@@ -142,6 +149,62 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
         pink: 'text-pink-500',
         green: 'text-green-500',
     };
+
+    // ==========================================================================
+    // FRESHA VARIANT (Clean, Solid, Flat)
+    // ==========================================================================
+
+    if (variant === 'fresha') {
+        const freshaColors: Record<string, string> = {
+            blue: 'bg-[#00a3ff] text-white',      // Cyan-ish Blue
+            violet: 'bg-[#8b5cf6] text-white',    // Violet
+            emerald: 'bg-[#10b981] text-white',   // Emerald
+            orange: 'bg-[#f97316] text-white',    // Orange
+            cyan: 'bg-[#06b6d4] text-white',      // Cyan
+            yellow: 'bg-[#eab308] text-white',    // Yellow
+            pink: 'bg-[#ec4899] text-white',      // Pink
+            green: 'bg-[#22c55e] text-white',     // Green
+            default: 'bg-[#3b82f6] text-white',   // Default Blue
+        };
+
+        const cardColor = freshaColors[typeConfig.color] || freshaColors.default;
+
+        return (
+            <div
+                onClick={onClick}
+                className={`
+                    relative overflow-hidden
+                    ${cardColor}
+                    rounded-md
+                    cursor-pointer
+                    transition-all duration-200
+                    hover:brightness-95 hover:scale-[1.01] hover:shadow-md hover:z-20
+                    ${className}
+                `}
+                style={{
+                    animationDelay: `${animationDelay}ms`,
+                    borderLeft: '3px solid rgba(0,0,0,0.1)'
+                }}
+            >
+                <div className="p-1 px-2 h-full flex flex-col justify-center min-h-[24px]">
+                    <div className="flex items-center gap-1.5 overflow-hidden">
+                        <span className="text-xs font-bold leading-tight flex-shrink-0 opacity-90">
+                            {formatTime(appointment.startDate)}
+                        </span>
+                        <span className="text-xs font-semibold leading-tight truncate">
+                            {appointment.title}
+                        </span>
+                    </div>
+
+                    {/* Show more details only if height permits (approx > 45px) */}
+                    <div className="hidden xs:block opacity-90 text-[10px] truncate mt-0.5">
+                        {/* Additional info if needed */}
+                        {appointment.participants?.[0]?.name}
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     // ==========================================================================
     // MINIMAL VARIANT (for calendar cells)

@@ -42,6 +42,10 @@ const HOUR_HEIGHT = 64; // px per hour
 // SUB-COMPONENTS
 // =============================================================================
 
+// =============================================================================
+// SUB-COMPONENTS
+// =============================================================================
+
 interface TimeSlotAppointmentProps {
     appointment: Appointment;
     onClick: () => void;
@@ -53,7 +57,6 @@ const TimeSlotAppointment: React.FC<TimeSlotAppointmentProps> = ({
     onClick,
     dayStart,
 }) => {
-    const typeConfig = APPOINTMENT_TYPE_CONFIGS[appointment.type];
     const startDate = timestampToDate(appointment.startDate);
     const endDate = timestampToDate(appointment.endDate);
 
@@ -68,61 +71,27 @@ const TimeSlotAppointment: React.FC<TimeSlotAppointmentProps> = ({
     const top = (startMinutesFromDayStart / 60) * HOUR_HEIGHT;
     const height = Math.max((durationMinutes / 60) * HOUR_HEIGHT, 24); // Min height of 24px
 
-    // Gradient classes
-    const gradientClasses: Record<string, string> = {
-        blue: 'from-blue-500 to-blue-600',
-        violet: 'from-violet-500 to-purple-600',
-        emerald: 'from-emerald-500 to-teal-600',
-        orange: 'from-orange-500 to-amber-600',
-        cyan: 'from-cyan-500 to-sky-600',
-        yellow: 'from-yellow-500 to-amber-500',
-        pink: 'from-pink-500 to-rose-600',
-        green: 'from-green-500 to-emerald-600',
-    };
-
-    // Fallback to blue if typeConfig is undefined
-    const color = typeConfig?.color || 'blue';
-
-    const isShort = height < 50;
-
     return (
         <div
-            onClick={(e) => { e.stopPropagation(); onClick(); }}
-            className={`
-                absolute left-1 right-1 z-10
-                bg-gradient-to-br ${gradientClasses[color]}
-                rounded-lg overflow-hidden
-                cursor-pointer group
-                transition-all duration-200
-                hover:shadow-lg hover:scale-[1.02] hover:z-20
-                border border-white/20
-            `}
+            className="absolute left-0.5 right-1 z-10 hover:z-20 transition-all duration-200"
             style={{
                 top: `${top}px`,
                 height: `${height}px`,
-                minHeight: '24px',
             }}
         >
-            {/* Shine overlay */}
-            <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent" />
+            <AppointmentCard
+                appointment={appointment}
+                onClick={(e) => { e?.stopPropagation?.(); onClick(); }}
+                variant="fresha"
+                className="h-full w-full shadow-sm"
+            />
 
-            {/* Content */}
-            <div className={`relative h-full p-2 ${isShort ? 'flex items-center gap-2' : ''}`}>
-                <p className={`text-white font-semibold ${isShort ? 'text-xs truncate' : 'text-sm line-clamp-2'}`}>
-                    {appointment.title}
-                </p>
-                {!isShort && (
-                    <p className="text-white/80 text-xs mt-0.5">
-                        {formatTime(appointment.startDate)} - {formatTime(appointment.endDate)}
-                    </p>
-                )}
-            </div>
-
-            {/* Resize handle */}
+            {/* Resize handle (Visual only for now) */}
             <div className="
-                absolute bottom-0 left-0 right-0 h-2 
-                cursor-s-resize opacity-0 group-hover:opacity-100
-                bg-black/20 transition-opacity
+                absolute bottom-0 left-0 right-0 h-1.5 
+                cursor-s-resize opacity-0 hover:opacity-100
+                bg-black/10 transition-opacity
+                rounded-b-md
             " />
         </div>
     );
@@ -138,8 +107,8 @@ export const CalendarWeekView: React.FC<CalendarWeekViewProps> = ({
     onAppointmentClick,
     onSlotClick,
     weekStartsOn = 1,
-    workingHoursStart = 8,
-    workingHoursEnd = 18,
+    workingHoursStart = 0, // Fresha usually shows full day or wider range
+    workingHoursEnd = 24,
 }) => {
     const { t } = useTranslation();
     const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -182,68 +151,47 @@ export const CalendarWeekView: React.FC<CalendarWeekViewProps> = ({
         return () => clearInterval(interval);
     }, []);
 
-    // Scroll to current time on mount
+    // Scroll to 8 AM on mount if not specified otherwise
     useEffect(() => {
         if (scrollContainerRef.current) {
-            const scrollTo = Math.max(0, workingHoursStart * HOUR_HEIGHT - 50);
+            const scrollTo = Math.max(0, 8 * HOUR_HEIGHT - 50);
             scrollContainerRef.current.scrollTop = scrollTo;
         }
-    }, [workingHoursStart]);
-
-    // Check if today is in the current week
-    const todayInWeek = weekDays.some(day => isToday(day));
-    const todayIndex = weekDays.findIndex(day => isToday(day));
+    }, []);
 
     return (
         <div className="flex-1 flex flex-col min-h-0 bg-background">
             {/* Header with days */}
-            <div className="flex border-b border-border sticky top-0 z-20 bg-background">
+            <div className="flex border-b border-border sticky top-0 z-30 bg-background shadow-xs">
                 {/* Time column header */}
-                <div className="w-10 sm:w-14 lg:w-16 flex-shrink-0 border-r border-border p-1 sm:p-2">
-                    <span className="text-[8px] sm:text-xs text-muted-foreground font-medium hidden sm:block">
-                        GMT{new Date().getTimezoneOffset() / -60 >= 0 ? '+' : ''}{new Date().getTimezoneOffset() / -60}
-                    </span>
-                </div>
+                <div className="w-16 flex-shrink-0 border-r border-border bg-background" />
 
                 {/* Day headers */}
                 {weekDays.map((day, index) => {
                     const isCurrentDay = isToday(day);
                     const dayKey = day.toISOString().split('T')[0];
-                    const dayAppointments = appointmentsByDay.get(dayKey) || [];
 
                     return (
                         <div
                             key={dayKey}
                             className={`
-                                flex-1 p-1.5 sm:p-3 text-center border-r border-border last:border-r-0
-                                transition-colors min-w-[80px] sm:min-w-0
-                                ${isCurrentDay ? 'bg-primary/5' : ''}
+                                flex-1 py-3 text-center border-r border-border last:border-r-0
+                                min-w-[100px] flex flex-col items-center justify-center gap-1
+                                ${isCurrentDay ? 'bg-primary/5' : 'bg-background'}
                             `}
                         >
-                            <p className={`text-[10px] sm:text-xs font-medium uppercase tracking-wider ${isCurrentDay ? 'text-primary' : 'text-muted-foreground'}`}>
+                            <span className={`text-xs font-semibold uppercase tracking-wide ${isCurrentDay ? 'text-primary' : 'text-muted-foreground'}`}>
                                 {DAYS_ES[day.getDay()]}
-                            </p>
-                            <p className={`
-                                text-lg sm:text-2xl font-bold mt-0.5 sm:mt-1
+                            </span>
+                            <div className={`
+                                w-8 h-8 flex items-center justify-center rounded-full text-lg font-bold
                                 ${isCurrentDay
-                                    ? 'text-primary'
-                                    : 'text-foreground'
+                                    ? 'bg-primary text-primary-foreground shadow-sm'
+                                    : 'text-foreground hover:bg-secondary/50'
                                 }
                             `}>
                                 {day.getDate()}
-                            </p>
-                            {dayAppointments.length > 0 && (
-                                <div className={`
-                                    mt-0.5 sm:mt-1 inline-flex items-center justify-center
-                                    px-1.5 sm:px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-medium
-                                    ${isCurrentDay
-                                        ? 'bg-primary/20 text-primary'
-                                        : 'bg-muted text-muted-foreground'
-                                    }
-                                `}>
-                                    {dayAppointments.length}
-                                </div>
-                            )}
+                            </div>
                         </div>
                     );
                 })}
@@ -252,25 +200,33 @@ export const CalendarWeekView: React.FC<CalendarWeekViewProps> = ({
             {/* Scrollable time grid */}
             <div
                 ref={scrollContainerRef}
-                className="flex-1 overflow-auto custom-scrollbar"
+                className="flex-1 overflow-auto custom-scrollbar relative"
             >
-                <div className="flex min-w-[560px] sm:min-w-[700px] lg:min-w-[800px]">
+                {/* Current Time Indicator Line (Spanning full width) */}
+                {weekDays.some(day => isToday(day)) && (
+                    <div
+                        className="absolute left-0 right-0 z-20 pointer-events-none flex items-center"
+                        style={{ top: `${currentTimeTop}px` }}
+                    >
+                        <div className="w-16 flex justify-end pr-2">
+                            <span className="text-[10px] font-bold text-red-500 bg-background px-1 rounded">
+                                {new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
+                            </span>
+                        </div>
+                        <div className="flex-1 h-px bg-red-500 shadow-[0_0_4px_rgba(239,68,68,0.6)]" />
+                    </div>
+                )}
+
+                <div className="flex min-w-[700px] lg:min-w-full">
                     {/* Time column */}
-                    <div className="w-10 sm:w-14 lg:w-16 flex-shrink-0 border-r border-border relative">
+                    <div className="w-16 flex-shrink-0 border-r border-border bg-background z-10">
                         {HOURS.map(hour => (
                             <div
                                 key={hour}
-                                className="border-b border-border/30 flex items-start justify-end pr-1 sm:pr-2 pt-1"
-                                style={{ height: `${HOUR_HEIGHT}px` }}
+                                className="h-[64px] relative"
                             >
-                                <span className={`
-                                    text-[10px] sm:text-xs font-medium
-                                    ${hour >= workingHoursStart && hour < workingHoursEnd
-                                        ? 'text-muted-foreground'
-                                        : 'text-muted-foreground/50'
-                                    }
-                                `}>
-                                    {hour}
+                                <span className="absolute -top-2.5 right-2 text-xs text-muted-foreground font-medium bg-background px-1">
+                                    {hour}:00
                                 </span>
                             </div>
                         ))}
@@ -288,52 +244,22 @@ export const CalendarWeekView: React.FC<CalendarWeekViewProps> = ({
                             <div
                                 key={dayKey}
                                 className={`
-                                    flex-1 border-r border-border/50 last:border-r-0 relative
+                                    flex-1 border-r border-border/40 last:border-r-0 relative
                                     ${isCurrentDay ? 'bg-primary/[0.02]' : ''}
                                 `}
                             >
-                                {/* Hour slots */}
-                                {HOURS.map(hour => {
-                                    const isWorkingHour = hour >= workingHoursStart && hour < workingHoursEnd;
-
-                                    return (
-                                        <div
-                                            key={hour}
-                                            onClick={() => {
-                                                const slotDate = new Date(day);
-                                                slotDate.setHours(hour, 0, 0, 0);
-                                                onSlotClick(slotDate, hour);
-                                            }}
-                                            className={`
-                                                border-b border-border/30
-                                                cursor-pointer group
-                                                transition-colors duration-150
-                                                hover:bg-primary/5
-                                                ${!isWorkingHour ? 'bg-muted/20' : ''}
-                                            `}
-                                            style={{ height: `${HOUR_HEIGHT}px` }}
-                                        >
-                                            {/* Half-hour line */}
-                                            <div
-                                                className="border-b border-dashed border-border/20"
-                                                style={{ marginTop: `${HOUR_HEIGHT / 2}px` }}
-                                            />
-
-                                            {/* Hover indicator */}
-                                            <div className="
-                                                absolute inset-1 rounded-lg
-                                                border-2 border-dashed border-primary/30
-                                                opacity-0 group-hover:opacity-100
-                                                transition-opacity pointer-events-none
-                                                flex items-center justify-center
-                                            ">
-                                                <span className="text-xs text-primary font-medium bg-background px-2 py-0.5 rounded">
-                                                    + {t('appointments.newAppointment')}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    );
-                                })}
+                                {/* Hour slots background lines */}
+                                {HOURS.map(hour => (
+                                    <div
+                                        key={hour}
+                                        onClick={() => {
+                                            const slotDate = new Date(day);
+                                            slotDate.setHours(hour, 0, 0, 0);
+                                            onSlotClick(slotDate, hour);
+                                        }}
+                                        className="h-[64px] border-b border-border/20 hover:bg-black/[0.02] cursor-pointer transition-colors"
+                                    />
+                                ))}
 
                                 {/* Appointments */}
                                 {dayAppointments.map(apt => (
@@ -344,26 +270,6 @@ export const CalendarWeekView: React.FC<CalendarWeekViewProps> = ({
                                         dayStart={dayStart}
                                     />
                                 ))}
-
-                                {/* Current time indicator */}
-                                {isCurrentDay && (
-                                    <div
-                                        className="absolute left-0 right-0 z-30 pointer-events-none"
-                                        style={{ top: `${currentTimeTop}px` }}
-                                    >
-                                        {/* Circle */}
-                                        <div className="
-                                            absolute -left-1.5 -top-1.5
-                                            w-3 h-3 rounded-full bg-red-500
-                                            shadow-lg shadow-red-500/50
-                                        " />
-                                        {/* Line */}
-                                        <div className="
-                                            h-0.5 bg-red-500
-                                            shadow-lg shadow-red-500/50
-                                        " />
-                                    </div>
-                                )}
                             </div>
                         );
                     })}

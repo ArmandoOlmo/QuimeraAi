@@ -8,7 +8,6 @@ import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
 import * as dns from 'dns';
 import { promisify } from 'util';
-import { getCertificateStatus, getCloudRunDomainMappingStatus } from './cloudRunApi';
 
 const db = admin.firestore();
 
@@ -124,40 +123,32 @@ export const checkDomainSSL = functions.https.onCall(async (data, context) => {
         }
 
         // In a real implementation, this would check Cloud Run's domain mapping status
-        // We now check both Certificate Manager (new) and Cloud Run (legacy)
+        // For now, we'll simulate SSL provisioning
         const domainData = domainDoc.data();
-
-        if (domainData?.status === 'ssl_pending' || domainData?.sslStatus === 'pending' || domainData?.sslStatus === 'provisioning') {
-            console.log(`[SSLCheck] Checking real status for ${normalizedDomain}...`);
-
-            // 1. Check Certificate Manager status
-            const certStatus = await getCertificateStatus(normalizedDomain);
-
-            // 2. Check legacy Cloud Run mapping status
-            const cloudRunStatus = await getCloudRunDomainMappingStatus(normalizedDomain);
-
-            const isReady = certStatus.ready || cloudRunStatus.ready;
-            const currentCertStatus = certStatus.ready ? 'active' : (certStatus.status || cloudRunStatus.certificateStatus || 'provisioning');
-
-            if (isReady) {
-                console.log(`[SSLCheck] Domain ${normalizedDomain} is now ACTIVE`);
-                const updates = {
+        
+        // SSL provisioning takes some time after DNS verification
+        // Check if DNS was verified recently
+        if (domainData?.status === 'ssl_pending' && domainData?.dnsVerified) {
+            // Simulate SSL becoming active after DNS is verified
+            // In production, you'd call Cloud Run API to check actual status
+            const verifiedAt = domainData.lastVerifiedAt?.toDate?.() || new Date(domainData.lastVerifiedAt);
+            const timeSinceVerification = Date.now() - verifiedAt.getTime();
+            
+            // SSL typically provisions within a few minutes
+            if (timeSinceVerification > 60000) { // 1 minute for demo
+                await db.collection('customDomains').doc(normalizedDomain).update({
                     status: 'active',
                     sslStatus: 'active',
                     updatedAt: admin.firestore.FieldValue.serverTimestamp()
-                };
-
-                await db.collection('customDomains').doc(normalizedDomain).update(updates);
-                await db.collection('users').doc(userId).collection('domains').doc(normalizedDomain).update(updates);
+                });
+                await db.collection('users').doc(userId).collection('domains').doc(normalizedDomain).update({
+                    status: 'active',
+                    sslStatus: 'active',
+                    updatedAt: admin.firestore.FieldValue.serverTimestamp()
+                });
 
                 return { sslStatus: 'active', status: 'active' };
             }
-
-            // If not ready yet, return current status from APIs
-            return {
-                sslStatus: currentCertStatus.toLowerCase(),
-                status: domainData?.status || 'ssl_pending'
-            };
         }
 
         return {
@@ -210,7 +201,7 @@ async function performDNSVerification(domain: string, verificationToken?: string
     // Check CNAME for www subdomain
     try {
         const cnameRecords = await resolveCname(`www.${domain}`);
-        const cnameVerified = cnameRecords.some(cname =>
+        const cnameVerified = cnameRecords.some(cname => 
             cname.toLowerCase().includes('ghs.googlehosted.com') ||
             cname.toLowerCase().includes('googlehosted.com')
         );
@@ -258,7 +249,7 @@ async function performDNSVerification(domain: string, verificationToken?: string
     // Domain is verified if A record (or CNAME) points to our servers
     const aVerified = results.records.find(r => r.type === 'A')?.verified || false;
     const wwwCnameVerified = results.records.find(r => r.type === 'CNAME')?.verified || false;
-
+    
     // A record is required for root domain, CNAME for www is optional but nice to have
     results.verified = aVerified || wwwCnameVerified;
 

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Editor } from '@tiptap/react';
 import {
     Heading1, Heading2, Heading3, List, ListOrdered,
@@ -21,6 +22,7 @@ interface Command {
 }
 
 const SlashCommands: React.FC<SlashCommandsProps> = ({ editor, onImageUpload, onAICommand }) => {
+    const { t } = useTranslation();
     const [isOpen, setIsOpen] = useState(false);
     const [search, setSearch] = useState('');
     const [selectedIndex, setSelectedIndex] = useState(0);
@@ -29,85 +31,85 @@ const SlashCommands: React.FC<SlashCommandsProps> = ({ editor, onImageUpload, on
 
     const commands: Command[] = [
         {
-            title: 'Heading 1',
-            description: 'Large section heading',
+            title: t('cms_editor.toolbar.h1'),
+            description: t('cms_editor.commands.h1Desc'),
             icon: <Heading1 size={18} />,
             command: () => editor?.chain().focus().setHeading({ level: 1 }).run(),
             searchTerms: ['h1', 'heading', 'title', 'large']
         },
         {
-            title: 'Heading 2',
-            description: 'Medium section heading',
+            title: t('cms_editor.toolbar.h2'),
+            description: t('cms_editor.commands.h2Desc'),
             icon: <Heading2 size={18} />,
             command: () => editor?.chain().focus().setHeading({ level: 2 }).run(),
             searchTerms: ['h2', 'heading', 'subtitle']
         },
         {
-            title: 'Heading 3',
-            description: 'Small section heading',
+            title: t('cms_editor.toolbar.h3'),
+            description: t('cms_editor.commands.h3Desc'),
             icon: <Heading3 size={18} />,
             command: () => editor?.chain().focus().setHeading({ level: 3 }).run(),
             searchTerms: ['h3', 'heading', 'small']
         },
         {
-            title: 'Bullet List',
-            description: 'Create a bullet list',
+            title: t('cms_editor.toolbar.bulletList'),
+            description: t('cms_editor.commands.ulDesc'),
             icon: <List size={18} />,
             command: () => editor?.chain().focus().toggleBulletList().run(),
             searchTerms: ['ul', 'list', 'bullet', 'unordered']
         },
         {
-            title: 'Numbered List',
-            description: 'Create a numbered list',
+            title: t('cms_editor.toolbar.numberedList'),
+            description: t('cms_editor.commands.olDesc'),
             icon: <ListOrdered size={18} />,
             command: () => editor?.chain().focus().toggleOrderedList().run(),
             searchTerms: ['ol', 'list', 'numbered', 'ordered']
         },
         {
-            title: 'Quote',
-            description: 'Insert a quote block',
+            title: t('cms_editor.toolbar.quote'),
+            description: t('cms_editor.commands.quoteDesc'),
             icon: <Quote size={18} />,
             command: () => editor?.chain().focus().toggleBlockquote().run(),
             searchTerms: ['quote', 'blockquote', 'citation']
         },
         {
-            title: 'Code Block',
-            description: 'Insert a code block',
+            title: t('cms_editor.toolbar.code'),
+            description: t('cms_editor.commands.codeDesc'),
             icon: <Code size={18} />,
             command: () => editor?.chain().focus().toggleCodeBlock().run(),
             searchTerms: ['code', 'codeblock', 'pre', 'programming']
         },
         {
-            title: 'Image',
-            description: 'Upload an image',
+            title: t('cms_editor.insertImage'),
+            description: t('cms_editor.commands.imageDesc'),
             icon: <ImageIcon size={18} />,
             command: () => { onImageUpload(); setIsOpen(false); },
             searchTerms: ['image', 'img', 'photo', 'picture', 'upload']
         },
         {
-            title: 'Table',
-            description: 'Insert a table',
+            title: t('cms_editor.toolbar.table'),
+            description: t('cms_editor.commands.tableDesc'),
             icon: <Table size={18} />,
             command: () => editor?.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run(),
             searchTerms: ['table', 'grid', 'spreadsheet']
         },
         {
-            title: 'Divider',
-            description: 'Insert a horizontal line',
+            title: t('cms_editor.toolbar.horizontalLine'),
+            description: t('cms_editor.commands.hrDesc'),
             icon: <Minus size={18} />,
             command: () => editor?.chain().focus().setHorizontalRule().run(),
             searchTerms: ['divider', 'hr', 'line', 'separator']
         },
         {
-            title: 'AI Continue',
-            description: 'Let AI continue writing',
+            title: t('cms_editor.assistant.continue'),
+            description: t('cms_editor.commands.aiContinueDesc'),
             icon: <Sparkles size={18} />,
             command: () => { onAICommand('continue'); setIsOpen(false); },
             searchTerms: ['ai', 'continue', 'write', 'generate']
         },
         {
-            title: 'AI Improve',
-            description: 'Improve selected text',
+            title: t('cms_editor.assistant.improve'),
+            description: t('cms_editor.commands.aiImproveDesc'),
             icon: <Sparkles size={18} />,
             command: () => { onAICommand('improve'); setIsOpen(false); },
             searchTerms: ['ai', 'improve', 'enhance', 'better']
@@ -205,17 +207,16 @@ const SlashCommands: React.FC<SlashCommandsProps> = ({ editor, onImageUpload, on
         >
             <div className="p-2">
                 <div className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase px-2 py-1 mb-1">
-                    Commands {search && `(${filteredCommands.length})`}
+                    {t('cms_editor.commands.title')} {search && `(${filteredCommands.length})`}
                 </div>
                 {filteredCommands.map((cmd, index) => (
                     <button
                         key={cmd.title}
                         onClick={() => executeCommand(cmd)}
-                        className={`w-full flex items-start gap-3 px-3 py-2 rounded-md transition-colors text-left ${
-                            index === selectedIndex
+                        className={`w-full flex items-start gap-3 px-3 py-2 rounded-md transition-colors text-left ${index === selectedIndex
                                 ? 'bg-primary/10 dark:bg-primary/20'
                                 : 'hover:bg-gray-100 dark:hover:bg-gray-700'
-                        }`}
+                            }`}
                     >
                         <div className={`mt-0.5 ${index === selectedIndex ? 'text-primary' : 'text-gray-500 dark:text-gray-400'}`}>
                             {cmd.icon}

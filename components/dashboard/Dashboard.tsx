@@ -185,9 +185,9 @@ const Dashboard: React.FC = () => {
 
             <div className="flex-1 flex flex-col overflow-hidden relative">
                 {/* Standardized Header */}
-                <header className="h-14 px-6 border-b border-border flex items-center bg-background z-20 sticky top-0" role="banner">
+                <header className="h-14 px-2 sm:px-6 border-b border-border flex items-center justify-between bg-background z-20 sticky top-0" role="banner">
                     {/* Left Section - Logo & Title */}
-                    <div className="flex items-center gap-4 flex-shrink-0">
+                    <div className="flex items-center gap-1 sm:gap-4 flex-shrink-0">
                         <button
                             onClick={() => setIsMobileMenuOpen(true)}
                             className="lg:hidden h-11 w-11 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary/80 active:bg-secondary rounded-xl transition-colors touch-manipulation"
@@ -196,14 +196,14 @@ const Dashboard: React.FC = () => {
                         >
                             <Menu className="w-5 h-5" />
                         </button>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1 sm:gap-2">
                             <HeaderIcon className="text-primary" size={24} aria-hidden="true" />
                             <h1 className="text-xl font-bold text-foreground hidden sm:block">{headerTitle}</h1>
                         </div>
                     </div>
 
                     {/* Center Section - Search Bar */}
-                    <div className="flex-1 flex justify-center px-4">
+                    <div className="flex-1 flex justify-center px-2 sm:px-4">
                         {(isDashboard || isWebsites) && (
                             <div className="hidden md:flex items-center gap-2 w-full max-w-xl bg-editor-border/40 rounded-lg px-3 py-2" role="search">
                                 <Search className="w-4 h-4 text-editor-text-secondary flex-shrink-0" aria-hidden="true" />
@@ -237,7 +237,7 @@ const Dashboard: React.FC = () => {
                     </div>
 
                     {/* Right Section - Back Button Only */}
-                    <div className="flex items-center gap-2 flex-shrink-0">
+                    <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
                         {/* Help/Instructions Button - Only on Dashboard when instructions are hidden */}
                         {isDashboard && !showInstructions && (
                             <button
@@ -253,10 +253,10 @@ const Dashboard: React.FC = () => {
                             </button>
                         )}
 
-                        {/* Back Button */}
+                        {/* Back Button - Icon only on mobile, with background on desktop */}
                         <button
                             onClick={() => navigate(ROUTES.DASHBOARD)}
-                            className="flex items-center justify-center gap-2 h-9 px-3 rounded-lg bg-secondary/50 hover:bg-secondary text-sm font-medium transition-all text-muted-foreground hover:text-foreground"
+                            className="flex items-center justify-center gap-2 h-9 w-9 sm:w-auto sm:px-3 rounded-lg sm:bg-secondary/50 sm:hover:bg-secondary text-sm font-medium transition-all text-muted-foreground hover:text-foreground"
                             aria-label={t('common.goBack', 'Volver')}
                         >
                             <ArrowLeft className="w-4 h-4" />

@@ -99,32 +99,15 @@ export const NAMECOM_CONFIG = {
 // =============================================================================
 // META (Facebook, Instagram, WhatsApp)
 // =============================================================================
-// Import functions config for legacy fallback
-import * as functions from 'firebase-functions';
-
-// Helper to safely get functions config
-const getFunctionsConfig = () => {
-    try {
-        return functions.config();
-    } catch {
-        return {};
-    }
-};
-
 export const META_CONFIG = {
     get appId(): string {
-        const functionsConf = getFunctionsConfig();
-        // Check functions.config() first (has the updated secret), then fall back to .env
-        return functionsConf?.meta?.app_id || process.env.META_APP_ID || '';
+        return process.env.META_APP_ID || '';
     },
     get appSecret(): string {
-        const functionsConf = getFunctionsConfig();
-        // Check functions.config() first (has the updated secret), then fall back to .env
-        return functionsConf?.meta?.app_secret || process.env.META_APP_SECRET || '';
+        return process.env.META_APP_SECRET || '';
     },
     get redirectUri(): string {
-        const functionsConf = getFunctionsConfig();
-        return functionsConf?.meta?.redirect_uri || process.env.META_REDIRECT_URI || 'https://us-central1-quimeraai.cloudfunctions.net/metaOAuth-callback';
+        return process.env.META_REDIRECT_URI || 'https://us-central1-quimeraai.cloudfunctions.net/metaOAuth-callback';
     },
     get verifyToken(): string {
         return process.env.META_VERIFY_TOKEN || 'quimera_verify_token_2024';

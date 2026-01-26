@@ -6,9 +6,9 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo, ReactNode } from 'react';
 import { db, collection, onSnapshot, query, orderBy } from '../firebase';
-import { 
-    SUBSCRIPTION_PLANS, 
-    PlanFeatures, 
+import {
+    SUBSCRIPTION_PLANS,
+    PlanFeatures,
     PlanLimits,
     SubscriptionPlanId,
     SubscriptionPlan
@@ -38,18 +38,18 @@ export interface PlansContextValue {
     // All plans data
     plans: Record<string, StoredPlanData>;
     plansArray: StoredPlanData[];
-    
+
     // Loading state
     isLoading: boolean;
     error: string | null;
-    
+
     // Helper functions
     getPlan: (planId: string) => StoredPlanData | null;
     getPlanFeatures: (planId: string) => PlanFeatures;
     getPlanLimits: (planId: string) => PlanLimits;
     hasFeatureInPlan: (planId: string, feature: keyof PlanFeatures) => boolean;
     getMinPlanForFeature: (feature: keyof PlanFeatures) => { planId: string; planName: string };
-    
+
     // Refresh function
     refresh: () => void;
 }
@@ -61,7 +61,7 @@ export interface PlansContextValue {
 const PLANS_COLLECTION = 'subscriptionPlans';
 
 // Plan order for comparison
-const PLAN_ORDER: SubscriptionPlanId[] = ['free', 'starter', 'pro', 'agency', 'enterprise'];
+const PLAN_ORDER: SubscriptionPlanId[] = ['free', 'hobby', 'starter', 'pro', 'agency', 'agency_plus', 'enterprise'];
 
 // =============================================================================
 // CONTEXT
@@ -88,7 +88,7 @@ function isFeatureEnabled(value: unknown): boolean {
  */
 function convertHardcodedPlans(): Record<string, StoredPlanData> {
     const result: Record<string, StoredPlanData> = {};
-    
+
     for (const [id, plan] of Object.entries(SUBSCRIPTION_PLANS)) {
         result[id] = {
             id: id as SubscriptionPlanId,
@@ -103,7 +103,7 @@ function convertHardcodedPlans(): Record<string, StoredPlanData> {
             isPopular: plan.isPopular,
         };
     }
-    
+
     return result;
 }
 
@@ -137,13 +137,13 @@ export const PlansProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                         setPlans(convertHardcodedPlans());
                     } else {
                         const loadedPlans: Record<string, StoredPlanData> = {};
-                        
+
                         snapshot.docs.forEach((doc) => {
                             const data = doc.data();
-                            
+
                             // Skip archived plans
                             if (data.isArchived) return;
-                            
+
                             loadedPlans[doc.id] = {
                                 id: doc.id as SubscriptionPlanId,
                                 name: data.name || doc.id,

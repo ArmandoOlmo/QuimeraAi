@@ -3,10 +3,10 @@
  * Handles API key authentication and rate limiting
  */
 
-import * as express from 'express';
 import * as admin from 'firebase-admin';
-import * as crypto from 'crypto';
+import * as express from 'express';
 import * as functions from 'firebase-functions';
+import * as crypto from 'crypto';
 
 const db = admin.firestore();
 
@@ -14,111 +14,171 @@ const db = admin.firestore();
 // TYPES
 // ============================================================================
 
-export interface ApiAuthContext {
+export interface ApiKeyData {
+  id: string;
   tenantId: string;
+  name: string;
+  keyHash: string;
   permissions: string[];
-  keyId: string;
-  rateLimit: number;
+  status: 'active' | 'revoked';
+  createdAt: admin.firestore.Timestamp;
+  lastUsedAt?: admin.firestore.Timestamp;
+  expiresAt?: admin.firestore.Timestamp;
+  rateLimit: number; // Requests per minute
 }
+
+export interface AuthenticatedRequest extends express.Request {
+  apiAuth?: {
+    tenantId: string;
+    permissions: string[];
+    keyId: string;
+    rateLimit: number;
+  };
+}
+
+// ============================================================================
+// RATE LIMIT CONFIGURATION
+// ============================================================================
+
+const RATE_LIMITS = {
+  agency: 100, // 100 requests/minute
+  agency_plus: 500, // 500 requests/minute
+  enterprise: 2000, // 2000 requests/minute
+};
 
 // ============================================================================
 // HELPER FUNCTIONS
 // ============================================================================
 
-function hashApiKey(apiKey: string): string {
+/**
+ * Hash an API key
+ */
+export function hashApiKey(apiKey: string): string {
   return crypto.createHash('sha256').update(apiKey).digest('hex');
 }
 
-async function getRateLimitForTenant(tenantId: string): Promise<number> {
-  const tenantDoc = await db.collection('tenants').doc(tenantId).get();
-
-  if (!tenantDoc.exists) {
-    return 100;  // Default
-  }
-
-  const tenantData = tenantDoc.data()!;
-  const plan = tenantData.subscriptionPlan;
-
-  // Rate limits per plan
-  const limits: Record<string, number> = {
-    agency: 100,          // 100 requests/minute
-    agency_plus: 500,     // 500 requests/minute
-    enterprise: 2000,     // 2000 requests/minute
-  };
-
-  return limits[plan] || 100;
+/**
+ * Generate a random API key
+ */
+export function generateApiKey(): string {
+  const prefix = 'qai_'; // Quimera AI prefix
+  const randomBytes = crypto.randomBytes(32).toString('hex');
+  return `${prefix}${randomBytes}`;
 }
 
+/**
+ * Check rate limit for an API key
+ */
 async function checkRateLimit(
   tenantId: string,
   keyId: string,
-  rateLimit: number
+  limit: number
 ): Promise<boolean> {
   const now = Date.now();
-  const minuteWindow = now - 60000;  // Last minute
+  const oneMinuteAgo = now - 60000;
 
-  // Count requests in the last minute
-  const recentCalls = await db.collection('apiUsage')
+  // Count API calls in the last minute
+  const recentCallsSnapshot = await db
+    .collection('apiUsage')
     .where('keyId', '==', keyId)
-    .where('timestamp', '>', admin.firestore.Timestamp.fromMillis(minuteWindow))
+    .where('timestamp', '>', oneMinuteAgo)
     .count()
     .get();
 
-  const count = recentCalls.data().count;
+  const count = recentCallsSnapshot.data().count;
 
-  if (count >= rateLimit) {
-    functions.logger.warn('Rate limit exceeded', { tenantId, keyId, count, limit: rateLimit });
-    return false;
+  if (count >= limit) {
+    return false; // Rate limit exceeded
   }
 
-  return true;
+  return true; // Within rate limit
 }
 
+/**
+ * Log API usage
+ */
 async function logApiUsage(
   tenantId: string,
   keyId: string,
   method: string,
   path: string,
-  statusCode: number
+  statusCode: number,
+  responseTime: number
 ): Promise<void> {
-  await db.collection('apiUsage').add({
-    tenantId,
-    keyId,
-    method,
-    path,
-    statusCode,
-    timestamp: admin.firestore.FieldValue.serverTimestamp(),
-  });
+  try {
+    await db.collection('apiUsage').add({
+      tenantId,
+      keyId,
+      method,
+      path,
+      statusCode,
+      responseTime,
+      timestamp: Date.now(),
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+  } catch (error) {
+    console.error('Error logging API usage:', error);
+    // Don't throw - logging shouldn't break the API
+  }
+}
+
+/**
+ * Get rate limit for tenant based on plan
+ */
+async function getRateLimitForTenant(tenantId: string): Promise<number> {
+  const tenantDoc = await db.collection('tenants').doc(tenantId).get();
+
+  if (!tenantDoc.exists) {
+    return RATE_LIMITS.agency; // Default
+  }
+
+  const tenantData = tenantDoc.data();
+  const plan = tenantData?.subscriptionPlan || 'agency';
+
+  return RATE_LIMITS[plan as keyof typeof RATE_LIMITS] || RATE_LIMITS.agency;
 }
 
 // ============================================================================
-// MIDDLEWARE
+// AUTHENTICATION MIDDLEWARE
 // ============================================================================
 
 /**
- * Authenticate API key
+ * Authenticate API Key Middleware
+ * Validates API key and checks rate limits
  */
 export async function authenticateApiKey(
-  req: express.Request,
+  req: AuthenticatedRequest,
   res: express.Response,
   next: express.NextFunction
 ): Promise<void> {
-  const apiKey = req.headers['x-api-key'] as string;
-
-  if (!apiKey) {
-    res.status(401).json({
-      error: 'API key required',
-      message: 'Include X-API-Key header in your request',
-    });
-    return;
-  }
+  const startTime = Date.now();
 
   try {
-    // Hash the API key
+    // 1. Extract API key from header
+    const apiKey = req.headers['x-api-key'] as string;
+
+    if (!apiKey) {
+      res.status(401).json({
+        error: 'API key required',
+        message: 'Include your API key in the X-API-Key header',
+      });
+      return;
+    }
+
+    // 2. Validate API key format
+    if (!apiKey.startsWith('qai_')) {
+      res.status(401).json({
+        error: 'Invalid API key format',
+        message: 'API key must start with qai_',
+      });
+      return;
+    }
+
+    // 3. Hash the key and look it up in database
     const keyHash = hashApiKey(apiKey);
 
-    // Look up API key in database
-    const apiKeySnapshot = await db.collection('apiKeys')
+    const apiKeySnapshot = await db
+      .collection('apiKeys')
       .where('keyHash', '==', keyHash)
       .where('status', '==', 'active')
       .limit(1)
@@ -127,28 +187,32 @@ export async function authenticateApiKey(
     if (apiKeySnapshot.empty) {
       res.status(401).json({
         error: 'Invalid API key',
-        message: 'The provided API key is invalid or has been revoked',
+        message: 'API key not found or has been revoked',
       });
       return;
     }
 
     const keyDoc = apiKeySnapshot.docs[0];
-    const keyData = keyDoc.data();
+    const keyData = keyDoc.data() as ApiKeyData;
 
-    // Check expiration
-    if (keyData.expiresAt && keyData.expiresAt.toMillis() < Date.now()) {
+    // 4. Check if key has expired
+    if (keyData.expiresAt && keyData.expiresAt.toDate() < new Date()) {
       res.status(401).json({
         error: 'API key expired',
-        message: 'The provided API key has expired',
+        message: 'This API key has expired',
       });
       return;
     }
 
-    // Get rate limit for tenant
+    // 5. Get rate limit for tenant
     const rateLimit = await getRateLimitForTenant(keyData.tenantId);
 
-    // Check rate limit
-    const withinLimit = await checkRateLimit(keyData.tenantId, keyDoc.id, rateLimit);
+    // 6. Check rate limit
+    const withinLimit = await checkRateLimit(
+      keyData.tenantId,
+      keyDoc.id,
+      rateLimit
+    );
 
     if (!withinLimit) {
       res.status(429).json({
@@ -159,89 +223,66 @@ export async function authenticateApiKey(
       return;
     }
 
-    // Update last used timestamp (async, don't wait)
-    keyDoc.ref.update({
+    // 7. Update last used timestamp
+    await keyDoc.ref.update({
       lastUsedAt: admin.firestore.FieldValue.serverTimestamp(),
-    }).catch(err => {
-      functions.logger.error('Error updating lastUsedAt', { error: err.message });
     });
 
-    // Attach auth context to request
-    (req as any).apiAuth = {
+    // 8. Attach auth data to request
+    req.apiAuth = {
       tenantId: keyData.tenantId,
-      permissions: keyData.permissions || [],
+      permissions: keyData.permissions,
       keyId: keyDoc.id,
       rateLimit,
     };
 
-    next();
-  } catch (error: any) {
-    functions.logger.error('Error authenticating API key', { error: error.message });
-    res.status(500).json({
-      error: 'Authentication error',
-      message: 'An error occurred while authenticating your request',
-    });
-  }
-}
-
-/**
- * Log API usage after response
- */
-export function logUsage(
-  req: express.Request,
-  res: express.Response,
-  next: express.NextFunction
-): void {
-  const apiAuth = (req as any).apiAuth as ApiAuthContext | undefined;
-
-  if (!apiAuth) {
-    next();
-    return;
-  }
-
-  // Capture original send
-  const originalSend = res.send;
-
-  res.send = function (data: any) {
-    // Log usage (async, don't wait)
+    // 9. Log usage (async, don't wait)
+    const responseTime = Date.now() - startTime;
     logApiUsage(
-      apiAuth.tenantId,
-      apiAuth.keyId,
+      keyData.tenantId,
+      keyDoc.id,
       req.method,
       req.path,
-      res.statusCode
-    ).catch(err => {
-      functions.logger.error('Error logging API usage', { error: err.message });
+      200,
+      responseTime
+    ).catch(console.error);
+
+    // 10. Continue to next middleware/route
+    next();
+  } catch (error: any) {
+    console.error('Authentication error:', error);
+
+    res.status(500).json({
+      error: 'Authentication failed',
+      message: 'An error occurred during authentication',
     });
-
-    // Call original send
-    return originalSend.call(this, data);
-  };
-
-  next();
+  }
 }
 
 /**
- * Require specific permission
+ * Check Permission Middleware
+ * Verifies the API key has specific permissions
  */
 export function requirePermission(permission: string) {
-  return (req: express.Request, res: express.Response, next: express.NextFunction): void => {
-    const apiAuth = (req as any).apiAuth as ApiAuthContext | undefined;
-
-    if (!apiAuth) {
+  return (
+    req: AuthenticatedRequest,
+    res: express.Response,
+    next: express.NextFunction
+  ) => {
+    if (!req.apiAuth) {
       res.status(401).json({
-        error: 'Not authenticated',
-        message: 'This endpoint requires authentication',
+        error: 'Unauthorized',
+        message: 'Authentication required',
       });
       return;
     }
 
-    if (!apiAuth.permissions.includes(permission) && !apiAuth.permissions.includes('admin')) {
+    if (!req.apiAuth.permissions.includes(permission)) {
       res.status(403).json({
-        error: 'Permission denied',
-        message: `This action requires the '${permission}' permission`,
+        error: 'Forbidden',
+        message: `This API key does not have the '${permission}' permission`,
         requiredPermission: permission,
-        yourPermissions: apiAuth.permissions,
+        currentPermissions: req.apiAuth.permissions,
       });
       return;
     }
@@ -251,23 +292,106 @@ export function requirePermission(permission: string) {
 }
 
 /**
- * Error handler middleware
+ * Error Handler Middleware
+ * Catches and formats errors
  */
 export function errorHandler(
   err: any,
   req: express.Request,
   res: express.Response,
   next: express.NextFunction
-): void {
-  functions.logger.error('API error', {
-    error: err.message,
-    stack: err.stack,
-    method: req.method,
-    path: req.path,
+) {
+  console.error('API Error:', err);
+
+  // Log error to Firestore
+  if ((req as AuthenticatedRequest).apiAuth) {
+    const auth = (req as AuthenticatedRequest).apiAuth!;
+    db.collection('apiErrors')
+      .add({
+        tenantId: auth.tenantId,
+        keyId: auth.keyId,
+        method: req.method,
+        path: req.path,
+        error: err.message,
+        stack: err.stack,
+        timestamp: Date.now(),
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      })
+      .catch(console.error);
+  }
+
+  // Format error response
+  const statusCode = err.statusCode || 500;
+  const message = err.message || 'Internal server error';
+
+  res.status(statusCode).json({
+    error: err.name || 'Error',
+    message,
+    ...(process.env.NODE_ENV === 'development' && { stack: err.stack }),
+  });
+}
+
+/**
+ * Not Found Handler
+ */
+export function notFoundHandler(
+  req: express.Request,
+  res: express.Response
+) {
+  res.status(404).json({
+    error: 'Not Found',
+    message: `Route ${req.method} ${req.path} not found`,
+    availableRoutes: [
+      'POST /api/v1/tenants',
+      'GET /api/v1/tenants',
+      'GET /api/v1/tenants/:id',
+      'PATCH /api/v1/tenants/:id',
+      'DELETE /api/v1/tenants/:id',
+      'POST /api/v1/tenants/:id/members',
+      'GET /api/v1/tenants/:id/usage',
+      'POST /api/v1/tenants/:id/reports',
+    ],
+  });
+}
+
+/**
+ * CORS Middleware
+ */
+export function corsMiddleware(
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+) {
+  res.set('Access-Control-Allow-Origin', '*');
+  res.set('Access-Control-Allow-Methods', 'GET, POST, PATCH, DELETE, OPTIONS');
+  res.set('Access-Control-Allow-Headers', 'Content-Type, X-API-Key');
+  res.set('Access-Control-Max-Age', '3600');
+
+  if (req.method === 'OPTIONS') {
+    res.status(204).send('');
+    return;
+  }
+
+  next();
+}
+
+/**
+ * Request Logger Middleware
+ */
+export function requestLogger(
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+) {
+  const startTime = Date.now();
+
+  // Log when response finishes
+  res.on('finish', () => {
+    const duration = Date.now() - startTime;
+    console.log(
+      `${req.method} ${req.path} - ${res.statusCode} - ${duration}ms`
+    );
   });
 
-  res.status(err.statusCode || 500).json({
-    error: err.name || 'Internal Server Error',
-    message: err.message || 'An unexpected error occurred',
-  });
+  next();
 }

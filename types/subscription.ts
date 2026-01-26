@@ -7,7 +7,7 @@
 // PLAN TYPES
 // =============================================================================
 
-export type SubscriptionPlanId = 'free' | 'starter' | 'pro' | 'agency' | 'agency_plus' | 'enterprise';
+export type SubscriptionPlanId = 'free' | 'hobby' | 'starter' | 'pro' | 'agency' | 'agency_plus' | 'enterprise';
 export type BillingCycle = 'monthly' | 'annually';
 export type SubscriptionStatus = 'active' | 'trial' | 'past_due' | 'cancelled' | 'expired';
 
@@ -36,42 +36,42 @@ export interface PlanFeatures {
     aiWebBuilder: boolean;
     visualEditor: boolean;
     templates: boolean;
-    
+
     // CMS
     cmsEnabled: boolean;
     cmsAdvanced: boolean;             // Blog, categorías, SEO avanzado
-    
+
     // CRM
     crmEnabled: boolean;
     crmPipelines: boolean;            // Múltiples pipelines
     crmAutomations: boolean;          // Automatizaciones
-    
+
     // E-commerce
     ecommerceEnabled: boolean;
     ecommerceTransactionFee: number;  // 0 = sin fee, 2 = 2%, etc.
-    
+
     // AI Features
     chatbotEnabled: boolean;
     chatbotCustomization: boolean;    // Personalización avanzada
     aiAssistant: boolean;
     aiImageGeneration: boolean;
-    
+
     // Communication
     emailMarketing: boolean;
     emailAutomation: boolean;
-    
+
     // Branding
     customDomains: boolean;
     removeBranding: boolean;          // Quitar "Powered by Quimera"
     whiteLabel: boolean;              // Full white-label
-    
+
     // Analytics
     analyticsBasic: boolean;
     analyticsAdvanced: boolean;
-    
+
     // Support
     supportLevel: 'community' | 'email' | 'chat' | 'priority' | 'dedicated';
-    
+
     // API
     apiAccess: boolean;
     webhooks: boolean;
@@ -84,23 +84,23 @@ export interface SubscriptionPlan {
     id: SubscriptionPlanId;
     name: string;
     description: string;
-    
+
     // Pricing
     price: {
         monthly: number;
         annually: number;              // Precio mensual si se paga anualmente
     };
-    
+
     // Limits & Features
     limits: PlanLimits;
     features: PlanFeatures;
-    
+
     // Display
     isFeatured: boolean;              // Destacar en pricing page
     isPopular: boolean;               // Badge "Popular"
     color: string;                    // Color del plan
     icon: string;                     // Icono del plan
-    
+
     // Stripe
     stripeProductId?: string;
     stripePriceIdMonthly?: string;
@@ -114,7 +114,7 @@ export interface SubscriptionPlan {
 /**
  * Tipos de operaciones que consumen AI credits
  */
-export type AiCreditOperation = 
+export type AiCreditOperation =
     | 'onboarding_complete'           // Generación completa de website
     | 'design_plan'                   // Generación de design plan
     | 'content_generation'            // Generación de contenido de sección
@@ -156,17 +156,17 @@ export interface AiCreditTransaction {
     tenantId: string;
     userId: string;
     projectId?: string;
-    
+
     // Operation details
     operation: AiCreditOperation;
     creditsUsed: number;
     description?: string;
-    
+
     // Model info (para debugging y análisis)
     model?: string;
     tokensInput?: number;
     tokensOutput?: number;
-    
+
     // Metadata
     timestamp: { seconds: number; nanoseconds: number };
     metadata?: Record<string, any>;
@@ -177,26 +177,26 @@ export interface AiCreditTransaction {
  */
 export interface AiCreditsUsage {
     tenantId: string;
-    
+
     // Current period
     periodStart: { seconds: number; nanoseconds: number };
     periodEnd: { seconds: number; nanoseconds: number };
-    
+
     // Credits
     creditsIncluded: number;          // Credits incluidos en el plan
     creditsUsed: number;              // Credits usados en el período
     creditsRemaining: number;         // Credits restantes
     creditsOverage: number;           // Credits de overage (si aplica)
-    
+
     // Breakdown by operation
     usageByOperation: Record<AiCreditOperation, number>;
-    
+
     // Daily usage (últimos 30 días)
     dailyUsage: Array<{
         date: string;                 // YYYY-MM-DD
         credits: number;
     }>;
-    
+
     // Last updated
     lastUpdated: { seconds: number; nanoseconds: number };
 }
@@ -236,12 +236,12 @@ export interface CreditCheckResult {
  */
 export interface TenantSubscription {
     tenantId: string;
-    
+
     // Plan info
     planId: SubscriptionPlanId;
     billingCycle: BillingCycle;
     status: SubscriptionStatus;
-    
+
     // Dates
     startDate: { seconds: number; nanoseconds: number };
     currentPeriodStart: { seconds: number; nanoseconds: number };
@@ -249,14 +249,14 @@ export interface TenantSubscription {
     trialEndDate?: { seconds: number; nanoseconds: number };
     cancelledAt?: { seconds: number; nanoseconds: number };
     cancelAtPeriodEnd: boolean;
-    
+
     // Stripe
     stripeCustomerId?: string;
     stripeSubscriptionId?: string;
-    
+
     // Add-ons
     addOns: SubscriptionAddOn[];
-    
+
     // Credit packages purchased
     creditPackagesPurchased: Array<{
         packageId: string;
@@ -264,7 +264,7 @@ export interface TenantSubscription {
         purchasedAt: { seconds: number; nanoseconds: number };
         expiresAt?: { seconds: number; nanoseconds: number };
     }>;
-    
+
     // Usage
     aiCreditsUsage: AiCreditsUsage;
 }
@@ -298,8 +298,8 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionPlanId, SubscriptionPlan> = 
         limits: {
             maxProjects: 1,
             maxUsers: 1,
-            maxStorageGB: 0.5,
-            maxAiCredits: 30,
+            maxStorageGB: 1,
+            maxAiCredits: 60,
             maxDomains: 0,
             maxLeads: 50,
             maxProducts: 0,
@@ -336,7 +336,54 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionPlanId, SubscriptionPlan> = 
         color: '#6b7280',
         icon: 'Sparkles',
     },
-    
+
+    hobby: {
+        id: 'hobby',
+        name: 'Hobby',
+        description: 'Para proyectos personales y portfolios',
+        price: { monthly: 9, annually: 7 },
+        limits: {
+            maxProjects: 2,
+            maxUsers: 1,
+            maxStorageGB: 2,
+            maxAiCredits: 100,
+            maxDomains: 1,
+            maxLeads: 200,
+            maxProducts: 0,
+            maxEmailsPerMonth: 0,
+        },
+        features: {
+            aiWebBuilder: true,
+            visualEditor: true,
+            templates: true,
+            cmsEnabled: false,
+            cmsAdvanced: false,
+            crmEnabled: false,
+            crmPipelines: false,
+            crmAutomations: false,
+            ecommerceEnabled: false,
+            ecommerceTransactionFee: 0,
+            chatbotEnabled: false,
+            chatbotCustomization: false,
+            aiAssistant: true,
+            aiImageGeneration: true,
+            emailMarketing: false,
+            emailAutomation: false,
+            customDomains: true,
+            removeBranding: false,
+            whiteLabel: false,
+            analyticsBasic: true,
+            analyticsAdvanced: false,
+            supportLevel: 'email',
+            apiAccess: false,
+            webhooks: false,
+        },
+        isFeatured: false,
+        isPopular: false,
+        color: '#06b6d4',
+        icon: 'Heart',
+    },
+
     starter: {
         id: 'starter',
         name: 'Starter',
@@ -383,7 +430,7 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionPlanId, SubscriptionPlan> = 
         color: '#3b82f6',
         icon: 'Rocket',
     },
-    
+
     pro: {
         id: 'pro',
         name: 'Pro',
@@ -430,7 +477,7 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionPlanId, SubscriptionPlan> = 
         color: '#8b5cf6',
         icon: 'Zap',
     },
-    
+
     agency: {
         id: 'agency',
         name: 'Agency',
@@ -620,6 +667,15 @@ export const AI_CREDIT_PACKAGES: AiCreditPackage[] = [
         price: 125,
         pricePerCredit: 0.025,
         discount: 50,
+        isPopular: false,
+    },
+    {
+        id: 'pack_10000',
+        name: '10,000 Credits',
+        credits: 10000,
+        price: 200,
+        pricePerCredit: 0.02,
+        discount: 60,
         isPopular: false,
     },
 ];

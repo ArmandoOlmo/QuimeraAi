@@ -39,7 +39,7 @@ const ProjectSelectorPage: React.FC<ProjectSelectorPageProps> = ({
     const { t } = useTranslation();
     const { setIsOnboardingOpen } = useUI();
     const { projects, isLoadingProjects } = useProject();
-    
+
     // Local state
     const [searchQuery, setSearchQuery] = useState('');
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -49,7 +49,7 @@ const ProjectSelectorPage: React.FC<ProjectSelectorPageProps> = ({
 
     // Filter and sort projects
     const filteredProjects = useMemo(() => {
-        let filtered = projects.filter(p => 
+        let filtered = projects.filter(p =>
             p.status !== 'Template' &&
             p.name.toLowerCase().includes(searchQuery.toLowerCase())
         );
@@ -114,18 +114,18 @@ const ProjectSelectorPage: React.FC<ProjectSelectorPageProps> = ({
 
                     {/* Center: Search */}
                     <div className="hidden md:flex flex-1 justify-center px-4">
-                        <div className="flex items-center gap-2 w-full max-w-xl bg-editor-border/40 rounded-lg px-3 py-2">
-                            <Search className="w-4 h-4 text-editor-text-secondary flex-shrink-0" />
+                        <div className="flex items-center gap-2 w-full max-w-xl bg-secondary/50 border border-border rounded-lg px-3 py-2">
+                            <Search className="w-4 h-4 text-muted-foreground flex-shrink-0" />
                             <input
                                 type="search"
                                 placeholder={t('navigationDashboard.searchProjects', 'Buscar proyectos...')}
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="flex-1 bg-transparent outline-none text-sm min-w-0"
+                                className="flex-1 bg-transparent outline-none text-sm min-w-0 text-foreground placeholder:text-muted-foreground"
                                 aria-label={t('navigationDashboard.searchProjects', 'Buscar proyectos')}
                             />
                             {searchQuery && (
-                                <button onClick={() => setSearchQuery('')} className="text-editor-text-secondary hover:text-editor-text-primary flex-shrink-0">
+                                <button onClick={() => setSearchQuery('')} className="text-muted-foreground hover:text-foreground flex-shrink-0">
                                     <X size={16} />
                                 </button>
                             )}
@@ -149,18 +149,18 @@ const ProjectSelectorPage: React.FC<ProjectSelectorPageProps> = ({
 
                 {/* Mobile Search - Below header */}
                 <div className="md:hidden px-4 py-3 border-b border-border bg-card/30">
-                    <div className="flex items-center gap-2 w-full bg-editor-border/40 rounded-lg px-3 py-2">
-                        <Search className="w-4 h-4 text-editor-text-secondary flex-shrink-0" />
+                    <div className="flex items-center gap-2 w-full bg-secondary/50 border border-border rounded-lg px-3 py-2">
+                        <Search className="w-4 h-4 text-muted-foreground flex-shrink-0" />
                         <input
                             type="search"
                             placeholder={t('navigationDashboard.searchProjects', 'Buscar proyectos...')}
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="flex-1 bg-transparent outline-none text-sm min-w-0"
+                            className="flex-1 bg-transparent outline-none text-sm min-w-0 text-foreground placeholder:text-muted-foreground"
                             aria-label={t('navigationDashboard.searchProjects', 'Buscar proyectos')}
                         />
                         {searchQuery && (
-                            <button onClick={() => setSearchQuery('')} className="text-editor-text-secondary hover:text-editor-text-primary flex-shrink-0">
+                            <button onClick={() => setSearchQuery('')} className="text-muted-foreground hover:text-foreground flex-shrink-0">
                                 <X size={16} />
                             </button>
                         )}
@@ -232,31 +232,28 @@ const ProjectSelectorPage: React.FC<ProjectSelectorPageProps> = ({
                         <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-6">
                             <button
                                 onClick={() => setFilterStatus('all')}
-                                className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-all border ${
-                                    filterStatus === 'all'
+                                className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-all border ${filterStatus === 'all'
                                         ? 'bg-primary text-primary-foreground border-primary shadow-md'
                                         : 'bg-secondary/50 border-border/40 text-muted-foreground hover:text-foreground hover:bg-secondary'
-                                }`}
+                                    }`}
                             >
                                 {t('common.all', 'Todos')} ({userProjects.length})
                             </button>
                             <button
                                 onClick={() => setFilterStatus('Published')}
-                                className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-all border ${
-                                    filterStatus === 'Published'
+                                className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-all border ${filterStatus === 'Published'
                                         ? 'bg-green-500 text-white border-green-500 shadow-md'
                                         : 'bg-secondary/50 border-border/40 text-muted-foreground hover:text-foreground hover:bg-secondary'
-                                }`}
+                                    }`}
                             >
                                 {t('dashboard.published', 'Publicados')} ({publishedCount})
                             </button>
                             <button
                                 onClick={() => setFilterStatus('Draft')}
-                                className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-all border ${
-                                    filterStatus === 'Draft'
+                                className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-all border ${filterStatus === 'Draft'
                                         ? 'bg-slate-500 text-white border-slate-500 shadow-md'
                                         : 'bg-secondary/50 border-border/40 text-muted-foreground hover:text-foreground hover:bg-secondary'
-                                }`}
+                                    }`}
                             >
                                 {t('dashboard.draft', 'Borradores')} ({draftCount})
                             </button>
@@ -382,7 +379,7 @@ interface ProjectCardProps {
 
 const ProjectCard: React.FC<ProjectCardProps> = ({ project, onSelect, formatDate }) => {
     const { t } = useTranslation();
-    
+
     return (
         <button
             onClick={onSelect}
@@ -401,14 +398,13 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, onSelect, formatDate
                         <Layers size={40} className="text-muted-foreground/30" />
                     </div>
                 )}
-                
+
                 {/* Status Badge */}
                 <div className="absolute top-3 right-3">
-                    <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${
-                        project.status === 'Published'
+                    <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${project.status === 'Published'
                             ? 'bg-green-500/90 text-white'
                             : 'bg-slate-500/90 text-white'
-                    }`}>
+                        }`}>
                         {project.status === 'Published' ? t('dashboard.published', 'Publicado') : t('dashboard.draft', 'Borrador')}
                     </span>
                 </div>
@@ -445,7 +441,7 @@ interface ProjectListItemProps {
 
 const ProjectListItem: React.FC<ProjectListItemProps> = ({ project, onSelect, formatDate }) => {
     const { t } = useTranslation();
-    
+
     return (
         <button
             onClick={onSelect}
@@ -472,9 +468,8 @@ const ProjectListItem: React.FC<ProjectListItemProps> = ({ project, onSelect, fo
                     {project.name}
                 </h3>
                 <div className="flex items-center gap-3 sm:gap-4 text-xs text-muted-foreground mt-1">
-                    <span className={`flex items-center gap-1 ${
-                        project.status === 'Published' ? 'text-green-500' : ''
-                    }`}>
+                    <span className={`flex items-center gap-1 ${project.status === 'Published' ? 'text-green-500' : ''
+                        }`}>
                         {project.status === 'Published' ? <Globe size={12} /> : <FileEdit size={12} />}
                         <span className="hidden sm:inline">
                             {project.status === 'Published' ? t('dashboard.published', 'Publicado') : t('dashboard.draft', 'Borrador')}

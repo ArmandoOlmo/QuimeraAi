@@ -7,24 +7,25 @@
 // ENUMS & BASIC TYPES
 // =============================================================================
 
-export type AppointmentStatus = 
-    | 'scheduled' 
-    | 'confirmed' 
-    | 'in_progress' 
-    | 'completed' 
-    | 'cancelled' 
-    | 'no_show' 
+export type AppointmentStatus =
+    | 'scheduled'
+    | 'confirmed'
+    | 'in_progress'
+    | 'completed'
+    | 'cancelled'
+    | 'no_show'
     | 'rescheduled';
 
-export type AppointmentType = 
-    | 'call' 
-    | 'video_call' 
-    | 'in_person' 
-    | 'demo' 
-    | 'consultation' 
-    | 'follow_up' 
-    | 'discovery' 
-    | 'closing';
+export type AppointmentType =
+    | 'call'
+    | 'video_call'
+    | 'in_person'
+    | 'demo'
+    | 'consultation'
+    | 'follow_up'
+    | 'discovery'
+    | 'closing'
+    | (string & {});
 
 export type AppointmentPriority = 'low' | 'medium' | 'high' | 'critical';
 
@@ -42,10 +43,10 @@ export type LocationType = 'virtual' | 'physical' | 'phone';
 
 export type SyncStatus = 'synced' | 'pending' | 'error' | 'not_synced';
 
-export type AppointmentOutcome = 
-    | 'successful' 
-    | 'partially_successful' 
-    | 'unsuccessful' 
+export type AppointmentOutcome =
+    | 'successful'
+    | 'partially_successful'
+    | 'unsuccessful'
     | 'needs_follow_up';
 
 // =============================================================================
@@ -184,13 +185,13 @@ export interface AppointmentAiInsights {
     potentialObjections?: string[];
     recommendedApproach?: string;
     participantProfile?: string;
-    
+
     // Scheduling intelligence
     successProbability?: number;
     recommendedDuration?: number;
     bestTimeSlots?: AppointmentTimeSlotSuggestion[];
     conflictWarnings?: string[];
-    
+
     // Sentiment & Analysis
     sentimentAnalysis?: {
         score: number; // -1 to 1
@@ -198,13 +199,13 @@ export interface AppointmentAiInsights {
         keywords: string[];
         confidence: number;
     };
-    
+
     // Post-meeting
     postMeetingSummary?: string;
     actionItems?: string[];
     keyDecisions?: string[];
     nextSteps?: string[];
-    
+
     // Metadata
     generatedAt?: { seconds: number; nanoseconds: number };
     model?: string;
@@ -246,73 +247,104 @@ export interface GoogleCalendarConfig {
 }
 
 // =============================================================================
+// TYPE CONFIGURATIONS (for UI) - Moved Up
+// =============================================================================
+
+export interface AppointmentTypeConfig {
+    id: AppointmentType;
+    label: string;
+    icon: string;
+    color: string;
+    gradient: string;
+    description?: string;
+}
+
+export interface AppointmentStatusConfig {
+    id: AppointmentStatus;
+    label: string;
+    icon: string;
+    color: string;
+    bgColor: string;
+    description?: string;
+}
+
+export interface AppointmentPriorityConfig {
+    id: AppointmentPriority;
+    label: string;
+    icon: string;
+    color: string;
+    order: number;
+}
+
+
+// =============================================================================
 // MAIN APPOINTMENT INTERFACE
 // =============================================================================
 
 export interface Appointment {
     id: string;
-    
+
     // Basic Information
     title: string;
     description?: string;
     type: AppointmentType;
     status: AppointmentStatus;
     priority: AppointmentPriority;
-    
+
     // Date & Time
     startDate: { seconds: number; nanoseconds: number };
     endDate: { seconds: number; nanoseconds: number };
     timezone: string;
     allDay?: boolean;
-    
+
     // Participants
     organizerId: string;
     organizerName?: string;
     organizerEmail?: string;
     participants: AppointmentParticipant[];
-    
+
     // Location
     location: AppointmentLocation;
-    
+
     // Recurrence
     recurrence?: AppointmentRecurrence;
     isRecurringInstance?: boolean;
-    
+
     // Reminders
     reminders: AppointmentReminder[];
-    
+
     // Attachments & Notes
     attachments: AppointmentAttachment[];
     notes: MeetingNote[];
-    
+
     // Follow-up
     followUpActions: FollowUpAction[];
-    
+
     // AI Features
     aiInsights?: AppointmentAiInsights;
     aiPrepEnabled?: boolean;
     autoTranscription?: boolean;
-    
+
     // Google Calendar
     googleSync?: GoogleCalendarSync;
-    
+
     // Relations
     linkedLeadIds?: string[];
     linkedDealIds?: string[];
     linkedProjectIds?: string[];
     parentAppointmentId?: string;
-    
+
     // Categorization
     tags?: string[];
     color?: string;
     customColor?: string;
-    
+
     // Outcome & Completion
     outcome?: AppointmentOutcome;
     outcomeNotes?: string;
     rating?: number; // 1-5
     actualDuration?: number; // minutos reales
-    
+
     // Metadata
     createdAt: { seconds: number; nanoseconds: number };
     createdBy: string;
@@ -322,7 +354,7 @@ export interface Appointment {
     cancelledBy?: string;
     cancelledReason?: string;
     completedAt?: { seconds: number; nanoseconds: number };
-    
+
     // Tenant/Project scope
     tenantId?: string;
     projectId?: string;
@@ -335,9 +367,9 @@ export interface Appointment {
 
 export interface AppointmentFilters {
     search?: string;
-    dateRange?: { 
+    dateRange?: {
         start: string; // ISO string
-        end: string; 
+        end: string;
     };
     statuses?: AppointmentStatus[];
     types?: AppointmentType[];
@@ -367,32 +399,32 @@ export interface AppointmentAnalytics {
     completedAppointments: number;
     cancelledAppointments: number;
     upcomingAppointments: number;
-    
+
     // Rates
     completionRate: number;
     cancellationRate: number;
     noShowRate: number;
     reschedulingRate: number;
-    
+
     // Time metrics
     averageDuration: number;
     totalTimeInMeetings: number;
-    
+
     // Patterns
     busiestDay: string;
     busiestHour: number;
     quietestDay: string;
-    
+
     // Conversion
     conversionRate: number; // citas -> deals cerrados
     averageDealsPerAppointment: number;
-    
+
     // Breakdown
     byType: Record<AppointmentType, number>;
     byStatus: Record<AppointmentStatus, number>;
     byOutcome: Record<AppointmentOutcome, number>;
     byPriority: Record<AppointmentPriority, number>;
-    
+
     // Trends
     trendsLastMonth: {
         date: string;
@@ -400,7 +432,7 @@ export interface AppointmentAnalytics {
         completed: number;
         cancelled: number;
     }[];
-    
+
     // Comparisons
     vsLastMonth: {
         appointmentsChange: number;
@@ -409,42 +441,28 @@ export interface AppointmentAnalytics {
     };
 }
 
-
 // =============================================================================
-// TYPE CONFIGURATIONS (for UI)
-// =============================================================================
-
-export interface AppointmentTypeConfig {
-    id: AppointmentType;
-    label: string;
-    icon: string;
-    color: string;
-    gradient: string;
-    description?: string;
-}
-
-export interface AppointmentStatusConfig {
-    id: AppointmentStatus;
-    label: string;
-    icon: string;
-    color: string;
-    bgColor: string;
-    description?: string;
-}
-
-export interface AppointmentPriorityConfig {
-    id: AppointmentPriority;
-    label: string;
-    icon: string;
-    color: string;
-    order: number;
-}
-
-// =============================================================================
-// EXPORTS FOR TYPE CONFIGS
+// HELPER FUNCTIONS FOR CONFIGS
 // =============================================================================
 
-export const APPOINTMENT_TYPE_CONFIGS: Record<AppointmentType, AppointmentTypeConfig> = {
+export const getAppointmentTypeConfig = (type: string): AppointmentTypeConfig => {
+    // Check if it's a known type
+    if (Object.prototype.hasOwnProperty.call(APPOINTMENT_TYPE_CONFIGS, type)) {
+        return APPOINTMENT_TYPE_CONFIGS[type as keyof typeof APPOINTMENT_TYPE_CONFIGS];
+    }
+
+    // Default/Custom config
+    return {
+        id: type as AppointmentType,
+        label: type.charAt(0).toUpperCase() + type.slice(1).replace(/_/g, ' '),
+        icon: 'Hash', // Use a generic icon for custom types
+        color: 'slate',
+        gradient: 'from-slate-500 to-slate-600',
+        description: 'Tipo de cita personalizado'
+    };
+};
+
+export const APPOINTMENT_TYPE_CONFIGS: Record<string, AppointmentTypeConfig> = {
     call: {
         id: 'call',
         label: 'Llamada',

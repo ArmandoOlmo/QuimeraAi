@@ -455,7 +455,7 @@ const ModernAppArticleEditor: React.FC<ModernAppArticleEditorProps> = ({ article
             {/* Main Content Area */}
             <div className="flex flex-col flex-1 min-w-0">
                 {/* Use the same SimpleEditorHeader as the rest of the app */}
-                <SimpleEditorHeader />
+                <SimpleEditorHeader showSaveButton={false} showPublishButton={false} />
 
                 <input
                     type="file"

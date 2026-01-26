@@ -268,7 +268,6 @@ export const CalendarDayView: React.FC<CalendarDayViewProps> = ({
 
                             {/* Appointments */}
                             {dayAppointments.map(apt => {
-                                const typeConfig = APPOINTMENT_TYPE_CONFIGS[apt.type];
                                 const startDate = timestampToDate(apt.startDate);
                                 const endDate = timestampToDate(apt.endDate);
 
@@ -279,71 +278,21 @@ export const CalendarDayView: React.FC<CalendarDayViewProps> = ({
                                 const top = (startMinutes / 60) * HOUR_HEIGHT;
                                 const height = Math.max((durationMinutes / 60) * HOUR_HEIGHT, 40);
 
-                                const gradientClasses: Record<string, string> = {
-                                    blue: 'from-blue-500 to-blue-600',
-                                    violet: 'from-violet-500 to-purple-600',
-                                    emerald: 'from-emerald-500 to-teal-600',
-                                    orange: 'from-orange-500 to-amber-600',
-                                    cyan: 'from-cyan-500 to-sky-600',
-                                    yellow: 'from-yellow-500 to-amber-500',
-                                    pink: 'from-pink-500 to-rose-600',
-                                    green: 'from-green-500 to-emerald-600',
-                                };
-
-                                // Fallback to blue if typeConfig is undefined
-                                const color = typeConfig?.color || 'blue';
-
                                 return (
                                     <div
                                         key={apt.id}
-                                        onClick={(e) => { e.stopPropagation(); onAppointmentClick(apt); }}
-                                        className={`
-                                            absolute left-4 right-4 z-10
-                                            bg-gradient-to-br ${gradientClasses[color]}
-                                            rounded-xl overflow-hidden
-                                            cursor-pointer
-                                            transition-all duration-200
-                                            hover:shadow-xl hover:scale-[1.01] hover:z-20
-                                            border border-white/20
-                                        `}
+                                        className="absolute left-4 right-4 z-10 transition-all duration-200 hover:z-20"
                                         style={{
                                             top: `${top}px`,
                                             height: `${height}px`,
                                         }}
                                     >
-                                        <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent" />
-                                        <div className="relative h-full p-4 flex flex-col">
-                                            <h4 className="text-white font-bold text-lg">
-                                                {apt.title}
-                                            </h4>
-                                            <p className="text-white/80 text-sm mt-1">
-                                                {formatTime(apt.startDate)} - {formatTime(apt.endDate)}
-                                            </p>
-                                            {apt.description && height > 100 && (
-                                                <p className="text-white/60 text-sm mt-2 line-clamp-2">
-                                                    {apt.description}
-                                                </p>
-                                            )}
-                                            {apt.participants.length > 0 && height > 80 && (
-                                                <div className="mt-auto flex items-center gap-2">
-                                                    <div className="flex -space-x-1">
-                                                        {apt.participants.slice(0, 3).map(p => (
-                                                            <div
-                                                                key={p.id}
-                                                                className="w-6 h-6 rounded-full bg-white/20 border border-white/30 flex items-center justify-center text-xs text-white font-medium"
-                                                            >
-                                                                {p.name.charAt(0)}
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                    {apt.participants.length > 3 && (
-                                                        <span className="text-white/80 text-xs">
-                                                            +{apt.participants.length - 3}
-                                                        </span>
-                                                    )}
-                                                </div>
-                                            )}
-                                        </div>
+                                        <AppointmentCard
+                                            appointment={apt}
+                                            variant="fresha"
+                                            onClick={() => onAppointmentClick(apt)}
+                                            className="h-full w-full shadow-md"
+                                        />
                                     </div>
                                 );
                             })}

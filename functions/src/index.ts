@@ -12,7 +12,7 @@ if (!admin.apps.length) {
 }
 
 import { getWidgetConfig, submitWidgetLead, trackWidgetAnalytics } from './widgetApi';
-import { generateContent, streamContent, getUsageStats, generateImage, getGeminiApiKey } from './geminiProxy';
+import { generateContent, streamContent, getUsageStats, generateImage } from './geminiProxy';
 import { textToSpeech, getVoices, voiceChat } from './voiceProxy';
 import {
     createPaymentIntent,
@@ -124,11 +124,7 @@ import {
     // External domain setup (simplified flow via Cloudflare)
     setupExternalDomainWithCloudflare,
     verifyExternalDomainNameservers,
-    migrateToCloudflare,
-    // Cloud Run Admin API (automatic domain mapping with SSL)
-    createDomainMapping,
-    checkDomainMappingStatus,
-    setupFullDomainMapping
+    migrateToCloudflare
 } from './domains';
 
 // Social Channels functions
@@ -183,49 +179,6 @@ import {
     batchSyncAllUserClaims
 } from './userRoleClaims';
 
-// Agency Plan - Billing functions (Stripe Connect for Agencies)
-import {
-    createStripeConnectAccount,
-    getStripeConnectStatus,
-    setupClientBilling,
-    updateClientMonthlyPrice,
-    cancelClientSubscription,
-    generateClientInvoice
-} from './billing/stripeConnectAgency';
-
-import { stripeConnectWebhook as agencyStripeWebhook } from './billing/stripeWebhooks';
-
-import {
-    getAddonsPricing,
-    calculateAddonsPrice,
-    checkAddonsEligibility,
-    updateSubscriptionAddons
-} from './billing/addonsManagement';
-
-// Agency Plan - Reports functions
-import {
-    generateConsolidatedReport,
-    getSavedReport,
-    deleteSavedReport
-} from './reports/generateConsolidatedReport';
-
-import {
-    sendMonthlyReports,
-    sendWeeklyReports,
-    triggerManualReport
-} from './reports/scheduledReports';
-
-// Agency Plan - Onboarding functions
-import {
-    autoProvisionClient,
-    getOnboardingStatus
-} from './onboarding/autoProvisionClient';
-
-import { analyzeWebsite } from './onboarding/websiteAnalyzer';
-
-// Agency Plan - REST API
-import { tenantsApi } from './api/v1/tenants';
-
 // Export widget API functions
 export const widget = {
     getConfig: getWidgetConfig,
@@ -238,8 +191,7 @@ export const gemini = {
     generate: generateContent,
     stream: streamContent,
     usage: getUsageStats,
-    image: generateImage,
-    getApiKey: getGeminiApiKey
+    image: generateImage
 };
 
 // Export Voice proxy functions (Google Cloud TTS)
@@ -347,11 +299,7 @@ export const domains = {
     // External domain setup (simplified via Cloudflare)
     setupExternalWithCloudflare: setupExternalDomainWithCloudflare,
     verifyExternalNameservers: verifyExternalDomainNameservers,
-    migrateToCloudflare,
-    // Cloud Run Admin API (automatic domain mapping with SSL)
-    createMapping: createDomainMapping,
-    checkMappingStatus: checkDomainMappingStatus,
-    setupFull: setupFullDomainMapping
+    migrateToCloudflare
 };
 
 // Export Social Channels functions
@@ -411,49 +359,6 @@ export const userRoles = {
     onUserRoleChange,
     syncClaims: syncUserRoleClaims,
     batchSyncAll: batchSyncAllUserClaims
-};
-
-// Export Agency Plan - Billing functions (Stripe Connect for Agencies)
-export const agencyBilling = {
-    // Stripe Connect Setup
-    createStripeConnectAccount,
-    getStripeConnectStatus,
-    // Client Billing Management
-    setupClientBilling,
-    updateClientMonthlyPrice,
-    cancelClientSubscription,
-    generateClientInvoice,
-    // Webhooks
-    webhook: agencyStripeWebhook,
-    // Add-ons
-    getAddonsPricing,
-    calculateAddonsPrice,
-    checkAddonsEligibility,
-    updateSubscriptionAddons
-};
-
-// Export Agency Plan - Reports functions
-export const agencyReports = {
-    // Manual Reports
-    generate: generateConsolidatedReport,
-    getSaved: getSavedReport,
-    deleteSaved: deleteSavedReport,
-    // Scheduled Reports
-    sendMonthly: sendMonthlyReports,
-    sendWeekly: sendWeeklyReports,
-    triggerManual: triggerManualReport
-};
-
-// Export Agency Plan - Onboarding functions
-export const agencyOnboarding = {
-    autoProvision: autoProvisionClient,
-    getStatus: getOnboardingStatus,
-    analyzeWebsite: analyzeWebsite
-};
-
-// Export Agency Plan - REST API
-export const agencyApi = {
-    tenants: tenantsApi
 };
 
 // Alternative flat exports for easier routing
@@ -549,10 +454,6 @@ export {
     syncDomainMapping,
     // Cloudflare Worker API
     addWorkerDomain,
-    // Cloud Run Admin API (automatic domain mapping with SSL)
-    createDomainMapping,
-    checkDomainMappingStatus,
-    setupFullDomainMapping,
     // Social Channels exports
     facebookWebhook,
     facebookWebhookVerify,
@@ -592,31 +493,6 @@ export {
     // User Role Claims exports (Security)
     onUserRoleChange,
     syncUserRoleClaims,
-    batchSyncAllUserClaims,
-    // Agency Plan - Billing exports (Stripe Connect for Agencies)
-    createStripeConnectAccount,
-    getStripeConnectStatus,
-    setupClientBilling,
-    updateClientMonthlyPrice,
-    cancelClientSubscription,
-    generateClientInvoice,
-    agencyStripeWebhook,
-    getAddonsPricing,
-    calculateAddonsPrice,
-    checkAddonsEligibility,
-    updateSubscriptionAddons,
-    // Agency Plan - Reports exports
-    generateConsolidatedReport,
-    getSavedReport,
-    deleteSavedReport,
-    sendMonthlyReports,
-    sendWeeklyReports,
-    triggerManualReport,
-    // Agency Plan - Onboarding exports
-    autoProvisionClient,
-    getOnboardingStatus,
-    analyzeWebsite,
-    // Agency Plan - REST API exports
-    tenantsApi
+    batchSyncAllUserClaims
 };
 

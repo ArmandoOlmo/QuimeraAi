@@ -1,5 +1,5 @@
 import React, { useState, useRef, useMemo, useEffect } from 'react';
-import { Upload, X, Image as ImageIcon, Loader2, Zap, Sparkles, Wand2, RefreshCw, Grid, Globe, Search, Check } from 'lucide-react';
+import { Upload, X, Image as ImageIcon, Loader2, Zap, Sparkles, Wand2, RefreshCw, Grid, Globe, Search, Check, Plus } from 'lucide-react';
 import { useAuth } from '../../contexts/core/AuthContext';
 import { useAI } from '../../contexts/ai';
 import { useFiles } from '../../contexts/files';
@@ -51,6 +51,11 @@ const ThumbnailEditor: React.FC<ThumbnailEditorProps> = ({ project, onClose, onU
     const [isGeneratingThumbnail, setIsGeneratingThumbnail] = useState(false);
     const [isEnhancingPrompt, setIsEnhancingPrompt] = useState(false);
     const [generatedThumbnail, setGeneratedThumbnail] = useState<string | null>(null);
+
+    // Reference Images State
+    const [referenceImages, setReferenceImages] = useState<string[]>([]);
+    const [isDraggingRef, setIsDraggingRef] = useState(false);
+    const referenceFileInputRef = useRef<HTMLInputElement>(null);
 
     // Library state
     const [librarySource, setLibrarySource] = useState<'user' | 'global'>('global');
@@ -294,6 +299,76 @@ Return ONLY the prompt text, nothing else. Make it 1-2 sentences maximum.`;
         }
     };
 
+    // Helper function to convert File to base64 data URL
+    const fileToBase64 = (file: File): Promise<string> => {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result as string);
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+        });
+    };
+
+    // Reference images handlers
+    const processReferenceFiles = async (files: FileList | File[]) => {
+        const remainingSlots = 14 - referenceImages.length;
+        if (remainingSlots <= 0) {
+            showError(t('dashboard.thumbnailEditor.maxReferences', 'Maximum 14 reference images'));
+            return;
+        }
+
+        const filesToProcess = Array.from(files).slice(0, remainingSlots);
+        const successfulBase64s: string[] = [];
+
+        for (const file of filesToProcess) {
+            if (file.type.startsWith('image/')) {
+                try {
+                    const base64DataUrl = await fileToBase64(file);
+                    if (base64DataUrl) {
+                        successfulBase64s.push(base64DataUrl);
+                    }
+                } catch (error) {
+                    console.error(`Error converting ${file.name} to base64:`, error);
+                }
+            }
+        }
+
+        if (successfulBase64s.length > 0) {
+            setReferenceImages(prev => [...prev, ...successfulBase64s]);
+        }
+    };
+
+    const handleReferenceImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files) {
+            processReferenceFiles(e.target.files);
+        }
+    };
+
+    const handleRefDragOver = (e: React.DragEvent) => {
+        e.preventDefault();
+        setIsDraggingRef(true);
+    };
+
+    const handleRefDragLeave = (e: React.DragEvent) => {
+        e.preventDefault();
+        setIsDraggingRef(false);
+    };
+
+    const handleRefDrop = (e: React.DragEvent) => {
+        e.preventDefault();
+        setIsDraggingRef(false);
+        if (e.dataTransfer.files) {
+            processReferenceFiles(e.dataTransfer.files);
+        }
+    };
+
+    const handleRemoveReferenceImage = (index: number) => {
+        setReferenceImages(prev => prev.filter((_, i) => i !== index));
+        if (referenceFileInputRef.current) {
+            referenceFileInputRef.current.value = '';
+        }
+    };
+
     // Generate thumbnail with AI
     const handleGenerateThumbnail = async () => {
         console.log('[ThumbnailEditor] handleGenerateThumbnail called');
@@ -319,6 +394,7 @@ Return ONLY the prompt text, nothing else. Make it 1-2 sentences maximum.`;
                 style: thumbnailStyle,
                 destination: 'user',
                 resolution: '2K',
+                referenceImages: referenceImages.length > 0 ? referenceImages : undefined,
             });
             console.log('[ThumbnailEditor] Generated image URL:', url);
             setGeneratedThumbnail(url);
@@ -796,6 +872,68 @@ Return ONLY the prompt text, nothing else. Make it 1-2 sentences maximum.`;
                                     placeholder={t('superadmin.templateEditor.describeThumbnail', 'Describe the thumbnail you want to generate...')}
                                     className="w-full bg-background border border-border rounded-lg p-3 text-sm text-foreground focus:ring-2 focus:ring-purple-500 outline-none resize-none h-24"
                                 />
+                            </div>
+
+                            {/* Reference Images */}
+                            <div>
+                                <div className="flex items-center justify-between mb-2">
+                                    <label className="text-xs text-muted-foreground">
+                                        {t('dashboard.thumbnailEditor.referenceImages', 'Reference Images')}
+                                    </label>
+                                    <span className="text-xs text-muted-foreground bg-secondary px-2 py-0.5 rounded-full">
+                                        {referenceImages.length}/14
+                                    </span>
+                                </div>
+                                <input
+                                    type="file"
+                                    ref={referenceFileInputRef}
+                                    accept="image/*"
+                                    multiple
+                                    onChange={handleReferenceImageUpload}
+                                    className="hidden"
+                                />
+                                <div
+                                    className={`
+                                        border-2 border-dashed rounded-lg p-2 transition-all cursor-pointer
+                                        ${isDraggingRef
+                                            ? 'border-purple-500 bg-purple-500/10'
+                                            : 'border-border hover:border-purple-400 hover:bg-secondary/50'
+                                        }
+                                    `}
+                                    onDragOver={handleRefDragOver}
+                                    onDragLeave={handleRefDragLeave}
+                                    onDrop={handleRefDrop}
+                                    onClick={() => referenceFileInputRef.current?.click()}
+                                >
+                                    {referenceImages.length > 0 ? (
+                                        <div className="flex flex-wrap gap-1.5" onClick={(e) => e.stopPropagation()}>
+                                            {referenceImages.map((img, idx) => (
+                                                <div key={idx} className="relative w-10 h-10 rounded-md overflow-hidden group border border-border">
+                                                    <img src={img} alt={`Ref ${idx}`} className="w-full h-full object-cover" />
+                                                    <button
+                                                        onClick={() => handleRemoveReferenceImage(idx)}
+                                                        className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
+                                                    >
+                                                        <X size={12} className="text-white" />
+                                                    </button>
+                                                </div>
+                                            ))}
+                                            {referenceImages.length < 14 && (
+                                                <button
+                                                    onClick={() => referenceFileInputRef.current?.click()}
+                                                    className="w-10 h-10 flex items-center justify-center border border-dashed border-border rounded-md hover:border-purple-400 hover:bg-secondary text-muted-foreground hover:text-purple-400 transition-all"
+                                                >
+                                                    <Plus size={14} />
+                                                </button>
+                                            )}
+                                        </div>
+                                    ) : (
+                                        <div className="flex flex-col items-center py-2 text-muted-foreground">
+                                            <Upload size={16} className="mb-1" />
+                                            <span className="text-[10px] font-medium">{t('dashboard.thumbnailEditor.clickOrDragRef', 'Click or drag images')}</span>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
 
                             {/* Style Selector */}

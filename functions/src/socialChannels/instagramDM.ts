@@ -112,7 +112,7 @@ async function processEntry(entry: any): Promise<void> {
 
     // Find project
     const projectConfig = await findProjectByInstagramId(instagramAccountId);
-
+    
     if (!projectConfig) {
         console.log(`No project found for Instagram ID: ${instagramAccountId}`);
         return;
@@ -168,7 +168,7 @@ async function handleMessage(
         const attachment = message.attachments[0];
         messageType = attachment.type as any;
         mediaUrl = attachment.payload?.url;
-
+        
         switch (attachment.type) {
             case 'image':
                 messageContent = '[Image]';
@@ -236,7 +236,7 @@ async function handlePostback(
 
 async function handleReaction(projectConfig: any, senderId: string, reaction: any): Promise<void> {
     console.log(`Instagram reaction from ${senderId}: ${reaction.reaction || reaction.emoji}`);
-
+    
     // Store reaction (optional)
     if (reaction.action === 'react') {
         await storeMessage(projectConfig.projectId, {
@@ -262,7 +262,7 @@ async function generateAndSendResponse(
 ): Promise<void> {
     try {
         const aiConfig = projectConfig.aiAssistantConfig;
-
+        
         if (!aiConfig || !aiConfig.isActive) {
             console.log('AI assistant not active');
             return;
@@ -305,7 +305,7 @@ async function processMessageInternal(
     history: any[]
 ): Promise<{ success: boolean; response?: string }> {
     const { GoogleGenerativeAI } = await import('@google/generative-ai');
-
+    
     // Use environment variable (from .env) or fallback to functions.config()
     const apiKey = GEMINI_CONFIG.apiKey;
     if (!apiKey) {
@@ -314,10 +314,10 @@ async function processMessageInternal(
 
     try {
         const genAI = new GoogleGenerativeAI(apiKey);
-        const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+        const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
 
         const aiConfig = projectConfig.aiAssistantConfig;
-
+        
         const systemPrompt = `You are ${aiConfig.agentName}, a ${aiConfig.tone?.toLowerCase() || 'professional'} AI assistant.
 
 BUSINESS PROFILE:
@@ -366,18 +366,18 @@ YOUR RESPONSE (friendly and engaging for Instagram):`;
 async function findProjectByInstagramId(instagramAccountId: string): Promise<any | null> {
     try {
         const usersSnapshot = await db.collection('users').get();
-
+        
         for (const userDoc of usersSnapshot.docs) {
             const projectsSnapshot = await db
                 .collection('users')
                 .doc(userDoc.id)
                 .collection('projects')
                 .get();
-
+            
             for (const projectDoc of projectsSnapshot.docs) {
                 const data = projectDoc.data();
                 const igConfig = data.aiAssistantConfig?.socialChannels?.instagram;
-
+                
                 if (igConfig?.accountId === instagramAccountId && igConfig?.enabled) {
                     return {
                         projectId: projectDoc.id,
@@ -390,7 +390,7 @@ async function findProjectByInstagramId(instagramAccountId: string): Promise<any
                 }
             }
         }
-
+        
         return null;
     } catch (error) {
         console.error('Error finding project:', error);
@@ -412,7 +412,7 @@ async function sendInstagramMessage(accessToken: string, recipientId: string, me
     );
 
     const data = await response.json();
-
+    
     if (data.error) {
         throw new Error(data.error.message);
     }

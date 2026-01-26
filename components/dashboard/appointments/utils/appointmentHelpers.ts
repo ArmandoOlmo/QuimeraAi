@@ -13,6 +13,7 @@ import {
     APPOINTMENT_TYPE_CONFIGS,
     APPOINTMENT_STATUS_CONFIGS,
     APPOINTMENT_PRIORITY_CONFIGS,
+    getAppointmentTypeConfig,
 } from '../../../../types';
 
 // =============================================================================
@@ -159,26 +160,26 @@ export const getWeekDays = (date: Date, weekStartsOn: number = 1): Date[] => {
 export const getMonthDays = (date: Date, weekStartsOn: number = 1): Date[] => {
     const year = date.getFullYear();
     const month = date.getMonth();
-    
+
     // Primer día del mes
     const firstDay = new Date(year, month, 1);
     // Último día del mes
     const lastDay = new Date(year, month + 1, 0);
-    
+
     // Ajustar al inicio de la semana
     const start = getStartOfWeek(firstDay, weekStartsOn);
-    
+
     // Calcular cuántas semanas necesitamos mostrar
     const endOfMonth = getStartOfWeek(new Date(lastDay.getTime() + 7 * 24 * 60 * 60 * 1000), weekStartsOn);
-    
+
     const days: Date[] = [];
     let current = new Date(start);
-    
+
     while (current < endOfMonth) {
         days.push(new Date(current));
         current.setDate(current.getDate() + 1);
     }
-    
+
     return days;
 };
 
@@ -225,11 +226,11 @@ export const getRelativeTime = (timestamp: { seconds: number; nanoseconds: numbe
     const time = timestamp.seconds * 1000;
     const diff = time - now;
     const absDiff = Math.abs(diff);
-    
+
     const minutes = Math.floor(absDiff / (1000 * 60));
     const hours = Math.floor(absDiff / (1000 * 60 * 60));
     const days = Math.floor(absDiff / (1000 * 60 * 60 * 24));
-    
+
     if (diff > 0) {
         // Future
         if (minutes < 60) return `en ${minutes} min`;
@@ -255,7 +256,7 @@ export const getRelativeTime = (timestamp: { seconds: number; nanoseconds: numbe
  * Obtiene la configuración de tipo de cita
  */
 export const getTypeConfig = (type: AppointmentType) => {
-    return APPOINTMENT_TYPE_CONFIGS[type];
+    return getAppointmentTypeConfig(type);
 };
 
 /**
@@ -326,12 +327,12 @@ export const getAvatarColor = (name: string): string => {
         'bg-indigo-500',
         'bg-teal-500',
     ];
-    
+
     let hash = 0;
     for (let i = 0; i < name.length; i++) {
         hash = name.charCodeAt(i) + ((hash << 5) - hash);
     }
-    
+
     return colors[Math.abs(hash) % colors.length];
 };
 
@@ -347,7 +348,7 @@ export const appointmentsOverlap = (apt1: Appointment, apt2: Appointment): boole
     const end1 = apt1.endDate.seconds;
     const start2 = apt2.startDate.seconds;
     const end2 = apt2.endDate.seconds;
-    
+
     return start1 < end2 && start2 < end1;
 };
 
@@ -361,7 +362,7 @@ export const findConflicts = (
     return appointments.filter(apt => {
         if (apt.id === newAppointment.id) return false;
         if (apt.status === 'cancelled') return false;
-        
+
         return appointmentsOverlap(
             apt,
             { ...apt, startDate: newAppointment.startDate, endDate: newAppointment.endDate }
@@ -381,15 +382,15 @@ export const isSlotAvailable = (
     const conflicts = appointments.filter(apt => {
         if (apt.id === excludeId) return false;
         if (apt.status === 'cancelled') return false;
-        
+
         const aptStart = apt.startDate.seconds * 1000;
         const aptEnd = apt.endDate.seconds * 1000;
         const slotStart = start.getTime();
         const slotEnd = end.getTime();
-        
+
         return slotStart < aptEnd && aptStart < slotEnd;
     });
-    
+
     return conflicts.length === 0;
 };
 
@@ -417,7 +418,7 @@ export const filterByDateRange = (
 ): Appointment[] => {
     const startTs = start.getTime() / 1000;
     const endTs = end.getTime() / 1000;
-    
+
     return appointments.filter(apt => {
         return apt.startDate.seconds >= startTs && apt.startDate.seconds <= endTs;
     });
@@ -428,17 +429,17 @@ export const filterByDateRange = (
  */
 export const groupByDay = (appointments: Appointment[]): Map<string, Appointment[]> => {
     const groups = new Map<string, Appointment[]>();
-    
+
     appointments.forEach(apt => {
         const date = timestampToDate(apt.startDate);
         const key = date.toISOString().split('T')[0];
-        
+
         if (!groups.has(key)) {
             groups.set(key, []);
         }
         groups.get(key)!.push(apt);
     });
-    
+
     return groups;
 };
 
@@ -450,7 +451,7 @@ export const getUpcomingAppointments = (
     limit = 5
 ): Appointment[] => {
     const now = Date.now() / 1000;
-    
+
     return appointments
         .filter(apt => apt.startDate.seconds > now && apt.status !== 'cancelled')
         .sort((a, b) => a.startDate.seconds - b.startDate.seconds)
@@ -464,7 +465,7 @@ export const getTodayAppointments = (appointments: Appointment[]): Appointment[]
     const today = new Date();
     const start = getStartOfDay(today);
     const end = getEndOfDay(today);
-    
+
     return filterByDateRange(appointments, start, end)
         .filter(apt => apt.status !== 'cancelled')
         .sort((a, b) => a.startDate.seconds - b.startDate.seconds);
@@ -481,29 +482,29 @@ export const validateAppointment = (
     appointment: Partial<Appointment>
 ): { valid: boolean; errors: string[] } => {
     const errors: string[] = [];
-    
+
     if (!appointment.title?.trim()) {
         errors.push('El título es requerido');
     }
-    
+
     if (!appointment.startDate) {
         errors.push('La fecha de inicio es requerida');
     }
-    
+
     if (!appointment.endDate) {
         errors.push('La fecha de fin es requerida');
     }
-    
+
     if (appointment.startDate && appointment.endDate) {
         if (appointment.startDate.seconds >= appointment.endDate.seconds) {
             errors.push('La fecha de fin debe ser posterior a la fecha de inicio');
         }
     }
-    
+
     if (!appointment.participants || appointment.participants.length === 0) {
         errors.push('Debe haber al menos un participante');
     }
-    
+
     return {
         valid: errors.length === 0,
         errors,
@@ -590,7 +591,7 @@ export const appointmentToICS = (appointment: Appointment): string => {
         const date = new Date(ts.seconds * 1000);
         return date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
     };
-    
+
     const lines = [
         'BEGIN:VCALENDAR',
         'VERSION:2.0',
@@ -606,7 +607,7 @@ export const appointmentToICS = (appointment: Appointment): string => {
         'END:VEVENT',
         'END:VCALENDAR',
     ].filter(Boolean);
-    
+
     return lines.join('\r\n');
 };
 

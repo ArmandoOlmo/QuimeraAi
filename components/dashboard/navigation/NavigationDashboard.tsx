@@ -173,7 +173,7 @@ const NavigationDashboard: React.FC = () => {
                                             {/* Dropdown */}
                                             {isProjectSelectorOpen && (
                                                 <>
-                                                    <div 
+                                                    <div
                                                         className="fixed inset-0 z-40"
                                                         onClick={() => setIsProjectSelectorOpen(false)}
                                                     />
@@ -184,7 +184,7 @@ const NavigationDashboard: React.FC = () => {
                                                                 {t('navigationDashboard.quickSwitch', 'Cambio rápido')}
                                                             </p>
                                                         </div>
-                                                        
+
                                                         {/* Recent Projects */}
                                                         {projects.filter(p => p.status !== 'Template').slice(0, 5).map((project) => (
                                                             <button
@@ -193,13 +193,12 @@ const NavigationDashboard: React.FC = () => {
                                                                     handleProjectSelect(project.id);
                                                                     setIsProjectSelectorOpen(false);
                                                                 }}
-                                                                className={`w-full flex items-center gap-3 px-4 py-2.5 hover:bg-muted transition-colors ${
-                                                                    project.id === effectiveProjectId ? 'bg-primary/10' : ''
-                                                                }`}
+                                                                className={`w-full flex items-center gap-3 px-4 py-2.5 hover:bg-muted transition-colors ${project.id === effectiveProjectId ? 'bg-primary/10' : ''
+                                                                    }`}
                                                             >
                                                                 {project.thumbnailUrl ? (
-                                                                    <img 
-                                                                        src={project.thumbnailUrl} 
+                                                                    <img
+                                                                        src={project.thumbnailUrl}
                                                                         alt={project.name}
                                                                         className="w-10 h-10 rounded-lg object-cover"
                                                                     />
@@ -221,7 +220,7 @@ const NavigationDashboard: React.FC = () => {
                                                                 )}
                                                             </button>
                                                         ))}
-                                                        
+
                                                         {/* View All Button */}
                                                         <div className="border-t border-border/50 mt-2 pt-2 px-2">
                                                             <button
@@ -246,7 +245,7 @@ const NavigationDashboard: React.FC = () => {
                     </div>
                 </header>
 
-                <main className="flex-1 p-8 overflow-y-auto bg-[#f6f6f7] dark:bg-background black:bg-background">
+                <main className="flex-1 p-8 overflow-y-auto bg-background">
                     <div className="max-w-5xl mx-auto">
 
                         {/* Info Banner */}
@@ -281,20 +280,20 @@ const NavigationDashboard: React.FC = () => {
                                 )}
                             </div>
 
-                                {effectiveProject && menus.length > 0 && (
+                            {effectiveProject && menus.length > 0 && (
                                 <div className="flex items-center gap-3">
                                     {/* Búsqueda */}
-                                    <div className="flex items-center gap-2 bg-editor-border/40 rounded-lg px-3 py-1.5 w-48">
-                                        <Search size={14} className="text-editor-text-secondary flex-shrink-0" />
+                                    <div className="flex items-center gap-2 bg-secondary/50 border border-border rounded-lg px-3 py-1.5 w-48">
+                                        <Search size={14} className="text-muted-foreground flex-shrink-0" />
                                         <input
                                             type="text"
                                             placeholder={t('navigationDashboard.searchMenus')}
                                             value={searchQuery}
                                             onChange={(e) => setSearchQuery(e.target.value)}
-                                            className="flex-1 bg-transparent outline-none text-sm min-w-0"
+                                            className="flex-1 bg-transparent outline-none text-sm min-w-0 text-foreground placeholder:text-muted-foreground"
                                         />
                                         {searchQuery && (
-                                            <button onClick={() => setSearchQuery('')} className="text-editor-text-secondary hover:text-editor-text-primary flex-shrink-0">
+                                            <button onClick={() => setSearchQuery('')} className="text-muted-foreground hover:text-foreground flex-shrink-0">
                                                 <X size={14} />
                                             </button>
                                         )}
@@ -317,7 +316,7 @@ const NavigationDashboard: React.FC = () => {
                             {effectiveProject && (
                                 <button
                                     onClick={handleCreateNew}
-                                    className="flex items-center gap-1.5 h-9 px-3 rounded-md text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40"
+                                    className="flex items-center gap-1.5 h-9 px-3 rounded-md text-sm font-medium transition-all text-muted-foreground hover:text-foreground hover:bg-secondary"
                                 >
                                     <Plus className="w-4 h-4" /> {t('navigationDashboard.addMenu')}
                                 </button>
@@ -325,139 +324,139 @@ const NavigationDashboard: React.FC = () => {
                         </div>
 
                         {/* Empty Menu Warning */}
-                                {menus.some(m => m.items.length === 0) && (
-                                    <div className="mb-6 p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
-                                        <div className="flex items-start gap-3">
-                                            <Lightbulb className="text-yellow-500 flex-shrink-0" size={20} />
-                                            <div className="flex-1">
-                                                <h4 className="text-sm font-semibold text-foreground mb-1">
-                                                    {t('navigationDashboard.emptyMenuDetected')}
-                                                </h4>
-                                                <p className="text-xs text-muted-foreground mb-3">
-                                                    "{menus.find(m => m.items.length === 0)?.title}" {t('navigationDashboard.emptyMenuDesc')}
-                                                </p>
-                                                <button
-                                                    onClick={() => handleEdit(menus.find(m => m.items.length === 0)!)}
-                                                    className="text-xs font-medium text-yellow-600 dark:text-yellow-400 hover:underline flex items-center gap-1"
-                                                >
-                                                    {t('navigationDashboard.addItemsNow')}
-                                                    <ArrowRight size={12} />
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
-
-                                <div className="bg-white dark:bg-card black:bg-card border border-border rounded-xl shadow-sm overflow-hidden">
-                                    <div className="overflow-x-auto">
-                                        <table className="w-full text-left border-collapse">
-                                            <thead>
-                                                <tr className="border-b border-border bg-secondary/20">
-                                                    <th className="p-4 font-medium text-sm text-muted-foreground">{t('editor.title')}</th>
-                                                    <th className="p-4 font-medium text-sm text-muted-foreground">{t('navigationDashboard.items')}</th>
-                                                    <th className="p-4 font-medium text-sm text-muted-foreground">{t('dashboard.usage')}</th>
-                                                    <th className="p-4 font-medium text-sm text-muted-foreground w-32">{t('common.actions')}</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody className="divide-y divide-border">
-                                                {filteredMenus.length === 0 ? (
-                                                    <tr>
-                                                        <td colSpan={4} className="p-8 text-center text-muted-foreground">
-                                                            {searchQuery || filterUsage !== 'all'
-                                                                ? t('navigationDashboard.noMenusMatch')
-                                                                : t('navigationDashboard.noMenusFound')}
-                                                        </td>
-                                                    </tr>
-                                                ) : (
-                                                    filteredMenus.map((menu) => {
-                                                        const usedInHeader = data?.header?.menuId === menu.id;
-                                                        const usedInFooter = data?.footer?.linkColumns?.some(col => col.menuId === menu.id);
-                                                        const isEmpty = menu.items.length === 0;
-
-                                                        return (
-                                                            <tr
-                                                                key={menu.id}
-                                                                onClick={() => handleEdit(menu)}
-                                                                className={`hover:bg-secondary/30 cursor-pointer transition-colors group ${isEmpty ? 'opacity-70' : ''}`}
-                                                            >
-                                                                <td className="p-4">
-                                                                    <div className="flex items-center gap-2">
-                                                                        <div className="font-semibold text-foreground">{menu.title}</div>
-                                                                        {isEmpty && (
-                                                                            <span className="inline-flex items-center px-2 py-0.5 text-[10px] font-medium text-orange-500 bg-orange-500/10 rounded-full">
-                                                                                {t('navigationDashboard.empty')}
-                                                                            </span>
-                                                                        )}
-                                                                    </div>
-                                                                    {menu.handle && <div className="text-xs text-muted-foreground mt-0.5">{t('navigationDashboard.handle')}: {menu.handle}</div>}
-                                                                </td>
-                                                                <td className="p-4 text-sm">
-                                                                    {isEmpty ? (
-                                                                        <span className="text-orange-500 flex items-center gap-1">
-                                                                            <AlertCircle size={14} />
-                                                                            {t('navigationDashboard.empty')}
-                                                                        </span>
-                                                                    ) : (
-                                                                        <span className="text-muted-foreground">
-                                                                            {menu.items.length} {menu.items.length === 1 ? t('navigationDashboard.item') : t('navigationDashboard.items')}
-                                                                        </span>
-                                                                    )}
-                                                                </td>
-                                                                <td className="p-4">
-                                                                    <div className="flex gap-2 flex-wrap">
-                                                                        {usedInHeader && (
-                                                                            <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-primary bg-primary/10 rounded-full">
-                                                                                <Layout size={12} />
-                                                                                {t('sections.header')}
-                                                                            </span>
-                                                                        )}
-                                                                        {usedInFooter && (
-                                                                            <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-primary bg-primary/10 rounded-full">
-                                                                                <LayoutGrid size={12} />
-                                                                                {t('sections.footer')}
-                                                                            </span>
-                                                                        )}
-                                                                        {!usedInHeader && !usedInFooter && (
-                                                                            <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                                                                                <AlertCircle size={12} />
-                                                                                <span>{t('navigationDashboard.notAssigned')}</span>
-                                                                            </div>
-                                                                        )}
-                                                                    </div>
-                                                                </td>
-                                                                <td className="p-4">
-                                                                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                                        <button
-                                                                            onClick={(e) => { e.stopPropagation(); handleEdit(menu); }}
-                                                                            className="p-2 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-md transition-all"
-                                                                            title="Edit menu"
-                                                                        >
-                                                                            <Edit2 size={14} />
-                                                                        </button>
-                                                                        <button
-                                                                            onClick={(e) => { e.stopPropagation(); handleDuplicate(menu); }}
-                                                                            className="p-2 text-muted-foreground hover:text-blue-500 hover:bg-blue-500/10 rounded-md transition-all"
-                                                                            title="Duplicate"
-                                                                        >
-                                                                            <Copy size={14} />
-                                                                        </button>
-                                                                        <button
-                                                                            onClick={(e) => handleDelete(e, menu.id)}
-                                                                            className="p-2 text-muted-foreground hover:text-red-500 hover:bg-red-500/10 rounded-md transition-all"
-                                                                            title="Delete"
-                                                                        >
-                                                                            <Trash2 size={14} />
-                                                                        </button>
-                                                                    </div>
-                                                                </td>
-                                                            </tr>
-                                                        );
-                                                    })
-                                                )}
-                                            </tbody>
-                                        </table>
+                        {menus.some(m => m.items.length === 0) && (
+                            <div className="mb-6 p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
+                                <div className="flex items-start gap-3">
+                                    <Lightbulb className="text-yellow-500 flex-shrink-0" size={20} />
+                                    <div className="flex-1">
+                                        <h4 className="text-sm font-semibold text-foreground mb-1">
+                                            {t('navigationDashboard.emptyMenuDetected')}
+                                        </h4>
+                                        <p className="text-xs text-muted-foreground mb-3">
+                                            "{menus.find(m => m.items.length === 0)?.title}" {t('navigationDashboard.emptyMenuDesc')}
+                                        </p>
+                                        <button
+                                            onClick={() => handleEdit(menus.find(m => m.items.length === 0)!)}
+                                            className="text-xs font-medium text-yellow-600 dark:text-yellow-400 hover:underline flex items-center gap-1"
+                                        >
+                                            {t('navigationDashboard.addItemsNow')}
+                                            <ArrowRight size={12} />
+                                        </button>
                                     </div>
                                 </div>
+                            </div>
+                        )}
+
+                        <div className="bg-card border border-border rounded-xl shadow-sm overflow-hidden">
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left border-collapse">
+                                    <thead>
+                                        <tr className="border-b border-border bg-muted/50">
+                                            <th className="p-4 font-medium text-sm text-muted-foreground">{t('editor.title')}</th>
+                                            <th className="p-4 font-medium text-sm text-muted-foreground">{t('navigationDashboard.items')}</th>
+                                            <th className="p-4 font-medium text-sm text-muted-foreground">{t('dashboard.usage')}</th>
+                                            <th className="p-4 font-medium text-sm text-muted-foreground w-32">{t('common.actions')}</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-border">
+                                        {filteredMenus.length === 0 ? (
+                                            <tr>
+                                                <td colSpan={4} className="p-8 text-center text-muted-foreground">
+                                                    {searchQuery || filterUsage !== 'all'
+                                                        ? t('navigationDashboard.noMenusMatch')
+                                                        : t('navigationDashboard.noMenusFound')}
+                                                </td>
+                                            </tr>
+                                        ) : (
+                                            filteredMenus.map((menu) => {
+                                                const usedInHeader = data?.header?.menuId === menu.id;
+                                                const usedInFooter = data?.footer?.linkColumns?.some(col => col.menuId === menu.id);
+                                                const isEmpty = menu.items.length === 0;
+
+                                                return (
+                                                    <tr
+                                                        key={menu.id}
+                                                        onClick={() => handleEdit(menu)}
+                                                        className={`hover:bg-secondary/30 cursor-pointer transition-colors group ${isEmpty ? 'opacity-70' : ''}`}
+                                                    >
+                                                        <td className="p-4">
+                                                            <div className="flex items-center gap-2">
+                                                                <div className="font-semibold text-foreground">{menu.title}</div>
+                                                                {isEmpty && (
+                                                                    <span className="inline-flex items-center px-2 py-0.5 text-[10px] font-medium text-orange-500 bg-orange-500/10 rounded-full">
+                                                                        {t('navigationDashboard.empty')}
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                            {menu.handle && <div className="text-xs text-muted-foreground mt-0.5">{t('navigationDashboard.handle')}: {menu.handle}</div>}
+                                                        </td>
+                                                        <td className="p-4 text-sm">
+                                                            {isEmpty ? (
+                                                                <span className="text-orange-500 flex items-center gap-1">
+                                                                    <AlertCircle size={14} />
+                                                                    {t('navigationDashboard.empty')}
+                                                                </span>
+                                                            ) : (
+                                                                <span className="text-muted-foreground">
+                                                                    {menu.items.length} {menu.items.length === 1 ? t('navigationDashboard.item') : t('navigationDashboard.items')}
+                                                                </span>
+                                                            )}
+                                                        </td>
+                                                        <td className="p-4">
+                                                            <div className="flex gap-2 flex-wrap">
+                                                                {usedInHeader && (
+                                                                    <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-primary bg-primary/10 rounded-full">
+                                                                        <Layout size={12} />
+                                                                        {t('sections.header')}
+                                                                    </span>
+                                                                )}
+                                                                {usedInFooter && (
+                                                                    <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-primary bg-primary/10 rounded-full">
+                                                                        <LayoutGrid size={12} />
+                                                                        {t('sections.footer')}
+                                                                    </span>
+                                                                )}
+                                                                {!usedInHeader && !usedInFooter && (
+                                                                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                                                                        <AlertCircle size={12} />
+                                                                        <span>{t('navigationDashboard.notAssigned')}</span>
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        </td>
+                                                        <td className="p-4">
+                                                            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                                <button
+                                                                    onClick={(e) => { e.stopPropagation(); handleEdit(menu); }}
+                                                                    className="p-2 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-md transition-all"
+                                                                    title="Edit menu"
+                                                                >
+                                                                    <Edit2 size={14} />
+                                                                </button>
+                                                                <button
+                                                                    onClick={(e) => { e.stopPropagation(); handleDuplicate(menu); }}
+                                                                    className="p-2 text-muted-foreground hover:text-blue-500 hover:bg-blue-500/10 rounded-md transition-all"
+                                                                    title="Duplicate"
+                                                                >
+                                                                    <Copy size={14} />
+                                                                </button>
+                                                                <button
+                                                                    onClick={(e) => handleDelete(e, menu.id)}
+                                                                    className="p-2 text-muted-foreground hover:text-red-500 hover:bg-red-500/10 rounded-md transition-all"
+                                                                    title="Delete"
+                                                                >
+                                                                    <Trash2 size={14} />
+                                                                </button>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                );
+                                            })
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
 
                         {effectiveProject && (
                             <div className="mt-6 flex justify-between items-center">

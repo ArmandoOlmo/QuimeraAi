@@ -1525,6 +1525,132 @@
       "actions": "Acciones"
     }
   },
+  "cms_editor": {
+    "postSettings": "Configuración de la Publicación",
+    "metaDescription": "Configura metadatos y apariencia.",
+    "urlSlug": "Slug de la URL",
+    "featuredImage": "Imagen Destacada",
+    "excerpt": "Extracto",
+    "excerptPlaceholder": "Breve resumen para listados...",
+    "seoSettings": "Configuración SEO",
+    "autoGen": "Auto-Generar",
+    "seoTitle": "Título SEO",
+    "seoTitlePlaceholder": "Máx. 60 caracteres",
+    "seoDescription": "Meta Descripción",
+    "seoDescPlaceholder": "Máx. 160 caracteres",
+    "draft": "Borrador",
+    "published": "Publicado",
+    "save": "Guardar",
+    "saved": "Guardado {{time}}",
+    "titlePlaceholder": "Ingresa el título de la publicación...",
+    "editLink": "Editar Enlace",
+    "linkPlaceholder": "https://ejemplo.com",
+    "removeLink": "Eliminar Enlace",
+    "insertImage": "Insertar Imagen",
+    "toolbar": {
+      "undo": "Deshacer",
+      "redo": "Rehacer",
+      "paragraph": "Párrafo",
+      "h1": "Encabezado 1",
+      "h2": "Encabezado 2",
+      "h3": "Encabezado 3",
+      "quote": "Cita",
+      "bold": "Negrita",
+      "italic": "Cursiva",
+      "underline": "Subrayado",
+      "strikethrough": "Tachado",
+      "code": "Código",
+      "textColor": "Color de Texto",
+      "highlight": "Resaltado",
+      "removeHighlight": "Eliminar Resaltado",
+      "alignLeft": "Alinear a la Izquierda",
+      "alignCenter": "Centrar",
+      "alignRight": "Alinear a la Derecha",
+      "alignJustify": "Justificar",
+      "bulletList": "Lista de Viñetas",
+      "numberedList": "Lista Numerada",
+      "table": "Insertar Tabla",
+      "horizontalLine": "Línea Horizontal",
+      "clearFormatting": "Limpiar Formato"
+    },
+    "commands": {
+      "title": "Comandos",
+      "h1Desc": "Encabezado de sección grande",
+      "h2Desc": "Encabezado de sección mediano",
+      "h3Desc": "Encabezado de sección pequeño",
+      "ulDesc": "Crear una lista de viñetas",
+      "olDesc": "Crear una lista numerada",
+      "quoteDesc": "Insertar un bloque de cita",
+      "codeDesc": "Insertar un bloque de código",
+      "imageDesc": "Subir una imagen",
+      "tableDesc": "Insertar una tabla",
+      "hrDesc": "Insertar una línea horizontal",
+      "aiContinueDesc": "Dejar que la IA continúe escribiendo",
+      "aiImproveDesc": "Mejorar el texto seleccionado"
+    },
+    "assistant": {
+      "ai": "IA",
+      "improve": "Mejorar",
+      "fix": "Corregir",
+      "continue": "Continuar"
+    },
+    "errors": {
+      "failedToSave": "Error al guardar",
+      "titleRequired": "El título es obligatorio",
+      "uploadFailed": "Error al subir la imagen.",
+      "aiGenerationFailed": "Error en la generación de IA. Por favor intenta de nuevo.",
+      "selectTextFirst": "Por favor, selecciona texto primero."
+    }
+  },
+  "cms_assistant": {
+    "title": "Asistente de Contenido AI",
+    "subtitle": "Creación guiada paso a paso",
+    "stepTopic": "¿Sobre qué quieres escribir hoy?",
+    "stepTopicDesc": "Dime el tema principal, una idea o incluso un título provisional.",
+    "topicPlaceholder": "Ej: Los beneficios del yoga para programadores...",
+    "stepDetails": "Detalles adicionales",
+    "audienceLabel": "¿A quién va dirigido? (Audiencia)",
+    "audiencePlaceholder": "Ej: Principiantes, Expertos, Clientes potenciales...",
+    "toneLabel": "¿Cuál es el tono deseado?",
+    "tones": {
+      "professional": "Profesional",
+      "friendly": "Amigable",
+      "persuasive": "Persuasivo",
+      "informative": "Informativo",
+      "inspirational": "Inspirador",
+      "funny": "Divertido",
+      "minimalist": "Minimalista"
+    },
+    "generating": "La IA está escribiendo...",
+    "generatingDesc": "Estamos estructurando tu artículo, creando títulos atractivos y redactando el contenido.",
+    "success": "¡Contenido generado con éxito!",
+    "successDesc": "Revisa el resumen antes de llevarlo al editor.",
+    "previewTitle": "Título",
+    "previewExcerpt": "Resumen",
+    "previewContent": "Vista previa del contenido",
+    "noContent": "Sin contenido generado",
+    "retry": "Reintentar",
+    "back": "Atrás",
+    "next": "Siguiente",
+    "generateDraft": "Generar Borrador",
+    "openInEditor": "Abrir en Editor",
+    "errorGenerating": "Hubo un error generando el contenido. Por favor intenta de nuevo."
+  },
+  "cms_assistant_step2": {
+    "title": "Estructura y Estilo",
+    "subtitle": "Define cómo quieres que se genere el contenido.",
+    "lengthLabel": "Extensión deseada",
+    "lengths": {
+      "short": "Corto (~300 palabras)",
+      "medium": "Medio (~600 palabras)",
+      "long": "Largo (+1000 palabras)"
+    },
+    "includeImages": "Incluir espacios para imágenes",
+    "includeFaq": "Incluir sección de FAQ",
+    "includeSeo": "Incluir metadatos SEO",
+    "generate": "Generar Contenido",
+    "back": "Atrás"
+  },
   "aiAssistant": {
     "title": "Asistente IA",
     "chatbot": "Chatbot",
@@ -1761,6 +1887,55 @@
     "trendAnalysis": "Análisis de Tendencias",
     "analyzeDesc": "Predice gastos futuros y encuentra oportunidades de ahorro",
     "analyzeTrends": "Analizar Tendencias",
+    "recategorizing": "Recategorizando...",
+    "pending": "Pendiente",
+    "recentActivity": "Actividad Reciente",
+    "noRecentActivity": "No hay actividad reciente",
+    "viewAllMovements": "Ver todos los movimientos →",
+    "aiAlerts": "Alertas AI",
+    "goToAnalysis": "Ir al Análisis →",
+    "upload": {
+      "title": "Sube tu Factura o Ticket",
+      "description": "IA extraerá automáticamente la información y categorizará el gasto",
+      "processing": "Procesando con IA..."
+    },
+    "charts": {
+      "expenses": "Gastos",
+      "average": "Promedio",
+      "waitingForData": "Esperando datos de gastos..."
+    },
+    "filters": {
+      "allCategories": "Todas las Categorías",
+      "time": {
+        "thisMonth": "Este Mes",
+        "lastMonth": "Mes Pasado",
+        "last90Days": "Últimos 90 Días",
+        "thisYear": "Este Año",
+        "all": "Todo",
+        "custom": "Personalizado"
+      }
+    },
+    "details": {
+      "totalAmount": "Monto Total",
+      "verifiedApproved": "Verificado y Aprobado",
+      "pendingReview": "Pendiente de Revisión",
+      "selectMovement": "Selecciona un Movimiento",
+      "selectMovementDesc": "Haz clic en cualquier registro de la tabla para ver y editar sus detalles."
+    },
+    "items": {
+      "detected": "Items Detectados",
+      "scanTag": "AI SCAN",
+      "description": "Descripción del item",
+      "quantity": "Cant:",
+      "uncategorized": "Sin Categoría",
+      "noItems": "No se detectaron items individuales."
+    },
+    "analysis": {
+      "generatedReport": "Reporte Generado",
+      "predictiveAnalysis": "Análisis Predictivo",
+      "noDataTitle": "Sin Datos para Analizar",
+      "noDataDesc": "Sube algunos recibos primero para desbloquear los análisis con IA."
+    },
     "categories": {
       "office": "Oficina",
       "marketing": "Marketing",

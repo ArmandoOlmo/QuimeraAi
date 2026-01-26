@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { X, Sparkles, ArrowRight, Loader2, CheckCircle } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { generateContentViaProxy, extractTextFromResponse } from '../../utils/geminiProxyClient';
 import { CMSPost } from '../../types';
 import { useAuth } from '../../contexts/core/AuthContext';
@@ -17,6 +18,7 @@ interface ContentCreatorAssistantProps {
 type Step = 'topic' | 'details' | 'generating' | 'preview';
 
 const ContentCreatorAssistant: React.FC<ContentCreatorAssistantProps> = ({ onClose, onPostCreated }) => {
+    const { t } = useTranslation();
     const { user } = useAuth();
     const { saveCMSPost } = useCMS();
     const { activeProject } = useProject();
@@ -24,9 +26,67 @@ const ContentCreatorAssistant: React.FC<ContentCreatorAssistantProps> = ({ onClo
     const [step, setStep] = useState<Step>('topic');
     const [topic, setTopic] = useState('');
     const [audience, setAudience] = useState('');
-    const [tone, setTone] = useState('Profesional');
+    const [tone, setTone] = useState('professional');
     const [generatedPost, setGeneratedPost] = useState<Partial<CMSPost> | null>(null);
     const [isGenerating, setIsGenerating] = useState(false);
+
+    // Tones configuration
+    const tones = [
+        { id: 'professional', label: t('cms_assistant.tones.professional') },
+        { id: 'friendly', label: t('cms_assistant.tones.friendly') },
+        { id: 'persuasive', label: t('cms_assistant.tones.persuasive') },
+        { id: 'informative', label: t('cms_assistant.tones.informative') },
+        { id: 'funny', label: t('cms_assistant.tones.funny') },
+        { id: 'minimalist', label: t('cms_assistant.tones.minimalist') }
+    ];
+
+    // Helper function to attempt repairing truncated JSON
+    const attemptRepairJSON = (text: string): object | null => {
+        try {
+            // First try direct parse
+            return JSON.parse(text);
+        } catch (e) {
+            console.log('⚠️ Attempting to repair truncated JSON...');
+
+            // Try to find and complete truncated JSON
+            let repaired = text.trim();
+
+            // Count open/close braces and brackets
+            const openBraces = (repaired.match(/{/g) || []).length;
+            const closeBraces = (repaired.match(/}/g) || []).length;
+            const openBrackets = (repaired.match(/\[/g) || []).length;
+            const closeBrackets = (repaired.match(/]/g) || []).length;
+
+            // Check if we're in the middle of a string (unterminated string error)
+            // Find the last quote and check if it's balanced
+            const lastPropertyMatch = repaired.match(/"([^"]+)":\s*"[^"]*$/);
+            if (lastPropertyMatch) {
+                // We have an unterminated string, close it
+                repaired = repaired + '"';
+                console.log('🔧 Closed unterminated string');
+            }
+
+            // Add missing closing braces
+            for (let i = 0; i < openBrackets - closeBrackets; i++) {
+                repaired += ']';
+            }
+            for (let i = 0; i < openBraces - closeBraces; i++) {
+                repaired += '}';
+            }
+
+            // Remove trailing commas before closing braces/brackets
+            repaired = repaired.replace(/,(\s*[}\]])/g, '$1');
+
+            try {
+                const result = JSON.parse(repaired);
+                console.log('✅ JSON repaired successfully');
+                return result;
+            } catch (e2) {
+                console.error('❌ Could not repair JSON:', e2);
+                return null;
+            }
+        }
+    };
 
     const handleGenerate = async () => {
         if (!topic) return;
@@ -67,12 +127,14 @@ const ContentCreatorAssistant: React.FC<ContentCreatorAssistantProps> = ({ onClo
 
                 Make sure the content is engaging, well-structured, and valuable for the target audience.
                 Output ONLY valid JSON without any markdown formatting or code blocks.
+                IMPORTANT: Keep the content concise to avoid truncation. Aim for 400-600 words maximum.
                 `;
             }
 
             const projectId = activeProject?.id || 'content-creator-assistant';
             const response = await generateContentViaProxy(projectId, promptText, modelToUse, {
-                temperature: 0.9
+                temperature: 0.9,
+                maxOutputTokens: 8192  // Ensure enough tokens for complete JSON response
             }, user?.uid);
 
             // Log successful API call
@@ -98,7 +160,12 @@ const ContentCreatorAssistant: React.FC<ContentCreatorAssistantProps> = ({ onClo
                 cleanedText = cleanedText.replace(/^```\n?/, '').replace(/\n?```$/, '');
             }
 
-            let parsedData = JSON.parse(cleanedText);
+            // Use robust JSON parsing with repair attempt
+            let parsedData = attemptRepairJSON(cleanedText);
+
+            if (!parsedData) {
+                throw new Error('Could not parse AI response as valid JSON');
+            }
             console.log("✅ Parsed data:", parsedData);
 
             // Si la respuesta es un array, tomar el primer elemento
@@ -128,7 +195,7 @@ const ContentCreatorAssistant: React.FC<ContentCreatorAssistantProps> = ({ onClo
             }
             console.error("❌ Error generating content:", error);
             console.error("Error details:", error);
-            alert("Hubo un error generando el contenido. Por favor intenta de nuevo.");
+            alert(t('cms_assistant.errorGenerating'));
             setStep('details');
         } finally {
             setIsGenerating(false);
@@ -175,7 +242,7 @@ const ContentCreatorAssistant: React.FC<ContentCreatorAssistantProps> = ({ onClo
             onPostCreated(newPost);
         } catch (error) {
             console.error("❌ Error in handleConfirm:", error);
-            alert("Error al crear el post. Por favor intenta de nuevo.");
+            alert(t('cms_editor.errors.failedToSave'));
         }
     };
 
@@ -189,8 +256,8 @@ const ContentCreatorAssistant: React.FC<ContentCreatorAssistantProps> = ({ onClo
                             <Sparkles className="text-primary w-6 h-6" />
                         </div>
                         <div>
-                            <h2 className="text-xl font-bold">Asistente de Contenido AI</h2>
-                            <p className="text-xs text-muted-foreground">Creación guiada paso a paso</p>
+                            <h2 className="text-xl font-bold">{t('cms_assistant.title')}</h2>
+                            <p className="text-xs text-muted-foreground">{t('cms_assistant.subtitle')}</p>
                         </div>
                     </div>
                     <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors">
@@ -203,14 +270,14 @@ const ContentCreatorAssistant: React.FC<ContentCreatorAssistantProps> = ({ onClo
                     {step === 'topic' && (
                         <div className="space-y-6 animate-fade-in-up">
                             <div className="text-center space-y-2 mb-8">
-                                <h3 className="text-2xl font-bold">¿Sobre qué quieres escribir hoy?</h3>
-                                <p className="text-muted-foreground">Dime el tema principal, una idea o incluso un título provisional.</p>
+                                <h3 className="text-2xl font-bold">{t('cms_assistant.stepTopic')}</h3>
+                                <p className="text-muted-foreground">{t('cms_assistant.stepTopicDesc')}</p>
                             </div>
                             <textarea
                                 autoFocus
                                 value={topic}
                                 onChange={(e) => setTopic(e.target.value)}
-                                placeholder="Ej: Los beneficios del yoga para programadores..."
+                                placeholder={t('cms_assistant.topicPlaceholder')}
                                 className="w-full h-32 bg-secondary/30 border border-border rounded-xl p-4 text-lg focus:ring-2 focus:ring-primary/50 outline-none resize-none"
                             />
                             <div className="flex justify-end">
@@ -219,7 +286,7 @@ const ContentCreatorAssistant: React.FC<ContentCreatorAssistantProps> = ({ onClo
                                     disabled={!topic.trim()}
                                     className="bg-primary text-primary-foreground px-6 py-3 rounded-xl font-bold flex items-center gap-2 hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
-                                    Siguiente <ArrowRight size={18} />
+                                    {t('cms_assistant.next')} <ArrowRight size={18} />
                                 </button>
                             </div>
                         </div>
@@ -228,29 +295,29 @@ const ContentCreatorAssistant: React.FC<ContentCreatorAssistantProps> = ({ onClo
                     {step === 'details' && (
                         <div className="space-y-6 animate-fade-in-up">
                             <div className="space-y-4">
-                                <label className="block font-medium">¿A quién va dirigido? (Audiencia)</label>
+                                <label className="block font-medium">{t('cms_assistant.audienceLabel')}</label>
                                 <input
                                     type="text"
                                     value={audience}
                                     onChange={(e) => setAudience(e.target.value)}
-                                    placeholder="Ej: Principiantes, Expertos, Clientes potenciales..."
+                                    placeholder={t('cms_assistant.audiencePlaceholder')}
                                     className="w-full bg-secondary/30 border border-border rounded-lg p-3 outline-none focus:border-primary transition-colors"
                                 />
                             </div>
 
                             <div className="space-y-4">
-                                <label className="block font-medium">¿Cuál es el tono deseado?</label>
+                                <label className="block font-medium">{t('cms_assistant.toneLabel')}</label>
                                 <div className="grid grid-cols-3 gap-3">
-                                    {['Profesional', 'Amigable', 'Persuasivo', 'Informativo', 'Divertido', 'Minimalista'].map((t) => (
+                                    {tones.map((t) => (
                                         <button
-                                            key={t}
-                                            onClick={() => setTone(t)}
-                                            className={`p-3 rounded-lg border text-sm font-medium transition-all ${tone === t
+                                            key={t.id}
+                                            onClick={() => setTone(t.id)}
+                                            className={`p-3 rounded-lg border text-sm font-medium transition-all ${tone === t.id
                                                 ? 'bg-primary text-primary-foreground border-primary'
                                                 : 'bg-card border-border hover:border-primary/50'
                                                 }`}
                                         >
-                                            {t}
+                                            {t.label}
                                         </button>
                                     ))}
                                 </div>
@@ -258,13 +325,13 @@ const ContentCreatorAssistant: React.FC<ContentCreatorAssistantProps> = ({ onClo
 
                             <div className="flex justify-between pt-4">
                                 <button onClick={() => setStep('topic')} className="text-muted-foreground hover:text-foreground font-medium px-4 transition-colors">
-                                    Atrás
+                                    {t('cms_assistant.back')}
                                 </button>
                                 <button
                                     onClick={handleGenerate}
                                     className="bg-gradient-to-r from-primary to-purple-600 text-white px-8 py-3 rounded-xl font-bold flex items-center gap-2 hover:shadow-lg hover:scale-105 transition-all"
                                 >
-                                    <Sparkles size={18} /> Generar Borrador
+                                    <Sparkles size={18} /> {t('cms_assistant.generateDraft')}
                                 </button>
                             </div>
                         </div>
@@ -277,8 +344,8 @@ const ContentCreatorAssistant: React.FC<ContentCreatorAssistantProps> = ({ onClo
                                 <Loader2 className="w-16 h-16 text-primary animate-spin relative z-10" />
                             </div>
                             <div>
-                                <h3 className="text-xl font-bold mb-2">La IA está escribiendo...</h3>
-                                <p className="text-muted-foreground max-w-xs mx-auto">Estamos estructurando tu artículo, creando títulos atractivos y redactando el contenido.</p>
+                                <h3 className="text-xl font-bold mb-2">{t('cms_assistant.generating')}</h3>
+                                <p className="text-muted-foreground max-w-xs mx-auto">{t('cms_assistant.generatingDesc')}</p>
                             </div>
                         </div>
                     )}
@@ -288,27 +355,40 @@ const ContentCreatorAssistant: React.FC<ContentCreatorAssistantProps> = ({ onClo
                             <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-4 flex items-start gap-3">
                                 <CheckCircle className="text-green-500 shrink-0 mt-0.5" size={20} />
                                 <div>
-                                    <p className="font-bold text-green-600">¡Contenido generado con éxito!</p>
-                                    <p className="text-xs text-green-600/80">Revisa el resumen antes de llevarlo al editor.</p>
+                                    <p className="font-bold text-green-600">{t('cms_assistant.success')}</p>
+                                    <p className="text-xs text-green-600/80">{t('cms_assistant.successDesc')}</p>
                                 </div>
                             </div>
 
                             <div className="space-y-4 flex-1 overflow-y-auto pr-2 custom-scrollbar">
                                 <div>
-                                    <span className="text-xs font-bold text-muted-foreground uppercase">Título</span>
-                                    <h3 className="text-xl font-bold">{generatedPost.title || 'Sin título'}</h3>
+                                    <span className="text-xs font-bold text-muted-foreground uppercase">{t('cms_assistant.previewTitle')}</span>
+                                    <h3 className="text-xl font-bold">{generatedPost.title || 'Untitled'}</h3>
                                 </div>
                                 <div>
-                                    <span className="text-xs font-bold text-muted-foreground uppercase">Resumen</span>
+                                    <span className="text-xs font-bold text-muted-foreground uppercase">{t('cms_assistant.previewExcerpt')}</span>
                                     <p className="text-muted-foreground">{generatedPost.excerpt || 'Sin resumen'}</p>
                                 </div>
                                 <div>
-                                    <span className="text-xs font-bold text-muted-foreground uppercase">Vista previa del contenido</span>
-                                    <div className="prose prose-sm dark:prose-invert max-w-none line-clamp-6 bg-secondary/20 p-4 rounded-lg border border-border/50 overflow-hidden">
+                                    <span className="text-xs font-bold text-muted-foreground uppercase">{t('cms_assistant.previewContent')}</span>
+                                    <div
+                                        className="max-w-none line-clamp-6 bg-background/50 p-4 rounded-lg border border-border overflow-hidden text-foreground"
+                                        style={{
+                                            // Ensure prose elements inherit proper colors
+                                            '--tw-prose-body': 'var(--foreground)',
+                                            '--tw-prose-headings': 'var(--foreground)',
+                                            '--tw-prose-links': 'var(--primary)',
+                                            '--tw-prose-bold': 'var(--foreground)',
+                                            '--tw-prose-bullets': 'var(--muted-foreground)',
+                                        } as React.CSSProperties}
+                                    >
                                         {generatedPost.content ? (
-                                            <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(generatedPost.content) }} />
+                                            <div
+                                                className="text-foreground prose-headings:text-foreground prose-p:text-foreground prose-li:text-foreground prose-strong:text-foreground [&_h2]:text-xl [&_h2]:font-bold [&_h2]:mt-4 [&_h2]:mb-2 [&_h2]:text-foreground [&_h3]:text-lg [&_h3]:font-semibold [&_h3]:mt-3 [&_h3]:mb-1 [&_h3]:text-foreground [&_p]:text-foreground [&_p]:mb-2 [&_p]:leading-relaxed [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:mb-2 [&_li]:text-foreground [&_li]:mb-1"
+                                                dangerouslySetInnerHTML={{ __html: sanitizeHtml(generatedPost.content) }}
+                                            />
                                         ) : (
-                                            <p className="text-muted-foreground italic">Sin contenido generado</p>
+                                            <p className="text-muted-foreground italic">{t('cms_assistant.noContent')}</p>
                                         )}
                                     </div>
                                 </div>
@@ -324,13 +404,13 @@ const ContentCreatorAssistant: React.FC<ContentCreatorAssistantProps> = ({ onClo
 
                             <div className="flex justify-between pt-4 border-t border-border mt-auto">
                                 <button onClick={() => setStep('details')} className="text-muted-foreground hover:text-foreground font-medium px-4 transition-colors">
-                                    Reintentar
+                                    {t('cms_assistant.retry')}
                                 </button>
                                 <button
                                     onClick={handleConfirm}
                                     className="bg-green-600 text-white px-8 py-3 rounded-xl font-bold flex items-center gap-2 hover:bg-green-700 transition-all shadow-lg shadow-green-900/20"
                                 >
-                                    Abrir en Editor <ArrowRight size={18} />
+                                    {t('cms_assistant.openInEditor')} <ArrowRight size={18} />
                                 </button>
                             </div>
                         </div>

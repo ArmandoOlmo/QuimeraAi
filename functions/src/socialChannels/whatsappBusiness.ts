@@ -118,7 +118,7 @@ async function processEntry(entry: any): Promise<void> {
 
         // Find project
         const projectConfig = await findProjectByPhoneNumberId(phoneNumberId);
-
+        
         if (!projectConfig) {
             console.log(`No project found for phone number ID: ${phoneNumberId}`);
             continue;
@@ -180,8 +180,8 @@ async function handleMessage(projectConfig: any, message: any, contact: any): Pr
             break;
         case 'interactive':
             // Handle button or list replies
-            messageContent = message.interactive?.button_reply?.title
-                || message.interactive?.list_reply?.title
+            messageContent = message.interactive?.button_reply?.title 
+                || message.interactive?.list_reply?.title 
                 || '[Interactive reply]';
             break;
         case 'button':
@@ -235,7 +235,7 @@ async function generateAndSendResponse(
 ): Promise<void> {
     try {
         const aiConfig = projectConfig.aiAssistantConfig;
-
+        
         if (!aiConfig || !aiConfig.isActive) {
             console.log('AI assistant not active');
             return;
@@ -279,7 +279,7 @@ async function processMessageInternal(
     history: any[]
 ): Promise<{ success: boolean; response?: string }> {
     const { GoogleGenerativeAI } = await import('@google/generative-ai');
-
+    
     const apiKey = GEMINI_CONFIG.apiKey;
     if (!apiKey) {
         return { success: false };
@@ -287,10 +287,10 @@ async function processMessageInternal(
 
     try {
         const genAI = new GoogleGenerativeAI(apiKey);
-        const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+        const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
 
         const aiConfig = projectConfig.aiAssistantConfig;
-
+        
         const systemPrompt = `You are ${aiConfig.agentName}, a ${aiConfig.tone?.toLowerCase() || 'professional'} AI assistant.
 
 BUSINESS PROFILE:
@@ -338,18 +338,18 @@ YOUR RESPONSE (keep it concise for WhatsApp):`;
 async function findProjectByPhoneNumberId(phoneNumberId: string): Promise<any | null> {
     try {
         const usersSnapshot = await db.collection('users').get();
-
+        
         for (const userDoc of usersSnapshot.docs) {
             const projectsSnapshot = await db
                 .collection('users')
                 .doc(userDoc.id)
                 .collection('projects')
                 .get();
-
+            
             for (const projectDoc of projectsSnapshot.docs) {
                 const data = projectDoc.data();
                 const waConfig = data.aiAssistantConfig?.socialChannels?.whatsapp;
-
+                
                 if (waConfig?.phoneNumberId === phoneNumberId && waConfig?.enabled) {
                     return {
                         projectId: projectDoc.id,
@@ -362,7 +362,7 @@ async function findProjectByPhoneNumberId(phoneNumberId: string): Promise<any | 
                 }
             }
         }
-
+        
         return null;
     } catch (error) {
         console.error('Error finding project:', error);
@@ -371,9 +371,9 @@ async function findProjectByPhoneNumberId(phoneNumberId: string): Promise<any | 
 }
 
 async function sendWhatsAppMessage(
-    phoneNumberId: string,
-    accessToken: string,
-    recipientId: string,
+    phoneNumberId: string, 
+    accessToken: string, 
+    recipientId: string, 
     message: string
 ): Promise<void> {
     const response = await fetch(
@@ -394,7 +394,7 @@ async function sendWhatsAppMessage(
     );
 
     const data = await response.json();
-
+    
     if (data.error) {
         throw new Error(data.error.message);
     }

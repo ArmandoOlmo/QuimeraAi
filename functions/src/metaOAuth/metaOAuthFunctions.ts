@@ -124,13 +124,13 @@ export const metaOAuthCallback = functions.https.onRequest(async (req, res) => {
     try {
         // Validate state
         const stateDoc = await db.collection('metaOAuthStates').doc(state as string).get();
-
+        
         if (!stateDoc.exists) {
             return res.redirect('/auth/meta/error?error=invalid_state');
         }
 
         const stateData = stateDoc.data()!;
-
+        
         // Check expiration
         if (stateData.expiresAt.toMillis() < Date.now()) {
             await stateDoc.ref.delete();
@@ -194,35 +194,35 @@ export const metaOAuthCallback = functions.https.onRequest(async (req, res) => {
             connectedAt: admin.firestore.FieldValue.serverTimestamp(),
             lastRefreshed: admin.firestore.FieldValue.serverTimestamp(),
             expiresAt: admin.firestore.Timestamp.fromMillis(Date.now() + expiresIn * 1000),
-
+            
             userId: stateData.userId,
             metaUserId: profileData.id,
             metaUserName: profileData.name,
             metaUserEmail: profileData.email,
             metaUserPicture: profileData.picture?.data?.url,
-
+            
             accessToken: accessToken, // In production, encrypt this
             tokenType: 'bearer',
-
+            
             pages: (pagesData.data || []).map((page: any) => ({
                 id: page.id,
                 name: page.name,
                 accessToken: page.access_token,
-                category: page.category || null,
-                pictureUrl: page.picture?.data?.url || null,
+                category: page.category,
+                pictureUrl: page.picture?.data?.url,
                 hasMessaging: true, // Assume true if we have pages_messaging scope
                 hasInstagram: !!page.instagram_business_account,
-                instagramAccountId: page.instagram_business_account?.id || null,
+                instagramAccountId: page.instagram_business_account?.id,
             })),
-
-            whatsappAccounts: whatsappAccounts || [],
-
+            
+            whatsappAccounts: whatsappAccounts,
+            
             instagramAccounts: (pagesData.data || [])
                 .filter((page: any) => page.instagram_business_account)
                 .map((page: any) => ({
                     id: page.instagram_business_account.id,
-                    username: page.instagram_business_account.username || null,
-                    profilePictureUrl: page.instagram_business_account.profile_picture_url || null,
+                    username: page.instagram_business_account.username,
+                    profilePictureUrl: page.instagram_business_account.profile_picture_url,
                     linkedPageId: page.id,
                 })),
         };
@@ -335,7 +335,7 @@ export const disconnectMeta = functions.https.onCall(async (data, context) => {
     // Also clear the social channels config
     const projectRef = db.collection('users').doc(context.auth.uid)
         .collection('projects').doc(projectId);
-
+    
     await projectRef.update({
         'aiAssistant.socialChannels': admin.firestore.FieldValue.delete(),
     });
@@ -550,7 +550,7 @@ export const selectMetaAssets = functions.https.onCall(async (data, context) => 
         await projectRef.update(socialChannelsUpdate);
     }
 
-    return {
+    return { 
         success: true,
         configured: {
             facebook: !!selectedPage,
@@ -592,14 +592,14 @@ export const setupWebhooks = functions.https.onCall(async (data, context) => {
 
     // Find page access token
     const selectedPage = connection.pages?.find((p: any) => p.id === connection.selectedPageId);
-
+    
     if (!selectedPage) {
         throw new functions.https.HttpsError('not-found', 'Selected page not found');
     }
 
     // Subscribe to page webhooks
     const webhookUrl = `https://us-central1-${process.env.GCLOUD_PROJECT}.cloudfunctions.net/socialChannels-facebookWebhook`;
-
+    
     const subscribeResponse = await fetch(
         `${META_GRAPH_API_BASE}/${selectedPage.id}/subscribed_apps`,
         {
@@ -618,7 +618,7 @@ export const setupWebhooks = functions.https.onCall(async (data, context) => {
         throw new functions.https.HttpsError('internal', `Failed to subscribe: ${subscribeResult.error.message}`);
     }
 
-    return {
+    return { 
         success: true,
         message: 'Webhooks configured successfully',
     };
@@ -642,7 +642,7 @@ async function fetchWhatsAppAccounts(accessToken: string): Promise<any[]> {
         const businessResponse = await fetch(
             `${META_GRAPH_API_BASE}/me/businesses?fields=id,name,owned_whatsapp_business_accounts{id,name}&access_token=${accessToken}`
         );
-
+        
         const businessData = await businessResponse.json() as any;
 
         if (businessData.error || !businessData.data) {
@@ -654,13 +654,13 @@ async function fetchWhatsAppAccounts(accessToken: string): Promise<any[]> {
 
         for (const business of businessData.data) {
             const wabaList = business.owned_whatsapp_business_accounts?.data || [];
-
+            
             for (const waba of wabaList) {
                 // Get phone numbers for this WABA
                 const phonesResponse = await fetch(
                     `${META_GRAPH_API_BASE}/${waba.id}/phone_numbers?fields=id,display_phone_number,verified_name,quality_rating,code_verification_status&access_token=${accessToken}`
                 );
-
+                
                 const phonesData = await phonesResponse.json() as any;
 
                 if (phonesData.data) {
@@ -697,7 +697,7 @@ export const scheduledTokenRefresh = functions.pubsub
     .schedule('every 24 hours')
     .onRun(async (context) => {
         const config = getMetaConfig();
-
+        
         // Find all connections that expire in the next 7 days
         const sevenDaysFromNow = admin.firestore.Timestamp.fromMillis(
             Date.now() + 7 * 24 * 60 * 60 * 1000
@@ -706,7 +706,7 @@ export const scheduledTokenRefresh = functions.pubsub
         // This would need to query across all users' projects
         // In production, you'd want a better structure for this
         console.log('Token refresh job running...');
-
+        
         // For now, we'll rely on the client-side refresh when needed
         return null;
     });
