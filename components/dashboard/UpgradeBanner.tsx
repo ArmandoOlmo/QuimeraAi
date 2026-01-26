@@ -14,6 +14,7 @@ import {
     TrendingUp,
     AlertTriangle,
 } from 'lucide-react';
+import { usePlans } from '../../contexts/PlansContext';
 import { useSafeUpgrade } from '../../contexts/UpgradeContext';
 import { useCreditsUsage } from '../../hooks/useCreditsUsage';
 import { useAuth } from '../../contexts/core/AuthContext';
@@ -24,11 +25,12 @@ interface UpgradeBannerProps {
     className?: string;
 }
 
-const UpgradeBanner: React.FC<UpgradeBannerProps> = ({ 
+const UpgradeBanner: React.FC<UpgradeBannerProps> = ({
     variant = 'full',
-    className = '' 
+    className = ''
 }) => {
     const { t } = useTranslation();
+    const { plansArray, getPlan } = usePlans();
     const upgradeContext = useSafeUpgrade();
     const { usage, isLoading } = useCreditsUsage();
     const { canAccessSuperAdmin } = useAuth();
@@ -53,11 +55,21 @@ const UpgradeBanner: React.FC<UpgradeBannerProps> = ({
         return null;
     }
 
-    // Determinar el siguiente plan
-    const planOrder = ['free', 'starter', 'pro', 'agency', 'enterprise'];
-    const currentIndex = planOrder.indexOf(usage?.planId || 'free');
-    const nextPlanId = planOrder[currentIndex + 1] as keyof typeof SUBSCRIPTION_PLANS;
-    const nextPlan = nextPlanId ? SUBSCRIPTION_PLANS[nextPlanId] : null;
+    // Get current plan data (try context first, then fallback)
+    const currentPlanId = usage?.planId || 'free';
+    const currentPlan = getPlan(currentPlanId) || SUBSCRIPTION_PLANS[currentPlanId] || SUBSCRIPTION_PLANS.free;
+
+    // Determinar el siguiente plan disponible (excluyendo archivados)
+    let nextPlan = null;
+    const currentIndex = plansArray.findIndex(p => p.id === currentPlanId);
+
+    if (currentIndex !== -1 && currentIndex < plansArray.length - 1) {
+        // Si el plan actual está activo y no es el último
+        nextPlan = plansArray[currentIndex + 1];
+    } else if (currentIndex === -1) {
+        // Si el plan actual está archivado o no encontrado, buscar el siguiente por precio
+        nextPlan = plansArray.find(p => p.price.monthly > currentPlan.price.monthly);
+    }
 
     if (variant === 'compact') {
         return (
@@ -99,14 +111,14 @@ const UpgradeBanner: React.FC<UpgradeBannerProps> = ({
                     {/* Left - Plan Info */}
                     <div className="flex-1">
                         <div className="flex items-center gap-3 mb-3">
-                            <div 
+                            <div
                                 className="p-3 rounded-xl"
-                                style={{ 
-                                    backgroundColor: `${SUBSCRIPTION_PLANS[usage?.planId || 'free'].color}20` 
+                                style={{
+                                    backgroundColor: `${SUBSCRIPTION_PLANS[usage?.planId || 'free'].color}20`
                                 }}
                             >
-                                <Sparkles 
-                                    className="w-6 h-6" 
+                                <Sparkles
+                                    className="w-6 h-6"
                                     style={{ color: SUBSCRIPTION_PLANS[usage?.planId || 'free'].color }}
                                 />
                             </div>
@@ -115,9 +127,9 @@ const UpgradeBanner: React.FC<UpgradeBannerProps> = ({
                                     <h3 className="text-lg font-bold text-foreground">
                                         {isLoading ? t('common.loading') : `Plan ${usage?.plan || 'Free'}`}
                                     </h3>
-                                    <span 
+                                    <span
                                         className="px-2 py-0.5 text-xs font-medium rounded-full"
-                                        style={{ 
+                                        style={{
                                             backgroundColor: `${SUBSCRIPTION_PLANS[usage?.planId || 'free'].color}20`,
                                             color: SUBSCRIPTION_PLANS[usage?.planId || 'free'].color
                                         }}

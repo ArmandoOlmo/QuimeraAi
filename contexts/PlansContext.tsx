@@ -136,10 +136,12 @@ export const PlansProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                         console.log('[PlansContext] No plans in Firestore, using hardcoded plans');
                         setPlans(convertHardcodedPlans());
                     } else {
+                        const seenPlans = new Set<string>();
                         const loadedPlans: Record<string, StoredPlanData> = {};
 
                         snapshot.docs.forEach((doc) => {
                             const data = doc.data();
+                            seenPlans.add(doc.id);
 
                             // Skip archived plans
                             if (data.isArchived) return;
@@ -163,7 +165,9 @@ export const PlansProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
                         // Ensure we have at least the base plans
                         for (const planId of PLAN_ORDER) {
-                            if (!loadedPlans[planId]) {
+                            // Only fall back to hardcoded if the plan is NOT in Firestore at all
+                            // If it is in Firestore but was skipped (archived), do NOT use hardcoded
+                            if (!loadedPlans[planId] && !seenPlans.has(planId)) {
                                 const hardcoded = SUBSCRIPTION_PLANS[planId];
                                 if (hardcoded) {
                                     loadedPlans[planId] = {

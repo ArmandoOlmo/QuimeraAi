@@ -21,7 +21,9 @@ import {
     Calendar,
     XCircle,
     RotateCcw,
+    Heart,
 } from 'lucide-react';
+import { usePlans } from '../../../contexts/PlansContext';
 import { useSafeUpgrade } from '../../../contexts/UpgradeContext';
 import { useCreditsUsage } from '../../../hooks/useCreditsUsage';
 import { useAuth } from '../../../contexts/core/AuthContext';
@@ -35,9 +37,11 @@ import {
 // Plan icons mapping
 const PLAN_ICONS: Record<SubscriptionPlanId, React.ElementType> = {
     free: Sparkles,
+    hobby: Heart,
     starter: Rocket,
     pro: Zap,
     agency: Building2,
+    agency_plus: Crown,
     enterprise: Crown,
 };
 
@@ -55,6 +59,7 @@ interface SubscriptionDetails {
 const SubscriptionSettings: React.FC = () => {
     const { t } = useTranslation();
     const { isUserOwner } = useAuth();
+    const { plansArray, getPlan } = usePlans();
     const upgradeContext = useSafeUpgrade();
     const tenantContext = useSafeTenant();
     const { usage, isLoading: isLoadingUsage, refresh } = useCreditsUsage();
@@ -68,14 +73,14 @@ const SubscriptionSettings: React.FC = () => {
     useEffect(() => {
         const fetchSubscriptionDetails = async () => {
             if (!tenantContext?.currentTenant?.id) return;
-            
+
             try {
                 const functions = await getFunctionsInstance();
                 const getDetails = httpsCallable<
                     { tenantId: string },
                     { subscription: SubscriptionDetails; invoices: any[] }
                 >(functions, 'getSubscriptionDetails');
-                
+
                 const result = await getDetails({ tenantId: tenantContext.currentTenant.id });
                 setSubscriptionDetails(result.data.subscription);
             } catch (error) {
@@ -88,8 +93,11 @@ const SubscriptionSettings: React.FC = () => {
 
     // Get current plan from usage or default to free
     const currentPlanId: SubscriptionPlanId = usage?.planId || 'free';
-    const currentPlan = SUBSCRIPTION_PLANS[currentPlanId] || SUBSCRIPTION_PLANS.free;
-    const PlanIcon = PLAN_ICONS[currentPlanId] || Sparkles;
+    // Try to get from context first, otherwise fallback to hardcoded
+    const currentPlan = getPlan(currentPlanId) || SUBSCRIPTION_PLANS[currentPlanId] || SUBSCRIPTION_PLANS.free;
+    const IconComponent = PLAN_ICONS[currentPlanId] || Sparkles;
+    // Safety check to ensure we always have a valid component
+    const PlanIcon = IconComponent || (() => <div className="w-7 h-7 bg-muted rounded-full" />);
 
     const handleUpgradeClick = (trigger: 'generic' | 'credits' = 'generic') => {
         if (upgradeContext) {
@@ -187,13 +195,13 @@ const SubscriptionSettings: React.FC = () => {
      */
     const handleCancelSubscription = async (immediately: boolean = false) => {
         if (!tenantContext?.currentTenant?.id) return;
-        
-        const confirmMessage = immediately 
+
+        const confirmMessage = immediately
             ? t('settings.subscription.confirmCancelImmediately', '¿Estás seguro de que deseas cancelar inmediatamente? Perderás acceso a las funciones de tu plan actual.')
             : t('settings.subscription.confirmCancel', '¿Estás seguro de que deseas cancelar? Tu suscripción permanecerá activa hasta el final del período actual.');
-        
+
         if (!window.confirm(confirmMessage)) return;
-        
+
         setIsCancelling(true);
         try {
             const functions = await getFunctionsInstance();
@@ -201,15 +209,15 @@ const SubscriptionSettings: React.FC = () => {
                 { tenantId: string; immediately?: boolean },
                 { success: boolean; message: string; cancelsAt?: string }
             >(functions, 'cancelSubscription');
-            
+
             const result = await cancelSub({
                 tenantId: tenantContext.currentTenant.id,
                 immediately,
             });
-            
+
             alert(result.data.message);
             refresh();
-            
+
             // Refresh subscription details
             const getDetails = httpsCallable<
                 { tenantId: string },
@@ -217,7 +225,7 @@ const SubscriptionSettings: React.FC = () => {
             >(functions, 'getSubscriptionDetails');
             const details = await getDetails({ tenantId: tenantContext.currentTenant.id });
             setSubscriptionDetails(details.data.subscription);
-            
+
         } catch (error: any) {
             console.error('Error cancelling subscription:', error);
             alert(error.message || 'Error al cancelar la suscripción');
@@ -231,7 +239,7 @@ const SubscriptionSettings: React.FC = () => {
      */
     const handleReactivateSubscription = async () => {
         if (!tenantContext?.currentTenant?.id) return;
-        
+
         setIsReactivating(true);
         try {
             const functions = await getFunctionsInstance();
@@ -239,11 +247,11 @@ const SubscriptionSettings: React.FC = () => {
                 { tenantId: string },
                 { success: boolean; message: string }
             >(functions, 'reactivateSubscription');
-            
+
             const result = await reactivateSub({ tenantId: tenantContext.currentTenant.id });
             alert(result.data.message);
             refresh();
-            
+
             // Refresh subscription details
             const getDetails = httpsCallable<
                 { tenantId: string },
@@ -251,7 +259,7 @@ const SubscriptionSettings: React.FC = () => {
             >(functions, 'getSubscriptionDetails');
             const details = await getDetails({ tenantId: tenantContext.currentTenant.id });
             setSubscriptionDetails(details.data.subscription);
-            
+
         } catch (error: any) {
             console.error('Error reactivating subscription:', error);
             alert(error.message || 'Error al reactivar la suscripción');
@@ -261,8 +269,13 @@ const SubscriptionSettings: React.FC = () => {
     };
 
     // Get list of plans for comparison
-    const allPlans = Object.values(SUBSCRIPTION_PLANS);
+    // Use plansArray from context which excludes archived plans
+    const allPlans = plansArray;
     const currentPlanIndex = allPlans.findIndex(p => p.id === currentPlanId);
+    // If current plan is not in list (e.g. archived), show all plans as upgrades?
+    // Or maybe show all plans that are higher in standard order?
+    // If currentPlanIndex is -1 (archived), all active plans are potential upgrades.
+    // If currentPlanIndex is valid, show higher plans.
     const upgradePlans = allPlans.filter((_, index) => index > currentPlanIndex);
     const downgradePlans = allPlans.filter((_, index) => index < currentPlanIndex && index > 0); // Exclude free from downgrade options
 
@@ -579,7 +592,8 @@ const SubscriptionSettings: React.FC = () => {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {upgradePlans.slice(0, 3).map((plan) => {
-                            const Icon = PLAN_ICONS[plan.id];
+                            const IconComponent = PLAN_ICONS[plan.id] || Sparkles;
+                            const Icon = IconComponent || (() => <div className="w-5 h-5 bg-muted rounded-full" />);
                             const isLoading = loadingPlanId === plan.id;
                             return (
                                 <div
@@ -618,7 +632,7 @@ const SubscriptionSettings: React.FC = () => {
                                         )}
                                     </ul>
 
-                                    <button 
+                                    <button
                                         onClick={() => handleSelectPlan(plan.id)}
                                         disabled={isLoading || loadingPlanId !== null}
                                         className="mt-3 w-full py-2 rounded-lg bg-secondary text-sm font-medium text-foreground hover:bg-primary hover:text-primary-foreground transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -654,10 +668,10 @@ const FeatureItem: React.FC<{ label: string; value: string; included?: boolean }
     <div className="flex items-center justify-between py-2 px-3 rounded-lg bg-secondary/30">
         <span className="text-sm text-muted-foreground">{label}</span>
         <span className={`text-sm font-medium ${included === false
-                ? 'text-muted-foreground/50'
-                : included === true
-                    ? 'text-green-600 dark:text-green-400'
-                    : 'text-foreground'
+            ? 'text-muted-foreground/50'
+            : included === true
+                ? 'text-green-600 dark:text-green-400'
+                : 'text-foreground'
             }`}>
             {value}
         </span>
