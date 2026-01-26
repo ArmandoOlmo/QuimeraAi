@@ -3691,7 +3691,7 @@ Now provide a brief response to the user about what was done.`;
                             </span>
                         </div>
                     ) : (
-                        <button onClick={() => setIsOpen(true)} className="w-full text-left group">
+                        <button onClick={() => setIsOpen(true)} className="flex-1 min-w-0 text-left group mx-2">
                             <p className="text-sm text-muted-foreground group-hover:text-foreground transition-colors truncate">
                                 {i18n.language.startsWith('es') ? "Pregunta a Quibo..." : "Ask Quibo..."}
                             </p>
@@ -3711,13 +3711,13 @@ Now provide a brief response to the user about what was done.`;
                                     startLiveSession();
                                 }
                             }}
-                            className={`p-2 rounded-full transition-all ${isLiveActive ? 'bg-red-500/20 text-red-500 hover:bg-red-500/30' : 'hover:bg-primary/10 text-muted-foreground hover:text-primary'}`}
+                            className={`shrink-0 w-9 h-9 aspect-square flex items-center justify-center rounded-full transition-all ${isLiveActive ? 'bg-red-500/20 text-red-500 hover:bg-red-500/30' : 'hover:bg-primary/10 text-muted-foreground hover:text-primary'}`}
                         >
                             {isLiveActive ? <PhoneOff size={18} /> : <Mic size={18} />}
                         </button>
                     )}
                     {!isLiveActive && (
-                        <button onClick={() => setIsOpen(true)} className="shrink-0 w-9 h-9 aspect-square flex items-center justify-center rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors">
+                        <button onClick={() => setIsOpen(true)} className="shrink-0 w-9 h-9 aspect-square flex items-center justify-center rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors shadow-sm">
                             <Send size={16} />
                         </button>
                     )}

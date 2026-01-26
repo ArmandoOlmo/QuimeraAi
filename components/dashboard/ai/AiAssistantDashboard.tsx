@@ -46,6 +46,18 @@ const AiAssistantDashboard: React.FC = () => {
     const [isSaving, setIsSaving] = useState(false);
     const [voiceGenderFilter, setVoiceGenderFilter] = useState<'all' | 'Male' | 'Female'>('all');
 
+    const tabs = useMemo(() => [
+        { id: 'overview', label: t('aiAssistant.dashboard.tabs.overview'), icon: <Activity size={18} />, description: 'Resumen de rendimiento y estado' },
+        { id: 'knowledge', label: t('aiAssistant.dashboard.tabs.knowledge'), icon: <Book size={18} />, description: 'Gestiona la base de conocimiento' },
+        { id: 'personality', label: t('aiAssistant.dashboard.tabs.personality'), icon: <User size={18} />, description: 'Define la identidad del asistente' },
+        { id: 'voice', label: t('aiAssistant.dashboard.tabs.voice'), icon: <Mic size={18} />, description: 'Configura la voz y respuestas' },
+        { id: 'leadCapture', label: t('aiAssistant.dashboard.tabs.leadCapture'), icon: <Sparkles size={18} />, description: 'Estrategias de captación' },
+        { id: 'customization', label: t('aiAssistant.dashboard.tabs.customization'), icon: <Sliders size={18} />, description: 'Apariencia del chat' },
+        { id: 'socialChannels', label: 'Canales', icon: <Phone size={18} />, description: 'Conexiones externas' },
+        { id: 'socialInbox', label: 'Bandeja', icon: <Inbox size={18} />, description: 'Mensajes y conversaciones' },
+        { id: 'settings', label: t('aiAssistant.dashboard.tabs.settings'), icon: <Settings size={18} />, description: 'Configuración general' },
+    ], [t]);
+
     // Load AI config from active project when it changes
     useEffect(() => {
         if (activeProject?.aiAssistantConfig) {
@@ -516,59 +528,94 @@ const AiAssistantDashboard: React.FC = () => {
                             </div>
                         </div>
 
+
                         <div className="bg-card border border-border rounded-xl p-6">
                             <h3 className="font-bold text-lg mb-4">{t('aiAssistant.dashboard.configStatus')}</h3>
-                            <div className="space-y-3">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 {/* Business Profile */}
-                                <div className="flex items-center justify-between p-3 bg-secondary/10 rounded-lg border border-border/50">
-                                    <div className="flex items-center">
-                                        <span className={`w-2 h-2 rounded-full mr-3 ${formData.businessProfile ? 'bg-green-500' : 'bg-amber-500'}`}></span>
-                                        <span className="text-sm font-medium">{t('aiAssistant.dashboard.businessProfile')}</span>
+                                <button
+                                    onClick={() => setActiveTab('knowledge')}
+                                    className="flex items-center justify-between p-4 bg-secondary/10 hover:bg-secondary/20 rounded-xl border border-border/50 hover:border-primary/30 transition-all text-left group"
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <div className={`p-2 rounded-lg ${formData.businessProfile ? 'bg-green-500/10 text-green-500' : 'bg-amber-500/10 text-amber-500'}`}>
+                                            <Building2 size={20} />
+                                        </div>
+                                        <div>
+                                            <span className="font-semibold text-sm block group-hover:text-primary transition-colors">{t('aiAssistant.dashboard.businessProfile')}</span>
+                                            <span className="text-xs text-muted-foreground">Información del negocio</span>
+                                        </div>
                                     </div>
-                                    <span className={`text-xs font-bold px-2 py-1 rounded ${formData.businessProfile ? 'text-green-500 bg-green-500/10' : 'text-amber-500 bg-amber-500/10'}`}>
-                                        {formData.businessProfile ? t('aiAssistant.dashboard.active') : 'Sin configurar'}
-                                    </span>
-                                </div>
+                                    <div className={`w-2 h-2 rounded-full ${formData.businessProfile ? 'bg-green-500' : 'bg-amber-500'}`} />
+                                </button>
+
                                 {/* Knowledge Base */}
-                                <div className="flex items-center justify-between p-3 bg-secondary/10 rounded-lg border border-border/50">
-                                    <div className="flex items-center">
-                                        <span className={`w-2 h-2 rounded-full mr-3 ${(formData.faqs?.length > 0 || formData.knowledgeDocuments?.length > 0) ? 'bg-green-500' : 'bg-amber-500'}`}></span>
-                                        <span className="text-sm font-medium">Base de Conocimiento</span>
+                                <button
+                                    onClick={() => setActiveTab('knowledge')}
+                                    className="flex items-center justify-between p-4 bg-secondary/10 hover:bg-secondary/20 rounded-xl border border-border/50 hover:border-primary/30 transition-all text-left group"
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <div className={`p-2 rounded-lg ${(formData.faqs?.length > 0 || formData.knowledgeDocuments?.length > 0) ? 'bg-green-500/10 text-green-500' : 'bg-amber-500/10 text-amber-500'}`}>
+                                            <BookOpen size={20} />
+                                        </div>
+                                        <div>
+                                            <span className="font-semibold text-sm block group-hover:text-primary transition-colors">Base de Conocimiento</span>
+                                            <span className="text-xs text-muted-foreground">{formData.faqs?.length || 0} FAQs, {formData.knowledgeDocuments?.length || 0} docs</span>
+                                        </div>
                                     </div>
-                                    <span className={`text-xs font-bold px-2 py-1 rounded ${(formData.faqs?.length > 0 || formData.knowledgeDocuments?.length > 0) ? 'text-green-500 bg-green-500/10' : 'text-amber-500 bg-amber-500/10'}`}>
-                                        {formData.faqs?.length || 0} FAQs, {formData.knowledgeDocuments?.length || 0} docs
-                                    </span>
-                                </div>
+                                    <div className={`w-2 h-2 rounded-full ${(formData.faqs?.length > 0 || formData.knowledgeDocuments?.length > 0) ? 'bg-green-500' : 'bg-amber-500'}`} />
+                                </button>
+
                                 {/* Lead Capture */}
-                                <div className="flex items-center justify-between p-3 bg-secondary/10 rounded-lg border border-border/50">
-                                    <div className="flex items-center">
-                                        <span className={`w-2 h-2 rounded-full mr-3 ${formData.leadCaptureEnabled ? 'bg-green-500' : 'bg-red-500'}`}></span>
-                                        <span className="text-sm font-medium">Captura de Leads</span>
+                                <button
+                                    onClick={() => setActiveTab('leadCapture')}
+                                    className="flex items-center justify-between p-4 bg-secondary/10 hover:bg-secondary/20 rounded-xl border border-border/50 hover:border-primary/30 transition-all text-left group"
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <div className={`p-2 rounded-lg ${formData.leadCaptureEnabled ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'}`}>
+                                            <Sparkles size={20} />
+                                        </div>
+                                        <div>
+                                            <span className="font-semibold text-sm block group-hover:text-primary transition-colors">Captura de Leads</span>
+                                            <span className="text-xs text-muted-foreground">{formData.leadCaptureEnabled ? 'Activado' : 'Desactivado'}</span>
+                                        </div>
                                     </div>
-                                    <span className={`text-xs font-bold px-2 py-1 rounded ${formData.leadCaptureEnabled ? 'text-green-500 bg-green-500/10' : 'text-red-500 bg-red-500/10'}`}>
-                                        {formData.leadCaptureEnabled ? t('aiAssistant.dashboard.enabled') : t('aiAssistant.dashboard.disabled')}
-                                    </span>
-                                </div>
+                                    <div className={`w-2 h-2 rounded-full ${formData.leadCaptureEnabled ? 'bg-green-500' : 'bg-red-500'}`} />
+                                </button>
+
                                 {/* Live Voice */}
-                                <div className="flex items-center justify-between p-3 bg-secondary/10 rounded-lg border border-border/50">
-                                    <div className="flex items-center">
-                                        <span className={`w-2 h-2 rounded-full mr-3 ${formData.enableLiveVoice ? 'bg-green-500' : 'bg-red-500'}`}></span>
-                                        <span className="text-sm font-medium">{t('aiAssistant.dashboard.liveVoice')}</span>
+                                <button
+                                    onClick={() => setActiveTab('voice')}
+                                    className="flex items-center justify-between p-4 bg-secondary/10 hover:bg-secondary/20 rounded-xl border border-border/50 hover:border-primary/30 transition-all text-left group"
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <div className={`p-2 rounded-lg ${formData.enableLiveVoice ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'}`}>
+                                            <Mic size={20} />
+                                        </div>
+                                        <div>
+                                            <span className="font-semibold text-sm block group-hover:text-primary transition-colors">{t('aiAssistant.dashboard.liveVoice')}</span>
+                                            <span className="text-xs text-muted-foreground">{formData.enableLiveVoice ? 'Activado' : 'Desactivado'}</span>
+                                        </div>
                                     </div>
-                                    <span className={`text-xs font-bold px-2 py-1 rounded ${formData.enableLiveVoice ? 'text-green-500 bg-green-500/10' : 'text-red-500 bg-red-500/10'}`}>
-                                        {formData.enableLiveVoice ? t('aiAssistant.dashboard.enabled') : t('aiAssistant.dashboard.disabled')}
-                                    </span>
-                                </div>
+                                    <div className={`w-2 h-2 rounded-full ${formData.enableLiveVoice ? 'bg-green-500' : 'bg-red-500'}`} />
+                                </button>
+
                                 {/* Chat Active */}
-                                <div className="flex items-center justify-between p-3 bg-secondary/10 rounded-lg border border-border/50">
-                                    <div className="flex items-center">
-                                        <span className={`w-2 h-2 rounded-full mr-3 ${formData.isActive ? 'bg-green-500' : 'bg-red-500'}`}></span>
-                                        <span className="text-sm font-medium">Chat Activo</span>
+                                <button
+                                    onClick={() => setActiveTab('settings')}
+                                    className="flex items-center justify-between p-4 bg-secondary/10 hover:bg-secondary/20 rounded-xl border border-border/50 hover:border-primary/30 transition-all text-left group"
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <div className={`p-2 rounded-lg ${formData.isActive ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'}`}>
+                                            <MessageSquare size={20} />
+                                        </div>
+                                        <div>
+                                            <span className="font-semibold text-sm block group-hover:text-primary transition-colors">Estado del Chat</span>
+                                            <span className="text-xs text-muted-foreground">{formData.isActive ? 'Online' : 'Offline'}</span>
+                                        </div>
                                     </div>
-                                    <span className={`text-xs font-bold px-2 py-1 rounded ${formData.isActive ? 'text-green-500 bg-green-500/10' : 'text-red-500 bg-red-500/10'}`}>
-                                        {formData.isActive ? 'Activo' : 'Desactivado'}
-                                    </span>
-                                </div>
+                                    <div className={`w-2 h-2 rounded-full ${formData.isActive ? 'bg-green-500' : 'bg-red-500'}`} />
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -890,36 +937,58 @@ const AiAssistantDashboard: React.FC = () => {
                 <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 overflow-hidden">
 
                     {/* LEFT: Configuration Area (Scrollable) - Full width when Inbox is active */}
-                    <div className={`${activeTab === 'socialInbox' ? 'lg:col-span-12' : 'lg:col-span-7 xl:col-span-5'} flex flex-col border-r border-border bg-background overflow-hidden relative z-10 shadow-[5px_0_30px_-10px_rgba(0,0,0,0.1)]`}>
-                        {/* Tabs Header */}
-                        <div className="px-8 pt-8 pb-4">
-                            <div className="flex space-x-1 bg-secondary/30 p-1 rounded-xl overflow-x-auto">
-                                {[
-                                    { id: 'overview', label: t('aiAssistant.dashboard.tabs.overview'), icon: <Activity size={14} /> },
-                                    { id: 'knowledge', label: t('aiAssistant.dashboard.tabs.knowledge'), icon: <Book size={14} /> },
-                                    { id: 'personality', label: t('aiAssistant.dashboard.tabs.personality'), icon: <User size={14} /> },
-                                    { id: 'voice', label: t('aiAssistant.dashboard.tabs.voice'), icon: <Mic size={14} /> },
-                                    { id: 'leadCapture', label: t('aiAssistant.dashboard.tabs.leadCapture'), icon: <Sparkles size={14} /> },
-                                    { id: 'customization', label: t('aiAssistant.dashboard.tabs.customization'), icon: <Sliders size={14} /> },
-                                    { id: 'socialChannels', label: 'Social', icon: <Phone size={14} /> },
-                                    { id: 'socialInbox', label: 'Inbox', icon: <Inbox size={14} /> },
-                                    { id: 'settings', label: t('aiAssistant.dashboard.tabs.settings'), icon: <Settings size={14} /> },
-                                ].map(tab => (
+                    <div className={`${activeTab === 'socialInbox' ? 'lg:col-span-12' : 'lg:col-span-7 xl:col-span-5'} flex flex-col border-r border-border bg-background overflow-hidden relative z-10 shadow-lg`}>
+                        <div className="flex h-full overflow-hidden">
+                            {/* Desktop Sidebar (New) */}
+                            <div className="hidden md:flex flex-col w-[240px] border-r border-border/50 bg-secondary/5 py-6 overflow-y-auto shrink-0">
+                                <div className="px-4 mb-2">
+                                    <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider px-2 mb-2">Menú Principal</h3>
+                                    <div className="space-y-1">
+                                        {tabs.map((tab) => (
+                                            <button
+                                                key={tab.id}
+                                                onClick={() => setActiveTab(tab.id as Tab)}
+                                                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all group ${activeTab === tab.id
+                                                    ? 'bg-primary text-primary-foreground shadow-sm'
+                                                    : 'text-muted-foreground hover:bg-secondary hover:text-foreground'
+                                                    }`}
+                                            >
+                                                <div className={`${activeTab === tab.id ? 'text-primary-foreground' : 'text-muted-foreground group-hover:text-primary'} transition-colors`}>
+                                                    {tab.icon}
+                                                </div>
+                                                <span>{tab.label}</span>
+                                                {activeTab === tab.id && (
+                                                    <ChevronRight size={14} className="ml-auto opacity-50" />
+                                                )}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Mobile Horizontal Nav (Visible < md) */}
+                            <div className="md:hidden w-full absolute top-0 left-0 bg-background z-20 border-b border-border overflow-x-auto whitespace-nowrap px-4 py-3 flex gap-2 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+                                {tabs.map((tab) => (
                                     <button
                                         key={tab.id}
                                         onClick={() => setActiveTab(tab.id as Tab)}
-                                        className={`flex items-center gap-1.5 py-2.5 px-3 text-sm font-bold rounded-lg transition-all whitespace-nowrap ${activeTab === tab.id ? 'bg-card text-primary shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+                                        className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold border transition-colors ${activeTab === tab.id
+                                            ? 'bg-primary text-primary-foreground border-primary'
+                                            : 'bg-card text-muted-foreground border-border'
+                                            }`}
                                     >
                                         {tab.icon}
-                                        <span className="hidden xl:inline">{tab.label}</span>
+                                        {tab.label}
                                     </button>
                                 ))}
                             </div>
-                        </div>
 
-                        {/* Tab Content */}
-                        <div className={`flex-1 overflow-y-auto custom-scrollbar ${activeTab === 'socialInbox' ? '' : 'px-8 pb-10'}`}>
-                            {renderTabContent()}
+                            {/* Content Area */}
+                            <div className="flex-1 overflow-y-auto custom-scrollbar relative">
+                                <div className={`h-full ${activeTab === 'socialInbox' ? '' : 'p-6 md:p-8 pt-16 md:pt-8'}`}>
+                                    {renderTabContent()}
+                                </div>
+                            </div>
                         </div>
                     </div>
 
