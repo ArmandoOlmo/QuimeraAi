@@ -1237,35 +1237,35 @@ const DomainsDashboard: React.FC = () => {
             <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
 
             <div className="flex-1 flex flex-col overflow-hidden relative">
-                <header className="h-14 px-6 border-b border-border flex items-center justify-between bg-background z-20 sticky top-0">
-                    <div className="flex items-center gap-4">
+                <header className="h-14 px-2 sm:px-6 border-b border-border flex items-center justify-between bg-background z-20 sticky top-0">
+                    <div className="flex items-center gap-1 sm:gap-4">
                         <button onClick={() => setIsMobileMenuOpen(true)} className="lg:hidden h-9 w-9 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-border/40 rounded-full transition-colors">
                             <Menu className="w-4 h-4" />
                         </button>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1 sm:gap-2">
                             <Link2 className="text-primary w-5 h-5" />
-                            <h1 className="text-lg font-semibold text-foreground">{t('domainsDashboard.title')}</h1>
+                            <h1 className="text-lg font-semibold text-foreground hidden sm:block">{t('domainsDashboard.title')}</h1>
                         </div>
                     </div>
 
-                    <div className="flex gap-2">
+                    <div className="flex gap-1 sm:gap-2">
                         <button
                             onClick={() => customDomainsAllowed ? setIsConnectModalOpen(true) : handleDomainUpgrade()}
-                            className="flex items-center gap-1.5 h-9 px-3 rounded-lg text-sm font-medium transition-all bg-secondary/50 border border-border/40 text-muted-foreground hover:text-foreground hover:bg-secondary hidden sm:flex"
+                            className="flex items-center gap-1.5 h-9 px-2 sm:px-3 rounded-lg text-sm font-medium transition-all sm:bg-secondary/50 sm:border sm:border-border/40 text-muted-foreground hover:text-foreground hover:bg-secondary hidden sm:flex"
                         >
                             {!customDomainsAllowed && <Crown className="w-4 h-4 text-yellow-500" />}
-                            <Link2 className="w-4 h-4" /> {t('domainsDashboard.connect')}
+                            <Link2 className="w-4 h-4" /> <span className="hidden sm:inline">{t('domainsDashboard.connect')}</span>
                         </button>
                         <button
                             onClick={handleBuyDomain}
-                            className="flex items-center gap-1.5 h-9 px-3 rounded-lg text-sm font-medium transition-all bg-secondary/50 border border-border/40 text-muted-foreground hover:text-foreground hover:bg-secondary"
+                            className="flex items-center gap-1.5 h-9 px-2 sm:px-3 rounded-lg text-sm font-medium transition-all sm:bg-secondary/50 sm:border sm:border-border/40 text-muted-foreground hover:text-foreground hover:bg-secondary"
                         >
                             {!customDomainsAllowed && <Crown className="w-4 h-4 text-yellow-500" />}
-                            <ShoppingCart className="w-4 h-4" /> {t('domainsDashboard.buyDomain')}
+                            <ShoppingCart className="w-4 h-4" /> <span className="hidden sm:inline">{t('domainsDashboard.buyDomain')}</span>
                         </button>
                         <button
                             onClick={() => setView('dashboard')}
-                            className="flex items-center justify-center gap-2 h-9 px-3 rounded-lg bg-secondary/50 border border-border/40 hover:bg-secondary text-sm font-medium transition-all text-muted-foreground hover:text-foreground"
+                            className="flex items-center justify-center gap-2 h-9 w-9 sm:w-auto sm:px-3 rounded-lg sm:bg-secondary/50 sm:border sm:border-border/40 sm:hover:bg-secondary text-sm font-medium transition-all text-muted-foreground hover:text-foreground"
                             aria-label={t('common.back', 'Volver')}
                         >
                             <ArrowLeft size={16} />

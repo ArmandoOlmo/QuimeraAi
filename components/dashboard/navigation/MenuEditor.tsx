@@ -501,19 +501,19 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onClose, isNew, projectId
 
             <div className="flex-1 flex flex-col overflow-hidden relative bg-background">
                 {/* Header */}
-                <header className="h-14 px-6 border-b border-border flex items-center justify-between bg-card/50 backdrop-blur-sm z-20 sticky top-0">
-                    <div className="flex items-center gap-4">
+                <header className="h-14 px-2 sm:px-6 border-b border-border flex items-center justify-between bg-card/50 backdrop-blur-sm z-20 sticky top-0">
+                    <div className="flex items-center gap-1 sm:gap-4">
                         <button onClick={() => setIsMobileMenuOpen(true)} className="h-9 w-9 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-border/40 rounded-full transition-colors lg:hidden">
                             <MenuIcon className="w-4 h-4" />
                         </button>
-                        <button onClick={onClose} className="p-2 -ml-2 rounded-md text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors">
+                        <button onClick={onClose} className="p-2 rounded-md text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors">
                             <ArrowLeft size={20} />
                         </button>
-                        <h1 className="text-xl font-bold">
+                        <h1 className="text-lg sm:text-xl font-bold truncate max-w-[120px] sm:max-w-none">
                             {isNew ? 'Add menu' : title}
                         </h1>
                         {!isNew && (usedInHeader || usedInFooter) && (
-                            <div className="flex gap-2 ml-3">
+                            <div className="hidden sm:flex gap-2 ml-3">
                                 {usedInHeader && (
                                     <span className="inline-flex items-center px-2 py-1 text-xs font-medium text-primary bg-primary/10 rounded-full">
                                         Used in Header
@@ -527,19 +527,21 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onClose, isNew, projectId
                             </div>
                         )}
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex gap-1 sm:gap-2">
                         {!isNew && (
-                            <button onClick={handleDeleteMenu} className="px-4 py-2 text-sm font-medium text-red-500 hover:bg-red-500/10 rounded-lg transition-colors">
-                                Delete menu
+                            <button onClick={handleDeleteMenu} className="px-2 sm:px-4 py-2 text-sm font-medium text-red-500 hover:bg-red-500/10 rounded-lg transition-colors">
+                                <span className="hidden sm:inline">Delete menu</span>
+                                <Trash2 size={18} className="sm:hidden" />
                             </button>
                         )}
                         <button
                             onClick={handleSave}
                             disabled={isSaving}
-                            className="flex items-center gap-1.5 h-9 px-3 rounded-md text-sm font-medium transition-all text-muted-foreground hover:text-foreground hover:bg-secondary disabled:opacity-50"
+                            className="flex items-center gap-1.5 h-9 px-2 sm:px-3 rounded-md text-sm font-medium transition-all text-muted-foreground hover:text-foreground hover:bg-secondary disabled:opacity-50"
                         >
                             {isSaving && <Loader2 className="w-4 h-4 animate-spin" />}
-                            Save
+                            <span className="hidden sm:inline">Save</span>
+                            {!isSaving && <Save size={18} className="sm:hidden" />}
                         </button>
                     </div>
                 </header>

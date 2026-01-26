@@ -25,7 +25,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ initialTab }) => {
     const { path, navigate } = useRouter();
     const { currentTenant, isLoading } = useSafeTenant();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-    
+
     // Determine active tab from URL
     const getTabFromPath = (): SettingsTab => {
         if (path.includes('/branding')) return 'branding';
@@ -33,14 +33,14 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ initialTab }) => {
         if (path.includes('/team')) return 'team';
         return initialTab || 'team';
     };
-    
+
     const [activeTab, setActiveTab] = useState<SettingsTab>(getTabFromPath());
-    
+
     // Update tab when URL changes
     useEffect(() => {
         setActiveTab(getTabFromPath());
     }, [path]);
-    
+
     const handleTabChange = (tab: SettingsTab) => {
         setActiveTab(tab);
         if (tab === 'team') {
@@ -51,7 +51,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ initialTab }) => {
             navigate(ROUTES.SETTINGS_SUBSCRIPTION);
         }
     };
-    
+
     const tabs = [
         {
             id: 'team' as SettingsTab,
@@ -72,7 +72,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ initialTab }) => {
             description: t('settings.subscription.tabDesc', 'Gestionar plan y suscripción'),
         },
     ];
-    
+
     if (isLoading) {
         return (
             <div className="flex h-screen items-center justify-center bg-background">
@@ -83,40 +83,40 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ initialTab }) => {
             </div>
         );
     }
-    
+
     return (
         <div className="flex h-screen bg-background">
             {/* Main Sidebar */}
-            <DashboardSidebar 
-                isMobileOpen={isMobileMenuOpen} 
-                onClose={() => setIsMobileMenuOpen(false)} 
+            <DashboardSidebar
+                isMobileOpen={isMobileMenuOpen}
+                onClose={() => setIsMobileMenuOpen(false)}
             />
-            
+
             {/* Main Content Area */}
             <div className="flex-1 flex flex-col overflow-hidden">
                 {/* Header */}
-                <header className="h-14 px-6 border-b border-border flex items-center justify-between bg-background sticky top-0 z-10">
-                    <div className="flex items-center gap-3">
+                <header className="h-14 px-2 sm:px-6 border-b border-border flex items-center justify-between bg-background sticky top-0 z-10">
+                    <div className="flex items-center gap-1 sm:gap-3">
                         <Building2 size={20} className="text-primary" />
-                        <h1 className="text-lg font-semibold text-foreground">
+                        <h1 className="text-lg font-semibold text-foreground hidden sm:block">
                             {t('settings.title', 'Configuración del Workspace')}
                         </h1>
                         {currentTenant && (
-                            <span className="px-2 py-1 text-xs bg-secondary rounded-md text-muted-foreground">
+                            <span className="px-2 py-1 text-xs bg-secondary rounded-md text-muted-foreground hidden sm:inline">
                                 {currentTenant.name}
                             </span>
                         )}
                     </div>
                     <button
                         onClick={() => navigate(ROUTES.DASHBOARD)}
-                        className="flex items-center justify-center gap-2 h-9 px-3 rounded-lg bg-secondary/50 hover:bg-secondary text-sm font-medium transition-all text-muted-foreground hover:text-foreground"
+                        className="flex items-center justify-center gap-2 h-9 w-9 sm:w-auto sm:px-3 rounded-lg sm:bg-secondary/50 sm:hover:bg-secondary text-sm font-medium transition-all text-muted-foreground hover:text-foreground"
                         aria-label={t('common.goBack', 'Volver')}
                     >
                         <ArrowLeft className="w-4 h-4" />
                         <span className="hidden sm:inline">{t('common.back', 'Volver')}</span>
                     </button>
                 </header>
-                
+
                 {/* Settings Content */}
                 <div className="flex-1 overflow-auto">
                     {/* Tab Navigation - Horizontal */}
@@ -129,11 +129,10 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ initialTab }) => {
                                     <button
                                         key={tab.id}
                                         onClick={() => handleTabChange(tab.id)}
-                                        className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-all ${
-                                            isActive
+                                        className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-all ${isActive
                                                 ? 'border-primary text-primary'
                                                 : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
-                                        }`}
+                                            }`}
                                     >
                                         <Icon size={18} />
                                         {tab.label}
@@ -142,7 +141,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ initialTab }) => {
                             })}
                         </div>
                     </div>
-                    
+
                     {/* Content Area */}
                     <div className="p-6 lg:p-8">
                         <div className="max-w-4xl mx-auto">

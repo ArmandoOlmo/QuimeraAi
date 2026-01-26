@@ -96,19 +96,19 @@ const AgencyDashboardMain: React.FC = () => {
             {/* Main Content */}
             <div className="flex-1 flex flex-col overflow-hidden">
                 {/* Header */}
-                <header className="h-14 px-6 border-b border-border flex items-center bg-background z-20 sticky top-0">
+                <header className="h-14 px-2 sm:px-6 border-b border-border flex items-center bg-background z-20 sticky top-0">
                     {/* Left Section - Menu Button & Title */}
-                    <div className="flex items-center gap-4 flex-shrink-0">
+                    <div className="flex items-center gap-1 sm:gap-4 flex-shrink-0">
                         <button
                             onClick={() => setIsMobileMenuOpen(true)}
-                            className="lg:hidden h-11 w-11 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary/80 rounded-xl transition-colors"
+                            className="lg:hidden h-9 w-9 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary/80 rounded-xl transition-colors"
                             aria-label="Open navigation menu"
                         >
                             <Menu className="w-5 h-5" />
                         </button>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1 sm:gap-2">
                             <Building2 size={24} className="text-primary" />
-                            <h1 className="text-xl font-bold text-foreground hidden sm:block">
+                            <h1 className="text-lg sm:text-xl font-bold text-foreground hidden sm:block">
                                 {t('agency.title', 'Agency Dashboard')}
                             </h1>
                         </div>

@@ -527,17 +527,17 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación ni puntu
 
             <div className="flex-1 flex flex-col overflow-hidden relative bg-background">
                 {/* Header */}
-                <header className="h-14 px-6 border-b border-border flex items-center justify-between bg-background z-20 shrink-0">
-                    <div className="flex items-center gap-4">
-                        <button onClick={() => setIsMobileMenuOpen(true)} className="lg:hidden">
+                <header className="h-14 px-2 sm:px-6 border-b border-border flex items-center justify-between bg-background z-20 shrink-0">
+                    <div className="flex items-center gap-1 sm:gap-4">
+                        <button onClick={() => setIsMobileMenuOpen(true)} className="lg:hidden h-9 w-9 flex items-center justify-center text-muted-foreground hover:text-foreground rounded-lg">
                             <Menu className="w-5 h-5" />
                         </button>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1 sm:gap-2">
                             <DollarSign className="text-primary w-5 h-5" />
-                            <h1 className="text-lg font-semibold text-foreground">{t('financeDashboard.title')}</h1>
+                            <h1 className="text-lg font-semibold text-foreground hidden sm:block">{t('financeDashboard.title')}</h1>
                         </div>
                     </div>
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-1 sm:gap-3">
                         <div className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-primary/10 rounded-lg">
                             <TrendingUp className="w-4 h-4 text-primary" />
                             <span className="text-sm font-bold text-foreground">${totalExpenses.toLocaleString()}</span>

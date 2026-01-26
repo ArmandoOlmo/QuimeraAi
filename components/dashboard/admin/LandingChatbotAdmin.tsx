@@ -125,7 +125,7 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                 ...defaultLandingChatbotConfig.appearance,
                 ...config.appearance,
                 // Migrate legacy field if present
-                colorSource: (config.appearance as any).colorSource || 
+                colorSource: (config.appearance as any).colorSource ||
                     ((config.appearance as any).useAppColors !== false ? 'app' : 'custom'),
                 customColors: config.appearance.customColors || defaultLandingChatbotConfig.appearance.customColors,
             },
@@ -166,7 +166,7 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                 appearance: {
                     ...defaultLandingChatbotConfig.appearance,
                     ...config.appearance,
-                    colorSource: (config.appearance as any).colorSource || 
+                    colorSource: (config.appearance as any).colorSource ||
                         ((config.appearance as any).useAppColors !== false ? 'app' : 'custom'),
                     customColors: config.appearance.customColors || defaultLandingChatbotConfig.appearance.customColors,
                 },
@@ -356,7 +356,7 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                                             {formData.isActive ? t('landingChatbot.status.active', 'Chatbot Activo') : t('landingChatbot.status.inactive', 'Chatbot Inactivo')}
                                         </h3>
                                         <p className="text-sm text-muted-foreground">
-                                            {formData.isActive 
+                                            {formData.isActive
                                                 ? t('landingChatbot.status.activeDesc', 'El chatbot está visible en la landing page pública')
                                                 : t('landingChatbot.status.inactiveDesc', 'El chatbot no se muestra a los visitantes')
                                             }
@@ -425,7 +425,7 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                                         {formData.knowledgeBase.faqs.length} FAQs, {formData.knowledgeBase.documents.length} docs
                                     </span>
                                 </div>
-                                
+
                                 {/* Personality */}
                                 <div className="flex items-center justify-between p-3 bg-secondary/20 rounded-lg">
                                     <div className="flex items-center gap-3">
@@ -436,7 +436,7 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                                         {formData.personality.tone}
                                     </span>
                                 </div>
-                                
+
                                 {/* Voice */}
                                 <div className="flex items-center justify-between p-3 bg-secondary/20 rounded-lg">
                                     <div className="flex items-center gap-3">
@@ -447,7 +447,7 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                                         {formData.voice.enabled ? formData.voice.voiceName : 'Desactivado'}
                                     </span>
                                 </div>
-                                
+
                                 {/* Lead Capture */}
                                 <div className="flex items-center justify-between p-3 bg-secondary/20 rounded-lg">
                                     <div className="flex items-center gap-3">
@@ -458,7 +458,7 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                                         {formData.leadCapture.enabled ? 'Activo' : 'Desactivado'}
                                     </span>
                                 </div>
-                                
+
                                 {/* Appearance */}
                                 <div className="flex items-center justify-between p-3 bg-secondary/20 rounded-lg">
                                     <div className="flex items-center gap-3">
@@ -951,7 +951,7 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                                 {/* Trigger Settings */}
                                 <div className="bg-card border border-border p-6 rounded-xl space-y-4">
                                     <h3 className="font-bold text-lg">Configuración de Triggers</h3>
-                                    
+
                                     <div>
                                         <label className="block text-sm font-medium text-muted-foreground mb-2">
                                             Solicitar datos después de X mensajes
@@ -1166,8 +1166,8 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                                                 className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-border hover:border-primary/50 bg-secondary/20 transition-all text-xs"
                                                 title={preset.name}
                                             >
-                                                <div 
-                                                    className="w-4 h-4 rounded-full ring-1 ring-black/10" 
+                                                <div
+                                                    className="w-4 h-4 rounded-full ring-1 ring-black/10"
                                                     style={{ background: `linear-gradient(135deg, ${preset.primary}, ${preset.secondary})` }}
                                                 />
                                                 <span>{preset.name}</span>
@@ -1456,9 +1456,9 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                                             {/* Header preview */}
                                             <div className="flex items-center gap-2">
                                                 <div className="w-10 h-10 rounded-full bg-primary/20 border border-primary/30 overflow-hidden flex items-center justify-center">
-                                                    <img 
-                                                        src={formData.appearance.avatarUrl} 
-                                                        alt="Header preview" 
+                                                    <img
+                                                        src={formData.appearance.avatarUrl}
+                                                        alt="Header preview"
                                                         className="w-full h-full object-cover"
                                                         onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
                                                     />
@@ -1468,9 +1468,9 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                                             {/* Message preview */}
                                             <div className="flex items-center gap-2">
                                                 <div className="w-8 h-8 rounded-full bg-secondary/50 border border-border overflow-hidden flex items-center justify-center">
-                                                    <img 
-                                                        src={formData.appearance.avatarUrl} 
-                                                        alt="Message preview" 
+                                                    <img
+                                                        src={formData.appearance.avatarUrl}
+                                                        alt="Message preview"
                                                         className="w-full h-full object-cover"
                                                         onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
                                                     />
@@ -1480,9 +1480,9 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                                             {/* Button preview (if using custom-image) */}
                                             <div className="flex items-center gap-2">
                                                 <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center">
-                                                    <img 
-                                                        src={formData.appearance.avatarUrl} 
-                                                        alt="Button preview" 
+                                                    <img
+                                                        src={formData.appearance.avatarUrl}
+                                                        alt="Button preview"
                                                         className="w-7 h-7 object-contain"
                                                         onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
                                                     />
@@ -1597,9 +1597,9 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                                         />
                                         {formData.appearance.customIconUrl && (
                                             <div className="w-12 h-12 rounded-lg border border-border overflow-hidden bg-secondary/30 flex items-center justify-center">
-                                                <img 
-                                                    src={formData.appearance.customIconUrl} 
-                                                    alt="Custom icon" 
+                                                <img
+                                                    src={formData.appearance.customIconUrl}
+                                                    alt="Custom icon"
                                                     className="w-8 h-8 object-contain"
                                                     onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
                                                 />
@@ -1912,17 +1912,17 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
 
             <div className="flex-1 flex flex-col min-w-0">
                 {/* Header */}
-                <header className="h-14 px-6 border-b border-border flex items-center justify-between bg-background z-20 shrink-0">
-                    <div className="flex items-center gap-4">
+                <header className="h-14 px-2 sm:px-6 border-b border-border flex items-center justify-between bg-background z-20 shrink-0">
+                    <div className="flex items-center gap-1 sm:gap-4">
                         <button
                             onClick={() => setIsMobileMenuOpen(true)}
                             className="lg:hidden h-9 w-9 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-border/40 rounded-full transition-colors"
                         >
                             <Menu className="w-4 h-4" />
                         </button>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1 sm:gap-2">
                             <Bot className="text-primary w-5 h-5" />
-                            <h1 className="text-lg font-semibold text-foreground">
+                            <h1 className="text-lg font-semibold text-foreground hidden sm:block">
                                 {t('landingChatbot.title', 'Landing Page Chatbot')}
                             </h1>
                             {formData.isActive && (
@@ -1933,33 +1933,32 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                             )}
                         </div>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1 sm:gap-2">
                         {showSuccess && (
                             <span className="text-sm text-green-500 flex items-center animate-fade-in-up">
                                 <CheckCircle size={16} className="mr-1.5" />
-                                Guardado
+                                <span className="hidden sm:inline">Guardado</span>
                             </span>
                         )}
                         <button
                             onClick={handleSave}
                             disabled={isSaving}
-                            className={`flex items-center gap-1.5 h-9 px-4 rounded-lg text-sm font-medium transition-all disabled:opacity-50 ${
-                                hasLocalChanges 
-                                    ? 'bg-amber-500 hover:bg-amber-600 text-white animate-pulse' 
+                            className={`flex items-center gap-1.5 h-9 px-2 sm:px-4 rounded-lg text-sm font-medium transition-all disabled:opacity-50 ${hasLocalChanges
+                                    ? 'bg-amber-500 hover:bg-amber-600 text-white animate-pulse'
                                     : 'bg-primary text-primary-foreground hover:bg-primary/90'
-                            }`}
+                                }`}
                         >
                             {isSaving ? (
                                 <Loader2 className="w-4 h-4 animate-spin" />
                             ) : (
                                 <Save className="w-4 h-4" />
                             )}
-                            <span>{isSaving ? 'Guardando...' : hasLocalChanges ? 'Guardar Cambios' : 'Guardar'}</span>
+                            <span className="hidden sm:inline">{isSaving ? 'Guardando...' : hasLocalChanges ? 'Guardar Cambios' : 'Guardar'}</span>
                         </button>
                         <button
                             onClick={handleRestoreDefaults}
                             disabled={isSaving}
-                            className="flex items-center gap-1.5 h-9 px-3 rounded-lg border border-border text-sm font-medium transition-all hover:bg-secondary/50 text-muted-foreground hover:text-foreground disabled:opacity-50"
+                            className="flex items-center justify-center gap-1.5 h-9 w-9 sm:w-auto sm:px-3 rounded-lg sm:border sm:border-border text-sm font-medium transition-all sm:hover:bg-secondary/50 text-muted-foreground hover:text-foreground disabled:opacity-50"
                             title="Restaurar valores por defecto"
                         >
                             <RefreshCw size={14} />
@@ -1967,7 +1966,7 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                         </button>
                         <button
                             onClick={onBack}
-                            className="flex items-center justify-center gap-2 h-9 px-3 rounded-lg bg-secondary/50 hover:bg-secondary text-sm font-medium transition-all text-muted-foreground hover:text-foreground"
+                            className="flex items-center justify-center gap-2 h-9 w-9 sm:w-auto sm:px-3 rounded-lg sm:bg-secondary/50 sm:hover:bg-secondary text-sm font-medium transition-all text-muted-foreground hover:text-foreground"
                         >
                             <ArrowLeft size={16} />
                             <span className="hidden sm:inline">{t('common.back', 'Volver')}</span>
@@ -2025,7 +2024,7 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                                 <div className="w-[320px] h-[650px] bg-gradient-to-b from-zinc-800 to-zinc-900 rounded-[50px] p-[10px] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.5),0_30px_60px_-30px_rgba(0,0,0,0.6)] relative">
                                     {/* Inner bezel highlight */}
                                     <div className="absolute inset-[2px] rounded-[48px] bg-gradient-to-b from-zinc-700 via-zinc-800 to-zinc-900 pointer-events-none"></div>
-                                    
+
                                     {/* Screen */}
                                     <div className="relative w-full h-full bg-card rounded-[40px] overflow-hidden flex flex-col">
                                         {/* Dynamic Island */}
@@ -2047,7 +2046,7 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                                                 </div>
                                                 {/* WiFi */}
                                                 <svg className="w-4 h-4 text-foreground" viewBox="0 0 24 24" fill="currentColor">
-                                                    <path d="M12 18c1.1 0 2 .9 2 2s-.9 2-2 2-2-.9-2-2 .9-2 2-2zm-4.9-2.1l1.4 1.4C9.4 18.1 10.6 18.5 12 18.5s2.6-.4 3.5-1.2l1.4-1.4c-1.3-1.2-3-1.9-4.9-1.9s-3.6.7-4.9 1.9zm-2.8-2.8l1.4 1.4c1.8-1.8 4.3-2.8 6.9-2.8s5.1 1 6.9 2.8l1.4-1.4C18.7 11 15.5 9.7 12 9.7s-6.7 1.3-8.7 3.4zm-2.8-2.8l1.4 1.4C5.3 9.3 8.5 7.7 12 7.7s6.7 1.6 9.1 4l1.4-1.4C19.8 7.5 16.1 5.7 12 5.7S4.2 7.5 1.5 10.3z"/>
+                                                    <path d="M12 18c1.1 0 2 .9 2 2s-.9 2-2 2-2-.9-2-2 .9-2 2-2zm-4.9-2.1l1.4 1.4C9.4 18.1 10.6 18.5 12 18.5s2.6-.4 3.5-1.2l1.4-1.4c-1.3-1.2-3-1.9-4.9-1.9s-3.6.7-4.9 1.9zm-2.8-2.8l1.4 1.4c1.8-1.8 4.3-2.8 6.9-2.8s5.1 1 6.9 2.8l1.4-1.4C18.7 11 15.5 9.7 12 9.7s-6.7 1.3-8.7 3.4zm-2.8-2.8l1.4 1.4C5.3 9.3 8.5 7.7 12 7.7s6.7 1.6 9.1 4l1.4-1.4C19.8 7.5 16.1 5.7 12 5.7S4.2 7.5 1.5 10.3z" />
                                                 </svg>
                                                 {/* Battery */}
                                                 <div className="flex items-center gap-[2px]">
@@ -2080,7 +2079,7 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                                                     </div>
                                                 </div>
                                             </div>
-                                            
+
                                             {/* Content Skeleton */}
                                             <div className="p-4 space-y-4">
                                                 {/* Feature Cards */}
@@ -2100,7 +2099,7 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                                                         <div className="h-2 bg-secondary/60 rounded w-1/2"></div>
                                                     </div>
                                                 </div>
-                                                
+
                                                 {/* Text Skeleton */}
                                                 <div className="space-y-2">
                                                     <div className="h-2 bg-secondary/40 rounded w-full"></div>
@@ -2115,12 +2114,12 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                                             {/* The Real Chat Widget Simulator */}
                                             <LandingChatSimulator config={formData} />
                                         </div>
-                                        
+
                                         {/* Home Indicator */}
                                         <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-32 h-1 bg-foreground/30 rounded-full"></div>
                                     </div>
                                 </div>
-                                
+
                                 {/* Side buttons */}
                                 <div className="absolute left-[-2px] top-28 w-[3px] h-8 bg-zinc-700 rounded-l-sm"></div>
                                 <div className="absolute left-[-2px] top-44 w-[3px] h-14 bg-zinc-700 rounded-l-sm"></div>

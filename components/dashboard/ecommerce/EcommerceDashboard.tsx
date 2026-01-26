@@ -417,17 +417,17 @@ const EcommerceDashboard: React.FC = () => {
                 {/* Main Content */}
                 <div className="flex-1 flex flex-col min-h-screen">
                     {/* Header */}
-                    <header className="h-14 px-4 sm:px-6 border-b border-border flex items-center justify-between bg-card/50 backdrop-blur-sm sticky top-0 z-40">
-                        <div className="flex items-center gap-4">
+                    <header className="h-14 px-2 sm:px-6 border-b border-border flex items-center justify-between bg-card/50 backdrop-blur-sm sticky top-0 z-40">
+                        <div className="flex items-center gap-1 sm:gap-4">
                             <button
                                 onClick={() => setIsMobileMenuOpen(true)}
                                 className="lg:hidden h-9 w-9 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
                             >
                                 <Menu className="w-5 h-5" />
                             </button>
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-1 sm:gap-2">
                                 <ShoppingBag className="text-primary w-5 h-5" />
-                                <h1 className="text-lg font-semibold text-foreground">
+                                <h1 className="text-lg font-semibold text-foreground hidden sm:block">
                                     {t('ecommerce.dashboardTitle', 'Panel de Ventas')}
                                 </h1>
                             </div>
@@ -435,10 +435,10 @@ const EcommerceDashboard: React.FC = () => {
                             <div className="relative">
                                 <button
                                     onClick={() => setIsProjectSelectorOpen(!isProjectSelectorOpen)}
-                                    className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                                    className="flex items-center gap-1 sm:gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
                                 >
                                     <Store size={14} />
-                                    <span className="max-w-[200px] truncate">
+                                    <span className="max-w-[100px] sm:max-w-[200px] truncate">
                                         {effectiveProject?.name || 'Seleccionar proyecto'}
                                     </span>
                                     <ChevronDown size={14} className={`transition-transform ${isProjectSelectorOpen ? 'rotate-180' : ''}`} />
@@ -509,7 +509,7 @@ const EcommerceDashboard: React.FC = () => {
                         </div>
 
                         {/* Right Section: Alerts & Back Button */}
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-1 sm:gap-3">
                             {/* Alerts */}
                             {(pendingOrdersCount > 0 || lowStockCount > 0) && (
                                 <div className="hidden sm:flex items-center gap-3">
@@ -537,7 +537,7 @@ const EcommerceDashboard: React.FC = () => {
                             {/* Back Button */}
                             <button
                                 onClick={() => setView('dashboard')}
-                                className="flex items-center justify-center gap-2 h-9 px-3 rounded-lg bg-secondary/50 border border-border/40 hover:bg-secondary text-sm font-medium transition-all text-muted-foreground hover:text-foreground"
+                                className="flex items-center justify-center gap-2 h-9 w-9 sm:w-auto sm:px-3 rounded-lg sm:bg-secondary/50 sm:border sm:border-border/40 sm:hover:bg-secondary text-sm font-medium transition-all text-muted-foreground hover:text-foreground"
                                 aria-label={t('common.back', 'Volver')}
                             >
                                 <ArrowLeft size={16} />
@@ -558,8 +558,8 @@ const EcommerceDashboard: React.FC = () => {
                                         key={item.id}
                                         onClick={() => handleViewChange(item.id)}
                                         className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${isActive
-                                                ? 'bg-primary text-primary-foreground'
-                                                : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                                            ? 'bg-primary text-primary-foreground'
+                                            : 'text-muted-foreground hover:text-foreground hover:bg-muted'
                                             }`}
                                     >
                                         <Icon size={18} />

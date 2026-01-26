@@ -162,17 +162,17 @@ const AiAssistantDashboard: React.FC = () => {
             <div className="flex h-screen bg-background text-foreground">
                 <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
                 <div className="flex-1 flex flex-col overflow-hidden">
-                    <header className="h-14 px-6 border-b border-border flex items-center justify-between bg-background z-20 shrink-0">
-                        <div className="flex items-center gap-4">
+                    <header className="h-14 px-2 sm:px-6 border-b border-border flex items-center justify-between bg-background z-20 shrink-0">
+                        <div className="flex items-center gap-1 sm:gap-4">
                             <button onClick={() => setIsMobileMenuOpen(true)} className="lg:hidden h-9 w-9 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-border/40 rounded-full transition-colors">
                                 <Menu className="w-4 h-4" />
                             </button>
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-1 sm:gap-2">
                                 <Bot className="text-primary w-5 h-5" />
-                                <h1 className="text-lg font-semibold text-foreground">{t('aiAssistant.dashboard.title')}</h1>
+                                <h1 className="text-lg font-semibold text-foreground hidden sm:block">{t('aiAssistant.dashboard.title')}</h1>
                             </div>
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1 sm:gap-2">
                             <button
                                 onClick={refreshStats}
                                 disabled={isLoadingStats}
@@ -183,7 +183,7 @@ const AiAssistantDashboard: React.FC = () => {
                             </button>
                             <button
                                 onClick={() => setView('dashboard')}
-                                className="flex items-center justify-center gap-2 h-9 px-3 rounded-lg bg-secondary/50 hover:bg-secondary text-sm font-medium transition-all text-muted-foreground hover:text-foreground"
+                                className="flex items-center justify-center gap-2 h-9 w-9 sm:w-auto sm:px-3 rounded-lg sm:bg-secondary/50 sm:hover:bg-secondary text-sm font-medium transition-all text-muted-foreground hover:text-foreground"
                                 aria-label={t('common.back', 'Volver')}
                             >
                                 <ArrowLeft size={16} />
@@ -391,8 +391,8 @@ const AiAssistantDashboard: React.FC = () => {
                                                         {/* Trend Indicator */}
                                                         {projectStats?.trend && projectStats.trend !== 'stable' && (
                                                             <div className={`flex items-center gap-1 text-xs font-medium ${projectStats.trend === 'up'
-                                                                    ? 'text-green-500'
-                                                                    : 'text-red-500'
+                                                                ? 'text-green-500'
+                                                                : 'text-red-500'
                                                                 }`}>
                                                                 {projectStats.trend === 'up' ? (
                                                                     <TrendingUp size={14} />
@@ -742,8 +742,8 @@ const AiAssistantDashboard: React.FC = () => {
                                             key={filter}
                                             onClick={() => setVoiceGenderFilter(filter)}
                                             className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${voiceGenderFilter === filter
-                                                    ? 'bg-primary text-primary-foreground shadow-sm'
-                                                    : 'text-muted-foreground hover:text-foreground hover:bg-secondary/50'
+                                                ? 'bg-primary text-primary-foreground shadow-sm'
+                                                : 'text-muted-foreground hover:text-foreground hover:bg-secondary/50'
                                                 }`}
                                         >
                                             {filter === 'all' ? 'Todos' : filter === 'Male' ? '♂ Masculino' : '♀ Femenino'}
@@ -848,37 +848,37 @@ const AiAssistantDashboard: React.FC = () => {
 
             <div className="flex-1 flex flex-col min-w-0">
                 {/* Header */}
-                <header className="h-14 px-8 border-b border-border flex items-center justify-between bg-background z-20 shrink-0">
-                    <div className="flex items-center gap-4">
-                        <button onClick={() => setIsMobileMenuOpen(true)} className="lg:hidden h-9 w-9 flex items-center justify-center -ml-2 text-muted-foreground hover:text-foreground hover:bg-border/40 rounded-full transition-colors">
+                <header className="h-14 px-2 sm:px-8 border-b border-border flex items-center justify-between bg-background z-20 shrink-0">
+                    <div className="flex items-center gap-1 sm:gap-4">
+                        <button onClick={() => setIsMobileMenuOpen(true)} className="lg:hidden h-9 w-9 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-border/40 rounded-full transition-colors">
                             <Menu className="w-4 h-4" />
                         </button>
-                        <div className="flex items-center gap-2">
-                            <h1 className="text-lg font-semibold text-foreground">{t('aiAssistant.dashboard.title')}</h1>
-                            <span className="text-xs text-muted-foreground flex items-center"><span className="w-1.5 h-1.5 bg-green-500 rounded-full mr-1"></span> {activeProject.name}</span>
+                        <div className="flex items-center gap-1 sm:gap-2">
+                            <h1 className="text-lg font-semibold text-foreground hidden sm:block">{t('aiAssistant.dashboard.title')}</h1>
+                            <span className="text-xs text-muted-foreground flex items-center"><span className="w-1.5 h-1.5 bg-green-500 rounded-full mr-1"></span> <span className="truncate max-w-[100px] sm:max-w-[200px]">{activeProject.name}</span></span>
                         </div>
                     </div>
                     <div className="flex items-center gap-1">
                         <button
                             onClick={handleSave}
                             disabled={isSaving}
-                            className="flex items-center gap-1.5 h-9 px-3 rounded-md text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40 disabled:text-green-500 disabled:hover:bg-transparent"
+                            className="flex items-center gap-1.5 h-9 px-2 sm:px-3 rounded-md text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40 disabled:text-green-500 disabled:hover:bg-transparent"
                         >
                             {isSaving ? (
                                 <>
                                     <Save className="w-4 h-4" />
-                                    <span>{t('aiAssistant.dashboard.saving')}</span>
+                                    <span className="hidden sm:inline">{t('aiAssistant.dashboard.saving')}</span>
                                 </>
                             ) : (
                                 <>
                                     <Save className="w-4 h-4" />
-                                    <span>{t('aiAssistant.dashboard.save')}</span>
+                                    <span className="hidden sm:inline">{t('aiAssistant.dashboard.save')}</span>
                                 </>
                             )}
                         </button>
                         <button
                             onClick={() => setView('dashboard')}
-                            className="flex items-center justify-center gap-2 h-9 px-3 rounded-lg bg-secondary/50 hover:bg-secondary text-sm font-medium transition-all text-muted-foreground hover:text-foreground"
+                            className="flex items-center justify-center gap-2 h-9 w-9 sm:w-auto sm:px-3 rounded-lg sm:bg-secondary/50 sm:hover:bg-secondary text-sm font-medium transition-all text-muted-foreground hover:text-foreground"
                             aria-label={t('common.back', 'Volver')}
                         >
                             <ArrowLeft size={16} />

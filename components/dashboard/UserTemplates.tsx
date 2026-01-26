@@ -4,8 +4,8 @@ import { useEditor } from '../../contexts/EditorContext';
 import { useRouter } from '../../hooks/useRouter';
 import { ROUTES } from '../../routes/config';
 import DashboardSidebar from './DashboardSidebar';
-import { 
-    LayoutTemplate, 
+import {
+    LayoutTemplate,
     Menu,
     Search,
     Grid,
@@ -32,29 +32,29 @@ const UserTemplates: React.FC = () => {
     const { projects, createProjectFromTemplate } = useEditor();
     const { navigate } = useRouter();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-    
+
     // Search and Filter States
     const [searchTerm, setSearchTerm] = useState('');
     const [filterIndustry, setFilterIndustry] = useState<string>('all');
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-    
+
     // Preview Modal
     const [previewTemplate, setPreviewTemplate] = useState<Project | null>(null);
     const [isCreating, setIsCreating] = useState(false);
-    
+
     // Instructions banner visibility (persisted in localStorage)
     const [showInstructions, setShowInstructions] = useState(() => {
         const saved = localStorage.getItem('quimera_show_templates_instructions');
         return saved !== 'false'; // Show by default
     });
-    
+
     const dismissInstructions = () => {
         setShowInstructions(false);
         localStorage.setItem('quimera_show_templates_instructions', 'false');
     };
 
     // Get only active templates
-    const templates = useMemo(() => 
+    const templates = useMemo(() =>
         projects.filter(p => p.status === 'Template' && !p.isArchived),
         [projects]
     );
@@ -99,7 +99,7 @@ const UserTemplates: React.FC = () => {
 
         if (searchTerm) {
             const search = searchTerm.toLowerCase();
-            result = result.filter(t => 
+            result = result.filter(t =>
                 t.name.toLowerCase().includes(search) ||
                 t.description?.toLowerCase().includes(search) ||
                 t.industries?.some(ind => getIndustryLabel(ind).toLowerCase().includes(search))
@@ -129,19 +129,19 @@ const UserTemplates: React.FC = () => {
     return (
         <div className="flex h-screen bg-background text-foreground">
             <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
-            
+
             <div className="flex-1 flex flex-col overflow-hidden">
                 {/* Header */}
-                <header className="h-14 px-6 border-b border-border flex items-center justify-between bg-background z-20 sticky top-0">
-                    <div className="flex items-center gap-4 flex-shrink-0">
-                        <button 
-                            onClick={() => setIsMobileMenuOpen(true)} 
+                <header className="h-14 px-2 sm:px-6 border-b border-border flex items-center justify-between bg-background z-20 sticky top-0">
+                    <div className="flex items-center gap-1 sm:gap-4 flex-shrink-0">
+                        <button
+                            onClick={() => setIsMobileMenuOpen(true)}
                             className="lg:hidden h-9 w-9 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-border/40 rounded-full transition-colors"
                             aria-label="Open navigation menu"
                         >
                             <Menu className="w-4 h-4" />
                         </button>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1 sm:gap-2">
                             <LayoutTemplate className="text-primary" size={24} />
                             <h1 className="text-xl font-bold text-foreground hidden sm:block">
                                 {t('userTemplates.title', 'Plantillas')}
@@ -150,11 +150,11 @@ const UserTemplates: React.FC = () => {
                     </div>
 
                     {/* Search Bar */}
-                    <div className="flex-1 flex justify-center px-4">
+                    <div className="flex-1 flex justify-center px-2 sm:px-4">
                         <div className="hidden md:flex items-center gap-2 w-full max-w-xl bg-editor-border/40 rounded-lg px-3 py-2">
                             <Search className="w-4 h-4 text-editor-text-secondary flex-shrink-0" />
-                            <input 
-                                type="search" 
+                            <input
+                                type="search"
                                 placeholder={t('userTemplates.searchPlaceholder', 'Buscar plantillas...')}
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -169,11 +169,11 @@ const UserTemplates: React.FC = () => {
                     </div>
 
                     {/* Controls */}
-                    <div className="flex items-center gap-2 flex-shrink-0">
+                    <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
                         {/* Back Button */}
                         <button
                             onClick={() => navigate(ROUTES.DASHBOARD)}
-                            className="flex items-center justify-center gap-2 h-9 px-3 rounded-lg bg-secondary/50 hover:bg-secondary text-sm font-medium transition-all text-muted-foreground hover:text-foreground"
+                            className="flex items-center justify-center gap-2 h-9 w-9 sm:w-auto sm:px-3 rounded-lg sm:bg-secondary/50 sm:hover:bg-secondary text-sm font-medium transition-all text-muted-foreground hover:text-foreground"
                             aria-label={t('common.goBack', 'Volver')}
                         >
                             <ArrowLeft className="w-4 h-4" />
@@ -198,33 +198,33 @@ const UserTemplates: React.FC = () => {
 
                 <main className="flex-1 overflow-y-auto p-6 lg:p-8">
                     <div className="max-w-7xl mx-auto">
-                        
+
                         {/* Instructions Banner - Dismissible */}
                         {showInstructions && (
                             <div className="mb-8 relative flex flex-col lg:flex-row items-stretch gap-6 lg:gap-0">
                                 {/* Floating Image - Outside the box, full height */}
                                 <div className="hidden lg:flex relative z-10 flex-shrink-0 -mr-6 items-end">
-                                    <img 
+                                    <img
                                         src="https://firebasestorage.googleapis.com/v0/b/quimeraai.firebasestorage.app/o/quimera%2FEP2SSUCSsy2EeQtokqlp3.jpg?alt=media&token=193cba94-d249-4bcb-b521-7c2639eb091c"
                                         alt="Templates Guide"
                                         className="w-auto h-full max-h-[280px] object-contain"
                                     />
                                 </div>
-                                
+
                                 {/* Content Box */}
                                 <div className="relative flex-1 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border border-primary/20 rounded-2xl overflow-hidden lg:pl-10">
                                     {/* Background decoration */}
                                     <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-primary/10 to-transparent rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-                                    
+
                                     {/* Close button */}
-                                    <button 
+                                    <button
                                         onClick={dismissInstructions}
                                         className="absolute top-4 right-4 p-2 rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors z-20"
                                         aria-label={t('common.close')}
                                     >
                                         <X size={18} />
                                     </button>
-                                    
+
                                     {/* Content Section */}
                                     <div className="relative z-10 p-6">
                                         <div className="flex items-center gap-3 mb-4">
@@ -237,7 +237,7 @@ const UserTemplates: React.FC = () => {
                                                 </h2>
                                             </div>
                                         </div>
-                                        
+
                                         <ul className="space-y-2 text-sm text-muted-foreground mb-4">
                                             <li className="flex items-center gap-2">
                                                 <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
@@ -256,9 +256,9 @@ const UserTemplates: React.FC = () => {
                                                 <span>{t('userTemplates.step4', 'Personaliza colores, textos e imágenes en el editor para hacerla tuya')}</span>
                                             </li>
                                         </ul>
-                                        
+
                                         <div className="flex items-center justify-end pt-2 border-t border-border/50">
-                                            <button 
+                                            <button
                                                 onClick={dismissInstructions}
                                                 className="text-xs font-medium text-primary hover:text-primary/80 transition-colors"
                                             >
@@ -299,7 +299,7 @@ const UserTemplates: React.FC = () => {
                             {/* Controls */}
                             <div className="flex items-center gap-2">
                                 {/* Industry Filter */}
-                                <select 
+                                <select
                                     value={filterIndustry}
                                     onChange={(e) => setFilterIndustry(e.target.value)}
                                     className="bg-secondary/50 border border-border/40 px-3 py-2 rounded-lg text-sm outline-none focus:border-primary/60"
@@ -312,23 +312,23 @@ const UserTemplates: React.FC = () => {
 
                                 {/* View Mode Toggle */}
                                 <div className="flex items-center gap-1 bg-secondary/40 rounded-lg p-1">
-                                    <button 
+                                    <button
                                         onClick={() => setViewMode('grid')}
                                         className={`h-8 w-8 flex items-center justify-center rounded-md transition-all ${viewMode === 'grid' ? 'text-primary bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
                                     >
                                         <Grid size={15} />
                                     </button>
-                                    <button 
+                                    <button
                                         onClick={() => setViewMode('list')}
                                         className={`h-8 w-8 flex items-center justify-center rounded-md transition-all ${viewMode === 'list' ? 'text-primary bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
                                     >
                                         <List size={15} />
                                     </button>
                                 </div>
-                                
+
                                 {/* Help Button - Show when instructions are hidden */}
                                 {!showInstructions && (
-                                    <button 
+                                    <button
                                         onClick={() => {
                                             setShowInstructions(true);
                                             localStorage.setItem('quimera_show_templates_instructions', 'true');
@@ -347,20 +347,20 @@ const UserTemplates: React.FC = () => {
                         {viewMode === 'grid' ? (
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                                 {filteredTemplates.map(template => (
-                                    <div 
-                                        key={template.id} 
+                                    <div
+                                        key={template.id}
                                         className="group relative rounded-2xl overflow-hidden bg-card border border-border hover:border-primary/50 hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 cursor-pointer"
                                         onClick={() => setPreviewTemplate(template)}
                                     >
                                         {/* Thumbnail */}
                                         <div className="relative aspect-[4/3] overflow-hidden">
-                                            <img 
-                                                src={template.thumbnailUrl} 
-                                                alt={template.name} 
-                                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+                                            <img
+                                                src={template.thumbnailUrl}
+                                                alt={template.name}
+                                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                                             />
                                             <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-                                            
+
                                             {/* Color Swatches */}
                                             {getThemeColors(template).length > 0 && (
                                                 <div className="absolute top-3 right-3 flex gap-1">
@@ -386,12 +386,12 @@ const UserTemplates: React.FC = () => {
                                         {/* Info */}
                                         <div className="p-4">
                                             <h3 className="font-bold text-foreground mb-2 line-clamp-1">{template.name}</h3>
-                                            
+
                                             {/* Industries */}
                                             {template.industries && template.industries.length > 0 && (
                                                 <div className="flex flex-wrap gap-1 mb-3">
                                                     {template.industries.slice(0, 2).map(ind => (
-                                                        <span 
+                                                        <span
                                                             key={ind}
                                                             className="inline-flex items-center gap-1 px-2 py-0.5 bg-secondary text-xs rounded-full"
                                                         >
@@ -420,16 +420,16 @@ const UserTemplates: React.FC = () => {
                             /* List View */
                             <div className="space-y-3">
                                 {filteredTemplates.map(template => (
-                                    <div 
-                                        key={template.id} 
+                                    <div
+                                        key={template.id}
                                         className="group bg-card border border-border rounded-xl p-4 flex items-center gap-4 hover:border-primary/50 hover:shadow-lg transition-all cursor-pointer"
                                         onClick={() => setPreviewTemplate(template)}
                                     >
                                         {/* Thumbnail */}
                                         <div className="relative flex-shrink-0 w-32 h-20 rounded-lg overflow-hidden">
-                                            <img 
-                                                src={template.thumbnailUrl} 
-                                                alt={template.name} 
+                                            <img
+                                                src={template.thumbnailUrl}
+                                                alt={template.name}
                                                 className="w-full h-full object-cover group-hover:scale-105 transition-transform"
                                             />
                                             {getThemeColors(template).length > 0 && (
@@ -479,7 +479,7 @@ const UserTemplates: React.FC = () => {
                                 <p className="text-sm text-muted-foreground mb-6 max-w-md">
                                     {t('userTemplates.tryAdjustingFilters', 'Intenta ajustar los filtros de búsqueda')}
                                 </p>
-                                <button 
+                                <button
                                     onClick={() => { setSearchTerm(''); setFilterIndustry('all'); }}
                                     className="px-4 py-2 bg-secondary text-foreground rounded-lg hover:bg-secondary/80 transition-colors"
                                 >
@@ -493,11 +493,11 @@ const UserTemplates: React.FC = () => {
 
             {/* Preview Modal */}
             {previewTemplate && (
-                <div 
+                <div
                     className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
                     onClick={() => setPreviewTemplate(null)}
                 >
-                    <div 
+                    <div
                         className="bg-card rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-auto shadow-2xl"
                         onClick={(e) => e.stopPropagation()}
                     >
@@ -510,7 +510,7 @@ const UserTemplates: React.FC = () => {
                                         <p className="text-muted-foreground mt-1">{previewTemplate.description}</p>
                                     )}
                                 </div>
-                                <button 
+                                <button
                                     onClick={() => setPreviewTemplate(null)}
                                     className="p-2 rounded-full hover:bg-secondary transition-colors"
                                 >
@@ -522,8 +522,8 @@ const UserTemplates: React.FC = () => {
                         <div className="p-6">
                             {/* Large Preview Image */}
                             <div className="mb-6 rounded-xl overflow-hidden relative">
-                                <img 
-                                    src={previewTemplate.thumbnailUrl} 
+                                <img
+                                    src={previewTemplate.thumbnailUrl}
                                     alt={previewTemplate.name}
                                     className="w-full h-auto"
                                 />
@@ -605,7 +605,7 @@ const UserTemplates: React.FC = () => {
 
                             {/* Action Button */}
                             <div className="flex justify-center">
-                                <button 
+                                <button
                                     onClick={() => handleUseTemplate(previewTemplate.id)}
                                     disabled={isCreating}
                                     className="group flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-primary to-primary/80 text-primary-foreground font-bold rounded-2xl shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"

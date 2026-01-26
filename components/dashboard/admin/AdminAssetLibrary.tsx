@@ -116,8 +116,8 @@ const CATEGORY_CONFIG: Record<AdminAssetCategory, { label: string; icon: React.R
 };
 
 // Preview Modal Component
-const AssetPreviewModal: React.FC<{ 
-    asset: AdminAssetRecord; 
+const AssetPreviewModal: React.FC<{
+    asset: AdminAssetRecord;
     onClose: () => void;
     onUpdate: (id: string, updates: Partial<AdminAssetRecord>) => Promise<void>;
     onDelete: (id: string, storagePath: string) => Promise<void>;
@@ -436,18 +436,18 @@ const AssetItem: React.FC<{
 
 const AdminAssetLibrary: React.FC<AdminAssetLibraryProps> = ({ onBack }) => {
     const { t } = useTranslation();
-    const { 
-        adminAssets, 
-        isAdminAssetsLoading, 
-        fetchAdminAssets, 
+    const {
+        adminAssets,
+        isAdminAssetsLoading,
+        fetchAdminAssets,
         uploadAdminAsset,
         uploadAdminAssetFromURL,
         updateAdminAsset,
-        deleteAdminAsset 
+        deleteAdminAsset
     } = useFiles();
     const { generateImage, enhancePrompt } = useAI();
     const { success, error: showError } = useToast();
-    
+
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [previewAsset, setPreviewAsset] = useState<AdminAssetRecord | null>(null);
     const referenceFileInputRef = useRef<HTMLInputElement>(null);
@@ -618,7 +618,7 @@ const AdminAssetLibrary: React.FC<AdminAssetLibraryProps> = ({ onBack }) => {
             };
 
             const result = await generateImage(prompt, options);
-            
+
             // If we get a URL back, also save to admin assets with the prompt
             if (result && typeof result === 'string') {
                 await uploadAdminAssetFromURL(result, `AI_${Date.now()}.png`, selectedCategory, {
@@ -706,17 +706,17 @@ const AdminAssetLibrary: React.FC<AdminAssetLibraryProps> = ({ onBack }) => {
 
             <div className="flex-1 flex flex-col overflow-hidden">
                 {/* Header */}
-                <header className="h-14 px-6 border-b border-border flex items-center bg-background z-20 sticky top-0">
-                    <div className="flex items-center gap-4 flex-shrink-0">
+                <header className="h-14 px-2 sm:px-6 border-b border-border flex items-center bg-background z-20 sticky top-0">
+                    <div className="flex items-center gap-1 sm:gap-4 flex-shrink-0">
                         <button
                             onClick={() => setIsMobileMenuOpen(true)}
-                            className="lg:hidden h-11 w-11 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary/80 rounded-xl transition-colors"
+                            className="lg:hidden h-9 w-9 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary/80 rounded-xl transition-colors"
                         >
                             <Menu className="w-5 h-5" />
                         </button>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1 sm:gap-2">
                             <FolderOpen className="text-primary" size={24} />
-                            <h1 className="text-xl font-bold text-foreground hidden sm:block">
+                            <h1 className="text-lg sm:text-xl font-bold text-foreground hidden sm:block">
                                 {t('adminAssets.title', 'Admin Asset Library')}
                             </h1>
                         </div>
@@ -729,7 +729,7 @@ const AdminAssetLibrary: React.FC<AdminAssetLibraryProps> = ({ onBack }) => {
 
                     <button
                         onClick={onBack}
-                        className="flex items-center justify-center gap-2 h-9 px-3 rounded-lg bg-secondary/50 hover:bg-secondary text-sm font-medium transition-all text-muted-foreground hover:text-foreground"
+                        className="flex items-center justify-center gap-2 h-9 w-9 sm:w-auto sm:px-3 rounded-lg sm:bg-secondary/50 sm:hover:bg-secondary text-sm font-medium transition-all text-muted-foreground hover:text-foreground"
                     >
                         <ArrowLeft className="w-4 h-4" />
                         <span className="hidden sm:inline">{t('common.back', 'Back')}</span>
@@ -739,8 +739,8 @@ const AdminAssetLibrary: React.FC<AdminAssetLibraryProps> = ({ onBack }) => {
                 {/* Asset Preview Modal */}
                 <Modal isOpen={!!previewAsset} onClose={() => setPreviewAsset(null)}>
                     {previewAsset && (
-                        <AssetPreviewModal 
-                            asset={previewAsset} 
+                        <AssetPreviewModal
+                            asset={previewAsset}
                             onClose={() => setPreviewAsset(null)}
                             onUpdate={updateAdminAsset}
                             onDelete={deleteAdminAsset}
@@ -1058,11 +1058,10 @@ const AdminAssetLibrary: React.FC<AdminAssetLibraryProps> = ({ onBack }) => {
                             <div className="mb-4 flex flex-wrap gap-2">
                                 <button
                                     onClick={() => setCategoryFilter('all')}
-                                    className={`flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors ${
-                                        categoryFilter === 'all' 
-                                            ? 'bg-primary/10 text-primary border-primary/30' 
+                                    className={`flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors ${categoryFilter === 'all'
+                                            ? 'bg-primary/10 text-primary border-primary/30'
                                             : 'bg-secondary/50 text-muted-foreground border-border hover:border-primary/30'
-                                    }`}
+                                        }`}
                                 >
                                     <FolderOpen size={12} />
                                     {t('common.all', 'All')} ({adminAssets.length})
@@ -1074,11 +1073,10 @@ const AdminAssetLibrary: React.FC<AdminAssetLibraryProps> = ({ onBack }) => {
                                         <button
                                             key={key}
                                             onClick={() => setCategoryFilter(key as AdminAssetCategory)}
-                                            className={`flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors ${
-                                                categoryFilter === key 
+                                            className={`flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors ${categoryFilter === key
                                                     ? config.color
                                                     : 'bg-secondary/50 text-muted-foreground border-border hover:border-primary/30'
-                                            }`}
+                                                }`}
                                         >
                                             {config.icon}
                                             {config.label} ({count})
@@ -1202,7 +1200,7 @@ const AdminAssetLibrary: React.FC<AdminAssetLibraryProps> = ({ onBack }) => {
                                     <div className="text-center py-8 px-4 border-2 border-dashed border-border rounded-xl bg-secondary/20">
                                         <ImageIcon size={32} className="mx-auto mb-2 text-muted-foreground opacity-50" />
                                         <p className="text-sm font-medium text-foreground mb-1">
-                                            {searchQuery || categoryFilter !== 'all' 
+                                            {searchQuery || categoryFilter !== 'all'
                                                 ? t('adminAssets.noResults', 'No assets found')
                                                 : t('adminAssets.empty', 'No assets yet')}
                                         </p>
