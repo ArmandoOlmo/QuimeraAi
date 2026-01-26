@@ -553,7 +553,7 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación ni puntu
                 </header>
 
                 {/* View Tabs */}
-                <div className="flex border-b border-border px-6 bg-card/50">
+                <div className="flex border-b border-border px-3 sm:px-6 bg-card/50">
                     {[
                         { id: 'overview', label: t('financeDashboard.overview'), icon: BarChart3 },
                         { id: 'list', label: t('financeDashboard.movements'), icon: Receipt },

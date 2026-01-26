@@ -193,7 +193,7 @@ const EmailDashboard: React.FC<EmailDashboardProps> = ({ projectId: propProjectI
                                     className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
                                 >
                                     <Layers size={14} />
-                                    <span className="max-w-[200px] truncate">
+                                    <span className="max-w-[100px] sm:max-w-[200px] truncate">
                                         {effectiveProject?.name || t('email.selectProject', 'Seleccionar proyecto')}
                                     </span>
                                     <ChevronDown size={14} className={`transition-transform ${isProjectSelectorOpen ? 'rotate-180' : ''}`} />
@@ -308,7 +308,7 @@ const EmailDashboard: React.FC<EmailDashboardProps> = ({ projectId: propProjectI
                             >
                                 <PlusCircle size={16} />
                                 <span className="hidden sm:inline">{t('email.newCampaign', 'Nueva Campaña')}</span>
-                                <span className="sm:hidden">Nueva</span>
+                                <span className="sm:hidden">{t('email.new', 'Nueva')}</span>
                             </button>
                         </nav>
                     </div>
