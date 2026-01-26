@@ -538,131 +538,227 @@ const CampaignsView: React.FC<CampaignsViewProps> = ({ onCreateTrigger }) => {
                         </button>
                     </div>
                 ) : (
-                    <div className="bg-card/50 border border-border rounded-xl overflow-hidden">
-                        <div className="overflow-x-auto">
-                            <table className="w-full">
-                                <thead>
-                                    <tr className="border-b border-border bg-muted/30">
-                                        <th className="text-left px-4 py-3 text-sm font-medium text-muted-foreground">
-                                            {t('email.campaignName', 'Campaña')}
-                                        </th>
-                                        <th className="text-left px-4 py-3 text-sm font-medium text-muted-foreground">
-                                            {t('email.status', 'Estado')}
-                                        </th>
-                                        <th className="text-right px-4 py-3 text-sm font-medium text-muted-foreground">
-                                            {t('email.recipients', 'Destinatarios')}
-                                        </th>
-                                        <th className="text-right px-4 py-3 text-sm font-medium text-muted-foreground">
-                                            {t('email.openRate', 'Apertura')}
-                                        </th>
-                                        <th className="text-right px-4 py-3 text-sm font-medium text-muted-foreground">
-                                            {t('email.clickRate', 'Clicks')}
-                                        </th>
-                                        <th className="text-right px-4 py-3 text-sm font-medium text-muted-foreground">
-                                            {t('email.actions', 'Acciones')}
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {filteredCampaigns.map((campaign) => {
-                                        const openRate = campaign.stats?.sent && campaign.stats.sent > 0
-                                            ? ((campaign.stats.uniqueOpens || 0) / campaign.stats.sent * 100).toFixed(1)
-                                            : '0.0';
-                                        const clickRate = campaign.stats?.uniqueOpens && campaign.stats.uniqueOpens > 0
-                                            ? ((campaign.stats.uniqueClicks || 0) / campaign.stats.uniqueOpens * 100).toFixed(1)
-                                            : '0.0';
-                                        const isSending = sendingCampaign === campaign.id;
+                    <>
+                        {/* Mobile Cards View */}
+                        <div className="md:hidden space-y-3">
+                            {filteredCampaigns.map((campaign) => {
+                                const openRate = campaign.stats?.sent && campaign.stats.sent > 0
+                                    ? ((campaign.stats.uniqueOpens || 0) / campaign.stats.sent * 100).toFixed(1)
+                                    : '0.0';
+                                const clickRate = campaign.stats?.uniqueOpens && campaign.stats.uniqueOpens > 0
+                                    ? ((campaign.stats.uniqueClicks || 0) / campaign.stats.uniqueOpens * 100).toFixed(1)
+                                    : '0.0';
+                                const isSending = sendingCampaign === campaign.id;
 
-                                        return (
-                                            <tr key={campaign.id} className="border-b border-border last:border-0 hover:bg-muted/20">
-                                                <td className="px-4 py-4">
-                                                    <div>
-                                                        <p className="text-foreground font-medium">{campaign.name}</p>
-                                                        <p className="text-muted-foreground text-sm truncate max-w-xs">
-                                                            {campaign.subject}
-                                                        </p>
-                                                    </div>
-                                                </td>
-                                                <td className="px-4 py-4">
-                                                    {isSending ? (
-                                                        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-amber-500/20 text-amber-400">
-                                                            <Loader2 size={12} className="animate-spin" />
-                                                            Enviando...
-                                                        </span>
-                                                    ) : (
-                                                        getStatusBadge(campaign.status)
-                                                    )}
-                                                </td>
-                                                <td className="px-4 py-4 text-right text-foreground">
-                                                    {campaign.stats?.totalRecipients?.toLocaleString() || 0}
-                                                </td>
-                                                <td className="px-4 py-4 text-right text-foreground">
-                                                    {openRate}%
-                                                </td>
-                                                <td className="px-4 py-4 text-right text-foreground">
-                                                    {clickRate}%
-                                                </td>
-                                                <td className="px-4 py-4">
-                                                    <div className="flex items-center justify-end gap-1">
-                                                        {/* Send button - only for drafts */}
-                                                        {campaign.status === 'draft' && (
-                                                            <button
-                                                                onClick={() => handleOpenSendConfirm(campaign.id)}
-                                                                disabled={isSending}
-                                                                className="p-2 hover:bg-green-500/20 rounded-lg transition-colors disabled:opacity-50"
-                                                                title={t('email.send', 'Enviar')}
-                                                            >
-                                                                <Play size={16} className="text-green-500" />
-                                                            </button>
-                                                        )}
-                                                        {/* Test email button */}
-                                                        {campaign.status === 'draft' && (
-                                                            <button
-                                                                onClick={() => handleOpenTestEmail(campaign.id)}
-                                                                className="p-2 hover:bg-blue-500/20 rounded-lg transition-colors"
-                                                                title={t('email.sendTest', 'Enviar prueba')}
-                                                            >
-                                                                <TestTube size={16} className="text-blue-500" />
-                                                            </button>
-                                                        )}
-                                                        {campaign.status === 'draft' && (
-                                                            <button
-                                                                onClick={() => handleEditCampaign(campaign)}
-                                                                className="p-2 hover:bg-primary/20 rounded-lg transition-colors"
-                                                                title={t('email.edit', 'Editar')}
-                                                            >
-                                                                <Edit size={16} className="text-primary" />
-                                                            </button>
-                                                        )}
-                                                        <button
-                                                            className="p-2 hover:bg-muted rounded-lg transition-colors"
-                                                            title={t('email.view', 'Ver')}
-                                                        >
-                                                            <Eye size={16} className="text-muted-foreground" />
-                                                        </button>
-                                                        <button
-                                                            onClick={() => handleDuplicateCampaign(campaign)}
-                                                            className="p-2 hover:bg-muted rounded-lg transition-colors"
-                                                            title={t('email.duplicate', 'Duplicar')}
-                                                        >
-                                                            <Copy size={16} className="text-muted-foreground" />
-                                                        </button>
-                                                        <button
-                                                            onClick={() => handleDeleteCampaign(campaign.id)}
-                                                            className="p-2 hover:bg-red-500/20 rounded-lg transition-colors"
-                                                            title={t('email.delete', 'Eliminar')}
-                                                        >
-                                                            <Trash2 size={16} className="text-red-500" />
-                                                        </button>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        );
-                                    })}
-                                </tbody>
-                            </table>
+                                return (
+                                    <div key={campaign.id} className="bg-card/50 border border-border rounded-xl p-4">
+                                        {/* Header Row: Name + Status */}
+                                        <div className="flex items-start justify-between gap-3 mb-3">
+                                            <div className="min-w-0 flex-1">
+                                                <p className="text-foreground font-medium truncate">{campaign.name}</p>
+                                                <p className="text-muted-foreground text-sm truncate">{campaign.subject}</p>
+                                            </div>
+                                            {isSending ? (
+                                                <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-amber-500/20 text-amber-400 shrink-0">
+                                                    <Loader2 size={12} className="animate-spin" />
+                                                    Enviando
+                                                </span>
+                                            ) : (
+                                                getStatusBadge(campaign.status)
+                                            )}
+                                        </div>
+
+                                        {/* Stats Row */}
+                                        <div className="grid grid-cols-3 gap-2 mb-3 text-center bg-muted/30 rounded-lg p-2">
+                                            <div>
+                                                <p className="text-xs text-muted-foreground">{t('email.recipients', 'Dest.')}</p>
+                                                <p className="text-sm font-medium text-foreground">{campaign.stats?.totalRecipients?.toLocaleString() || 0}</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-xs text-muted-foreground">{t('email.openRate', 'Apert.')}</p>
+                                                <p className="text-sm font-medium text-foreground">{openRate}%</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-xs text-muted-foreground">{t('email.clickRate', 'Clicks')}</p>
+                                                <p className="text-sm font-medium text-foreground">{clickRate}%</p>
+                                            </div>
+                                        </div>
+
+                                        {/* Actions Row - Always visible on mobile */}
+                                        <div className="flex items-center gap-1 flex-wrap">
+                                            {campaign.status === 'draft' && (
+                                                <>
+                                                    <button
+                                                        onClick={() => handleOpenSendConfirm(campaign.id)}
+                                                        disabled={isSending}
+                                                        className="flex items-center gap-1.5 px-3 py-2 bg-green-500/10 hover:bg-green-500/20 rounded-lg transition-colors disabled:opacity-50 text-green-500 text-xs font-medium"
+                                                    >
+                                                        <Play size={14} />
+                                                        <span>{t('email.send', 'Enviar')}</span>
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleOpenTestEmail(campaign.id)}
+                                                        className="flex items-center gap-1.5 px-3 py-2 bg-blue-500/10 hover:bg-blue-500/20 rounded-lg transition-colors text-blue-500 text-xs font-medium"
+                                                    >
+                                                        <TestTube size={14} />
+                                                        <span>Test</span>
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleEditCampaign(campaign)}
+                                                        className="flex items-center gap-1.5 px-3 py-2 bg-primary/10 hover:bg-primary/20 rounded-lg transition-colors text-primary text-xs font-medium"
+                                                    >
+                                                        <Edit size={14} />
+                                                        <span>{t('email.edit', 'Editar')}</span>
+                                                    </button>
+                                                </>
+                                            )}
+                                            <button
+                                                onClick={() => handleDuplicateCampaign(campaign)}
+                                                className="p-2 hover:bg-muted rounded-lg transition-colors"
+                                                title={t('email.duplicate', 'Duplicar')}
+                                            >
+                                                <Copy size={16} className="text-muted-foreground" />
+                                            </button>
+                                            <button
+                                                onClick={() => handleDeleteCampaign(campaign.id)}
+                                                className="p-2 hover:bg-red-500/20 rounded-lg transition-colors"
+                                                title={t('email.delete', 'Eliminar')}
+                                            >
+                                                <Trash2 size={16} className="text-red-500" />
+                                            </button>
+                                        </div>
+                                    </div>
+                                );
+                            })}
                         </div>
-                    </div>
+
+                        {/* Desktop Table View */}
+                        <div className="hidden md:block bg-card/50 border border-border rounded-xl overflow-hidden">
+                            <div className="overflow-x-auto">
+                                <table className="w-full">
+                                    <thead>
+                                        <tr className="border-b border-border bg-muted/30">
+                                            <th className="text-left px-4 py-3 text-sm font-medium text-muted-foreground">
+                                                {t('email.campaignName', 'Campaña')}
+                                            </th>
+                                            <th className="text-left px-4 py-3 text-sm font-medium text-muted-foreground">
+                                                {t('email.status', 'Estado')}
+                                            </th>
+                                            <th className="text-right px-4 py-3 text-sm font-medium text-muted-foreground">
+                                                {t('email.recipients', 'Destinatarios')}
+                                            </th>
+                                            <th className="text-right px-4 py-3 text-sm font-medium text-muted-foreground">
+                                                {t('email.openRate', 'Apertura')}
+                                            </th>
+                                            <th className="text-right px-4 py-3 text-sm font-medium text-muted-foreground">
+                                                {t('email.clickRate', 'Clicks')}
+                                            </th>
+                                            <th className="text-right px-4 py-3 text-sm font-medium text-muted-foreground">
+                                                {t('email.actions', 'Acciones')}
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {filteredCampaigns.map((campaign) => {
+                                            const openRate = campaign.stats?.sent && campaign.stats.sent > 0
+                                                ? ((campaign.stats.uniqueOpens || 0) / campaign.stats.sent * 100).toFixed(1)
+                                                : '0.0';
+                                            const clickRate = campaign.stats?.uniqueOpens && campaign.stats.uniqueOpens > 0
+                                                ? ((campaign.stats.uniqueClicks || 0) / campaign.stats.uniqueOpens * 100).toFixed(1)
+                                                : '0.0';
+                                            const isSending = sendingCampaign === campaign.id;
+
+                                            return (
+                                                <tr key={campaign.id} className="border-b border-border last:border-0 hover:bg-muted/20">
+                                                    <td className="px-4 py-4">
+                                                        <div>
+                                                            <p className="text-foreground font-medium">{campaign.name}</p>
+                                                            <p className="text-muted-foreground text-sm truncate max-w-xs">
+                                                                {campaign.subject}
+                                                            </p>
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-4 py-4">
+                                                        {isSending ? (
+                                                            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-amber-500/20 text-amber-400">
+                                                                <Loader2 size={12} className="animate-spin" />
+                                                                Enviando...
+                                                            </span>
+                                                        ) : (
+                                                            getStatusBadge(campaign.status)
+                                                        )}
+                                                    </td>
+                                                    <td className="px-4 py-4 text-right text-foreground">
+                                                        {campaign.stats?.totalRecipients?.toLocaleString() || 0}
+                                                    </td>
+                                                    <td className="px-4 py-4 text-right text-foreground">
+                                                        {openRate}%
+                                                    </td>
+                                                    <td className="px-4 py-4 text-right text-foreground">
+                                                        {clickRate}%
+                                                    </td>
+                                                    <td className="px-4 py-4">
+                                                        <div className="flex items-center justify-end gap-1">
+                                                            {/* Send button - only for drafts */}
+                                                            {campaign.status === 'draft' && (
+                                                                <button
+                                                                    onClick={() => handleOpenSendConfirm(campaign.id)}
+                                                                    disabled={isSending}
+                                                                    className="p-2 hover:bg-green-500/20 rounded-lg transition-colors disabled:opacity-50"
+                                                                    title={t('email.send', 'Enviar')}
+                                                                >
+                                                                    <Play size={16} className="text-green-500" />
+                                                                </button>
+                                                            )}
+                                                            {/* Test email button */}
+                                                            {campaign.status === 'draft' && (
+                                                                <button
+                                                                    onClick={() => handleOpenTestEmail(campaign.id)}
+                                                                    className="p-2 hover:bg-blue-500/20 rounded-lg transition-colors"
+                                                                    title={t('email.sendTest', 'Enviar prueba')}
+                                                                >
+                                                                    <TestTube size={16} className="text-blue-500" />
+                                                                </button>
+                                                            )}
+                                                            {campaign.status === 'draft' && (
+                                                                <button
+                                                                    onClick={() => handleEditCampaign(campaign)}
+                                                                    className="p-2 hover:bg-primary/20 rounded-lg transition-colors"
+                                                                    title={t('email.edit', 'Editar')}
+                                                                >
+                                                                    <Edit size={16} className="text-primary" />
+                                                                </button>
+                                                            )}
+                                                            <button
+                                                                className="p-2 hover:bg-muted rounded-lg transition-colors"
+                                                                title={t('email.view', 'Ver')}
+                                                            >
+                                                                <Eye size={16} className="text-muted-foreground" />
+                                                            </button>
+                                                            <button
+                                                                onClick={() => handleDuplicateCampaign(campaign)}
+                                                                className="p-2 hover:bg-muted rounded-lg transition-colors"
+                                                                title={t('email.duplicate', 'Duplicar')}
+                                                            >
+                                                                <Copy size={16} className="text-muted-foreground" />
+                                                            </button>
+                                                            <button
+                                                                onClick={() => handleDeleteCampaign(campaign.id)}
+                                                                className="p-2 hover:bg-red-500/20 rounded-lg transition-colors"
+                                                                title={t('email.delete', 'Eliminar')}
+                                                            >
+                                                                <Trash2 size={16} className="text-red-500" />
+                                                            </button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </>
                 )
             }
 
@@ -722,7 +818,7 @@ const CampaignsView: React.FC<CampaignsViewProps> = ({ onCreateTrigger }) => {
                                     />
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div>
                                         <label className="block text-sm font-medium text-foreground mb-1">
                                             {t('email.campaignType', 'Tipo')}

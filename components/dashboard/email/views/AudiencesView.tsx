@@ -30,14 +30,14 @@ type FilterType = 'all' | 'marketing' | 'orders' | 'spending' | 'inactive';
 const AudiencesView: React.FC = () => {
     const { t } = useTranslation();
     const { userId, projectId } = useEmailDashboardContext();
-    const { 
-        audiences, 
-        isLoading, 
-        isSaving, 
-        createAudience, 
-        updateAudience, 
+    const {
+        audiences,
+        isLoading,
+        isSaving,
+        createAudience,
+        updateAudience,
         deleteAudience,
-        duplicateAudience 
+        duplicateAudience
     } = useEmailAudiences(userId, projectId);
 
     const [searchTerm, setSearchTerm] = useState('');
@@ -239,25 +239,25 @@ const AudiencesView: React.FC = () => {
                                     <div className="p-2 bg-primary/10 rounded-lg">
                                         <Icon className="text-primary" size={20} />
                                     </div>
-                                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <button 
+                                    <div className="flex items-center gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                                        <button
                                             onClick={() => handleOpenModal(audience)}
-                                            className="p-1.5 hover:bg-muted rounded-lg" 
+                                            className="p-1.5 hover:bg-muted rounded-lg"
                                             title={t('email.edit', 'Editar')}
                                         >
                                             <Edit size={14} className="text-muted-foreground" />
                                         </button>
-                                        <button 
+                                        <button
                                             onClick={() => handleDuplicateAudience(audience.id!)}
-                                            className="p-1.5 hover:bg-muted rounded-lg" 
+                                            className="p-1.5 hover:bg-muted rounded-lg"
                                             title={t('email.duplicate', 'Duplicar')}
                                         >
                                             <Copy size={14} className="text-muted-foreground" />
                                         </button>
                                         {!audience.isDefault && (
-                                            <button 
+                                            <button
                                                 onClick={() => handleDeleteAudience(audience.id!, audience.isDefault)}
-                                                className="p-1.5 hover:bg-red-500/20 rounded-lg" 
+                                                className="p-1.5 hover:bg-red-500/20 rounded-lg"
                                                 title={t('email.delete', 'Eliminar')}
                                             >
                                                 <Trash2 size={14} className="text-red-400" />
@@ -323,7 +323,7 @@ const AudiencesView: React.FC = () => {
                     <div className="bg-card rounded-xl border border-border w-full max-w-lg max-h-[90vh] overflow-y-auto">
                         <div className="p-6 border-b border-border flex items-center justify-between">
                             <h3 className="text-lg font-bold text-foreground">
-                                {editingAudience 
+                                {editingAudience
                                     ? t('email.editAudience', 'Editar Segmento')
                                     : t('email.newAudience', 'Nuevo Segmento')
                                 }
@@ -335,7 +335,7 @@ const AudiencesView: React.FC = () => {
                                 <X size={20} className="text-muted-foreground" />
                             </button>
                         </div>
-                        
+
                         <div className="p-6 space-y-4">
                             {/* Name */}
                             <div>
@@ -370,7 +370,7 @@ const AudiencesView: React.FC = () => {
                                 <label className="block text-sm font-medium text-foreground mb-2">
                                     {t('email.filterType', 'Tipo de filtro')}
                                 </label>
-                                <div className="grid grid-cols-2 gap-2">
+                                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                                     {[
                                         { value: 'all', label: 'Todos', icon: Users },
                                         { value: 'marketing', label: 'Acepta Marketing', icon: Mail },
@@ -383,11 +383,10 @@ const AudiencesView: React.FC = () => {
                                             <button
                                                 key={type.value}
                                                 onClick={() => setNewAudience({ ...newAudience, filterType: type.value as FilterType })}
-                                                className={`flex items-center gap-2 p-3 rounded-lg border transition-colors ${
-                                                    newAudience.filterType === type.value
+                                                className={`flex items-center gap-2 p-3 rounded-lg border transition-colors ${newAudience.filterType === type.value
                                                         ? 'border-primary bg-primary/10 text-primary'
                                                         : 'border-border hover:bg-muted text-foreground'
-                                                }`}
+                                                    }`}
                                             >
                                                 <TypeIcon size={16} />
                                                 <span className="text-sm">{type.label}</span>
@@ -461,7 +460,7 @@ const AudiencesView: React.FC = () => {
                                 className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 {isSaving && <Loader2 size={16} className="animate-spin" />}
-                                {editingAudience 
+                                {editingAudience
                                     ? t('common.save', 'Guardar')
                                     : t('email.createAudience', 'Crear Segmento')
                                 }
