@@ -24,7 +24,7 @@ const BulkActionsBar: React.FC<BulkActionsBarProps> = ({
       <div className="bg-card border-2 border-primary shadow-2xl shadow-primary/20 rounded-full px-6 py-3 flex items-center gap-4">
         {/* Selection count */}
         <div className="flex items-center gap-2 pr-4 border-r border-border">
-          <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
+          <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
             <span className="text-sm font-bold text-primary">{selectedCount}</span>
           </div>
           <span className="text-sm font-medium text-foreground">{t('bulk.selected')}</span>

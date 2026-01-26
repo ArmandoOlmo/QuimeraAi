@@ -640,7 +640,7 @@ const ParticipantsStep: React.FC<ParticipantsStepProps> = ({ data, leads, onChan
                                             }
                                         `}
                                     >
-                                        <div className={`w-8 h-8 rounded-full ${getAvatarColor(lead.name || '')} flex items-center justify-center text-white text-xs font-bold`}>
+                                        <div className={`w-8 h-8 rounded-full ${getAvatarColor(lead.name || '')} flex items-center justify-center text-white text-xs font-bold shrink-0`}>
                                             {getInitials(lead.name || '')}
                                         </div>
                                         <div className="flex-1 min-w-0">
@@ -713,7 +713,7 @@ const ParticipantsStep: React.FC<ParticipantsStepProps> = ({ data, leads, onChan
                                 key={participant.id}
                                 className="flex items-center gap-3 p-3 bg-secondary/30 rounded-xl group"
                             >
-                                <div className={`w-10 h-10 rounded-full ${getAvatarColor(participant.name)} flex items-center justify-center text-white font-bold`}>
+                                <div className={`w-10 h-10 rounded-full ${getAvatarColor(participant.name)} flex items-center justify-center text-white font-bold shrink-0`}>
                                     {getInitials(participant.name)}
                                 </div>
                                 <div className="flex-1 min-w-0">

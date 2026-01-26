@@ -196,11 +196,11 @@ const GlobalTrackingPixels: React.FC<GlobalTrackingPixelsProps> = ({ onBack }) =
                                 </div>
                                 <button
                                     onClick={() => updateField('googleAnalyticsEnabled', !localConfig.googleAnalyticsEnabled)}
-                                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                                    className={`shrink-0 relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
                                         localConfig.googleAnalyticsEnabled ? 'bg-[#F9AB00]' : 'bg-gray-600'
                                     }`}
                                 >
-                                    <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                                    <span className={`shrink-0 inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
                                         localConfig.googleAnalyticsEnabled ? 'translate-x-6' : 'translate-x-1'
                                     }`} />
                                 </button>
@@ -249,11 +249,11 @@ const GlobalTrackingPixels: React.FC<GlobalTrackingPixelsProps> = ({ onBack }) =
                                 </div>
                                 <button
                                     onClick={() => updateField('googleTagManagerEnabled', !localConfig.googleTagManagerEnabled)}
-                                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                                    className={`shrink-0 relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
                                         localConfig.googleTagManagerEnabled ? 'bg-[#246FDB]' : 'bg-gray-600'
                                     }`}
                                 >
-                                    <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                                    <span className={`shrink-0 inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
                                         localConfig.googleTagManagerEnabled ? 'translate-x-6' : 'translate-x-1'
                                     }`} />
                                 </button>
@@ -302,11 +302,11 @@ const GlobalTrackingPixels: React.FC<GlobalTrackingPixelsProps> = ({ onBack }) =
                                 </div>
                                 <button
                                     onClick={() => updateField('facebookPixelEnabled', !localConfig.facebookPixelEnabled)}
-                                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                                    className={`shrink-0 relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
                                         localConfig.facebookPixelEnabled ? 'bg-[#1877F2]' : 'bg-gray-600'
                                     }`}
                                 >
-                                    <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                                    <span className={`shrink-0 inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
                                         localConfig.facebookPixelEnabled ? 'translate-x-6' : 'translate-x-1'
                                     }`} />
                                 </button>
@@ -353,11 +353,11 @@ const GlobalTrackingPixels: React.FC<GlobalTrackingPixelsProps> = ({ onBack }) =
                                 </div>
                                 <button
                                     onClick={() => updateField('googleAdsEnabled', !localConfig.googleAdsEnabled)}
-                                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                                    className={`shrink-0 relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
                                         localConfig.googleAdsEnabled ? 'bg-[#4285F4]' : 'bg-gray-600'
                                     }`}
                                 >
-                                    <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                                    <span className={`shrink-0 inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
                                         localConfig.googleAdsEnabled ? 'translate-x-6' : 'translate-x-1'
                                     }`} />
                                 </button>
@@ -397,11 +397,11 @@ const GlobalTrackingPixels: React.FC<GlobalTrackingPixelsProps> = ({ onBack }) =
                                 </div>
                                 <button
                                     onClick={() => updateField('tiktokPixelEnabled', !localConfig.tiktokPixelEnabled)}
-                                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                                    className={`shrink-0 relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
                                         localConfig.tiktokPixelEnabled ? 'bg-black' : 'bg-gray-600'
                                     }`}
                                 >
-                                    <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                                    <span className={`shrink-0 inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
                                         localConfig.tiktokPixelEnabled ? 'translate-x-6' : 'translate-x-1'
                                     }`} />
                                 </button>
@@ -441,11 +441,11 @@ const GlobalTrackingPixels: React.FC<GlobalTrackingPixelsProps> = ({ onBack }) =
                                 </div>
                                 <button
                                     onClick={() => updateField('linkedinEnabled', !localConfig.linkedinEnabled)}
-                                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                                    className={`shrink-0 relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
                                         localConfig.linkedinEnabled ? 'bg-[#0A66C2]' : 'bg-gray-600'
                                     }`}
                                 >
-                                    <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                                    <span className={`shrink-0 inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
                                         localConfig.linkedinEnabled ? 'translate-x-6' : 'translate-x-1'
                                     }`} />
                                 </button>

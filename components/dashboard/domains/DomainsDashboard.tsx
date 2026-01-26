@@ -31,7 +31,7 @@ const StepIndicator: React.FC<{
 }> = ({ step, label, completed, active }) => (
     <div className="flex flex-col items-center">
         <div className={`
-            w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold
+            w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0
             ${completed
                 ? 'bg-green-500 text-white'
                 : active

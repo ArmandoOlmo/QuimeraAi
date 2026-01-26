@@ -362,7 +362,7 @@ export const LeadContactSelector: React.FC<LeadContactSelectorProps> = ({
             {selectedLeadIds.length > 0 && (
                 <div className="mb-4 p-3 bg-primary/5 border border-primary/20 rounded-xl flex items-center justify-between animate-fade-in">
                     <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-sm">
+                        <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-sm shrink-0">
                             {selectedLeadIds.length}
                         </div>
                         <span className="text-sm font-medium text-foreground">

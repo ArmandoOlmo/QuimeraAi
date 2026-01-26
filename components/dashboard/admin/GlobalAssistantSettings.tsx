@@ -233,9 +233,9 @@ const GlobalAssistantSettings: React.FC<GlobalAssistantSettingsProps> = ({ onBac
                                             </div>
                                             <button
                                                 onClick={() => updateForm('isEnabled', !formData.isEnabled)}
-                                                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${formData.isEnabled ? 'bg-editor-accent' : 'bg-editor-border'}`}
+                                                className={`shrink-0 relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${formData.isEnabled ? 'bg-editor-accent' : 'bg-editor-border'}`}
                                             >
-                                                <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${formData.isEnabled ? 'translate-x-6' : 'translate-x-1'}`} />
+                                                <span className={`shrink-0 inline-block h-4 w-4 transform rounded-full bg-white transition ${formData.isEnabled ? 'translate-x-6' : 'translate-x-1'}`} />
                                             </button>
                                         </div>
                                     </div>
@@ -253,9 +253,9 @@ const GlobalAssistantSettings: React.FC<GlobalAssistantSettingsProps> = ({ onBac
                                             </div>
                                             <button
                                                 onClick={() => updateForm('autoDetectLanguage', !formData.autoDetectLanguage)}
-                                                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${formData.autoDetectLanguage ? 'bg-green-500' : 'bg-editor-border'}`}
+                                                className={`shrink-0 relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${formData.autoDetectLanguage ? 'bg-green-500' : 'bg-editor-border'}`}
                                             >
-                                                <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${formData.autoDetectLanguage ? 'translate-x-6' : 'translate-x-1'}`} />
+                                                <span className={`shrink-0 inline-block h-4 w-4 transform rounded-full bg-white transition ${formData.autoDetectLanguage ? 'translate-x-6' : 'translate-x-1'}`} />
                                             </button>
                                         </div>
 
@@ -282,9 +282,9 @@ const GlobalAssistantSettings: React.FC<GlobalAssistantSettingsProps> = ({ onBac
                                             </div>
                                             <button
                                                 onClick={() => updateForm('enableLiveVoice', !formData.enableLiveVoice)}
-                                                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${formData.enableLiveVoice ? 'bg-green-500' : 'bg-editor-border'}`}
+                                                className={`shrink-0 relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${formData.enableLiveVoice ? 'bg-green-500' : 'bg-editor-border'}`}
                                             >
-                                                <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${formData.enableLiveVoice ? 'translate-x-6' : 'translate-x-1'}`} />
+                                                <span className={`shrink-0 inline-block h-4 w-4 transform rounded-full bg-white transition ${formData.enableLiveVoice ? 'translate-x-6' : 'translate-x-1'}`} />
                                             </button>
                                         </div>
 

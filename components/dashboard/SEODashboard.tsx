@@ -352,11 +352,11 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                       </div>
                       <button
                         onClick={() => updateField('aiCrawlable', !localConfig.aiCrawlable)}
-                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${localConfig.aiCrawlable ? 'bg-primary' : 'bg-gray-600'
+                        className={`shrink-0 relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${localConfig.aiCrawlable ? 'bg-primary' : 'bg-gray-600'
                           }`}
                       >
                         <span
-                          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${localConfig.aiCrawlable ? 'translate-x-6' : 'translate-x-1'
+                          className={`shrink-0 inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${localConfig.aiCrawlable ? 'translate-x-6' : 'translate-x-1'
                             }`}
                         />
                       </button>
@@ -599,10 +599,10 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                         ...localConfig.adPixels,
                         facebookPixelEnabled: !localConfig.adPixels?.facebookPixelEnabled
                       })}
-                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${localConfig.adPixels?.facebookPixelEnabled ? 'bg-[#1877F2]' : 'bg-gray-600'
+                      className={`shrink-0 relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${localConfig.adPixels?.facebookPixelEnabled ? 'bg-[#1877F2]' : 'bg-gray-600'
                         }`}
                     >
-                      <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${localConfig.adPixels?.facebookPixelEnabled ? 'translate-x-6' : 'translate-x-1'
+                      <span className={`shrink-0 inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${localConfig.adPixels?.facebookPixelEnabled ? 'translate-x-6' : 'translate-x-1'
                         }`} />
                     </button>
                   </div>
@@ -656,10 +656,10 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                         ...localConfig.adPixels,
                         googleTagManagerEnabled: !localConfig.adPixels?.googleTagManagerEnabled
                       })}
-                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${localConfig.adPixels?.googleTagManagerEnabled ? 'bg-[#246FDB]' : 'bg-gray-600'
+                      className={`shrink-0 relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${localConfig.adPixels?.googleTagManagerEnabled ? 'bg-[#246FDB]' : 'bg-gray-600'
                         }`}
                     >
-                      <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${localConfig.adPixels?.googleTagManagerEnabled ? 'translate-x-6' : 'translate-x-1'
+                      <span className={`shrink-0 inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${localConfig.adPixels?.googleTagManagerEnabled ? 'translate-x-6' : 'translate-x-1'
                         }`} />
                     </button>
                   </div>
@@ -711,10 +711,10 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                         ...localConfig.adPixels,
                         googleAdsEnabled: !localConfig.adPixels?.googleAdsEnabled
                       })}
-                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${localConfig.adPixels?.googleAdsEnabled ? 'bg-[#4285F4]' : 'bg-gray-600'
+                      className={`shrink-0 relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${localConfig.adPixels?.googleAdsEnabled ? 'bg-[#4285F4]' : 'bg-gray-600'
                         }`}
                     >
-                      <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${localConfig.adPixels?.googleAdsEnabled ? 'translate-x-6' : 'translate-x-1'
+                      <span className={`shrink-0 inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${localConfig.adPixels?.googleAdsEnabled ? 'translate-x-6' : 'translate-x-1'
                         }`} />
                     </button>
                   </div>
@@ -762,10 +762,10 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                         ...localConfig.adPixels,
                         googleAnalyticsEnabled: !localConfig.adPixels?.googleAnalyticsEnabled
                       })}
-                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${localConfig.adPixels?.googleAnalyticsEnabled ? 'bg-[#F9AB00]' : 'bg-gray-600'
+                      className={`shrink-0 relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${localConfig.adPixels?.googleAnalyticsEnabled ? 'bg-[#F9AB00]' : 'bg-gray-600'
                         }`}
                     >
-                      <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${localConfig.adPixels?.googleAnalyticsEnabled ? 'translate-x-6' : 'translate-x-1'
+                      <span className={`shrink-0 inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${localConfig.adPixels?.googleAnalyticsEnabled ? 'translate-x-6' : 'translate-x-1'
                         }`} />
                     </button>
                   </div>
@@ -819,10 +819,10 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                         ...localConfig.adPixels,
                         tiktokPixelEnabled: !localConfig.adPixels?.tiktokPixelEnabled
                       })}
-                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${localConfig.adPixels?.tiktokPixelEnabled ? 'bg-black' : 'bg-gray-600'
+                      className={`shrink-0 relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${localConfig.adPixels?.tiktokPixelEnabled ? 'bg-black' : 'bg-gray-600'
                         }`}
                     >
-                      <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${localConfig.adPixels?.tiktokPixelEnabled ? 'translate-x-6' : 'translate-x-1'
+                      <span className={`shrink-0 inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${localConfig.adPixels?.tiktokPixelEnabled ? 'translate-x-6' : 'translate-x-1'
                         }`} />
                     </button>
                   </div>
@@ -876,10 +876,10 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                         ...localConfig.adPixels,
                         twitterPixelEnabled: !localConfig.adPixels?.twitterPixelEnabled
                       })}
-                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${localConfig.adPixels?.twitterPixelEnabled ? 'bg-black' : 'bg-gray-600'
+                      className={`shrink-0 relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${localConfig.adPixels?.twitterPixelEnabled ? 'bg-black' : 'bg-gray-600'
                         }`}
                     >
-                      <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${localConfig.adPixels?.twitterPixelEnabled ? 'translate-x-6' : 'translate-x-1'
+                      <span className={`shrink-0 inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${localConfig.adPixels?.twitterPixelEnabled ? 'translate-x-6' : 'translate-x-1'
                         }`} />
                     </button>
                   </div>
@@ -933,10 +933,10 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                         ...localConfig.adPixels,
                         linkedinEnabled: !localConfig.adPixels?.linkedinEnabled
                       })}
-                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${localConfig.adPixels?.linkedinEnabled ? 'bg-[#0A66C2]' : 'bg-gray-600'
+                      className={`shrink-0 relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${localConfig.adPixels?.linkedinEnabled ? 'bg-[#0A66C2]' : 'bg-gray-600'
                         }`}
                     >
-                      <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${localConfig.adPixels?.linkedinEnabled ? 'translate-x-6' : 'translate-x-1'
+                      <span className={`shrink-0 inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${localConfig.adPixels?.linkedinEnabled ? 'translate-x-6' : 'translate-x-1'
                         }`} />
                     </button>
                   </div>
@@ -990,10 +990,10 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                         ...localConfig.adPixels,
                         pinterestEnabled: !localConfig.adPixels?.pinterestEnabled
                       })}
-                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${localConfig.adPixels?.pinterestEnabled ? 'bg-[#E60023]' : 'bg-gray-600'
+                      className={`shrink-0 relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${localConfig.adPixels?.pinterestEnabled ? 'bg-[#E60023]' : 'bg-gray-600'
                         }`}
                     >
-                      <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${localConfig.adPixels?.pinterestEnabled ? 'translate-x-6' : 'translate-x-1'
+                      <span className={`shrink-0 inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${localConfig.adPixels?.pinterestEnabled ? 'translate-x-6' : 'translate-x-1'
                         }`} />
                     </button>
                   </div>
@@ -1047,7 +1047,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                         ...localConfig.adPixels,
                         snapchatEnabled: !localConfig.adPixels?.snapchatEnabled
                       })}
-                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${localConfig.adPixels?.snapchatEnabled ? 'bg-[#FFFC00]' : 'bg-gray-600'
+                      className={`shrink-0 relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${localConfig.adPixels?.snapchatEnabled ? 'bg-[#FFFC00]' : 'bg-gray-600'
                         }`}
                     >
                       <span className={`inline-block h-4 w-4 transform rounded-full bg-black transition-transform ${localConfig.adPixels?.snapchatEnabled ? 'translate-x-6' : 'translate-x-1'
@@ -1104,10 +1104,10 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                         ...localConfig.adPixels,
                         microsoftUetEnabled: !localConfig.adPixels?.microsoftUetEnabled
                       })}
-                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${localConfig.adPixels?.microsoftUetEnabled ? 'bg-[#00A4EF]' : 'bg-gray-600'
+                      className={`shrink-0 relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${localConfig.adPixels?.microsoftUetEnabled ? 'bg-[#00A4EF]' : 'bg-gray-600'
                         }`}
                     >
-                      <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${localConfig.adPixels?.microsoftUetEnabled ? 'translate-x-6' : 'translate-x-1'
+                      <span className={`shrink-0 inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${localConfig.adPixels?.microsoftUetEnabled ? 'translate-x-6' : 'translate-x-1'
                         }`} />
                     </button>
                   </div>
@@ -1161,10 +1161,10 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                         ...localConfig.adPixels,
                         redditPixelEnabled: !localConfig.adPixels?.redditPixelEnabled
                       })}
-                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${localConfig.adPixels?.redditPixelEnabled ? 'bg-[#FF4500]' : 'bg-gray-600'
+                      className={`shrink-0 relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${localConfig.adPixels?.redditPixelEnabled ? 'bg-[#FF4500]' : 'bg-gray-600'
                         }`}
                     >
-                      <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${localConfig.adPixels?.redditPixelEnabled ? 'translate-x-6' : 'translate-x-1'
+                      <span className={`shrink-0 inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${localConfig.adPixels?.redditPixelEnabled ? 'translate-x-6' : 'translate-x-1'
                         }`} />
                     </button>
                   </div>

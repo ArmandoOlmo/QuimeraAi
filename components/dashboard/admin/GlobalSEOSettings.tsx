@@ -257,7 +257,7 @@ const GlobalSEOSettings: React.FC<GlobalSEOSettingsProps> = ({ onBack }) => {
                                                 </div>
                                                 <button
                                                     onClick={() => setAiCrawlingEnabled(!aiCrawlingEnabled)}
-                                                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${aiCrawlingEnabled ? 'bg-editor-accent' : 'bg-gray-600'
+                                                    className={`shrink-0 relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${aiCrawlingEnabled ? 'bg-editor-accent' : 'bg-gray-600'
                                                         }`}
                                                 >
                                                     <span

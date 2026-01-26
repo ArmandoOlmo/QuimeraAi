@@ -47,7 +47,7 @@ const AnalyticsView: React.FC = () => {
     const { storeId } = useEcommerceContext();
     const theme = useEcommerceTheme();
     const [dateRange, setDateRange] = useState<DateRange>('30d');
-    
+
     // Use theme color for charts
     const COLORS = [theme.primary, '#22c55e', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'];
 
@@ -70,7 +70,7 @@ const AnalyticsView: React.FC = () => {
     const comparison = useMemo(() => {
         const now = new Date();
         let startDate: Date;
-        
+
         switch (dateRange) {
             case '7d':
                 startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
@@ -141,11 +141,10 @@ const AnalyticsView: React.FC = () => {
                         <button
                             key={range}
                             onClick={() => setDateRange(range)}
-                            className={`px-3 py-1.5 rounded-md text-sm transition-colors ${
-                                dateRange === range
+                            className={`px-3 py-1.5 rounded-md text-sm transition-colors ${dateRange === range
                                     ? 'bg-primary text-primary-foreground'
                                     : 'text-muted-foreground hover:text-foreground'
-                            }`}
+                                }`}
                         >
                             {range === '7d' && '7 días'}
                             {range === '30d' && '30 días'}
@@ -286,7 +285,7 @@ const AnalyticsView: React.FC = () => {
                         <div className="space-y-3">
                             {topProducts.slice(0, 5).map((product, index) => (
                                 <div key={product.productId} className="flex items-center gap-4">
-                                    <div className="w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm bg-primary/20 text-primary">
+                                    <div className="w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm bg-primary/20 text-primary shrink-0">
                                         {index + 1}
                                     </div>
                                     <div className="flex-1 min-w-0">
@@ -315,7 +314,7 @@ const AnalyticsView: React.FC = () => {
                         <div className="space-y-3">
                             {topCustomers.slice(0, 5).map((customer, index) => (
                                 <div key={customer.customerId} className="flex items-center gap-4">
-                                    <div className="w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center text-purple-400 font-bold text-sm">
+                                    <div className="w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center text-purple-400 font-bold text-sm shrink-0">
                                         {index + 1}
                                     </div>
                                     <div className="flex-1 min-w-0">
@@ -398,9 +397,8 @@ const MetricCard: React.FC<MetricCardProps> = ({ title, value, change, icon: Ico
                     <p className="text-2xl font-bold text-foreground mt-1">{value}</p>
                     {change !== undefined && (
                         <div
-                            className={`flex items-center gap-1 mt-2 text-sm ${
-                                change >= 0 ? 'text-green-400' : 'text-red-400'
-                            }`}
+                            className={`flex items-center gap-1 mt-2 text-sm ${change >= 0 ? 'text-green-400' : 'text-red-400'
+                                }`}
                         >
                             {change >= 0 ? <ArrowUp size={14} /> : <ArrowDown size={14} />}
                             {Math.abs(change).toFixed(1)}% vs período anterior
