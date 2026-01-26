@@ -47,8 +47,8 @@ const LeadsListView: React.FC<LeadsListViewProps> = ({
     return (
         <div className="bg-card border border-border rounded-xl overflow-hidden">
             {/* Header */}
-            <div className="px-4 py-3 border-b border-border bg-secondary/10 flex items-center justify-between">
-                <span className="text-sm font-bold text-muted-foreground uppercase tracking-wider">
+            <div className="px-3 sm:px-4 py-2 sm:py-3 border-b border-border bg-secondary/10 flex items-center justify-between">
+                <span className="text-xs sm:text-sm font-bold text-muted-foreground uppercase tracking-wider">
                     {t('leads.allLeads')} ({leads.length})
                 </span>
             </div>
@@ -67,93 +67,161 @@ const LeadsListView: React.FC<LeadsListViewProps> = ({
                         return (
                             <div
                                 key={lead.id}
-                                className={`group flex items-center gap-3 px-4 py-3 hover:bg-secondary/10 cursor-pointer transition-colors ${isSelected ? 'bg-primary/5 border-l-2 border-l-primary' : ''
+                                className={`group px-3 sm:px-4 py-3 sm:py-3 hover:bg-secondary/10 active:bg-secondary/20 cursor-pointer transition-colors ${isSelected ? 'bg-primary/5 border-l-2 border-l-primary' : ''
                                     }`}
                                 onClick={() => onLeadClick(lead)}
                             >
-                                {/* Checkbox */}
-                                <div onClick={(e) => e.stopPropagation()}>
-                                    <input
-                                        type="checkbox"
-                                        checked={isChecked}
-                                        onChange={() => onToggleSelect(lead.id)}
-                                        className="rounded border-border"
-                                    />
-                                </div>
-
-                                {/* Source Icon */}
-                                <div className="shrink-0">
-                                    {lead.source === 'chatbot' ? (
-                                        <div className="p-2 rounded-full bg-purple-500/10 text-purple-500">
-                                            <Bot size={16} />
+                                {/* Mobile Layout - Vertical stacking */}
+                                <div className="sm:hidden">
+                                    <div className="flex items-start gap-3">
+                                        {/* Checkbox */}
+                                        <div className="pt-0.5" onClick={(e) => e.stopPropagation()}>
+                                            <input
+                                                type="checkbox"
+                                                checked={isChecked}
+                                                onChange={() => onToggleSelect(lead.id)}
+                                                className="rounded border-border w-4 h-4"
+                                            />
                                         </div>
-                                    ) : (
-                                        <div className="p-2 rounded-full bg-blue-500/10 text-blue-500">
-                                            <LayoutGrid size={16} />
+
+                                        {/* Source Icon */}
+                                        <div className="shrink-0">
+                                            {lead.source === 'chatbot' ? (
+                                                <div className="p-1.5 rounded-full bg-purple-500/10 text-purple-500">
+                                                    <Bot size={14} />
+                                                </div>
+                                            ) : (
+                                                <div className="p-1.5 rounded-full bg-blue-500/10 text-blue-500">
+                                                    <LayoutGrid size={14} />
+                                                </div>
+                                            )}
                                         </div>
-                                    )}
-                                </div>
 
-                                {/* Main Content */}
-                                <div className="flex-1 min-w-0">
-                                    <div className="flex items-center gap-2 mb-1">
-                                        {lead.emojiMarker && <span className="text-base">{lead.emojiMarker}</span>}
-                                        <h4 className="font-bold text-sm text-foreground truncate">{lead.name}</h4>
-                                        {lead.company && (
-                                            <>
-                                                <span className="text-muted-foreground">·</span>
-                                                <span className="text-xs text-muted-foreground truncate flex items-center gap-1">
-                                                    <Building2 size={10} />
-                                                    {lead.company}
-                                                </span>
-                                            </>
-                                        )}
-                                    </div>
-                                    <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                                        <span className="flex items-center gap-1 truncate">
-                                            <Mail size={10} />
-                                            {lead.email}
-                                        </span>
-                                        {lead.phone && (
-                                            <span className="flex items-center gap-1">
-                                                <Phone size={10} />
-                                                {lead.phone}
-                                            </span>
-                                        )}
-                                    </div>
-                                </div>
+                                        {/* Content */}
+                                        <div className="flex-1 min-w-0">
+                                            {/* Name Row */}
+                                            <div className="flex items-center gap-2 mb-1">
+                                                {lead.emojiMarker && <span className="text-sm">{lead.emojiMarker}</span>}
+                                                <h4 className="font-bold text-sm text-foreground truncate flex-1">{lead.name}</h4>
+                                                <div className={`w-2 h-2 rounded-full shrink-0 ${LEAD_STATUS_COLORS[lead.status]}`} title={lead.status} />
+                                            </div>
 
-                                {/* Right Side Info */}
-                                <div className="shrink-0 flex items-center gap-3">
-                                    {/* Value */}
-                                    {lead.value && lead.value > 0 && (
-                                        <div className="text-right">
-                                            <div className="text-xs font-bold text-green-500 flex items-center gap-1">
-                                                <DollarSign size={10} />
-                                                {lead.value.toLocaleString()}
+                                            {/* Email */}
+                                            <div className="flex items-center gap-1 mb-1.5 text-xs text-muted-foreground">
+                                                <Mail size={10} className="shrink-0" />
+                                                <span className="truncate">{lead.email}</span>
+                                            </div>
+
+                                            {/* Value + Company Row */}
+                                            <div className="flex items-center gap-3 flex-wrap">
+                                                {lead.value && lead.value > 0 && (
+                                                    <span className="text-xs font-bold text-green-500 flex items-center gap-0.5">
+                                                        <DollarSign size={10} />
+                                                        {lead.value.toLocaleString()}
+                                                    </span>
+                                                )}
+                                                {lead.company && (
+                                                    <span className="text-xs text-muted-foreground flex items-center gap-1 truncate">
+                                                        <Building2 size={10} className="shrink-0" />
+                                                        {lead.company}
+                                                    </span>
+                                                )}
                                             </div>
                                         </div>
-                                    )}
 
-                                    {/* AI Score */}
-                                    {lead.aiScore !== undefined && (
-                                        <div className="flex items-center gap-1 bg-secondary px-2 py-1 rounded">
-                                            <Star size={10} className={
-                                                lead.aiScore > 75 ? 'text-green-500' :
-                                                    lead.aiScore > 40 ? 'text-yellow-500' :
-                                                        'text-red-500'
-                                            } />
-                                            <span className="text-xs font-bold">{lead.aiScore}</span>
+                                        {/* Time */}
+                                        <span className="text-[10px] text-muted-foreground shrink-0">
+                                            {formatDate(lead.createdAt)}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                {/* Desktop Layout - Horizontal */}
+                                <div className="hidden sm:flex items-center gap-3">
+                                    {/* Checkbox */}
+                                    <div onClick={(e) => e.stopPropagation()}>
+                                        <input
+                                            type="checkbox"
+                                            checked={isChecked}
+                                            onChange={() => onToggleSelect(lead.id)}
+                                            className="rounded border-border"
+                                        />
+                                    </div>
+
+                                    {/* Source Icon */}
+                                    <div className="shrink-0">
+                                        {lead.source === 'chatbot' ? (
+                                            <div className="p-2 rounded-full bg-purple-500/10 text-purple-500">
+                                                <Bot size={16} />
+                                            </div>
+                                        ) : (
+                                            <div className="p-2 rounded-full bg-blue-500/10 text-blue-500">
+                                                <LayoutGrid size={16} />
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Main Content */}
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex items-center gap-2 mb-1">
+                                            {lead.emojiMarker && <span className="text-base">{lead.emojiMarker}</span>}
+                                            <h4 className="font-bold text-sm text-foreground truncate">{lead.name}</h4>
+                                            {lead.company && (
+                                                <>
+                                                    <span className="text-muted-foreground">·</span>
+                                                    <span className="text-xs text-muted-foreground truncate flex items-center gap-1">
+                                                        <Building2 size={10} />
+                                                        {lead.company}
+                                                    </span>
+                                                </>
+                                            )}
                                         </div>
-                                    )}
+                                        <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                                            <span className="flex items-center gap-1 truncate">
+                                                <Mail size={10} />
+                                                {lead.email}
+                                            </span>
+                                            {lead.phone && (
+                                                <span className="flex items-center gap-1">
+                                                    <Phone size={10} />
+                                                    {lead.phone}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
 
-                                    {/* Status Badge */}
-                                    <div className={`w-2 h-2 rounded-full ${LEAD_STATUS_COLORS[lead.status]}`} title={lead.status} />
+                                    {/* Right Side Info */}
+                                    <div className="shrink-0 flex items-center gap-3">
+                                        {/* Value */}
+                                        {lead.value && lead.value > 0 && (
+                                            <div className="text-right">
+                                                <div className="text-xs font-bold text-green-500 flex items-center gap-1">
+                                                    <DollarSign size={10} />
+                                                    {lead.value.toLocaleString()}
+                                                </div>
+                                            </div>
+                                        )}
 
-                                    {/* Date */}
-                                    <span className="text-[10px] text-muted-foreground w-12 text-right">
-                                        {formatDate(lead.createdAt)}
-                                    </span>
+                                        {/* AI Score */}
+                                        {lead.aiScore !== undefined && (
+                                            <div className="flex items-center gap-1 bg-secondary px-2 py-1 rounded">
+                                                <Star size={10} className={
+                                                    lead.aiScore > 75 ? 'text-green-500' :
+                                                        lead.aiScore > 40 ? 'text-yellow-500' :
+                                                            'text-red-500'
+                                                } />
+                                                <span className="text-xs font-bold">{lead.aiScore}</span>
+                                            </div>
+                                        )}
+
+                                        {/* Status Badge */}
+                                        <div className={`w-2 h-2 rounded-full ${LEAD_STATUS_COLORS[lead.status]}`} title={lead.status} />
+
+                                        {/* Date */}
+                                        <span className="text-[10px] text-muted-foreground w-12 text-right">
+                                            {formatDate(lead.createdAt)}
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
                         );

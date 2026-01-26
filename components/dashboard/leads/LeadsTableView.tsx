@@ -111,8 +111,152 @@ const LeadsTableView: React.FC<LeadsTableViewProps> = ({
 
     return (
         <div className="bg-card border border-border rounded-xl overflow-hidden">
-            {/* Table */}
-            <div className="overflow-x-auto">
+            {/* Mobile Card View */}
+            <div className="sm:hidden">
+                {/* Mobile Header with Select All */}
+                <div className="px-3 py-2 border-b border-border bg-secondary/20 flex items-center justify-between">
+                    <label className="flex items-center gap-2">
+                        <input
+                            type="checkbox"
+                            checked={allPageLeadsSelected}
+                            onChange={onToggleSelectAll}
+                            className="rounded border-border w-4 h-4"
+                        />
+                        <span className="text-xs font-bold text-muted-foreground uppercase">{t('leads.selectAll')}</span>
+                    </label>
+                    <span className="text-xs text-muted-foreground">{paginatedLeads.length} {t('leads.leads')}</span>
+                </div>
+
+                {/* Mobile Cards */}
+                <div className="divide-y divide-border max-h-[calc(100vh-280px)] overflow-y-auto">
+                    {paginatedLeads.length === 0 ? (
+                        <div className="text-center py-12 text-muted-foreground">
+                            {t('leads.noLeadsFound')}
+                        </div>
+                    ) : (
+                        paginatedLeads.map((lead) => (
+                            <div
+                                key={lead.id}
+                                className="p-3 hover:bg-secondary/10 active:bg-secondary/20 transition-colors"
+                            >
+                                <div className="flex items-start gap-3">
+                                    {/* Checkbox */}
+                                    <div className="pt-0.5" onClick={(e) => e.stopPropagation()}>
+                                        <input
+                                            type="checkbox"
+                                            checked={selectedLeadIds.includes(lead.id)}
+                                            onChange={() => onToggleSelect(lead.id)}
+                                            className="rounded border-border w-4 h-4"
+                                        />
+                                    </div>
+
+                                    {/* Main Content - Clickable */}
+                                    <div
+                                        className="flex-1 min-w-0"
+                                        onClick={() => onLeadClick(lead)}
+                                    >
+                                        {/* Top Row: Name + Status */}
+                                        <div className="flex items-center gap-2 mb-1">
+                                            {lead.emojiMarker && <span className="text-base">{lead.emojiMarker}</span>}
+                                            <h4 className="font-bold text-sm text-foreground truncate flex-1">{lead.name}</h4>
+                                            <span className={`shrink-0 px-2 py-0.5 rounded-full text-[10px] font-bold text-white uppercase ${LEAD_STATUS_COLORS[lead.status]}`}>
+                                                {lead.status}
+                                            </span>
+                                        </div>
+
+                                        {/* Second Row: Email + Company */}
+                                        <div className="flex items-center gap-2 mb-2 text-xs text-muted-foreground">
+                                            <span className="truncate">{lead.email}</span>
+                                            {lead.company && (
+                                                <>
+                                                    <span>·</span>
+                                                    <span className="truncate">{lead.company}</span>
+                                                </>
+                                            )}
+                                        </div>
+
+                                        {/* Third Row: Value + Score + Source */}
+                                        <div className="flex items-center gap-3 flex-wrap">
+                                            {(lead.value || 0) > 0 && (
+                                                <span className="text-xs font-bold text-green-500">
+                                                    ${(lead.value || 0).toLocaleString()}
+                                                </span>
+                                            )}
+                                            {lead.aiScore !== undefined && (
+                                                <div className="flex items-center gap-1">
+                                                    <div className={`w-1.5 h-1.5 rounded-full ${lead.aiScore > 75 ? 'bg-green-500' :
+                                                            lead.aiScore > 40 ? 'bg-yellow-500' : 'bg-red-500'
+                                                        }`} />
+                                                    <span className="text-xs font-medium">{lead.aiScore}</span>
+                                                </div>
+                                            )}
+                                            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                                                {lead.source === 'chatbot' ? (
+                                                    <Bot size={12} className="text-purple-500" />
+                                                ) : (
+                                                    <LayoutGrid size={12} className="text-blue-500" />
+                                                )}
+                                                <span className="capitalize">{lead.source}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Action Buttons */}
+                                    <div className="shrink-0 flex flex-col gap-1">
+                                        <button
+                                            onClick={() => onLeadClick(lead)}
+                                            className="p-2 hover:bg-secondary rounded-lg text-primary transition-colors"
+                                            title={t('leads.viewDetails')}
+                                        >
+                                            <Eye size={16} />
+                                        </button>
+                                        <button
+                                            onClick={() => {
+                                                if (window.confirm(t('leads.confirmDelete'))) {
+                                                    onDelete(lead.id);
+                                                }
+                                            }}
+                                            className="p-2 hover:bg-red-500/10 rounded-lg text-red-500 transition-colors"
+                                            title={t('leads.delete')}
+                                        >
+                                            <Trash2 size={16} />
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        ))
+                    )}
+                </div>
+
+                {/* Mobile Pagination */}
+                {totalPages > 1 && (
+                    <div className="flex items-center justify-between px-3 py-2 border-t border-border bg-secondary/5">
+                        <span className="text-xs text-muted-foreground">
+                            {(currentPage - 1) * itemsPerPage + 1}-{Math.min(currentPage * itemsPerPage, sortedLeads.length)} / {sortedLeads.length}
+                        </span>
+                        <div className="flex items-center gap-1">
+                            <button
+                                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                                disabled={currentPage === 1}
+                                className="p-2 rounded border border-border hover:bg-secondary transition-colors disabled:opacity-50"
+                            >
+                                <ChevronLeft size={14} />
+                            </button>
+                            <span className="text-xs font-medium px-2">{currentPage}/{totalPages}</span>
+                            <button
+                                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                                disabled={currentPage === totalPages}
+                                className="p-2 rounded border border-border hover:bg-secondary transition-colors disabled:opacity-50"
+                            >
+                                <ChevronRight size={14} />
+                            </button>
+                        </div>
+                    </div>
+                )}
+            </div>
+
+            {/* Desktop Table View */}
+            <div className="hidden sm:block overflow-x-auto">
                 <table className="w-full">
                     <thead className="bg-secondary/20 border-b border-border">
                         <tr>
@@ -227,8 +371,8 @@ const LeadsTableView: React.FC<LeadsTableViewProps> = ({
                                     {lead.aiScore !== undefined ? (
                                         <div className="flex items-center gap-1">
                                             <div className={`w-1.5 h-1.5 rounded-full ${lead.aiScore > 75 ? 'bg-green-500' :
-                                                    lead.aiScore > 40 ? 'bg-yellow-500' :
-                                                        'bg-red-500'
+                                                lead.aiScore > 40 ? 'bg-yellow-500' :
+                                                    'bg-red-500'
                                                 }`} />
                                             <span className="text-sm font-bold">{lead.aiScore}</span>
                                         </div>
@@ -280,9 +424,9 @@ const LeadsTableView: React.FC<LeadsTableViewProps> = ({
                 )}
             </div>
 
-            {/* Pagination */}
+            {/* Desktop Pagination */}
             {totalPages > 1 && (
-                <div className="flex items-center justify-between px-4 py-3 border-t border-border bg-secondary/5">
+                <div className="hidden sm:flex items-center justify-between px-4 py-3 border-t border-border bg-secondary/5">
                     <div className="text-sm text-muted-foreground">
                         Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, sortedLeads.length)} of {sortedLeads.length} leads
                     </div>
