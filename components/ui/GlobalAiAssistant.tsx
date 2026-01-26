@@ -3717,7 +3717,7 @@ Now provide a brief response to the user about what was done.`;
                         </button>
                     )}
                     {!isLiveActive && (
-                        <button onClick={() => setIsOpen(true)} className="p-2 rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors">
+                        <button onClick={() => setIsOpen(true)} className="shrink-0 w-9 h-9 aspect-square flex items-center justify-center rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors">
                             <Send size={16} />
                         </button>
                     )}
@@ -3844,7 +3844,7 @@ Now provide a brief response to the user about what was done.`;
                     <button
                         onClick={handleTextSend}
                         disabled={!input.trim() || isThinking || isLiveActive}
-                        className="p-2 bg-primary text-primary-foreground rounded-full hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed shadow-md transition-all hover:scale-105"
+                        className="shrink-0 w-9 h-9 aspect-square flex items-center justify-center bg-primary text-primary-foreground rounded-full hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed shadow-md transition-all hover:scale-105"
                     >
                         <Send size={18} />
                     </button>
