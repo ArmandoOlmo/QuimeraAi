@@ -27,7 +27,16 @@ import {
     Calendar,
     AlertTriangle,
     Palette,
+    Brain,
+    Info,
+    ChevronUp,
+    ChevronDown,
+    Sparkles,
+    EyeOff,
+    FileText,
+    ChevronRight,
 } from 'lucide-react';
+import { generateContentViaProxy, extractTextFromResponse } from '../../../../utils/geminiProxyClient';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import { useEmailDashboardContext } from '../EmailDashboard';
 import { useEmailCampaigns, useEmailAudiences } from '../../../../hooks/useEmailSettings';
@@ -101,6 +110,58 @@ const CampaignsView: React.FC<CampaignsViewProps> = ({ onCreateTrigger }) => {
         audienceSegmentId: '',
         scheduledAt: '',
     });
+
+    const [showHelp, setShowHelp] = useState(true);
+    const [aiLoadingField, setAiLoadingField] = useState<string | null>(null);
+
+    const handleAiGenerate = async (field: 'name' | 'subject' | 'previewText' | 'content') => {
+        if (aiLoadingField) return;
+        setAiLoadingField(field);
+
+        try {
+            let prompt = '';
+            const context = `Tipo de campaña: ${newCampaign.type}. ${newCampaign.name ? `Nombre: ${newCampaign.name}.` : ''} ${newCampaign.subject ? `Asunto: ${newCampaign.subject}.` : ''}`;
+
+            switch (field) {
+                case 'name':
+                    prompt = `Genera un nombre interno corto y descriptivo para una campaña de email marketing. ${context} Solo devuelve el nombre, sin comillas.`;
+                    break;
+                case 'subject':
+                    prompt = `Genera una línea de asunto atractiva y efectiva para un email de marketing. ${context} Debe ser persuasiva, corta y generar apertura. Solo devuelve el texto del asunto.`;
+                    break;
+                case 'previewText':
+                    prompt = `Genera un texto de vista previa (preheader) complementario para el asunto "${newCampaign.subject}". Debe incentivar la apertura. Máximo 100 caracteres.`;
+                    break;
+                case 'content':
+                    prompt = `Genera el contenido HTML básico para el cuerpo de un email. ${context} Usa etiquetas <p>, <br>, <strong>. No incluyas html/body/head tags, solo el contenido del body. Debe ser profesional y persuasivo.`;
+                    break;
+            }
+
+            const result = await generateContentViaProxy(
+                projectId || 'ai-assistant',
+                prompt,
+                'gemini-2.5-flash',
+                { temperature: 0.7 },
+                userId
+            );
+
+            const text = extractTextFromResponse(result).trim().replace(/^"|"$/g, '');
+
+            setNewCampaign(prev => ({
+                ...prev,
+                [field]: text
+            }));
+
+            setSendSuccess(t('ai.generated', 'Contenido generado por IA'));
+            setTimeout(() => setSendSuccess(null), 3000);
+        } catch (error) {
+            console.error('Error generating AI content:', error);
+            setSendError('Error al generar contenido con IA');
+            setTimeout(() => setSendError(null), 3000);
+        } finally {
+            setAiLoadingField(null);
+        }
+    };
 
     // Check for pending draft from Leads
     // Triggered by mount OR by parent passing initialAutoOpen=true
@@ -766,67 +827,151 @@ const CampaignsView: React.FC<CampaignsViewProps> = ({ onCreateTrigger }) => {
             {
                 showNewCampaignModal && (
                     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                        <div className="bg-card rounded-xl border border-border w-full max-w-lg max-h-[90vh] overflow-y-auto">
-                            <div className="p-6 border-b border-border flex items-center justify-between">
-                                <h3 className="text-lg font-bold text-foreground">
-                                    {t('email.newCampaign', 'Nueva Campaña')}
-                                </h3>
-                                <button
-                                    onClick={() => { setShowNewCampaignModal(false); resetForm(); }}
-                                    className="p-2 hover:bg-muted rounded-lg transition-colors"
-                                >
-                                    <X size={20} className="text-muted-foreground" />
-                                </button>
+                        <div className="bg-card rounded-xl border border-border w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl">
+                            <div className="p-6 border-b border-border flex items-center justify-between sticky top-0 bg-card z-10">
+                                <div>
+                                    <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
+                                        {t('email.newCampaign', 'Nueva Campaña')}
+                                    </h3>
+                                    <p className="text-xs text-muted-foreground mt-1">Configure los detalles básicos de su envío</p>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <button
+                                        onClick={() => setShowHelp(!showHelp)}
+                                        className={`p-2 rounded-lg transition-colors ${showHelp ? 'bg-primary/10 text-primary' : 'hover:bg-muted text-muted-foreground'}`}
+                                        title={showHelp ? "Ocultar ayuda" : "Mostrar ayuda"}
+                                    >
+                                        {showHelp ? <Eye size={18} /> : <EyeOff size={18} />}
+                                    </button>
+                                    <button
+                                        onClick={() => { setShowNewCampaignModal(false); resetForm(); }}
+                                        className="p-2 hover:bg-muted rounded-lg transition-colors"
+                                    >
+                                        <X size={20} className="text-muted-foreground" />
+                                    </button>
+                                </div>
                             </div>
-                            <div className="p-6 space-y-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-foreground mb-1">
-                                        {t('email.campaignName', 'Nombre de la campaña')} *
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={newCampaign.name}
-                                        onChange={(e) => setNewCampaign({ ...newCampaign, name: e.target.value })}
-                                        placeholder="Ej: Newsletter Diciembre 2024"
-                                        className="w-full px-4 py-2 bg-muted/50 border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-                                    />
+
+                            <div className="p-6 space-y-6">
+                                {/* Campaign Name */}
+                                <div className="space-y-2">
+                                    <div className="flex justify-between items-center">
+                                        <label className="text-sm font-medium text-foreground">
+                                            {t('email.campaignName', 'Nombre de la campaña')} <span className="text-red-500">*</span>
+                                        </label>
+                                        <button
+                                            onClick={() => handleAiGenerate('name')}
+                                            disabled={!!aiLoadingField}
+                                            className="text-xs flex items-center gap-1 text-primary hover:text-primary/80 disabled:opacity-50 transition-colors"
+                                            title="Generar nombre con IA"
+                                        >
+                                            {aiLoadingField === 'name' ? <Loader2 size={12} className="animate-spin" /> : <Brain size={12} />}
+                                            <span>Generar</span>
+                                        </button>
+                                    </div>
+
+                                    {showHelp && (
+                                        <div className="bg-primary/5 border border-primary/10 rounded-lg p-3 text-xs text-muted-foreground flex gap-2">
+                                            <Info size={14} className="text-primary flex-shrink-0 mt-0.5" />
+                                            <p>El nombre interno para identificar tu campaña en el dashboard. Solo tú podrás verlo.</p>
+                                        </div>
+                                    )}
+
+                                    <div className="relative">
+                                        <input
+                                            type="text"
+                                            value={newCampaign.name}
+                                            onChange={(e) => setNewCampaign({ ...newCampaign, name: e.target.value })}
+                                            placeholder="Ej: Newsletter Diciembre 2024"
+                                            className="w-full pl-4 pr-10 py-2.5 bg-muted/50 border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-all"
+                                        />
+                                        <div className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                                            <FileText size={16} />
+                                        </div>
+                                    </div>
                                 </div>
 
-                                <div>
-                                    <label className="block text-sm font-medium text-foreground mb-1">
-                                        {t('email.subject', 'Asunto del email')} *
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={newCampaign.subject}
-                                        onChange={(e) => setNewCampaign({ ...newCampaign, subject: e.target.value })}
-                                        placeholder="Ej: ¡No te pierdas nuestras ofertas!"
-                                        className="w-full px-4 py-2 bg-muted/50 border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-                                    />
+                                {/* Subject */}
+                                <div className="space-y-2">
+                                    <div className="flex justify-between items-center">
+                                        <label className="text-sm font-medium text-foreground">
+                                            {t('email.subject', 'Asunto del email')} <span className="text-red-500">*</span>
+                                        </label>
+                                        <button
+                                            onClick={() => handleAiGenerate('subject')}
+                                            disabled={!!aiLoadingField}
+                                            className="text-xs flex items-center gap-1 text-primary hover:text-primary/80 disabled:opacity-50 transition-colors"
+                                        >
+                                            {aiLoadingField === 'subject' ? <Loader2 size={12} className="animate-spin" /> : <Brain size={12} />}
+                                            <span>IA Suggest</span>
+                                        </button>
+                                    </div>
+
+                                    {showHelp && (
+                                        <div className="bg-primary/5 border border-primary/10 rounded-lg p-3 text-xs text-muted-foreground flex gap-2">
+                                            <Info size={14} className="text-primary flex-shrink-0 mt-0.5" />
+                                            <p>Lo primero que verán tus suscriptores en su bandeja de entrada. Hazlo breve y atractivo.</p>
+                                        </div>
+                                    )}
+
+                                    <div className="relative">
+                                        <input
+                                            type="text"
+                                            value={newCampaign.subject}
+                                            onChange={(e) => setNewCampaign({ ...newCampaign, subject: e.target.value })}
+                                            placeholder="Ej: ¡No te pierdas nuestras ofertas!"
+                                            className="w-full pl-4 pr-10 py-2.5 bg-muted/50 border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-all"
+                                        />
+                                        <div className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                                            <Mail size={16} />
+                                        </div>
+                                    </div>
                                 </div>
 
-                                <div>
-                                    <label className="block text-sm font-medium text-foreground mb-1">
-                                        {t('email.previewText', 'Texto de vista previa')}
-                                    </label>
+                                {/* Preview Text */}
+                                <div className="space-y-2">
+                                    <div className="flex justify-between items-center">
+                                        <label className="text-sm font-medium text-foreground">
+                                            {t('email.previewText', 'Texto de vista previa')}
+                                        </label>
+                                        <button
+                                            onClick={() => handleAiGenerate('previewText')}
+                                            disabled={!!aiLoadingField || !newCampaign.subject}
+                                            className="text-xs flex items-center gap-1 text-primary hover:text-primary/80 disabled:opacity-50 transition-colors"
+                                        >
+                                            {aiLoadingField === 'previewText' ? <Loader2 size={12} className="animate-spin" /> : <Brain size={12} />}
+                                            <span>IA Generate</span>
+                                        </button>
+                                    </div>
+
+                                    {showHelp && (
+                                        <div className="bg-primary/5 border border-primary/10 rounded-lg p-3 text-xs text-muted-foreground flex gap-2">
+                                            <Info size={14} className="text-primary flex-shrink-0 mt-0.5" />
+                                            <p>Un breve resumen que aparece junto al asunto en la lista de correos. Úsalo para complementar el asunto.</p>
+                                        </div>
+                                    )}
+
                                     <input
                                         type="text"
                                         value={newCampaign.previewText}
                                         onChange={(e) => setNewCampaign({ ...newCampaign, previewText: e.target.value })}
                                         placeholder="Texto que aparece después del asunto..."
-                                        className="w-full px-4 py-2 bg-muted/50 border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                                        className="w-full px-4 py-2.5 bg-muted/50 border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-all"
                                     />
                                 </div>
 
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="block text-sm font-medium text-foreground mb-1">
+                                    <div className="space-y-2">
+                                        <label className="block text-sm font-medium text-foreground">
                                             {t('email.campaignType', 'Tipo')}
                                         </label>
+                                        {showHelp && (
+                                            <p className="text-xs text-muted-foreground mb-1">El propósito de tu correo.</p>
+                                        )}
                                         <select
                                             value={newCampaign.type}
                                             onChange={(e) => setNewCampaign({ ...newCampaign, type: e.target.value })}
-                                            className="w-full px-4 py-2 bg-muted/50 border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                                            className="w-full px-4 py-2.5 bg-muted/50 border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-all"
                                         >
                                             <option value="newsletter">Newsletter</option>
                                             <option value="promotion">Promoción</option>
@@ -834,14 +979,17 @@ const CampaignsView: React.FC<CampaignsViewProps> = ({ onCreateTrigger }) => {
                                         </select>
                                     </div>
 
-                                    <div>
-                                        <label className="block text-sm font-medium text-foreground mb-1">
+                                    <div className="space-y-2">
+                                        <label className="block text-sm font-medium text-foreground">
                                             {t('email.audience', 'Audiencia')}
                                         </label>
+                                        {showHelp && (
+                                            <p className="text-xs text-muted-foreground mb-1">A quién se enviará este correo.</p>
+                                        )}
                                         <select
                                             value={newCampaign.audienceType}
                                             onChange={(e) => setNewCampaign({ ...newCampaign, audienceType: e.target.value as AudienceType })}
-                                            className="w-full px-4 py-2 bg-muted/50 border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                                            className="w-full px-4 py-2.5 bg-muted/50 border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-all"
                                         >
                                             <option value="all">{t('email.allSubscribers', 'Todos los suscriptores')}</option>
                                             <option value="segment">{t('email.selectSegment', 'Seleccionar segmento')}</option>
@@ -851,7 +999,7 @@ const CampaignsView: React.FC<CampaignsViewProps> = ({ onCreateTrigger }) => {
 
                                 {/* Segment selector */}
                                 {newCampaign.audienceType === 'segment' && (
-                                    <div>
+                                    <div className="animate-in fade-in slide-in-from-top-2 duration-200">
                                         <label className="block text-sm font-medium text-foreground mb-1">
                                             {t('email.selectSegment', 'Seleccionar segmento')}
                                         </label>
@@ -859,7 +1007,7 @@ const CampaignsView: React.FC<CampaignsViewProps> = ({ onCreateTrigger }) => {
                                             <select
                                                 value={newCampaign.audienceSegmentId}
                                                 onChange={(e) => setNewCampaign({ ...newCampaign, audienceSegmentId: e.target.value })}
-                                                className="w-full px-4 py-2 bg-muted/50 border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                                                className="w-full px-4 py-2.5 bg-muted/50 border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-all"
                                             >
                                                 <option value="">{t('email.chooseSegment', 'Elige un segmento...')}</option>
                                                 {audiences.map((audience) => (
@@ -879,39 +1027,63 @@ const CampaignsView: React.FC<CampaignsViewProps> = ({ onCreateTrigger }) => {
                                     </div>
                                 )}
 
-                                <div>
-                                    <label className="block text-sm font-medium text-foreground mb-1">
-                                        {t('email.content', 'Contenido del email')}
-                                    </label>
+                                <div className="space-y-4 pt-2 border-t border-border">
+                                    <div className="flex justify-between items-center">
+                                        <label className="text-sm font-medium text-foreground">
+                                            {t('email.content', 'Contenido del email')}
+                                        </label>
+                                        {/* Visual Editor Button moved to be prominent */}
+                                    </div>
 
                                     {/* Visual Editor Button */}
                                     <button
                                         type="button"
                                         onClick={handleOpenVisualEditor}
-                                        className="w-full mb-3 flex items-center justify-center gap-2 px-4 py-4 bg-primary/10 border-2 border-dashed border-primary/30 rounded-lg text-primary hover:bg-primary/20 hover:border-primary/50 transition-all"
+                                        className="w-full group relative overflow-hidden flex items-center justify-center gap-3 px-6 py-5 bg-gradient-to-r from-primary/10 via-primary/5 to-primary/10 border border-primary/20 rounded-xl text-primary hover:border-primary/50 transition-all shadow-sm hover:shadow-md"
                                     >
-                                        <Palette size={20} />
-                                        <span className="font-medium">{t('email.openVisualEditor', 'Abrir Editor Visual')}</span>
+                                        <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                        <div className="bg-primary/10 p-2 rounded-full group-hover:scale-110 transition-transform">
+                                            <Palette size={24} />
+                                        </div>
+                                        <div className="text-left">
+                                            <span className="block font-bold text-base">{t('email.openVisualEditor', 'Abrir Editor Visual')}</span>
+                                            <span className="block text-xs text-muted-foreground group-hover:text-primary/80 transition-colors">Diseña emails hermosos arrastrando y soltando</span>
+                                        </div>
+                                        <ChevronRight size={20} className="ml-auto opacity-50 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
                                     </button>
 
-                                    <div className="relative">
-                                        <p className="text-xs text-muted-foreground mb-2 text-center">
-                                            {t('email.orUseHtml', 'O escribe HTML directamente:')}
-                                        </p>
+                                    {showHelp && (
+                                        <p className="text-xs text-center text-muted-foreground my-2">O si prefieres código puro:</p>
+                                    )}
+
+                                    <div className="relative group">
+                                        <div className="absolute right-2 top-2 z-10">
+                                            <button
+                                                onClick={() => handleAiGenerate('content')}
+                                                disabled={!!aiLoadingField}
+                                                className="p-1.5 bg-background/80 hover:bg-background border border-border rounded-md text-primary shadow-sm backdrop-blur-sm transition-all"
+                                                title="Generar borrador HTML con IA"
+                                            >
+                                                {aiLoadingField === 'content' ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
+                                            </button>
+                                        </div>
                                         <textarea
                                             value={newCampaign.content}
                                             onChange={(e) => setNewCampaign({ ...newCampaign, content: e.target.value })}
-                                            placeholder="Escribe el contenido de tu email (HTML permitido)..."
+                                            placeholder="<code>Escribe HTML directamente...</code>"
                                             rows={4}
-                                            className="w-full px-4 py-2 bg-muted/50 border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring resize-none font-mono text-sm"
+                                            className="w-full px-4 py-3 bg-muted/50 border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring resize-none font-mono text-sm shadow-inner"
                                         />
                                     </div>
-                                    <p className="text-xs text-muted-foreground mt-1">
-                                        {t('email.htmlHint', 'Variables: {{firstName}}, {{lastName}}, {{email}}')}
+                                    <p className="text-xs text-muted-foreground flex items-center gap-1 justify-center bg-muted/30 py-1 px-2 rounded-full mx-auto w-fit">
+                                        <span className="font-mono text-primary">{`{{firstName}}`}</span>
+                                        <span className="font-mono text-primary">{`{{lastName}}`}</span>
+                                        <span className="font-mono text-primary">{`{{email}}`}</span>
                                     </p>
                                 </div>
                             </div>
-                            <div className="p-6 border-t border-border flex justify-end gap-3">
+
+                            <div className="p-6 border-t border-border flex justify-end gap-3 bg-muted/10 sticky bottom-0 rounded-b-xl">
                                 <button
                                     onClick={() => { setShowNewCampaignModal(false); resetForm(); }}
                                     className="px-4 py-2 border border-border rounded-lg text-foreground hover:bg-muted transition-colors"
@@ -921,9 +1093,9 @@ const CampaignsView: React.FC<CampaignsViewProps> = ({ onCreateTrigger }) => {
                                 <button
                                     onClick={handleCreateCampaign}
                                     disabled={!newCampaign.name || !newCampaign.subject || isSaving}
-                                    className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="flex items-center gap-2 px-6 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none font-medium"
                                 >
-                                    {isSaving && <Loader2 size={16} className="animate-spin" />}
+                                    {isSaving ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
                                     {t('email.createCampaign', 'Crear Campaña')}
                                 </button>
                             </div>

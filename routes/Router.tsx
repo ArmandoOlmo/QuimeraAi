@@ -42,13 +42,13 @@ const ProductDetailPageWithCart = lazyWithRetry(() => import('../components/ecom
 const CheckoutPageEnhanced = lazyWithRetry(() => import('../components/ecommerce/CheckoutPageEnhanced'));
 
 // Named exports need to be handled differently with lazyWithRetry
-const ProductSearchPage = lazyWithRetry(() => 
+const ProductSearchPage = lazyWithRetry(() =>
   import('../components/ecommerce').then(module => ({ default: module.ProductSearchPage }))
 );
-const StorefrontLayout = lazyWithRetry(() => 
+const StorefrontLayout = lazyWithRetry(() =>
   import('../components/ecommerce').then(module => ({ default: module.StorefrontLayout }))
 );
-const OrderConfirmation = lazyWithRetry(() => 
+const OrderConfirmation = lazyWithRetry(() =>
   import('../components/ecommerce').then(module => ({ default: module.OrderConfirmation }))
 );
 
@@ -61,12 +61,12 @@ export interface RouterProps {
   user: { uid: string; email: string | null; emailVerified: boolean } | null;
   userRole?: string;
   loadingAuth: boolean;
-  
+
   // Callbacks
   onVerificationEmailSent: (email: string | null) => void;
   verificationEmail: string | null;
   onLogout: () => Promise<void>;
-  
+
   // Render props for authenticated content
   children: (props: {
     view: View;
@@ -103,14 +103,17 @@ const Router: React.FC<RouterProps> = ({
   // =========================================================================
   // COMPUTED AUTH STATE
   // =========================================================================
-  
+
   const isAuthenticated = !!user;
   const isEmailVerified = user?.emailVerified ?? false;
+
+  // Check if landing page preview mode is enabled (for Landing Page Editor iframe)
+  const isLandingPreviewMode = new URLSearchParams(window.location.search).get('preview') === 'landing';
 
   // =========================================================================
   // ROUTE ACCESS CHECK
   // =========================================================================
-  
+
   const canAccessRoute = useMemo(() => {
     if (!route) return false;
     return hasRouteAccess(route, userRole, isAuthenticated, isEmailVerified);
@@ -119,7 +122,7 @@ const Router: React.FC<RouterProps> = ({
   // =========================================================================
   // REDIRECTS
   // =========================================================================
-  
+
   useEffect(() => {
     // Skip during loading
     if (loadingAuth) return;
@@ -151,8 +154,8 @@ const Router: React.FC<RouterProps> = ({
       return;
     }
 
-    // Default path handling
-    if (path === '/' && isAuthenticated && isEmailVerified) {
+    // Default path handling - skip if preview mode
+    if (path === '/' && isAuthenticated && isEmailVerified && !isLandingPreviewMode) {
       replace(ROUTES.DASHBOARD);
     }
   }, [
@@ -163,6 +166,7 @@ const Router: React.FC<RouterProps> = ({
     isPrivateRoute,
     isAdminRoute,
     isPreviewRoute,
+    isLandingPreviewMode,
     canAccessRoute,
     path,
     replace,
@@ -171,7 +175,7 @@ const Router: React.FC<RouterProps> = ({
   // =========================================================================
   // LOADING STATE
   // =========================================================================
-  
+
   if (loadingAuth) {
     return <LoadingScreen />;
   }
@@ -179,18 +183,18 @@ const Router: React.FC<RouterProps> = ({
   // =========================================================================
   // STOREFRONT ROUTES (Public ecommerce pages)
   // =========================================================================
-  
+
   const isStoreRoute = path.startsWith('/store/');
-  
+
   if (isStoreRoute) {
     const pathParts = path.split('/');
     const storeId = pathParts[2];
-    
+
     // /store/:storeId/checkout - Checkout page
     if (path.includes('/checkout')) {
       return (
         <Suspense fallback={<LoadingScreen />}>
-          <StorefrontLayout 
+          <StorefrontLayout
             storeId={storeId}
             onNavigateHome={() => navigate(`/preview/${storeId}`)}
             onNavigateToCheckout={() => navigate(`/store/${storeId}/checkout`)}
@@ -205,13 +209,13 @@ const Router: React.FC<RouterProps> = ({
         </Suspense>
       );
     }
-    
+
     // /store/:storeId/order/:orderId - Order confirmation page
     if (path.includes('/order/')) {
       const orderId = pathParts[4];
       return (
         <Suspense fallback={<LoadingScreen />}>
-          <StorefrontLayout 
+          <StorefrontLayout
             storeId={storeId}
             onNavigateHome={() => navigate(`/preview/${storeId}`)}
             onNavigateToCheckout={() => navigate(`/store/${storeId}/checkout`)}
@@ -226,13 +230,13 @@ const Router: React.FC<RouterProps> = ({
         </Suspense>
       );
     }
-    
+
     // /store/:storeId/product/:slug - Product detail page
     if (path.includes('/product/')) {
       const productSlug = pathParts[4];
       return (
         <Suspense fallback={<LoadingScreen />}>
-          <StorefrontLayout 
+          <StorefrontLayout
             storeId={storeId}
             onNavigateHome={() => navigate(`/preview/${storeId}`)}
             onNavigateToCheckout={() => navigate(`/store/${storeId}/checkout`)}
@@ -248,13 +252,13 @@ const Router: React.FC<RouterProps> = ({
         </Suspense>
       );
     }
-    
+
     // /store/:storeId/category/:categorySlug - Category page
     if (path.includes('/category/')) {
       const categorySlug = pathParts[4];
       return (
         <Suspense fallback={<LoadingScreen />}>
-          <StorefrontLayout 
+          <StorefrontLayout
             storeId={storeId}
             onNavigateHome={() => navigate(`/preview/${storeId}`)}
             onNavigateToCheckout={() => navigate(`/store/${storeId}/checkout`)}
@@ -269,12 +273,12 @@ const Router: React.FC<RouterProps> = ({
         </Suspense>
       );
     }
-    
+
     // /store/:storeId - Main store page (product listing)
     if (pathParts.length === 3 || (pathParts.length === 4 && pathParts[3] === '')) {
       return (
         <Suspense fallback={<LoadingScreen />}>
-          <StorefrontLayout 
+          <StorefrontLayout
             storeId={storeId}
             onNavigateHome={() => navigate(`/preview/${storeId}`)}
             onNavigateToCheckout={() => navigate(`/store/${storeId}/checkout`)}
@@ -292,7 +296,7 @@ const Router: React.FC<RouterProps> = ({
   // =========================================================================
   // PREVIEW ROUTE (No auth required)
   // =========================================================================
-  
+
   if (isPreviewRoute) {
     return (
       <Suspense fallback={<LoadingScreen />}>
@@ -304,7 +308,7 @@ const Router: React.FC<RouterProps> = ({
   // =========================================================================
   // PUBLIC ROUTES
   // =========================================================================
-  
+
   // Invite page (accept team invitation)
   if (path.startsWith('/invite/')) {
     const token = path.split('/invite/')[1];
@@ -314,12 +318,13 @@ const Router: React.FC<RouterProps> = ({
       </Suspense>
     );
   }
-  
-  // Landing page
-  if (path === '/' && !isAuthenticated) {
+
+  // Landing page (for unauthenticated users OR when preview=landing param is present)
+  // The preview=landing param allows the Landing Page Editor to show the landing page in an iframe
+  if (path === '/' && (!isAuthenticated || isLandingPreviewMode)) {
     return (
       <Suspense fallback={<LoadingScreen />}>
-        <PublicLandingPage 
+        <PublicLandingPage
           onNavigateToLogin={() => navigate(ROUTES.LOGIN)}
           onNavigateToRegister={() => navigate(ROUTES.REGISTER)}
           onNavigateToBlog={() => navigate(ROUTES.BLOG)}
@@ -333,7 +338,7 @@ const Router: React.FC<RouterProps> = ({
   if (path === '/blog') {
     return (
       <Suspense fallback={<LoadingScreen />}>
-        <PublicBlogPage 
+        <PublicBlogPage
           onNavigateToHome={() => navigate(ROUTES.LANDING)}
           onNavigateToLogin={() => navigate(ROUTES.LOGIN)}
           onNavigateToRegister={() => navigate(ROUTES.REGISTER)}
@@ -348,7 +353,7 @@ const Router: React.FC<RouterProps> = ({
     const slug = path.replace('/blog/', '');
     return (
       <Suspense fallback={<LoadingScreen />}>
-        <PublicArticlePage 
+        <PublicArticlePage
           slug={slug}
           onNavigateToHome={() => navigate(ROUTES.LANDING)}
           onNavigateToBlog={() => navigate(ROUTES.BLOG)}
@@ -419,7 +424,7 @@ const Router: React.FC<RouterProps> = ({
   if (path === '/changelog') {
     return (
       <Suspense fallback={<LoadingScreen />}>
-        <ChangelogPage 
+        <ChangelogPage
           onNavigateToHome={() => navigate(ROUTES.LANDING)}
           onNavigateToLogin={() => navigate(ROUTES.LOGIN)}
           onNavigateToRegister={() => navigate(ROUTES.REGISTER)}
@@ -441,7 +446,7 @@ const Router: React.FC<RouterProps> = ({
   if (path === '/login' && !isAuthenticated) {
     return (
       <Suspense fallback={<LoadingScreen />}>
-        <ModernAuth 
+        <ModernAuth
           onVerificationEmailSent={onVerificationEmailSent}
           initialMode="login"
           onNavigateToLanding={() => navigate(ROUTES.LANDING)}
@@ -454,7 +459,7 @@ const Router: React.FC<RouterProps> = ({
   if (path === '/register' && !isAuthenticated) {
     return (
       <Suspense fallback={<LoadingScreen />}>
-        <ModernAuth 
+        <ModernAuth
           onVerificationEmailSent={onVerificationEmailSent}
           initialMode="register"
           onNavigateToLanding={() => navigate(ROUTES.LANDING)}
@@ -466,7 +471,7 @@ const Router: React.FC<RouterProps> = ({
   // =========================================================================
   // EMAIL VERIFICATION PENDING
   // =========================================================================
-  
+
   if (isAuthenticated && !isEmailVerified) {
     const handleGoToLogin = async () => {
       await onLogout();
@@ -484,12 +489,12 @@ const Router: React.FC<RouterProps> = ({
   if (!isAuthenticated && verificationEmail) {
     return (
       <Suspense fallback={<LoadingScreen />}>
-        <VerificationScreen 
-          email={verificationEmail} 
+        <VerificationScreen
+          email={verificationEmail}
           onGoToLogin={() => {
             onVerificationEmailSent(null);
             navigate(ROUTES.LOGIN);
-          }} 
+          }}
         />
       </Suspense>
     );
@@ -498,7 +503,7 @@ const Router: React.FC<RouterProps> = ({
   // =========================================================================
   // AUTHENTICATED ROUTES
   // =========================================================================
-  
+
   if (isAuthenticated && isEmailVerified) {
     // Determine the view based on route
     const view: View = route?.view || 'dashboard';
@@ -511,10 +516,10 @@ const Router: React.FC<RouterProps> = ({
   // =========================================================================
   // FALLBACK (redirect to landing)
   // =========================================================================
-  
+
   return (
     <Suspense fallback={<LoadingScreen />}>
-      <PublicLandingPage 
+      <PublicLandingPage
         onNavigateToLogin={() => navigate(ROUTES.LOGIN)}
         onNavigateToRegister={() => navigate(ROUTES.REGISTER)}
         onNavigateToBlog={() => navigate(ROUTES.BLOG)}

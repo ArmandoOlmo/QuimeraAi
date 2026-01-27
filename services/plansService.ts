@@ -163,9 +163,10 @@ export async function getPlanById(planId: string): Promise<StoredPlan | null> {
 
 /**
  * Get active (non-archived) plans
+ * @param forceRefresh - Force refresh from Firestore, bypassing cache
  */
-export async function getActivePlans(): Promise<StoredPlan[]> {
-    const allPlans = await getAllPlans();
+export async function getActivePlans(forceRefresh = false): Promise<StoredPlan[]> {
+    const allPlans = await getAllPlans(forceRefresh);
     return Object.values(allPlans).filter(plan => !plan.isArchived);
 }
 

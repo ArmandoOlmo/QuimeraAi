@@ -2585,6 +2585,7 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
             case 'colors': return renderColorsControls();
             case 'typography': return renderTypographyControls();
             case 'slideshow': return renderSlideshowControls();
+            case 'screenshotCarousel': return renderSlideshowControls(); // Reuse slideshow controls for screenshot carousel
             case 'newsletter':
                 return renderNewsletterControls();
             case 'howItWorks':

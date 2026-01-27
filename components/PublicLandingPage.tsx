@@ -4,18 +4,18 @@
  * Ahora con contenido dinámico gestionado desde el panel de Super Admin
  */
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { 
-  ArrowRight, 
-  Zap, 
-  Layout, 
-  Palette, 
-  Image as ImageIcon, 
-  MessageSquare, 
-  BarChart3, 
-  Check, 
-  Menu, 
+import {
+  ArrowRight,
+  Zap,
+  Layout,
+  Palette,
+  Image as ImageIcon,
+  MessageSquare,
+  BarChart3,
+  Check,
+  Menu,
   X,
   Calendar,
   Clock,
@@ -36,6 +36,15 @@ import { useLandingPlans } from '../hooks/useLandingPlans';
 // --- Brand Assets ---
 const QUIMERA_LOGO = "https://firebasestorage.googleapis.com/v0/b/quimeraai.firebasestorage.app/o/quimera%2Fquimeralogo.png?alt=media&token=82368c1c-0f63-42b7-831f-72780006f032";
 
+// Types for preview sections
+interface PreviewSection {
+  id: string;
+  type: string;
+  enabled: boolean;
+  order: number;
+  data: Record<string, any>;
+}
+
 interface PublicLandingPageProps {
   onNavigateToLogin: () => void;
   onNavigateToRegister: () => void;
@@ -53,22 +62,55 @@ const SOCIAL_ICONS: Record<string, React.ReactNode> = {
   discord: <MessageCircle size={18} />,
 };
 
-const PublicLandingPage: React.FC<PublicLandingPageProps> = ({ 
-  onNavigateToLogin, 
+const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
+  onNavigateToLogin,
   onNavigateToRegister,
   onNavigateToBlog,
   onNavigateToArticle
 }) => {
   const { t } = useTranslation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  
+
+  // Preview mode - listens for postMessage from Landing Page Editor
+  const [isPreviewMode, setIsPreviewMode] = useState(false);
+  const [previewSections, setPreviewSections] = useState<PreviewSection[]>([]);
+
+  // Listen for preview updates from the Landing Page Editor
+  useEffect(() => {
+    // Check if we're in preview mode (loaded in iframe with ?preview=landing)
+    const urlParams = new URLSearchParams(window.location.search);
+    const previewParam = urlParams.get('preview');
+    setIsPreviewMode(previewParam === 'landing');
+
+    const handleMessage = (event: MessageEvent) => {
+      // Security: Only accept messages from same origin
+      if (event.origin !== window.location.origin) return;
+
+      if (event.data?.type === 'LANDING_EDITOR_UPDATE') {
+        setPreviewSections(event.data.sections || []);
+      }
+
+      // Handle scroll to section request from editor
+      if (event.data?.type === 'SCROLL_TO_SECTION') {
+        const sectionType = event.data.sectionType;
+        const sectionElement = document.getElementById(`section-${sectionType}`);
+        if (sectionElement) {
+          sectionElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, []);
+
   // Get dynamic content from AppContent context
   const appContent = useSafeAppContent();
-  
+
   // Get dynamic pricing plans from Firestore (connected to Super Admin)
   // Only shows plans that have showInLanding = true in Super Admin
   const { plans: dynamicPlans, isLoading: isLoadingPlans } = useLandingPlans();
-  
+
   // Use navigation from context or defaults
   const navigation = appContent?.navigation || DEFAULT_APP_NAVIGATION;
   const featuredArticles = appContent?.featuredArticles || [];
@@ -108,6 +150,35 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
     }
   ];
 
+  // Helper to get preview data for a specific section type
+  const getPreviewData = useMemo(() => (sectionType: string) => {
+    if (!isPreviewMode || previewSections.length === 0) return null;
+    const section = previewSections.find(s =>
+      s.type === sectionType ||
+      s.type.startsWith(sectionType) ||
+      s.id === sectionType
+    );
+    return section?.enabled !== false ? section?.data || null : null;
+  }, [isPreviewMode, previewSections]);
+
+  // Get preview overrides for Hero section
+  const heroPreview = getPreviewData('hero');
+
+  // Get preview overrides for Features section
+  const featuresPreview = getPreviewData('features');
+
+  // Get preview overrides for Pricing section
+  const pricingPreview = getPreviewData('pricing');
+
+  // Get preview overrides for CTA section
+  const ctaPreview = getPreviewData('cta');
+
+  // Get preview overrides for Footer section
+  const footerPreview = getPreviewData('footer');
+
+  // Get preview overrides for Header section
+  const headerPreview = getPreviewData('header');
+
   // Pricing plans are now loaded dynamically from Firestore via useLandingPlans hook
   // This connects the Super Admin plan management with the public landing page
 
@@ -133,15 +204,15 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
 
   // Article Card Component
   const ArticleCard: React.FC<{ article: AppArticle; onClick: () => void }> = ({ article, onClick }) => (
-    <div 
+    <div
       onClick={onClick}
       className="group bg-white/5 border border-white/10 rounded-2xl overflow-hidden hover:bg-white/10 hover:border-yellow-400/30 transition-all cursor-pointer"
     >
       {/* Image */}
       <div className="relative h-48 overflow-hidden">
         {article.featuredImage ? (
-          <img 
-            src={article.featuredImage} 
+          <img
+            src={article.featuredImage}
             alt={article.title}
             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
           />
@@ -156,7 +227,7 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
           </div>
         )}
       </div>
-      
+
       {/* Content */}
       <div className="p-5">
         <div className="flex items-center gap-2 text-xs text-gray-500 mb-3">
@@ -190,13 +261,13 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
           <div className="flex items-center justify-between">
             {/* Logo */}
             <a href="/" className="flex items-center gap-2 sm:gap-3">
-              <img 
-                src={navigation.header.logo?.imageUrl || QUIMERA_LOGO} 
-                alt={navigation.header.logo?.text || "Quimera.ai"} 
-                className="w-8 h-8 sm:w-10 sm:h-10" 
+              <img
+                src={headerPreview?.logoImage || navigation.header.logo?.imageUrl || QUIMERA_LOGO}
+                alt={navigation.header.logo?.text || "Quimera.ai"}
+                className="w-8 h-8 sm:w-10 sm:h-10"
               />
               <span className="text-lg sm:text-xl font-bold text-white">
-                {navigation.header.logo?.text?.split('.')[0] || 'Quimera'}
+                {(headerPreview?.logoText || navigation.header.logo?.text || 'Quimera.ai').split('.')[0] || 'Quimera'}
                 <span className="text-yellow-400">.ai</span>
               </span>
             </a>
@@ -220,13 +291,13 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
             {/* CTA Buttons - Desktop */}
             <div className="hidden md:flex items-center gap-4">
               <LanguageSelector variant="minimal" />
-              <button 
+              <button
                 onClick={onNavigateToLogin}
                 className="text-sm text-gray-300 hover:text-white transition-colors"
               >
                 {navigation.header.cta?.loginText || t('landing.login')}
               </button>
-              <button 
+              <button
                 onClick={onNavigateToRegister}
                 className="px-5 py-2.5 bg-yellow-400 text-black font-semibold rounded-xl hover:bg-yellow-300 transition-colors"
               >
@@ -265,7 +336,7 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
                 ))}
               </nav>
               <div className="flex flex-col gap-3">
-                <button 
+                <button
                   onClick={() => {
                     setIsMobileMenuOpen(false);
                     onNavigateToLogin();
@@ -274,7 +345,7 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
                 >
                   {navigation.header.cta?.loginText || t('landing.login')}
                 </button>
-                <button 
+                <button
                   onClick={() => {
                     setIsMobileMenuOpen(false);
                     onNavigateToRegister();
@@ -290,7 +361,7 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
       </header>
 
       {/* === HERO SECTION === */}
-      <section className="min-h-screen flex flex-col items-center justify-center pt-16 sm:pt-20 px-4 sm:px-6">
+      <section id="section-hero" className="min-h-screen flex flex-col items-center justify-center pt-16 sm:pt-20 px-4 sm:px-6">
         <div className="max-w-4xl mx-auto text-center">
           {/* Logo Grande */}
           <div className="w-28 h-28 sm:w-36 sm:h-36 md:w-48 md:h-48 mx-auto mb-6 sm:mb-8">
@@ -303,61 +374,69 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
 
           {/* Título Principal */}
           <h1 className="text-3xl sm:text-5xl md:text-7xl font-black leading-tight mb-4 sm:mb-6 px-2">
-            {t('landing.heroTitle1')}
+            {heroPreview?.title || t('landing.heroTitle1')}
             <span className="block text-yellow-400">
-              {t('landing.heroTitle2')}
+              {heroPreview?.subtitle ? '' : t('landing.heroTitle2')}
             </span>
           </h1>
 
           {/* Subtítulo */}
           <p className="text-base sm:text-lg md:text-xl text-gray-400 max-w-2xl mx-auto mb-8 sm:mb-10 leading-relaxed px-2">
-            {t('landing.heroSubtitle')}
+            {heroPreview?.subtitle || t('landing.heroSubtitle')}
           </p>
 
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center mb-12 sm:mb-16 px-4 sm:px-0">
-            <button 
+            <button
               onClick={onNavigateToRegister}
               className="w-full sm:w-auto px-6 sm:px-8 py-3.5 sm:py-4 bg-yellow-400 text-black font-bold rounded-xl hover:bg-yellow-300 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
             >
-              {t('landing.startFree')}
+              {heroPreview?.primaryButtonText || t('landing.startFree')}
               <ArrowRight className="w-5 h-5" />
             </button>
-            <button 
-              onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })}
-              className="w-full sm:w-auto px-6 sm:px-8 py-3.5 sm:py-4 bg-white/5 border border-white/10 text-white font-semibold rounded-xl hover:bg-white/10 active:scale-[0.98] transition-all"
-            >
-              {t('landing.viewFeatures')}
-            </button>
+            {(heroPreview?.showSecondaryButton !== false) && (
+              <button
+                onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })}
+                className="w-full sm:w-auto px-6 sm:px-8 py-3.5 sm:py-4 bg-white/5 border border-white/10 text-white font-semibold rounded-xl hover:bg-white/10 active:scale-[0.98] transition-all"
+              >
+                {heroPreview?.secondaryButtonText || t('landing.viewFeatures')}
+              </button>
+            )}
           </div>
 
         </div>
       </section>
 
       {/* === FEATURES SECTION === */}
-      <section id="features" className="py-16 sm:py-20 md:py-24 bg-[#0A0A0A]">
+      <section id="section-features" className="py-16 sm:py-20 md:py-24 bg-[#0A0A0A]">
         <div className="container mx-auto px-4 sm:px-6">
           <div className="text-center mb-10 sm:mb-16">
             <h2 className="text-2xl sm:text-4xl md:text-5xl font-bold mb-3 sm:mb-4 px-2">
-              {t('landing.featuresTitle')}
-              <span className="text-yellow-400"> {t('landing.featuresTitleHighlight')}</span>
+              {featuresPreview?.title || t('landing.featuresTitle')}
+              <span className="text-yellow-400"> {featuresPreview?.title ? '' : t('landing.featuresTitleHighlight')}</span>
             </h2>
             <p className="text-sm sm:text-base text-gray-400 max-w-2xl mx-auto px-2">
-              {t('landing.featuresSubtitle')}
+              {featuresPreview?.subtitle || t('landing.featuresSubtitle')}
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-            {features.map((feature, index) => (
-              <div 
+          <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-${featuresPreview?.columns || 3} gap-4 sm:gap-6`}>
+            {(featuresPreview?.features || features).map((feature: any, index: number) => (
+              <div
                 key={index}
                 className="p-5 sm:p-8 bg-white/5 border border-white/10 rounded-xl sm:rounded-2xl hover:bg-white/10 hover:border-yellow-400/30 active:scale-[0.99] transition-all"
               >
-                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-yellow-400/10 rounded-lg sm:rounded-xl flex items-center justify-center text-yellow-400 mb-4 sm:mb-6">
-                  {feature.icon}
-                </div>
-                <h3 className="text-lg sm:text-xl font-bold mb-2 sm:mb-3">{t(feature.titleKey)}</h3>
-                <p className="text-sm sm:text-base text-gray-400 leading-relaxed">{t(feature.descKey)}</p>
+                {(featuresPreview?.showIcons !== false) && (
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-yellow-400/10 rounded-lg sm:rounded-xl flex items-center justify-center text-yellow-400 mb-4 sm:mb-6">
+                    {feature.icon || <Zap className="w-6 h-6" />}
+                  </div>
+                )}
+                <h3 className="text-lg sm:text-xl font-bold mb-2 sm:mb-3">
+                  {feature.title || (feature.titleKey ? t(feature.titleKey) : '')}
+                </h3>
+                <p className="text-sm sm:text-base text-gray-400 leading-relaxed">
+                  {feature.description || (feature.descKey ? t(feature.descKey) : '')}
+                </p>
               </div>
             ))}
           </div>
@@ -379,9 +458,9 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {featuredArticles.slice(0, 3).map((article) => (
-                <ArticleCard 
-                  key={article.id} 
-                  article={article} 
+                <ArticleCard
+                  key={article.id}
+                  article={article}
                   onClick={() => onNavigateToArticle?.(article.slug)}
                 />
               ))}
@@ -403,14 +482,14 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
       )}
 
       {/* === PRICING SECTION === */}
-      <section id="pricing" className="py-16 sm:py-20 md:py-24 bg-[#0A0A0A]">
+      <section id="section-pricing" className="py-16 sm:py-20 md:py-24 bg-[#0A0A0A]">
         <div className="container mx-auto px-4 sm:px-6">
           <div className="text-center mb-10 sm:mb-16">
             <h2 className="text-2xl sm:text-4xl md:text-5xl font-bold mb-3 sm:mb-4 px-2">
-              {t('landing.pricingTitle')} <span className="text-yellow-400">{t('landing.pricingTitleHighlight')}</span>
+              {pricingPreview?.title || t('landing.pricingTitle')} <span className="text-yellow-400">{pricingPreview?.title ? '' : t('landing.pricingTitleHighlight')}</span>
             </h2>
             <p className="text-sm sm:text-base text-gray-400 max-w-2xl mx-auto px-2">
-              {t('landing.pricingSubtitle')}
+              {pricingPreview?.subtitle || t('landing.pricingSubtitle')}
             </p>
           </div>
 
@@ -422,13 +501,12 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 max-w-5xl mx-auto">
               {dynamicPlans.map((plan, index) => (
-                <div 
+                <div
                   key={plan.id}
-                  className={`relative p-5 sm:p-8 rounded-xl sm:rounded-2xl transition-all hover:scale-[1.02] active:scale-[0.99] ${
-                    plan.featured || plan.isPopular
-                      ? 'bg-gradient-to-br from-yellow-400/15 to-yellow-600/5 border-2 border-yellow-400/50 order-first md:order-none md:scale-105 shadow-xl shadow-yellow-400/10'
-                      : 'bg-white/5 border border-white/10 hover:border-white/20'
-                  }`}
+                  className={`relative p-5 sm:p-8 rounded-xl sm:rounded-2xl transition-all hover:scale-[1.02] active:scale-[0.99] ${plan.featured || plan.isPopular
+                    ? 'bg-gradient-to-br from-yellow-400/15 to-yellow-600/5 border-2 border-yellow-400/50 order-first md:order-none md:scale-105 shadow-xl shadow-yellow-400/10'
+                    : 'bg-white/5 border border-white/10 hover:border-white/20'
+                    }`}
                   style={{ animationDelay: `${index * 100}ms` }}
                 >
                   {(plan.featured || plan.isPopular) && (
@@ -459,13 +537,12 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
                       </li>
                     ))}
                   </ul>
-                  <button 
+                  <button
                     onClick={onNavigateToRegister}
-                    className={`w-full py-2.5 sm:py-3 rounded-xl font-semibold transition-all active:scale-[0.98] ${
-                      plan.featured || plan.isPopular
-                        ? 'bg-gradient-to-r from-yellow-400 to-yellow-500 text-black hover:from-yellow-300 hover:to-yellow-400 shadow-lg shadow-yellow-400/20'
-                        : 'bg-white/10 text-white hover:bg-white/20'
-                    }`}
+                    className={`w-full py-2.5 sm:py-3 rounded-xl font-semibold transition-all active:scale-[0.98] ${plan.featured || plan.isPopular
+                      ? 'bg-gradient-to-r from-yellow-400 to-yellow-500 text-black hover:from-yellow-300 hover:to-yellow-400 shadow-lg shadow-yellow-400/20'
+                      : 'bg-white/10 text-white hover:bg-white/20'
+                      }`}
                   >
                     {plan.priceValue === 0 ? t('landing.startFree', 'Empieza Gratis') : t('landing.getStarted')}
                   </button>
@@ -477,20 +554,20 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
       </section>
 
       {/* === CTA SECTION === */}
-      <section className="py-16 sm:py-20 md:py-24 bg-[#050505]">
+      <section id="section-cta" className="py-16 sm:py-20 md:py-24 bg-[#050505]">
         <div className="container mx-auto px-4 sm:px-6">
           <div className="max-w-3xl mx-auto text-center">
             <h2 className="text-2xl sm:text-4xl md:text-5xl font-bold mb-4 sm:mb-6 px-2">
-              {t('landing.ctaTitle')}
+              {ctaPreview?.title || t('landing.ctaTitle')}
             </h2>
             <p className="text-base sm:text-lg md:text-xl text-gray-400 mb-8 sm:mb-10 px-2">
-              {t('landing.ctaSubtitle')}
+              {ctaPreview?.subtitle || t('landing.ctaSubtitle')}
             </p>
-            <button 
+            <button
               onClick={onNavigateToRegister}
               className="w-full sm:w-auto px-8 sm:px-10 py-4 sm:py-5 bg-yellow-400 text-black font-bold text-base sm:text-lg rounded-xl hover:bg-yellow-300 active:scale-[0.98] transition-all inline-flex items-center justify-center gap-2 sm:gap-3 mx-4 sm:mx-0"
             >
-              {t('landing.startFree')}
+              {ctaPreview?.buttonText || t('landing.startFree')}
               <ArrowRight className="w-5 h-5 sm:w-6 sm:h-6" />
             </button>
             <p className="mt-3 sm:mt-4 text-gray-500 text-xs sm:text-sm">{t('landing.noCreditCard')}</p>
@@ -499,7 +576,7 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
       </section>
 
       {/* === FOOTER === */}
-      <footer className="py-12 sm:py-16 border-t border-white/10 bg-[#0A0A0A]">
+      <footer id="section-footer" className="py-12 sm:py-16 border-t border-white/10 bg-[#0A0A0A]">
         <div className="container mx-auto px-4 sm:px-6">
           {/* Footer Columns */}
           {navigation.footer.columns.length > 0 && (
@@ -508,12 +585,12 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
               <div className="col-span-2 md:col-span-1">
                 <div className="flex items-center gap-2 mb-4">
                   <img src={QUIMERA_LOGO} alt="Quimera.ai" className="w-8 h-8" />
-                  <span className="font-bold">Quimera<span className="text-yellow-400">.ai</span></span>
+                  <span className="font-bold">{footerPreview?.companyName || 'Quimera'}<span className="text-yellow-400">.ai</span></span>
                 </div>
                 <p className="text-sm text-gray-500 mb-4">
-                  {t('landing.footerTagline', 'Build amazing websites with AI')}
+                  {footerPreview?.tagline || t('landing.footerTagline', 'Build amazing websites with AI')}
                 </p>
-                
+
                 {/* Social Links */}
                 {navigation.footer.socialLinks && navigation.footer.socialLinks.length > 0 && (
                   <div className="flex items-center gap-3">
@@ -582,9 +659,9 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
           {/* Bottom Bar */}
           <div className="flex flex-col items-center gap-4 pt-8 border-t border-white/10 md:flex-row md:justify-between">
             <div className="text-xs sm:text-sm text-gray-500">
-              {navigation.footer.bottomText || `© ${new Date().getFullYear()} Quimera.ai. All rights reserved.`}
+              {footerPreview?.copyright || navigation.footer.bottomText || `© ${new Date().getFullYear()} Quimera.ai. All rights reserved.`}
             </div>
-            
+
             <div className="flex flex-wrap justify-center gap-4 sm:gap-6 text-xs sm:text-sm text-gray-500">
               <a href="/changelog" className="hover:text-white transition-colors">{t('landing.footerChangelog', 'Changelog')}</a>
               <a href="/help-center" className="hover:text-white transition-colors">{t('landing.footerHelpCenter', 'Centro de Ayuda')}</a>

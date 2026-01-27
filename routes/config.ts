@@ -126,6 +126,7 @@ export const ROUTES = {
   ADMIN_CHATBOT_PROMPTS: '/admin/chatbot-prompts',
   ADMIN_EXECUTION_MODE: '/admin/execution-mode',
   ADMIN_NEWS: '/admin/news',
+  ADMIN_LANDING_EDITOR: '/admin/landing-editor',
 } as const;
 
 // =============================================================================
@@ -792,6 +793,17 @@ export const routeConfigs: RouteConfig[] = [
     adminView: 'news',
     type: 'admin',
     title: 'News & Updates',
+    requiresAuth: true,
+    requiresEmailVerified: true,
+    roles: ['owner', 'superadmin', 'admin'],
+    parent: ROUTES.SUPERADMIN,
+  },
+  {
+    path: ROUTES.ADMIN_LANDING_EDITOR,
+    view: 'superadmin',
+    adminView: 'landing-editor',
+    type: 'admin',
+    title: 'Landing Page Editor',
     requiresAuth: true,
     requiresEmailVerified: true,
     roles: ['owner', 'superadmin', 'admin'],

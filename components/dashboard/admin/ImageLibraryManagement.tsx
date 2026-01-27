@@ -1,15 +1,16 @@
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useFiles } from '../../../contexts/files';
 import { useToast } from '../../../contexts/ToastContext';
 import { useAssetLibrary } from '../../../hooks/useAssetLibrary';
 import DashboardSidebar from '../DashboardSidebar';
-import { ArrowLeft, Image, Upload, Trash2, Download, Zap, Search, Filter, ArrowUpDown, CheckSquare, Square, ChevronLeft, ChevronRight, Menu, Sparkles, X, Eye, Copy, Calendar, HardDrive, FileType } from 'lucide-react';
+import { ArrowLeft, Image, Upload, Trash2, Download, Zap, Search, Filter, ArrowUpDown, CheckSquare, Square, ChevronLeft, ChevronRight, Menu, Sparkles, X, Eye, Copy, Calendar, HardDrive, FileType, Star, Shapes, Layout, FolderOpen, Grid } from 'lucide-react';
 import { FileRecord } from '../../../types';
 import ImageGeneratorModal from '../../ui/ImageGeneratorModal';
 import DragDropZone from '../../ui/DragDropZone';
 import { formatBytes } from '../../../utils/fileHelpers';
+import { DEFAULT_FOLDERS, BRAND_ASSETS, AssetFolder, BrandAsset } from '../../../constants/brandAssets';
 
 interface ImageLibraryManagementProps {
     onBack: () => void;
@@ -25,9 +26,54 @@ const ImageLibraryManagement: React.FC<ImageLibraryManagementProps> = ({ onBack 
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [selectedImageForDetail, setSelectedImageForDetail] = useState<FileRecord | null>(null);
 
-    // Use the custom hook for asset management
+    // Folder state
+    const [selectedFolder, setSelectedFolder] = useState<string>('all');
+    const [isFolderPanelOpen, setIsFolderPanelOpen] = useState(true);
+
+    // Folder icons mapping
+    const FOLDER_ICONS: Record<string, React.ReactNode> = {
+        grid: <Grid size={18} />,
+        star: <Star size={18} />,
+        shapes: <Shapes size={18} />,
+        image: <Image size={18} />,
+        layout: <Layout size={18} />,
+        upload: <Upload size={18} />,
+        sparkles: <Sparkles size={18} />,
+    };
+
+    // Combine global files with brand assets
+    const allFiles = useMemo(() => {
+        // Convert brand assets to FileRecord format
+        const brandAssetFiles: FileRecord[] = BRAND_ASSETS.map(asset => ({
+            id: asset.id,
+            name: asset.name,
+            downloadURL: asset.downloadURL,
+            type: asset.type,
+            size: asset.size,
+            storagePath: '',
+            folder: asset.folder,
+            isSystemAsset: asset.isSystemAsset,
+            createdAt: new Date().toISOString(),
+        } as unknown as FileRecord));
+
+        // Add folder property to user files (default to 'uploads')
+        const userFiles = globalFiles.map(file => ({
+            ...file,
+            folder: (file as any).folder || 'uploads',
+        }));
+
+        return [...brandAssetFiles, ...userFiles];
+    }, [globalFiles]);
+
+    // Filter files by selected folder
+    const filteredByFolder = useMemo(() => {
+        if (selectedFolder === 'all') return allFiles;
+        return allFiles.filter(file => (file as any).folder === selectedFolder);
+    }, [allFiles, selectedFolder]);
+
+    // Use the custom hook for asset management - now uses filteredByFolder
     const library = useAssetLibrary({
-        files: globalFiles,
+        files: filteredByFolder,
         itemsPerPage: 30
     });
 
@@ -77,6 +123,12 @@ const ImageLibraryManagement: React.FC<ImageLibraryManagementProps> = ({ onBack 
     };
 
     const handleSingleDelete = async (file: FileRecord) => {
+        // Protect system assets from deletion
+        if ((file as any).isSystemAsset) {
+            showError(t('superadmin.imageLibraryManagement.cannotDeleteSystem', 'Los assets del sistema no se pueden eliminar'));
+            return;
+        }
+
         if (!window.confirm(t('superadmin.imageLibraryManagement.deleteSingleConfirm', 'Delete this global asset?'))) return;
 
         try {
@@ -94,23 +146,23 @@ const ImageLibraryManagement: React.FC<ImageLibraryManagementProps> = ({ onBack 
                 onClose={() => setIsGeneratorOpen(false)}
                 destination="global"
             />
-            
+
             {/* Image Detail Modal */}
             {selectedImageForDetail && (
-                <div 
+                <div
                     className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in"
                     onClick={() => setSelectedImageForDetail(null)}
                 >
-                    <div 
+                    <div
                         className="bg-editor-bg border border-editor-border rounded-2xl shadow-2xl max-w-5xl w-full max-h-[90vh] overflow-hidden flex flex-col lg:flex-row animate-scale-in"
                         onClick={(e) => e.stopPropagation()}
                     >
                         {/* Image Preview */}
                         <div className="flex-1 min-h-[300px] lg:min-h-0 bg-black/50 flex items-center justify-center p-4">
-                            <img 
-                                src={selectedImageForDetail.downloadURL} 
-                                alt={selectedImageForDetail.name} 
-                                className="max-w-full max-h-[60vh] lg:max-h-[80vh] object-contain rounded-lg shadow-xl" 
+                            <img
+                                src={selectedImageForDetail.downloadURL}
+                                alt={selectedImageForDetail.name}
+                                className="max-w-full max-h-[60vh] lg:max-h-[80vh] object-contain rounded-lg shadow-xl"
                             />
                         </div>
 
@@ -124,7 +176,7 @@ const ImageLibraryManagement: React.FC<ImageLibraryManagementProps> = ({ onBack 
                                         {t('superadmin.imageLibraryManagement.imageDetails', 'Image Details')}
                                     </h3>
                                 </div>
-                                <button 
+                                <button
                                     onClick={() => setSelectedImageForDetail(null)}
                                     className="p-1.5 rounded-lg hover:bg-editor-border text-editor-text-secondary hover:text-editor-text-primary transition-colors"
                                 >
@@ -220,7 +272,7 @@ const ImageLibraryManagement: React.FC<ImageLibraryManagementProps> = ({ onBack 
                                                 </span>
                                             </div>
                                             <p className="text-sm font-medium text-editor-text-primary">
-                                                {selectedImageForDetail.createdAt 
+                                                {selectedImageForDetail.createdAt
                                                     ? new Date(selectedImageForDetail.createdAt).toLocaleString()
                                                     : 'Unknown'
                                                 }
@@ -285,6 +337,46 @@ const ImageLibraryManagement: React.FC<ImageLibraryManagementProps> = ({ onBack 
 
             <div className="flex h-screen bg-editor-bg text-editor-text-primary">
                 <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
+
+                {/* Folder Sidebar */}
+                {isFolderPanelOpen && (
+                    <aside className="w-56 flex-shrink-0 bg-editor-panel-bg border-r border-editor-border hidden md:flex flex-col overflow-y-auto">
+                        <div className="p-4 border-b border-editor-border">
+                            <div className="flex items-center gap-2">
+                                <FolderOpen size={18} className="text-editor-accent" />
+                                <h2 className="font-semibold text-sm">{t('superadmin.imageLibraryManagement.folders', 'Carpetas')}</h2>
+                            </div>
+                        </div>
+                        <nav className="flex-1 p-2 space-y-1">
+                            {DEFAULT_FOLDERS.map((folder) => (
+                                <button
+                                    key={folder.id}
+                                    onClick={() => setSelectedFolder(folder.id)}
+                                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left text-sm transition-all ${selectedFolder === folder.id
+                                        ? 'bg-editor-accent text-editor-bg font-semibold'
+                                        : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40'
+                                        }`}
+                                >
+                                    <span className={`flex-shrink-0 ${selectedFolder === folder.id ? 'text-editor-bg' : 'text-editor-text-secondary'}`}>
+                                        {FOLDER_ICONS[folder.icon] || <FolderOpen size={18} />}
+                                    </span>
+                                    <span className="truncate">{folder.name}</span>
+                                    {folder.isSystemFolder && (
+                                        <span className="ml-auto flex-shrink-0">
+                                            <Star size={12} className={selectedFolder === folder.id ? 'text-editor-bg' : 'text-yellow-500'} />
+                                        </span>
+                                    )}
+                                </button>
+                            ))}
+                        </nav>
+                        {/* Folder stats */}
+                        <div className="p-4 border-t border-editor-border">
+                            <p className="text-xs text-editor-text-secondary">
+                                {allFiles.length} {t('superadmin.imageLibraryManagement.totalImages', 'imágenes totales')}
+                            </p>
+                        </div>
+                    </aside>
+                )}
 
                 <div className="flex-1 flex flex-col overflow-hidden">
                     {/* Header */}

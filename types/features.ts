@@ -353,7 +353,7 @@ export interface ABTestConfig {
 // =============================================================================
 // COMPONENT STUDIO
 // =============================================================================
-export type EditableComponentID = 'hero' | 'heroSplit' | 'features' | 'services' | 'testimonials' | 'team' | 'cta' | 'slideshow' | 'pricing' | 'faq' | 'portfolio' | 'leads' | 'newsletter' | 'video' | 'howItWorks' | 'footer' | 'header' | 'chatbot' | 'typography' | 'map' | 'menu' | 'banner' | 'colors' | 'products' | 'storeSettings' | 'featuredProducts' | 'categoryGrid' | 'productHero' | 'saleCountdown' | 'trustBadges' | 'recentlyViewed' | 'productReviews' | 'collectionBanner' | 'productBundle' | 'announcementBar' | 'productDetail' | 'categoryProducts' | 'articleContent' | 'productGrid' | 'cart' | 'checkout';
+export type EditableComponentID = 'hero' | 'heroSplit' | 'features' | 'services' | 'testimonials' | 'team' | 'cta' | 'slideshow' | 'screenshotCarousel' | 'pricing' | 'faq' | 'portfolio' | 'leads' | 'newsletter' | 'video' | 'howItWorks' | 'footer' | 'header' | 'chatbot' | 'typography' | 'map' | 'menu' | 'banner' | 'colors' | 'products' | 'storeSettings' | 'featuredProducts' | 'categoryGrid' | 'productHero' | 'saleCountdown' | 'trustBadges' | 'recentlyViewed' | 'productReviews' | 'collectionBanner' | 'productBundle' | 'announcementBar' | 'productDetail' | 'categoryProducts' | 'articleContent' | 'productGrid' | 'cart' | 'checkout';
 export type ComponentStyles = Record<EditableComponentID, any>;
 export type ComponentCategory = 'hero' | 'cta' | 'form' | 'content' | 'navigation' | 'media' | 'other';
 
@@ -419,7 +419,7 @@ export interface CustomComponent {
     description?: string;
     baseComponent: EditableComponentID;
     styles: any;
-    
+
     // Versioning
     version: number;
     versions?: ComponentVersion[]; // Array of all versions
@@ -427,30 +427,30 @@ export interface CustomComponent {
     currentVersion?: number;
     lastModified?: { seconds: number; nanoseconds: number; };
     modifiedBy?: string;
-    
+
     // Organization
     category?: ComponentCategory;
     tags?: string[];
     thumbnail?: string;
-    
+
     // Variants
     variants?: ComponentVariant[];
     activeVariant?: string; // ID of the currently active variant
-    
+
     // Permissions & Usage
     permissions?: ComponentPermissions;
     isPublic?: boolean;
     createdBy?: string;
-    
+
     // Metadata
     createdAt: { seconds: number; nanoseconds: number; };
     updatedAt?: { seconds: number; nanoseconds: number; };
     usageCount?: number;
     projectsUsing?: string[];
-    
+
     // Documentation
     documentation?: ComponentDocumentation;
-    
+
     // Ratings
     ratings?: ComponentRating[];
     averageRating?: number;

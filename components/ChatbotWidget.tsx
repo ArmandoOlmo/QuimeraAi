@@ -9,6 +9,7 @@ import { getDefaultAppearanceConfig, getSizeClasses, getButtonSizeClasses, getSh
 import ChatCore, { ChatAppointmentData, AppointmentSlot } from './chat/ChatCore';
 import { db, collection, addDoc, getDocs, query, where, orderBy } from '../firebase';
 import { useSafeAuth } from '../contexts/core/AuthContext';
+import { useRouter } from '../hooks/useRouter';
 
 interface ChatbotWidgetProps {
     isPreview?: boolean;
@@ -159,8 +160,9 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
     const [appointments, setAppointments] = useState<AppointmentSlot[]>([]);
 
     // Detect if we're in the editor (editor view showing the preview)
-    // In editor mode, we disable pointer events to allow clicking through to other components
-    const isInEditor = view === 'editor';
+    // We use both the context view and the URL route to be robust
+    const { isEditorRoute } = useRouter();
+    const isInEditor = view === 'editor' || isEditorRoute;
 
     // Don't render if not active and not in preview
     if (!aiAssistantConfig.isActive && !isPreview) return null;
@@ -449,10 +451,10 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
     // Cap at 56% of viewport height or configured height, whichever is smaller (reduced 30%)
     const maxHeightValue = Math.min(configuredHeight, typeof window !== 'undefined' ? window.innerHeight * 0.56 : configuredHeight);
 
-    // Widget content
+    // Widget content - use absolute positioning in editor to stay within preview
     const widgetContent = (
         <div
-            className={`fixed z-[9999] flex flex-col items-end font-body ${isInEditor ? 'pointer-events-none' : ''}`}
+            className={`${isInEditor ? 'absolute' : 'fixed'} z-[9999] flex flex-col items-end font-body`}
             style={getPositionStyle()}
         >
             {/* Chat Window */}
@@ -542,7 +544,17 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
         </div>
     );
 
-    // Render the widget using a portal to ensure it's always on top
+    // In editor mode, try to use the preview overlay portal to avoid scrolling
+    // Outside editor, use global portal to ensure widget is always on top of the page
+    if (isInEditor) {
+        const previewOverlay = document.getElementById('browser-preview-overlay');
+        if (previewOverlay) {
+            return ReactDOM.createPortal(widgetContent, previewOverlay);
+        }
+        // Fallback if overlay not found (shouldn't happen)
+        return widgetContent;
+    }
+
     return typeof document !== 'undefined'
         ? ReactDOM.createPortal(widgetContent, document.body)
         : null;

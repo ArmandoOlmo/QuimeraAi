@@ -8,7 +8,7 @@ import {
     Shield, Users, LayoutTemplate, Bot, BarChart3, Puzzle,
     ArrowLeft, Menu, Image, MessageSquare, PackageSearch, Palette,
     FlaskConical, Languages, Search, FileText, FolderOpen,
-    Navigation, Star, Settings, Grid3x3, List, X, Sparkles, Zap, Newspaper
+    Navigation, Star, Settings, Grid3x3, List, X, Sparkles, Zap, Newspaper, Layout
 } from 'lucide-react';
 import DashboardSidebar from './DashboardSidebar';
 import AdminViewLayout from './admin/AdminViewLayout';
@@ -35,6 +35,7 @@ import GlobalTrackingPixels from './admin/GlobalTrackingPixels';
 import GlobalChatbotPromptsSettings from './admin/GlobalChatbotPromptsSettings';
 import ExecutionModeToggle from './admin/ExecutionModeToggle';
 import NewsManagement from './admin/NewsManagement';
+import LandingPageEditor from './admin/LandingPageEditor';
 
 // Types
 type AdminFeature = {
@@ -74,6 +75,7 @@ const ADMIN_ROUTES: Record<string, string> = {
     'changelog': ROUTES.ADMIN_CHANGELOG,
     'global-tracking-pixels': ROUTES.ADMIN_GLOBAL_TRACKING_PIXELS,
     'news': ROUTES.ADMIN_NEWS,
+    'landing-editor': ROUTES.ADMIN_LANDING_EDITOR,
 };
 
 // Components
@@ -237,6 +239,7 @@ const SuperAdminDashboard = () => {
         { id: 'images', title: t('superadmin.imageLibrary'), description: t('superadmin.imageLibraryDesc'), icon: <Image size={24} />, category: 'content', route: ROUTES.ADMIN_IMAGES, allowedRoles: ['owner', 'superadmin', 'admin'] },
         { id: 'admin-assets', title: t('superadmin.adminAssets'), description: t('superadmin.adminAssetsDesc'), icon: <FolderOpen size={24} />, category: 'content', route: ROUTES.ADMIN_ASSETS, isNew: true, allowedRoles: ['owner', 'superadmin', 'admin'] },
         { id: 'landing-navigation', title: t('superadmin.landingNavigation'), description: t('superadmin.landingNavigationDesc'), icon: <Navigation size={24} />, category: 'content', route: ROUTES.ADMIN_LANDING_NAVIGATION, allowedRoles: ['owner', 'superadmin', 'admin'] },
+        { id: 'landing-editor', title: t('superadmin.landingEditor', 'Editor Landing Page'), description: t('superadmin.landingEditorDesc', 'Editar componentes de la landing page con vista previa en tiempo real'), icon: <Layout size={24} />, category: 'content', route: ROUTES.ADMIN_LANDING_EDITOR, isNew: true, allowedRoles: ['owner', 'superadmin'] },
 
         // Development & Design
         { id: 'design-tokens', title: t('superadmin.designTokens'), description: t('superadmin.designTokensDesc'), icon: <Palette size={24} />, category: 'development', route: ROUTES.ADMIN_DESIGN_TOKENS, allowedRoles: ['owner', 'superadmin', 'admin'] },
@@ -314,6 +317,7 @@ const SuperAdminDashboard = () => {
     if (adminView === 'global-tracking-pixels') return <GlobalTrackingPixels onBack={handleBack} />;
     if (adminView === 'execution-mode') return <ExecutionModeToggle onBack={handleBack} />;
     if (adminView === 'news') return <NewsManagement onBack={handleBack} />;
+    if (adminView === 'landing-editor') return <LandingPageEditor onBack={handleBack} />;
     if (adminView === 'design-tokens') return <AdminViewLayout title={t('superadmin.designTokensTitle')} onBack={handleBack}><DesignTokensEditor /></AdminViewLayout>;
     if (adminView === 'analytics') return <AdminViewLayout title={t('superadmin.componentAnalyticsTitle')} onBack={handleBack} noPadding><AnalyticsDashboard /></AdminViewLayout>;
 

@@ -21,7 +21,8 @@ import { useCMS } from '../../../contexts/cms';
 import { CMSPost } from '../../../types';
 import {
     ArrowLeft, Save, Globe, Type, Loader2, Sparkles,
-    MoreVertical, Calendar, Check, X as XIcon, Link as LinkIcon
+    MoreVertical, Calendar, Check, X as XIcon, Link as LinkIcon,
+    Monitor, Tablet, Smartphone, Eye, EyeOff, Layout, Menu, RefreshCw
 } from 'lucide-react';
 
 import EditorMenuBar from './EditorMenuBar';
@@ -29,9 +30,11 @@ import EditorBubbleMenu from './EditorBubbleMenu';
 import SlashCommands from './SlashCommands';
 import ImagePicker from '../../ui/ImagePicker';
 import { generateContentViaProxy, extractTextFromResponse } from '../../../utils/geminiProxyClient';
-import SimpleEditorHeader from '../../SimpleEditorHeader';
+// import SimpleEditorHeader from '../../SimpleEditorHeader';
 import DashboardSidebar from '../../dashboard/DashboardSidebar';
 import { logApiCall } from '../../../services/apiLoggingService';
+
+type PreviewDevice = 'desktop' | 'tablet' | 'mobile';
 
 interface ModernCMSEditorProps {
     post: CMSPost | null;
@@ -60,6 +63,10 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
     const [isSaving, setIsSaving] = useState(false);
     const [isAiWorking, setIsAiWorking] = useState(false);
     const [lastSaved, setLastSaved] = useState<Date | null>(null);
+    const [previewDevice, setPreviewDevice] = useState<PreviewDevice>('desktop');
+    const [isPreviewVisible, setIsPreviewVisible] = useState(true);
+    // Refresh preview key (mostly for force re-renders if needed)
+    const [previewKey, setPreviewKey] = useState(0);
 
     // Link Modal
     const [showLinkModal, setShowLinkModal] = useState(false);
@@ -73,6 +80,15 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
     const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
 
     // TipTap Editor
+    // Get preview iframe/container width based on device
+    const previewWidth = React.useMemo(() => {
+        switch (previewDevice) {
+            case 'tablet': return 'max-w-[768px]';
+            case 'mobile': return 'max-w-[375px]';
+            default: return 'max-w-full';
+        }
+    }, [previewDevice]);
+
     const editor = useEditor({
         extensions: [
             StarterKit.configure({
@@ -417,8 +433,110 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
 
             {/* Main Content Area */}
             <div className="flex flex-col flex-1 min-w-0">
-                {/* Use the same SimpleEditorHeader as the rest of the app */}
-                <SimpleEditorHeader showSaveButton={false} showPublishButton={false} />
+                {/* Header - Replicated from LandingPageEditor */}
+                <header className="h-14 px-4 lg:px-6 border-b border-border flex items-center bg-background z-20 sticky top-0">
+                    {/* Left Section - Logo + Title + Badge */}
+                    <div className="flex items-center gap-3">
+                        <button
+                            onClick={() => setIsMobileSidebarOpen(true)}
+                            className="lg:hidden h-10 w-10 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary/80 rounded-xl transition-colors"
+                        >
+                            <Menu className="w-5 h-5" />
+                        </button>
+                        <div className="flex items-center gap-2">
+                            <Layout className="text-primary w-5 h-5" />
+                            <span className="text-sm sm:text-base font-semibold text-foreground">
+                                {t('cms_editor.title', 'Editor Landing Page')}
+                            </span>
+                        </div>
+
+                        {/* Unsaved changes indicator - "Cambios sin guardar" */}
+                        <span className="hidden sm:inline-flex px-2.5 py-1 text-xs font-medium bg-amber-500/20 text-amber-400 rounded-full">
+                            {t('editor.unsavedChanges', 'Cambios sin guardar')}
+                        </span>
+                    </div>
+
+                    {/* Center - Device Preview Toggle (compact style) */}
+                    <div className="hidden md:flex flex-1 justify-center">
+                        <div className="flex items-center gap-0.5 bg-secondary/60 rounded-md p-0.5">
+                            <button
+                                onClick={() => setPreviewDevice('desktop')}
+                                className={`p-1.5 rounded transition-colors ${previewDevice === 'desktop' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+                                title="Desktop"
+                            >
+                                <Monitor size={16} />
+                            </button>
+                            <button
+                                onClick={() => setPreviewDevice('tablet')}
+                                className={`p-1.5 rounded transition-colors ${previewDevice === 'tablet' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+                                title="Tablet"
+                            >
+                                <Tablet size={16} />
+                            </button>
+                            <button
+                                onClick={() => setPreviewDevice('mobile')}
+                                className={`p-1.5 rounded transition-colors ${previewDevice === 'mobile' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+                                title="Mobile"
+                            >
+                                <Smartphone size={16} />
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Right Section - Icons + Guardar + Volver */}
+                    <div className="flex items-center gap-2 ml-auto">
+                        {/* Refresh preview */}
+                        <button
+                            onClick={() => setPreviewKey(prev => prev + 1)}
+                            className="h-8 w-8 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                            title={t('landingEditor.refreshPreview', 'Refrescar vista previa')}
+                        >
+                            <RefreshCw size={16} />
+                        </button>
+
+                        {/* Toggle preview visibility */}
+                        <button
+                            onClick={() => setIsPreviewVisible(!isPreviewVisible)}
+                            className="h-8 w-8 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                            title={isPreviewVisible ? 'Ocultar vista previa' : 'Mostrar vista previa'}
+                        >
+                            {isPreviewVisible ? <EyeOff size={16} /> : <Eye size={16} />}
+                        </button>
+
+                        {/* Save button - Yellow/Primary style */}
+                        <button
+                            onClick={handleSave}
+                            disabled={isSaving}
+                            className="flex items-center gap-2 h-8 px-4 rounded-md text-sm font-medium transition-all bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-50"
+                        >
+                            {isSaving ? (
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                                <Save size={14} />
+                            )}
+                            <span className="hidden sm:inline">
+                                {t('common.save', 'Guardar')}
+                            </span>
+                        </button>
+
+                        {/* Volver button - Outlined style on the right */}
+                        <button
+                            onClick={onClose}
+                            className="flex items-center gap-1.5 h-8 px-3 rounded-md text-sm font-medium transition-all border border-border text-muted-foreground hover:text-foreground hover:bg-secondary"
+                        >
+                            <ArrowLeft className="w-4 h-4" />
+                            <span className="hidden sm:inline">{t('common.back', 'Volver')}</span>
+                        </button>
+
+                        {/* Sidebar Toggle */}
+                        <button
+                            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                            className={`h-9 w-9 flex items-center justify-center rounded-md transition-colors ${isSidebarOpen ? 'bg-accent text-accent-foreground' : 'text-muted-foreground hover:bg-secondary'}`}
+                        >
+                            <MoreVertical size={18} />
+                        </button>
+                    </div>
+                </header>
 
                 <input
                     type="file"
@@ -479,19 +597,18 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
                     />
                 )}
 
-                {/* CMS Editor Toolbar - Just below the main header */}
+                {/* CMS Editor Toolbar - Simplified, Remove Save Button */}
                 <div className="h-14 border-b border-border bg-card flex items-center justify-between px-6 shrink-0 shadow-sm">
                     <div className="flex items-center gap-4 flex-1">
-                        <button onClick={onClose} className="p-2 -ml-2 rounded-full text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors">
-                            <ArrowLeft size={20} />
-                        </button>
-                        <div className="h-6 w-px bg-border"></div>
-                        <input
-                            value={title}
-                            onChange={(e) => setTitle(e.target.value)}
-                            placeholder={t('cms_editor.titlePlaceholder')}
-                            className="bg-transparent text-xl font-bold placeholder:text-muted-foreground/50 focus:outline-none flex-1 text-foreground"
-                        />
+                        {/* Title input moved to header, keeping this bar for secondary controls or removing entirely? 
+                           The user request wants strict replication. The Admin Editor has 'Controls' on the right.
+                           But this is the CMS editor, so we might need this bar for different things. 
+                           I will keep the status toggles here but remove the Big Title Input and Save button since they are up top now.
+                       */}
+                        <div className="text-sm text-muted-foreground font-medium flex items-center gap-2">
+                            <Type size={16} />
+                            <span>{t('cms_editor.contentEditor')}</span>
+                        </div>
                     </div>
                     <div className="flex items-center gap-3">
                         {lastSaved && (
@@ -504,18 +621,13 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
                             <button onClick={() => setStatus('draft')} className={`px-3 py-1.5 rounded-md transition-all ${status === 'draft' ? 'bg-background shadow text-foreground' : 'text-muted-foreground hover:text-foreground'}`}>{t('cms_editor.draft')}</button>
                             <button onClick={() => setStatus('published')} className={`px-3 py-1.5 rounded-md transition-all ${status === 'published' ? 'bg-green-500/20 text-green-400' : 'text-muted-foreground hover:text-foreground'}`}>{t('cms_editor.published')}</button>
                         </div>
-                        <button onClick={handleSave} disabled={isSaving} className="flex items-center gap-2 bg-primary text-primary-foreground px-5 py-2 rounded-lg font-bold hover:opacity-90 transition-all disabled:opacity-50 shadow-md">
-                            {isSaving ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />} {t('cms_editor.save')}
-                        </button>
-                        <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className={`p-2 rounded-lg transition-colors ${isSidebarOpen ? 'bg-accent text-accent-foreground' : 'text-muted-foreground hover:bg-secondary'}`}>
-                            <MoreVertical size={20} />
-                        </button>
+                        {/* Save Button Removed from here */}
                     </div>
                 </div>
 
                 <div className="flex flex-1 overflow-hidden">
                     {/* Main Editor */}
-                    <div className="flex-1 flex flex-col min-w-0 bg-muted/30">
+                    <div className={`flex-1 flex flex-col min-w-0 bg-muted/30 transition-all duration-300`}>
                         <EditorMenuBar
                             editor={editor}
                             onImageUpload={triggerImageUpload}
@@ -523,8 +635,9 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
                             isAiWorking={isAiWorking}
                         />
 
-                        <div className="flex-1 overflow-y-auto p-8 flex justify-center bg-background">
-                            <div className="w-full max-w-[900px] min-h-[800px]">
+                        <div className="flex-1 overflow-y-auto p-8 flex justify-center bg-background/50">
+                            {/* Dynamic width container matching Landing Page Editor style */}
+                            <div className={`bg-background shadow-sm border border-border/50 rounded-xl overflow-hidden transition-all duration-300 ${previewWidth} ${isPreviewVisible ? 'opacity-100' : 'opacity-0 hidden'} min-h-[800px]`}>
                                 <EditorContent editor={editor} />
                                 <EditorBubbleMenu
                                     editor={editor}

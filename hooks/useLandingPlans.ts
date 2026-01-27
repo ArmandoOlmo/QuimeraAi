@@ -43,66 +43,66 @@ interface UseLandingPlansReturn {
  */
 function buildFeaturesList(plan: StoredPlan): string[] {
     const features: string[] = [];
-    
+
     // Límites
     if (plan.limits?.maxProjects) {
-        const projects = plan.limits.maxProjects === -1 
-            ? 'Proyectos ilimitados' 
+        const projects = plan.limits.maxProjects === -1
+            ? 'Proyectos ilimitados'
             : `${plan.limits.maxProjects} proyecto${plan.limits.maxProjects > 1 ? 's' : ''}`;
         features.push(projects);
     }
-    
+
     if (plan.limits?.maxAiCredits && plan.limits.maxAiCredits > 0) {
-        const credits = plan.limits.maxAiCredits === -1 
-            ? 'AI Credits ilimitados' 
+        const credits = plan.limits.maxAiCredits === -1
+            ? 'AI Credits ilimitados'
             : `${plan.limits.maxAiCredits.toLocaleString()} AI Credits/mes`;
         features.push(credits);
     }
-    
+
     if (plan.limits?.maxUsers && plan.limits.maxUsers > 1) {
-        const users = plan.limits.maxUsers === -1 
-            ? 'Usuarios ilimitados' 
+        const users = plan.limits.maxUsers === -1
+            ? 'Usuarios ilimitados'
             : `${plan.limits.maxUsers} usuarios`;
         features.push(users);
     }
-    
+
     // Features
     if (plan.features?.customDomains) {
         features.push('Dominios personalizados');
     }
-    
+
     if (plan.features?.ecommerceEnabled) {
         features.push('E-commerce integrado');
     }
-    
+
     if (plan.features?.chatbotEnabled) {
         features.push('AI Chatbot');
     }
-    
+
     if (plan.features?.emailMarketing) {
         features.push('Email Marketing');
     }
-    
+
     if (plan.features?.crmEnabled) {
         features.push('CRM integrado');
     }
-    
+
     if (plan.features?.analyticsAdvanced) {
         features.push('Analytics avanzados');
     } else if (plan.features?.analyticsBasic) {
         features.push('Analytics básicos');
     }
-    
+
     if (plan.features?.whiteLabel) {
         features.push('White-label completo');
     } else if (plan.features?.removeBranding) {
         features.push('Sin branding Quimera');
     }
-    
+
     if (plan.features?.apiAccess) {
         features.push('Acceso API');
     }
-    
+
     if (plan.features?.supportLevel) {
         const supportLabels: Record<string, string> = {
             'community': 'Soporte comunidad',
@@ -116,7 +116,7 @@ function buildFeaturesList(plan: StoredPlan): string[] {
             features.push(supportLabel);
         }
     }
-    
+
     return features;
 }
 
@@ -139,7 +139,7 @@ function getPlanOrder(planId: string): number {
  */
 function transformPlanForLanding(plan: StoredPlan): LandingPlan {
     const priceValue = plan.price?.monthly ?? 0;
-    
+
     return {
         id: plan.id,
         name: plan.name,
@@ -169,7 +169,7 @@ export function useLandingPlans(options?: {
     fallbackToAll?: boolean;
 }): UseLandingPlansReturn {
     const { fallbackToAll = true } = options ?? {};
-    
+
     const [rawPlans, setRawPlans] = useState<StoredPlan[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -178,14 +178,16 @@ export function useLandingPlans(options?: {
         try {
             setIsLoading(true);
             setError(null);
-            
-            const activePlans = await getActivePlans();
+
+            // Force refresh from Firestore to ensure latest showInLanding settings are loaded
+            // This is important because the landing page needs to reflect admin changes immediately
+            const activePlans = await getActivePlans(true);
             setRawPlans(activePlans);
-            
+
         } catch (err) {
             console.error('Error loading landing plans:', err);
             setError('Error al cargar los planes');
-            
+
             // Fallback a planes hardcodeados
             const fallbackPlans = Object.values(SUBSCRIPTION_PLANS) as StoredPlan[];
             setRawPlans(fallbackPlans);
@@ -200,9 +202,20 @@ export function useLandingPlans(options?: {
 
     // Transformar y filtrar planes
     const plans = useMemo(() => {
+        // Debug: Log all plans and their showInLanding status
+        console.log('[useLandingPlans] Raw plans from Firestore:', rawPlans.map(p => ({
+            id: p.id,
+            name: p.name,
+            showInLanding: p.showInLanding,
+            landingOrder: p.landingOrder,
+            isArchived: p.isArchived
+        })));
+
         // Filtrar solo los planes que tienen showInLanding = true
         let landingPlans = rawPlans.filter(p => p.showInLanding === true);
-        
+
+        console.log('[useLandingPlans] Plans with showInLanding=true:', landingPlans.length);
+
         // Si no hay planes con showInLanding y fallbackToAll está activo,
         // mostrar los 3 planes pagados más relevantes como fallback
         if (landingPlans.length === 0 && fallbackToAll) {
@@ -216,7 +229,7 @@ export function useLandingPlans(options?: {
                 })
                 .slice(0, 3);
         }
-        
+
         // Transformar y ordenar por landingOrder
         return landingPlans
             .map(transformPlanForLanding)

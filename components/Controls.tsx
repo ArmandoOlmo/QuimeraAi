@@ -17,7 +17,10 @@ import ColorControl from './ui/ColorControl';
 import GlobalStylesControl from './ui/GlobalStylesControl';
 import ImagePicker from './ui/ImagePicker';
 import IconSelector from './ui/IconSelector';
+import MobileBottomSheet from './ui/MobileBottomSheet';
+import TabletSlidePanel from './ui/TabletSlidePanel';
 import { useClickOutside } from '../hooks/useClickOutside';
+import { useViewportType } from '../hooks/use-mobile';
 import {
   Trash2, Plus, ChevronDown, ChevronRight, ChevronLeft, ChevronUp, ArrowLeft, HelpCircle,
   Layout, Image, List, Star, PlaySquare, Users, DollarSign,
@@ -419,10 +422,15 @@ const AccordionItem: React.FC<AccordionItemProps> = ({
 
 const Controls: React.FC = () => {
   const { t } = useTranslation();
+  const viewportType = useViewportType();
+  const isMobile = viewportType === 'mobile';
+  const isTablet = viewportType === 'tablet';
+  const isDesktop = viewportType === 'desktop';
   const { activeSection, onSectionSelect, activeSectionItem, isSidebarOpen, setIsSidebarOpen } = useUI();
   const {
     data, setData, sectionVisibility, setSectionVisibility,
     componentOrder, setComponentOrder, activeProject, updateProjectFavicon,
+    saveProject,
     // Page management
     pages, activePage, setActivePage, addPage, updatePage, deletePage, duplicatePage
   } = useProject();
@@ -443,6 +451,9 @@ const Controls: React.FC = () => {
   const [isAddComponentOpen, setIsAddComponentOpen] = useState(false);
   const addComponentRef = useRef<HTMLDivElement>(null);
   const [isTreeHiddenMobile, setIsTreeHiddenMobile] = useState(false);
+
+  // State for save button feedback
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
 
   // State for map geocoding
   const [isGeocoding, setIsGeocoding] = useState(false);
@@ -8149,77 +8160,35 @@ const Controls: React.FC = () => {
         />
       )}
 
+      {/* Left Panel: Sections List - Desktop only */}
       <div className={`
-        bg-editor-bg border-r border-editor-border flex
-        ${activeSection ? 'w-full md:w-[600px] lg:w-[700px]' : 'w-64'}
+        bg-card/50 border-r border-border w-64 lg:w-72 flex-shrink-0 flex flex-col overflow-hidden
         fixed inset-y-0 left-0 z-40 transform duration-300 ease-in-out
         md:relative md:inset-auto md:z-auto md:transform-none md:h-full
-        ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+        hidden md:flex
       `}>
-        {/* Left Panel: Page Selector + Component Tree - Siempre visible en desktop, colapsable en mobile cuando hay propiedades */}
-        <div className={`
-        w-64 flex-shrink-0 border-r border-editor-border transition-all duration-300 flex flex-col
-        ${activeSection && isTreeHiddenMobile ? 'hidden md:block' : ''}
-      `}>
-
-
-          {/* Component Tree for active page */}
-          <div className="flex-1 min-h-0">
-            <ComponentTree
-              componentOrder={effectiveComponentOrder}
-              activeSection={activeSection}
-              sectionVisibility={effectiveSectionVisibility}
-              componentStatus={componentStatus}
-              onSectionSelect={(section) => onSectionSelect(section as any)}
-              onToggleVisibility={toggleVisibility}
-              onReorder={(newOrder) => {
-                // Update the active page's sections
-                if (activePage) {
-                  updatePage(activePage.id, { sections: newOrder });
-                } else {
-                  setComponentOrder(newOrder);
-                }
-              }}
-              onAddComponent={handleAddComponent}
-              onRemoveComponent={handleRemoveComponent}
-              availableComponents={availableComponentsToAdd}
-            />
-          </div>
+        {/* Component Tree for active page */}
+        <div className="flex-1 min-h-0 overflow-hidden">
+          <ComponentTree
+            componentOrder={effectiveComponentOrder}
+            activeSection={activeSection}
+            sectionVisibility={effectiveSectionVisibility}
+            componentStatus={componentStatus}
+            onSectionSelect={(section) => onSectionSelect(section as any)}
+            onToggleVisibility={toggleVisibility}
+            onReorder={(newOrder) => {
+              // Update the active page's sections
+              if (activePage) {
+                updatePage(activePage.id, { sections: newOrder });
+              } else {
+                setComponentOrder(newOrder);
+              }
+            }}
+            onAddComponent={handleAddComponent}
+            onRemoveComponent={handleRemoveComponent}
+            availableComponents={availableComponentsToAdd}
+          />
         </div>
-
-        {/* Right Panel: Properties - Solo se muestra cuando hay una sección activa */}
-        {activeSection && (
-          <div className="flex-1 flex flex-col min-w-0 animate-fade-in">
-            {/* Header with Close Button */}
-            <div className="flex-shrink-0 p-4 border-b border-editor-border bg-editor-panel-bg/30">
-              <div className="flex items-center justify-between mb-1">
-                <h3 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider flex-1">
-                  {t('controls.properties')}
-                </h3>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onSectionSelect(null as any);
-                    // Close sidebar on mobile when closing properties
-                    setIsSidebarOpen(false);
-                  }}
-                  className="p-2.5 md:p-2 text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-panel-bg rounded-xl md:rounded-lg transition-colors touch-manipulation"
-                  title={t('controls.closePropertiesPanel')}
-                >
-                  <X size={20} className="md:w-[18px] md:h-[18px]" />
-                </button>
-              </div>
-              <p className="text-base font-semibold text-editor-text-primary">
-                {getSectionLabel(activeSection)}
-              </p>
-            </div>
-
-            {/* Controls */}
-            <div className="flex-1 overflow-y-auto p-4">
-              {renderActiveSectionControls()}
-            </div>
-          </div>
-        )}
 
         <AIContentAssistant
           isOpen={!!aiAssistField}
@@ -8229,6 +8198,229 @@ const Controls: React.FC = () => {
           contextPrompt={aiAssistField?.context || ''}
         />
       </div>
+
+      {/* Mobile Bottom Sheet: Sections List */}
+      <MobileBottomSheet
+        isOpen={isMobile && isSidebarOpen && !activeSection}
+        onClose={() => setIsSidebarOpen(false)}
+        title={t('controls.sections', 'Secciones')}
+      >
+        <div className="min-h-[50vh]">
+          <ComponentTree
+            componentOrder={effectiveComponentOrder}
+            activeSection={activeSection}
+            sectionVisibility={effectiveSectionVisibility}
+            componentStatus={componentStatus}
+            onSectionSelect={(section) => {
+              // Select section and close sections sheet (controls sheet will open)
+              onSectionSelect(section as any);
+            }}
+            onToggleVisibility={toggleVisibility}
+            onReorder={(newOrder) => {
+              if (activePage) {
+                updatePage(activePage.id, { sections: newOrder });
+              } else {
+                setComponentOrder(newOrder);
+              }
+            }}
+            onAddComponent={handleAddComponent}
+            onRemoveComponent={handleRemoveComponent}
+            availableComponents={availableComponentsToAdd}
+          />
+        </div>
+      </MobileBottomSheet>
+
+      {/* Right Panel: Properties/Controls - Desktop only */}
+      {activeSection && isDesktop && (
+        <div className="w-80 lg:w-96 border-l border-border bg-card/50 flex flex-col overflow-hidden flex-shrink-0 order-last hidden md:flex">
+          {/* Header */}
+          <div className="p-4 border-b border-border flex items-center justify-between">
+            <h2 className="font-semibold text-sm flex items-center gap-2">
+              <Settings size={16} className="text-primary" />
+              {t('landingEditor.editSection', 'Editar')}: <span className="capitalize">{getSectionLabel(activeSection)}</span>
+            </h2>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onSectionSelect(null as any);
+                // Close sidebar on mobile when closing properties
+                setIsSidebarOpen(false);
+              }}
+              className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+              title={t('controls.closePropertiesPanel')}
+            >
+              <X size={18} />
+            </button>
+          </div>
+
+          {/* Controls */}
+          <div className="flex-1 min-h-0 overflow-y-auto p-4">
+            {renderActiveSectionControls()}
+          </div>
+
+          {/* Apply Changes Button */}
+          <div className="p-4 border-t border-border flex-shrink-0">
+            <button
+              onClick={async () => {
+                if (saveStatus === 'saving') return;
+                setSaveStatus('saving');
+                try {
+                  await saveProject();
+                  setSaveStatus('saved');
+                  // Reset to idle after 2 seconds
+                  setTimeout(() => setSaveStatus('idle'), 2000);
+                } catch (error) {
+                  console.error('Error saving:', error);
+                  setSaveStatus('idle');
+                }
+              }}
+              disabled={saveStatus === 'saving'}
+              className={`w-full py-2.5 px-4 rounded-lg font-medium text-sm transition-all flex items-center justify-center gap-2 ${saveStatus === 'saved'
+                ? 'bg-green-500 text-white'
+                : saveStatus === 'saving'
+                  ? 'bg-primary/70 text-primary-foreground cursor-wait'
+                  : 'bg-primary text-primary-foreground hover:opacity-90'
+                }`}
+            >
+              <Check size={16} />
+              {saveStatus === 'saving'
+                ? t('common.saving', 'Guardando...')
+                : saveStatus === 'saved'
+                  ? t('common.saved', '¡Guardado!')
+                  : t('landingEditor.applyChanges', 'Aplicar cambios')}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Mobile Bottom Sheet for Controls */}
+      <MobileBottomSheet
+        isOpen={!!activeSection && isMobile}
+        onClose={() => {
+          // Deselect section and re-open sections sheet
+          onSectionSelect(null as any);
+          setIsSidebarOpen(true);
+        }}
+        title={activeSection ? getSectionLabel(activeSection) : ''}
+        subtitle={t('landingEditor.editSection', 'Editar sección')}
+      >
+        {/* Controls */}
+        <div className="p-4">
+          {renderActiveSectionControls()}
+        </div>
+
+        {/* Apply Changes Button - Sticky at bottom */}
+        <div className="sticky bottom-0 p-4 border-t border-border bg-card flex-shrink-0">
+          <button
+            onClick={async () => {
+              if (saveStatus === 'saving') return;
+              setSaveStatus('saving');
+              try {
+                await saveProject();
+                setSaveStatus('saved');
+                // Reset to idle after 2 seconds
+                setTimeout(() => setSaveStatus('idle'), 2000);
+              } catch (error) {
+                console.error('Error saving:', error);
+                setSaveStatus('idle');
+              }
+            }}
+            disabled={saveStatus === 'saving'}
+            className={`w-full py-3 px-4 rounded-lg font-medium text-sm transition-all flex items-center justify-center gap-2 ${saveStatus === 'saved'
+              ? 'bg-green-500 text-white'
+              : saveStatus === 'saving'
+                ? 'bg-primary/70 text-primary-foreground cursor-wait'
+                : 'bg-primary text-primary-foreground hover:opacity-90'
+              }`}
+          >
+            <Check size={16} />
+            {saveStatus === 'saving'
+              ? t('common.saving', 'Guardando...')
+              : saveStatus === 'saved'
+                ? t('common.saved', '¡Guardado!')
+                : t('landingEditor.applyChanges', 'Aplicar cambios')}
+          </button>
+        </div>
+      </MobileBottomSheet>
+
+      {/* Tablet Slide Panel: Sections List */}
+      <TabletSlidePanel
+        isOpen={isTablet && isSidebarOpen && !activeSection}
+        onClose={() => setIsSidebarOpen(false)}
+        title={t('controls.sections', 'Secciones')}
+        position="left"
+      >
+        <div className="min-h-[60vh]">
+          <ComponentTree
+            componentOrder={effectiveComponentOrder}
+            activeSection={activeSection}
+            sectionVisibility={effectiveSectionVisibility}
+            componentStatus={componentStatus}
+            onSectionSelect={(section) => {
+              onSectionSelect(section as any);
+            }}
+            onToggleVisibility={toggleVisibility}
+            onReorder={(newOrder) => {
+              if (activePage) {
+                updatePage(activePage.id, { sections: newOrder });
+              } else {
+                setComponentOrder(newOrder);
+              }
+            }}
+            onAddComponent={handleAddComponent}
+            onRemoveComponent={handleRemoveComponent}
+            availableComponents={availableComponentsToAdd}
+          />
+        </div>
+      </TabletSlidePanel>
+
+      {/* Tablet Slide Panel: Controls */}
+      <TabletSlidePanel
+        isOpen={isTablet && !!activeSection}
+        onClose={() => {
+          onSectionSelect(null as any);
+          setIsSidebarOpen(true);
+        }}
+        title={activeSection ? getSectionLabel(activeSection) : ''}
+        position="left"
+      >
+        {/* Controls */}
+        <div className="p-4">
+          {renderActiveSectionControls()}
+        </div>
+
+        {/* Apply Changes Button - Sticky at bottom */}
+        <div className="sticky bottom-0 p-4 border-t border-border bg-card flex-shrink-0">
+          <button
+            onClick={async () => {
+              if (saveStatus === 'saving') return;
+              setSaveStatus('saving');
+              try {
+                await saveProject();
+                setSaveStatus('saved');
+                setTimeout(() => setSaveStatus('idle'), 2000);
+              } catch (error) {
+                console.error('Error saving:', error);
+                setSaveStatus('idle');
+              }
+            }}
+            disabled={saveStatus === 'saving'}
+            className={`w-full py-3 px-4 rounded-lg font-medium text-sm transition-all flex items-center justify-center gap-2 ${saveStatus === 'saved'
+              ? 'bg-green-500 text-white'
+              : saveStatus === 'saving'
+                ? 'bg-primary/70 text-primary-foreground cursor-wait'
+                : 'bg-primary text-primary-foreground hover:opacity-90'
+              }`}
+          >
+            <Check size={16} />
+            {saveStatus === 'saving'
+              ? t('common.saving', 'Guardando...')
+              : saveStatus === 'saved'
+                ? t('common.saved', '¡Guardado!')
+                : t('landingEditor.applyChanges', 'Aplicar cambios')}
+          </button>
+        </div>
+      </TabletSlidePanel>
 
       {/* Page Settings Modal */}
       {showPageSettings && (

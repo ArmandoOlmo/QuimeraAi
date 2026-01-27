@@ -2784,6 +2784,8 @@
     "landingChatbot": "Chatbot de Landing",
     "landingChatbotDesc": "Configurar chatbot para la landing page pública de Quimera.ai",
     "newsDesc": "Gestionar noticias y actualizaciones para el dashboard de usuarios",
+    "landingEditor": "Editor de Landing Page",
+    "landingEditorDesc": "Editar componentes de la landing page con vista previa en tiempo real",
     "categoryCore": "Principal",
     "categoryMultilingual": "Multilingüe",
     "categoryTechnical": "Técnico",
