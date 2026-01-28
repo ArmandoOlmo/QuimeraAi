@@ -113,7 +113,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const isUserOwner = isOwner(user?.email || '');
     const currentTenant = userDocument?.tenantId || null;
     const currentTenantRole = userDocument?.tenantRole || null;
-    const canAccessSuperAdmin = ['owner', 'superadmin', 'admin', 'manager'].includes(userDocument?.role || '');
+    // Include isUserOwner as fallback to handle race condition where userDocument.role
+    // hasn't loaded yet but we can verify owner by email
+    const canAccessSuperAdmin = isUserOwner || ['owner', 'superadmin', 'admin', 'manager'].includes(userDocument?.role || '');
 
     // Functions
     const canPerform = (permission: keyof RolePermissions): boolean => {
