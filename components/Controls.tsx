@@ -428,12 +428,20 @@ const Controls: React.FC = () => {
   const isDesktop = viewportType === 'desktop';
   const { activeSection, onSectionSelect, activeSectionItem, isSidebarOpen, setIsSidebarOpen } = useUI();
   const {
-    data, setData, sectionVisibility, setSectionVisibility,
+    data, setData,
     componentOrder, setComponentOrder, activeProject, updateProjectFavicon,
     saveProject,
     // Page management
-    pages, activePage, setActivePage, addPage, updatePage, deletePage, duplicatePage
+    pages, activePage, setActivePage, addPage, updatePage, deletePage, duplicatePage,
+    // Note: sectionVisibility comes from ProjectContext but we need to sync with EditorContext 
+    sectionVisibility: projectSectionVisibility
   } = useProject();
+
+  // Use EditorContext's sectionVisibility for real-time preview sync
+  // LandingPage.tsx reads from EditorContext when in editor mode
+  const editorContext = useEditor();
+  const sectionVisibility = editorContext.sectionVisibility;
+  const setSectionVisibility = editorContext.setSectionVisibility;
   const { uploadImageAndGetURL } = useFiles();
   const { menus } = useCMS();
 

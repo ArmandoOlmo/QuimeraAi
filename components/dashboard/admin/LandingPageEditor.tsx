@@ -7,13 +7,17 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-    ArrowLeft, Menu, Save, Eye, EyeOff, Settings, Layers, Plus,
+    ArrowLeft, Menu as MenuIcon, Save, Eye, EyeOff, Settings, Layers, Plus,
     GripVertical, Trash2, ChevronDown, ChevronUp, Monitor, Tablet,
     Smartphone, RotateCcw, Loader2, Check, Image, Type, Layout,
-    Sparkles, X, RefreshCw
+    Sparkles, X, RefreshCw, Palette
 } from 'lucide-react';
 import DashboardSidebar from '../DashboardSidebar';
 import LandingPageControls from './LandingPageControls';
+import Modal from '../../ui/Modal';
+import { GlobalColors } from '../../../types';
+import { doc, setDoc, getDoc } from '../../../firebase';
+import { db } from '../../../firebase';
 
 // Types for landing page sections
 interface LandingSection {
@@ -30,7 +34,7 @@ interface LandingPageEditorProps {
 
 type PreviewDevice = 'desktop' | 'tablet' | 'mobile';
 
-// Available components for landing page
+// Available components for landing page (CONTENIDO section)
 const AVAILABLE_COMPONENTS = [
     { type: 'hero', label: 'Hero Principal', icon: <Layout size={18} /> },
     { type: 'heroModern', label: 'Hero Moderno', icon: <Layout size={18} /> },
@@ -41,7 +45,14 @@ const AVAILABLE_COMPONENTS = [
     { type: 'faq', label: 'Preguntas Frecuentes', icon: <Type size={18} /> },
     { type: 'cta', label: 'Llamada a Acción', icon: <Type size={18} /> },
     { type: 'screenshotCarousel', label: 'Carrusel de Screenshots', icon: <Image size={18} />, isNew: true },
-    { type: 'footer', label: 'Footer', icon: <Layout size={18} /> },
+];
+
+// Structure items for global settings (ESTRUCTURA section)
+const STRUCTURE_ITEMS = [
+    { id: 'colors', type: 'colors', label: 'Colores', icon: <Palette size={18} /> },
+    { id: 'typography', type: 'typography', label: 'Tipografía', icon: <Type size={18} /> },
+    { id: 'navigation', type: 'header', label: 'Navegación', icon: <MenuIcon size={18} /> },
+    { id: 'footerGlobal', type: 'footer', label: 'Pie de Página', icon: <Layout size={18} /> },
 ];
 
 const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
@@ -50,10 +61,16 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
 
     // Editor state
     const [sections, setSections] = useState<LandingSection[]>([]);
+    const [originalSections, setOriginalSections] = useState<LandingSection[]>([]); // For undo/reset
     const [selectedSection, setSelectedSection] = useState<string | null>(null);
+    const [selectedStructureItem, setSelectedStructureItem] = useState<string | null>(null);
     const [previewDevice, setPreviewDevice] = useState<PreviewDevice>('desktop');
     const [isPreviewVisible, setIsPreviewVisible] = useState(true);
     const [showAddComponent, setShowAddComponent] = useState(false);
+
+    // Group expansion state
+    const [isStructureExpanded, setIsStructureExpanded] = useState(true);
+    const [isContentExpanded, setIsContentExpanded] = useState(true);
 
     // Save state
     const [isSaving, setIsSaving] = useState(false);
@@ -64,12 +81,16 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
     // Preview refresh
     const [previewKey, setPreviewKey] = useState(0);
 
+    // Reset confirmation modal
+    const [showResetConfirm, setShowResetConfirm] = useState(false);
+
     // Iframe ref for postMessage
     const iframeRef = useRef<HTMLIFrameElement>(null);
 
     // Send updates to preview iframe when sections change
     useEffect(() => {
         if (iframeRef.current?.contentWindow) {
+            console.log('[Editor] Sending sections to preview:', sections.length, sections.map(s => ({ id: s.id, data: s.data })));
             iframeRef.current.contentWindow.postMessage({
                 type: 'LANDING_EDITOR_UPDATE',
                 sections: sections
@@ -77,14 +98,63 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
         }
     }, [sections]);
 
-    // Load landing page configuration
+    // Listen for PREVIEW_READY message from iframe and send current state
+    useEffect(() => {
+        const handleMessage = (event: MessageEvent) => {
+            if (event.origin !== window.location.origin) return;
+
+            if (event.data?.type === 'PREVIEW_READY') {
+                console.log('[Editor] Preview ready, sending current sections');
+                if (iframeRef.current?.contentWindow) {
+                    iframeRef.current.contentWindow.postMessage({
+                        type: 'LANDING_EDITOR_UPDATE',
+                        sections: sections
+                    }, window.location.origin);
+                }
+            }
+        };
+
+        window.addEventListener('message', handleMessage);
+        return () => window.removeEventListener('message', handleMessage);
+    }, [sections]);
+
+    // Load landing page configuration from Firestore
     useEffect(() => {
         const loadConfiguration = async () => {
             setIsLoading(true);
-            // TODO: Load from Firestore appSettings/landingPage
-            // For now, load default sections
+            try {
+                const settingsRef = doc(db, 'globalSettings', 'landingPage');
+                const settingsSnap = await getDoc(settingsRef);
+
+                if (settingsSnap.exists()) {
+                    const data = settingsSnap.data();
+                    if (data.sections && Array.isArray(data.sections)) {
+                        setSections(data.sections);
+                        setOriginalSections(JSON.parse(JSON.stringify(data.sections))); // Deep copy for reset
+                        if (data.lastUpdated) {
+                            setLastSaved(new Date(data.lastUpdated));
+                        }
+                        setIsLoading(false);
+                        return;
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading landing page configuration:', error);
+            }
+
+            // Fallback to default sections if no saved data
             const defaultSections: LandingSection[] = [
                 { id: 'header', type: 'header', enabled: true, order: 0, data: {} },
+                {
+                    id: 'typography', type: 'typography', enabled: true, order: -1, data: {
+                        headingFont: 'poppins',
+                        bodyFont: 'mulish',
+                        buttonFont: 'poppins',
+                        headingsCaps: false,
+                        buttonsCaps: false,
+                        navLinksCaps: false,
+                    }
+                },
                 { id: 'hero', type: 'hero', enabled: true, order: 1, data: {} },
                 { id: 'features', type: 'features', enabled: true, order: 2, data: {} },
                 { id: 'pricing', type: 'pricing', enabled: true, order: 3, data: {} },
@@ -94,27 +164,35 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
                 { id: 'footer', type: 'footer', enabled: true, order: 7, data: {} },
             ];
             setSections(defaultSections);
+            setOriginalSections(JSON.parse(JSON.stringify(defaultSections))); // Deep copy for reset
             setIsLoading(false);
         };
         loadConfiguration();
     }, []);
 
-    // Handle save
+    // Handle save to Firestore
     const handleSave = useCallback(async () => {
         setIsSaving(true);
         try {
-            // TODO: Save to Firestore appSettings/landingPage
-            await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate save
+            const settingsRef = doc(db, 'globalSettings', 'landingPage');
+            const payload = {
+                sections: sections,
+                lastUpdated: new Date().toISOString(),
+            };
+            await setDoc(settingsRef, payload, { merge: true });
             setHasUnsavedChanges(false);
             setLastSaved(new Date());
+            setOriginalSections(JSON.parse(JSON.stringify(sections))); // Update original after save
             // Refresh preview
             setPreviewKey(prev => prev + 1);
+            console.log('[LandingPageEditor] Saved to Firestore successfully');
         } catch (error) {
             console.error('Error saving landing page:', error);
+            alert(t('common.errorSaving', { defaultValue: '❌ Error saving. Please try again.' }));
         } finally {
             setIsSaving(false);
         }
-    }, [sections]);
+    }, [sections, t]);
 
     // Toggle section visibility
     const toggleSection = (id: string) => {
@@ -171,6 +249,92 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
         setHasUnsavedChanges(true);
     }, []);
 
+    /**
+     * Mapeo de colores globales a cada tipo de sección del landing page
+     */
+    const generateLandingSectionColorMappings = (colors: GlobalColors): Record<string, Record<string, string>> => ({
+        hero: {
+            backgroundColor: colors.background,
+            textColor: colors.text,
+            accentColor: colors.primary,
+        },
+        heroModern: {
+            backgroundColor: colors.background,
+            textColor: colors.text,
+            accentColor: colors.primary,
+        },
+        heroGradient: {
+            backgroundColor: colors.background,
+            textColor: colors.text,
+            accentColor: colors.primary,
+        },
+        features: {
+            backgroundColor: colors.surface,
+            textColor: colors.text,
+            accentColor: colors.primary,
+        },
+        pricing: {
+            backgroundColor: colors.background,
+            textColor: colors.text,
+            accentColor: colors.primary,
+        },
+        testimonials: {
+            backgroundColor: colors.surface,
+            textColor: colors.text,
+            accentColor: colors.secondary,
+        },
+        faq: {
+            backgroundColor: colors.background,
+            textColor: colors.text,
+            accentColor: colors.primary,
+        },
+        cta: {
+            backgroundColor: colors.primary,
+            textColor: '#ffffff',
+            accentColor: colors.secondary,
+        },
+        footer: {
+            backgroundColor: colors.surface,
+            textColor: colors.textMuted,
+            accentColor: colors.primary,
+        },
+        header: {
+            backgroundColor: colors.background,
+            textColor: colors.text,
+            accentColor: colors.primary,
+        },
+        screenshotCarousel: {
+            backgroundColor: colors.background,
+            textColor: colors.text,
+            accentColor: colors.primary,
+        },
+    });
+
+    /**
+     * Aplica colores globales a TODAS las secciones del landing page
+     */
+    const applyGlobalColorsToAllSections = useCallback((colors: GlobalColors) => {
+        const colorMappings = generateLandingSectionColorMappings(colors);
+
+        setSections(prev => prev.map(section => {
+            const sectionColors = colorMappings[section.type];
+            if (sectionColors) {
+                return {
+                    ...section,
+                    data: {
+                        ...section.data,
+                        ...sectionColors
+                    }
+                };
+            }
+            return section;
+        }));
+
+        setHasUnsavedChanges(true);
+        // Refresh preview
+        setPreviewKey(prev => prev + 1);
+    }, []);
+
     // Get preview iframe width based on device
     const previewWidth = useMemo(() => {
         switch (previewDevice) {
@@ -199,8 +363,15 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
     // Handle section selection - select and scroll to section
     const handleSectionSelect = useCallback((sectionId: string, sectionType: string) => {
         setSelectedSection(sectionId);
+        setSelectedStructureItem(null); // Clear structure selection
         scrollToSection(sectionType);
     }, [scrollToSection]);
+
+    // Handle structure item selection (Colores, Tipografía, etc.)
+    const handleStructureSelect = useCallback((itemId: string) => {
+        setSelectedStructureItem(itemId);
+        setSelectedSection(null); // Clear section selection
+    }, []);
 
     if (isLoading) {
         return (
@@ -224,7 +395,7 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
                             onClick={() => setIsMobileMenuOpen(true)}
                             className="lg:hidden h-10 w-10 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary/80 rounded-xl transition-colors"
                         >
-                            <Menu className="w-5 h-5" />
+                            <MenuIcon className="w-5 h-5" />
                         </button>
                         <div className="flex items-center gap-2">
                             <Layout className="text-primary w-5 h-5" />
@@ -288,6 +459,18 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
                             {isPreviewVisible ? <EyeOff size={18} /> : <Eye size={18} />}
                         </button>
 
+                        {/* Reset/Undo button */}
+                        {hasUnsavedChanges && (
+                            <button
+                                onClick={() => setShowResetConfirm(true)}
+                                className="flex items-center gap-2 h-9 px-3 rounded-md text-sm font-medium transition-all bg-amber-500/10 text-amber-500 hover:bg-amber-500/20"
+                                title={t('landingEditor.resetChanges', 'Descartar cambios')}
+                            >
+                                <RotateCcw size={16} />
+                                <span className="hidden sm:inline">{t('landingEditor.reset', 'Deshacer')}</span>
+                            </button>
+                        )}
+
                         {/* Save button */}
                         <button
                             onClick={handleSave}
@@ -320,10 +503,10 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
 
                 {/* Main Content - Three Panel Layout */}
                 <main className="flex-1 flex overflow-hidden">
-                    {/* Left Panel - Component List */}
+                    {/* Left Panel - Grouped Component List */}
                     <div className="w-64 lg:w-72 border-r border-border bg-card/50 flex flex-col overflow-hidden">
                         <div className="p-4 border-b border-border flex items-center justify-between">
-                            <h2 className="font-semibold text-sm">{t('landingEditor.sections', 'Secciones')}</h2>
+                            <h2 className="font-semibold text-sm">{t('landingEditor.pageStructure', 'ESTRUCTURA DE PÁGINA')}</h2>
                             <button
                                 onClick={() => setShowAddComponent(true)}
                                 className="h-8 w-8 flex items-center justify-center rounded-md bg-primary text-primary-foreground hover:opacity-90 transition-colors"
@@ -333,60 +516,84 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
                             </button>
                         </div>
 
-                        {/* Section List */}
-                        <div className="flex-1 overflow-y-auto p-2 space-y-1">
-                            {sections.map((section, idx) => (
-                                <div
-                                    key={section.id}
-                                    onClick={() => handleSectionSelect(section.id, section.type)}
-                                    className={`group flex items-center gap-2 p-3 rounded-lg cursor-pointer transition-colors ${selectedSection === section.id
-                                        ? 'bg-primary/10 border border-primary/30'
-                                        : 'hover:bg-secondary/50 border border-transparent'
-                                        } ${!section.enabled ? 'opacity-50' : ''}`}
+                        {/* Scrollable content */}
+                        <div className="flex-1 overflow-y-auto p-2">
+                            {/* ESTRUCTURA Group */}
+                            <div className="mb-4">
+                                <button
+                                    onClick={() => setIsStructureExpanded(!isStructureExpanded)}
+                                    className="w-full flex items-center gap-2 px-2 py-2 text-xs font-bold text-primary uppercase tracking-wider hover:bg-secondary/30 rounded transition-colors"
                                 >
-                                    <GripVertical size={14} className="text-muted-foreground flex-shrink-0" />
+                                    <ChevronDown size={14} className={`transition-transform ${isStructureExpanded ? '' : '-rotate-90'}`} />
+                                    <span>{t('landingEditor.structure', 'ESTRUCTURA')}</span>
+                                    <span className="text-muted-foreground">({STRUCTURE_ITEMS.length})</span>
+                                </button>
 
-                                    <div className="flex-1 min-w-0">
-                                        <p className="text-sm font-medium truncate capitalize">
-                                            {section.type}
-                                        </p>
+                                {isStructureExpanded && (
+                                    <div className="mt-1 space-y-0.5 pl-2">
+                                        {STRUCTURE_ITEMS.map((item) => (
+                                            <button
+                                                key={item.id}
+                                                onClick={() => handleStructureSelect(item.id)}
+                                                className={`w-full flex items-center gap-2 p-2.5 rounded-lg cursor-pointer transition-colors text-left ${selectedStructureItem === item.id
+                                                    ? 'bg-primary/10 border border-primary/30'
+                                                    : 'hover:bg-secondary/50 border border-transparent'
+                                                    }`}
+                                            >
+                                                <span className="text-muted-foreground">{item.icon}</span>
+                                                <span className="text-sm font-medium">{item.label}</span>
+                                            </button>
+                                        ))}
                                     </div>
+                                )}
+                            </div>
 
-                                    {/* Section actions */}
-                                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        {idx > 1 && (
-                                            <button
-                                                onClick={(e) => { e.stopPropagation(); moveSection(section.id, 'up'); }}
-                                                className="p-1 rounded hover:bg-secondary"
+                            {/* CONTENIDO Group */}
+                            <div>
+                                <button
+                                    onClick={() => setIsContentExpanded(!isContentExpanded)}
+                                    className="w-full flex items-center gap-2 px-2 py-2 text-xs font-bold text-primary uppercase tracking-wider hover:bg-secondary/30 rounded transition-colors"
+                                >
+                                    <ChevronDown size={14} className={`transition-transform ${isContentExpanded ? '' : '-rotate-90'}`} />
+                                    <span>{t('landingEditor.content', 'CONTENIDO')}</span>
+                                    <span className="text-muted-foreground">({sections.filter(s => s.type !== 'header' && s.type !== 'footer').length})</span>
+                                </button>
+
+                                {isContentExpanded && (
+                                    <div className="mt-1 space-y-0.5 pl-2">
+                                        {sections.filter(s => s.type !== 'header' && s.type !== 'footer').map((section, idx) => (
+                                            <div
+                                                key={section.id}
+                                                onClick={() => handleSectionSelect(section.id, section.type)}
+                                                className={`group flex items-center gap-2 p-2.5 rounded-lg cursor-pointer transition-colors ${selectedSection === section.id
+                                                    ? 'bg-primary/10 border border-primary/30'
+                                                    : 'hover:bg-secondary/50 border border-transparent'
+                                                    } ${!section.enabled ? 'opacity-50' : ''}`}
                                             >
-                                                <ChevronUp size={14} />
-                                            </button>
-                                        )}
-                                        {idx < sections.length - 1 && section.type !== 'footer' && (
-                                            <button
-                                                onClick={(e) => { e.stopPropagation(); moveSection(section.id, 'down'); }}
-                                                className="p-1 rounded hover:bg-secondary"
-                                            >
-                                                <ChevronDown size={14} />
-                                            </button>
-                                        )}
-                                        <button
-                                            onClick={(e) => { e.stopPropagation(); toggleSection(section.id); }}
-                                            className="p-1 rounded hover:bg-secondary"
-                                        >
-                                            {section.enabled ? <Eye size={14} /> : <EyeOff size={14} />}
-                                        </button>
-                                        {section.type !== 'header' && section.type !== 'footer' && (
-                                            <button
-                                                onClick={(e) => { e.stopPropagation(); deleteSection(section.id); }}
-                                                className="p-1 rounded hover:bg-destructive/20 text-destructive"
-                                            >
-                                                <Trash2 size={14} />
-                                            </button>
-                                        )}
+                                                <GripVertical size={14} className="text-muted-foreground flex-shrink-0" />
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="text-sm font-medium truncate capitalize">{section.type}</p>
+                                                </div>
+                                                {/* Section actions */}
+                                                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <button
+                                                        onClick={(e) => { e.stopPropagation(); toggleSection(section.id); }}
+                                                        className="p-1 rounded hover:bg-secondary"
+                                                    >
+                                                        {section.enabled ? <Eye size={14} /> : <EyeOff size={14} />}
+                                                    </button>
+                                                    <button
+                                                        onClick={(e) => { e.stopPropagation(); deleteSection(section.id); }}
+                                                        className="p-1 rounded hover:bg-destructive/20 text-destructive"
+                                                    >
+                                                        <Trash2 size={14} />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ))}
                                     </div>
-                                </div>
-                            ))}
+                                )}
+                            </div>
                         </div>
 
                         {/* Last saved indicator */}
@@ -417,7 +624,32 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
 
                     {/* Right Panel - Component Controls */}
                     <div className={`${isPreviewVisible ? 'w-80 lg:w-96' : 'flex-1 max-w-2xl mx-auto'} border-l border-border bg-card/50 flex flex-col overflow-hidden`}>
-                        {currentSection ? (
+                        {/* Structure Item Controls (Colores, Tipografía, etc.) */}
+                        {selectedStructureItem ? (
+                            <>
+                                <div className="p-4 border-b border-border">
+                                    <h2 className="font-semibold text-sm flex items-center gap-2">
+                                        <Settings size={16} className="text-primary" />
+                                        {t('landingEditor.edit', 'Editar')}: <span className="capitalize">
+                                            {STRUCTURE_ITEMS.find(i => i.id === selectedStructureItem)?.label || selectedStructureItem}
+                                        </span>
+                                    </h2>
+                                </div>
+                                <LandingPageControls
+                                    section={{
+                                        id: selectedStructureItem,
+                                        type: STRUCTURE_ITEMS.find(i => i.id === selectedStructureItem)?.type || selectedStructureItem,
+                                        enabled: true,
+                                        order: 0,
+                                        data: sections.find(s => s.type === STRUCTURE_ITEMS.find(i => i.id === selectedStructureItem)?.type)?.data || {}
+                                    }}
+                                    onUpdateSection={updateSectionData}
+                                    onRefreshPreview={() => setPreviewKey(prev => prev + 1)}
+                                    allSections={sections}
+                                    onApplyGlobalColors={applyGlobalColorsToAllSections}
+                                />
+                            </>
+                        ) : currentSection ? (
                             <>
                                 <div className="p-4 border-b border-border">
                                     <h2 className="font-semibold text-sm flex items-center gap-2">
@@ -429,6 +661,8 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
                                     section={currentSection}
                                     onUpdateSection={updateSectionData}
                                     onRefreshPreview={() => setPreviewKey(prev => prev + 1)}
+                                    allSections={sections}
+                                    onApplyGlobalColors={applyGlobalColorsToAllSections}
                                 />
                             </>
                         ) : (
@@ -483,6 +717,39 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
                     </div>
                 </div>
             )}
+
+            {/* Reset Confirmation Modal */}
+            <Modal
+                isOpen={showResetConfirm}
+                onClose={() => setShowResetConfirm(false)}
+                maxWidth="max-w-md"
+            >
+                <div className="p-6">
+                    <h3 className="text-xl font-bold mb-4">{t('common.confirm', 'Confirmar')}</h3>
+                    <p className="text-muted-foreground mb-6">
+                        {t('landingEditor.confirmReset', '¿Descartar todos los cambios no guardados?')}
+                    </p>
+                    <div className="flex justify-end gap-3">
+                        <button
+                            onClick={() => setShowResetConfirm(false)}
+                            className="px-4 py-2 rounded-lg hover:bg-secondary transition-colors"
+                        >
+                            {t('common.cancel', 'Cancelar')}
+                        </button>
+                        <button
+                            onClick={() => {
+                                setSections(JSON.parse(JSON.stringify(originalSections)));
+                                setHasUnsavedChanges(false);
+                                setPreviewKey(prev => prev + 1);
+                                setShowResetConfirm(false);
+                            }}
+                            className="px-4 py-2 rounded-lg bg-amber-500 hover:bg-amber-600 text-white transition-colors"
+                        >
+                            {t('landingEditor.discardChanges', 'Descartar')}
+                        </button>
+                    </div>
+                </div>
+            </Modal>
         </div>
     );
 };

@@ -10,9 +10,15 @@ import {
     Type, Image, Palette, AlignLeft, AlignCenter, AlignRight,
     Eye, EyeOff, Plus, Trash2, GripVertical, ChevronDown, ChevronUp,
     Sparkles, Link2, Upload, Bold, Italic, Underline, List,
-    LayoutGrid, Columns, Rows, Clock, Play, Pause, Settings, ImageIcon
+    LayoutGrid, Columns, Rows, Clock, Play, Pause, Settings, ImageIcon,
+    RotateCcw, Info, Loader2, Grid, Check
 } from 'lucide-react';
 import ImagePickerModal from '../../ui/ImagePickerModal';
+import ImageGeneratorModal from '../../ui/ImageGeneratorModal';
+import ColorControl from '../../ui/ColorControl';
+import CoolorsImporter from '../../ui/CoolorsImporter';
+import { GlobalColors } from '../../../types';
+import { colorPalettes, getDefaultGlobalColors } from '../../../data/colorPalettes';
 
 // Types for landing page sections
 interface LandingSection {
@@ -27,6 +33,9 @@ interface LandingPageControlsProps {
     section: LandingSection;
     onUpdateSection: (sectionId: string, data: Record<string, any>) => void;
     onRefreshPreview: () => void;
+    // Props para colores globales
+    allSections?: LandingSection[];
+    onApplyGlobalColors?: (colors: GlobalColors) => void;
 }
 
 // Reusable control components
@@ -88,29 +97,8 @@ const Toggle: React.FC<{
     </div>
 );
 
-const ColorPicker: React.FC<{
-    label: string;
-    value: string;
-    onChange: (value: string) => void;
-}> = ({ label, value, onChange }) => (
-    <div className="flex items-center justify-between">
-        <span className="text-sm text-foreground">{label}</span>
-        <div className="flex items-center gap-2">
-            <input
-                type="color"
-                value={value}
-                onChange={(e) => onChange(e.target.value)}
-                className="w-8 h-8 rounded border border-border cursor-pointer"
-            />
-            <input
-                type="text"
-                value={value}
-                onChange={(e) => onChange(e.target.value)}
-                className="w-20 px-2 py-1 rounded border border-border bg-background text-xs font-mono"
-            />
-        </div>
-    </div>
-);
+// ColorPicker ahora se usa el componente ColorControl de ui/ColorControl.tsx
+// que provee paletas, colores recientes, opacidad, etc.
 
 const SelectControl: React.FC<{
     label: string;
@@ -165,10 +153,23 @@ const RangeControl: React.FC<{
 const LandingPageControls: React.FC<LandingPageControlsProps> = ({
     section,
     onUpdateSection,
-    onRefreshPreview
+    onRefreshPreview,
+    allSections,
+    onApplyGlobalColors
 }) => {
     const { t } = useTranslation();
     const [activeTab, setActiveTab] = useState<'content' | 'style'>('content');
+
+    // Image modal states
+    const [isImagePickerOpen, setIsImagePickerOpen] = useState(false);
+    const [isAIGeneratorOpen, setIsAIGeneratorOpen] = useState(false);
+    const [imageTargetField, setImageTargetField] = useState<string>('heroImage');
+
+    // Global styles states - for Coolors and palette management
+    const [showCoolorsImporter, setShowCoolorsImporter] = useState(false);
+    const [selectedPaletteId, setSelectedPaletteId] = useState<string | null>(null);
+    const [isApplyingPalette, setIsApplyingPalette] = useState(false);
+    const [globalColors, setGlobalColors] = useState<GlobalColors | null>(null);
 
     // Get section data with defaults
     const data = section.data || {};
@@ -214,6 +215,11 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                 return renderHeaderControls();
             case 'screenshotCarousel':
                 return renderCarouselControls();
+            case 'globalStyles':
+            case 'colors':
+                return renderGlobalStylesControls();
+            case 'typography':
+                return renderTypographyControls();
             default:
                 return renderGenericControls();
         }
@@ -280,7 +286,18 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                                 onChange={(v) => updateData('heroImage', v)}
                                 placeholder="URL de la imagen"
                             />
-                            <button className="shrink-0 p-2 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-colors">
+                            <button
+                                onClick={() => { setImageTargetField('heroImage'); setIsImagePickerOpen(true); }}
+                                className="shrink-0 p-2 rounded-lg bg-muted hover:bg-muted-foreground/20 transition-colors"
+                                title={t('landingEditor.selectFromLibrary', 'Seleccionar de librería')}
+                            >
+                                <Image size={18} />
+                            </button>
+                            <button
+                                onClick={() => { setImageTargetField('heroImage'); setIsAIGeneratorOpen(true); }}
+                                className="shrink-0 p-2 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+                                title={t('landingEditor.generateWithAI', 'Generar con IA')}
+                            >
                                 <Sparkles size={18} />
                             </button>
                         </div>
@@ -302,13 +319,13 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                         onChange={(v) => updateData('layout', v)}
                     />
 
-                    <ColorPicker
+                    <ColorControl
                         label={t('landingEditor.backgroundColor', 'Fondo')}
                         value={data.backgroundColor || '#000000'}
                         onChange={(v) => updateData('backgroundColor', v)}
                     />
 
-                    <ColorPicker
+                    <ColorControl
                         label={t('landingEditor.textColor', 'Texto')}
                         value={data.textColor || '#ffffff'}
                         onChange={(v) => updateData('textColor', v)}
@@ -423,10 +440,31 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                         onChange={(v) => updateData('columns', Number(v))}
                     />
 
-                    <ColorPicker
+                    <ColorControl
                         label={t('landingEditor.backgroundColor', 'Fondo')}
-                        value={data.backgroundColor || '#ffffff'}
+                        value={data.backgroundColor || '#0A0A0A'}
                         onChange={(v) => updateData('backgroundColor', v)}
+                    />
+
+                    <ColorControl
+                        label={t('landingEditor.textColor', 'Texto')}
+                        value={data.textColor || '#ffffff'}
+                        onChange={(v) => updateData('textColor', v)}
+                    />
+
+                    <ColorControl
+                        label={t('landingEditor.accentColor', 'Color de acento')}
+                        value={data.accentColor || '#facc15'}
+                        onChange={(v) => updateData('accentColor', v)}
+                    />
+
+                    <RangeControl
+                        label={t('landingEditor.padding', 'Espaciado')}
+                        value={data.padding || 80}
+                        min={20}
+                        max={200}
+                        unit="px"
+                        onChange={(v) => updateData('padding', v)}
                     />
 
                     <Toggle
@@ -485,16 +523,31 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
 
             {activeTab === 'style' && (
                 <>
-                    <ColorPicker
+                    <ColorControl
                         label={t('landingEditor.backgroundColor', 'Fondo')}
-                        value={data.backgroundColor || '#f8fafc'}
+                        value={data.backgroundColor || '#0A0A0A'}
                         onChange={(v) => updateData('backgroundColor', v)}
                     />
 
-                    <ColorPicker
+                    <ColorControl
+                        label={t('landingEditor.textColor', 'Texto')}
+                        value={data.textColor || '#ffffff'}
+                        onChange={(v) => updateData('textColor', v)}
+                    />
+
+                    <ColorControl
                         label={t('landingEditor.accentColor', 'Color de acento')}
-                        value={data.accentColor || '#7c3aed'}
+                        value={data.accentColor || '#facc15'}
                         onChange={(v) => updateData('accentColor', v)}
+                    />
+
+                    <RangeControl
+                        label={t('landingEditor.padding', 'Espaciado')}
+                        value={data.padding || 80}
+                        min={20}
+                        max={200}
+                        unit="px"
+                        onChange={(v) => updateData('padding', v)}
                     />
                 </>
             )}
@@ -580,19 +633,46 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
 
             {activeTab === 'style' && (
                 <>
+                    <ColorControl
+                        label={t('landingEditor.backgroundColor', 'Fondo')}
+                        value={data.backgroundColor || '#050505'}
+                        onChange={(v) => updateData('backgroundColor', v)}
+                    />
+
+                    <ColorControl
+                        label={t('landingEditor.textColor', 'Texto')}
+                        value={data.textColor || '#ffffff'}
+                        onChange={(v) => updateData('textColor', v)}
+                    />
+
+                    <ColorControl
+                        label={t('landingEditor.accentColor', 'Color de acento')}
+                        value={data.accentColor || '#facc15'}
+                        onChange={(v) => updateData('accentColor', v)}
+                    />
+
+                    <RangeControl
+                        label={t('landingEditor.padding', 'Espaciado')}
+                        value={data.padding || 80}
+                        min={20}
+                        max={200}
+                        unit="px"
+                        onChange={(v) => updateData('padding', v)}
+                    />
+
                     <SelectControl
                         label={t('landingEditor.layout', 'Layout')}
-                        value={data.layout || 'carousel'}
+                        value={data.layout || 'grid'}
                         options={[
-                            { value: 'carousel', label: 'Carrusel' },
                             { value: 'grid', label: 'Grid' },
+                            { value: 'carousel', label: 'Carrusel' },
                             { value: 'masonry', label: 'Masonry' },
                         ]}
                         onChange={(v) => updateData('layout', v)}
                     />
 
                     <Toggle
-                        label={t('landingEditor.autoPlay', 'Auto-reproducir')}
+                        label={t('landingEditor.autoPlay', 'Auto-reproducir (carrusel)')}
                         checked={data.autoPlay ?? true}
                         onChange={(v) => updateData('autoPlay', v)}
                     />
@@ -671,6 +751,33 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
 
             {activeTab === 'style' && (
                 <>
+                    <ColorControl
+                        label={t('landingEditor.backgroundColor', 'Fondo')}
+                        value={data.backgroundColor || '#0A0A0A'}
+                        onChange={(v) => updateData('backgroundColor', v)}
+                    />
+
+                    <ColorControl
+                        label={t('landingEditor.textColor', 'Texto')}
+                        value={data.textColor || '#ffffff'}
+                        onChange={(v) => updateData('textColor', v)}
+                    />
+
+                    <ColorControl
+                        label={t('landingEditor.accentColor', 'Color de acento')}
+                        value={data.accentColor || '#facc15'}
+                        onChange={(v) => updateData('accentColor', v)}
+                    />
+
+                    <RangeControl
+                        label={t('landingEditor.padding', 'Espaciado')}
+                        value={data.padding || 80}
+                        min={20}
+                        max={200}
+                        unit="px"
+                        onChange={(v) => updateData('padding', v)}
+                    />
+
                     <SelectControl
                         label={t('landingEditor.faqStyle', 'Estilo')}
                         value={data.style || 'accordion'}
@@ -733,13 +840,13 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
 
             {activeTab === 'style' && (
                 <>
-                    <ColorPicker
+                    <ColorControl
                         label={t('landingEditor.backgroundColor', 'Fondo')}
                         value={data.backgroundColor || '#7c3aed'}
                         onChange={(v) => updateData('backgroundColor', v)}
                     />
 
-                    <ColorPicker
+                    <ColorControl
                         label={t('landingEditor.textColor', 'Texto')}
                         value={data.textColor || '#ffffff'}
                         onChange={(v) => updateData('textColor', v)}
@@ -803,7 +910,7 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
 
             {activeTab === 'style' && (
                 <>
-                    <ColorPicker
+                    <ColorControl
                         label={t('landingEditor.backgroundColor', 'Fondo')}
                         value={data.backgroundColor || '#111827'}
                         onChange={(v) => updateData('backgroundColor', v)}
@@ -914,7 +1021,7 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                         onChange={(v) => updateData('transparent', v)}
                     />
 
-                    <ColorPicker
+                    <ColorControl
                         label={t('landingEditor.backgroundColor', 'Fondo')}
                         value={data.backgroundColor || '#000000'}
                         onChange={(v) => updateData('backgroundColor', v)}
@@ -1033,6 +1140,361 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
     );
 
     // ========================================================================
+    // GLOBAL STYLES CONTROLS - Coolors & Palettes
+    // ========================================================================
+    const handleCoolorsPaletteGenerated = async (colors: GlobalColors, allColors: string[], _paletteName?: string) => {
+        setIsApplyingPalette(true);
+        try {
+            setGlobalColors(colors);
+
+            // Si hay onApplyGlobalColors, aplicar a TODAS las secciones
+            if (onApplyGlobalColors) {
+                onApplyGlobalColors(colors);
+            } else {
+                // Fallback: solo actualizar la sección actual
+                updateData('backgroundColor', colors.background);
+                updateData('textColor', colors.text);
+                updateData('accentColor', colors.primary);
+                onRefreshPreview();
+            }
+
+            setShowCoolorsImporter(false);
+            setSelectedPaletteId(null);
+        } finally {
+            setIsApplyingPalette(false);
+        }
+    };
+
+    const handlePaletteSelect = async (palette: { id: string; colors: GlobalColors }) => {
+        setIsApplyingPalette(true);
+        setSelectedPaletteId(palette.id);
+        try {
+            setGlobalColors(palette.colors);
+
+            // Si hay onApplyGlobalColors, aplicar a TODAS las secciones
+            if (onApplyGlobalColors) {
+                onApplyGlobalColors(palette.colors);
+            } else {
+                // Fallback: solo actualizar la sección actual
+                updateData('backgroundColor', palette.colors.background);
+                updateData('textColor', palette.colors.text);
+                updateData('accentColor', palette.colors.primary);
+                onRefreshPreview();
+            }
+        } finally {
+            setIsApplyingPalette(false);
+        }
+    };
+
+    const handleResetColors = () => {
+        const defaultColors = getDefaultGlobalColors();
+        setGlobalColors(defaultColors);
+
+        // Si hay onApplyGlobalColors, aplicar a TODAS las secciones
+        if (onApplyGlobalColors) {
+            onApplyGlobalColors(defaultColors);
+        } else {
+            // Fallback: solo actualizar la sección actual
+            updateData('backgroundColor', defaultColors.background);
+            updateData('textColor', defaultColors.text);
+            updateData('accentColor', defaultColors.primary);
+            onRefreshPreview();
+        }
+        setSelectedPaletteId(null);
+    };
+
+    /**
+     * Re-aplicar colores globales a todas las secciones
+     */
+    const handleReapplyColors = () => {
+        if (globalColors && onApplyGlobalColors) {
+            setIsApplyingPalette(true);
+            onApplyGlobalColors(globalColors);
+            setIsApplyingPalette(false);
+        }
+    };
+
+    const renderGlobalStylesControls = () => (
+        <div className="space-y-6">
+            {/* Coolors.co Importer Section */}
+            <div className="border border-dashed border-purple-500/30 rounded-lg overflow-hidden">
+                <button
+                    onClick={() => setShowCoolorsImporter(!showCoolorsImporter)}
+                    className="w-full flex items-center justify-between p-3 bg-gradient-to-r from-purple-500/10 to-pink-500/10 hover:from-purple-500/20 hover:to-pink-500/20 transition-all"
+                >
+                    <div className="flex items-center gap-2">
+                        <Upload size={16} className="text-purple-400" />
+                        <span className="text-sm font-medium text-foreground">
+                            {t('landingEditor.importFromCoolors', 'Importar paleta de Coolors.co')}
+                        </span>
+                    </div>
+                    <ChevronDown size={14} className={`text-purple-400 transition-transform ${showCoolorsImporter ? 'rotate-180' : ''}`} />
+                </button>
+
+                {showCoolorsImporter && (
+                    <div className="p-4 border-t border-purple-500/20">
+                        <CoolorsImporter onPaletteGenerated={handleCoolorsPaletteGenerated} />
+                    </div>
+                )}
+            </div>
+
+            {/* Palettes Section */}
+            <div>
+                <div className="flex items-center justify-between mb-3">
+                    <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+                        <Sparkles size={14} className="text-primary" />
+                        {t('landingEditor.presetPalettes', 'Paletas Predefinidas')}
+                    </label>
+                    <button
+                        onClick={handleResetColors}
+                        disabled={isApplyingPalette}
+                        className="text-xs text-muted-foreground hover:text-primary flex items-center gap-1 transition-colors disabled:opacity-50"
+                    >
+                        <RotateCcw size={12} className={isApplyingPalette ? 'animate-spin' : ''} />
+                        {t('landingEditor.reset', 'Restablecer')}
+                    </button>
+                </div>
+
+                {/* Info Banner */}
+                <div className="mb-3 p-2.5 bg-primary/10 border border-primary/30 rounded-lg">
+                    <p className="text-xs text-primary flex items-start gap-2">
+                        <Info size={14} className="flex-shrink-0 mt-0.5" />
+                        <span>
+                            {t('landingEditor.paletteInfo', 'Los colores se aplicarán a la sección actual. Puedes ajustarlos individualmente después.')}
+                        </span>
+                    </p>
+                </div>
+
+                {/* Palette Grid */}
+                <div className="grid grid-cols-2 gap-2">
+                    {colorPalettes.map((palette) => (
+                        <button
+                            key={palette.id}
+                            onClick={() => handlePaletteSelect(palette)}
+                            disabled={isApplyingPalette}
+                            className={`relative p-2.5 rounded-lg border transition-all text-left group ${selectedPaletteId === palette.id
+                                ? 'border-primary ring-1 ring-primary bg-primary/10'
+                                : 'border-border hover:border-primary/50 bg-background hover:bg-muted/50'
+                                } ${isApplyingPalette ? 'opacity-60 cursor-wait' : 'cursor-pointer'}`}
+                        >
+                            {/* Selection indicator */}
+                            {selectedPaletteId === palette.id && (
+                                <div className="absolute top-1.5 right-1.5 w-4 h-4 bg-primary rounded-full flex items-center justify-center">
+                                    {isApplyingPalette ? (
+                                        <Loader2 size={10} className="text-white animate-spin" />
+                                    ) : (
+                                        <Check size={10} className="text-white" />
+                                    )}
+                                </div>
+                            )}
+
+                            {/* Color Preview */}
+                            <div className="flex gap-1 mb-2">
+                                {palette.preview.map((color, idx) => (
+                                    <div
+                                        key={idx}
+                                        className="w-5 h-5 rounded-md border border-white/10 shadow-sm"
+                                        style={{ backgroundColor: color }}
+                                    />
+                                ))}
+                            </div>
+
+                            {/* Palette Name */}
+                            <p className="text-xs font-medium text-foreground truncate">
+                                {palette.nameEs}
+                            </p>
+                        </button>
+                    ))}
+                </div>
+            </div>
+
+            {/* Current Colors Preview */}
+            {globalColors && (
+                <div className="p-3 bg-muted/30 rounded-lg border border-border">
+                    <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2 block">
+                        {t('landingEditor.currentColors', 'Colores Actuales')}
+                    </label>
+                    <div className="flex gap-2">
+                        <div className="flex-1 h-8 rounded" style={{ backgroundColor: globalColors.background }} title="Background" />
+                        <div className="flex-1 h-8 rounded" style={{ backgroundColor: globalColors.primary }} title="Primary" />
+                        <div className="flex-1 h-8 rounded" style={{ backgroundColor: globalColors.secondary }} title="Secondary" />
+                        <div className="flex-1 h-8 rounded" style={{ backgroundColor: globalColors.accent }} title="Accent" />
+                    </div>
+                </div>
+            )}
+
+            {/* Re-apply Colors Button */}
+            {globalColors && onApplyGlobalColors && (
+                <button
+                    onClick={handleReapplyColors}
+                    disabled={isApplyingPalette}
+                    className="w-full py-3 px-4 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 text-white font-medium text-sm flex items-center justify-center gap-2 hover:opacity-90 transition-all disabled:opacity-50"
+                >
+                    {isApplyingPalette ? (
+                        <Loader2 size={16} className="animate-spin" />
+                    ) : (
+                        <Sparkles size={16} />
+                    )}
+                    {t('landingEditor.reapplyColors', 'Re-aplicar colores a todos los componentes')}
+                </button>
+            )}
+        </div>
+    );
+
+    // ========================================================================
+    // TYPOGRAPHY CONTROLS (Global Fonts - Same as User Web Editor)
+    // ========================================================================
+    const FONT_OPTIONS = [
+        // Sans-serif fonts
+        { value: 'roboto', label: 'Roboto' },
+        { value: 'open-sans', label: 'Open Sans' },
+        { value: 'lato', label: 'Lato' },
+        { value: 'poppins', label: 'Poppins' },
+        { value: 'montserrat', label: 'Montserrat' },
+        { value: 'mulish', label: 'Mulish' },
+        { value: 'inter', label: 'Inter' },
+        { value: 'dm-sans', label: 'DM Sans' },
+        { value: 'space-grotesk', label: 'Space Grotesk' },
+        { value: 'oswald', label: 'Oswald' },
+        { value: 'source-sans-pro', label: 'Source Sans Pro' },
+        { value: 'raleway', label: 'Raleway' },
+        { value: 'pt-sans', label: 'PT Sans' },
+        { value: 'ubuntu', label: 'Ubuntu' },
+        { value: 'noto-sans', label: 'Noto Sans' },
+        { value: 'cabin', label: 'Cabin' },
+        { value: 'fira-sans', label: 'Fira Sans' },
+        { value: 'josefin-sans', label: 'Josefin Sans' },
+        { value: 'anton', label: 'Anton' },
+        { value: 'yanone-kaffeesatz', label: 'Yanone Kaffeesatz' },
+        { value: 'arimo', label: 'Arimo' },
+        { value: 'abel', label: 'Abel' },
+        { value: 'archivo-narrow', label: 'Archivo Narrow' },
+        { value: 'francois-one', label: 'Francois One' },
+        { value: 'signika', label: 'Signika' },
+        { value: 'oxygen', label: 'Oxygen' },
+        { value: 'quicksand', label: 'Quicksand' },
+        { value: 'exo-2', label: 'Exo 2' },
+        { value: 'varela-round', label: 'Varela Round' },
+        { value: 'dosis', label: 'Dosis' },
+        { value: 'titillium-web', label: 'Titillium Web' },
+        { value: 'nobile', label: 'Nobile' },
+        { value: 'asap', label: 'Asap' },
+        { value: 'questrial', label: 'Questrial' },
+        // Serif fonts
+        { value: 'playfair-display', label: 'Playfair Display' },
+        { value: 'merriweather', label: 'Merriweather' },
+        { value: 'lora', label: 'Lora' },
+        { value: 'slabo-27px', label: 'Slabo 27px' },
+        { value: 'crimson-text', label: 'Crimson Text' },
+        { value: 'arvo', label: 'Arvo' },
+        { value: 'noto-serif', label: 'Noto Serif' },
+        { value: 'bree-serif', label: 'Bree Serif' },
+        { value: 'vollkorn', label: 'Vollkorn' },
+        { value: 'pt-serif', label: 'PT Serif' },
+        { value: 'bitter', label: 'Bitter' },
+        { value: 'noticia-text', label: 'Noticia Text' },
+        { value: 'cardo', label: 'Cardo' },
+        // Decorative/Display fonts
+        { value: 'indie-flower', label: 'Indie Flower' },
+        { value: 'pacifico', label: 'Pacifico' },
+        { value: 'lobster', label: 'Lobster' },
+        { value: 'dancing-script', label: 'Dancing Script' },
+        { value: 'amatic-sc', label: 'Amatic SC' },
+        // Monospace
+        { value: 'inconsolata', label: 'Inconsolata' },
+    ];
+
+    const renderTypographyControls = () => (
+        <div className="space-y-6">
+            {/* Header */}
+            <div className="flex items-center gap-2 text-primary mb-2">
+                <Type size={16} />
+                <span className="text-xs font-bold uppercase tracking-wider">
+                    {t('landingEditor.globalFonts', 'FUENTES GLOBALES')}
+                </span>
+            </div>
+
+            {/* Heading Font */}
+            <ControlGroup label={t('landingEditor.headingFont', 'Fuente de Encabezados')}>
+                <select
+                    value={data.headingFont || 'Open Sans'}
+                    onChange={(e) => updateData('headingFont', e.target.value)}
+                    className="w-full py-2.5 px-3 rounded-lg bg-secondary/50 border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                >
+                    {FONT_OPTIONS.map(font => (
+                        <option key={font.value} value={font.value}>{font.label}</option>
+                    ))}
+                </select>
+            </ControlGroup>
+
+            {/* Body Font */}
+            <ControlGroup label={t('landingEditor.bodyFont', 'Fuente de Cuerpo')}>
+                <select
+                    value={data.bodyFont || 'Mulish'}
+                    onChange={(e) => updateData('bodyFont', e.target.value)}
+                    className="w-full py-2.5 px-3 rounded-lg bg-secondary/50 border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                >
+                    {FONT_OPTIONS.map(font => (
+                        <option key={font.value} value={font.value}>{font.label}</option>
+                    ))}
+                </select>
+            </ControlGroup>
+
+            {/* Button Font */}
+            <ControlGroup label={t('landingEditor.buttonFont', 'Fuente de Botones')}>
+                <select
+                    value={data.buttonFont || 'Open Sans'}
+                    onChange={(e) => updateData('buttonFont', e.target.value)}
+                    className="w-full py-2.5 px-3 rounded-lg bg-secondary/50 border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                >
+                    {FONT_OPTIONS.map(font => (
+                        <option key={font.value} value={font.value}>{font.label}</option>
+                    ))}
+                </select>
+            </ControlGroup>
+
+            {/* Caps Options */}
+            <div className="border-t border-border pt-4">
+                <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3 block">
+                    {t('landingEditor.allCaps', 'MAYÚSCULAS (ALL CAPS)')}
+                </label>
+                <div className="space-y-3">
+                    <Toggle
+                        label={t('landingEditor.headingsCaps', 'Encabezados')}
+                        checked={data.headingsCaps || false}
+                        onChange={(v) => updateData('headingsCaps', v)}
+                    />
+                    <Toggle
+                        label={t('landingEditor.buttonsCaps', 'Botones')}
+                        checked={data.buttonsCaps || false}
+                        onChange={(v) => updateData('buttonsCaps', v)}
+                    />
+                    <Toggle
+                        label={t('landingEditor.navLinksCaps', 'Enlaces de Navegación')}
+                        checked={data.navLinksCaps || false}
+                        onChange={(v) => updateData('navLinksCaps', v)}
+                    />
+                </div>
+            </div>
+
+            {/* Preview */}
+            <div className="p-4 bg-muted/30 rounded-lg border border-border">
+                <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3 block">
+                    {t('landingEditor.preview', 'VISTA PREVIA')}
+                </label>
+                <div className="bg-background rounded-lg p-4 space-y-2">
+                    <h3 className="text-lg font-bold" style={{ fontFamily: data.headingFont || 'Open Sans' }}>
+                        {t('landingEditor.exampleTitle', 'Título de Ejemplo')}
+                    </h3>
+                    <p className="text-sm text-muted-foreground" style={{ fontFamily: data.bodyFont || 'Mulish' }}>
+                        {t('landingEditor.exampleBody', 'Este es un párrafo de ejemplo para visualizar cómo se verá el texto del cuerpo en tu sitio web. Una buena tipografía mejora la legibilidad.')}
+                    </p>
+                </div>
+            </div>
+        </div>
+    );
+
+    // ========================================================================
     // GENERIC CONTROLS (for unsupported section types)
     // ========================================================================
     const renderGenericControls = () => (
@@ -1062,21 +1524,26 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
         </div>
     );
 
+    // Sections that don't need tabs (global settings)
+    const hideTabs = ['typography', 'header', 'colors', 'globalStyles'].includes(section.type);
+
     return (
-        <div className="flex flex-col h-full">
-            {/* Tabs */}
-            <div className="flex border-b border-border">
-                <TabButton tab="content" label={t('landingEditor.content', 'Contenido')} />
-                <TabButton tab="style" label={t('landingEditor.style', 'Estilo')} />
-            </div>
+        <div className="flex flex-col h-full overflow-hidden">
+            {/* Tabs - hidden for global settings */}
+            {!hideTabs && (
+                <div className="shrink-0 flex border-b border-border">
+                    <TabButton tab="content" label={t('landingEditor.content', 'Contenido')} />
+                    <TabButton tab="style" label={t('landingEditor.style', 'Estilo')} />
+                </div>
+            )}
 
             {/* Controls */}
             <div className="flex-1 overflow-y-auto p-4">
                 {renderControls()}
             </div>
 
-            {/* Apply button */}
-            <div className="p-4 border-t border-border">
+            {/* Apply button - fixed at bottom using flexbox */}
+            <div className="shrink-0 p-4 border-t border-border bg-card">
                 <button
                     onClick={onRefreshPreview}
                     className="w-full py-2.5 px-4 rounded-lg bg-primary text-primary-foreground font-medium text-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
@@ -1085,6 +1552,25 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                     {t('landingEditor.applyChanges', 'Aplicar cambios')}
                 </button>
             </div>
+            {/* Image Picker Modal */}
+            <ImagePickerModal
+                isOpen={isImagePickerOpen}
+                onClose={() => setIsImagePickerOpen(false)}
+                onSelect={(url) => {
+                    updateData(imageTargetField, url);
+                    setIsImagePickerOpen(false);
+                }}
+                title={t('landingEditor.selectImage', 'Seleccionar Imagen')}
+            />
+
+            {/* AI Image Generator Modal */}
+            {isAIGeneratorOpen && (
+                <ImageGeneratorModal
+                    isOpen={isAIGeneratorOpen}
+                    onClose={() => setIsAIGeneratorOpen(false)}
+                    destination="global"
+                />
+            )}
         </div>
     );
 };

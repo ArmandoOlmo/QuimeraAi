@@ -1,11 +1,12 @@
-// SimpleEditorHeader - Updated with publish functionality
+// SimpleEditorHeader - Updated with publish functionality and device preview controls
 import React, { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useUI } from '../contexts/core/UIContext';
 import { useProject } from '../contexts/project';
 import { useRouter } from '../hooks/useRouter';
 import { ROUTES } from '../routes/config';
-import { LayoutDashboard, Check, CloudUpload, Globe, SlidersHorizontal, Menu, ArrowLeft } from 'lucide-react';
+import { PreviewDevice } from '../types';
+import { LayoutDashboard, Check, CloudUpload, Globe, SlidersHorizontal, Menu, ArrowLeft, Monitor, Tablet, Smartphone } from 'lucide-react';
 
 interface SimpleEditorHeaderProps {
   onOpenMobileMenu?: () => void;
@@ -19,7 +20,7 @@ const SimpleEditorHeader: React.FC<SimpleEditorHeaderProps> = ({
   showPublishButton = true,
 }) => {
   const { t } = useTranslation();
-  const { isSidebarOpen, setIsSidebarOpen } = useUI();
+  const { isSidebarOpen, setIsSidebarOpen, previewDevice, setPreviewDevice } = useUI();
   const { activeProject, renameActiveProject, saveProject, publishProject, isEditingTemplate, exitTemplateEditor } = useProject();
   const { navigate } = useRouter();
 
@@ -142,6 +143,27 @@ const SimpleEditorHeader: React.FC<SimpleEditorHeaderProps> = ({
             </button>
           )}
         </div>
+      </div>
+
+      {/* CENTER SECTION - Device Preview Controls */}
+      <div className="hidden md:flex items-center gap-1 bg-secondary/30 rounded-lg p-1">
+        {([
+          { name: 'desktop' as PreviewDevice, icon: <Monitor className="w-4 h-4" /> },
+          { name: 'tablet' as PreviewDevice, icon: <Tablet className="w-4 h-4" /> },
+          { name: 'mobile' as PreviewDevice, icon: <Smartphone className="w-4 h-4" /> },
+        ]).map(({ name, icon }) => (
+          <button
+            key={name}
+            title={t(`editor.previewOn${name.charAt(0).toUpperCase() + name.slice(1)}`)}
+            onClick={() => setPreviewDevice(name)}
+            className={`h-8 w-8 flex items-center justify-center rounded-md transition-all ${previewDevice === name
+                ? 'bg-primary text-primary-foreground'
+                : 'text-muted-foreground hover:text-foreground hover:bg-secondary/80'
+              }`}
+          >
+            {icon}
+          </button>
+        ))}
       </div>
 
       <div className="flex items-center gap-2 flex-shrink-0">
