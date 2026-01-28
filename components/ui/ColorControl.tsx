@@ -111,11 +111,59 @@ const formatColor = ({ hex, alpha }: { hex: string, alpha: number }): string => 
 };
 
 
+// Helper for HSV conversions
+const hexToHsv = (hexInput: string) => {
+    // First normalize the hex through parseColor to handle various formats
+    const normalizedHex = parseColor(hexInput).hex;
+
+    // Extract RGB values from the normalized hex
+    const r = parseInt(normalizedHex.substring(1, 3), 16) / 255;
+    const g = parseInt(normalizedHex.substring(3, 5), 16) / 255;
+    const b = parseInt(normalizedHex.substring(5, 7), 16) / 255;
+
+    const max = Math.max(r, g, b), min = Math.min(r, g, b);
+    let h = 0, s = 0, v = max;
+    const d = max - min;
+    s = max === 0 ? 0 : d / max;
+
+    if (max !== min) {
+        switch (max) {
+            case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+            case g: h = (b - r) / d + 2; break;
+            case b: h = (r - g) / d + 4; break;
+        }
+        h /= 6;
+    }
+    return { h: h * 360, s: s * 100, v: v * 100 };
+};
+
+const hsvToHex = (h: number, s: number, v: number) => {
+    let r = 0, g = 0, b = 0;
+    const i = Math.floor(h / 60);
+    const f = h / 60 - i;
+    const p = (v / 100) * (1 - s / 100);
+    const q = (v / 100) * (1 - f * s / 100);
+    const t = (v / 100) * (1 - (1 - f) * s / 100);
+    const val = v / 100;
+
+    switch (i % 6) {
+        case 0: r = val; g = t; b = p; break;
+        case 1: r = q; g = val; b = p; break;
+        case 2: r = p; g = val; b = t; break;
+        case 3: r = p; g = q; b = val; break;
+        case 4: r = t; g = p; b = val; break;
+        case 5: r = val; g = p; b = q; break;
+    }
+
+    const toHex = (x: number) => Math.round(x * 255).toString(16).padStart(2, '0');
+    return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+};
+
 interface ColorControlProps {
     label: string;
     value: string;
     onChange: (value: string) => void;
-    /** Colores de la paleta importada para acceso rápido. 
+    /** Colores de la paleta importada para acceso rápido.
      * Si no se proporciona, se obtiene automáticamente del tema global */
     paletteColors?: string[];
 }
@@ -127,15 +175,33 @@ const ColorControl: React.FC<ColorControlProps> = ({ label, value, onChange, pal
     const [isOpen, setIsOpen] = useState(false);
     const popoverRef = useRef<HTMLDivElement>(null);
     const triggerRef = useRef<HTMLButtonElement>(null);
-    const colorInputRef = useRef<HTMLInputElement>(null);
+    const saturationRef = useRef<HTMLDivElement>(null);
+
+    // State
     const [popoverStyle, setPopoverStyle] = useState<React.CSSProperties>({});
     const portalContainer = document.getElementById('portal-root');
+    const { hex, alpha } = parseColor(value);
 
-    // Estado local para el input HEX que permite edición manual
-    const [hexInput, setHexInput] = useState('');
+    // Derived state for local editing
+    const [localHsv, setLocalHsv] = useState({ h: 0, s: 0, v: 0 });
+    const [isDragging, setIsDragging] = useState(false);
 
-    // Estado para colores recientes
-    const [recentColors, setRecentColors] = useState<string[]>(() => getRecentColors());
+    // Sync local HSV when value changes externally
+    useEffect(() => {
+        if (!isDragging) {
+            setLocalHsv(hexToHsv(hex));
+        }
+    }, [hex, isDragging]);
+
+    // Helper to get raw RGB numbers from hex
+    function parseColorToRgb(h: string) {
+        const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(h);
+        return result ? {
+            r: parseInt(result[1], 16),
+            g: parseInt(result[2], 16),
+            b: parseInt(result[3], 16)
+        } : { r: 0, g: 0, b: 0 };
+    }
 
     useClickOutside(popoverRef, () => {
         // Save current color to recent when closing
@@ -149,34 +215,15 @@ const ColorControl: React.FC<ColorControlProps> = ({ label, value, onChange, pal
     useLayoutEffect(() => {
         if (isOpen && triggerRef.current) {
             const rect = triggerRef.current.getBoundingClientRect();
-
-            const popoverWidth = 256; // Corresponds to w-64
-            const popoverHeight = 400; // Estimated height
+            const popoverWidth = 280; // Widen for RGB inputs
+            const popoverHeight = 500;
             const gap = 8;
-
-            // Use fixed positioning relative to viewport
             let top = rect.bottom + gap;
             let left = rect.left;
-
-            // Adjust vertically if it overflows bottom
-            if (top + popoverHeight > window.innerHeight) {
-                top = rect.top - popoverHeight - gap;
-            }
-
-            // If still overflows top, position at top of screen
-            if (top < gap) {
-                top = gap;
-            }
-
-            // Adjust horizontally if it overflows right
-            if (left + popoverWidth > window.innerWidth) {
-                left = rect.right - popoverWidth;
-            }
-
-            // If overflows left
-            if (left < gap) {
-                left = gap;
-            }
+            if (top + popoverHeight > window.innerHeight) top = rect.top - popoverHeight - gap;
+            if (top < gap) top = gap;
+            if (left + popoverWidth > window.innerWidth) left = rect.right - popoverWidth;
+            if (left < gap) left = gap;
 
             setPopoverStyle({
                 position: 'fixed',
@@ -186,17 +233,22 @@ const ColorControl: React.FC<ColorControlProps> = ({ label, value, onChange, pal
         }
     }, [isOpen]);
 
-    const { hex, alpha } = parseColor(value);
     const safeValue = value || formatColor({ hex, alpha });
+    const [recentColors, setRecentColors] = useState<string[]>(() => getRecentColors());
 
-    // Sincronizar hexInput con el valor actual cuando cambia externamente
+    // Local state for controlled inputs
+    const [hexInputValue, setHexInputValue] = useState(hex.toUpperCase());
+    const [localRgb, setLocalRgb] = useState(() => parseColorToRgb(hex));
+
+    // Sync hex input with external value changes
     useEffect(() => {
-        setHexInput(hex.toUpperCase());
+        setHexInputValue(hex.toUpperCase());
+        setLocalRgb(parseColorToRgb(hex));
     }, [hex]);
 
     // Load recent colors from localStorage on mount
     useEffect(() => {
-        const saved = localStorage.getItem('quimera_recent_colors');
+        const saved = localStorage.getItem(RECENT_COLORS_KEY);
         if (saved) {
             try {
                 setRecentColors(JSON.parse(saved));
@@ -206,30 +258,58 @@ const ColorControl: React.FC<ColorControlProps> = ({ label, value, onChange, pal
         }
     }, []);
 
+
     const handleColorChange = (newColor: string) => {
         onChange(newColor);
-        addToRecent(newColor);
+        // The addToRecent logic is now handled on popover close
     };
 
     const addToRecent = (color: string) => {
         if (!color) return;
-        const newRecent = [color, ...recentColors.filter(c => c !== color)].slice(0, 14);
+        const newRecent = [color, ...recentColors.filter(c => c !== color)].slice(0, MAX_RECENT_COLORS);
         setRecentColors(newRecent);
-        localStorage.setItem('quimera_recent_colors', JSON.stringify(newRecent));
+        localStorage.setItem(RECENT_COLORS_KEY, JSON.stringify(newRecent));
     };
 
-    const handleHexInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const newValue = e.target.value;
-        setHexInput(newValue);
-        // Apply valid hex colors
-        if (/^#[0-9A-Fa-f]{6}$/.test(newValue)) {
-            handleColorChange(formatColor({ hex: newValue, alpha }));
-        }
+    const handleSaturationChange = (e: React.MouseEvent | MouseEvent | React.TouchEvent | TouchEvent) => {
+        if (!saturationRef.current) return;
+        const rect = saturationRef.current.getBoundingClientRect();
+        const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+        const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+
+        let left = (clientX - rect.left) / rect.width;
+        let top = (clientY - rect.top) / rect.height;
+
+        left = Math.max(0, Math.min(1, left));
+        top = Math.max(0, Math.min(1, top));
+
+        const newS = left * 100;
+        const newV = (1 - top) * 100;
+
+        setLocalHsv(prev => {
+            const next = { ...prev, s: newS, v: newV };
+            handleColorChange(formatColor({ hex: hsvToHex(next.h, next.s, next.v), alpha }));
+            return next;
+        });
     };
 
-    const handleAlphaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const newAlpha = parseFloat(e.target.value);
-        handleColorChange(formatColor({ hex, alpha: newAlpha }));
+    const handleHueChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const newH = parseFloat(e.target.value);
+        setLocalHsv(prev => {
+            const next = { ...prev, h: newH };
+            handleColorChange(formatColor({ hex: hsvToHex(next.h, next.s, next.v), alpha }));
+            return next;
+        });
+    };
+
+    const handleRgbChange = (key: 'r' | 'g' | 'b', val: string) => {
+        const num = parseInt(val);
+        if (isNaN(num)) return;
+        const clamped = Math.max(0, Math.min(255, num));
+
+        const newRgb = { ...parseColorToRgb(hex), [key]: clamped };
+        const newHex = `#${newRgb.r.toString(16).padStart(2, '0')}${newRgb.g.toString(16).padStart(2, '0')}${newRgb.b.toString(16).padStart(2, '0')}`;
+        handleColorChange(formatColor({ hex: newHex, alpha }));
     };
 
     const PopoverContent = (
@@ -238,25 +318,50 @@ const ColorControl: React.FC<ColorControlProps> = ({ label, value, onChange, pal
             style={popoverStyle}
             className="z-[9999] w-64 bg-editor-panel-bg border border-editor-border rounded-lg shadow-xl p-3"
         >
-            {/* Native color picker */}
-            <div className="mb-3">
-                <input
-                    ref={colorInputRef}
-                    type="color"
-                    value={hex}
-                    onChange={(e) => handleColorChange(formatColor({ hex: e.target.value, alpha }))}
-                    className="w-full h-10 rounded cursor-pointer border-0"
+            {/* Custom Saturation Area */}
+            <div
+                ref={saturationRef}
+                className="relative w-full h-32 rounded-md cursor-crosshair overflow-hidden mb-3"
+                style={{
+                    backgroundColor: `hsl(${localHsv.h}, 100%, 50%)`,
+                    backgroundImage: `
+                        linear-gradient(to top, #000, transparent),
+                        linear-gradient(to right, #fff, transparent)
+                    `
+                }}
+                onMouseDown={(e) => {
+                    setIsDragging(true);
+                    handleSaturationChange(e);
+                }}
+                onMouseMove={(e) => {
+                    if (isDragging) handleSaturationChange(e);
+                }}
+                onMouseUp={() => setIsDragging(false)}
+                onMouseLeave={() => setIsDragging(false)}
+            >
+                <div
+                    className="absolute w-4 h-4 rounded-full border-2 border-white shadow-sm -translate-x-1/2 -translate-y-1/2 pointer-events-none"
+                    style={{
+                        left: `${localHsv.s}%`,
+                        top: `${100 - localHsv.v}%`,
+                        backgroundColor: hex
+                    }}
                 />
             </div>
 
-            {/* Hex input */}
+            {/* Hue Slider */}
             <div className="mb-3">
-                <Label>HEX</Label>
-                <Input
-                    type="text"
-                    value={hexInput}
-                    onChange={handleHexInputChange}
-                    placeholder="#000000"
+                <Label>Hue</Label>
+                <input
+                    type="range"
+                    min="0"
+                    max="360"
+                    value={localHsv.h}
+                    onChange={handleHueChange}
+                    className="w-full h-2 rounded-lg appearance-none cursor-pointer"
+                    style={{
+                        background: 'linear-gradient(to right, #f00 0%, #ff0 17%, #0f0 33%, #0ff 50%, #00f 67%, #f0f 83%, #f00 100%)'
+                    }}
                 />
             </div>
 
@@ -269,9 +374,71 @@ const ColorControl: React.FC<ColorControlProps> = ({ label, value, onChange, pal
                     max="1"
                     step="0.01"
                     value={alpha}
-                    onChange={handleAlphaChange}
+                    onChange={(e) => handleColorChange(formatColor({ hex, alpha: parseFloat(e.target.value) }))}
                     className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer"
                 />
+            </div>
+
+            {/* Hex input */}
+            <div className="mb-3">
+                <Label>HEX</Label>
+                <Input
+                    type="text"
+                    value={hexInputValue}
+                    onChange={(e) => {
+                        let val = e.target.value.toUpperCase();
+                        // Ensure # prefix
+                        if (!val.startsWith('#')) val = '#' + val.replace('#', '');
+                        // Only allow valid hex characters
+                        val = val.replace(/[^#0-9A-F]/gi, '').slice(0, 7);
+                        setHexInputValue(val);
+                        // Apply color when valid 7-char hex (including #)
+                        if (/^#[0-9A-F]{6}$/i.test(val)) {
+                            handleColorChange(formatColor({ hex: val, alpha }));
+                        }
+                    }}
+                    onBlur={() => {
+                        // Reset to current hex if invalid on blur
+                        if (!/^#[0-9A-F]{6}$/i.test(hexInputValue)) {
+                            setHexInputValue(hex.toUpperCase());
+                        }
+                    }}
+                    placeholder="#000000"
+                />
+            </div>
+
+            {/* RGB Inputs */}
+            <div className="mb-3">
+                <Label>RGB</Label>
+                <div className="grid grid-cols-3 gap-2">
+                    {(['r', 'g', 'b'] as const).map((k) => (
+                        <div key={k} className="flex flex-col items-center">
+                            <span className="text-[10px] text-editor-text-secondary uppercase mb-1">{k}</span>
+                            <input
+                                type="number"
+                                min="0"
+                                max="255"
+                                value={localRgb[k]}
+                                onChange={(e) => {
+                                    const val = e.target.value;
+                                    const num = parseInt(val);
+                                    // Allow empty string for typing
+                                    if (val === '') {
+                                        setLocalRgb(prev => ({ ...prev, [k]: 0 }));
+                                        return;
+                                    }
+                                    if (isNaN(num)) return;
+                                    const clamped = Math.max(0, Math.min(255, num));
+                                    const newRgb = { ...localRgb, [k]: clamped };
+                                    setLocalRgb(newRgb);
+                                    const newHex = `#${newRgb.r.toString(16).padStart(2, '0')}${newRgb.g.toString(16).padStart(2, '0')}${newRgb.b.toString(16).padStart(2, '0')}`;
+                                    handleColorChange(formatColor({ hex: newHex, alpha }));
+                                }}
+                                className="w-full bg-editor-border text-editor-text-primary p-1.5 rounded border border-transparent focus:ring-1 focus:ring-editor-accent focus:outline-none text-center text-xs"
+                            />
+                        </div>
+                    ))}
+                </div>
             </div>
 
             {/* Palette colors from theme */}
@@ -328,26 +495,25 @@ const ColorControl: React.FC<ColorControlProps> = ({ label, value, onChange, pal
         </div>
     );
 
-return (
-    <div className="mb-3">
-        {label && <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{label}</label>}
-        <div className="relative">
-            <button
-                ref={triggerRef}
-                onClick={() => setIsOpen(!isOpen)}
-                className="w-full flex items-center gap-2 bg-editor-panel-bg border border-editor-border rounded-md px-2 py-1.5 text-sm text-editor-text-primary hover:border-editor-accent transition-colors"
-            >
-                <div
-                    className="w-6 h-6 rounded border border-editor-border shadow-sm"
-                    style={{ backgroundColor: safeValue }}
-                />
-                <span className="flex-1 text-left font-mono text-xs">{safeValue.toUpperCase()}</span>
-                <ChevronDown size={14} className="text-editor-text-secondary" />
-            </button>
-            {isOpen && portalContainer && createPortal(PopoverContent, portalContainer)}
+    return (
+        <div className="mb-3">
+            {label && <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{label}</label>}
+            <div className="relative">
+                <button
+                    ref={triggerRef}
+                    onClick={() => setIsOpen(!isOpen)}
+                    className="w-full flex items-center gap-2 bg-editor-panel-bg border border-editor-border rounded-md px-2 py-1.5 text-sm text-editor-text-primary hover:border-editor-accent transition-colors group"
+                >
+                    <div className="w-6 h-6 rounded border border-editor-border shadow-sm flex items-center justify-center overflow-hidden bg-checkered">
+                        <div className="w-full h-full" style={{ backgroundColor: safeValue }} />
+                    </div>
+                    <span className="flex-1 text-left font-mono text-xs">{safeValue.toUpperCase()}</span>
+                    <ChevronDown size={14} className="text-editor-text-secondary group-hover:text-editor-text-primary" />
+                </button>
+                {isOpen && portalContainer && createPortal(PopoverContent, portalContainer)}
+            </div>
         </div>
-    </div>
-);
+    );
 };
 
 export default ColorControl;

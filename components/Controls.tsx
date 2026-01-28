@@ -1731,30 +1731,27 @@ const Controls: React.FC = () => {
         <h4 className="font-bold text-editor-text-primary text-sm uppercase tracking-wider mb-2">{t('editor.controls.features.featureList')}</h4>
         {(data.features.items || []).map((item, index) => (
           <div key={index} className="bg-editor-bg p-3 rounded-lg border border-editor-border mb-3 group">
-            <div className="flex justify-between items-center mb-2">
-              <span className="text-xs font-bold text-editor-text-secondary">{t('editor.controls.features.feature')} #{index + 1}</span>
-              <button
-                onClick={() => {
-                  const newItems = data.features.items.filter((_, i) => i !== index);
-                  setNestedData('features.items', newItems);
-                }}
-                className="text-editor-text-secondary hover:text-red-400 transition-colors"
-              >
-                <Trash2 size={14} />
-              </button>
-            </div>
-            <Input placeholder="Title" value={item.title} onChange={(e) => setNestedData(`features.items.${index}.title`, e.target.value)} className="mb-2" />
+            <ImagePicker
+              label={`${t('editor.controls.features.feature')} #${index + 1}`}
+              value={item.imageUrl}
+              onChange={(url) => setNestedData(`features.items.${index}.imageUrl`, url)}
+              onRemove={() => {
+                const newItems = data.features.items.filter((_, i) => i !== index);
+                setNestedData('features.items', newItems);
+              }}
+            />
+            <Input
+              placeholder="Title"
+              value={item.title}
+              onChange={(e) => setNestedData(`features.items.${index}.title`, e.target.value)}
+              className="mb-2 mt-2"
+            />
             <textarea
               placeholder="Description"
               value={item.description}
               onChange={(e) => setNestedData(`features.items.${index}.description`, e.target.value)}
               rows={2}
               className="w-full bg-editor-panel-bg border border-editor-border rounded px-2 py-1 text-xs text-editor-text-primary focus:outline-none focus:border-editor-accent mb-2"
-            />
-            <ImagePicker
-              label="Image"
-              value={item.imageUrl}
-              onChange={(url) => setNestedData(`features.items.${index}.imageUrl`, url)}
             />
           </div>
         ))}
@@ -2550,22 +2547,14 @@ const Controls: React.FC = () => {
         <h4 className="font-bold text-editor-text-primary text-sm uppercase tracking-wider mb-2">Slides</h4>
         {(data.slideshow.items || []).map((item: any, index: number) => (
           <div key={index} className="bg-editor-bg p-3 rounded-lg border border-editor-border mb-3 group">
-            <div className="flex justify-between items-center mb-2">
-              <span className="text-xs font-bold text-editor-text-secondary">Slide #{index + 1}</span>
-              <button
-                onClick={() => {
-                  const newItems = (data.slideshow.items || []).filter((_: any, i: number) => i !== index);
-                  setNestedData('slideshow.items', newItems);
-                }}
-                className="text-editor-text-secondary hover:text-red-400 transition-colors"
-              >
-                <Trash2 size={14} />
-              </button>
-            </div>
             <ImagePicker
-              label="Image"
+              label={`Slide #${index + 1}`}
               value={item.imageUrl}
               onChange={(url) => setNestedData(`slideshow.items.${index}.imageUrl`, url)}
+              onRemove={() => {
+                const newItems = (data.slideshow.items || []).filter((_: any, i: number) => i !== index);
+                setNestedData('slideshow.items', newItems);
+              }}
             />
             <input
               placeholder="Alt Text"
@@ -3640,20 +3629,16 @@ const Controls: React.FC = () => {
           <h4 className="font-bold text-editor-text-primary text-sm uppercase tracking-wider">{t('editor.controls.team.teamMembers')}</h4>
           {(data?.team?.items || []).map((member: any, index: number) => (
             <div key={index} className="bg-editor-bg p-3 rounded-lg border border-editor-border mb-3">
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-xs font-bold text-editor-text-secondary">{t('editor.controls.team.member')} #{index + 1}</span>
-                <button
-                  onClick={() => {
-                    const newItems = [...(data?.team?.items || [])];
-                    newItems.splice(index, 1);
-                    setNestedData('team.items', newItems);
-                  }}
-                  className="text-editor-text-secondary hover:text-red-400 transition-colors"
-                >
-                  <Trash2 size={14} />
-                </button>
-              </div>
-              <ImagePicker label={t('editor.controls.team.photo')} value={member.imageUrl} onChange={(url) => setNestedData(`team.items.${index}.imageUrl`, url)} />
+              <ImagePicker
+                label={`${t('editor.controls.team.member')} #${index + 1} Photo`}
+                value={member.imageUrl}
+                onChange={(url) => setNestedData(`team.items.${index}.imageUrl`, url)}
+                onRemove={() => {
+                  const newItems = [...(data?.team?.items || [])];
+                  newItems.splice(index, 1);
+                  setNestedData('team.items', newItems);
+                }}
+              />
               <Input label={t('editor.controls.common.name')} value={member.name} onChange={(e) => setNestedData(`team.items.${index}.name`, e.target.value)} />
               <Input label={t('editor.controls.team.role')} value={member.role} onChange={(e) => setNestedData(`team.items.${index}.role`, e.target.value)} />
             </div>
@@ -6230,21 +6215,17 @@ const Controls: React.FC = () => {
         <h4 className="font-bold text-editor-text-primary text-sm uppercase tracking-wider">Team Members</h4>
         {(data?.team?.items || []).map((member: any, index: number) => (
           <div key={index} className="bg-editor-bg p-3 rounded-lg border border-editor-border mb-3">
-            <div className="flex justify-between items-center mb-2">
-              <span className="text-xs font-bold text-editor-text-secondary">Member #{index + 1}</span>
-              <button
-                onClick={() => {
-                  const newItems = [...(data?.team?.items || [])];
-                  newItems.splice(index, 1);
-                  setNestedData('team.items', newItems);
-                }}
-                className="text-editor-text-secondary hover:text-red-400 transition-colors"
-              >
-                <Trash2 size={14} />
-              </button>
-            </div>
-            <ImagePicker label="Photo" value={member.imageUrl} onChange={(url) => setNestedData(`team.items.${index}.imageUrl`, url)} />
-            <Input label="Name" value={member.name} onChange={(e) => setNestedData(`team.items.${index}.name`, e.target.value)} />
+            <ImagePicker
+              label={`${t('editor.controls.team.member')} #${index + 1}`}
+              value={member.imageUrl}
+              onChange={(url) => setNestedData(`team.items.${index}.imageUrl`, url)}
+              onRemove={() => {
+                const newItems = [...(data?.team?.items || [])];
+                newItems.splice(index, 1);
+                setNestedData('team.items', newItems);
+              }}
+            />
+            <Input label="Name" value={member.name} onChange={(e) => setNestedData(`team.items.${index}.name`, e.target.value)} className="mt-2" />
             <Input label="Role" value={member.role} onChange={(e) => setNestedData(`team.items.${index}.role`, e.target.value)} />
           </div>
         ))}
@@ -7763,22 +7744,14 @@ const Controls: React.FC = () => {
         <h4 className="font-bold text-editor-text-primary text-sm uppercase tracking-wider mb-2">Slides</h4>
         {(data.slideshow.items || []).map((item: any, index: number) => (
           <div key={index} className="bg-editor-bg p-3 rounded-lg border border-editor-border mb-3 group">
-            <div className="flex justify-between items-center mb-2">
-              <span className="text-xs font-bold text-editor-text-secondary">Slide #{index + 1}</span>
-              <button
-                onClick={() => {
-                  const newItems = (data.slideshow.items || []).filter((_: any, i: number) => i !== index);
-                  setNestedData('slideshow.items', newItems);
-                }}
-                className="text-editor-text-secondary hover:text-red-400 transition-colors"
-              >
-                <Trash2 size={14} />
-              </button>
-            </div>
             <ImagePicker
-              label="Image"
+              label={`Slide #${index + 1}`}
               value={item.imageUrl}
               onChange={(url) => setNestedData(`slideshow.items.${index}.imageUrl`, url)}
+              onRemove={() => {
+                const newItems = (data.slideshow.items || []).filter((_: any, i: number) => i !== index);
+                setNestedData('slideshow.items', newItems);
+              }}
             />
             <input
               placeholder="Alt Text"

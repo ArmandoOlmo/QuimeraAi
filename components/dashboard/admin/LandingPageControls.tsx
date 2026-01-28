@@ -13,6 +13,7 @@ import {
     LayoutGrid, Columns, Rows, Clock, Play, Pause, Settings, ImageIcon,
     RotateCcw, Info, Loader2, Grid, Check
 } from 'lucide-react';
+import ImagePicker from '../../ui/ImagePicker';
 import ImagePickerModal from '../../ui/ImagePickerModal';
 import ImageGeneratorModal from '../../ui/ImageGeneratorModal';
 import ColorControl from '../../ui/ColorControl';
@@ -164,6 +165,7 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
     const [isImagePickerOpen, setIsImagePickerOpen] = useState(false);
     const [isAIGeneratorOpen, setIsAIGeneratorOpen] = useState(false);
     const [imageTargetField, setImageTargetField] = useState<string>('heroImage');
+    const [imageTargetIndex, setImageTargetIndex] = useState<number | null>(null);
 
     // Global styles states - for Coolors and palette management
     const [showCoolorsImporter, setShowCoolorsImporter] = useState(false);
@@ -228,6 +230,31 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
     // ========================================================================
     // HERO CONTROLS
     // ========================================================================
+    // Helper to get active palette colors
+    const getSelectedPaletteColors = () => {
+        // 1. Try to find 'colors' section data from allSections prop
+        if (allSections) {
+            const colorsSection = allSections.find(s => s.type === 'colors');
+            if (colorsSection && colorsSection.data) {
+                // If we found the global colors section, return its colors
+                // We construct an array from the main theme colors
+                const { backgroundColor, textColor, accentColor, secondaryColor, mainColor } = colorsSection.data;
+                const palette = [
+                    backgroundColor,
+                    textColor,
+                    accentColor,
+                    secondaryColor || '#3b82f6', // fallback defaults matching standard palette
+                    mainColor || '#3b82f6'
+                ].filter(Boolean); // Filter out undefined/null
+
+                if (palette.length > 0) return palette;
+            }
+        }
+
+        // 2. Fallback to default palette if no global section found
+        return ['#000000', '#ffffff', '#facc15', '#3b82f6', '#10b981'];
+    };
+
     const renderHeroControls = () => (
         <div className="space-y-6">
             {activeTab === 'content' && (
@@ -280,55 +307,86 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                     </ControlGroup>
 
                     <ControlGroup label={t('landingEditor.heroImage', 'Imagen')}>
-                        <div className="flex gap-2">
-                            <TextInput
-                                value={data.heroImage || ''}
-                                onChange={(v) => updateData('heroImage', v)}
-                                placeholder="URL de la imagen"
-                            />
-                            <button
-                                onClick={() => { setImageTargetField('heroImage'); setIsImagePickerOpen(true); }}
-                                className="shrink-0 p-2 rounded-lg bg-muted hover:bg-muted-foreground/20 transition-colors"
-                                title={t('landingEditor.selectFromLibrary', 'Seleccionar de librería')}
-                            >
-                                <Image size={18} />
-                            </button>
-                            <button
-                                onClick={() => { setImageTargetField('heroImage'); setIsAIGeneratorOpen(true); }}
-                                className="shrink-0 p-2 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
-                                title={t('landingEditor.generateWithAI', 'Generar con IA')}
-                            >
-                                <Sparkles size={18} />
-                            </button>
+                        <div className="p-3 bg-muted/50 rounded-lg border border-border space-y-2">
+                            <div className="flex items-center justify-between gap-2">
+                                <div className="relative w-16 h-10 bg-muted rounded overflow-hidden flex-shrink-0 border border-border">
+                                    {data.heroImage ? (
+                                        <img src={data.heroImage} alt="" className="w-full h-full object-cover" />
+                                    ) : (
+                                        <div className="w-full h-full flex items-center justify-center text-muted-foreground"><ImageIcon size={12} /></div>
+                                    )}
+                                </div>
+
+                                <div className="flex gap-1">
+                                    <button
+                                        onClick={() => { setImageTargetField('heroImage'); setIsImagePickerOpen(true); }}
+                                        className="shrink-0 p-2 rounded-lg bg-muted hover:bg-muted-foreground/20 transition-colors"
+                                        title={t('landingEditor.selectFromLibrary', 'Seleccionar de librería')}
+                                    >
+                                        <Image size={16} />
+                                    </button>
+                                    <button
+                                        onClick={() => { setImageTargetField('heroImage'); setIsAIGeneratorOpen(true); }}
+                                        className="shrink-0 p-2 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+                                        title={t('landingEditor.generateWithAI', 'Generar con IA')}
+                                    >
+                                        <Sparkles size={16} />
+                                    </button>
+                                    {data.heroImage && (
+                                        <button
+                                            onClick={() => updateData('heroImage', '')}
+                                            className="p-2 text-destructive hover:bg-destructive/10 rounded"
+                                            title={t('landingEditor.removeImage', 'Eliminar imagen')}
+                                        >
+                                            <Trash2 size={16} />
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
                         </div>
                     </ControlGroup>
                 </>
             )}
-
             {activeTab === 'style' && (
                 <>
-                    <SelectControl
-                        label={t('landingEditor.layout', 'Layout')}
-                        value={data.layout || 'centered'}
-                        options={[
-                            { value: 'centered', label: 'Centrado' },
-                            { value: 'left', label: 'Izquierda' },
-                            { value: 'right', label: 'Derecha' },
-                            { value: 'split', label: 'Dividido' },
-                        ]}
-                        onChange={(v) => updateData('layout', v)}
-                    />
+                    <div className="space-y-4">
+                        <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider block">
+                            {t('landingEditor.layout', 'DISEÑO Y ESTRUCTURA')}
+                        </label>
+                        <div className="grid grid-cols-4 gap-2">
+                            {[
+                                { id: 'centered', icon: AlignCenter, label: 'Centrado' },
+                                { id: 'left', icon: AlignLeft, label: 'Izquierda' },
+                                { id: 'right', icon: AlignRight, label: 'Derecha' },
+                                { id: 'split', icon: Columns, label: 'Dividido' }
+                            ].map((option) => (
+                                <button
+                                    key={option.id}
+                                    onClick={() => updateData('layout', option.id)}
+                                    className={`flex flex-col items-center justify-center p-3 rounded-lg border transition-all ${data.layout === option.id
+                                        ? 'bg-primary/10 border-primary text-primary'
+                                        : 'bg-card border-border hover:border-primary/50 text-muted-foreground'
+                                        }`}
+                                    title={option.label}
+                                >
+                                    <option.icon size={20} className="mb-1" />
+                                </button>
+                            ))}
+                        </div>
+                    </div>
 
                     <ColorControl
                         label={t('landingEditor.backgroundColor', 'Fondo')}
                         value={data.backgroundColor || '#000000'}
                         onChange={(v) => updateData('backgroundColor', v)}
+                        paletteColors={getSelectedPaletteColors()}
                     />
 
                     <ColorControl
                         label={t('landingEditor.textColor', 'Texto')}
                         value={data.textColor || '#ffffff'}
                         onChange={(v) => updateData('textColor', v)}
+                        paletteColors={getSelectedPaletteColors()}
                     />
 
                     <RangeControl
@@ -340,11 +398,71 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                         onChange={(v) => updateData('padding', v)}
                     />
 
-                    <Toggle
-                        label={t('landingEditor.showGradient', 'Mostrar gradiente')}
-                        checked={data.showGradient ?? false}
-                        onChange={(v) => updateData('showGradient', v)}
-                    />
+                    <div className="border-t border-border pt-4">
+                        <Toggle
+                            label={t('landingEditor.gradient', 'Mostrar Gradiente')}
+                            checked={data.showGradient || false}
+                            onChange={(v) => updateData('showGradient', v)}
+                        />
+                        {data.showGradient && (
+                            <div className="mt-4 space-y-4 pl-4 border-l-2 border-primary/20">
+                                <SelectControl
+                                    label="Dirección"
+                                    value={data.gradientDirection || 'to bottom'}
+                                    options={[
+                                        { value: 'to bottom', label: 'Vertical ↓' },
+                                        { value: 'to right', label: 'Horizontal →' },
+                                        { value: 'to bottom right', label: 'Diagonal ↘' },
+                                        { value: 'radial', label: 'Radial O' },
+                                    ]}
+                                    onChange={(v) => updateData('gradientDirection', v)}
+                                />
+                                <div className="grid grid-cols-2 gap-2">
+                                    <ColorControl
+                                        label="Inicio"
+                                        value={data.gradientStart || '#000000'}
+                                        onChange={(v) => updateData('gradientStart', v)}
+                                        paletteColors={getSelectedPaletteColors()}
+                                    />
+                                    <ColorControl
+                                        label="Fin"
+                                        value={data.gradientEnd || 'transparent'}
+                                        onChange={(v) => updateData('gradientEnd', v)}
+                                        paletteColors={getSelectedPaletteColors()}
+                                    />
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="border-t border-border pt-4">
+                        <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2 block">
+                            {t('landingEditor.overlay', 'SUPERPOSICIÓN (OVERLAY)')}
+                        </label>
+                        <div className="space-y-4">
+                            <div className="space-y-2">
+                                <div className="flex justify-between text-xs">
+                                    <span className="text-muted-foreground">Opacidad</span>
+                                    <span className="font-mono">{((data.overlayOpacity ?? 0) * 100).toFixed(0)}%</span>
+                                </div>
+                                <input
+                                    type="range"
+                                    min="0"
+                                    max="1"
+                                    step="0.1"
+                                    value={data.overlayOpacity ?? 0}
+                                    onChange={(e) => updateData('overlayOpacity', parseFloat(e.target.value))}
+                                    className="w-full"
+                                />
+                            </div>
+                            <ColorControl
+                                label="Color de Fondo"
+                                value={data.overlayColor || '#000000'}
+                                onChange={(v) => updateData('overlayColor', v)}
+                                paletteColors={getSelectedPaletteColors()}
+                            />
+                        </div>
+                    </div>
                 </>
             )}
         </div>
@@ -444,18 +562,21 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                         label={t('landingEditor.backgroundColor', 'Fondo')}
                         value={data.backgroundColor || '#0A0A0A'}
                         onChange={(v) => updateData('backgroundColor', v)}
+                        paletteColors={getSelectedPaletteColors()}
                     />
 
                     <ColorControl
                         label={t('landingEditor.textColor', 'Texto')}
                         value={data.textColor || '#ffffff'}
                         onChange={(v) => updateData('textColor', v)}
+                        paletteColors={getSelectedPaletteColors()}
                     />
 
                     <ColorControl
                         label={t('landingEditor.accentColor', 'Color de acento')}
                         value={data.accentColor || '#facc15'}
                         onChange={(v) => updateData('accentColor', v)}
+                        paletteColors={getSelectedPaletteColors()}
                     />
 
                     <RangeControl
@@ -527,18 +648,21 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                         label={t('landingEditor.backgroundColor', 'Fondo')}
                         value={data.backgroundColor || '#0A0A0A'}
                         onChange={(v) => updateData('backgroundColor', v)}
+                        paletteColors={getSelectedPaletteColors()}
                     />
 
                     <ColorControl
                         label={t('landingEditor.textColor', 'Texto')}
                         value={data.textColor || '#ffffff'}
                         onChange={(v) => updateData('textColor', v)}
+                        paletteColors={getSelectedPaletteColors()}
                     />
 
                     <ColorControl
                         label={t('landingEditor.accentColor', 'Color de acento')}
                         value={data.accentColor || '#facc15'}
                         onChange={(v) => updateData('accentColor', v)}
+                        paletteColors={getSelectedPaletteColors()}
                     />
 
                     <RangeControl
@@ -637,18 +761,21 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                         label={t('landingEditor.backgroundColor', 'Fondo')}
                         value={data.backgroundColor || '#050505'}
                         onChange={(v) => updateData('backgroundColor', v)}
+                        paletteColors={getSelectedPaletteColors()}
                     />
 
                     <ColorControl
                         label={t('landingEditor.textColor', 'Texto')}
                         value={data.textColor || '#ffffff'}
                         onChange={(v) => updateData('textColor', v)}
+                        paletteColors={getSelectedPaletteColors()}
                     />
 
                     <ColorControl
                         label={t('landingEditor.accentColor', 'Color de acento')}
                         value={data.accentColor || '#facc15'}
                         onChange={(v) => updateData('accentColor', v)}
+                        paletteColors={getSelectedPaletteColors()}
                     />
 
                     <RangeControl
@@ -755,18 +882,21 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                         label={t('landingEditor.backgroundColor', 'Fondo')}
                         value={data.backgroundColor || '#0A0A0A'}
                         onChange={(v) => updateData('backgroundColor', v)}
+                        paletteColors={getSelectedPaletteColors()}
                     />
 
                     <ColorControl
                         label={t('landingEditor.textColor', 'Texto')}
                         value={data.textColor || '#ffffff'}
                         onChange={(v) => updateData('textColor', v)}
+                        paletteColors={getSelectedPaletteColors()}
                     />
 
                     <ColorControl
                         label={t('landingEditor.accentColor', 'Color de acento')}
                         value={data.accentColor || '#facc15'}
                         onChange={(v) => updateData('accentColor', v)}
+                        paletteColors={getSelectedPaletteColors()}
                     />
 
                     <RangeControl
@@ -844,12 +974,14 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                         label={t('landingEditor.backgroundColor', 'Fondo')}
                         value={data.backgroundColor || '#7c3aed'}
                         onChange={(v) => updateData('backgroundColor', v)}
+                        paletteColors={getSelectedPaletteColors()}
                     />
 
                     <ColorControl
                         label={t('landingEditor.textColor', 'Texto')}
                         value={data.textColor || '#ffffff'}
                         onChange={(v) => updateData('textColor', v)}
+                        paletteColors={getSelectedPaletteColors()}
                     />
 
                     <Toggle
@@ -914,6 +1046,7 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                         label={t('landingEditor.backgroundColor', 'Fondo')}
                         value={data.backgroundColor || '#111827'}
                         onChange={(v) => updateData('backgroundColor', v)}
+                        paletteColors={getSelectedPaletteColors()}
                     />
 
                     <SelectControl
@@ -1025,6 +1158,7 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                         label={t('landingEditor.backgroundColor', 'Fondo')}
                         value={data.backgroundColor || '#000000'}
                         onChange={(v) => updateData('backgroundColor', v)}
+                        paletteColors={getSelectedPaletteColors()}
                     />
                 </>
             )}
@@ -1040,104 +1174,202 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
     );
 
     // ========================================================================
-    // SCREENSHOT CAROUSEL CONTROLS
+    // IMAGE CAROUSEL CONTROLS
     // ========================================================================
-    const renderCarouselControls = () => (
-        <div className="space-y-6">
-            {activeTab === 'content' && (
-                <>
-                    <ControlGroup label={t('landingEditor.sectionTitle', 'Título de Sección')}>
-                        <TextInput
-                            value={data.title || ''}
-                            onChange={(v) => updateData('title', v)}
-                            placeholder="Ej: Descubre nuestra plataforma"
+    const renderCarouselControls = () => {
+        // Ensure images is array of objects for new functionality
+        // Migration: string[] -> { url: string }[]
+        const images = Array.isArray(data.images)
+            ? data.images.map((img: any) => typeof img === 'string' ? { url: img, title: '', subtitle: '' } : img)
+            : [];
+
+        const updateImages = (newImages: any[]) => {
+            updateData('images', newImages);
+        };
+
+        return (
+            <div className="space-y-6">
+                {activeTab === 'content' && (
+                    <>
+                        <ControlGroup label={t('landingEditor.sectionTitle', 'Título de Sección')}>
+                            <TextInput
+                                value={data.title || ''}
+                                onChange={(v) => updateData('title', v)}
+                                placeholder="Ej: Nuestra Galería"
+                            />
+                        </ControlGroup>
+
+                        <ControlGroup label={t('landingEditor.sectionSubtitle', 'Descripción')}>
+                            <TextInput
+                                value={data.subtitle || ''}
+                                onChange={(v) => updateData('subtitle', v)}
+                                placeholder="Ej: Un vistazo a nuestros proyectos"
+                                multiline
+                            />
+                        </ControlGroup>
+
+                        <SelectControl
+                            label={t('landingEditor.carouselMode', 'Modo de Visualización')}
+                            value={data.variant || 'basic'}
+                            options={[
+                                { value: 'basic', label: 'Básico (Solo Imágenes)' },
+                                { value: 'gradient', label: 'Gradiente con Texto' },
+                                { value: 'cards', label: 'Tarjetas Modernas' },
+                                { value: 'modern', label: 'Coverflow 3D' },
+                            ]}
+                            onChange={(v) => updateData('variant', v)}
                         />
-                    </ControlGroup>
 
-                    <ControlGroup label={t('landingEditor.carouselImages', 'Imágenes')}>
-                        <div className="space-y-2 mt-2">
-                            {(data.images || []).map((image: string, idx: number) => (
-                                <div key={idx} className="flex items-center gap-2">
-                                    <TextInput
-                                        value={image}
-                                        onChange={(v) => {
-                                            const newImages = [...(data.images || [])];
-                                            newImages[idx] = v;
-                                            updateData('images', newImages);
-                                        }}
-                                        placeholder="URL de imagen"
-                                    />
-                                    <button
-                                        onClick={() => {
-                                            const newImages = [...(data.images || [])];
-                                            newImages.splice(idx, 1);
-                                            updateData('images', newImages);
-                                        }}
-                                        className="shrink-0 p-2 text-destructive hover:bg-destructive/10 rounded"
-                                    >
-                                        <Trash2 size={16} />
-                                    </button>
-                                </div>
-                            ))}
-                            <button
-                                onClick={() => {
-                                    updateData('images', [...(data.images || []), '']);
-                                }}
-                                className="w-full py-2 px-4 rounded-lg border border-dashed border-border text-sm text-muted-foreground hover:border-primary hover:text-primary transition-colors flex items-center justify-center gap-2"
-                            >
-                                <Plus size={16} />
-                                {t('landingEditor.addImage', 'Añadir imagen')}
-                            </button>
-                        </div>
-                    </ControlGroup>
+                        <ControlGroup label={t('landingEditor.carouselImages', 'Imágenes')}>
+                            <div className="space-y-3 mt-2">
+                                {images.map((image: any, idx: number) => (
+                                    <div key={idx} className="p-3 bg-muted/50 rounded-lg border border-border space-y-2">
+                                        <div className="flex items-center justify-between gap-2">
+                                            <div className="relative w-16 h-10 bg-muted rounded overflow-hidden flex-shrink-0 border border-border">
+                                                {image.url ? (
+                                                    <img src={image.url} alt="" className="w-full h-full object-cover" />
+                                                ) : (
+                                                    <div className="w-full h-full flex items-center justify-center text-muted-foreground"><Image size={12} /></div>
+                                                )}
+                                            </div>
 
-                    <button className="w-full py-3 px-4 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 text-white font-medium flex items-center justify-center gap-2 hover:opacity-90 transition-opacity">
-                        <Sparkles size={18} />
-                        {t('landingEditor.generateWithAI', 'Generar con IA')}
-                    </button>
-                </>
-            )}
+                                            <div className="flex gap-1">
+                                                <button
+                                                    onClick={() => { setImageTargetField('carouselImage'); setImageTargetIndex(idx); setIsImagePickerOpen(true); }}
+                                                    className="shrink-0 p-2 rounded-lg bg-muted hover:bg-muted-foreground/20 transition-colors"
+                                                    title={t('landingEditor.selectFromLibrary', 'Seleccionar de librería')}
+                                                >
+                                                    <Image size={16} />
+                                                </button>
+                                                <button
+                                                    onClick={() => { setImageTargetField('carouselImage'); setImageTargetIndex(idx); setIsAIGeneratorOpen(true); }}
+                                                    className="shrink-0 p-2 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+                                                    title={t('landingEditor.generateWithAI', 'Generar con IA')}
+                                                >
+                                                    <Sparkles size={16} />
+                                                </button>
+                                                <button
+                                                    onClick={() => {
+                                                        const newImages = [...images];
+                                                        newImages.splice(idx, 1);
+                                                        updateImages(newImages);
+                                                    }}
+                                                    className="p-2 text-destructive hover:bg-destructive/10 rounded"
+                                                >
+                                                    <Trash2 size={16} />
+                                                </button>
+                                            </div>
+                                        </div>
 
-            {activeTab === 'style' && (
-                <>
-                    <Toggle
-                        label={t('landingEditor.autoScroll', 'Auto-scroll')}
-                        checked={data.autoScroll ?? true}
-                        onChange={(v) => updateData('autoScroll', v)}
+                                        {/* Show extra fields for non-basic modes */}
+                                        {data.variant !== 'basic' && (
+                                            <div className="pl-2 border-l-2 border-primary/20 space-y-2 animate-in slide-in-from-left-2 duration-200">
+                                                <TextInput
+                                                    value={image.title || ''}
+                                                    onChange={(v) => {
+                                                        const newImages = [...images];
+                                                        newImages[idx] = { ...newImages[idx], title: v };
+                                                        updateImages(newImages);
+                                                    }}
+                                                    placeholder="Título de la imagen"
+                                                />
+                                                <TextInput
+                                                    value={image.subtitle || ''}
+                                                    onChange={(v) => {
+                                                        const newImages = [...images];
+                                                        newImages[idx] = { ...newImages[idx], subtitle: v };
+                                                        updateImages(newImages);
+                                                    }}
+                                                    placeholder="Descripción corta"
+                                                />
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
+                                <button
+                                    onClick={() => {
+                                        updateImages([...images, { url: '', title: '', subtitle: '' }]);
+                                    }}
+                                    className="w-full py-2 px-4 rounded-lg border border-dashed border-border text-sm text-muted-foreground hover:border-primary hover:text-primary transition-colors flex items-center justify-center gap-2"
+                                >
+                                    <Plus size={16} />
+                                    {t('landingEditor.addImage', 'Añadir imagen')}
+                                </button>
+                            </div>
+                        </ControlGroup>
+                    </>
+                )}
+
+                <ColorControl
+                    label={t('landingEditor.backgroundColor', 'Fondo')}
+                    value={data.backgroundColor || '#0A0A0A'}
+                    onChange={(v) => updateData('backgroundColor', v)}
+                    paletteColors={getSelectedPaletteColors()}
+                />
+                <ColorControl
+                    label={t('landingEditor.textColor', 'Texto')}
+                    value={data.textColor || '#ffffff'}
+                    onChange={(v) => updateData('textColor', v)}
+                    paletteColors={getSelectedPaletteColors()}
+                />
+                <ColorControl
+                    label={t('landingEditor.accentColor', 'Color Acento')}
+                    value={data.accentColor || '#facc15'}
+                    onChange={(v) => updateData('accentColor', v)}
+                    paletteColors={getSelectedPaletteColors()}
+                />
+                <RangeControl
+                    label={t('landingEditor.padding', 'Espaciado')}
+                    value={data.padding || 80}
+                    min={20}
+                    max={200}
+                    unit="px"
+                    onChange={(v) => updateData('padding', v)}
+                />
+
+                <Toggle
+                    label={t('landingEditor.autoScroll', 'Auto-scroll')}
+                    checked={data.autoScroll ?? true}
+                    onChange={(v) => updateData('autoScroll', v)}
+                />
+
+                {data.autoScroll !== false && (
+                    <RangeControl
+                        label={t('landingEditor.scrollSpeed', 'Velocidad')}
+                        value={data.scrollSpeed || 50}
+                        min={10}
+                        max={200}
+                        unit="px/s"
+                        onChange={(v) => updateData('scrollSpeed', v)}
                     />
+                )}
 
-                    {data.autoScroll !== false && (
-                        <RangeControl
-                            label={t('landingEditor.scrollSpeed', 'Velocidad')}
-                            value={data.scrollSpeed || 50}
-                            min={10}
-                            max={200}
-                            unit="px/s"
-                            onChange={(v) => updateData('scrollSpeed', v)}
-                        />
-                    )}
+                <SelectControl
+                    label={t('landingEditor.aspectRatio', 'Aspect Ratio')}
+                    value={data.aspectRatio || '16:9'}
+                    options={[
+                        { value: '16:9', label: '16:9 (Widescreen)' },
+                        { value: '4:3', label: '4:3 (Estándar)' },
+                        { value: '3:2', label: '3:2' },
+                        { value: '1:1', label: '1:1 (Cuadrado)' },
+                    ]}
+                    onChange={(v) => updateData('aspectRatio', v)}
+                />
 
-                    <SelectControl
-                        label={t('landingEditor.aspectRatio', 'Aspect Ratio')}
-                        value={data.aspectRatio || '16:9'}
-                        options={[
-                            { value: '16:9', label: '16:9 (Widescreen)' },
-                            { value: '4:3', label: '4:3 (Estándar)' },
-                            { value: '3:2', label: '3:2' },
-                            { value: '1:1', label: '1:1 (Cuadrado)' },
-                        ]}
-                        onChange={(v) => updateData('aspectRatio', v)}
-                    />
+                <Toggle
+                    label={t('landingEditor.showNavigation', 'Mostrar navegación')}
+                    checked={data.showNavigation ?? true}
+                    onChange={(v) => updateData('showNavigation', v)}
+                />
 
-                    <Toggle
-                        label={t('landingEditor.showNavigation', 'Mostrar navegación')}
-                        checked={data.showNavigation ?? true}
-                        onChange={(v) => updateData('showNavigation', v)}
-                    />
-                </>
-            )}
-        </div>
-    );
+                <Toggle
+                    label={t('landingEditor.showScrollbar', 'Mostrar barra de desplazamiento')}
+                    checked={data.showScrollbar ?? false}
+                    onChange={(v) => updateData('showScrollbar', v)}
+                />
+            </div>
+        );
+    };
 
     // ========================================================================
     // GLOBAL STYLES CONTROLS - Coolors & Palettes
@@ -1555,10 +1787,36 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
             {/* Image Picker Modal */}
             <ImagePickerModal
                 isOpen={isImagePickerOpen}
-                onClose={() => setIsImagePickerOpen(false)}
-                onSelect={(url) => {
-                    updateData(imageTargetField, url);
+                onClose={() => {
                     setIsImagePickerOpen(false);
+                    setImageTargetIndex(null);
+                }}
+                onSelect={(url) => {
+                    try {
+                        console.log('ImagePicker onSelect:', { url, imageTargetField, imageTargetIndex });
+
+                        if (imageTargetField === 'carouselImage' && imageTargetIndex !== null) {
+                            const rawImages = Array.isArray(data.images) ? data.images : [];
+                            // Ensure strict object structure to prevent string spreading issues
+                            const currentImages = rawImages.map((img: any) =>
+                                typeof img === 'string' ? { url: img, title: '', subtitle: '' } : { ...img }
+                            );
+
+                            if (currentImages[imageTargetIndex]) {
+                                currentImages[imageTargetIndex].url = url;
+                                updateData('images', currentImages);
+                            } else {
+                                console.error('Target index out of bounds:', imageTargetIndex);
+                            }
+                        } else {
+                            updateData(imageTargetField, url);
+                        }
+                    } catch (error) {
+                        console.error('Error in ImagePicker onSelect:', error);
+                    } finally {
+                        setIsImagePickerOpen(false);
+                        setImageTargetIndex(null);
+                    }
                 }}
                 title={t('landingEditor.selectImage', 'Seleccionar Imagen')}
             />

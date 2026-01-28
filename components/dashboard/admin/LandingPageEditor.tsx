@@ -44,7 +44,7 @@ const AVAILABLE_COMPONENTS = [
     { type: 'testimonials', label: 'Testimonios', icon: <Type size={18} /> },
     { type: 'faq', label: 'Preguntas Frecuentes', icon: <Type size={18} /> },
     { type: 'cta', label: 'Llamada a Acción', icon: <Type size={18} /> },
-    { type: 'screenshotCarousel', label: 'Carrusel de Screenshots', icon: <Image size={18} />, isNew: true },
+    { type: 'screenshotCarousel', label: 'Carrusel de Imágenes', icon: <Image size={18} />, isNew: true },
 ];
 
 // Structure items for global settings (ESTRUCTURA section)
@@ -83,6 +83,8 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
 
     // Reset confirmation modal
     const [showResetConfirm, setShowResetConfirm] = useState(false);
+    // Delete confirmation modal
+    const [sectionToDelete, setSectionToDelete] = useState<string | null>(null);
 
     // Iframe ref for postMessage
     const iframeRef = useRef<HTMLIFrameElement>(null);
@@ -217,13 +219,18 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
         setHasUnsavedChanges(true);
     };
 
-    // Delete section
+    // Delete section - triggers modal
     const deleteSection = (id: string) => {
-        if (window.confirm(t('landingEditor.confirmDelete', '¿Eliminar esta sección?'))) {
-            setSections(prev => prev.filter(s => s.id !== id));
-            if (selectedSection === id) setSelectedSection(null);
-            setHasUnsavedChanges(true);
-        }
+        setSectionToDelete(id);
+    };
+
+    // Confirm delete - executing the action
+    const confirmDeleteSection = () => {
+        if (!sectionToDelete) return;
+        setSections(prev => prev.filter(s => s.id !== sectionToDelete));
+        if (selectedSection === sectionToDelete) setSelectedSection(null);
+        setHasUnsavedChanges(true);
+        setSectionToDelete(null);
     };
 
     // Add new component
@@ -746,6 +753,34 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
                             className="px-4 py-2 rounded-lg bg-amber-500 hover:bg-amber-600 text-white transition-colors"
                         >
                             {t('landingEditor.discardChanges', 'Descartar')}
+                        </button>
+                    </div>
+                </div>
+            </Modal>
+
+            {/* Delete Confirmation Modal */}
+            <Modal
+                isOpen={!!sectionToDelete}
+                onClose={() => setSectionToDelete(null)}
+                maxWidth="max-w-md"
+            >
+                <div className="p-6">
+                    <h3 className="text-xl font-bold mb-4">{t('landingEditor.confirmDeleteTitle', 'Eliminar Sección')}</h3>
+                    <p className="text-muted-foreground mb-6">
+                        {t('landingEditor.confirmDeleteMessage', '¿Estás seguro de que quieres eliminar esta sección? Esta acción no se puede deshacer.')}
+                    </p>
+                    <div className="flex justify-end gap-3">
+                        <button
+                            onClick={() => setSectionToDelete(null)}
+                            className="px-4 py-2 rounded-lg hover:bg-secondary transition-colors"
+                        >
+                            {t('common.cancel', 'Cancelar')}
+                        </button>
+                        <button
+                            onClick={confirmDeleteSection}
+                            className="px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white transition-colors"
+                        >
+                            {t('common.delete', 'Eliminar')}
                         </button>
                     </div>
                 </div>

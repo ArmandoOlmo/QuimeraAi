@@ -32,6 +32,7 @@ import {
   User
 } from 'lucide-react';
 import LanguageSelector from './ui/LanguageSelector';
+import ImageCarousel from './ImageCarousel';
 import { useSafeAppContent } from '../contexts/appContent';
 import { AppArticle, AppNavItem, DEFAULT_APP_NAVIGATION } from '../types/appContent';
 import { useLandingPlans } from '../hooks/useLandingPlans';
@@ -277,15 +278,21 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
     }
   };
 
-  // Compute ordered section types based on previewSections order
+  // Compute ordered sections based on previewSections order
   // This enables dynamic reordering in the preview
-  const orderedSectionTypes = useMemo(() => {
-    // Default order when not in preview mode
+  const orderedSections = useMemo(() => {
+    // Default order when not in preview mode or empty
     const defaultOrder = ['hero', 'features', 'testimonials', 'pricing', 'faq', 'cta'];
 
     // Default order if no sections loaded
     if (previewSections.length === 0) {
-      return defaultOrder;
+      return defaultOrder.map((type, index) => ({
+        id: type,
+        type,
+        enabled: true,
+        order: index,
+        data: {}
+      } as PreviewSection));
     }
 
     // Sort sections by their order property, excluding header and footer
@@ -293,7 +300,7 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
       .filter(s => s.type !== 'header' && s.type !== 'footer')
       .sort((a, b) => a.order - b.order);
 
-    return sortedSections.map(s => s.type);
+    return sortedSections;
   }, [isPreviewMode, previewSections]);
 
   // Pricing plans are now loaded dynamically from Firestore via useLandingPlans hook
@@ -371,123 +378,232 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
   );
 
   // Render a section by type - enables dynamic ordering
-  const renderSection = (sectionType: string): React.ReactNode => {
+  const renderSection = (section: PreviewSection): React.ReactNode => {
     // Check visibility first
-    if (!isSectionVisible(sectionType)) return null;
+    if (section.enabled === false) return null;
+
+    const sectionType = section.type;
 
     switch (sectionType) {
       case 'hero':
-        // Get style values from preview data with defaults
-        const heroBackgroundColor = heroPreview?.backgroundColor || '#0A0A0A';
-        const heroTextColor = heroPreview?.textColor || '#ffffff';
-        const heroPadding = heroPreview?.padding || 80;
-        const heroShowGradient = heroPreview?.showGradient ?? false;
-        const heroLayout = heroPreview?.layout || 'centered';
+      case 'heroModern':
+      case 'heroGradient': {
+        const currentSectionData = section.data || {};
+        const heroBackgroundColor = currentSectionData?.backgroundColor || '#0A0A0A';
+        const heroTextColor = currentSectionData?.textColor || '#ffffff';
+        const heroPadding = currentSectionData?.padding || 80;
+        const heroShowGradient = currentSectionData?.showGradient ?? (sectionType === 'heroGradient' ? true : false);
+        const heroLayout = currentSectionData?.layout || 'centered';
+        const overlayOpacity = currentSectionData?.overlayOpacity ?? 0;
+        const overlayColor = currentSectionData?.overlayColor || '#000000';
+        const gradientDirection = currentSectionData?.gradientDirection || 'to bottom';
+        const gradientStart = currentSectionData?.gradientStart || (sectionType === 'heroGradient' ? '#ff0080' : '#000000');
+        const gradientEnd = currentSectionData?.gradientEnd || (sectionType === 'heroGradient' ? '#7928ca' : 'transparent');
 
-        // Debug logging
-        console.log('[Preview] Rendering Hero with:', {
-          isPreviewMode,
-          previewSectionsLength: previewSections.length,
-          heroPreview,
-          heroBackgroundColor,
-          heroTextColor
-        });
+        const heroAlignmentClasses = heroLayout === 'left' ? 'items-start text-left'
+          : heroLayout === 'right' ? 'items-end text-right'
+            : heroLayout === 'split' ? 'items-start text-left'
+              : 'items-center text-center';
 
-        // Determine layout alignment classes
-        const heroAlignmentClasses = heroLayout === 'left'
-          ? 'items-start text-left'
-          : heroLayout === 'right'
-            ? 'items-end text-right'
-            : 'items-center text-center';
+        const sectionStyle = {
+          backgroundColor: heroBackgroundColor,
+          color: heroTextColor,
+          paddingTop: `${heroPadding}px`,
+          paddingBottom: sectionType === 'heroGradient' ? '0px' : `${heroPadding}px`,
+          background: heroShowGradient
+            ? `linear-gradient(${gradientDirection}, ${gradientStart}, ${gradientEnd}), ${heroBackgroundColor}`
+            : heroBackgroundColor
+        };
 
-        return (
-          <section
-            key="hero"
-            id="section-hero"
-            className={`min-h-screen flex flex-col justify-center pt-16 sm:pt-20 px-4 sm:px-6 relative overflow-hidden ${heroAlignmentClasses}`}
-            style={{
-              backgroundColor: heroBackgroundColor,
-              color: heroTextColor,
-              paddingTop: `${heroPadding}px`,
-              paddingBottom: `${heroPadding}px`,
-            }}
-          >
-            {/* Optional gradient overlay */}
-            {heroShowGradient && (
-              <div
-                className="absolute inset-0 pointer-events-none"
-                style={{
-                  background: `linear-gradient(135deg, ${heroBackgroundColor}00 0%, ${heroBackgroundColor}80 50%, ${heroBackgroundColor} 100%)`,
-                }}
-              />
-            )}
-
-            <div className={`max-w-4xl ${heroLayout === 'centered' ? 'mx-auto' : heroLayout === 'left' ? 'mr-auto' : 'ml-auto'} relative z-10`}>
-              {/* Logo Grande */}
-              <div className={`w-28 h-28 sm:w-36 sm:h-36 md:w-48 md:h-48 mb-6 sm:mb-8 ${heroLayout === 'centered' ? 'mx-auto' : ''}`}>
-                <img
-                  src={heroPreview?.heroImage || QUIMERA_LOGO}
-                  alt="Quimera AI"
-                  className="w-full h-full object-contain drop-shadow-[0_0_30px_rgba(250,204,21,0.5)] sm:drop-shadow-[0_0_50px_rgba(250,204,21,0.6)]"
-                />
-              </div>
-
-              {/* Título Principal */}
-              <h1
-                className="text-3xl sm:text-5xl md:text-7xl font-black leading-tight mb-4 sm:mb-6 px-2"
-                style={{
-                  color: heroTextColor,
-                  fontFamily: `var(--font-heading)`,
-                  textTransform: headingsCaps ? 'uppercase' : 'none',
-                }}
-              >
-                {heroPreview?.title || t('landing.heroTitle1')}
-                <span className="block text-yellow-400">
-                  {heroPreview?.subtitle ? '' : t('landing.heroTitle2')}
-                </span>
-              </h1>
-
-              {/* Subtítulo */}
-              <p
-                className="text-base sm:text-lg md:text-xl max-w-2xl mb-8 sm:mb-10 leading-relaxed px-2"
-                style={{ color: `${heroTextColor}99` }}
-              >
-                {heroPreview?.subtitle || t('landing.heroSubtitle')}
-              </p>
-
-              {/* CTA Buttons */}
-              <div className={`flex flex-col sm:flex-row gap-3 sm:gap-4 mb-12 sm:mb-16 px-4 sm:px-0 ${heroLayout === 'centered' ? 'justify-center' : heroLayout === 'left' ? 'justify-start' : 'justify-end'}`}>
-                <button
-                  onClick={onNavigateToRegister}
-                  className="w-full sm:w-auto px-6 sm:px-8 py-3.5 sm:py-4 bg-yellow-400 text-black font-bold rounded-xl hover:bg-yellow-300 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
-                  style={{
-                    fontFamily: `var(--font-button)`,
-                    textTransform: buttonsCaps ? 'uppercase' : 'none',
-                  }}
-                >
-                  {heroPreview?.primaryButtonText || t('landing.startFree')}
-                  <ArrowRight className="w-5 h-5" />
-                </button>
-                {(heroPreview?.showSecondaryButton !== false) && (
-                  <button
-                    onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })}
-                    className="w-full sm:w-auto px-6 sm:px-8 py-3.5 sm:py-4 bg-white/5 border border-white/10 font-semibold rounded-xl hover:bg-white/10 active:scale-[0.98] transition-all"
-                    style={{
-                      color: heroTextColor,
-                      fontFamily: `var(--font-button)`,
-                      textTransform: buttonsCaps ? 'uppercase' : 'none',
-                    }}
-                  >
-                    {heroPreview?.secondaryButtonText || t('landing.viewFeatures')}
-                  </button>
-                )}
-              </div>
-            </div>
-          </section>
+        const overlayComponent = (
+          <div
+            className="absolute inset-0 z-0 pointer-events-none"
+            style={{ backgroundColor: overlayColor, opacity: overlayOpacity }}
+          />
         );
 
+        if (sectionType === 'hero') {
+          return (
+            <section
+              key="hero"
+              id={`section-${sectionType}`}
+              data-section-id={section.id}
+              className={`min-h-screen flex flex-col justify-center pt-16 sm:pt-20 px-4 sm:px-6 relative overflow-hidden ${heroAlignmentClasses}`}
+              style={sectionStyle}
+            >
+              {overlayComponent}
+              <div className={`w-full max-w-7xl mx-auto relative z-10 ${heroLayout === 'split' ? 'grid grid-cols-1 lg:grid-cols-2 gap-12 items-center' : ''}`}>
+                <div className={`${heroLayout === 'centered' ? 'mx-auto max-w-4xl' : heroLayout === 'left' ? 'mr-auto max-w-4xl' : heroLayout === 'right' ? 'ml-auto max-w-4xl' : ''}`}>
+                  {/* Logo/Image (Visible in centered/left/right) */}
+                  {heroLayout !== 'split' && (
+                    <div className={`w-28 h-28 sm:w-36 sm:h-36 md:w-48 md:h-48 mb-6 sm:mb-8 ${heroLayout === 'centered' ? 'mx-auto' : heroLayout === 'right' ? 'ml-auto' : ''}`}>
+                      <img src={currentSectionData?.heroImage || QUIMERA_LOGO} alt="Quimera AI" className="w-full h-full object-contain drop-shadow-[0_0_30px_rgba(250,204,21,0.5)] sm:drop-shadow-[0_0_50px_rgba(250,204,21,0.6)]" />
+                    </div>
+                  )}
+
+                  <h1 className="text-3xl sm:text-5xl md:text-7xl font-black leading-tight mb-4 sm:mb-6 px-2" style={{ color: heroTextColor, fontFamily: `var(--font-heading)`, textTransform: headingsCaps ? 'uppercase' : 'none' }}>
+                    {currentSectionData?.title || t('landing.heroTitle1')}
+                    <span className="block" style={{ color: currentSectionData?.accentColor || '#facc15' }}>{currentSectionData?.subtitle ? '' : t('landing.heroTitle2')}</span>
+                  </h1>
+                  <p className="text-base sm:text-lg md:text-xl max-w-2xl mb-8 sm:mb-10 leading-relaxed px-2" style={{ color: `${heroTextColor}99`, marginLeft: heroLayout === 'centered' ? 'auto' : '0', marginRight: heroLayout === 'centered' ? 'auto' : '0' }}>
+                    {currentSectionData?.subtitle || t('landing.heroSubtitle')}
+                  </p>
+                  <div className={`flex flex-col sm:flex-row gap-3 sm:gap-4 mb-12 sm:mb-16 px-4 sm:px-0 ${heroLayout === 'centered' ? 'justify-center' : heroLayout === 'left' || heroLayout === 'split' ? 'justify-start' : 'justify-end'}`}>
+                    <button
+                      onClick={onNavigateToRegister}
+                      className="w-full sm:w-auto px-6 sm:px-8 py-3.5 sm:py-4 font-bold rounded-xl hover:opacity-90 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+                      style={{
+                        backgroundColor: currentSectionData?.accentColor || '#facc15',
+                        color: '#000000',
+                        fontFamily: `var(--font-button)`,
+                        textTransform: buttonsCaps ? 'uppercase' : 'none'
+                      }}
+                    >
+                      {currentSectionData?.primaryButtonText || t('landing.startFree')}
+                      <ArrowRight className="w-5 h-5" />
+                    </button>
+                    {currentSectionData?.showSecondaryButton !== false && (
+                      <button onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })} className="w-full sm:w-auto px-6 sm:px-8 py-3.5 sm:py-4 bg-white/5 border border-white/10 font-semibold rounded-xl hover:bg-white/10 active:scale-[0.98] transition-all" style={{ color: heroTextColor, fontFamily: `var(--font-button)`, textTransform: buttonsCaps ? 'uppercase' : 'none' }}>
+                        {currentSectionData?.secondaryButtonText || t('landing.viewFeatures')}
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {heroLayout === 'split' && (
+                  <div className="flex items-center justify-center">
+                    <img
+                      src={currentSectionData?.heroImage || QUIMERA_LOGO}
+                      alt="Hero Visual"
+                      className="w-full max-w-md object-contain drop-shadow-[0_20px_50px_rgba(0,0,0,0.3)] transform hover:scale-105 transition-transform duration-700"
+                    />
+                  </div>
+                )}
+              </div>
+            </section>
+          );
+        }
+
+        if (sectionType === 'heroModern') {
+          const isReversed = heroLayout === 'right';
+          const isCentered = heroLayout === 'centered';
+
+          return (
+            <section
+              key="heroModern"
+              id={`section-${sectionType}`}
+              data-section-id={section.id}
+              className="min-h-screen flex items-center justify-center relative overflow-hidden"
+              style={sectionStyle}
+            >
+              <div className="absolute inset-0 z-0 text-center">
+                {currentSectionData?.heroImage && (
+                  <img src={currentSectionData.heroImage} alt="Background" className="w-full h-full object-cover opacity-30 blur-sm scale-110" />
+                )}
+                <div className="absolute inset-0 bg-gradient-to-t" style={{ background: `linear-gradient(to top, ${heroBackgroundColor}, ${heroBackgroundColor}cc, transparent)` }} />
+              </div>
+              {overlayComponent}
+              <div className="relative z-10 w-full max-w-7xl px-4 sm:px-6">
+                <div className={`grid grid-cols-1 ${isCentered ? 'max-w-4xl mx-auto' : 'lg:grid-cols-2'} gap-12 items-center text-center`}>
+                  <div className={`space-y-8 p-8 rounded-3xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl ${isReversed ? 'lg:order-2 text-right' : isCentered ? 'text-center' : 'text-left'}`}>
+                    <h1 className="text-4xl sm:text-6xl font-black leading-tight tracking-tight" style={{ fontFamily: `var(--font-heading)`, textTransform: headingsCaps ? 'uppercase' : 'none' }}>
+                      {currentSectionData?.title || t('landing.heroTitle1')}
+                    </h1>
+                    <p className={`text-lg sm:text-xl leading-relaxed opacity-80 ${isCentered ? 'mx-auto' : ''}`} style={{ fontFamily: `var(--font-body)` }}>
+                      {currentSectionData?.subtitle || t('landing.heroSubtitle')}
+                    </p>
+                    <div className={`flex flex-col sm:flex-row gap-4 pt-4 ${isReversed ? 'lg:justify-end' : isCentered ? 'justify-center' : 'justify-start'}`}>
+                      <button onClick={onNavigateToRegister} className="px-8 py-4 bg-white text-black font-bold rounded-full hover:bg-white/90 transition-all flex items-center justify-center gap-2" style={{ fontFamily: `var(--font-button)`, textTransform: buttonsCaps ? 'uppercase' : 'none' }}>
+                        {currentSectionData?.primaryButtonText || t('landing.startFree')}
+                        <ArrowRight className="w-5 h-5" />
+                      </button>
+                    </div>
+                  </div>
+                  {!isCentered && (
+                    <div className={`flex items-center justify-center relative ${isReversed ? 'lg:order-1' : ''}`}>
+                      <div className="absolute inset-0 bg-gradient-to-tr from-primary/20 to-purple-500/20 rounded-full blur-3xl animate-pulse" />
+                      <img src={currentSectionData?.heroImage || QUIMERA_LOGO} alt="Hero Visual" className="relative w-full max-w-md object-contain drop-shadow-[0_20px_50px_rgba(0,0,0,0.5)] transform hover:scale-105 transition-transform duration-700" />
+                    </div>
+                  )}
+                </div>
+              </div>
+            </section>
+          );
+        }
+
+        if (sectionType === 'heroGradient') {
+          const isLeft = heroLayout === 'left';
+          const isRight = heroLayout === 'right';
+
+          return (
+            <section
+              key="heroGradient"
+              id={`section-${sectionType}`}
+              data-section-id={section.id}
+              className={`min-h-screen flex flex-col relative overflow-hidden ${isLeft ? 'items-start text-left' : isRight ? 'items-end text-right' : 'items-center text-center'} ${heroPadding < 100 ? 'pt-24' : ''} justify-end`}
+              style={sectionStyle}
+            >
+              <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 brightness-100 contrast-150 mix-blend-overlay"></div>
+              {overlayComponent}
+              <div className={`relative z-10 w-full max-w-7xl px-4 sm:px-6 ${isLeft ? 'mr-auto' : isRight ? 'ml-auto' : 'mx-auto'}`}>
+                <div className={`inline-block mb-6 px-4 py-1.5 rounded-full bg-white/20 backdrop-blur-md border border-white/30 text-sm font-medium tracking-wide`} style={{ color: heroTextColor }}>
+                  ✨ {t('landing.newFeature', 'Nuevo Diseño Disponible')}
+                </div>
+                <h1 className="text-5xl sm:text-7xl md:text-8xl font-black mb-6 tracking-tighter drop-shadow-lg" style={{ color: heroTextColor, fontFamily: `var(--font-heading)`, textTransform: headingsCaps ? 'uppercase' : 'none' }}>
+                  {currentSectionData?.title || t('landing.heroTitle1')}
+                </h1>
+                <p className={`text-xl sm:text-2xl max-w-3xl mb-10 font-light opacity-90 ${!isLeft && !isRight ? 'mx-auto' : ''}`} style={{ color: heroTextColor, fontFamily: `var(--font-body)` }}>
+                  {currentSectionData?.subtitle || t('landing.heroSubtitle')}
+                </p>
+                <div className={`flex flex-col sm:flex-row gap-5 ${isLeft ? 'justify-start' : isRight ? 'justify-end' : 'justify-center'}`}>
+                  <button onClick={onNavigateToRegister} className="px-8 py-4 bg-black text-white font-bold rounded-xl hover:scale-105 transition-transform shadow-xl flex items-center justify-center gap-2" style={{ fontFamily: `var(--font-button)`, textTransform: buttonsCaps ? 'uppercase' : 'none' }}>
+                    {currentSectionData?.primaryButtonText || t('landing.startFree')}
+                    <Zap className="w-5 h-5 fill-current" />
+                  </button>
+                </div>
+                <div className={`mt-16 sm:mt-24 relative max-w-6xl w-full ${isLeft ? 'mr-auto' : isRight ? 'ml-auto' : 'mx-auto'}`}>
+                  <div className="relative rounded-t-xl bg-white/5 backdrop-blur-xl border border-white/20 shadow-2xl overflow-hidden ring-1 ring-white/10">
+                    {/* Browser Header - Glassmorphic */}
+                    <div className="h-10 bg-white/10 backdrop-blur-md flex items-center px-4 border-b border-white/10 gap-4 select-none">
+                      <div className="flex gap-2">
+                        <div className="w-3 h-3 rounded-full bg-[#FF5F56] hover:bg-[#FF5F56]/80 transition-colors" />
+                        <div className="w-3 h-3 rounded-full bg-[#FFBD2E] hover:bg-[#FFBD2E]/80 transition-colors" />
+                        <div className="w-3 h-3 rounded-full bg-[#27C93F] hover:bg-[#27C93F]/80 transition-colors" />
+                      </div>
+                      <div className="flex-1 max-w-2xl mx-auto h-6 bg-black/20 rounded-md border border-white/5 flex items-center justify-center backdrop-blur-sm group cursor-text">
+                        <div className="flex items-center gap-2 opacity-50 text-[10px] text-white font-mono group-hover:opacity-80 transition-opacity">
+                          <div className="w-2 h-2 rounded-full bg-white/50"></div>
+                          <span>quimera.ai</span>
+                        </div>
+                      </div>
+                    </div>
+                    {/* Browser Content - Taller Viewport */}
+                    <div className="relative h-[300px] sm:h-[450px] md:h-[600px] bg-black/40 backdrop-blur-sm">
+                      {currentSectionData?.heroImage ? (
+                        <img
+                          src={currentSectionData.heroImage}
+                          alt="Website Preview"
+                          className="w-full h-full object-cover object-top opacity-90 hover:opacity-100 transition-opacity duration-700"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-white/20">
+                          <span className="text-lg font-medium">No image selected</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section >
+          );
+        }
+
+        return null;
+      }
+
       case 'features':
-        // Get Features section style values from preview data
+        // Get Features section style values from section data
+        const featuresPreview = section.data || {};
         const featuresBackgroundColor = featuresPreview?.backgroundColor || '#0A0A0A';
         const featuresTextColor = featuresPreview?.textColor || '#ffffff';
         const featuresAccentColor = featuresPreview?.accentColor || '#facc15'; // yellow-400
@@ -495,8 +611,9 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
 
         return (
           <section
-            key="features"
-            id="section-features"
+            key={section.id}
+            id={`section-${sectionType}`}
+            data-section-id={section.id}
             className="py-16 sm:py-20 md:py-24"
             style={{
               backgroundColor: featuresBackgroundColor,
@@ -550,7 +667,8 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
         );
 
       case 'pricing':
-        // Get Pricing section style values from preview data
+        // Get Pricing section style values from section data
+        const pricingPreview = section.data || {};
         const pricingBackgroundColor = pricingPreview?.backgroundColor || '#0A0A0A';
         const pricingTextColor = pricingPreview?.textColor || '#ffffff';
         const pricingAccentColor = pricingPreview?.accentColor || '#facc15'; // yellow-400
@@ -561,8 +679,9 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
 
         return (
           <section
-            key="pricing"
-            id="section-pricing"
+            key={section.id}
+            id={`section-${sectionType}`}
+            data-section-id={section.id}
             className="py-16 sm:py-20 md:py-24"
             style={{
               backgroundColor: pricingBackgroundColor,
@@ -680,7 +799,8 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
         );
 
       case 'testimonials': {
-        // Get Testimonials section style values from preview data
+        // Get Testimonials section style values from section data
+        const testimonialsPreview = section.data || {};
         const testimonialsBackgroundColor = testimonialsPreview?.backgroundColor || '#050505';
         const testimonialsTextColor = testimonialsPreview?.textColor || '#ffffff';
         const testimonialsAccentColor = testimonialsPreview?.accentColor || '#facc15';
@@ -714,8 +834,9 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
 
         return (
           <section
-            key="testimonials"
-            id="section-testimonials"
+            key={section.id}
+            id={`section-${sectionType}`}
+            data-section-id={section.id}
             className="py-16 sm:py-20 md:py-24"
             style={{
               backgroundColor: testimonialsBackgroundColor,
@@ -792,6 +913,71 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
                 ))}
               </div>
             </div>
+          </section>
+        );
+      }
+
+      case 'screenshotCarousel': {
+        const carouselPreview = section.data || {};
+        const carouselBackgroundColor = carouselPreview?.backgroundColor || '#0A0A0A';
+        const carouselTextColor = carouselPreview?.textColor || '#ffffff';
+        const carouselPadding = carouselPreview?.padding || 80;
+
+        const carouselData = {
+          images: carouselPreview?.images || [],
+          autoScroll: carouselPreview?.autoScroll ?? true,
+          scrollDirection: (carouselPreview?.scrollDirection || 'left') as 'left' | 'right',
+          scrollSpeed: carouselPreview?.scrollSpeed || 50,
+          pauseOnHover: carouselPreview?.pauseOnHover ?? true,
+          gap: 16,
+          showNavigation: carouselPreview?.showNavigation ?? true,
+          showScrollbar: carouselPreview?.showScrollbar ?? false,
+          aspectRatio: (carouselPreview?.aspectRatio || '16:9') as '16:9' | '4:3' | '3:2' | '1:1' | 'custom',
+          variant: (carouselPreview?.variant || 'basic') as 'basic' | 'gradient' | 'cards' | 'modern',
+          colors: {
+            background: 'transparent',
+          },
+        };
+
+        return (
+          <section
+            key={section.id}
+            id={`section-${sectionType}`}
+            data-section-id={section.id}
+            className="py-16 sm:py-20 md:py-24 overflow-hidden"
+            style={{
+              backgroundColor: carouselBackgroundColor,
+              color: carouselTextColor,
+              paddingTop: `${carouselPadding}px`,
+              paddingBottom: `${carouselPadding}px`,
+            }}
+          >
+            <div className="container mx-auto px-4 sm:px-6 mb-8 sm:mb-12 text-center">
+              {(carouselPreview?.title || carouselPreview?.subtitle) && (
+                <div className="max-w-3xl mx-auto mb-8 sm:mb-12">
+                  {carouselPreview?.title && (
+                    <h2 className="text-2xl sm:text-4xl md:text-5xl font-bold mb-4"
+                      style={{
+                        color: carouselTextColor,
+                        fontFamily: `var(--font-heading)`,
+                        textTransform: headingsCaps ? 'uppercase' : 'none',
+                      }}>
+                      {carouselPreview.title}
+                    </h2>
+                  )}
+                  {carouselPreview?.subtitle && (
+                    <p className="text-base sm:text-lg" style={{ color: `${carouselTextColor}cc` }}>
+                      {carouselPreview.subtitle}
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <ImageCarousel
+              data={carouselData}
+              isEditing={false}
+            />
           </section>
         );
       }
@@ -1150,7 +1336,7 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
       </header>
 
       {/* === DYNAMICALLY ORDERED SECTIONS === */}
-      {orderedSectionTypes.map(sectionType => renderSection(sectionType))}
+      {orderedSections.map(section => renderSection(section))}
 
       {/* === FOOTER === */}
       <footer

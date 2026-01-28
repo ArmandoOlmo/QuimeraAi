@@ -207,6 +207,9 @@ export const AIProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
             if (options?.cameraAngle) {
                 enhancedPrompt += `, ${options.cameraAngle} angle`;
             }
+            if (options?.aspectRatio) {
+                enhancedPrompt += `, aspect ratio ${options.aspectRatio}`;
+            }
 
             // Try proxy first
             if (shouldUseProxy()) {
