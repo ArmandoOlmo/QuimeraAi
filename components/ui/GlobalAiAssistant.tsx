@@ -3373,203 +3373,74 @@ You: "✓ Made the hero button green and increased its size"
             setIsThinking(true);
             try {
                 // ============================================================
-                // FAST PATH: Check if we can infer the tool call directly from
-                // the user's message BEFORE calling the LLM. This is more reliable
-                // and faster for simple commands like "abre hero", "open features", etc.
-                console.log('[Global Assistant] === FAST PATH CHECK ===', { userMsg });
-                const directInferred = inferToolCallFromUserText(userMsg);
-                console.log('[Global Assistant] inferToolCallFromUserText result:', directInferred);
+                // SIMPLIFIED: Fast vision-only assistant - no tool execution
+                // Focus: Help user understand what they're seeing, answer questions
+                // ============================================================
+                console.log('[Global Assistant] Processing message:', userMsg);
 
-                if (directInferred?.name) {
-                    console.log('[Global Assistant] FAST PATH - Executing:', directInferred);
-                    setIsExecutingCommands(true);
-                    const { result, error } = await executeTool(directInferred.name, directInferred.args || {}, 'chat');
-                    setIsExecutingCommands(false);
-                    setIsThinking(false);
-                    const feedback = result || error || "✓ Listo";
-                    setMessages(prev => [...prev, { role: 'model', text: `✅ ${feedback}` }]);
-                    return;
-                }
-
-                console.log('[Global Assistant] No FAST PATH match, calling LLM...');
-
-                // Build conversation history for the prompt
+                // Build conversation history for context
                 const historyText = messages
+                    .slice(-6) // Keep only last 6 messages for speed
                     .filter(m => !m.isToolOutput)
                     .map(m => `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.text}`)
                     .join('\n');
-
-                // Build tools description for the prompt
-                const toolsDescription = TOOLS.map(tool =>
-                    `- ${tool.name}: ${tool.description}. Parameters: ${JSON.stringify(tool.parameters)}`
-                ).join('\n');
-
-                const systemPrompt = getEffectiveSystemInstruction('chat');
 
                 // Build current context information
                 const currentView = viewRef.current || 'dashboard';
                 const currentProject = activeProjectRef.current;
                 const projectInfo = currentProject
-                    ? `Active Project: "${currentProject.name}" (ID: ${currentProject.id})`
-                    : 'No project loaded - user needs to select a project first';
+                    ? `Project: "${currentProject.name}"`
+                    : 'No project loaded';
 
-                // Build detailed view-specific context with available data
-                let viewContext = '';
-                let availableData = '';
+                // Simple, focused system prompt for fast responses
+                const simpleSystemPrompt = `Eres Quibo, el asistente de Quimera.ai. Tu rol es AYUDAR al usuario a entender la plataforma y responder preguntas.
 
-                switch (currentView) {
-                    case 'editor':
-                        const visibleSections = Object.entries(sectionVisibilityRef.current || {})
-                            .filter(([_, visible]) => visible)
-                            .map(([section]) => section)
-                            .slice(0, 10);
+CONTEXTO ACTUAL:
+- Vista: ${currentView.toUpperCase()}
+- ${projectInfo}
 
-                        viewContext = `User is in the WEBSITE EDITOR for "${currentProject?.name || 'unknown'}".
-They can edit sections, change content, colors, fonts, and styling.`;
+INSTRUCCIONES:
+1. Responde de forma CONCISA y ÚTIL
+2. Si ves una captura de pantalla, describe qué está viendo el usuario
+3. Explica las funciones disponibles en la pantalla actual
+4. Da consejos prácticos y directos
+5. Responde en el mismo idioma que el usuario
 
-                        // We rely on the full schema in system prompt, but adding visible sections helps context
-                        availableData = `Visible sections on canvas: ${visibleSections.join(', ') || 'none'}
-(See SYSTEM PROMPT for full data schema/paths)`;
-                        break;
+MAPEO DE ÁREAS:
+- Dashboard: Métricas y resumen del proyecto
+- Editor: Panel izquierdo con secciones, preview central
+- CRM/Leads: Tabla de prospectos con estados
+- Finance: Gastos y transacciones
+- Ecommerce: Productos y pedidos
+- CMS: Artículos y blog posts
+- Email: Campañas de email marketing
+- Appointments: Calendario y citas
+- Super Admin: Configuración global
 
-                    case 'email':
-                        viewContext = `User is in EMAIL MARKETING for "${currentProject?.name || 'unknown'}".
-They can create campaigns, manage audiences, send emails, and view analytics.
-AVAILABLE ACTIONS: create campaign, edit campaign, send campaign, create audience, view stats`;
-                        availableData = `To help: Ask what they want to do - create a new campaign, send to an audience, or check analytics.`;
-                        break;
+Sé amigable, rápido y útil.`;
 
-                    case 'ecommerce':
-                        viewContext = `User is in ECOMMERCE/STORE for "${currentProject?.name || 'unknown'}".
-They can manage products, view orders, configure store settings, and track sales.
-AVAILABLE ACTIONS: add product, edit product, view orders, update order status, enable/disable store`;
-                        availableData = `To help: Ask what they want to do - add products, check orders, or configure store.`;
-                        break;
+                // Always capture screen for context (fast with html2canvas-pro)
+                console.time('[Global Assistant] Screen Capture');
+                const screenCapture = await captureCurrentView();
+                console.timeEnd('[Global Assistant] Screen Capture');
 
-                    case 'finance':
-                        viewContext = `User is in FINANCE for "${currentProject?.name || 'unknown'}".
-They can track expenses, manage invoices, and view financial reports.
-AVAILABLE ACTIONS: add expense, edit expense, delete expense, view reports`;
-                        availableData = `To help: Ask what expense they want to add or what financial info they need.`;
-                        break;
+                const fullPrompt = `${simpleSystemPrompt}
 
-                    case 'appointments':
-                        viewContext = `User is in APPOINTMENTS/CALENDAR.
-They can schedule appointments, manage bookings, and view their calendar.
-AVAILABLE ACTIONS: create appointment, edit appointment, cancel appointment, view schedule`;
-                        availableData = `To help: Ask what appointment they want to create or manage.`;
-                        break;
+${historyText ? `CONVERSACIÓN RECIENTE:\n${historyText}\n` : ''}
+Usuario: ${userMsg}`;
 
-                    case 'cms':
-                        const postsCount = cmsPostsRef.current?.length || 0;
-                        const recentPosts = cmsPostsRef.current?.slice(0, 3).map(p => p.title).join(', ') || 'none';
-                        viewContext = `User is in CMS/BLOG for "${currentProject?.name || 'unknown'}".
-They can create and manage blog posts and articles.
-AVAILABLE ACTIONS: create post, edit post, publish post, delete post`;
-                        availableData = `Total posts: ${postsCount}
-Recent posts: ${recentPosts}`;
-                        break;
-
-                    case 'leads':
-                        const leadsCount = leadsRef.current?.length || 0;
-                        const recentLeads = leadsRef.current?.slice(0, 3).map(l => l.name).join(', ') || 'none';
-                        viewContext = `User is in LEADS/CRM.
-They can manage contacts, track leads, and update lead status.
-AVAILABLE ACTIONS: add lead, edit lead, change lead status, delete lead`;
-                        availableData = `Total leads: ${leadsCount}
-Recent leads: ${recentLeads}`;
-                        break;
-
-                    case 'domains':
-                        viewContext = `User is in DOMAINS management.
-They can connect custom domains, verify DNS, and manage domain settings.
-AVAILABLE ACTIONS: add domain, verify domain, delete domain`;
-                        break;
-
-                    case 'seo':
-                        viewContext = `User is in SEO settings for "${currentProject?.name || 'unknown'}".
-They can configure meta tags, titles, descriptions, and search optimization.
-AVAILABLE ACTIONS: update SEO title, description, keywords, social sharing settings`;
-                        break;
-
-                    case 'dashboard':
-                    case 'websites':
-                        const projectsList = projectsRef.current?.slice(0, 5).map(p => p.name).join(', ') || 'none';
-                        const totalProjects = projectsRef.current?.length || 0;
-                        viewContext = `User is in the DASHBOARD/PROJECTS view.
-They can see all their projects and select one to work on.
-AVAILABLE ACTIONS: open project, create new website, view project list`;
-                        availableData = `Total projects: ${totalProjects}
-Available projects: ${projectsList}${totalProjects > 5 ? '...' : ''}`;
-                        break;
-
-                    case 'templates':
-                        viewContext = `User is in TEMPLATES.
-They can browse, create, and manage website templates.
-AVAILABLE ACTIONS: create template, duplicate template, use template`;
-                        break;
-
-                    default:
-                        viewContext = `User is in ${currentView.toUpperCase()} view.`;
-                }
-
-                // Full prompt with system instruction, tools, history, and user message
-                const fullPrompt = `${systemPrompt}
-
-=== CURRENT CONTEXT (THIS IS WHERE THE USER IS RIGHT NOW) ===
-VIEW: ${currentView.toUpperCase()}
-PROJECT: ${projectInfo}
-
-${viewContext}
-
-${availableData ? `CURRENT DATA:\n${availableData}` : ''}
-
-=== IMPORTANT BEHAVIOR ===
-1. The user is looking at the ${currentView.toUpperCase()} screen right now
-2. Understand their request in the context of what they're viewing
-3. Use the appropriate tool for this view
-4. If they ask to "create", "add", "edit", etc., do it for the CURRENT VIEW
-5. If no project is loaded and they need one, help them load a project first
-
-AVAILABLE TOOLS (use these to help the user):
-${toolsDescription}
-
-When you need to use a tool, respond with ONLY a JSON object in this exact format:
-{"tool_call": {"name": "tool_name", "args": {"param1": "value1"}}}
-
-When you don't need to use a tool, respond naturally and helpfully.
-
-CONVERSATION HISTORY:
-${historyText}
-
-User: ${userMsg}`;
-
-                // Call the proxy API - use activeProject if available, otherwise use userId for rate limiting
+                // Use gemini-2.5-flash for SPEED (proven fast model)
                 const proxyProjectId = activeProject?.id || user?.uid || 'anonymous';
-                const promptConfig = getPromptRef.current('global-assistant-main');
-                const chatModel = promptConfig?.model || 'gemini-2.5-flash';
-                // Ensure minimum 2048 tokens to avoid MAX_TOKENS truncation with empty content
-                const configuredMaxTokens = Math.max(2048, typeof globalAssistantConfig?.maxTokens === 'number' ? globalAssistantConfig.maxTokens : 2048);
+                const chatModel = 'gemini-2.5-flash';
                 const proxyConfig = {
-                    temperature: typeof globalAssistantConfig?.temperature === 'number' ? globalAssistantConfig.temperature : 0.7,
-                    maxOutputTokens: configuredMaxTokens
+                    temperature: 0.7,
+                    maxOutputTokens: 1024 // Shorter responses = faster
                 };
 
-                // Capture screen context for text chat ONLY if needed (optimization)
+                console.time('[Global Assistant] LLM Response');
                 let response;
-                const lowerMsg = userMsg.toLowerCase();
-                const needsVision = [
-                    'mira', 'ver', 'pantalla', 'esto', 'que es', 'analiza', // Spanish
-                    'look', 'see', 'screen', 'this', 'what is', 'analyze'   // English
-                ].some(keyword => lowerMsg.includes(keyword));
-
-                // If vision is needed, we capture. Otherwise we skip for speed.
-                const screenCapture = needsVision ? await captureCurrentView() : null;
 
                 if (screenCapture) {
-                    console.log('[Global Assistant] Sending request WITH visual context (requested by user)...');
-                    console.time('[Global Assistant] LLM Vision Latency');
-                    // Notify user we are looking (optional UI feedback could go here)
                     response = await generateMultimodalContentViaProxy(
                         proxyProjectId,
                         fullPrompt,
@@ -3578,10 +3449,7 @@ User: ${userMsg}`;
                         proxyConfig,
                         user?.uid
                     );
-                    console.timeEnd('[Global Assistant] LLM Vision Latency');
                 } else {
-                    console.log('[Global Assistant] Sending text-only request (fast path)...');
-                    console.time('[Global Assistant] LLM Text Latency');
                     response = await generateContentViaProxy(
                         proxyProjectId,
                         fullPrompt,
@@ -3589,70 +3457,25 @@ User: ${userMsg}`;
                         proxyConfig,
                         user?.uid
                     );
-                    console.timeEnd('[Global Assistant] LLM Text Latency');
                 }
+                console.timeEnd('[Global Assistant] LLM Response');
 
-                let responseText = extractTextFromResponse(response).trim();
-                console.log('[Global Assistant] Proxy Response:', responseText?.substring(0, 300));
-
-                // Check if the response is a tool call
-                let turnCount = 0;
-                while (turnCount < 5) {
-                    const toolCall = tryExtractToolCall(responseText);
-                    if (toolCall?.name) {
-                        turnCount++;
-                        console.log(`[Global Assistant] Tool call detected (turn ${turnCount}):`, toolCall);
-                        setIsExecutingCommands(true);
-
-                        const { result, error } = await executeTool(toolCall.name, toolCall.args || {}, 'chat');
-                        const feedback = result || error || "Done";
-
-                        // OPTIMIZATION: If the tool executed successfully and gave a clear result, 
-                        // skip the confirmation LLM call to save ~2-3 seconds.
-                        if (result && !error) {
-                            console.log('[Global Assistant] Skipping confirmation LLM call (Optimization)');
-                            setIsExecutingCommands(false);
-                            setIsThinking(false);
-                            setMessages(prev => [...prev, { role: 'model', text: `✅ ${result}` }]);
-                            return;
-                        }
-
-                        // Only do follow-up if there was an error or ambiguous result that needs explanation
-                        const followUpPrompt = `${fullPrompt}
-
-Assistant called tool: ${toolCall.name}
-Tool args: ${JSON.stringify(toolCall.args || {})}
-Tool result: ${feedback}
-
-Now provide a brief response to the user about what was done.`;
-
-                        const followUpResponse = await generateContentViaProxy(proxyProjectId, followUpPrompt, chatModel, {
-                            temperature: typeof globalAssistantConfig?.temperature === 'number' ? globalAssistantConfig.temperature : 0.7,
-                            maxOutputTokens: configuredMaxTokens
-                        }, user?.uid);
-
-                        responseText = extractTextFromResponse(followUpResponse).trim();
-                        continue;
-                    }
-                    break;
-                }
-
-                setIsExecutingCommands(false);
+                const responseText = extractTextFromResponse(response).trim();
+                console.log('[Global Assistant] Response:', responseText?.substring(0, 200));
 
                 if (responseText) {
                     setMessages(prev => [...prev, { role: 'model', text: responseText }]);
                 } else {
-                    setMessages(prev => [...prev, { role: 'model', text: "✓ Listo" }]);
+                    setMessages(prev => [...prev, { role: 'model', text: "¿En qué puedo ayudarte?" }]);
                 }
 
             } catch (e: any) {
-                console.error(e);
+                console.error('[Global Assistant] Error:', e);
                 handleApiError(e);
                 const errorMessage = typeof e?.message === 'string' ? e.message : "Error processing request.";
                 setMessages(prev => [...prev, { role: 'model', text: `Error: ${errorMessage}` }]);
             } finally {
                 setIsThinking(false);
-                setIsExecutingCommands(false);
             }
         }
     };

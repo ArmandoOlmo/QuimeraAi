@@ -1,13 +1,18 @@
-import html2canvas from 'html2canvas';
+// Use html2canvas-pro instead of html2canvas - it supports oklch() colors
+import html2canvas from 'html2canvas-pro';
 
 /**
  * Captures the current DOM as a base64 encoded JPEG image.
  * Excludes the AI Assistant UI to prevent infinite visual recursion.
+ * 
+ * Uses html2canvas-pro which supports modern CSS color functions like oklch().
  */
 export const captureCurrentView = async (): Promise<string | null> => {
     try {
         const element = document.body;
         if (!element) return null;
+
+        console.log('[Vision] Starting screen capture...');
 
         // PRE-PROCESSING: Manually sync input values to DOM attributes
         // html2canvas sometimes misses current values of inputs/textareas if they haven't been 'set' in the DOM attribute
@@ -34,7 +39,7 @@ export const captureCurrentView = async (): Promise<string | null> => {
             }
         });
 
-        // Use html2canvas to capture the screen
+        // Use html2canvas-pro to capture the screen (supports oklch colors natively)
         // Configured for "deep" capture: accurate current state including simple dynamic elements
         const canvas = await html2canvas(element, {
             ignoreElements: (elt) => {
@@ -58,13 +63,20 @@ export const captureCurrentView = async (): Promise<string | null> => {
             foreignObjectRendering: false
         });
 
+        console.log('[Vision] Canvas captured successfully');
+
         // Convert to base64 JPEG with quality 0.6
         // The Gemini API expects base64 without the data URI prefix for some endpoints
         const dataUrl = canvas.toDataURL('image/jpeg', 0.6);
         // Remove the prefix "data:image/jpeg;base64,"
-        return dataUrl.split(',')[1];
-    } catch (error) {
-        console.warn('Vision capture failed:', error);
+        const base64 = dataUrl.split(',')[1];
+
+        console.log(`[Vision] Image encoded, size: ${Math.round(base64.length / 1024)}KB`);
+
+        return base64;
+    } catch (error: any) {
+        console.warn('[Vision] Capture failed:', error?.message || error?.toString() || 'Unknown error');
+        console.warn('[Vision] Error stack:', error?.stack);
         return null;
     }
 };

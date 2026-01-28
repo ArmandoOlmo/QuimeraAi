@@ -51,7 +51,32 @@ export interface GeminiProxyError {
 }
 
 /**
+ * Get the fallback model for when capacity is unavailable
+ */
+function getFallbackModel(model: string): string | null {
+    if (model.startsWith('gemini-3')) {
+        return 'gemini-2.5-flash';
+    }
+    return null;
+}
+
+/**
+ * Apply Gemini 3 specific configuration adjustments
+ * Per Google's best practices: temperature should be 1.0 for Gemini 3 models
+ */
+function applyGemini3Optimizations(model: string, config: GeminiProxyConfig): GeminiProxyConfig {
+    if (model.startsWith('gemini-3')) {
+        return {
+            ...config,
+            temperature: 1.0 // Gemini 3 requires temperature 1.0 for optimal performance
+        };
+    }
+    return config;
+}
+
+/**
  * Generate content using the Gemini proxy
+ * Includes automatic fallback from gemini-3 to gemini-2.5 on capacity errors
  */
 export async function generateContentViaProxy(
     projectId: string,
@@ -60,6 +85,9 @@ export async function generateContentViaProxy(
     config: GeminiProxyConfig = {},
     userId?: string
 ): Promise<GeminiProxyResponse> {
+    // Apply Gemini 3 optimizations (temperature = 1.0)
+    const optimizedConfig = applyGemini3Optimizations(model, config);
+
     try {
         const response = await fetch(`${PROXY_BASE_URL}-generate`, {
             method: 'POST',
@@ -71,9 +99,18 @@ export async function generateContentViaProxy(
                 prompt,
                 userId,
                 model,
-                config
+                config: optimizedConfig
             })
         });
+
+        // Check for 503 capacity error and try fallback
+        if (response.status === 503) {
+            const fallbackModel = getFallbackModel(model);
+            if (fallbackModel) {
+                console.warn(`[Gemini] Model ${model} unavailable (503), falling back to ${fallbackModel}`);
+                return generateContentViaProxy(projectId, prompt, fallbackModel, config, userId);
+            }
+        }
 
         if (!response.ok) {
             const errorData: GeminiProxyError = await response.json();
@@ -83,6 +120,14 @@ export async function generateContentViaProxy(
         const data: GeminiProxyResponse = await response.json();
         return data;
     } catch (error) {
+        // Also catch network-level 503 errors
+        if (error instanceof Error && error.message.includes('503')) {
+            const fallbackModel = getFallbackModel(model);
+            if (fallbackModel) {
+                console.warn(`[Gemini] Model ${model} capacity error, falling back to ${fallbackModel}`);
+                return generateContentViaProxy(projectId, prompt, fallbackModel, config, userId);
+            }
+        }
         console.error('Gemini proxy error:', error);
         throw error;
     }
@@ -99,6 +144,7 @@ export interface ImageInput {
 /**
  * Generate content with images using the Gemini proxy (multimodal)
  * Supports sending images alongside text for vision analysis
+ * Includes automatic fallback from gemini-3 to gemini-2.5 on capacity errors
  */
 export async function generateMultimodalContentViaProxy(
     projectId: string,
@@ -108,6 +154,9 @@ export async function generateMultimodalContentViaProxy(
     config: GeminiProxyConfig = {},
     userId?: string
 ): Promise<GeminiProxyResponse> {
+    // Apply Gemini 3 optimizations (temperature = 1.0)
+    const optimizedConfig = applyGemini3Optimizations(model, config);
+
     try {
         // Validate images
         if (images.length > 10) {
@@ -125,9 +174,18 @@ export async function generateMultimodalContentViaProxy(
                 images,  // Send images array to proxy
                 userId,
                 model,
-                config
+                config: optimizedConfig
             })
         });
+
+        // Check for 503 capacity error and try fallback
+        if (response.status === 503) {
+            const fallbackModel = getFallbackModel(model);
+            if (fallbackModel) {
+                console.warn(`[Gemini Multimodal] Model ${model} unavailable (503), falling back to ${fallbackModel}`);
+                return generateMultimodalContentViaProxy(projectId, prompt, images, fallbackModel, config, userId);
+            }
+        }
 
         if (!response.ok) {
             const errorData: GeminiProxyError = await response.json();
@@ -137,6 +195,14 @@ export async function generateMultimodalContentViaProxy(
         const data: GeminiProxyResponse = await response.json();
         return data;
     } catch (error) {
+        // Also catch network-level 503 errors
+        if (error instanceof Error && error.message.includes('503')) {
+            const fallbackModel = getFallbackModel(model);
+            if (fallbackModel) {
+                console.warn(`[Gemini Multimodal] Model ${model} capacity error, falling back to ${fallbackModel}`);
+                return generateMultimodalContentViaProxy(projectId, prompt, images, fallbackModel, config, userId);
+            }
+        }
         console.error('Gemini multimodal proxy error:', error);
         throw error;
     }

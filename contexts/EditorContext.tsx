@@ -416,6 +416,15 @@ export const EditorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     const [activeProjectId, setActiveProjectId] = useState<string | null>(null);
     const activeProject = projects.find(p => p.id === activeProjectId) || null;
 
+    // CRITICAL FIX: Sync activeProjectId from ProjectContext to EditorContext
+    // This ensures GlobalAiAssistant receives the correct project when loaded from sidebar
+    useEffect(() => {
+        if (projectActiveId !== null && projectActiveId !== activeProjectId) {
+            console.log('[EditorContext] Syncing activeProjectId from ProjectContext:', projectActiveId);
+            setActiveProjectId(projectActiveId);
+        }
+    }, [projectActiveId, activeProjectId]);
+
     // Active project data
     const [data, setData] = useState<PageData | null>(null);
     const [theme, setTheme] = useState<ThemeData>(initialData.theme);

@@ -75,8 +75,8 @@ const GlobalAssistantSettings: React.FC<GlobalAssistantSettingsProps> = ({ onBac
         setFormData({
             ...globalAssistantConfig,
             permissions: globalAssistantConfig.permissions || {},
-            temperature: globalAssistantConfig.temperature ?? 0.7,
-            maxTokens: globalAssistantConfig.maxTokens ?? 500,
+            temperature: globalAssistantConfig.temperature ?? 1.0,
+            maxTokens: globalAssistantConfig.maxTokens ?? 2048,
             autoDetectLanguage: globalAssistantConfig.autoDetectLanguage ?? true,
             supportedLanguages: globalAssistantConfig.supportedLanguages || 'English, Spanish, French',
             enabledTemplates: globalAssistantConfig.enabledTemplates || getDefaultEnabledTemplates(),
@@ -342,7 +342,7 @@ const GlobalAssistantSettings: React.FC<GlobalAssistantSettingsProps> = ({ onBac
                                             </div>
                                             <input
                                                 type="range"
-                                                min="100" max="2000" step="100"
+                                                min="2048" max="8192" step="256"
                                                 value={formData.maxTokens}
                                                 onChange={(e) => updateForm('maxTokens', parseInt(e.target.value))}
                                                 className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer"
