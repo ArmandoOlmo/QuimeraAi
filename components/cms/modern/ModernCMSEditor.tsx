@@ -22,7 +22,7 @@ import { CMSPost } from '../../../types';
 import {
     ArrowLeft, Save, Globe, Type, Loader2, Sparkles,
     MoreVertical, Calendar, Check, X as XIcon, Link as LinkIcon,
-    Monitor, Tablet, Smartphone, Eye, EyeOff, Layout, Menu, RefreshCw
+    Monitor, Tablet, Smartphone, Eye, EyeOff, Layout, Menu, RefreshCw, Settings
 } from 'lucide-react';
 
 import EditorMenuBar from './EditorMenuBar';
@@ -30,9 +30,11 @@ import EditorBubbleMenu from './EditorBubbleMenu';
 import SlashCommands from './SlashCommands';
 import ImagePicker from '../../ui/ImagePicker';
 import { generateContentViaProxy, extractTextFromResponse } from '../../../utils/geminiProxyClient';
-// import SimpleEditorHeader from '../../SimpleEditorHeader';
 import DashboardSidebar from '../../dashboard/DashboardSidebar';
 import { logApiCall } from '../../../services/apiLoggingService';
+import { useViewportType } from '../../../hooks/use-mobile';
+import MobileBottomSheet from '../../ui/MobileBottomSheet';
+import TabletSlidePanel from '../../ui/TabletSlidePanel';
 
 type PreviewDevice = 'desktop' | 'tablet' | 'mobile';
 
@@ -41,12 +43,78 @@ interface ModernCMSEditorProps {
     onClose: () => void;
 }
 
+// Settings sidebar content - shared across Desktop/Tablet/Mobile variants
+interface SettingsSidebarContentProps {
+    t: (key: string) => string;
+    slug: string;
+    setSlug: (value: string) => void;
+    featuredImage: string;
+    setFeaturedImage: (value: string) => void;
+    excerpt: string;
+    setExcerpt: (value: string) => void;
+    seoTitle: string;
+    setSeoTitle: (value: string) => void;
+    seoDescription: string;
+    setSeoDescription: (value: string) => void;
+    generateSEO: () => void;
+    isAiWorking: boolean;
+}
+
+const SettingsSidebarContent: React.FC<SettingsSidebarContentProps> = ({
+    t, slug, setSlug, featuredImage, setFeaturedImage, excerpt, setExcerpt,
+    seoTitle, setSeoTitle, seoDescription, setSeoDescription, generateSEO, isAiWorking
+}) => (
+    <>
+        <div className="mb-6">
+            <h3 className="font-bold text-lg mb-1 flex items-center"><Type className="mr-2 text-primary" /> {t('cms_editor.postSettings')}</h3>
+            <p className="text-xs text-muted-foreground">{t('cms_editor.metaDescription')}</p>
+        </div>
+
+        <div className="space-y-6">
+            <div>
+                <label className="block text-xs font-bold text-muted-foreground uppercase mb-2">{t('cms_editor.urlSlug')}</label>
+                <input value={slug} onChange={(e) => setSlug(e.target.value)} className="w-full bg-secondary/50 border border-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-primary outline-none text-foreground" />
+            </div>
+
+            <div>
+                <label className="block text-xs font-bold text-muted-foreground uppercase mb-2">{t('cms_editor.featuredImage')}</label>
+                <ImagePicker label="" value={featuredImage} onChange={setFeaturedImage} />
+            </div>
+
+            <div>
+                <label className="block text-xs font-bold text-muted-foreground uppercase mb-2">{t('cms_editor.excerpt')}</label>
+                <textarea value={excerpt} onChange={(e) => setExcerpt(e.target.value)} rows={4} className="w-full bg-secondary/50 border border-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-primary outline-none resize-none text-foreground" placeholder={t('cms_editor.excerptPlaceholder')} />
+            </div>
+
+            <div className="pt-6 border-t border-border">
+                <div className="flex justify-between items-center mb-4">
+                    <h4 className="font-bold text-sm flex items-center"><Globe size={16} className="mr-2" /> {t('cms_editor.seoSettings')}</h4>
+                    <button onClick={generateSEO} disabled={isAiWorking} className="text-xs font-bold text-yellow-400 hover:text-yellow-300 flex items-center"><Sparkles size={12} className="mr-1" /> {t('cms_editor.autoGen')}</button>
+                </div>
+
+                <div className="space-y-4">
+                    <div>
+                        <label className="block text-xs font-medium text-muted-foreground mb-1">{t('cms_editor.seoTitle')}</label>
+                        <input value={seoTitle} onChange={(e) => setSeoTitle(e.target.value)} className="w-full bg-secondary/50 border border-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-primary outline-none text-foreground" placeholder={t('cms_editor.seoTitlePlaceholder')} />
+                    </div>
+                    <div>
+                        <label className="block text-xs font-medium text-muted-foreground mb-1">{t('cms_editor.seoDescription')}</label>
+                        <textarea value={seoDescription} onChange={(e) => setSeoDescription(e.target.value)} rows={4} className="w-full bg-secondary/50 border border-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-primary outline-none resize-none text-foreground" placeholder={t('cms_editor.seoDescPlaceholder')} />
+                    </div>
+                </div>
+            </div>
+        </div>
+    </>
+);
+
 const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
     const { t } = useTranslation();
     // Use CMSContext for posts (scoped to active project)
     const { saveCMSPost } = useCMS();
     // Use EditorContext for other utilities
     const { handleApiError, hasApiKey, promptForKeySelection, uploadImageAndGetURL, getPrompt, activeProject, user } = useEditorContext();
+    // Responsive viewport detection for Three-Tier strategy
+    const viewportType = useViewportType();
 
     // Form State
     const [title, setTitle] = useState(post?.title || '');
@@ -653,52 +721,84 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
                         </div>
                     </div>
 
-                    {/* Settings Sidebar (Right) */}
-                    {isSidebarOpen && (
+                    {/* Settings Sidebar - Desktop Only (Fixed) */}
+                    {viewportType === 'desktop' && isSidebarOpen && (
                         <aside className="w-80 bg-card border-l border-border overflow-y-auto p-6 shrink-0 shadow-xl">
-                            <div className="mb-6">
-                                <h3 className="font-bold text-lg mb-1 flex items-center"><Type className="mr-2 text-primary" /> {t('cms_editor.postSettings')}</h3>
-                                <p className="text-xs text-muted-foreground">{t('cms_editor.metaDescription')}</p>
-                            </div>
-
-                            <div className="space-y-6">
-                                <div>
-                                    <label className="block text-xs font-bold text-muted-foreground uppercase mb-2">{t('cms_editor.urlSlug')}</label>
-                                    <input value={slug} onChange={(e) => setSlug(e.target.value)} className="w-full bg-secondary/50 border border-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-primary outline-none text-foreground" />
-                                </div>
-
-                                <div>
-                                    <label className="block text-xs font-bold text-muted-foreground uppercase mb-2">{t('cms_editor.featuredImage')}</label>
-                                    <ImagePicker label="" value={featuredImage} onChange={setFeaturedImage} />
-                                </div>
-
-                                <div>
-                                    <label className="block text-xs font-bold text-muted-foreground uppercase mb-2">{t('cms_editor.excerpt')}</label>
-                                    <textarea value={excerpt} onChange={(e) => setExcerpt(e.target.value)} rows={4} className="w-full bg-secondary/50 border border-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-primary outline-none resize-none text-foreground" placeholder={t('cms_editor.excerptPlaceholder')} />
-                                </div>
-
-                                <div className="pt-6 border-t border-border">
-                                    <div className="flex justify-between items-center mb-4">
-                                        <h4 className="font-bold text-sm flex items-center"><Globe size={16} className="mr-2" /> {t('cms_editor.seoSettings')}</h4>
-                                        <button onClick={generateSEO} disabled={isAiWorking} className="text-xs font-bold text-yellow-400 hover:text-yellow-300 flex items-center"><Sparkles size={12} className="mr-1" /> {t('cms_editor.autoGen')}</button>
-                                    </div>
-
-                                    <div className="space-y-4">
-                                        <div>
-                                            <label className="block text-xs font-medium text-muted-foreground mb-1">{t('cms_editor.seoTitle')}</label>
-                                            <input value={seoTitle} onChange={(e) => setSeoTitle(e.target.value)} className="w-full bg-secondary/50 border border-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-primary outline-none text-foreground" placeholder={t('cms_editor.seoTitlePlaceholder')} />
-                                        </div>
-                                        <div>
-                                            <label className="block text-xs font-medium text-muted-foreground mb-1">{t('cms_editor.seoDescription')}</label>
-                                            <textarea value={seoDescription} onChange={(e) => setSeoDescription(e.target.value)} rows={4} className="w-full bg-secondary/50 border border-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-primary outline-none resize-none text-foreground" placeholder={t('cms_editor.seoDescPlaceholder')} />
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                            <SettingsSidebarContent
+                                t={t}
+                                slug={slug}
+                                setSlug={setSlug}
+                                featuredImage={featuredImage}
+                                setFeaturedImage={setFeaturedImage}
+                                excerpt={excerpt}
+                                setExcerpt={setExcerpt}
+                                seoTitle={seoTitle}
+                                setSeoTitle={setSeoTitle}
+                                seoDescription={seoDescription}
+                                setSeoDescription={setSeoDescription}
+                                generateSEO={generateSEO}
+                                isAiWorking={isAiWorking}
+                            />
                         </aside>
                     )}
                 </div>
             </div>
+
+            {/* Tablet: Slide Panel from Right */}
+            {viewportType === 'tablet' && (
+                <TabletSlidePanel
+                    isOpen={isSidebarOpen}
+                    onClose={() => setIsSidebarOpen(false)}
+                    title={t('cms_editor.postSettings')}
+                    position="right"
+                >
+                    <div className="p-4">
+                        <SettingsSidebarContent
+                            t={t}
+                            slug={slug}
+                            setSlug={setSlug}
+                            featuredImage={featuredImage}
+                            setFeaturedImage={setFeaturedImage}
+                            excerpt={excerpt}
+                            setExcerpt={setExcerpt}
+                            seoTitle={seoTitle}
+                            setSeoTitle={setSeoTitle}
+                            seoDescription={seoDescription}
+                            setSeoDescription={setSeoDescription}
+                            generateSEO={generateSEO}
+                            isAiWorking={isAiWorking}
+                        />
+                    </div>
+                </TabletSlidePanel>
+            )}
+
+            {/* Mobile: Bottom Sheet */}
+            {viewportType === 'mobile' && (
+                <MobileBottomSheet
+                    isOpen={isSidebarOpen}
+                    onClose={() => setIsSidebarOpen(false)}
+                    title={t('cms_editor.postSettings')}
+                    subtitle={t('cms_editor.metaDescription')}
+                >
+                    <div className="p-4">
+                        <SettingsSidebarContent
+                            t={t}
+                            slug={slug}
+                            setSlug={setSlug}
+                            featuredImage={featuredImage}
+                            setFeaturedImage={setFeaturedImage}
+                            excerpt={excerpt}
+                            setExcerpt={setExcerpt}
+                            seoTitle={seoTitle}
+                            setSeoTitle={setSeoTitle}
+                            seoDescription={seoDescription}
+                            setSeoDescription={setSeoDescription}
+                            generateSEO={generateSEO}
+                            isAiWorking={isAiWorking}
+                        />
+                    </div>
+                </MobileBottomSheet>
+            )}
         </div>
     );
 };

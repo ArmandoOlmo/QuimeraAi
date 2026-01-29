@@ -30,8 +30,8 @@ const MenuButton: React.FC<{
         onClick={onClick}
         disabled={disabled}
         className={`p-2 rounded-md transition-colors disabled:opacity-30 disabled:cursor-not-allowed ${isActive
-                ? 'bg-primary text-primary-foreground'
-                : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+            ? 'bg-primary text-primary-foreground'
+            : 'text-muted-foreground hover:bg-muted hover:text-foreground'
             }`}
         title={title}
     >
@@ -69,9 +69,9 @@ const EditorMenuBar: React.FC<EditorMenuBarProps> = ({ editor, onImageUpload, on
     const colors = ['#000000', '#4b5563', '#9ca3af', '#ffffff', '#ef4444', '#f97316', '#f59e0b', '#84cc16', '#10b981', '#06b6d4', '#3b82f6', '#6366f1', '#8b5cf6', '#d946ef', '#f43f5e'];
 
     return (
-        <div className="border-b border-border bg-card p-2 flex flex-wrap gap-1 items-center sticky top-0 z-10">
+        <div className="border-b border-border bg-card p-2 flex gap-1 items-center sticky top-0 z-10 overflow-x-auto scrollbar-hide">
             {/* History */}
-            <div className="flex bg-background border border-border rounded-md shadow-sm">
+            <div className="flex shrink-0 bg-background border border-border rounded-md shadow-sm">
                 <MenuButton onClick={() => editor.chain().focus().undo().run()} disabled={!editor.can().undo()} title={t('cms_editor.toolbar.undo')}>
                     <Undo size={16} />
                 </MenuButton>
@@ -81,7 +81,7 @@ const EditorMenuBar: React.FC<EditorMenuBarProps> = ({ editor, onImageUpload, on
             </div>
 
             {/* Heading Dropdown */}
-            <div className="relative">
+            <div className="relative shrink-0">
                 <button
                     onClick={() => setShowHeadings(!showHeadings)}
                     className="flex items-center justify-between w-32 px-3 py-1.5 bg-background border border-border rounded-md shadow-sm text-sm hover:bg-muted"
@@ -114,7 +114,7 @@ const EditorMenuBar: React.FC<EditorMenuBarProps> = ({ editor, onImageUpload, on
             <MenuDivider />
 
             {/* Text Formatting */}
-            <div className="flex bg-background border border-border rounded-md shadow-sm">
+            <div className="flex shrink-0 bg-background border border-border rounded-md shadow-sm">
                 <MenuButton onClick={() => editor.chain().focus().toggleBold().run()} isActive={editor.isActive('bold')} title={t('cms_editor.toolbar.bold')}>
                     <Bold size={16} />
                 </MenuButton>
@@ -133,7 +133,7 @@ const EditorMenuBar: React.FC<EditorMenuBarProps> = ({ editor, onImageUpload, on
             </div>
 
             {/* Color Picker */}
-            <div className="relative">
+            <div className="relative shrink-0">
                 <MenuButton onClick={() => setShowColors(!showColors)} title={t('cms_editor.toolbar.textColor')}>
                     <Palette size={16} />
                 </MenuButton>
@@ -156,7 +156,7 @@ const EditorMenuBar: React.FC<EditorMenuBarProps> = ({ editor, onImageUpload, on
             </div>
 
             {/* Highlight */}
-            <div className="relative">
+            <div className="relative shrink-0">
                 <MenuButton onClick={() => setShowHighlight(!showHighlight)} isActive={editor.isActive('highlight')} title={t('cms_editor.toolbar.highlight')}>
                     <Highlighter size={16} />
                 </MenuButton>
@@ -187,7 +187,7 @@ const EditorMenuBar: React.FC<EditorMenuBarProps> = ({ editor, onImageUpload, on
             <MenuDivider />
 
             {/* Alignment */}
-            <div className="flex bg-background border border-border rounded-md shadow-sm">
+            <div className="flex shrink-0 bg-background border border-border rounded-md shadow-sm">
                 <MenuButton onClick={() => editor.chain().focus().setTextAlign('left').run()} isActive={editor.isActive({ textAlign: 'left' })} title={t('cms_editor.toolbar.alignLeft')}>
                     <AlignLeft size={16} />
                 </MenuButton>
@@ -203,7 +203,7 @@ const EditorMenuBar: React.FC<EditorMenuBarProps> = ({ editor, onImageUpload, on
             </div>
 
             {/* Lists */}
-            <div className="flex bg-background border border-border rounded-md shadow-sm">
+            <div className="flex shrink-0 bg-background border border-border rounded-md shadow-sm">
                 <MenuButton onClick={() => editor.chain().focus().toggleBulletList().run()} isActive={editor.isActive('bulletList')} title={t('cms_editor.toolbar.bulletList')}>
                     <List size={16} />
                 </MenuButton>
@@ -215,7 +215,7 @@ const EditorMenuBar: React.FC<EditorMenuBarProps> = ({ editor, onImageUpload, on
             <MenuDivider />
 
             {/* Insert */}
-            <div className="flex bg-background border border-border rounded-md shadow-sm">
+            <div className="flex shrink-0 bg-background border border-border rounded-md shadow-sm">
                 <MenuButton onClick={onImageUpload} title={t('cms_editor.insertImage')}>
                     <ImageIcon size={16} />
                 </MenuButton>
@@ -234,7 +234,7 @@ const EditorMenuBar: React.FC<EditorMenuBarProps> = ({ editor, onImageUpload, on
             </MenuButton>
 
             {/* AI Commands */}
-            <div className="ml-auto flex items-center gap-1 bg-primary/10 border border-primary/30 rounded-lg p-0.5">
+            <div className="ml-auto flex shrink-0 items-center gap-1 bg-primary/10 border border-primary/30 rounded-lg p-0.5">
                 <span className="px-2 text-xs font-bold text-primary flex items-center">
                     <Sparkles size={12} className="mr-1" /> {t('cms_editor.assistant.ai')}
                 </span>
