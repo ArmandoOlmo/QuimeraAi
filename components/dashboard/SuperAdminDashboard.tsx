@@ -36,6 +36,7 @@ import GlobalChatbotPromptsSettings from './admin/GlobalChatbotPromptsSettings';
 import ExecutionModeToggle from './admin/ExecutionModeToggle';
 import NewsManagement from './admin/NewsManagement';
 import LandingPageEditor from './admin/LandingPageEditor';
+import ServiceAvailabilityControl from './admin/ServiceAvailabilityControl';
 
 // Types
 type AdminFeature = {
@@ -76,6 +77,7 @@ const ADMIN_ROUTES: Record<string, string> = {
     'global-tracking-pixels': ROUTES.ADMIN_GLOBAL_TRACKING_PIXELS,
     'news': ROUTES.ADMIN_NEWS,
     'landing-editor': ROUTES.ADMIN_LANDING_EDITOR,
+    'service-availability': ROUTES.ADMIN_SERVICE_AVAILABILITY,
 };
 
 // Components
@@ -230,6 +232,7 @@ const SuperAdminDashboard = () => {
         { id: 'languages', title: t('superadmin.languageSettings'), description: t('superadmin.languageSettingsDesc'), icon: <Languages size={24} />, category: 'core', route: ROUTES.ADMIN_LANGUAGES, allowedRoles: ['owner', 'superadmin', 'admin'] },
         { id: 'app-info', title: t('superadmin.appInformation'), description: t('superadmin.appInformationDesc'), icon: <FileText size={24} />, category: 'core', route: ROUTES.ADMIN_APP_INFO, allowedRoles: ['owner', 'superadmin'] },
         { id: 'subscriptions', title: t('superadmin.subscriptions'), description: t('superadmin.subscriptionsDesc'), icon: <Sparkles size={24} />, category: 'core', route: ROUTES.ADMIN_SUBSCRIPTIONS, isNew: true, allowedRoles: ['owner', 'superadmin'] },
+        { id: 'service-availability', title: t('serviceAvailability.title', 'Disponibilidad de Servicios'), description: t('serviceAvailability.description', 'Control global de servicios de la plataforma'), icon: <Settings size={24} />, category: 'core', route: ROUTES.ADMIN_SERVICE_AVAILABILITY, isNew: true, allowedRoles: ['owner', 'superadmin'] },
 
         // Content Management
         { id: 'news', title: t('admin.news.title', 'Noticias y Novedades'), description: t('superadmin.newsDesc', 'Gestionar noticias y actualizaciones para el dashboard'), icon: <Newspaper size={24} />, category: 'content', route: ROUTES.ADMIN_NEWS, isNew: true, allowedRoles: ['owner', 'superadmin', 'admin'] },
@@ -318,6 +321,7 @@ const SuperAdminDashboard = () => {
     if (adminView === 'execution-mode') return <ExecutionModeToggle onBack={handleBack} />;
     if (adminView === 'news') return <NewsManagement onBack={handleBack} />;
     if (adminView === 'landing-editor') return <LandingPageEditor onBack={handleBack} />;
+    if (adminView === 'service-availability') return <ServiceAvailabilityControl onBack={handleBack} />;
     if (adminView === 'design-tokens') return <AdminViewLayout title={t('superadmin.designTokensTitle')} onBack={handleBack}><DesignTokensEditor /></AdminViewLayout>;
     if (adminView === 'analytics') return <AdminViewLayout title={t('superadmin.componentAnalyticsTitle')} onBack={handleBack} noPadding><AnalyticsDashboard /></AdminViewLayout>;
 

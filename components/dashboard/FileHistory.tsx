@@ -60,7 +60,7 @@ const DEPTH_OF_FIELD = [
 
 const FileItem: React.FC<{
     file: FileRecord;
-    variant: 'widget' | 'full';
+    variant: 'widget' | 'full' | 'gallery-only';
     onPreview: (file: FileRecord) => void;
     isSelected?: boolean;
     onToggleSelect?: () => void;
@@ -210,7 +210,7 @@ const FileItem: React.FC<{
 };
 
 interface FileHistoryProps {
-    variant?: 'widget' | 'full';
+    variant?: 'widget' | 'full' | 'gallery-only';
 }
 
 const FileHistory: React.FC<FileHistoryProps> = ({ variant = 'widget' }) => {
@@ -546,7 +546,7 @@ const FileHistory: React.FC<FileHistoryProps> = ({ variant = 'widget' }) => {
         : "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6";
 
     // Show message when no project is active
-    if (!hasActiveProject && variant === 'full') {
+    if (!hasActiveProject && (variant === 'full' || variant === 'gallery-only')) {
         return (
             <section className={containerClasses}>
                 <div className="flex flex-col items-center justify-center py-12">
@@ -575,8 +575,8 @@ const FileHistory: React.FC<FileHistoryProps> = ({ variant = 'widget' }) => {
                 />
             )}
 
-            {/* IMAGE GENERATOR - Only show in full Assets view, not in dashboard widget */}
-            {variant !== 'widget' && (
+            {/* IMAGE GENERATOR - Only show in full Assets view, not in dashboard widget or gallery-only */}
+            {variant === 'full' && (
                 <div className="mb-8 p-6 bg-primary/5 border-2 border-primary/20 rounded-2xl">
                     <div className="flex items-center gap-3 mb-6">
                         <div className="p-2 bg-primary rounded-lg">
@@ -996,7 +996,7 @@ const FileHistory: React.FC<FileHistoryProps> = ({ variant = 'widget' }) => {
                                                         isSelected={library.isSelected(file.id)}
                                                         onToggleSelect={() => library.toggleSelection(file.id)}
                                                         isSelectionMode={library.isSelectionMode}
-                                                        onAddToReference={variant === 'full' ? addImageToReference : undefined}
+                                                        onAddToReference={variant !== 'widget' ? addImageToReference : undefined}
                                                     />
                                                 </div>
                                             ))}

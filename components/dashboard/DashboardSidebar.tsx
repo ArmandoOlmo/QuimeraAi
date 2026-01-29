@@ -15,6 +15,8 @@ import { useSafeTenant } from '../../contexts/tenant';
 import { useSafeUpgrade } from '../../contexts/UpgradeContext';
 import { useCreditsUsage } from '../../hooks/useCreditsUsage';
 import { usePlanAccess } from '../../hooks/usePlanFeatures';
+import { useServiceAvailability } from '../../hooks/useServiceAvailability';
+import { PlatformServiceId } from '../../types/serviceAvailability';
 import { PlanFeatures } from '../../types/subscription';
 import { UpgradeTrigger } from '../ui/UpgradeModal';
 import {
@@ -54,6 +56,7 @@ interface NavItemData {
   subView?: string; // Para sub-vistas dentro de un módulo (ej: ecommerce)
   requiredFeature?: keyof PlanFeatures; // Feature del plan requerida para acceder
   upgradeTrigger?: UpgradeTrigger; // Trigger para el modal de upgrade
+  serviceId?: PlatformServiceId; // ID del servicio global para control de disponibilidad
 }
 
 const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClose, hiddenOnDesktop = false, defaultCollapsed = false }) => {
@@ -84,7 +87,10 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
 
   // Get plan access functions from the dynamic hook (reads from Firestore)
   const { hasAccess: hasFeatureAccess, getMinPlan: getMinPlanForFeature, isLoading: isLoadingPlan } = usePlanAccess();
-  // Default to expanded on desktop, unless defaultCollapsed is true
+
+  // Get global service availability control
+  const { canAccessService: canAccessGlobalService, isLoading: isLoadingServiceAvailability } = useServiceAvailability();
+
   // Default to expanded on desktop, unless defaultCollapsed is true
   const [isCollapsed, setIsCollapsed] = useState(defaultCollapsed);
 
@@ -172,38 +178,43 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
   // Websites section items
   const websiteItems: NavItemData[] = [
     { id: 'websites', icon: Globe, label: t('dashboard.myWebsites'), view: 'websites', route: ROUTES.WEBSITES },
-    { id: 'templates', icon: LayoutTemplate, label: t('dashboard.templates'), view: 'templates', route: ROUTES.TEMPLATES },
+    { id: 'templates', icon: LayoutTemplate, label: t('dashboard.templates'), view: 'templates', route: ROUTES.TEMPLATES, serviceId: 'templates' },
     { id: 'navigation', icon: MenuIcon, label: t('dashboard.navigation'), view: 'navigation', route: ROUTES.NAVIGATION },
-    { id: 'cms', icon: PenTool, label: t('dashboard.contentManager'), view: 'cms', route: ROUTES.CMS, requiredFeature: 'cmsEnabled', upgradeTrigger: 'generic' },
-    { id: 'domains', icon: Link2, label: t('domains.title'), view: 'domains', route: ROUTES.DOMAINS, requiredFeature: 'customDomains', upgradeTrigger: 'domains' },
+    { id: 'cms', icon: PenTool, label: t('dashboard.contentManager'), view: 'cms', route: ROUTES.CMS, requiredFeature: 'cmsEnabled', upgradeTrigger: 'generic', serviceId: 'cms' },
+    { id: 'domains', icon: Link2, label: t('domains.title'), view: 'domains', route: ROUTES.DOMAINS, requiredFeature: 'customDomains', upgradeTrigger: 'domains', serviceId: 'domains' },
     { id: 'seo', icon: Search, label: t('dashboard.seoAndMeta'), view: 'seo', route: ROUTES.SEO },
   ];
 
   // Ecommerce section items (sección independiente con árbol de componentes)
   const ecommerceItems: NavItemData[] = [
-    { id: 'ecommerce-overview', icon: BarChart3, label: t('ecommerce.overview', 'Vista General'), view: 'ecommerce', route: ROUTES.ECOMMERCE, subView: 'overview', requiredFeature: 'ecommerceEnabled', upgradeTrigger: 'ecommerce' },
-    { id: 'ecommerce-products', icon: Package, label: t('ecommerce.products', 'Productos'), view: 'ecommerce', route: ROUTES.ECOMMERCE, subView: 'products', requiredFeature: 'ecommerceEnabled', upgradeTrigger: 'ecommerce' },
-    { id: 'ecommerce-categories', icon: FolderTree, label: t('ecommerce.categories', 'Categorías'), view: 'ecommerce', route: ROUTES.ECOMMERCE, subView: 'categories', requiredFeature: 'ecommerceEnabled', upgradeTrigger: 'ecommerce' },
-    { id: 'ecommerce-orders', icon: ShoppingCart, label: t('ecommerce.orders', 'Pedidos'), view: 'ecommerce', route: ROUTES.ECOMMERCE, subView: 'orders', requiredFeature: 'ecommerceEnabled', upgradeTrigger: 'ecommerce' },
-    { id: 'ecommerce-customers', icon: Users, label: t('ecommerce.customers', 'Clientes'), view: 'ecommerce', route: ROUTES.ECOMMERCE, subView: 'customers', requiredFeature: 'ecommerceEnabled', upgradeTrigger: 'ecommerce' },
-    { id: 'ecommerce-store-users', icon: UserCheck, label: t('storeUsers.title', 'Usuarios Registrados'), view: 'ecommerce', route: ROUTES.ECOMMERCE, subView: 'store-users', requiredFeature: 'ecommerceEnabled', upgradeTrigger: 'ecommerce' },
-    { id: 'ecommerce-discounts', icon: Tag, label: t('ecommerce.discounts', 'Descuentos'), view: 'ecommerce', route: ROUTES.ECOMMERCE, subView: 'discounts', requiredFeature: 'ecommerceEnabled', upgradeTrigger: 'ecommerce' },
-    { id: 'ecommerce-analytics', icon: TrendingUp, label: t('ecommerce.analyticsTitle', 'Analytics'), view: 'ecommerce', route: ROUTES.ECOMMERCE, subView: 'analytics', requiredFeature: 'ecommerceEnabled', upgradeTrigger: 'ecommerce' },
-    { id: 'ecommerce-settings', icon: Settings, label: t('ecommerce.settings', 'Configuración'), view: 'ecommerce', route: ROUTES.ECOMMERCE, subView: 'settings', requiredFeature: 'ecommerceEnabled', upgradeTrigger: 'ecommerce' },
+    { id: 'ecommerce-overview', icon: BarChart3, label: t('ecommerce.overview', 'Vista General'), view: 'ecommerce', route: ROUTES.ECOMMERCE, subView: 'overview', requiredFeature: 'ecommerceEnabled', upgradeTrigger: 'ecommerce', serviceId: 'ecommerce' },
+    { id: 'ecommerce-products', icon: Package, label: t('ecommerce.products', 'Productos'), view: 'ecommerce', route: ROUTES.ECOMMERCE, subView: 'products', requiredFeature: 'ecommerceEnabled', upgradeTrigger: 'ecommerce', serviceId: 'ecommerce' },
+    { id: 'ecommerce-categories', icon: FolderTree, label: t('ecommerce.categories', 'Categorías'), view: 'ecommerce', route: ROUTES.ECOMMERCE, subView: 'categories', requiredFeature: 'ecommerceEnabled', upgradeTrigger: 'ecommerce', serviceId: 'ecommerce' },
+    { id: 'ecommerce-orders', icon: ShoppingCart, label: t('ecommerce.orders', 'Pedidos'), view: 'ecommerce', route: ROUTES.ECOMMERCE, subView: 'orders', requiredFeature: 'ecommerceEnabled', upgradeTrigger: 'ecommerce', serviceId: 'ecommerce' },
+    { id: 'ecommerce-customers', icon: Users, label: t('ecommerce.customers', 'Clientes'), view: 'ecommerce', route: ROUTES.ECOMMERCE, subView: 'customers', requiredFeature: 'ecommerceEnabled', upgradeTrigger: 'ecommerce', serviceId: 'ecommerce' },
+    { id: 'ecommerce-store-users', icon: UserCheck, label: t('storeUsers.title', 'Usuarios Registrados'), view: 'ecommerce', route: ROUTES.ECOMMERCE, subView: 'store-users', requiredFeature: 'ecommerceEnabled', upgradeTrigger: 'ecommerce', serviceId: 'ecommerce' },
+    { id: 'ecommerce-discounts', icon: Tag, label: t('ecommerce.discounts', 'Descuentos'), view: 'ecommerce', route: ROUTES.ECOMMERCE, subView: 'discounts', requiredFeature: 'ecommerceEnabled', upgradeTrigger: 'ecommerce', serviceId: 'ecommerce' },
+    { id: 'ecommerce-analytics', icon: TrendingUp, label: t('ecommerce.analyticsTitle', 'Analytics'), view: 'ecommerce', route: ROUTES.ECOMMERCE, subView: 'analytics', requiredFeature: 'ecommerceEnabled', upgradeTrigger: 'ecommerce', serviceId: 'ecommerce' },
+    { id: 'ecommerce-settings', icon: Settings, label: t('ecommerce.settings', 'Configuración'), view: 'ecommerce', route: ROUTES.ECOMMERCE, subView: 'settings', requiredFeature: 'ecommerceEnabled', upgradeTrigger: 'ecommerce', serviceId: 'ecommerce' },
   ];
 
-  // Tools section items
+  // Tools section items (settings removed - placed outside section)
   const toolsItems: NavItemData[] = [
-    { id: 'ai-assistant', icon: MessageSquare, label: t('dashboard.quimeraChat'), view: 'ai-assistant', route: ROUTES.AI_ASSISTANT, requiredFeature: 'chatbotEnabled', upgradeTrigger: 'chatbot' },
-    { id: 'leads', icon: Users, label: t('leads.title'), view: 'leads', route: ROUTES.LEADS, requiredFeature: 'crmEnabled', upgradeTrigger: 'generic' },
-    { id: 'email', icon: Mail, label: t('email.title', 'Email Marketing'), view: 'email', route: ROUTES.EMAIL, requiredFeature: 'emailMarketing', upgradeTrigger: 'generic' },
-    { id: 'assets', icon: Zap, label: t('editor.imageGenerator'), view: 'assets', route: ROUTES.ASSETS }, // Available in all plans
-    { id: 'finance', icon: DollarSign, label: t('editor.finance'), view: 'finance', route: ROUTES.FINANCE },
-    { id: 'appointments', icon: Calendar, label: t('appointments.title'), view: 'appointments', route: ROUTES.APPOINTMENTS },
-    { id: 'settings', icon: Settings, label: t('settings.title', 'Configuración'), view: 'settings', route: ROUTES.SETTINGS },
+    { id: 'ai-assistant', icon: MessageSquare, label: t('dashboard.quimeraChat'), view: 'ai-assistant', route: ROUTES.AI_ASSISTANT, requiredFeature: 'chatbotEnabled', upgradeTrigger: 'chatbot', serviceId: 'chatbot' },
+    { id: 'leads', icon: Users, label: t('leads.title'), view: 'leads', route: ROUTES.LEADS, requiredFeature: 'crmEnabled', upgradeTrigger: 'generic', serviceId: 'crm' },
+    { id: 'email', icon: Mail, label: t('email.title', 'Email Marketing'), view: 'email', route: ROUTES.EMAIL, requiredFeature: 'emailMarketing', upgradeTrigger: 'generic', serviceId: 'emailMarketing' },
+    { id: 'assets', icon: Zap, label: t('editor.imageGenerator'), view: 'assets', route: ROUTES.ASSETS, serviceId: 'aiFeatures' }, // AI Features
+    { id: 'finance', icon: DollarSign, label: t('editor.finance'), view: 'finance', route: ROUTES.FINANCE, serviceId: 'finance' },
+    { id: 'appointments', icon: Calendar, label: t('appointments.title'), view: 'appointments', route: ROUTES.APPOINTMENTS, serviceId: 'appointments' },
   ];
 
-  // Agency section items (sección independiente con árbol de componentes para gestión de agencia)
+  // Agency button - standalone outside control panel area
+  const agencyItem: NavItemData = { id: 'agency', icon: Building2, label: t('dashboard.agencySection', 'Agencia'), view: 'agency', route: ROUTES.AGENCY };
+
+  // Workspace Settings - standalone outside tools section, before Super Admin
+  const settingsItem: NavItemData = { id: 'settings', icon: Settings, label: t('settings.title', 'Configuración del Workspace'), view: 'settings', route: ROUTES.SETTINGS };
+
+  // Agency section items (for collapsible drawer - kept for backwards compatibility)
   const agencyItems: NavItemData[] = [
     { id: 'agency-overview', icon: BarChart3, label: t('agency.overview', 'Vista General'), view: 'agency', route: ROUTES.AGENCY },
     { id: 'agency-billing', icon: DollarSign, label: t('agency.billing', 'Facturación'), view: 'agency', route: ROUTES.AGENCY_BILLING },
@@ -295,6 +306,18 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
     }).catch((error) => console.error("Sign out error", error));
   };
 
+  // Helper: Check if an item is accessible based on global service availability
+  const isItemAccessible = (item: NavItemData): boolean => {
+    if (!item.serviceId) return true; // No service restriction
+    if (isLoadingServiceAvailability) return true; // Show while loading
+    return canAccessGlobalService(item.serviceId);
+  };
+
+  // Helper: Check if any items in a section are accessible
+  const hasAccessibleItems = (items: NavItemData[]): boolean => {
+    return items.some(isItemAccessible);
+  };
+
   // Check if a route is active
   const isRouteActive = (route: string): boolean => {
     return path === route || path.startsWith(route + '/');
@@ -314,6 +337,9 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
       disabled: item.isFixed,
     });
 
+    // Note: Service availability filtering is done at the parent level (before mapping)
+    // to avoid violating React hooks rules with conditional early returns
+
     const style = {
       transform: CSS.Transform.toString(transform),
       transition,
@@ -331,7 +357,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
     // En móvil siempre mostrar expandido cuando el sidebar está abierto
     const showExpanded = !isCollapsed || isMobileOpen;
 
-    // Check if user has access to this feature
+    // Check if user has access to this feature (plan-based access)
     const hasAccess = hasFeatureAccess(item.requiredFeature);
     const isLocked = !isLoadingPlan && !hasAccess && item.requiredFeature;
     const minPlanRequired = isLocked ? getMinPlanForFeature(item.requiredFeature) : '';
@@ -584,10 +610,17 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
                   <>
                     {/* Separator */}
                     <div className="my-2 border-t border-border mx-2" />
-                    {/* Show all items directly with drag and drop */}
-                    {[...websiteItems, ...ecommerceItems, ...toolsItems, ...agencyItems].map((item, index) => (
-                      <SortableNavItem key={item.id} item={item} index={index + 1} />
-                    ))}
+                    {/* Show all items directly with drag and drop - filtered by service availability */}
+                    {[...websiteItems, ...ecommerceItems, ...toolsItems]
+                      .filter(isItemAccessible)
+                      .map((item, index) => (
+                        <SortableNavItem key={item.id} item={item} index={index + 1} />
+                      ))}
+                    {/* Agency button - standalone */}
+                    <div className="my-2 border-t border-border mx-2" />
+                    <SortableNavItem item={agencyItem} index={websiteItems.length + ecommerceItems.length + toolsItems.length + 1} />
+                    {/* Workspace Settings - standalone before Super Admin */}
+                    <SortableNavItem item={settingsItem} index={websiteItems.length + ecommerceItems.length + toolsItems.length + 2} />
                   </>
                 ) : (
                   <>
@@ -612,96 +645,84 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
                           }`}
                       >
                         <div className="pl-2 border-l-2 border-border/50 ml-4 mt-1">
-                          {websiteItems.map((item, index) => (
+                          {websiteItems.filter(isItemAccessible).map((item, index) => (
                             <SortableNavItem key={item.id} item={item} index={index + 1} />
                           ))}
                         </div>
                       </div>
                     </div>
-
-                    {/* Ecommerce Section - Collapsible Drawer */}
-                    <div className="mt-3">
-                      <button
-                        onClick={() => toggleSection('ecommerce')}
-                        className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-muted-foreground hover:bg-secondary/50 hover:text-foreground transition-all duration-200"
-                        aria-expanded={!collapsedSections.ecommerce}
-                      >
-                        <div className="flex items-center gap-2">
-                          <ShoppingBag size={18} className="flex-shrink-0" />
-                          <span className="text-xs font-bold uppercase tracking-wider">{t('dashboard.ecommerceSection')}</span>
-                        </div>
-                        <ChevronDown
-                          size={16}
-                          className={`transition-transform duration-200 ${collapsedSections.ecommerce ? '-rotate-90' : 'rotate-0'}`}
-                        />
-                      </button>
-                      <div
-                        className={`overflow-hidden transition-all duration-300 ease-in-out ${collapsedSections.ecommerce ? 'max-h-0 opacity-0' : 'max-h-[500px] opacity-100'
-                          }`}
-                      >
-                        <div className="pl-2 border-l-2 border-border/50 ml-4 mt-1">
-                          {ecommerceItems.map((item, index) => (
-                            <SortableNavItem key={item.id} item={item} index={index + websiteItems.length + 1} />
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Tools Section - Collapsible Drawer */}
-                    <div className="mt-3">
-                      <button
-                        onClick={() => toggleSection('tools')}
-                        className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-muted-foreground hover:bg-secondary/50 hover:text-foreground transition-all duration-200"
-                        aria-expanded={!collapsedSections.tools}
-                      >
-                        <div className="flex items-center gap-2">
-                          <Wrench size={18} className="flex-shrink-0" />
-                          <span className="text-xs font-bold uppercase tracking-wider">{t('dashboard.toolsSection')}</span>
-                        </div>
-                        <ChevronDown
-                          size={16}
-                          className={`transition-transform duration-200 ${collapsedSections.tools ? '-rotate-90' : 'rotate-0'}`}
-                        />
-                      </button>
-                      <div
-                        className={`overflow-hidden transition-all duration-300 ease-in-out ${collapsedSections.tools ? 'max-h-0 opacity-0' : 'max-h-[500px] opacity-100'
-                          }`}
-                      >
-                        <div className="pl-2 border-l-2 border-border/50 ml-4 mt-1">
-                          {toolsItems.map((item, index) => (
-                            <SortableNavItem key={item.id} item={item} index={index + websiteItems.length + ecommerceItems.length + 1} />
-                          ))}
+                    {/* Ecommerce Section - Collapsible Drawer (only show if any items accessible) */}
+                    {hasAccessibleItems(ecommerceItems) && (
+                      <div className="mt-3">
+                        <button
+                          onClick={() => toggleSection('ecommerce')}
+                          className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-muted-foreground hover:bg-secondary/50 hover:text-foreground transition-all duration-200"
+                          aria-expanded={!collapsedSections.ecommerce}
+                        >
+                          <div className="flex items-center gap-2">
+                            <ShoppingBag size={18} className="flex-shrink-0" />
+                            <span className="text-xs font-bold uppercase tracking-wider">{t('dashboard.ecommerceSection')}</span>
+                          </div>
+                          <ChevronDown
+                            size={16}
+                            className={`transition-transform duration-200 ${collapsedSections.ecommerce ? '-rotate-90' : 'rotate-0'}`}
+                          />
+                        </button>
+                        <div
+                          className={`overflow-hidden transition-all duration-300 ease-in-out ${collapsedSections.ecommerce ? 'max-h-0 opacity-0' : 'max-h-[500px] opacity-100'
+                            }`}
+                        >
+                          <div className="pl-2 border-l-2 border-border/50 ml-4 mt-1">
+                            {ecommerceItems.filter(isItemAccessible).map((item, index) => (
+                              <SortableNavItem key={item.id} item={item} index={index + websiteItems.length + 1} />
+                            ))}
+                          </div>
                         </div>
                       </div>
-                    </div>
+                    )}
 
-                    {/* Agency Section - Collapsible Drawer */}
-                    <div className="mt-3">
-                      <button
-                        onClick={() => toggleSection('agency')}
-                        className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-muted-foreground hover:bg-secondary/50 hover:text-foreground transition-all duration-200"
-                        aria-expanded={!collapsedSections.agency}
-                      >
-                        <div className="flex items-center gap-2">
-                          <Building2 size={18} className="flex-shrink-0" />
-                          <span className="text-xs font-bold uppercase tracking-wider">{t('dashboard.agencySection', 'Agencia')}</span>
-                        </div>
-                        <ChevronDown
-                          size={16}
-                          className={`transition-transform duration-200 ${collapsedSections.agency ? '-rotate-90' : 'rotate-0'}`}
-                        />
-                      </button>
-                      <div
-                        className={`overflow-hidden transition-all duration-300 ease-in-out ${collapsedSections.agency ? 'max-h-0 opacity-0' : 'max-h-[500px] opacity-100'
-                          }`}
-                      >
-                        <div className="pl-2 border-l-2 border-border/50 ml-4 mt-1">
-                          {agencyItems.map((item, index) => (
-                            <SortableNavItem key={item.id} item={item} index={index + websiteItems.length + ecommerceItems.length + toolsItems.length + 1} />
-                          ))}
+                    {/* Tools Section - Collapsible Drawer (only show if any items accessible) */}
+                    {hasAccessibleItems(toolsItems) && (
+                      <div className="mt-3">
+                        <button
+                          onClick={() => toggleSection('tools')}
+                          className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-muted-foreground hover:bg-secondary/50 hover:text-foreground transition-all duration-200"
+                          aria-expanded={!collapsedSections.tools}
+                        >
+                          <div className="flex items-center gap-2">
+                            <Wrench size={18} className="flex-shrink-0" />
+                            <span className="text-xs font-bold uppercase tracking-wider">{t('dashboard.toolsSection')}</span>
+                          </div>
+                          <ChevronDown
+                            size={16}
+                            className={`transition-transform duration-200 ${collapsedSections.tools ? '-rotate-90' : 'rotate-0'}`}
+                          />
+                        </button>
+                        <div
+                          className={`overflow-hidden transition-all duration-300 ease-in-out ${collapsedSections.tools ? 'max-h-0 opacity-0' : 'max-h-[500px] opacity-100'
+                            }`}
+                        >
+                          <div className="pl-2 border-l-2 border-border/50 ml-4 mt-1">
+                            {toolsItems.filter(isItemAccessible).map((item, index) => (
+                              <SortableNavItem key={item.id} item={item} index={index + websiteItems.length + ecommerceItems.length + 1} />
+                            ))}
+                          </div>
                         </div>
                       </div>
-                    </div>
+                    )}
+
+                    {/* Agency Button - Standalone outside control panel area */}
+                    <div className={`my-3 lg:my-4 border-t border-border ${isCollapsed && !isMobileOpen ? 'mx-2' : 'mx-0'}`} />
+                    <SortableNavItem
+                      item={agencyItem}
+                      index={websiteItems.length + ecommerceItems.length + toolsItems.length + 1}
+                    />
+
+                    {/* Workspace Settings - Standalone outside tools section */}
+                    <SortableNavItem
+                      item={settingsItem}
+                      index={websiteItems.length + ecommerceItems.length + toolsItems.length + 2}
+                    />
                   </>
                 )}
 

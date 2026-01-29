@@ -1,6 +1,7 @@
 /**
  * AssetsDashboard
  * Dashboard principal para generación y gestión de imágenes con selector de proyecto
+ * Layout: Fixed ImageGeneratorPanel (left) + Scrollable Gallery (right)
  */
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -11,33 +12,36 @@ import { useEditor } from '../../../contexts/EditorContext';
 import DashboardSidebar from '../DashboardSidebar';
 import ProjectSelectorPage from './ProjectSelectorPage';
 import FileHistory from '../FileHistory';
-import { 
-    Zap, 
-    Menu, 
-    ArrowLeft, 
-    Store, 
-    ChevronDown, 
-    Check, 
-    Layers 
+import ImageGeneratorPanel from '../../ui/ImageGeneratorPanel';
+import {
+    Zap,
+    Menu,
+    ArrowLeft,
+    Store,
+    ChevronDown,
+    Check,
+    Layers,
+    Sparkles
 } from 'lucide-react';
 
 const AssetsDashboard: React.FC = () => {
     const { t } = useTranslation();
     const { setView } = useUI();
-    const { 
-        activeProject, 
+    const {
+        activeProject,
         projects,
         activeProjectId,
         isLoadingProjects
     } = useProject();
     const { loadProject } = useEditor();
-    
+
     const [selectedProjectId, setSelectedProjectId] = useState<string | null>(activeProjectId);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isProjectSelectorOpen, setIsProjectSelectorOpen] = useState(false);
-    
+    const [isGeneratorCollapsed, setIsGeneratorCollapsed] = useState(false);
+
     const selectableProjects = projects.filter(p => p.status !== 'Template');
-    
+
     // Determinar qué proyecto usar
     const effectiveProjectId = selectedProjectId || activeProjectId;
     const effectiveProject = projects.find(p => p.id === effectiveProjectId) || activeProject;
@@ -79,11 +83,11 @@ const AssetsDashboard: React.FC = () => {
 
     return (
         <div className="flex h-screen bg-background text-foreground">
-            <DashboardSidebar 
-                isMobileOpen={isMobileMenuOpen} 
-                onClose={() => setIsMobileMenuOpen(false)} 
+            <DashboardSidebar
+                isMobileOpen={isMobileMenuOpen}
+                onClose={() => setIsMobileMenuOpen(false)}
             />
-            
+
             <div className="flex-1 flex flex-col overflow-hidden">
                 {/* Header */}
                 <header className="h-14 px-4 sm:px-6 border-b border-border flex items-center justify-between bg-card/50 backdrop-blur-sm sticky top-0 z-40">
@@ -101,7 +105,7 @@ const AssetsDashboard: React.FC = () => {
                                 {t('editor.imageGenerator', 'Generador de Imágenes')}
                             </h1>
                         </div>
-                        
+
                         {/* Project Selector */}
                         <div className="relative">
                             <button
@@ -118,7 +122,7 @@ const AssetsDashboard: React.FC = () => {
                             {/* Dropdown */}
                             {isProjectSelectorOpen && (
                                 <>
-                                    <div 
+                                    <div
                                         className="fixed inset-0 z-40"
                                         onClick={() => setIsProjectSelectorOpen(false)}
                                     />
@@ -128,7 +132,7 @@ const AssetsDashboard: React.FC = () => {
                                                 {t('assets.quickSwitch', 'Cambio rápido')}
                                             </p>
                                         </div>
-                                        
+
                                         {selectableProjects.slice(0, 5).map((project) => (
                                             <button
                                                 key={project.id}
@@ -136,13 +140,12 @@ const AssetsDashboard: React.FC = () => {
                                                     handleProjectSelect(project.id);
                                                     setIsProjectSelectorOpen(false);
                                                 }}
-                                                className={`w-full flex items-center gap-3 px-4 py-2.5 hover:bg-muted transition-colors ${
-                                                    project.id === effectiveProjectId ? 'bg-primary/10' : ''
-                                                }`}
+                                                className={`w-full flex items-center gap-3 px-4 py-2.5 hover:bg-muted transition-colors ${project.id === effectiveProjectId ? 'bg-primary/10' : ''
+                                                    }`}
                                             >
                                                 {project.thumbnailUrl ? (
-                                                    <img 
-                                                        src={project.thumbnailUrl} 
+                                                    <img
+                                                        src={project.thumbnailUrl}
                                                         alt={project.name}
                                                         className="w-10 h-10 rounded-lg object-cover"
                                                     />
@@ -181,16 +184,42 @@ const AssetsDashboard: React.FC = () => {
                     </button>
                 </header>
 
-                {/* Main Content - FileHistory with full variant */}
-                <main className="flex-1 overflow-auto p-6 lg:p-8">
-                    <div className="max-w-7xl mx-auto">
-                        <FileHistory variant="full" />
+                {/* Main Content - Vertical Layout (Generator on top, Gallery below) */}
+                <main className="flex-1 overflow-auto">
+                    {/* Image Generator Section */}
+                    {!isGeneratorCollapsed ? (
+                        <div className="bg-editor-bg border-b border-border">
+                            <ImageGeneratorPanel
+                                destination="user"
+                                className=""
+                                onCollapse={() => setIsGeneratorCollapsed(true)}
+                            />
+                        </div>
+                    ) : (
+                        <div className="h-14 bg-editor-bg border-b border-border flex items-center px-4 gap-3 sticky top-0 z-10">
+                            <button
+                                onClick={() => setIsGeneratorCollapsed(false)}
+                                className="p-2.5 rounded-xl bg-primary/10 hover:bg-primary/20 text-primary transition-colors flex items-center gap-2"
+                                title={t('common.expand', { defaultValue: 'Expandir generador' })}
+                            >
+                                <Sparkles size={18} />
+                                <span className="text-sm font-medium">{t('editor.imageGenerator', 'Generador de Imágenes')}</span>
+                            </button>
+                        </div>
+                    )}
+
+                    {/* Gallery Section */}
+                    <div className="p-4 md:p-6 lg:p-8">
+                        <div className="max-w-7xl mx-auto">
+                            <FileHistory variant="gallery-only" />
+                        </div>
                     </div>
                 </main>
+
+
             </div>
         </div>
     );
 };
 
 export default AssetsDashboard;
-

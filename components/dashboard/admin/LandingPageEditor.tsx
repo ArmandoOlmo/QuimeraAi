@@ -12,6 +12,25 @@ import {
     Smartphone, RotateCcw, Loader2, Check, Image, Type, Layout,
     Sparkles, X, RefreshCw, Palette
 } from 'lucide-react';
+import {
+    DndContext,
+    closestCenter,
+    KeyboardSensor,
+    PointerSensor,
+    useSensor,
+    useSensors,
+    DragEndEvent,
+    DragStartEvent,
+    DragOverlay,
+} from '@dnd-kit/core';
+import {
+    arrayMove,
+    SortableContext,
+    sortableKeyboardCoordinates,
+    useSortable,
+    verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import DashboardSidebar from '../DashboardSidebar';
 import LandingPageControls from './LandingPageControls';
 import Modal from '../../ui/Modal';
@@ -55,6 +74,88 @@ const STRUCTURE_ITEMS = [
     { id: 'footerGlobal', type: 'footer', label: 'Pie de Página', icon: <Layout size={18} /> },
 ];
 
+// Sortable Section Item Component
+interface SortableSectionItemProps {
+    section: LandingSection;
+    isActive: boolean;
+    onSelect: () => void;
+    onToggleVisibility: () => void;
+    onDelete: () => void;
+}
+
+const SortableSectionItem: React.FC<SortableSectionItemProps> = ({
+    section,
+    isActive,
+    onSelect,
+    onToggleVisibility,
+    onDelete,
+}) => {
+    const {
+        attributes,
+        listeners,
+        setNodeRef,
+        transform,
+        transition,
+        isDragging,
+    } = useSortable({ id: section.id });
+
+    const style = {
+        transform: CSS.Transform.toString(transform),
+        transition,
+        zIndex: isDragging ? 50 : undefined,
+    };
+
+    return (
+        <div
+            ref={setNodeRef}
+            style={style}
+            onClick={onSelect}
+            className={`group flex items-center gap-2 p-2.5 rounded-lg cursor-pointer transition-colors ${isActive
+                ? 'bg-primary/10 border border-primary/30'
+                : 'hover:bg-secondary/50 border border-transparent'
+                } ${!section.enabled ? 'opacity-50' : ''} ${isDragging ? 'opacity-50 shadow-lg' : ''}`}
+        >
+            {/* Drag Handle */}
+            <div
+                {...attributes}
+                {...listeners}
+                className="cursor-grab active:cursor-grabbing touch-none"
+                onClick={(e) => e.stopPropagation()}
+            >
+                <GripVertical size={14} className="text-muted-foreground flex-shrink-0" />
+            </div>
+
+            <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium truncate capitalize">{section.type}</p>
+            </div>
+
+            {/* Section actions */}
+            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <button
+                    onClick={(e) => { e.stopPropagation(); onToggleVisibility(); }}
+                    className="p-1 rounded hover:bg-secondary"
+                >
+                    {section.enabled ? <Eye size={14} /> : <EyeOff size={14} />}
+                </button>
+                <button
+                    onClick={(e) => { e.stopPropagation(); onDelete(); }}
+                    className="p-1 rounded hover:bg-destructive/20 text-destructive"
+                >
+                    <Trash2 size={14} />
+                </button>
+            </div>
+        </div>
+    );
+};
+
+// Drag Overlay Item (shown while dragging)
+const DragOverlayItem: React.FC<{ section: LandingSection }> = ({ section }) => (
+    <div className="flex items-center gap-2 p-2.5 bg-card border border-primary rounded-lg shadow-xl">
+        <GripVertical size={14} className="text-primary" />
+        <span className="text-sm font-medium capitalize">{section.type}</span>
+    </div>
+);
+
 const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
     const { t } = useTranslation();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -85,6 +186,19 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
     const [showResetConfirm, setShowResetConfirm] = useState(false);
     // Delete confirmation modal
     const [sectionToDelete, setSectionToDelete] = useState<string | null>(null);
+
+    // Drag and drop state
+    const [activeDragId, setActiveDragId] = useState<string | null>(null);
+
+    // Configure sensors for drag detection
+    const sensors = useSensors(
+        useSensor(PointerSensor, {
+            activationConstraint: { distance: 8 },
+        }),
+        useSensor(KeyboardSensor, {
+            coordinateGetter: sortableKeyboardCoordinates,
+        })
+    );
 
     // Iframe ref for postMessage
     const iframeRef = useRef<HTMLIFrameElement>(null);
@@ -204,16 +318,19 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
         setHasUnsavedChanges(true);
     };
 
-    // Move section up/down
-    const moveSection = (id: string, direction: 'up' | 'down') => {
+    // Move section up/down (legacy, replaced by drag and drop)
+    const handleDragEnd = (event: DragEndEvent) => {
+        const { active, over } = event;
+        setActiveDragId(null);
+
+        if (!over || active.id === over.id) return;
+
         setSections(prev => {
-            const idx = prev.findIndex(s => s.id === id);
-            if ((direction === 'up' && idx <= 1) || (direction === 'down' && idx >= prev.length - 1)) {
-                return prev; // Can't move header or beyond limits
-            }
-            const newSections = [...prev];
-            const targetIdx = direction === 'up' ? idx - 1 : idx + 1;
-            [newSections[idx], newSections[targetIdx]] = [newSections[targetIdx], newSections[idx]];
+            const oldIndex = prev.findIndex(s => s.id === active.id);
+            const newIndex = prev.findIndex(s => s.id === over.id);
+            if (oldIndex === -1 || newIndex === -1) return prev;
+
+            const newSections = arrayMove(prev, oldIndex, newIndex);
             return newSections.map((s, i) => ({ ...s, order: i }));
         });
         setHasUnsavedChanges(true);
@@ -567,38 +684,38 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
                                 </button>
 
                                 {isContentExpanded && (
-                                    <div className="mt-1 space-y-0.5 pl-2">
-                                        {sections.filter(s => s.type !== 'header' && s.type !== 'footer').map((section, idx) => (
-                                            <div
-                                                key={section.id}
-                                                onClick={() => handleSectionSelect(section.id, section.type)}
-                                                className={`group flex items-center gap-2 p-2.5 rounded-lg cursor-pointer transition-colors ${selectedSection === section.id
-                                                    ? 'bg-primary/10 border border-primary/30'
-                                                    : 'hover:bg-secondary/50 border border-transparent'
-                                                    } ${!section.enabled ? 'opacity-50' : ''}`}
-                                            >
-                                                <GripVertical size={14} className="text-muted-foreground flex-shrink-0" />
-                                                <div className="flex-1 min-w-0">
-                                                    <p className="text-sm font-medium truncate capitalize">{section.type}</p>
-                                                </div>
-                                                {/* Section actions */}
-                                                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                    <button
-                                                        onClick={(e) => { e.stopPropagation(); toggleSection(section.id); }}
-                                                        className="p-1 rounded hover:bg-secondary"
-                                                    >
-                                                        {section.enabled ? <Eye size={14} /> : <EyeOff size={14} />}
-                                                    </button>
-                                                    <button
-                                                        onClick={(e) => { e.stopPropagation(); deleteSection(section.id); }}
-                                                        className="p-1 rounded hover:bg-destructive/20 text-destructive"
-                                                    >
-                                                        <Trash2 size={14} />
-                                                    </button>
-                                                </div>
+                                    <DndContext
+                                        sensors={sensors}
+                                        collisionDetection={closestCenter}
+                                        onDragStart={(e) => setActiveDragId(e.active.id as string)}
+                                        onDragEnd={handleDragEnd}
+                                    >
+                                        <SortableContext
+                                            items={sections.filter(s => s.type !== 'header' && s.type !== 'footer').map(s => s.id)}
+                                            strategy={verticalListSortingStrategy}
+                                        >
+                                            <div className="mt-1 space-y-0.5 pl-2">
+                                                {sections.filter(s => s.type !== 'header' && s.type !== 'footer').map((section) => (
+                                                    <SortableSectionItem
+                                                        key={section.id}
+                                                        section={section}
+                                                        isActive={selectedSection === section.id}
+                                                        onSelect={() => handleSectionSelect(section.id, section.type)}
+                                                        onToggleVisibility={() => toggleSection(section.id)}
+                                                        onDelete={() => deleteSection(section.id)}
+                                                    />
+                                                ))}
                                             </div>
-                                        ))}
-                                    </div>
+                                        </SortableContext>
+
+                                        <DragOverlay>
+                                            {activeDragId && (
+                                                <DragOverlayItem
+                                                    section={sections.find(s => s.id === activeDragId)!}
+                                                />
+                                            )}
+                                        </DragOverlay>
+                                    </DndContext>
                                 )}
                             </div>
                         </div>

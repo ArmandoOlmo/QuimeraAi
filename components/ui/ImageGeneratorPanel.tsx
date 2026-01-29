@@ -5,16 +5,19 @@ import { useTranslation } from 'react-i18next';
 import {
     Zap, Loader2, Wand2, X, Download, Upload, Image as ImageIcon, Plus,
     AlertTriangle, Sparkles, Brain, Users, Thermometer, Eye, Flame, Layers,
-    Rocket, ChevronDown, Check, Settings2, Palette, Camera, Sun, CheckCircle2
+    Rocket, ChevronDown, Check, Settings2, Palette, Camera, Sun, CheckCircle2,
+    PanelLeftClose
 } from 'lucide-react';
 
 interface ImageGeneratorPanelProps {
     destination: 'user' | 'global';
     className?: string;
     onClose?: () => void;
+    onCollapse?: () => void;
+    hidePreview?: boolean;
 }
 
-const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, className = '', onClose }) => {
+const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, className = '', onClose, onCollapse, hidePreview = false }) => {
     const { generateImage, enhancePrompt } = useAI();
     const { uploadGlobalFile, uploadFile, hasActiveProject } = useFiles();
     const { t } = useTranslation();
@@ -392,7 +395,7 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
     return (
         <div className={`bg-editor-bg flex flex-col h-full overflow-hidden ${className}`}>
             {/* Header */}
-            <div className="flex-shrink-0 px-5 py-4 border-b border-editor-border bg-gradient-to-r from-editor-panel-bg to-editor-bg">
+            <div className="flex-shrink-0 px-4 py-3 md:px-5 md:py-4 border-b border-editor-border bg-gradient-to-r from-editor-panel-bg to-editor-bg">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                         <div className={`p-2 rounded-xl bg-gradient-to-br ${currentModel.color} shadow-lg`}>
@@ -407,14 +410,25 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
                             </p>
                         </div>
                     </div>
-                    {onClose && (
-                        <button
-                            onClick={onClose}
-                            className="p-2 rounded-lg hover:bg-editor-border text-editor-text-secondary hover:text-editor-text-primary transition-colors"
-                        >
-                            <X size={18} />
-                        </button>
-                    )}
+                    <div className="flex items-center gap-1">
+                        {onCollapse && (
+                            <button
+                                onClick={onCollapse}
+                                className="p-2 rounded-lg hover:bg-editor-border text-editor-text-secondary hover:text-editor-text-primary transition-colors"
+                                title={t('common.minimize', { defaultValue: 'Minimizar' })}
+                            >
+                                <PanelLeftClose size={18} />
+                            </button>
+                        )}
+                        {onClose && (
+                            <button
+                                onClick={onClose}
+                                className="p-2 rounded-lg hover:bg-editor-border text-editor-text-secondary hover:text-editor-text-primary transition-colors"
+                            >
+                                <X size={18} />
+                            </button>
+                        )}
+                    </div>
                 </div>
             </div>
 
@@ -463,10 +477,11 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
             </div>
 
             {/* Main Content Area */}
-            <div className="flex-1 min-h-0 flex flex-col lg:flex-row overflow-hidden">
+            {/* Main Content Area */}
+            <div className="flex-1 min-h-0 flex flex-col md:flex-row overflow-hidden md:max-h-[765px]">
                 {/* Left Panel - Controls */}
-                <div className="w-full lg:w-[380px] flex-shrink-0 border-b lg:border-b-0 lg:border-r border-editor-border overflow-y-auto">
-                    <div className="p-5 space-y-5">
+                <div className="w-full md:w-[320px] lg:w-[380px] flex-shrink-0 border-b md:border-b-0 md:border-r border-editor-border overflow-y-auto">
+                    <div className="p-4 md:p-5 space-y-4 md:space-y-5">
                         {/* Prompt Section */}
                         <div>
                             <div className="flex items-center justify-between mb-2">
@@ -876,6 +891,7 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
                 </div>
 
                 {/* Right Panel - Preview */}
+
                 <div className="flex-1 min-w-0 flex flex-col p-5 bg-gradient-to-br from-editor-bg to-editor-panel-bg/30">
                     {/* Preview Area */}
                     <div className="flex-1 min-h-0 flex items-center justify-center bg-black/30 rounded-2xl border border-editor-border overflow-hidden backdrop-blur-sm">

@@ -127,6 +127,7 @@ export const ROUTES = {
   ADMIN_EXECUTION_MODE: '/admin/execution-mode',
   ADMIN_NEWS: '/admin/news',
   ADMIN_LANDING_EDITOR: '/admin/landing-editor',
+  ADMIN_SERVICE_AVAILABILITY: '/admin/service-availability',
 } as const;
 
 // =============================================================================
@@ -807,6 +808,17 @@ export const routeConfigs: RouteConfig[] = [
     requiresAuth: true,
     requiresEmailVerified: true,
     roles: ['owner', 'superadmin', 'admin'],
+    parent: ROUTES.SUPERADMIN,
+  },
+  {
+    path: ROUTES.ADMIN_SERVICE_AVAILABILITY,
+    view: 'superadmin',
+    adminView: 'service-availability',
+    type: 'admin',
+    title: 'Service Availability',
+    requiresAuth: true,
+    requiresEmailVerified: true,
+    roles: ['owner', 'superadmin'],
     parent: ROUTES.SUPERADMIN,
   },
 ];

@@ -5,17 +5,38 @@ service cloud.firestore {
     // ============================================
     // HELPER FUNCTIONS
     // ============================================
+    
+    // Owner email - This must match VITE_OWNER_EMAIL in .env
+    // This is the only user who can set themselves as 'owner' role  
+    function isOwnerEmail() {
+      return request.auth != null && 
+             request.auth.token.email != null &&
+             (request.auth.token.email == 'armandoolmomiranda@gmail.com' ||
+              request.auth.token.email == 'ARMANDOOLMOMIRANDA@GMAIL.COM' ||
+              request.auth.token.email == 'ArmandoOlmoMiranda@gmail.com');
+    }
+    
+    // Check if user has superadmin or owner role in their user document
+    // Note: Handle both capitalized and lowercase variants
+    function hasAdminRole() {
+      let userDoc = /databases/$(database)/documents/users/$(request.auth.uid);
+      return request.auth != null && 
+             exists(userDoc) && 
+             (get(userDoc).data.get('role', '') == 'superadmin' || 
+              get(userDoc).data.get('role', '') == 'Superadmin' || 
+              get(userDoc).data.get('role', '') == 'SuperAdmin' ||
+              get(userDoc).data.get('role', '') == 'owner' || 
+              get(userDoc).data.get('role', '') == 'Owner');
+    }
+    
     function isSuperAdminOrOwner() {
-      let userRole = get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
-      return userRole == 'superadmin' || userRole == 'owner';
+      // First check owner by email (fast path, no document read)
+      // Then check role in user document (only if exists)
+      return isOwnerEmail() || hasAdminRole();
     }
     
     function isValidEmail(email) {
       return email.matches('^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$');
-    }
-    
-    function hasRequiredFields(data, fields) {
-      return data.keys().hasAll(fields);
     }
     
     // Check if user is tenant owner
@@ -257,7 +278,15 @@ service cloud.firestore {
     match /globalSettings/{settingId} {
       // Allow public read for landingPage (needed for public landing page preview)
       allow read: if request.auth != null || settingId == 'landingPage';
+      // Write access restricted to Super Admins and Owners
       allow write: if request.auth != null && isSuperAdminOrOwner();
+      
+      // Service Availability Audit Log subcollection
+      // Only accessible by Super Admins/Owners
+      match /auditLog/{entryId} {
+        allow read: if request.auth != null && isSuperAdminOrOwner();
+        allow write: if request.auth != null && isSuperAdminOrOwner();
+      }
     }
     
     match /globalFiles/{fileId} {
