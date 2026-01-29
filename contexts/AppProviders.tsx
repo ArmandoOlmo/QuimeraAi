@@ -27,6 +27,7 @@ import { UpgradeProvider } from './UpgradeContext';
 import { PlansProvider } from './PlansContext';
 import { AgencyProvider } from './agency/AgencyContext';
 import { NewsProvider } from './news';
+import { UndoProvider } from './undo';
 
 interface AppProvidersProps {
     children: ReactNode;
@@ -55,7 +56,9 @@ export const AppProviders: React.FC<AppProvidersProps> = ({ children }) => {
                                                                     <AgencyProvider>
                                                                         <NewsProvider>
                                                                             <UpgradeProvider>
-                                                                                {children}
+                                                                                <UndoProvider>
+                                                                                    {children}
+                                                                                </UndoProvider>
                                                                             </UpgradeProvider>
                                                                         </NewsProvider>
                                                                     </AgencyProvider>

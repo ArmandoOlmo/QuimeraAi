@@ -15,7 +15,7 @@ import {
     ArrowUpRight, Calendar, Trash2, MoveRight,
     Building2, Palette, Sparkles, Loader2, ThumbsUp,
     Smile, Table, List, Columns, Download, Edit, MapPin,
-    Globe, Briefcase, Linkedin, BookOpen, X, Save, Send
+    Globe, Briefcase, Linkedin, BookOpen, X, Save, Send, Users
 } from 'lucide-react';
 import { Lead, LeadStatus } from '../../../types';
 import Modal from '../../ui/Modal';
@@ -28,6 +28,7 @@ import LeadsListView from './LeadsListView';
 import CustomFieldsManager, { CustomFieldDefinition } from './CustomFieldsManager';
 import LeadsLibrary from './LeadsLibrary';
 import AddLeadModal from './AddLeadModal';
+import AddToAudienceModal from '../email/AddToAudienceModal';
 import { logApiCall } from '../../../services/apiLoggingService';
 
 import { useTranslation } from 'react-i18next';
@@ -342,6 +343,7 @@ const LeadsDashboard: React.FC = () => {
 
     // Bulk Actions
     const [selectedLeadIds, setSelectedLeadIds] = useState<string[]>([]);
+    const [showAddToAudienceModal, setShowAddToAudienceModal] = useState(false);
 
     // Advanced Filters
     const [filters, setFilters] = useState<LeadsFiltersState>({
@@ -763,13 +765,15 @@ const LeadsDashboard: React.FC = () => {
     };
 
     const handleSendEmail = async () => {
-        if (!selectedLead || !emailDraft) return;
+        if (!selectedLead) return;
 
-        // Save intention to open editor with this draft
+        // Save intention to open editor with this draft (or empty if no draft exists)
         try {
             const draftIntent = {
-                subject: `Follow up from ${selectedLead.company || 'Quimera AI'}`,
-                content: emailDraft,
+                subject: emailDraft
+                    ? `Follow up from ${selectedLead.company || 'Quimera AI'}`
+                    : `Hola ${selectedLead.name || selectedLead.email}`,
+                content: emailDraft || `<p>Hola ${selectedLead.name || ''},</p><p></p><p>Saludos cordiales</p>`,
                 recipient: {
                     email: selectedLead.email,
                     name: selectedLead.name
@@ -1090,6 +1094,13 @@ const LeadsDashboard: React.FC = () => {
                                             ))}
                                         </select>
                                         <button
+                                            onClick={() => setShowAddToAudienceModal(true)}
+                                            className="bg-primary-foreground text-foreground p-1.5 rounded hover:bg-secondary transition-colors"
+                                            title={t('email.addToAudience', 'Añadir a Audiencia')}
+                                        >
+                                            <Users size={14} />
+                                        </button>
+                                        <button
                                             onClick={handleExportCSV}
                                             className="bg-primary-foreground text-foreground p-1.5 rounded hover:bg-secondary transition-colors"
                                         >
@@ -1123,6 +1134,13 @@ const LeadsDashboard: React.FC = () => {
                                         </button>
                                     </div>
                                     <div className="flex items-center gap-2">
+                                        <button
+                                            onClick={() => setShowAddToAudienceModal(true)}
+                                            className="bg-primary-foreground text-foreground px-3 py-1.5 rounded text-sm font-bold flex items-center gap-2 hover:bg-secondary transition-colors"
+                                        >
+                                            <Users size={14} />
+                                            {t('email.addToAudience', 'Añadir a Audiencia')}
+                                        </button>
                                         <button
                                             onClick={handleExportCSV}
                                             className="bg-primary-foreground text-foreground px-3 py-1.5 rounded text-sm font-bold flex items-center gap-2 hover:bg-secondary transition-colors"
@@ -2216,6 +2234,22 @@ const LeadsDashboard: React.FC = () => {
                     onClose={() => setIsAddModalOpen(false)}
                     onSubmit={handleAddSubmit}
                 />
+
+                {/* Add to Audience Modal */}
+                {user && activeProject && (
+                    <AddToAudienceModal
+                        isOpen={showAddToAudienceModal}
+                        onClose={() => {
+                            setShowAddToAudienceModal(false);
+                            setSelectedLeadIds([]);
+                        }}
+                        userId={user.uid}
+                        projectId={activeProject.id}
+                        leadIds={selectedLeadIds}
+                        contactCount={selectedLeadIds.length}
+                        contactType="leads"
+                    />
+                )}
             </div>
         </div>
     );

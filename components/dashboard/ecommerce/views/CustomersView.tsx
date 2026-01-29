@@ -25,17 +25,21 @@ import { useCustomers } from '../hooks/useCustomers';
 import { Customer } from '../../../../types/ecommerce';
 import { useEcommerceTheme, withOpacity } from '../hooks/useEcommerceTheme';
 import { useEcommerceContext } from '../EcommerceDashboard';
+import AddToAudienceModal from '../../email/AddToAudienceModal';
+import { useProject } from '../../../../contexts/project';
 
 const CustomersView: React.FC = () => {
     const { t } = useTranslation();
     const { user } = useAuth();
     const { storeId } = useEcommerceContext();
+    const { activeProject } = useProject();
     const theme = useEcommerceTheme();
     const { customers, isLoading, getTopCustomers } = useCustomers(user?.uid || '', storeId);
 
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
     const [showDetail, setShowDetail] = useState(false);
+    const [showAddToAudienceModal, setShowAddToAudienceModal] = useState(false);
 
     // Filter customers
     const filteredCustomers = useMemo(() => {
@@ -301,6 +305,20 @@ const CustomersView: React.FC = () => {
                         setShowDetail(false);
                         setSelectedCustomer(null);
                     }}
+                    onAddToAudience={() => setShowAddToAudienceModal(true)}
+                />
+            )}
+
+            {/* Add to Audience Modal */}
+            {user && activeProject && selectedCustomer && (
+                <AddToAudienceModal
+                    isOpen={showAddToAudienceModal}
+                    onClose={() => setShowAddToAudienceModal(false)}
+                    userId={user.uid}
+                    projectId={activeProject.id}
+                    customerIds={[selectedCustomer.id]}
+                    contactCount={1}
+                    contactType="customers"
                 />
             )}
         </div>
@@ -311,9 +329,10 @@ const CustomersView: React.FC = () => {
 interface CustomerDetailModalProps {
     customer: Customer;
     onClose: () => void;
+    onAddToAudience: () => void;
 }
 
-const CustomerDetailModal: React.FC<CustomerDetailModalProps> = ({ customer, onClose }) => {
+const CustomerDetailModal: React.FC<CustomerDetailModalProps> = ({ customer, onClose, onAddToAudience }) => {
     const { t } = useTranslation();
 
     return (
@@ -419,10 +438,17 @@ const CustomerDetailModal: React.FC<CustomerDetailModalProps> = ({ customer, onC
                     </div>
                 </div>
 
-                <div className="p-6 border-t border-border">
+                <div className="p-6 border-t border-border flex gap-3">
+                    <button
+                        onClick={onAddToAudience}
+                        className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg transition-colors font-medium"
+                    >
+                        <Users size={18} />
+                        {t('email.addToAudience', 'Añadir a Audiencia')}
+                    </button>
                     <button
                         onClick={onClose}
-                        className="w-full px-4 py-2 bg-muted hover:bg-muted/80 text-foreground rounded-lg transition-colors"
+                        className="flex-1 px-4 py-2 bg-muted hover:bg-muted/80 text-foreground rounded-lg transition-colors"
                     >
                         {t('common.close', 'Cerrar')}
                     </button>

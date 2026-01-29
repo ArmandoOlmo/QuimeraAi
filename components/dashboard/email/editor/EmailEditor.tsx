@@ -16,6 +16,7 @@ import {
     DEFAULT_BLOCK_CONTENT,
     DEFAULT_BLOCK_STYLES,
 } from '../../../../types/email';
+import DashboardSidebar from '../../DashboardSidebar';
 import EmailEditorHeader from './EmailEditorHeader';
 import EmailBlockTree from './EmailBlockTree';
 import EmailPreview from './EmailPreview';
@@ -29,15 +30,15 @@ interface EmailEditorContextType {
     // Document state
     document: EmailDocument;
     setDocument: React.Dispatch<React.SetStateAction<EmailDocument>>;
-    
+
     // Selection state
     selectedBlockId: string | null;
     setSelectedBlockId: (id: string | null) => void;
-    
+
     // Preview state
     previewDevice: 'desktop' | 'mobile';
     setPreviewDevice: (device: 'desktop' | 'mobile') => void;
-    
+
     // Block operations
     addBlock: (type: EmailBlockType, index?: number) => void;
     updateBlock: (id: string, updates: Partial<EmailBlock>) => void;
@@ -45,14 +46,14 @@ interface EmailEditorContextType {
     duplicateBlock: (id: string) => void;
     reorderBlocks: (newOrder: EmailBlock[]) => void;
     toggleBlockVisibility: (id: string) => void;
-    
+
     // Global styles
     updateGlobalStyles: (updates: Partial<EmailGlobalStyles>) => void;
-    
+
     // Subject/Preview text
     updateSubject: (subject: string) => void;
     updatePreviewText: (previewText: string) => void;
-    
+
     // Dirty state
     isDirty: boolean;
     setIsDirty: (dirty: boolean) => void;
@@ -75,11 +76,12 @@ export const useEmailEditor = () => {
 interface EmailEditorProps {
     // Initial document (for editing existing)
     initialDocument?: Partial<EmailDocument>;
-    
+
     // Callbacks
     onSave?: (document: EmailDocument) => void;
     onClose?: () => void;
-    
+    onSendTest?: () => void;
+
     // Campaign info (optional)
     campaignId?: string;
     campaignName?: string;
@@ -111,29 +113,33 @@ const EmailEditor: React.FC<EmailEditorProps> = ({
     initialDocument,
     onSave,
     onClose,
+    onSendTest,
     campaignId,
     campaignName,
 }) => {
     const { t } = useTranslation();
-    
+
     // Document state
-    const [document, setDocument] = useState<EmailDocument>(() => 
+    const [document, setDocument] = useState<EmailDocument>(() =>
         createDefaultDocument(initialDocument)
     );
-    
+
     // Selection state
     const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
-    
+
     // Preview device state
     const [previewDevice, setPreviewDevice] = useState<'desktop' | 'mobile'>('desktop');
-    
+
     // Dirty state (unsaved changes)
     const [isDirty, setIsDirty] = useState(false);
-    
+
+    // Mobile menu state for sidebar
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
     // ==========================================================================
     // BLOCK OPERATIONS
     // ==========================================================================
-    
+
     const addBlock = useCallback((type: EmailBlockType, index?: number) => {
         const newBlock: EmailBlock = {
             id: uuidv4(),
@@ -142,7 +148,7 @@ const EmailEditor: React.FC<EmailEditorProps> = ({
             content: { ...DEFAULT_BLOCK_CONTENT[type] },
             styles: { ...DEFAULT_BLOCK_STYLES[type] },
         };
-        
+
         setDocument(prev => {
             const newBlocks = [...prev.blocks];
             if (index !== undefined) {
@@ -152,11 +158,11 @@ const EmailEditor: React.FC<EmailEditorProps> = ({
             }
             return { ...prev, blocks: newBlocks };
         });
-        
+
         setSelectedBlockId(newBlock.id);
         setIsDirty(true);
     }, []);
-    
+
     const updateBlock = useCallback((id: string, updates: Partial<EmailBlock>) => {
         setDocument(prev => ({
             ...prev,
@@ -166,24 +172,24 @@ const EmailEditor: React.FC<EmailEditorProps> = ({
         }));
         setIsDirty(true);
     }, []);
-    
+
     const deleteBlock = useCallback((id: string) => {
         setDocument(prev => ({
             ...prev,
             blocks: prev.blocks.filter(block => block.id !== id),
         }));
-        
+
         if (selectedBlockId === id) {
             setSelectedBlockId(null);
         }
         setIsDirty(true);
     }, [selectedBlockId]);
-    
+
     const duplicateBlock = useCallback((id: string) => {
         setDocument(prev => {
             const blockIndex = prev.blocks.findIndex(b => b.id === id);
             if (blockIndex === -1) return prev;
-            
+
             const originalBlock = prev.blocks[blockIndex];
             const newBlock: EmailBlock = {
                 ...originalBlock,
@@ -191,20 +197,20 @@ const EmailEditor: React.FC<EmailEditorProps> = ({
                 content: { ...originalBlock.content },
                 styles: { ...originalBlock.styles },
             };
-            
+
             const newBlocks = [...prev.blocks];
             newBlocks.splice(blockIndex + 1, 0, newBlock);
-            
+
             return { ...prev, blocks: newBlocks };
         });
         setIsDirty(true);
     }, []);
-    
+
     const reorderBlocks = useCallback((newOrder: EmailBlock[]) => {
         setDocument(prev => ({ ...prev, blocks: newOrder }));
         setIsDirty(true);
     }, []);
-    
+
     const toggleBlockVisibility = useCallback((id: string) => {
         setDocument(prev => ({
             ...prev,
@@ -214,11 +220,11 @@ const EmailEditor: React.FC<EmailEditorProps> = ({
         }));
         setIsDirty(true);
     }, []);
-    
+
     // ==========================================================================
     // GLOBAL STYLES
     // ==========================================================================
-    
+
     const updateGlobalStyles = useCallback((updates: Partial<EmailGlobalStyles>) => {
         setDocument(prev => ({
             ...prev,
@@ -226,36 +232,36 @@ const EmailEditor: React.FC<EmailEditorProps> = ({
         }));
         setIsDirty(true);
     }, []);
-    
+
     // ==========================================================================
     // SUBJECT / PREVIEW TEXT
     // ==========================================================================
-    
+
     const updateSubject = useCallback((subject: string) => {
         setDocument(prev => ({ ...prev, subject }));
         setIsDirty(true);
     }, []);
-    
+
     const updatePreviewText = useCallback((previewText: string) => {
         setDocument(prev => ({ ...prev, previewText }));
         setIsDirty(true);
     }, []);
-    
+
     // ==========================================================================
     // SAVE HANDLER
     // ==========================================================================
-    
+
     const handleSave = useCallback(() => {
         if (onSave) {
             onSave(document);
             setIsDirty(false);
         }
     }, [document, onSave]);
-    
+
     // ==========================================================================
     // CONTEXT VALUE
     // ==========================================================================
-    
+
     const contextValue: EmailEditorContextType = {
         document,
         setDocument,
@@ -275,37 +281,49 @@ const EmailEditor: React.FC<EmailEditorProps> = ({
         isDirty,
         setIsDirty,
     };
-    
+
     // ==========================================================================
     // RENDER
     // ==========================================================================
-    
+
     return (
         <EmailEditorContext.Provider value={contextValue}>
-            <div className="h-screen flex flex-col bg-editor-bg text-editor-text-primary">
-                {/* Header */}
-                <EmailEditorHeader
-                    documentName={campaignName || document.name}
-                    onSave={handleSave}
-                    onClose={onClose}
-                    isDirty={isDirty}
+            <div className="flex h-screen bg-editor-bg text-editor-text-primary">
+                {/* Dashboard Sidebar - Collapsed by default, same as Web Editor */}
+                <DashboardSidebar
+                    isMobileOpen={isMobileMenuOpen}
+                    onClose={() => setIsMobileMenuOpen(false)}
+                    defaultCollapsed={true}
                 />
-                
-                {/* Main Content - 3 Column Layout */}
-                <div className="flex-1 flex overflow-hidden">
-                    {/* Left Sidebar - Block Tree */}
-                    <div className="w-64 flex-shrink-0 border-r border-editor-border overflow-hidden">
-                        <EmailBlockTree />
-                    </div>
-                    
-                    {/* Center - Preview */}
-                    <div className="flex-1 overflow-hidden bg-editor-panel-bg/30">
-                        <EmailPreview />
-                    </div>
-                    
-                    {/* Right Sidebar - Properties Panel */}
-                    <div className="w-80 flex-shrink-0 border-l border-editor-border overflow-hidden">
-                        <EmailPropertiesPanel />
+
+                {/* Main Editor Content */}
+                <div className="flex flex-col flex-1 min-w-0">
+                    {/* Header */}
+                    <EmailEditorHeader
+                        documentName={campaignName || document.name}
+                        onSave={handleSave}
+                        onClose={onClose}
+                        onSendTest={onSendTest}
+                        isDirty={isDirty}
+                        onOpenMobileMenu={() => setIsMobileMenuOpen(true)}
+                    />
+
+                    {/* Main Content - 3 Column Layout */}
+                    <div className="flex-1 flex overflow-hidden">
+                        {/* Left Sidebar - Block Tree */}
+                        <div className="w-64 flex-shrink-0 border-r border-editor-border overflow-hidden hidden md:block">
+                            <EmailBlockTree />
+                        </div>
+
+                        {/* Center - Preview */}
+                        <div className="flex-1 overflow-hidden bg-editor-panel-bg/30">
+                            <EmailPreview />
+                        </div>
+
+                        {/* Right Sidebar - Properties Panel */}
+                        <div className="w-80 flex-shrink-0 border-l border-editor-border overflow-hidden hidden lg:block">
+                            <EmailPropertiesPanel />
+                        </div>
                     </div>
                 </div>
             </div>

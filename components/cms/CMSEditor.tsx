@@ -8,14 +8,14 @@ import { useFiles } from '../../contexts/files';
 import { useProject } from '../../contexts/project';
 import { useAdmin } from '../../contexts/admin';
 import { CMSPost } from '../../types';
-import { 
-    ArrowLeft, Save, Globe, Image as ImageIcon, Type, 
+import {
+    ArrowLeft, Save, Globe, Image as ImageIcon, Type,
     AlignLeft, AlignCenter, AlignRight, AlignJustify,
     Bold, Italic, Underline, Strikethrough,
     List, ListOrdered,
-    MoreVertical, Loader2, Sparkles, 
+    MoreVertical, Loader2, Sparkles,
     Undo, Redo, Link as LinkIcon, Unlink, RemoveFormatting, Minus,
-    ChevronDown, Table, Palette, 
+    ChevronDown, Table, Palette,
     Heading1, Heading2, Heading3, Quote, Check, X as XIcon, Upload as UploadIcon, Hash
 } from 'lucide-react';
 import { generateContentViaProxy, extractTextFromResponse } from '../../utils/geminiProxyClient';
@@ -48,7 +48,7 @@ const CMSEditor: React.FC<CMSEditorProps> = ({ post, onClose }) => {
     const { uploadImageAndGetURL } = useFiles();
     const { activeProject } = useProject();
     const { getPrompt } = useAdmin();
-    
+
     // Form State
     const [title, setTitle] = useState(post?.title || '');
     const [slug, setSlug] = useState(post?.slug || '');
@@ -63,22 +63,22 @@ const CMSEditor: React.FC<CMSEditorProps> = ({ post, onClose }) => {
     const [isSaving, setIsSaving] = useState(false);
     const [isAiWorking, setIsAiWorking] = useState(false);
     const [isImageModalOpen, setIsImageModalOpen] = useState(false);
-    
+
     // Toolbar Active States
     const [activeFormats, setActiveFormats] = useState<Record<string, any>>({});
-    
+
     // Dropdown/Modal States
     const [showHeadings, setShowHeadings] = useState(false);
     const [showColors, setShowColors] = useState(false);
     const [colorMode, setColorMode] = useState<'text' | 'background'>('text');
     const [currentColor, setCurrentColor] = useState('#000000');
-    
+
     const [showLinkInput, setShowLinkInput] = useState(false);
     const [linkUrl, setLinkUrl] = useState('');
 
     // Selection Persistence
     const [savedRange, setSavedRange] = useState<Range | null>(null);
-    
+
     const editorRef = useRef<HTMLDivElement>(null);
     const contentFileInputRef = useRef<HTMLInputElement>(null);
 
@@ -98,7 +98,7 @@ const CMSEditor: React.FC<CMSEditorProps> = ({ post, onClose }) => {
     // Slug Normalization
     useEffect(() => {
         if (!post?.slug && title && !slug) {
-             setSlug(title.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, ''));
+            setSlug(title.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, ''));
         }
     }, [title]); // Removed slug dependency to prevent loop if user edits slug manually
 
@@ -127,7 +127,7 @@ const CMSEditor: React.FC<CMSEditorProps> = ({ post, onClose }) => {
 
     const checkActiveFormats = () => {
         if (!document.getSelection()?.rangeCount) return;
-        
+
         const formats: any = {
             bold: document.queryCommandState('bold'),
             italic: document.queryCommandState('italic'),
@@ -139,7 +139,7 @@ const CMSEditor: React.FC<CMSEditorProps> = ({ post, onClose }) => {
             insertUnorderedList: document.queryCommandState('insertUnorderedList'),
             insertOrderedList: document.queryCommandState('insertOrderedList'),
         };
-        
+
         try {
             const blockValue = document.queryCommandValue('formatBlock');
             formats.blockType = blockValue;
@@ -175,7 +175,7 @@ const CMSEditor: React.FC<CMSEditorProps> = ({ post, onClose }) => {
         setShowLinkInput(false);
         setLinkUrl('');
     };
-    
+
     const removeLink = () => {
         restoreSelection();
         execCmd('unlink');
@@ -242,7 +242,7 @@ const CMSEditor: React.FC<CMSEditorProps> = ({ post, onClose }) => {
         }
         setShowHeadings(false);
     };
-    
+
     const getBlockLabel = () => {
         const tag = activeFormats.blockType || '';
         if (!tag) return 'Format';
@@ -258,7 +258,7 @@ const CMSEditor: React.FC<CMSEditorProps> = ({ post, onClose }) => {
     // --- Save Logic ---
     const handleSave = async () => {
         if (!title) return alert("Title is required");
-        
+
         // Normalize slug on save (ensure safe URL string)
         let finalSlug = slug.trim();
         if (!finalSlug) {
@@ -269,7 +269,7 @@ const CMSEditor: React.FC<CMSEditorProps> = ({ post, onClose }) => {
         setIsSaving(true);
         try {
             const currentContent = editorRef.current?.innerHTML || '';
-            
+
             const postData: CMSPost = {
                 id: post?.id || '',
                 title,
@@ -297,10 +297,10 @@ const CMSEditor: React.FC<CMSEditorProps> = ({ post, onClose }) => {
     // --- AI Logic ---
     const aiMagicWrite = async (instruction: string) => {
         if (hasApiKey === false) { await promptForKeySelection(); return; }
-        
+
         const selection = window.getSelection();
         const selectedText = selection?.toString();
-        
+
         if (!selectedText && instruction !== 'continue') {
             alert("Please select some text to edit.");
             return;
@@ -311,30 +311,30 @@ const CMSEditor: React.FC<CMSEditorProps> = ({ post, onClose }) => {
         try {
             let promptConfig;
             let populatedPrompt = "";
-            
+
             if (instruction === 'continue') {
-                 const context = editorRef.current?.innerText.slice(-1000) || title;
-                 promptConfig = getPrompt('cms-continue-writing');
-                 if (promptConfig) {
-                     populatedPrompt = promptConfig.template.replace('{{context}}', context);
-                 } else {
-                     // Fallback
-                     populatedPrompt = `Continue writing based on: ${context}`;
-                 }
+                const context = editorRef.current?.innerText.slice(-1000) || title;
+                promptConfig = getPrompt('cms-continue-writing');
+                if (promptConfig) {
+                    populatedPrompt = promptConfig.template.replace('{{context}}', context);
+                } else {
+                    // Fallback
+                    populatedPrompt = `Continue writing based on: ${context}`;
+                }
             } else if (instruction === 'fix') {
-                 promptConfig = getPrompt('cms-fix-grammar');
-                 if (promptConfig) {
-                     populatedPrompt = promptConfig.template.replace('{{text}}', selectedText || '');
-                 } else {
-                     populatedPrompt = `Fix grammar: "${selectedText}"`;
-                 }
+                promptConfig = getPrompt('cms-fix-grammar');
+                if (promptConfig) {
+                    populatedPrompt = promptConfig.template.replace('{{text}}', selectedText || '');
+                } else {
+                    populatedPrompt = `Fix grammar: "${selectedText}"`;
+                }
             }
 
             usedModel = promptConfig?.model || 'gemini-2.5-flash';
 
             const projectId = activeProject?.id || 'cms-editor';
             const response = await generateContentViaProxy(projectId, populatedPrompt, usedModel, {}, user?.uid);
-            
+
             // Log API call
             if (user) {
                 logApiCall({
@@ -345,7 +345,7 @@ const CMSEditor: React.FC<CMSEditorProps> = ({ post, onClose }) => {
                     success: true
                 });
             }
-            
+
             const result = extractTextFromResponse(response).trim();
             execCmd('insertHTML', result);
 
@@ -374,7 +374,7 @@ const CMSEditor: React.FC<CMSEditorProps> = ({ post, onClose }) => {
         let seoModelName = 'gemini-2.5-flash';
         try {
             const contentPreview = editorRef.current?.innerText.substring(0, 2000) || '';
-            
+
             const promptConfig = getPrompt('cms-generate-seo');
             let populatedPrompt = "";
 
@@ -390,7 +390,7 @@ const CMSEditor: React.FC<CMSEditorProps> = ({ post, onClose }) => {
             const projectId = activeProject?.id || 'cms-seo';
             const response = await generateContentViaProxy(projectId, populatedPrompt, seoModelName, {}, user?.uid);
             const responseText = extractTextFromResponse(response);
-            
+
             // Log API call
             if (user) {
                 logApiCall({
@@ -401,7 +401,7 @@ const CMSEditor: React.FC<CMSEditorProps> = ({ post, onClose }) => {
                     success: true
                 });
             }
-            
+
             const data = JSON.parse(responseText);
             setSeoTitle(data.seoTitle);
             setSeoDescription(data.seoDescription);
@@ -435,7 +435,7 @@ const CMSEditor: React.FC<CMSEditorProps> = ({ post, onClose }) => {
                         <ArrowLeft size={20} />
                     </button>
                     <div className="h-6 w-px bg-border"></div>
-                    <input 
+                    <input
                         value={title}
                         onChange={(e) => setTitle(e.target.value)}
                         placeholder="Enter Post Title..."
@@ -457,13 +457,13 @@ const CMSEditor: React.FC<CMSEditorProps> = ({ post, onClose }) => {
             </header>
 
             <div className="flex flex-1 overflow-hidden relative">
-                
+
                 {/* --- Main Editor Area --- */}
-                <div className="flex-1 flex flex-col min-w-0 bg-[#e5e7eb] relative"> 
-                    
+                <div className="flex-1 flex flex-col min-w-0 bg-[#e5e7eb] relative">
+
                     {/* --- Toolbar --- */}
                     <div className="bg-[#f9fafb] border-b border-gray-300 p-2 flex flex-wrap gap-1 shrink-0 shadow-sm z-20 relative items-center text-black">
-                        
+
                         {/* History */}
                         <div className="flex bg-white border border-gray-300 rounded-md shadow-sm mr-2">
                             <ToolbarButton onClick={() => execCmd('undo')} title="Undo"><Undo size={16} /></ToolbarButton>
@@ -481,12 +481,12 @@ const CMSEditor: React.FC<CMSEditorProps> = ({ post, onClose }) => {
                             </button>
                             {showHeadings && (
                                 <div className="absolute top-full left-0 mt-1 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-50 py-1 text-black">
-                                    <button onMouseDown={(e) => { e.preventDefault(); handleHeading('p'); }} className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"><Type size={14} className="mr-2"/> Paragraph</button>
-                                    <button onMouseDown={(e) => { e.preventDefault(); handleHeading('h1'); }} className="block w-full text-left px-4 py-2 text-lg font-bold text-gray-900 hover:bg-gray-100 flex items-center"><Heading1 size={18} className="mr-2"/> Heading 1</button>
-                                    <button onMouseDown={(e) => { e.preventDefault(); handleHeading('h2'); }} className="block w-full text-left px-4 py-2 text-md font-bold text-gray-800 hover:bg-gray-100 flex items-center"><Heading2 size={16} className="mr-2"/> Heading 2</button>
-                                    <button onMouseDown={(e) => { e.preventDefault(); handleHeading('h3'); }} className="block w-full text-left px-4 py-2 text-sm font-bold text-gray-700 hover:bg-gray-100 flex items-center"><Heading3 size={14} className="mr-2"/> Heading 3</button>
+                                    <button onMouseDown={(e) => { e.preventDefault(); handleHeading('p'); }} className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"><Type size={14} className="mr-2" /> Paragraph</button>
+                                    <button onMouseDown={(e) => { e.preventDefault(); handleHeading('h1'); }} className="block w-full text-left px-4 py-2 text-lg font-bold text-gray-900 hover:bg-gray-100 flex items-center"><Heading1 size={18} className="mr-2" /> Heading 1</button>
+                                    <button onMouseDown={(e) => { e.preventDefault(); handleHeading('h2'); }} className="block w-full text-left px-4 py-2 text-md font-bold text-gray-800 hover:bg-gray-100 flex items-center"><Heading2 size={16} className="mr-2" /> Heading 2</button>
+                                    <button onMouseDown={(e) => { e.preventDefault(); handleHeading('h3'); }} className="block w-full text-left px-4 py-2 text-sm font-bold text-gray-700 hover:bg-gray-100 flex items-center"><Heading3 size={14} className="mr-2" /> Heading 3</button>
                                     <div className="border-t my-1"></div>
-                                    <button onMouseDown={(e) => { e.preventDefault(); handleHeading('blockquote'); }} className="block w-full text-left px-4 py-2 text-sm italic text-gray-600 hover:bg-gray-100 flex items-center"><Quote size={14} className="mr-2"/> Quote</button>
+                                    <button onMouseDown={(e) => { e.preventDefault(); handleHeading('blockquote'); }} className="block w-full text-left px-4 py-2 text-sm italic text-gray-600 hover:bg-gray-100 flex items-center"><Quote size={14} className="mr-2" /> Quote</button>
                                 </div>
                             )}
                         </div>
@@ -501,8 +501,8 @@ const CMSEditor: React.FC<CMSEditorProps> = ({ post, onClose }) => {
                             <ToolbarButton onClick={() => execCmd('strikeThrough')} isActive={activeFormats.strikethrough} title="Strikethrough"><Strikethrough size={16} /></ToolbarButton>
                         </div>
 
-                         {/* Advanced Color Dropdown */}
-                         <div className="relative mr-2">
+                        {/* Advanced Color Dropdown */}
+                        <div className="relative mr-2">
                             <button
                                 onMouseDown={(e) => { e.preventDefault(); setShowColors(!showColors); }}
                                 className="p-2 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 flex items-center justify-center text-gray-700 relative group"
@@ -520,9 +520,9 @@ const CMSEditor: React.FC<CMSEditorProps> = ({ post, onClose }) => {
 
                                     <div className="space-y-3">
                                         <div className="flex items-center border border-gray-300 rounded-md px-2 bg-white">
-                                            <Hash size={14} className="text-gray-400 mr-1"/>
-                                            <input 
-                                                type="text" 
+                                            <Hash size={14} className="text-gray-400 mr-1" />
+                                            <input
+                                                type="text"
                                                 value={currentColor}
                                                 onChange={(e) => applyColor(e.target.value)}
                                                 className="flex-1 text-xs py-1.5 focus:outline-none font-mono uppercase text-black"
@@ -531,8 +531,8 @@ const CMSEditor: React.FC<CMSEditorProps> = ({ post, onClose }) => {
                                             <div className="w-4 h-4 rounded border border-gray-200" style={{ backgroundColor: currentColor }}></div>
                                         </div>
                                         <div className="relative w-full h-8 rounded-md overflow-hidden cursor-pointer border border-gray-300">
-                                            <input 
-                                                type="color" 
+                                            <input
+                                                type="color"
                                                 value={currentColor}
                                                 onChange={(e) => applyColor(e.target.value)}
                                                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
@@ -546,14 +546,14 @@ const CMSEditor: React.FC<CMSEditorProps> = ({ post, onClose }) => {
                                             <p className="text-[10px] font-bold text-gray-400 uppercase mb-1.5">Presets</p>
                                             <div className="grid grid-cols-6 gap-1.5">
                                                 {['#000000', '#4b5563', '#9ca3af', '#ffffff', '#ef4444', '#f97316', '#f59e0b', '#84cc16', '#10b981', '#06b6d4', '#3b82f6', '#6366f1', '#8b5cf6', '#d946ef', '#f43f5e', 'transparent'].map(c => (
-                                                    <button 
-                                                        key={c} 
-                                                        onMouseDown={(e) => { e.preventDefault(); applyColor(c); }} 
-                                                        className="w-6 h-6 rounded-full border border-gray-200 hover:scale-110 transition-transform relative" 
+                                                    <button
+                                                        key={c}
+                                                        onMouseDown={(e) => { e.preventDefault(); applyColor(c); }}
+                                                        className="w-6 h-6 rounded-full border border-gray-200 hover:scale-110 transition-transform relative"
                                                         style={{ backgroundColor: c === 'transparent' ? 'white' : c }}
                                                         title={c}
                                                     >
-                                                        {c === 'transparent' && <div className="absolute inset-0 flex items-center justify-center text-red-500"><XIcon size={12}/></div>}
+                                                        {c === 'transparent' && <div className="absolute inset-0 flex items-center justify-center text-red-500"><XIcon size={12} /></div>}
                                                     </button>
                                                 ))}
                                             </div>
@@ -582,16 +582,16 @@ const CMSEditor: React.FC<CMSEditorProps> = ({ post, onClose }) => {
 
                         {/* Inserts */}
                         <div className="flex bg-white border border-gray-300 rounded-md shadow-sm relative">
-                             {/* Link Popover Trigger */}
+                            {/* Link Popover Trigger */}
                             <ToolbarButton onClick={openLinkInput} title="Link" isActive={showLinkInput}><LinkIcon size={16} /></ToolbarButton>
-                            
+
                             {/* Link Popover */}
                             {showLinkInput && (
                                 <div className="absolute top-full left-0 mt-1 w-64 bg-white border border-gray-200 rounded-md shadow-xl z-50 p-3 text-black">
                                     <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Edit Link</label>
                                     <div className="flex gap-2 mb-2">
-                                        <input 
-                                            type="text" 
+                                        <input
+                                            type="text"
                                             value={linkUrl}
                                             onChange={(e) => setLinkUrl(e.target.value)}
                                             placeholder="https://example.com"
@@ -601,18 +601,18 @@ const CMSEditor: React.FC<CMSEditorProps> = ({ post, onClose }) => {
                                         />
                                     </div>
                                     <div className="flex justify-between items-center">
-                                        <button onMouseDown={(e) => {e.preventDefault(); removeLink();}} className="text-xs text-red-500 hover:underline flex items-center"><Unlink size={10} className="mr-1"/> Remove</button>
+                                        <button onMouseDown={(e) => { e.preventDefault(); removeLink(); }} className="text-xs text-red-500 hover:underline flex items-center"><Unlink size={10} className="mr-1" /> Remove</button>
                                         <div className="flex gap-2">
-                                            <button onMouseDown={(e) => {e.preventDefault(); setShowLinkInput(false); restoreSelection();}} className="p-1 hover:bg-gray-100 rounded"><XIcon size={14}/></button>
-                                            <button onMouseDown={(e) => {e.preventDefault(); applyLink();}} className="p-1 bg-blue-500 text-white rounded hover:bg-blue-600"><Check size={14}/></button>
+                                            <button onMouseDown={(e) => { e.preventDefault(); setShowLinkInput(false); restoreSelection(); }} className="p-1 hover:bg-gray-100 rounded"><XIcon size={14} /></button>
+                                            <button onMouseDown={(e) => { e.preventDefault(); applyLink(); }} className="p-1 bg-blue-500 text-white rounded hover:bg-blue-600"><Check size={14} /></button>
                                         </div>
                                     </div>
                                 </div>
                             )}
 
                             <div className="relative">
-                                <input 
-                                    type="file" 
+                                <input
+                                    type="file"
                                     ref={contentFileInputRef}
                                     onChange={handleContentImageUpload}
                                     className="hidden"
@@ -626,27 +626,27 @@ const CMSEditor: React.FC<CMSEditorProps> = ({ post, onClose }) => {
                         </div>
 
                         <div className="ml-auto flex items-center gap-2">
-                             <ToolbarButton onClick={() => execCmd('removeFormat')} title="Clear Formatting"><RemoveFormatting size={16} /></ToolbarButton>
-                             <div className="bg-purple-50 border border-purple-200 rounded-md flex items-center p-0.5">
-                                <span className="px-2 text-xs font-bold text-purple-700 flex items-center"><Sparkles size={10} className="mr-1"/> AI</span>
+                            <ToolbarButton onClick={() => execCmd('removeFormat')} title="Clear Formatting"><RemoveFormatting size={16} /></ToolbarButton>
+                            <div className="bg-purple-50 border border-purple-200 rounded-md flex items-center p-0.5">
+                                <span className="px-2 text-xs font-bold text-purple-700 flex items-center"><Sparkles size={10} className="mr-1" /> AI</span>
                                 <button onMouseDown={(e) => { e.preventDefault(); aiMagicWrite('fix'); }} className="px-2 py-1 text-xs font-medium text-purple-700 hover:bg-purple-100 rounded disabled:opacity-50" disabled={isAiWorking}>{t('postEditor.fixGrammar')}</button>
                                 <button onMouseDown={(e) => { e.preventDefault(); aiMagicWrite('continue'); }} className="px-2 py-1 text-xs font-medium text-purple-700 hover:bg-purple-100 rounded disabled:opacity-50" disabled={isAiWorking}>{t('postEditor.continue')}</button>
-                             </div>
+                            </div>
                         </div>
                     </div>
 
                     {/* --- WYSIWYG Canvas --- */}
-                    <div 
-                        className="flex-1 overflow-y-auto p-8 flex justify-center cursor-text" 
+                    <div
+                        className="flex-1 overflow-y-auto p-8 flex justify-center cursor-text"
                         onClick={() => editorRef.current?.focus()}
                         onMouseUp={checkActiveFormats}
                         onKeyUp={checkActiveFormats}
                     >
-                        <div 
+                        <div
                             ref={editorRef}
                             contentEditable
                             className="w-full max-w-[816px] min-h-[1056px] bg-white text-black shadow-2xl p-[96px] outline-none prose prose-lg prose-slate max-w-none selection:bg-blue-200 selection:text-black [&_img]:inline-block [&_img]:mx-1 [&_img]:my-2 [&_img]:max-w-full"
-                            style={{ 
+                            style={{
                                 boxShadow: '0 20px 50px -12px rgba(0,0,0,0.25)',
                                 border: '1px solid #e5e7eb'
                             }}
@@ -657,11 +657,11 @@ const CMSEditor: React.FC<CMSEditorProps> = ({ post, onClose }) => {
                 {/* --- Settings Sidebar --- */}
                 {isSidebarOpen && (
                     <aside className="w-80 bg-card border-l border-border overflow-y-auto p-6 shrink-0 z-20 shadow-xl custom-scrollbar">
-                         <div className="mb-6">
+                        <div className="mb-6">
                             <h3 className="font-bold text-lg mb-1 flex items-center"><Type className="mr-2 text-primary" /> {t('postEditor.postSettings')}</h3>
                             <p className="text-xs text-muted-foreground">{t('postEditor.configureMetadata')}</p>
                         </div>
-                        
+
                         <div className="space-y-6">
                             <div>
                                 <label className="block text-xs font-bold text-muted-foreground uppercase mb-2">{t('postEditor.urlSlug')}</label>
@@ -670,7 +670,7 @@ const CMSEditor: React.FC<CMSEditorProps> = ({ post, onClose }) => {
 
                             <div>
                                 <label className="block text-xs font-bold text-muted-foreground uppercase mb-2">{t('postEditor.featuredImage')}</label>
-                                <ImagePicker label="" value={featuredImage} onChange={setFeaturedImage} />
+                                <ImagePicker label="" value={featuredImage} onChange={setFeaturedImage} hideUrlInput={true} />
                             </div>
 
                             <div>
@@ -683,7 +683,7 @@ const CMSEditor: React.FC<CMSEditorProps> = ({ post, onClose }) => {
                                     <h4 className="font-bold text-sm flex items-center"><Globe size={16} className="mr-2" /> {t('postEditor.seoSettings')}</h4>
                                     <button onClick={generateSEO} disabled={isAiWorking} className="text-xs font-bold text-yellow-400 hover:text-yellow-300 flex items-center"><Sparkles size={12} className="mr-1" /> {t('postEditor.autoGenerate')}</button>
                                 </div>
-                                
+
                                 <div className="space-y-4">
                                     <div>
                                         <label className="block text-xs font-medium text-muted-foreground mb-1">{t('postEditor.seoTitle')}</label>

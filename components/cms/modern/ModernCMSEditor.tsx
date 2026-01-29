@@ -78,7 +78,7 @@ const SettingsSidebarContent: React.FC<SettingsSidebarContentProps> = ({
 
             <div>
                 <label className="block text-xs font-bold text-muted-foreground uppercase mb-2">{t('cms_editor.featuredImage')}</label>
-                <ImagePicker label="" value={featuredImage} onChange={setFeaturedImage} />
+                <ImagePicker label="" value={featuredImage} onChange={setFeaturedImage} hideUrlInput={true} />
             </div>
 
             <div>

@@ -66,6 +66,26 @@
     "yearsAgo": "hace {{count}} años",
     "of": "de"
   },
+  "undo": {
+    "button": "Deshacer",
+    "redo": "Rehacer",
+    "actionUndone": "Acción deshecha: {{action}}",
+    "actionRedone": "Acción rehecha: {{action}}",
+    "noActions": "No hay acciones para deshacer",
+    "limitReached": "Límite de historial alcanzado",
+    "keyboard": {
+      "undo": "Ctrl+Z para deshacer",
+      "redo": "Ctrl+Shift+Z para rehacer"
+    },
+    "actions": {
+      "update": "Actualizado {{field}} en {{entity}}",
+      "delete": "Eliminado {{entity}}",
+      "create": "Creado {{entity}}",
+      "move": "Movido {{entity}}",
+      "reorder": "Reordenado {{entity}}",
+      "statusChange": "Cambio de estado de {{entity}}"
+    }
+  },
   "auth": {
     "login": "Iniciar Sesión",
     "register": "Registrarse",
@@ -1526,6 +1546,7 @@
     }
   },
   "cms_editor": {
+    "contentEditor": "Editor de Contenido",
     "postSettings": "Configuración de la Publicación",
     "metaDescription": "Configura metadatos y apariencia.",
     "urlSlug": "Slug de la URL",
@@ -2114,6 +2135,27 @@
     "dealValue": "Valor Estimado del Trato",
     "creating": "Creando...",
     "createLead": "Crear Lead",
+    "editLead": "Editar Contacto",
+    "customFields": {
+      "title": "Campos Personalizados",
+      "existingFields": "Campos Existentes",
+      "noFields": "No hay campos personalizados configurados",
+      "addNew": "Agregar Nuevo Campo",
+      "saveConfig": "Guardar Configuración",
+      "industryTemplates": "Plantillas por Industria",
+      "industryTemplatesDesc": "Aplica campos pre-configurados para tu industria en un solo click",
+      "fields": "campos",
+      "fieldNamePlaceholder": "Nombre del campo (ej. Industria)",
+      "add": "Agregar",
+      "customFieldsHelpText": "Los campos personalizados estarán disponibles al editar leads.",
+      "types": {
+        "text": "Texto",
+        "number": "Número",
+        "date": "Fecha",
+        "select": "Selección",
+        "checkbox": "Casilla de verificación"
+      }
+    },
     "library": {
       "title": "Biblioteca de Leads",
       "description": "Repositorio de todos tus leads potenciales"
@@ -5209,7 +5251,44 @@
       "noAnalyticsDataDesc": "Envía tu primera campaña para ver las métricas",
       "selectProjectFirst": "Selecciona un proyecto",
       "selectProjectDesc": "Elige un proyecto para gestionar su email marketing",
-      "selectProjectButton": "Seleccionar Proyecto"
+      "selectProjectButton": "Seleccionar Proyecto",
+      "addToAudience": "Añadir a Audiencia",
+      "addToAudienceTitle": "Añadir Contactos a Audiencia",
+      "addToAudienceDesc": "Selecciona la audiencia donde añadir los contactos.",
+      "selectAudience": "Seleccionar audiencia...",
+      "searchAudiencesPlaceholder": "Buscar audiencias...",
+      "addingToAudience": "Añadiendo...",
+      "addToAudienceButton": "Añadir a Audiencia",
+      "addedToAudience": "contactos añadidos a la audiencia correctamente",
+      "contacts": "contactos",
+      "manual": "manual",
+      "deleteAudienceTitle": "¿Eliminar audiencia?",
+      "deleteAudienceMessage": "Esta acción no se puede deshacer. La audiencia será eliminada permanentemente.",
+      "deleteConfirmTitle": "¿Eliminar campaña?",
+      "deleteConfirmMessage": "Esta acción no se puede deshacer. La campaña será eliminada permanentemente.",
+      "viewDetail": "Ver Detalle",
+      "addContact": "Añadir Contacto",
+      "createContact": "Crear Contacto",
+      "totalMembers": "Miembros Totales",
+      "dynamicMembers": "Miembros Dinámicos",
+      "staticMembers": "Miembros Manuales",
+      "dynamicFilters": "Filtros Dinámicos",
+      "noMembers": "Sin miembros manuales",
+      "noMembersDesc": "Esta audiencia no tiene miembros añadidos manualmente",
+      "removeFromAudience": "Quitar de Audiencia",
+      "selectExisting": "Seleccionar Existente",
+      "createNew": "Crear Nuevo",
+      "searchLeads": "Buscar leads...",
+      "searchCustomers": "Buscar clientes...",
+      "noLeadsMatchSearch": "No se encontraron leads",
+      "noAvailableLeads": "No hay leads disponibles para añadir",
+      "contactsSelected": "contacto(s) seleccionado(s)",
+      "addSelected": "Añadir Seleccionados",
+      "createAndAdd": "Crear y Añadir",
+      "createNewContactDesc": "El nuevo contacto se creará como Lead en el CRM y se añadirá a esta audiencia.",
+      "directEmails": "Emails Directos",
+      "leadCreatedAndAdded": "Lead creado y añadido a la audiencia",
+      "memberRemoved": "Contacto removido de la audiencia"
     },
     "project": {
       "actions": {

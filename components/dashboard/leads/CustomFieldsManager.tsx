@@ -89,10 +89,10 @@ const CustomFieldsManager: React.FC<CustomFieldsManagerProps> = ({ customFieldsC
                     <div className="bg-gradient-to-r from-purple-500/10 to-blue-500/10 border border-purple-500/20 rounded-xl p-4">
                         <div className="flex items-center gap-2 mb-3">
                             <Sparkles className="text-purple-500" size={16} />
-                            <h4 className="text-sm font-bold text-purple-500 uppercase">Industry Templates</h4>
+                            <h4 className="text-sm font-bold text-purple-500 uppercase">{t('leads.customFields.industryTemplates')}</h4>
                         </div>
                         <p className="text-xs text-muted-foreground mb-4">
-                            Aplica campos pre-configurados para tu industria en un solo click
+                            {t('leads.customFields.industryTemplatesDesc')}
                         </p>
                         <div className="grid grid-cols-3 gap-2 max-h-[200px] overflow-y-auto custom-scrollbar">
                             {LEAD_FIELD_TEMPLATES.map(template => (
@@ -103,7 +103,7 @@ const CustomFieldsManager: React.FC<CustomFieldsManagerProps> = ({ customFieldsC
                                 >
                                     <div className="text-2xl mb-1">{template.icon}</div>
                                     <h5 className="font-bold text-xs mb-0.5 group-hover:text-primary transition-colors">{template.name}</h5>
-                                    <p className="text-[10px] text-muted-foreground">{template.fields.length} fields</p>
+                                    <p className="text-[10px] text-muted-foreground">{template.fields.length} {t('leads.customFields.fields')}</p>
                                 </button>
                             ))}
                         </div>
@@ -153,7 +153,7 @@ const CustomFieldsManager: React.FC<CustomFieldsManagerProps> = ({ customFieldsC
                                 type="text"
                                 value={newFieldName}
                                 onChange={e => setNewFieldName(e.target.value)}
-                                placeholder="Field name (e.g., Industry)"
+                                placeholder={t('leads.customFields.fieldNamePlaceholder')}
                                 className="col-span-6 bg-secondary/20 border border-border rounded px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/50"
                             />
                             <select
@@ -161,11 +161,11 @@ const CustomFieldsManager: React.FC<CustomFieldsManagerProps> = ({ customFieldsC
                                 onChange={e => setNewFieldType(e.target.value as any)}
                                 className="col-span-4 bg-secondary/20 border border-border rounded px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/50"
                             >
-                                <option value="text">Text</option>
-                                <option value="number">Number</option>
-                                <option value="date">Date</option>
-                                <option value="select">Select</option>
-                                <option value="checkbox">Checkbox</option>
+                                <option value="text">{t('leads.customFields.types.text')}</option>
+                                <option value="number">{t('leads.customFields.types.number')}</option>
+                                <option value="date">{t('leads.customFields.types.date')}</option>
+                                <option value="select">{t('leads.customFields.types.select')}</option>
+                                <option value="checkbox">{t('leads.customFields.types.checkbox')}</option>
                             </select>
                             <button
                                 onClick={handleAddField}
@@ -173,11 +173,11 @@ const CustomFieldsManager: React.FC<CustomFieldsManagerProps> = ({ customFieldsC
                                 className="col-span-2 bg-primary text-primary-foreground rounded px-3 py-2 text-sm font-bold hover:opacity-90 transition-colors disabled:opacity-50 flex items-center justify-center gap-1"
                             >
                                 <Plus size={14} />
-                                Add
+                                {t('leads.customFields.add')}
                             </button>
                         </div>
                         <p className="text-xs text-muted-foreground mt-2">
-                            Custom fields will be available when editing leads.
+                            {t('leads.customFields.customFieldsHelpText')}
                         </p>
                     </div>
 

@@ -51,7 +51,7 @@ const Logo: React.FC<LogoProps> = ({ logoType, logoText, logoImageUrl, logoWidth
       )}
       {showText && (
         <span
-          className={`${compact ? 'text-lg' : 'text-xl md:text-2xl'} font-bold font-header tracking-tight transition-colors truncate max-w-[150px] md:max-w-none`}
+          className={`${compact ? 'text-lg' : 'text-xl md:text-2xl'} font-bold font-header tracking-tight transition-colors`}
           style={{ color: textColor }}
         >
           {logoText}
@@ -527,10 +527,10 @@ const Header: React.FC<HeaderData & {
           return (
             <>
               <div className="flex-shrink-0 mr-4"><Logo logoType={logoType} logoText={logoText} logoImageUrl={logoImageUrl} logoWidth={logoWidth} textColor={finalTextColor} onNavigate={onNavigate} /></div>
-              <div className="hidden md:flex flex-1 justify-center">
+              <div className="hidden nav:flex flex-1 justify-center">
                 <NavLinks links={allLinks} textColor={finalTextColor} accentColor={colors?.accent} hoverStyle={hoverStyle} className="flex items-center gap-8" linkFontSize={linkFontSize} onNavigate={onNavigate} />
               </div>
-              <div className="hidden md:flex flex-shrink-0 ml-4 justify-end items-center gap-4">
+              <div className="hidden nav:flex flex-shrink-0 ml-4 justify-end items-center gap-4">
                 {showSearch && (
                   <GlobalSearch
                     storeId={storeId}
@@ -551,13 +551,13 @@ const Header: React.FC<HeaderData & {
         case 'center':
           return (
             <>
-              <div className="hidden md:flex flex-1 justify-start items-center">
+              <div className="hidden nav:flex flex-1 justify-start items-center">
                 <NavLinks links={allLinks} textColor={finalTextColor} accentColor={colors?.accent} hoverStyle={hoverStyle} className="flex items-center gap-8" linkFontSize={linkFontSize} onNavigate={onNavigate} />
               </div>
-              <div className="flex-shrink-0 mx-auto">
+              <div className="flex-shrink-0 nav:mx-auto absolute left-1/2 -translate-x-1/2 nav:static nav:translate-x-0">
                 <Logo logoType={logoType} logoText={logoText} logoImageUrl={logoImageUrl} logoWidth={logoWidth} textColor={finalTextColor} onNavigate={onNavigate} />
               </div>
-              <div className="hidden md:flex flex-1 justify-end items-center gap-4">
+              <div className="hidden nav:flex flex-1 justify-end items-center gap-4">
                 {showSearch && (
                   <GlobalSearch
                     storeId={storeId}
@@ -581,7 +581,7 @@ const Header: React.FC<HeaderData & {
               <div className="flex justify-center mb-4">
                 <Logo logoType={logoType} logoText={logoText} logoImageUrl={logoImageUrl} logoWidth={logoWidth} textColor={finalTextColor} onNavigate={onNavigate} />
               </div>
-              <div className="hidden md:flex justify-center items-center border-t border-white/10 pt-2">
+              <div className="hidden nav:flex justify-center items-center border-t border-white/10 pt-2">
                 <NavLinks links={allLinks} textColor={finalTextColor} accentColor={colors?.accent} hoverStyle={hoverStyle} className="flex items-center gap-8" linkFontSize={linkFontSize} onNavigate={onNavigate} />
                 <div className="ml-8 flex items-center gap-4">
                   {showSearch && (
@@ -606,7 +606,7 @@ const Header: React.FC<HeaderData & {
           return (
             <>
               <div className="flex-shrink-0 mr-8"><Logo logoType={logoType} logoText={logoText} logoImageUrl={logoImageUrl} logoWidth={logoWidth} textColor={finalTextColor} onNavigate={onNavigate} /></div>
-              <div className="hidden md:flex flex-1 justify-end items-center gap-8">
+              <div className="hidden nav:flex flex-1 justify-end items-center gap-8">
                 <NavLinks links={allLinks} textColor={finalTextColor} accentColor={colors?.accent} hoverStyle={hoverStyle} className="flex items-center gap-8" linkFontSize={linkFontSize} onNavigate={onNavigate} />
                 <div className="flex items-center ml-4 gap-4">
                   {showSearch && (
@@ -701,26 +701,26 @@ const Header: React.FC<HeaderData & {
               : `0 ${isScrolled ? '1.5rem' : '2rem'}`
           }}
         >
-          <div className={`container mx-auto h-full flex items-center justify-between ${style.startsWith('floating') ? '' : 'px-0'
+          <div className={`container mx-auto h-full flex items-center justify-between relative ${style.startsWith('floating') ? '' : 'px-0'
             }`}>
 
             {/* Desktop Layouts */}
             {renderLayout()}
 
-            {/* Mobile Actions - Only visible on mobile */}
-            <div className="md:hidden flex items-center gap-2 ml-auto">
+            {/* Mobile Actions - Only visible on mobile and tablet */}
+            <div className="nav:hidden flex items-center gap-0 -ml-2.5 -mr-2.5">
               {/* Cart Button (mobile) */}
               {showCart && (
                 <button
                   onClick={onCartClick}
-                  className="relative flex items-center justify-center w-11 h-11 rounded-full hover:bg-white/10 active:bg-white/20 transition-all touch-manipulation"
+                  className="relative flex items-center justify-center w-9 h-9 rounded-full hover:bg-white/10 active:bg-white/20 transition-all touch-manipulation"
                   style={{ color: finalTextColor }}
                   aria-label={`Carrito (${cartItemCount} productos)`}
                 >
-                  <ShoppingCart size={22} />
+                  <ShoppingCart size={20} />
                   {cartItemCount > 0 && (
                     <span
-                      className="absolute -top-0.5 -right-0.5 w-5 h-5 flex items-center justify-center rounded-full text-white text-xs font-bold shadow-lg"
+                      className="absolute -top-0.5 -right-0.5 w-4 h-4 flex items-center justify-center rounded-full text-white text-[10px] font-bold shadow-lg"
                       style={{ backgroundColor: '#ef4444' }}
                     >
                       {cartItemCount > 99 ? '99+' : cartItemCount}
@@ -731,22 +731,22 @@ const Header: React.FC<HeaderData & {
               {/* Menu Button */}
               <button
                 onClick={() => setIsMenuOpen(true)}
-                className="flex items-center justify-center w-11 h-11 rounded-full hover:bg-white/10 active:bg-white/20 transition-all touch-manipulation"
+                className="flex items-center justify-center w-9 h-9 rounded-full hover:bg-white/10 active:bg-white/20 transition-all touch-manipulation"
                 style={{ color: finalTextColor }}
                 aria-label="Abrir menú"
               >
-                <Menu className="w-6 h-6" />
+                <Menu className="w-5 h-5" />
               </button>
             </div>
 
           </div>
         </div>
 
-        {/* ===== MOBILE MENU ===== */}
+        {/* ===== MOBILE MENU (also for tablets < 1080px) ===== */}
         {/* Overlay */}
         {isMenuOpen && (
           <div
-            className="fixed inset-0 bg-black/50 z-[100] md:hidden"
+            className="fixed inset-0 bg-black/50 z-[100] nav:hidden"
             onClick={() => setIsMenuOpen(false)}
           />
         )}
@@ -756,7 +756,7 @@ const Header: React.FC<HeaderData & {
           ref={drawerRef}
           className={`
           fixed top-0 right-0 bottom-0 w-[80vw] max-w-[320px] z-[101] 
-          transform transition-transform duration-300 ease-out md:hidden
+          transform transition-transform duration-300 ease-out nav:hidden
           ${isMenuOpen ? 'translate-x-0' : 'translate-x-full'}
         `}
           style={{ backgroundColor: colors?.background }}

@@ -1562,6 +1562,7 @@
     }
   },
   "cms_editor": {
+    "contentEditor": "Content Editor",
     "postSettings": "Post Settings",
     "metaDescription": "Configure metadata and appearance.",
     "urlSlug": "URL Slug",

@@ -6,7 +6,7 @@ import { PageData, NavLink, ThemeData, PageSection, BrandIdentity } from '../typ
 const pageData: PageData = {
   header: {
     style: 'sticky-solid',
-    layout: 'classic',
+    layout: 'minimal',
     isSticky: true,
     glassEffect: false,
     height: 80,

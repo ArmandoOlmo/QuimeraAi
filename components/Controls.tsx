@@ -816,10 +816,7 @@ const Controls: React.FC = () => {
               onChange={(e) => setNestedData('header.layout', e.target.value)}
               className="w-full bg-editor-panel-bg border border-editor-border rounded-md px-2 py-2 text-sm text-editor-text-primary"
             >
-              <option value="classic">{t('editor.controls.header.classic')}</option>
               <option value="minimal">{t('editor.controls.header.minimal')}</option>
-              <option value="center">{t('editor.controls.header.center')}</option>
-              <option value="stack">{t('editor.controls.header.stack')}</option>
             </select>
           </div>
           <div>

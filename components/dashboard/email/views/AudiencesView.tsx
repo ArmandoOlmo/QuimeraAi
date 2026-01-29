@@ -20,10 +20,13 @@ import {
     Loader2,
     DollarSign,
     Clock,
+    Eye,
+    ChevronRight,
 } from 'lucide-react';
 import { useEmailDashboardContext } from '../EmailDashboard';
 import { useEmailAudiences } from '../../../../hooks/useEmailSettings';
 import { EmailAudience } from '../../../../types/email';
+import AudienceDetailView from './AudienceDetailView';
 
 type FilterType = 'all' | 'marketing' | 'orders' | 'spending' | 'inactive';
 
@@ -43,6 +46,9 @@ const AudiencesView: React.FC = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [showNewAudienceModal, setShowNewAudienceModal] = useState(false);
     const [editingAudience, setEditingAudience] = useState<Partial<EmailAudience> | null>(null);
+    const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
+    const [selectedAudience, setSelectedAudience] = useState<EmailAudience | null>(null);
     const [newAudience, setNewAudience] = useState({
         name: '',
         description: '',
@@ -150,10 +156,27 @@ const AudiencesView: React.FC = () => {
         }
     };
 
-    const handleDeleteAudience = async (audienceId: string, isDefault?: boolean) => {
+    const handleDeleteAudience = (audienceId: string, isDefault?: boolean) => {
         if (isDefault) return;
-        if (confirm(t('email.confirmDeleteAudience', '¿Estás seguro de eliminar este segmento?'))) {
-            await deleteAudience(audienceId);
+        setDeleteConfirmId(audienceId);
+    };
+
+    const confirmDeleteAudience = async () => {
+        if (!deleteConfirmId) return;
+        setIsDeleting(true);
+        try {
+            await deleteAudience(deleteConfirmId);
+        } catch (err) {
+            console.error('Error deleting audience:', err);
+        } finally {
+            setIsDeleting(false);
+            setDeleteConfirmId(null);
+        }
+    };
+
+    const cancelDeleteAudience = () => {
+        if (!isDeleting) {
+            setDeleteConfirmId(null);
         }
     };
 
@@ -161,11 +184,33 @@ const AudiencesView: React.FC = () => {
         await duplicateAudience(audienceId);
     };
 
+    // Keep selectedAudience in sync with updated audiences from Firestore
+    React.useEffect(() => {
+        if (selectedAudience && audiences) {
+            const updatedAudience = audiences.find(a => a.id === selectedAudience.id);
+            if (updatedAudience && JSON.stringify(updatedAudience) !== JSON.stringify(selectedAudience)) {
+                setSelectedAudience(updatedAudience as EmailAudience);
+            }
+        }
+    }, [audiences, selectedAudience]);
+
     if (isLoading) {
         return (
             <div className="flex items-center justify-center py-12">
                 <Loader2 className="animate-spin text-primary" size={32} />
             </div>
+        );
+    }
+
+    // Show Audience Detail View if an audience is selected
+    if (selectedAudience) {
+        return (
+            <AudienceDetailView
+                audience={selectedAudience}
+                userId={userId}
+                projectId={projectId}
+                onBack={() => setSelectedAudience(null)}
+            />
         );
     }
 
@@ -233,7 +278,8 @@ const AudiencesView: React.FC = () => {
                         return (
                             <div
                                 key={audience.id}
-                                className="bg-card/50 border border-border rounded-xl p-5 hover:border-primary/50 transition-colors group"
+                                onClick={() => setSelectedAudience(audience as EmailAudience)}
+                                className="bg-card/50 border border-border rounded-xl p-5 hover:border-primary/50 transition-colors group cursor-pointer"
                             >
                                 <div className="flex items-start justify-between mb-3">
                                     <div className="p-2 bg-primary/10 rounded-lg">
@@ -304,12 +350,28 @@ const AudiencesView: React.FC = () => {
                                     <div className="flex items-center gap-2 text-sm">
                                         <Users size={14} className="text-muted-foreground" />
                                         <span className="text-foreground font-medium">
-                                            {audience.estimatedCount?.toLocaleString() || 0}
+                                            {((audience.estimatedCount || 0) + (audience.staticMemberCount || 0)).toLocaleString()}
                                         </span>
                                         <span className="text-muted-foreground">
                                             {t('email.contacts', 'contactos')}
                                         </span>
+                                        {(audience.staticMemberCount || 0) > 0 && (
+                                            <span className="text-xs px-1.5 py-0.5 bg-primary/10 text-primary rounded-full">
+                                                +{audience.staticMemberCount} {t('email.manual', 'manual')}
+                                            </span>
+                                        )}
                                     </div>
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setSelectedAudience(audience as EmailAudience);
+                                        }}
+                                        className="flex items-center gap-1 text-xs text-primary hover:underline"
+                                    >
+                                        <Eye size={12} />
+                                        {t('email.viewDetail', 'Ver Detalle')}
+                                        <ChevronRight size={12} />
+                                    </button>
                                 </div>
                             </div>
                         );
@@ -384,8 +446,8 @@ const AudiencesView: React.FC = () => {
                                                 key={type.value}
                                                 onClick={() => setNewAudience({ ...newAudience, filterType: type.value as FilterType })}
                                                 className={`flex items-center gap-2 p-3 rounded-lg border transition-colors ${newAudience.filterType === type.value
-                                                        ? 'border-primary bg-primary/10 text-primary'
-                                                        : 'border-border hover:bg-muted text-foreground'
+                                                    ? 'border-primary bg-primary/10 text-primary'
+                                                    : 'border-border hover:bg-muted text-foreground'
                                                     }`}
                                             >
                                                 <TypeIcon size={16} />
@@ -465,6 +527,50 @@ const AudiencesView: React.FC = () => {
                                     : t('email.createAudience', 'Crear Segmento')
                                 }
                             </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Delete Audience Confirmation Modal */}
+            {deleteConfirmId && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-fade-in" style={{ zIndex: 9999 }}>
+                    <div className="bg-card w-full max-w-md rounded-xl border border-border shadow-2xl overflow-hidden animate-scale-in">
+                        <div className="p-6">
+                            <div className="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center mb-4 text-red-500 mx-auto">
+                                <Trash2 size={24} />
+                            </div>
+                            <h3 className="text-xl font-bold text-center text-foreground mb-2">
+                                {t('email.deleteAudienceTitle', '¿Eliminar audiencia?')}
+                            </h3>
+                            <p className="text-center text-muted-foreground mb-6">
+                                {t('email.deleteAudienceMessage', 'Esta acción no se puede deshacer. La audiencia será eliminada permanentemente.')}
+                            </p>
+                            <div className="flex gap-3 justify-center">
+                                <button
+                                    onClick={cancelDeleteAudience}
+                                    disabled={isDeleting}
+                                    className="px-5 py-2.5 rounded-lg border border-input bg-background hover:bg-accent hover:text-accent-foreground transition-colors font-medium text-sm"
+                                >
+                                    {t('common.cancel', 'Cancelar')}
+                                </button>
+                                <button
+                                    onClick={confirmDeleteAudience}
+                                    disabled={isDeleting}
+                                    className="px-5 py-2.5 rounded-lg bg-red-600 hover:bg-red-700 text-white transition-colors font-medium text-sm flex items-center gap-2"
+                                >
+                                    {isDeleting ? (
+                                        <>
+                                            <Loader2 size={16} className="animate-spin" />
+                                            {t('common.deleting', 'Eliminando...')}
+                                        </>
+                                    ) : (
+                                        <>
+                                            {t('common.delete', 'Eliminar')}
+                                        </>
+                                    )}
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>

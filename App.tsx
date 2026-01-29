@@ -1,5 +1,6 @@
 import React, { useEffect, useState, lazy, Suspense } from 'react';
-import { AppProviders } from './contexts/AppProviders';
+import { AppProviders, LightProviders } from './contexts/AppProviders';
+import { useLightAuthState } from './hooks/useLightAuthState';
 import { useAuth } from './contexts/core/AuthContext';
 import { useUI } from './contexts/core/UIContext';
 import { useProject } from './contexts/project';
@@ -186,8 +187,14 @@ const AuthGate: React.FC = () => {
 // =============================================================================
 
 const App: React.FC = () => {
+  // ==========================================================================
+  // ALL HOOKS MUST BE CALLED AT THE TOP - React Rules of Hooks
+  // ==========================================================================
   const [isPreview, setIsPreview] = useState(isPreviewRoute());
   const customDomain = useCustomDomain();
+
+  // Performance optimization: lightweight auth check before loading heavy providers
+  const lightAuth = useLightAuthState();
 
   useEffect(() => {
     initializeMonitoring();
@@ -199,18 +206,21 @@ const App: React.FC = () => {
     return () => window.removeEventListener('popstate', handleNavigation);
   }, []);
 
-  // Handle custom domain detection
+  // ==========================================================================
+  // CONDITIONAL RENDERS (after all hooks)
+  // ==========================================================================
+
+  // Handle custom domain detection - loading state
   if (customDomain.isLoading) {
     return <DomainLoadingPage />;
   }
 
-  // If it's a custom domain, render the landing page
+  // Custom domain - render landing page directly
   if (customDomain.isCustomDomain) {
     if (!customDomain.projectId || !customDomain.userId) {
       return <DomainNotConfiguredPage domain={customDomain.domain || 'unknown'} />;
     }
 
-    // Render the landing page using PublicWebsitePreview with the resolved project
     return (
       <ErrorBoundary>
         <Suspense fallback={<MinimalLoader />}>
@@ -223,6 +233,7 @@ const App: React.FC = () => {
     );
   }
 
+  // Preview route - no providers needed
   if (isPreview) {
     return (
       <ErrorBoundary>
@@ -233,6 +244,24 @@ const App: React.FC = () => {
     );
   }
 
+  // Auth loading state
+  if (lightAuth.isLoading) {
+    return <MinimalLoader />;
+  }
+
+  // Unauthenticated users get LightProviders (5 contexts instead of 17+)
+  // This significantly reduces initial load time for login/register pages
+  if (!lightAuth.isAuthenticated) {
+    return (
+      <ErrorBoundary>
+        <LightProviders>
+          <AuthGate />
+        </LightProviders>
+      </ErrorBoundary>
+    );
+  }
+
+  // Authenticated users get full AppProviders with all feature contexts
   return (
     <ErrorBoundary>
       <AppProviders>

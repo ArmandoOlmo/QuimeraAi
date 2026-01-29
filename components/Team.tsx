@@ -241,12 +241,12 @@ const Team: React.FC<TeamProps> = ({
   // Use user-defined photo border color, or fall back to 50% of secondary color
   const photoBorderColor = (colors as any)?.photoBorderColor || hexToRgba(secondaryColor, 0.5);
   
-  // Grid columns based on variant
+  // Grid columns based on variant - mobile-first responsive
   const gridClasses = {
-    classic: 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-12',
-    cards: 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8',
-    minimal: 'grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6',
-    overlay: 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6',
+    classic: 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 sm:gap-12',
+    cards: 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8',
+    minimal: 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6',
+    overlay: 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6',
   };
 
   return (

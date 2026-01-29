@@ -36,11 +36,13 @@ import EmailProjectSelectorPage from './EmailProjectSelectorPage';
 interface EmailDashboardContextData {
     userId: string;
     projectId: string;
+    projectName: string;
 }
 
 const EmailDashboardContext = createContext<EmailDashboardContextData>({
     userId: '',
     projectId: '',
+    projectName: '',
 });
 
 export const useEmailDashboardContext = () => useContext(EmailDashboardContext);
@@ -165,7 +167,7 @@ const EmailDashboard: React.FC<EmailDashboardProps> = ({ projectId: propProjectI
     };
 
     return (
-        <EmailDashboardContext.Provider value={{ userId, projectId }}>
+        <EmailDashboardContext.Provider value={{ userId, projectId, projectName: effectiveProject?.name || '' }}>
             <div className="min-h-screen bg-background flex">
                 <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
 

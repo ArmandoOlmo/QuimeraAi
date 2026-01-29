@@ -648,6 +648,22 @@ const LandingPageContent: React.FC = () => {
   }, [mergedProductsData, data.products, storefrontProducts]);
 
   /**
+   * Verifica si algún componente de ecommerce está habilitado (visible)
+   * Esto se usa para determinar si mostrar el carrito de compras en el header
+   */
+  const isAnyEcommerceComponentEnabled = useMemo(() => {
+    const ecommerceComponents: PageSection[] = [
+      'products', 'featuredProducts', 'categoryGrid', 'productHero',
+      'saleCountdown', 'trustBadges', 'recentlyViewed', 'productReviews',
+      'collectionBanner', 'productBundle', 'announcementBar', 'storeSettings'
+    ];
+    
+    return ecommerceComponents.some(component => 
+      componentStatus[component] && effectiveSectionVisibility[component]
+    );
+  }, [componentStatus, effectiveSectionVisibility]);
+
+  /**
    * Verifica si un componente de ecommerce debe mostrarse en el contexto actual
    * @param componentKey - Clave del componente (ej: 'featuredProducts')
    * @param context - Contexto actual: 'landing' (home) o 'store' (tienda/categoría/producto)
@@ -865,14 +881,14 @@ const LandingPageContent: React.FC = () => {
         {...mergedHeaderData}
         links={headerLinks}
         forceSolid={isStoreViewActive}
-        showCart={storefrontProducts.length > 0}
+        showCart={storefrontProducts.length > 0 && isAnyEcommerceComponentEnabled}
         cartItemCount={cart.itemCount}
         onCartClick={cart.toggleCart}
         onNavigate={handleLinkNavigation}
       />
 
-      {/* Cart Drawer - only when store has products */}
-      {storefrontProducts.length > 0 && (
+      {/* Cart Drawer - only when store has products AND ecommerce is enabled */}
+      {storefrontProducts.length > 0 && isAnyEcommerceComponentEnabled && (
         <CartDrawer
           isOpen={cart.isCartOpen}
           onClose={cart.closeCart}

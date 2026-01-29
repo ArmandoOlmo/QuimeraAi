@@ -28,7 +28,7 @@ export const COMPONENT_OPTIONS = {
         category: 'navigation',
         options: {
             style: ['sticky-solid', 'sticky-transparent', 'floating'],
-            layout: ['classic', 'minimal', 'center', 'stack'],
+            layout: ['minimal'],
             hoverStyle: ['simple', 'underline', 'bracket', 'highlight', 'glow'],
             logoType: ['text', 'image', 'both'],
         },

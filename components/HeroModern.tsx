@@ -7,10 +7,10 @@ import { hexToRgba } from '../utils/colorUtils';
 
 // Ajustamos los tamaños para que sean más impactantes en este diseño full-screen
 const headlineSizeClasses: Record<FontSize, string> = {
-    sm: 'text-3xl md:text-4xl',
-    md: 'text-4xl md:text-6xl',
-    lg: 'text-5xl md:text-7xl',
-    xl: 'text-6xl md:text-8xl',
+    sm: 'text-4xl md:text-4xl',
+    md: 'text-5xl md:text-6xl',
+    lg: 'text-6xl md:text-7xl',
+    xl: 'text-7xl md:text-8xl',
 };
 
 const subheadlineSizeClasses: Record<FontSize, string> = {
@@ -145,8 +145,8 @@ const HeroModern: React.FC<HeroProps> = ({
         </div>
       )}
 
-      {/* Contenido */}
-      <div className={`relative z-10 container mx-auto ${paddingXClasses[paddingX]} ${paddingYClasses[paddingY]} text-center max-w-5xl flex flex-col items-center`}>
+      {/* Contenido - pt-24 adds space for sticky header on mobile */}
+      <div className={`relative z-10 container mx-auto ${paddingXClasses[paddingX]} ${paddingYClasses[paddingY]} pt-24 md:pt-16 text-center max-w-5xl flex flex-col items-center`}>
          
          {/* Badge Flotante Premium */}
          {showBadge && badgeText && (
@@ -161,7 +161,7 @@ const HeroModern: React.FC<HeroProps> = ({
 
          {/* Título Principal */}
          <h1 
-            className={`${headlineSizeClasses[headlineFontSize]} font-black tracking-tight mb-8 leading-[1.1] animate-fade-in-up font-header`}
+            className={`${headlineSizeClasses[headlineFontSize]} font-black tracking-tight leading-[1.1] animate-fade-in-up font-header mt-0 mb-0 pt-10 md:mt-[60px] md:mb-[60px]`}
             style={{ 
               animationDelay: '0.1s', 
               color: actualColors.heading,

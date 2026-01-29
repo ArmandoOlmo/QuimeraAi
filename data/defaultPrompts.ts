@@ -51,7 +51,7 @@ Choose components that best fit the {{industry}} and {{summary}}. Consider:
 **Available Component Settings (use these EXACT values):**
 - cardBorderRadius: 'none' | 'md' | 'xl' | 'full'
 - buttonBorderRadius: 'none' | 'md' | 'xl' | 'full'
-- headerLayout: 'classic' | 'minimal' | 'center' | 'stack' (DEFAULT: 'classic')
+- headerLayout: 'minimal' (ONLY option available)
 - headerStyle: 'sticky-solid' (ALWAYS use 'sticky-solid' - header must have solid brand color background)
 - heroImageStyle: 'default' | 'glow' | 'float' | 'hexagon' | 'polaroid'
 - heroImagePosition: 'left' | 'right'
@@ -104,7 +104,7 @@ Generate a JSON object defining the visual strategy.
       "buttonBorderRadius": "size"
   },
   "layoutStrategy": {
-      "headerLayout": "classic",
+      "headerLayout": "minimal",
       "headerStyle": "sticky-solid",
       "heroImageStyle": "type",
       "heroImagePosition": "left | right"
@@ -194,7 +194,7 @@ Generate a JSON object defining the visual strategy.
 - menu.menuVariant: 'classic' | 'modern-grid' | 'elegant-list'
 - map.mapVariant: 'modern' | 'minimal' | 'dark-tech' | 'retro' | 'night'
 - banner.bannerVariant: 'classic' | 'gradient-overlay' | 'side-text' | 'centered'
-- header.layout: 'classic' | 'minimal' | 'center' | 'stack'
+- header.layout: 'minimal'
 - header.style: 'sticky-solid' | 'sticky-transparent' | 'floating'
 
 **VALID SIZE OPTIONS:**

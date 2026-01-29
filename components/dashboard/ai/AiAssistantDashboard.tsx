@@ -937,7 +937,7 @@ const AiAssistantDashboard: React.FC = () => {
                 <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 overflow-hidden">
 
                     {/* LEFT: Configuration Area (Scrollable) - Full width when Inbox is active */}
-                    <div className={`${activeTab === 'socialInbox' ? 'lg:col-span-12' : 'lg:col-span-7 xl:col-span-5'} flex flex-col border-r border-border bg-background overflow-hidden relative z-10 shadow-lg`}>
+                    <div className={`${activeTab === 'socialInbox' ? 'lg:col-span-12' : 'lg:col-span-8 xl:col-span-6'} flex flex-col border-r border-border bg-background overflow-hidden relative z-10 shadow-lg`}>
                         <div className="flex h-full overflow-hidden">
                             {/* Desktop Sidebar (New) */}
                             <div className="hidden md:flex flex-col w-[240px] border-r border-border/50 bg-secondary/5 py-6 overflow-y-auto shrink-0">
@@ -994,7 +994,7 @@ const AiAssistantDashboard: React.FC = () => {
 
                     {/* RIGHT: Widget Preview Area (Fixed/Sticky Feel) - Hidden when Inbox is active */}
                     {activeTab !== 'socialInbox' && (
-                        <div className="hidden lg:flex lg:col-span-5 xl:col-span-7 flex-col bg-muted/30 relative items-center justify-center p-10 overflow-hidden">
+                        <div className="hidden lg:flex lg:col-span-4 xl:col-span-6 flex-col bg-muted/30 relative items-center justify-center p-10 overflow-hidden">
                             {/* Dot pattern - visible in both themes */}
                             <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(#d5d5d5_1px,transparent_1px)] dark:bg-[radial-gradient(#404040_1px,transparent_1px)] [background-size:16px_16px]"></div>
 

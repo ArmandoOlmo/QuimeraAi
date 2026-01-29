@@ -311,6 +311,9 @@ html.palette-rose-coral .theme-btn-active {
    TAILWIND THEME CONFIG (Reference CSS Vars)
    ============================================ */
 @theme {
+  /* Custom breakpoint for navigation - tablet threshold at 1080px */
+  --breakpoint-nav: 1300px;
+
   /* Colors that reference CSS variables for dynamic theming */
   --color-background: hsl(var(--background));
   --color-foreground: hsl(var(--foreground));
@@ -1000,6 +1003,104 @@ body {
   flex-shrink: 0 !important;
 }
 
+/* Custom peer-based toggle switches - prevent deformation in flex containers */
+/* Target the label wrapper that contains peer toggles */
+label:has(> input.peer + div.rounded-full),
+label:has(> input.sr-only.peer) {
+  flex-shrink: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+}
+
+/* Target the toggle track (background) - standard size w-11 h-6 */
+input.peer + div.rounded-full,
+input.sr-only.peer + div.rounded-full {
+  flex-shrink: 0 !important;
+  min-width: 44px !important;
+  width: 44px !important;
+  min-height: 24px !important;
+  height: 24px !important;
+  max-height: 24px !important;
+  position: relative !important;
+  box-sizing: border-box !important;
+}
+
+/* Target larger toggle variant w-14 h-7 */
+input.peer + div.rounded-full.w-14,
+input.sr-only.peer + div.rounded-full.w-14 {
+  min-width: 56px !important;
+  width: 56px !important;
+  min-height: 28px !important;
+  height: 28px !important;
+  max-height: 28px !important;
+}
+
+/* Ensure the toggle knob (::after pseudo-element) maintains circular shape */
+input.peer + div.rounded-full::after,
+input.sr-only.peer + div.rounded-full::after {
+  flex-shrink: 0 !important;
+  aspect-ratio: 1 / 1 !important;
+  border-radius: 9999px !important;
+}
+
+/* Rounded-full elements that should maintain their shape */
+.rounded-full {
+  flex-shrink: 0;
+}
+
+/* Protect aspect-square elements from deformation */
+.aspect-square {
+  flex-shrink: 0 !important;
+  aspect-ratio: 1 / 1 !important;
+}
+
+/* Button-style toggles with inline-flex */
+button.rounded-full[class*="h-6"][class*="w-11"],
+button.rounded-full[class*="h-6 w-11"] {
+  flex-shrink: 0 !important;
+  min-width: 44px !important;
+  min-height: 24px !important;
+  max-height: 24px !important;
+}
+
+/* Toggle knob inside button toggles */
+button.rounded-full > span.rounded-full {
+  flex-shrink: 0 !important;
+  aspect-ratio: 1 / 1 !important;
+  min-width: 16px !important;
+  min-height: 16px !important;
+}
+
+/* Toggle pattern with nested div for the knob (instead of ::after) */
+input.peer + div.rounded-full > div.rounded-full,
+input.sr-only.peer + div.rounded-full > div.rounded-full {
+  flex-shrink: 0 !important;
+  aspect-ratio: 1 / 1 !important;
+  min-width: 20px !important;
+  min-height: 20px !important;
+  width: 20px !important;
+  height: 20px !important;
+  border-radius: 9999px !important;
+}
+
+/* Avatar circles and status indicators - prevent deformation */
+div.rounded-full[class*="w-"][class*="h-"]:not([class*="w-full"]) {
+  flex-shrink: 0;
+  aspect-ratio: 1 / 1;
+}
+
+/* Protect small indicator circles (online status, badges, etc) */
+span.rounded-full[class*="w-"][class*="h-"]:not([class*="w-full"]),
+div.rounded-full.w-2,
+div.rounded-full.w-3,
+div.rounded-full.w-4,
+span.rounded-full.w-2,
+span.rounded-full.w-3,
+span.rounded-full.w-4 {
+  flex-shrink: 0 !important;
+  aspect-ratio: 1 / 1 !important;
+}
+
 /* Mobile-first button reset for better touch targets */
 @media (max-width: 767px) {
 
@@ -1455,4 +1556,445 @@ body {
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
   /* Chrome, Safari and Opera */
+}
+
+/* ============================================
+   PREVIEW CONTAINER QUERIES
+   Production-ready responsive preview using CSS Container Queries.
+   These respond to the preview container width, not viewport.
+   ============================================ */
+
+/* 
+ * Container Query Breakpoints (matching Tailwind):
+ * - sm: 640px
+ * - md: 768px  
+ * - lg: 1024px
+ * 
+ * Preview widths:
+ * - Mobile: 384px (max-w-sm) - smaller than sm
+ * - Tablet: 768px (max-w-3xl) - at md breakpoint
+ * - Desktop: full width
+ */
+
+/* Base mobile styles for preview container */
+.preview-container {
+  /* CSS custom properties for responsive values */
+  --preview-text-5xl: 2.25rem;  /* 36px - mobile */
+  --preview-text-6xl: 2.75rem;  /* 44px - mobile */
+  --preview-text-7xl: 3.5rem;   /* 56px - mobile */
+  --preview-text-8xl: 4rem;     /* 64px - mobile */
+}
+
+/* Container query: when container is >= 640px (sm breakpoint) */
+@container preview (min-width: 640px) {
+  .preview-container {
+    --preview-text-5xl: 3rem;     /* 48px */
+    --preview-text-6xl: 3.5rem;   /* 56px */
+    --preview-text-7xl: 4rem;     /* 64px */
+    --preview-text-8xl: 5rem;     /* 80px */
+  }
+}
+
+/* Container query: when container is >= 768px (md breakpoint) */
+@container preview (min-width: 768px) {
+  .preview-container {
+    --preview-text-5xl: 3rem;     /* 48px - text-5xl */
+    --preview-text-6xl: 3.75rem;  /* 60px - text-6xl */
+    --preview-text-7xl: 4.5rem;   /* 72px - text-7xl */
+    --preview-text-8xl: 6rem;     /* 96px - text-8xl */
+  }
+}
+
+/* 
+ * Hero headline responsive sizing using container queries
+ * Targets hero h1 elements and applies container-responsive font sizes
+ */
+.preview-container h1.font-header {
+  font-size: var(--preview-text-6xl) !important;
+  line-height: 1.1 !important;
+}
+
+/* Size variants based on Tailwind classes */
+.preview-container h1.font-header.text-4xl {
+  font-size: calc(var(--preview-text-5xl) * 0.85) !important;
+}
+
+.preview-container h1.font-header.text-5xl {
+  font-size: var(--preview-text-5xl) !important;
+}
+
+.preview-container h1.font-header.text-6xl {
+  font-size: var(--preview-text-6xl) !important;
+}
+
+.preview-container h1.font-header.text-7xl {
+  font-size: var(--preview-text-7xl) !important;
+}
+
+.preview-container h1.font-header.text-8xl {
+  font-size: var(--preview-text-8xl) !important;
+}
+
+/* ============================================
+   MOBILE PREVIEW (container < 640px / sm breakpoint)
+   Forces single-column layouts and mobile styles
+   ============================================ */
+@container preview (max-width: 639px) {
+  /* Force mobile layout - all flex-row variants to column */
+  .sm\:flex-row,
+  .md\:flex-row,
+  .lg\:flex-row {
+    flex-direction: column !important;
+  }
+  
+  .md\:flex-row-reverse,
+  .lg\:flex-row-reverse {
+    flex-direction: column !important;
+  }
+  
+  /* Force single-column grids on mobile */
+  .sm\:grid-cols-2,
+  .sm\:grid-cols-3,
+  .sm\:grid-cols-4,
+  .md\:grid-cols-2,
+  .md\:grid-cols-3,
+  .md\:grid-cols-4,
+  .lg\:grid-cols-2,
+  .lg\:grid-cols-3,
+  .lg\:grid-cols-4 {
+    grid-template-columns: repeat(1, minmax(0, 1fr)) !important;
+  }
+  
+  /* Force mobile widths */
+  .sm\:w-1\/2,
+  .md\:w-1\/2,
+  .lg\:w-1\/2,
+  .md\:w-1\/3,
+  .md\:w-2\/3 {
+    width: 100% !important;
+  }
+  
+  /* 
+   * Elements with "hidden md:flex" or "hidden lg:flex" should stay hidden on mobile
+   * because their BASE state is hidden, and we're simulating mobile viewport
+   */
+  .hidden.sm\:flex,
+  .hidden.md\:flex,
+  .hidden.lg\:flex,
+  .hidden.nav\:flex,
+  .hidden.sm\:block,
+  .hidden.md\:block,
+  .hidden.lg\:block,
+  .hidden.nav\:block {
+    display: none !important;
+  }
+  
+  /* 
+   * Elements with "md:hidden" or "nav:hidden" (no base hidden) should be VISIBLE on mobile
+   * These are mobile-only elements like hamburger menus
+   * The actual viewport triggers @media(min-width:768px) which hides them,
+   * but we need to override that in the mobile preview container.
+   * Using higher specificity with .preview-container prefix
+   */
+  .preview-container .md\:hidden,
+  .preview-mobile .md\:hidden,
+  .preview-container .nav\:hidden,
+  .preview-mobile .nav\:hidden {
+    display: flex !important;
+  }
+  
+  .preview-container .md\:hidden.block,
+  .preview-mobile .md\:hidden.block,
+  .preview-container .nav\:hidden.block,
+  .preview-mobile .nav\:hidden.block {
+    display: block !important;
+  }
+  
+  /* Force text alignment for mobile */
+  .sm\:text-left,
+  .md\:text-left,
+  .lg\:text-left,
+  .sm\:text-right,
+  .md\:text-right,
+  .lg\:text-right {
+    text-align: center !important;
+  }
+  
+  /* Force centering for mobile */
+  .sm\:justify-start,
+  .md\:justify-start,
+  .lg\:justify-start,
+  .sm\:justify-end,
+  .md\:justify-end,
+  .lg\:justify-end {
+    justify-content: center !important;
+  }
+  
+  .sm\:items-start,
+  .md\:items-start,
+  .lg\:items-start {
+    align-items: center !important;
+  }
+  
+  /* Force max-width adjustments */
+  .sm\:max-w-lg,
+  .md\:max-w-lg,
+  .md\:max-w-xl,
+  .md\:max-w-2xl,
+  .lg\:max-w-xl {
+    max-width: 100% !important;
+  }
+  
+  /* Responsive text sizes for mobile */
+  .sm\:text-4xl,
+  .md\:text-4xl { font-size: 1.875rem !important; }
+  .sm\:text-5xl,
+  .md\:text-5xl { font-size: 2.25rem !important; }
+  .md\:text-6xl { font-size: 2.75rem !important; }
+  .md\:text-7xl { font-size: 3rem !important; }
+  .md\:text-8xl { font-size: 3.5rem !important; }
+  
+  /* Gap adjustments for mobile */
+  .sm\:gap-6,
+  .md\:gap-6 { gap: 1rem !important; }
+  .sm\:gap-8,
+  .md\:gap-8 { gap: 1.5rem !important; }
+  .md\:gap-12 { gap: 2rem !important; }
+  
+  /* Padding adjustments for mobile */
+  .sm\:py-16,
+  .md\:py-16 {
+    padding-top: 2rem !important;
+    padding-bottom: 2rem !important;
+  }
+  .md\:py-24 {
+    padding-top: 2.5rem !important;
+    padding-bottom: 2.5rem !important;
+  }
+  .md\:py-32 {
+    padding-top: 3rem !important;
+    padding-bottom: 3rem !important;
+  }
+  .md\:py-40 {
+    padding-top: 4rem !important;
+    padding-bottom: 4rem !important;
+  }
+  
+  /* Margin adjustments for mobile */
+  .sm\:mt-0,
+  .md\:mt-0 { margin-top: 1.5rem !important; }
+  .md\:mt-\[60px\] { margin-top: 1.5rem !important; }
+  .md\:mb-\[60px\] { margin-bottom: 1.5rem !important; }
+  
+  /* Team/Features image sizes for mobile */
+  .sm\:w-40,
+  .md\:w-40 { width: 8rem !important; }
+  .sm\:h-40,
+  .md\:h-40 { height: 8rem !important; }
+  
+  /* Column span overrides for bento/modern layouts */
+  .md\:col-span-2,
+  .lg\:col-span-2,
+  .lg\:row-span-2 {
+    grid-column: span 1 !important;
+    grid-row: span 1 !important;
+  }
+}
+
+/* ============================================
+   TABLET PREVIEW (640px - 767px)
+   2-column layouts for medium screens
+   ============================================ */
+@container preview (min-width: 640px) and (max-width: 767px) {
+  /* Allow 2 columns on tablet for sm: breakpoints */
+  .sm\:grid-cols-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+  
+  /* But limit 3+ columns to 2 */
+  .sm\:grid-cols-3,
+  .sm\:grid-cols-4,
+  .md\:grid-cols-3,
+  .md\:grid-cols-4,
+  .lg\:grid-cols-3,
+  .lg\:grid-cols-4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+  
+  /* Tablet text sizes */
+  .md\:text-7xl,
+  .md\:text-8xl {
+    font-size: 3.25rem !important;
+  }
+  
+  /* Show sm: display elements on tablet */
+  .sm\:flex {
+    display: flex !important;
+  }
+  
+  .sm\:block {
+    display: block !important;
+  }
+  
+  /* Allow sm:flex-row on tablet */
+  .sm\:flex-row {
+    flex-direction: row !important;
+  }
+  
+  /* Nav breakpoint for tablet preview - show mobile menu since tablet (640-767px) < nav breakpoint (1300px) */
+  .nav\:hidden {
+    display: flex !important;
+  }
+  
+  .hidden.nav\:flex,
+  .hidden.nav\:block {
+    display: none !important;
+  }
+}
+
+/* ============================================
+   LARGE TABLET (768px - 1023px)
+   Allow md: styles but limit lg: to 3 columns max
+   ============================================ */
+@container preview (min-width: 768px) and (max-width: 1023px) {
+  /* Allow md: grid columns */
+  .md\:grid-cols-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+  
+  .md\:grid-cols-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+  
+  /* Limit lg: columns to 3 max */
+  .lg\:grid-cols-4 {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+  
+  /* Show md: display elements */
+  .md\:flex {
+    display: flex !important;
+  }
+  
+  .md\:block {
+    display: block !important;
+  }
+  
+  /* Hide md:hidden elements */
+  .md\:hidden {
+    display: none !important;
+  }
+  
+  /* But show nav:hidden elements (hamburger) since large tablet (768-1023px) < nav breakpoint (1300px) */
+  .nav\:hidden {
+    display: flex !important;
+  }
+  
+  /* Hide nav:flex elements (desktop navigation) since large tablet < nav breakpoint */
+  .hidden.nav\:flex,
+  .hidden.nav\:block {
+    display: none !important;
+  }
+  
+  /* Allow md:flex-row */
+  .md\:flex-row {
+    flex-direction: row !important;
+  }
+  
+  /* Allow md: col-span */
+  .md\:col-span-2 {
+    grid-column: span 2 !important;
+  }
+}
+
+/* ============================================
+   PREVIEW CLASS OVERRIDES (Non-Container Query)
+   These use the .preview-mobile class which IS applied regardless of container queries
+   ============================================ */
+.preview-mobile .md\:hidden,
+.preview-mobile .nav\:hidden {
+  display: flex !important;
+}
+
+.preview-mobile .md\:hidden.block,
+.preview-mobile .nav\:hidden.block {
+  display: block !important;
+}
+
+.preview-mobile .hidden.md\:flex,
+.preview-mobile .hidden.md\:block,
+.preview-mobile .hidden.lg\:flex,
+.preview-mobile .hidden.lg\:block,
+.preview-mobile .hidden.nav\:flex,
+.preview-mobile .hidden.nav\:block {
+  display: none !important;
+}
+
+/* Force single column grids */
+.preview-mobile .md\:grid-cols-2,
+.preview-mobile .md\:grid-cols-3,
+.preview-mobile .md\:grid-cols-4,
+.preview-mobile .lg\:grid-cols-2,
+.preview-mobile .lg\:grid-cols-3,
+.preview-mobile .lg\:grid-cols-4 {
+  grid-template-columns: repeat(1, minmax(0, 1fr)) !important;
+}
+
+/* Force column direction */
+.preview-mobile .md\:flex-row,
+.preview-mobile .lg\:flex-row {
+  flex-direction: column !important;
+}
+
+/* Reset column spans for bento layouts */
+.preview-mobile .md\:col-span-2,
+.preview-mobile .lg\:col-span-2,
+.preview-mobile .lg\:row-span-2 {
+  grid-column: span 1 !important;
+  grid-row: span 1 !important;
+}
+
+/* Hero headline responsive text sizes for mobile preview */
+.preview-mobile h1.font-header {
+  font-size: var(--preview-text-6xl, 2.75rem) !important;
+}
+
+.preview-mobile h1.font-header.text-5xl {
+  font-size: var(--preview-text-5xl, 2.25rem) !important;
+}
+
+.preview-mobile h1.font-header.text-7xl {
+  font-size: var(--preview-text-7xl, 3rem) !important;
+}
+
+.preview-mobile .md\:text-7xl {
+  font-size: 3rem !important;
+}
+
+.preview-mobile .md\:text-8xl {
+  font-size: 3.5rem !important;
+}
+
+/* Tablet preview styles */
+.preview-tablet .lg\:grid-cols-4 {
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+}
+
+.preview-tablet .md\:hidden {
+  display: none !important;
+}
+
+.preview-tablet .hidden.md\:flex,
+.preview-tablet .hidden.md\:block {
+  display: flex !important;
+}
+
+/* Nav breakpoint for tablet preview - show mobile menu since tablet (768px) < nav breakpoint (1300px) */
+.preview-tablet .nav\:hidden {
+  display: flex !important;
+}
+
+.preview-tablet .hidden.nav\:flex,
+.preview-tablet .hidden.nav\:block {
+  display: none !important;
 }

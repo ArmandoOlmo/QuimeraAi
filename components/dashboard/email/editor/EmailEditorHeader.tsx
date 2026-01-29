@@ -14,6 +14,7 @@ import {
     Check,
     Send,
     Eye,
+    Menu,
 } from 'lucide-react';
 import { useEmailEditor } from './EmailEditor';
 
@@ -21,20 +22,24 @@ interface EmailEditorHeaderProps {
     documentName: string;
     onSave?: () => void;
     onClose?: () => void;
+    onSendTest?: () => void;
     isDirty?: boolean;
+    onOpenMobileMenu?: () => void;
 }
 
 const EmailEditorHeader: React.FC<EmailEditorHeaderProps> = ({
     documentName,
     onSave,
     onClose,
+    onSendTest,
     isDirty = false,
+    onOpenMobileMenu,
 }) => {
     const { t } = useTranslation();
     const { previewDevice, setPreviewDevice } = useEmailEditor();
-    
+
     const [saveState, setSaveState] = React.useState<'idle' | 'saved'>('idle');
-    
+
     const handleSave = () => {
         if (onSave) {
             onSave();
@@ -42,17 +47,28 @@ const EmailEditorHeader: React.FC<EmailEditorHeaderProps> = ({
             setTimeout(() => setSaveState('idle'), 2500);
         }
     };
-    
+
     const deviceOptions: { name: 'desktop' | 'mobile'; icon: React.ReactNode; width: string }[] = [
         { name: 'desktop', icon: <Monitor className="w-4 h-4" />, width: '600px' },
         { name: 'mobile', icon: <Smartphone className="w-4 h-4" />, width: '375px' },
     ];
-    
+
     return (
         <header className="bg-editor-bg border-b border-editor-border/50 h-14 flex-shrink-0 z-20">
             <div className="h-full flex items-center justify-between px-4 gap-4">
-                {/* LEFT SECTION - Back & Name */}
+                {/* LEFT SECTION - Mobile Menu, Back & Name */}
                 <div className="flex items-center gap-3 min-w-0">
+                    {/* Mobile Menu Button */}
+                    {onOpenMobileMenu && (
+                        <button
+                            onClick={onOpenMobileMenu}
+                            className="lg:hidden h-9 w-9 flex items-center justify-center text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40 rounded-md transition-colors"
+                            title={t('common.menu', 'Menú')}
+                        >
+                            <Menu className="w-5 h-5" />
+                        </button>
+                    )}
+
                     {/* Back Button */}
                     {onClose && (
                         <button
@@ -63,10 +79,10 @@ const EmailEditorHeader: React.FC<EmailEditorHeaderProps> = ({
                             <ArrowLeft className="w-4 h-4" />
                         </button>
                     )}
-                    
+
                     {/* Divider */}
                     <div className="w-px h-6 bg-editor-border/50" />
-                    
+
                     {/* Document Name */}
                     <div className="flex items-center gap-2 min-w-0">
                         <span className="text-sm font-medium text-editor-text-primary truncate max-w-[200px]">
@@ -79,7 +95,7 @@ const EmailEditorHeader: React.FC<EmailEditorHeaderProps> = ({
                         )}
                     </div>
                 </div>
-                
+
                 {/* CENTER SECTION - Device Toggle */}
                 <div className="flex items-center gap-2 bg-editor-panel-bg rounded-lg p-1">
                     {deviceOptions.map(({ name, icon, width }) => (
@@ -100,7 +116,7 @@ const EmailEditorHeader: React.FC<EmailEditorHeaderProps> = ({
                         </button>
                     ))}
                 </div>
-                
+
                 {/* RIGHT SECTION - Actions */}
                 <div className="flex items-center gap-2">
                     {/* Preview Button */}
@@ -111,16 +127,18 @@ const EmailEditorHeader: React.FC<EmailEditorHeaderProps> = ({
                         <Eye className="w-4 h-4" />
                         <span className="hidden lg:inline">{t('email.preview', 'Vista previa')}</span>
                     </button>
-                    
+
                     {/* Send Test Button */}
                     <button
-                        className="flex items-center gap-1.5 h-9 px-3 rounded-md text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40"
+                        onClick={onSendTest}
+                        disabled={!onSendTest}
+                        className="flex items-center gap-1.5 h-9 px-3 rounded-md text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40 disabled:opacity-50 disabled:cursor-not-allowed"
                         title={t('email.sendTest', 'Enviar prueba')}
                     >
                         <Send className="w-4 h-4" />
                         <span className="hidden lg:inline">{t('email.sendTest', 'Enviar prueba')}</span>
                     </button>
-                    
+
                     {/* Save Button */}
                     <button
                         onClick={handleSave}

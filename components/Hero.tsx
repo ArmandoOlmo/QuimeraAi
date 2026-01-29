@@ -24,17 +24,17 @@ const paddingXClasses: Record<PaddingSize, string> = {
 };
 
 const headlineSizeClasses: Record<FontSize, string> = {
-    sm: 'text-2xl md:text-3xl',
-    md: 'text-3xl md:text-5xl',
-    lg: 'text-4xl md:text-6xl',
-    xl: 'text-5xl md:text-8xl',
+  sm: 'text-2xl md:text-3xl',
+  md: 'text-3xl md:text-5xl',
+  lg: 'text-4xl md:text-6xl',
+  xl: 'text-5xl md:text-8xl',
 };
 
 const subheadlineSizeClasses: Record<FontSize, string> = {
-    sm: 'text-sm',
-    md: 'text-base',
-    lg: 'text-lg md:text-xl',
-    xl: 'text-xl md:text-2xl',
+  sm: 'text-sm',
+  md: 'text-base',
+  lg: 'text-lg md:text-xl',
+  xl: 'text-xl md:text-2xl',
 };
 
 const imageStyleClasses: Record<ImageStyle, string> = {
@@ -88,73 +88,73 @@ const objectFitClasses: Record<ObjectFit, string> = {
 
 
 interface HeroProps extends HeroData {
-    borderRadius: BorderRadiusSize;
-    onNavigate?: (href: string) => void;
+  borderRadius: BorderRadiusSize;
+  onNavigate?: (href: string) => void;
 }
 
 const getAspectRatioValue = (ratio: AspectRatio): number => {
-    if (ratio === 'auto') return 0;
-    const parts = ratio.split(':');
-    if (parts.length !== 2) return 0;
-    const [w, h] = parts.map(Number);
-    if (isNaN(w) || isNaN(h) || w === 0) return 0;
-    return h / w;
+  if (ratio === 'auto') return 0;
+  const parts = ratio.split(':');
+  if (parts.length !== 2) return 0;
+  const [w, h] = parts.map(Number);
+  if (isNaN(w) || isNaN(h) || w === 0) return 0;
+  return h / w;
 };
 
 // Helper function to render badge icon (supports both emoji strings and Lucide icons)
 const renderBadgeIcon = (badgeIcon?: ServiceIcon | string) => {
-    if (!badgeIcon) return '✨';
-    
-    // If it's a single character or emoji, return it directly
-    if (badgeIcon.length <= 2) return badgeIcon;
-    
-    // Try to render as Lucide icon
-    const iconMap: Record<string, any> = {
-        'sparkles': LucideIcons.Sparkles,
-        'zap': LucideIcons.Zap,
-        'star': LucideIcons.Star,
-        'award': LucideIcons.Award,
-        'trophy': LucideIcons.Trophy,
-        'rocket': LucideIcons.Rocket,
-        'lightbulb': LucideIcons.Lightbulb,
-        'heart': LucideIcons.Heart,
-        'check-circle': LucideIcons.CheckCircle,
-        'alert-circle': LucideIcons.AlertCircle,
-        'shield': LucideIcons.Shield,
-        'target': LucideIcons.Target,
-        'trending-up': LucideIcons.TrendingUp,
-        'circle-dot': LucideIcons.CircleDot,
-        'hexagon': LucideIcons.Hexagon,
-        'layers': LucideIcons.Layers,
-    };
-    
-    const IconComponent = iconMap[badgeIcon];
-    if (IconComponent) {
-        return React.createElement(IconComponent, { size: 16, className: 'inline-block' });
-    }
-    
-    // Fallback to string if not found in icon map
-    return badgeIcon;
+  if (!badgeIcon) return '✨';
+
+  // If it's a single character or emoji, return it directly
+  if (badgeIcon.length <= 2) return badgeIcon;
+
+  // Try to render as Lucide icon
+  const iconMap: Record<string, any> = {
+    'sparkles': LucideIcons.Sparkles,
+    'zap': LucideIcons.Zap,
+    'star': LucideIcons.Star,
+    'award': LucideIcons.Award,
+    'trophy': LucideIcons.Trophy,
+    'rocket': LucideIcons.Rocket,
+    'lightbulb': LucideIcons.Lightbulb,
+    'heart': LucideIcons.Heart,
+    'check-circle': LucideIcons.CheckCircle,
+    'alert-circle': LucideIcons.AlertCircle,
+    'shield': LucideIcons.Shield,
+    'target': LucideIcons.Target,
+    'trending-up': LucideIcons.TrendingUp,
+    'circle-dot': LucideIcons.CircleDot,
+    'hexagon': LucideIcons.Hexagon,
+    'layers': LucideIcons.Layers,
+  };
+
+  const IconComponent = iconMap[badgeIcon];
+  if (IconComponent) {
+    return React.createElement(IconComponent, { size: 16, className: 'inline-block' });
+  }
+
+  // Fallback to string if not found in icon map
+  return badgeIcon;
 };
 
 
-const Hero: React.FC<HeroProps> = ({ 
-    headline, subheadline, primaryCta, secondaryCta, imageUrl, 
-    imageStyle, imageDropShadow, imageBorderRadius, imageBorderSize, imageBorderColor, imageJustification, imagePosition,
-    imageWidth, imageHeight, imageHeightEnabled, imageAspectRatio, imageObjectFit,
-    paddingY, paddingX, sectionBorderSize, sectionBorderColor, colors = {}, borderRadius,
-    headlineFontSize = 'lg', subheadlineFontSize = 'lg',
-    showBadge = true, badgeText = '', badgeIcon = '✨',
-    badgeColor, badgeBackgroundColor,
-    secondaryButtonStyle = 'solid',
-    secondaryButtonOpacity = 100,
-    primaryCtaLink = '/#cta',
-    secondaryCtaLink = '/#features',
-    onNavigate,
+const Hero: React.FC<HeroProps> = ({
+  headline, subheadline, primaryCta, secondaryCta, imageUrl,
+  imageStyle, imageDropShadow, imageBorderRadius, imageBorderSize, imageBorderColor, imageJustification, imagePosition,
+  imageWidth, imageHeight, imageHeightEnabled, imageAspectRatio, imageObjectFit,
+  paddingY, paddingX, sectionBorderSize, sectionBorderColor, colors = {}, borderRadius,
+  headlineFontSize = 'lg', subheadlineFontSize = 'lg',
+  showBadge = true, badgeText = '', badgeIcon = '✨',
+  badgeColor, badgeBackgroundColor,
+  secondaryButtonStyle = 'solid',
+  secondaryButtonOpacity = 100,
+  primaryCtaLink = '/#cta',
+  secondaryCtaLink = '/#features',
+  onNavigate,
 }) => {
   // Get design tokens with fallback to component colors
   const { getColor, colors: tokenColors } = useDesignTokens();
-  
+
   // Component colors take priority over Design Tokens
   // User changes should always override defaults and design tokens
   const actualColors = {
@@ -177,18 +177,18 @@ const Hero: React.FC<HeroProps> = ({
   } else {
     safeHeadline = 'Welcome';
   }
-  
+
   // Create a modified headline for styling the gradient part specifically
   const styledHeadline = safeHeadline.replace(
-      /(<span.*?>)(.*?)(<\/span>)/,
-      `<span style="background-image: linear-gradient(to right, ${actualColors.primary}, ${actualColors.secondary});" class="text-transparent bg-clip-text">$2</span>`
+    /(<span.*?>)(.*?)(<\/span>)/,
+    `<span style="background-image: linear-gradient(to right, ${actualColors.primary}, ${actualColors.secondary});" class="text-transparent bg-clip-text">$2</span>`
   );
-  
+
   const glowStyle = imageStyle === 'glow' && imageDropShadow ? { boxShadow: `0 10px 15px -3px ${actualColors.primary}40, 0 4px 6px -4px ${actualColors.primary}40` } : {};
   const shadowClass = imageDropShadow && ['default', 'rounded-full', 'glow'].includes(imageStyle) ? 'shadow-2xl' : '';
-  
+
   const imageBorderRadiusClass = imageStyle === 'default' ? borderRadiusClasses[imageBorderRadius] : '';
-  
+
   // FIX: Cast to 'any' to allow 'maxWidth' which may be missing from CSSProperties type definition.
   const imageContainerStyle: any = {
     width: `${imageWidth}%`,
@@ -197,69 +197,69 @@ const Hero: React.FC<HeroProps> = ({
 
   // Logic for fixed aspect ratios: constrain the container's width based on height.
   if (imageHeightEnabled && imageAspectRatio !== 'auto') {
-      const ratioValue = getAspectRatioValue(imageAspectRatio);
-      if (ratioValue > 0) {
-          const heightBasedMaxWidth = imageHeight / ratioValue;
-          
-          const originalMaxWidthStr = imageContainerStyle.maxWidth || '512';
-          const originalMaxWidth = parseInt(originalMaxWidthStr, 10);
+    const ratioValue = getAspectRatioValue(imageAspectRatio);
+    if (ratioValue > 0) {
+      const heightBasedMaxWidth = imageHeight / ratioValue;
 
-          imageContainerStyle.maxWidth = `${Math.min(originalMaxWidth, heightBasedMaxWidth)}px`;
-      }
+      const originalMaxWidthStr = imageContainerStyle.maxWidth || '512';
+      const originalMaxWidth = parseInt(originalMaxWidthStr, 10);
+
+      imageContainerStyle.maxWidth = `${Math.min(originalMaxWidth, heightBasedMaxWidth)}px`;
+    }
   }
 
   const ImageComponent = () => {
-      // FIX: Cast to 'any' to allow 'maxHeight' which may be missing from CSSProperties type definition.
-      const imgStyle: any = { 
-          ...glowStyle,
-          borderColor: imageBorderColor,
-      };
-  
-      // Logic for 'auto' aspect ratio: constrain the image's height directly.
-      if (imageHeightEnabled && imageAspectRatio === 'auto') {
-          imgStyle.maxHeight = `${imageHeight}px`;
-      }
+    // FIX: Cast to 'any' to allow 'maxHeight' which may be missing from CSSProperties type definition.
+    const imgStyle: any = {
+      ...glowStyle,
+      borderColor: imageBorderColor,
+    };
 
-      // Show placeholder if image URL is empty or pending
-      if (isPendingImage(imageUrl)) {
-          return (
-              <ImagePlaceholder 
-                  aspectRatio="16:9"
-                  showGenerateButton={false}
-                  className={`${imageBorderRadiusClass} ${borderSizeClasses[imageBorderSize]}`}
-              />
-          );
-      }
+    // Logic for 'auto' aspect ratio: constrain the image's height directly.
+    if (imageHeightEnabled && imageAspectRatio === 'auto') {
+      imgStyle.maxHeight = `${imageHeight}px`;
+    }
 
+    // Show placeholder if image URL is empty or pending
+    if (isPendingImage(imageUrl)) {
       return (
-          <img 
-            src={imageUrl}
-            alt="AI Generated Artwork" 
-            className={`w-full ${imageAspectRatio === 'auto' ? 'h-auto' : 'h-full'} ${objectFitClasses[imageObjectFit]} ${imageStyleClasses[imageStyle]} ${imageBorderRadiusClass} ${borderSizeClasses[imageBorderSize]} ${shadowClass}`}
-            style={imgStyle}
-            key={imageUrl}
-          />
+        <ImagePlaceholder
+          aspectRatio="16:9"
+          showGenerateButton={false}
+          className={`${imageBorderRadiusClass} ${borderSizeClasses[imageBorderSize]}`}
+        />
       );
+    }
+
+    return (
+      <img
+        src={imageUrl}
+        alt="AI Generated Artwork"
+        className={`w-full ${imageAspectRatio === 'auto' ? 'h-auto' : 'h-full'} ${objectFitClasses[imageObjectFit]} ${imageStyleClasses[imageStyle]} ${imageBorderRadiusClass} ${borderSizeClasses[imageBorderSize]} ${shadowClass}`}
+        style={imgStyle}
+        key={imageUrl}
+      />
+    );
   };
-  
+
   const sectionBorderClass = sectionBorderSize !== 'none' ? `border ${borderSizeClasses[sectionBorderSize]}` : '';
 
   return (
-    <section 
+    <section
       className={`relative container mx-auto flex flex-col items-center ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]} ${imagePosition === 'left' ? 'md:flex-row-reverse' : 'md:flex-row'} ${sectionBorderClass}`}
       style={{ backgroundColor: actualColors.background, borderColor: sectionBorderColor }}
     >
       <div className="absolute top-0 left-0 -translate-x-1/4 -translate-y-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl -z-10"></div>
       <div className="absolute bottom-0 right-0 translate-x-1/4 translate-y-1/4 w-96 h-96 bg-secondary/10 rounded-full blur-3xl -z-10"></div>
-      
+
       <div className={`md:w-1/2 animate-fade-in-up text-center ${imagePosition === 'left' ? 'md:text-right' : 'md:text-left'}`}>
         {/* Badge/Kicker */}
         {showBadge && badgeText && (
           <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full mb-4 border backdrop-blur-sm ${imagePosition === 'left' ? 'md:mr-0 md:ml-auto' : ''}`}
-               style={{ 
-                 backgroundColor: badgeBackgroundColor || `${actualColors.primary}15`, 
-                 borderColor: badgeColor ? `${badgeColor}30` : `${actualColors.primary}30` 
-               }}>
+            style={{
+              backgroundColor: badgeBackgroundColor || `${actualColors.primary}15`,
+              borderColor: badgeColor ? `${badgeColor}30` : `${actualColors.primary}30`
+            }}>
             <span className="text-sm font-semibold animate-pulse flex items-center" style={{ color: badgeColor || actualColors.primary }}>
               {renderBadgeIcon(badgeIcon)}
             </span>
@@ -268,25 +268,25 @@ const Hero: React.FC<HeroProps> = ({
             </span>
           </div>
         )}
-        
-        <h1 
-            className={`${headlineSizeClasses[headlineFontSize]} font-extrabold text-site-heading leading-tight mb-6 font-header`}
-            style={{ 
-              color: actualColors.heading,
-              textTransform: 'var(--headings-transform, none)' as any,
-              letterSpacing: 'var(--headings-spacing, normal)'
-            }}
-            dangerouslySetInnerHTML={{ __html: styledHeadline }}
+
+        <h1
+          className={`${headlineSizeClasses[headlineFontSize]} font-extrabold text-site-heading leading-tight mb-6 font-header`}
+          style={{
+            color: actualColors.heading,
+            textTransform: 'var(--headings-transform, none)' as any,
+            letterSpacing: 'var(--headings-spacing, normal)'
+          }}
+          dangerouslySetInnerHTML={{ __html: styledHeadline }}
         />
-        <p 
-            className={`${subheadlineSizeClasses[subheadlineFontSize]} mb-8 max-w-xl mx-auto md:mx-0 font-body`}
-            style={{ color: actualColors.text }}
+        <p
+          className={`${subheadlineSizeClasses[subheadlineFontSize]} mb-8 max-w-xl mx-auto md:mx-0 font-body`}
+          style={{ color: actualColors.text }}
         >
           {subheadline}
         </p>
         <div className={`flex flex-wrap justify-center gap-4 ${imagePosition === 'left' ? 'md:justify-end' : 'md:justify-start'}`}>
-          <a 
-            href={primaryCtaLink || '/#cta'} 
+          <a
+            href={primaryCtaLink || '/#cta'}
             onClick={(e) => {
               const href = primaryCtaLink || '/#cta';
               if (onNavigate && !href.startsWith('http://') && !href.startsWith('https://')) {
@@ -294,19 +294,19 @@ const Hero: React.FC<HeroProps> = ({
                 onNavigate(href);
               }
             }}
-            style={{ 
-              backgroundColor: actualColors.buttonBackground || actualColors.primary, 
+            style={{
+              backgroundColor: actualColors.buttonBackground || actualColors.primary,
               color: actualColors.buttonText || '#ffffff',
               textTransform: 'var(--buttons-transform, none)' as any,
               letterSpacing: 'var(--buttons-spacing, normal)'
-            }} 
+            }}
             className={`relative overflow-hidden group text-white font-bold py-3 px-8 hover:-translate-y-1 active:translate-y-0 transition-all duration-300 font-button ${borderRadiusClasses[borderRadius]}`}
           >
             <span className="relative z-10">{primaryCta}</span>
             <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
           </a>
-          <a 
-            href={secondaryCtaLink || '/#features'} 
+          <a
+            href={secondaryCtaLink || '/#features'}
             onClick={(e) => {
               const href = secondaryCtaLink || '/#features';
               if (onNavigate && !href.startsWith('http://') && !href.startsWith('https://')) {
@@ -314,15 +314,14 @@ const Hero: React.FC<HeroProps> = ({
                 onNavigate(href);
               }
             }}
-            className={`relative overflow-hidden group font-bold py-3 px-8 hover:-translate-y-1 active:translate-y-0 transition-all duration-300 font-button ${borderRadiusClasses[borderRadius]} ${
-              secondaryButtonStyle === 'outline' 
-                  ? 'border-2 bg-transparent' 
-                  : secondaryButtonStyle === 'ghost'
-                    ? 'bg-transparent hover:bg-white/10'
-                    : ''
-            }`}
-            style={{ 
-              backgroundColor: secondaryButtonStyle === 'solid' 
+            className={`relative overflow-hidden group font-bold py-3 px-8 hover:-translate-y-1 active:translate-y-0 transition-all duration-300 font-button ${borderRadiusClasses[borderRadius]} ${secondaryButtonStyle === 'outline'
+              ? 'border-2 bg-transparent'
+              : secondaryButtonStyle === 'ghost'
+                ? 'bg-transparent hover:bg-white/10'
+                : ''
+              }`}
+            style={{
+              backgroundColor: secondaryButtonStyle === 'solid'
                 ? hexToRgba(actualColors.secondaryButtonBackground, secondaryButtonOpacity / 100)
                 : 'transparent',
               borderColor: secondaryButtonStyle === 'outline' ? actualColors.secondaryButtonBackground : 'transparent',
@@ -337,19 +336,19 @@ const Hero: React.FC<HeroProps> = ({
             )}
           </a>
         </div>
-        
+
       </div>
       <div className={`md:w-1/2 mt-12 md:mt-0 flex justify-center ${justificationClasses[imageJustification]} animate-fade-in-up`} style={{ animationDelay: '0.2s' }}>
         <div className="relative animate-hero-float" style={imageContainerStyle}>
-            <div className={imageStyle === 'polaroid' || imageAspectRatio === 'auto' ? '' : aspectRatioClasses[imageAspectRatio]}>
-              {imageStyle === 'polaroid' ? (
-                <div className="img-style-polaroid">
-                  <ImageComponent />
-                </div>
-              ) : (
+          <div className={imageStyle === 'polaroid' || imageAspectRatio === 'auto' ? '' : aspectRatioClasses[imageAspectRatio]}>
+            {imageStyle === 'polaroid' ? (
+              <div className="img-style-polaroid">
                 <ImageComponent />
-              )}
-            </div>
+              </div>
+            ) : (
+              <ImageComponent />
+            )}
+          </div>
         </div>
       </div>
     </section>

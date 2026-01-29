@@ -3487,7 +3487,7 @@ Usuario: ${userMsg}`;
     // =========================================================================
     const footerTriggerContent = isMinimized ? (
         // MODE 1: MINIMIZED BUBBLE (Bottom-Right)
-        <div id="global-ai-assistant-footer-bubble" className="fixed bottom-6 right-6 z-50 pointer-events-none animate-in fade-in zoom-in duration-300">
+        <div id="global-ai-assistant-footer-bubble" className="fixed bottom-6 right-6 z-[1000] pointer-events-none animate-in fade-in zoom-in duration-300">
             <button
                 onClick={() => { setIsMinimized(false); setIsOpen(true); }}
                 className={`pointer-events-auto flex items-center justify-center w-14 h-14 rounded-full shadow-xl transition-all hover:scale-105 active:scale-95 ${isLiveActive
@@ -3509,7 +3509,7 @@ Usuario: ${userMsg}`;
         </div>
     ) : (
         // MODE 2: DEFAULT CENTER BAR (Bottom-Center)
-        <div id="global-ai-assistant-footer-bar" className="fixed bottom-6 inset-x-0 z-50 px-6 pointer-events-none animate-in fade-in slide-in-from-bottom-4 duration-300">
+        <div id="global-ai-assistant-footer-bar" className="fixed bottom-6 inset-x-0 z-[1000] px-6 pointer-events-none animate-in fade-in slide-in-from-bottom-4 duration-300">
             <div className={`assistant-footer-trigger pointer-events-auto mx-auto flex items-center gap-3 px-5 py-3 backdrop-blur-lg border rounded-full shadow-xl transition-all max-w-md w-full ${isLiveActive ? 'bg-primary/20 border-primary/50 animate-pulse' : 'bg-card/95 border-border hover:shadow-2xl'}`}>
                 {/* Logo with voice-active indicator */}
                 <div className="relative shrink-0">

@@ -16,24 +16,24 @@ export interface EmailSettings {
     // Provider config
     provider: 'resend' | 'sendgrid';
     apiKeyConfigured: boolean; // Solo indica si está configurado, no guarda la key
-    
+
     // Sender info
     fromEmail: string;
     fromName: string;
     replyTo?: string;
-    
+
     // Branding
     logoUrl?: string;
     primaryColor: string;
     footerText?: string;
     socialLinks?: EmailSocialLinks;
-    
+
     // Transactional email toggles
     transactional: TransactionalEmailSettings;
-    
+
     // Marketing email settings
     marketing: MarketingEmailSettings;
-    
+
     // Timestamps
     createdAt: FirebaseTimestamp;
     updatedAt: FirebaseTimestamp;
@@ -54,11 +54,11 @@ export interface TransactionalEmailSettings {
     orderDelivered: boolean;
     orderCancelled: boolean;
     orderRefunded: boolean;
-    
+
     // Review request
     reviewRequest: boolean;
     reviewRequestDelayDays: number; // días después de entrega
-    
+
     // Admin notifications
     newOrderNotification: boolean;
     lowStockNotification: boolean;
@@ -66,12 +66,12 @@ export interface TransactionalEmailSettings {
 
 export interface MarketingEmailSettings {
     enabled: boolean;
-    
+
     // Automated emails
     welcomeEmail: boolean;
     abandonedCartEnabled: boolean;
     abandonedCartDelayHours: number;
-    
+
     // Win-back
     winBackEnabled: boolean;
     winBackDelayDays: number;
@@ -92,27 +92,27 @@ export interface EmailCampaign {
     id: string;
     name: string;
     type: CampaignType;
-    
+
     // Content
     subject: string;
     previewText?: string;
     templateId?: string;
     htmlContent: string;
-    
+
     // Audience
     audienceType: AudienceType;
     audienceSegmentId?: string;
     customRecipientEmails?: string[];
     excludeEmails?: string[];
-    
+
     // Scheduling
     status: CampaignStatus;
     scheduledAt?: FirebaseTimestamp;
     sentAt?: FirebaseTimestamp;
-    
+
     // Stats
     stats: CampaignStats;
-    
+
     // Metadata
     tags?: string[];
     createdBy: string;
@@ -148,33 +148,33 @@ export interface EmailLog {
     type: EmailType;
     templateId: string;
     campaignId?: string;
-    
+
     // Recipient
     recipientEmail: string;
     recipientName?: string;
     customerId?: string;
-    
+
     // Content
     subject: string;
-    
+
     // Status tracking
     status: EmailStatus;
-    
+
     // Provider info
     providerMessageId?: string;
     provider: 'resend' | 'sendgrid';
-    
+
     // Timestamps
     sentAt: FirebaseTimestamp;
     deliveredAt?: FirebaseTimestamp;
     openedAt?: FirebaseTimestamp;
     clickedAt?: FirebaseTimestamp;
     bouncedAt?: FirebaseTimestamp;
-    
+
     // Error info
     errorMessage?: string;
     errorCode?: string;
-    
+
     // Context
     orderId?: string;
     leadId?: string;
@@ -200,10 +200,10 @@ export interface EmailAudience {
     id: string;
     name: string;
     description?: string;
-    
+
     // Filter conditions (AND logic)
     filters: AudienceFilter[];
-    
+
     // Pre-built filters
     acceptsMarketing?: boolean;
     hasOrdered?: boolean;
@@ -215,11 +215,19 @@ export interface EmailAudience {
     excludeTags?: string[];
     lastOrderDaysAgo?: number;
     source?: string[]; // 'ecommerce', 'lead-form', 'import'
-    
+
+    // Static members (manually added contacts)
+    staticMembers?: {
+        leadIds?: string[];      // IDs de leads añadidos manualmente
+        customerIds?: string[];  // IDs de clientes añadidos manualmente
+        emails?: string[];       // Emails añadidos directamente
+    };
+    staticMemberCount?: number;  // Contador de miembros manuales
+
     // Dynamic count (updated periodically)
     estimatedCount: number;
     lastCountUpdate?: FirebaseTimestamp;
-    
+
     // Metadata
     isDefault: boolean;
     createdBy: string;
@@ -232,7 +240,7 @@ export interface EmailAudience {
 // =============================================================================
 
 export type TemplateCategory = 'transactional' | 'marketing';
-export type TemplateType = 
+export type TemplateType =
     // Transactional
     | 'order-confirmation'
     | 'order-shipped'
@@ -260,22 +268,22 @@ export interface EmailTemplate {
     name: string;
     category: TemplateCategory;
     type: TemplateType;
-    
+
     // Content
     subject: string;
     previewText?: string;
     htmlContent: string;
-    
+
     // Variables available in this template
     availableVariables: TemplateVariable[];
-    
+
     // Metadata
     isDefault: boolean;
     isActive: boolean;
-    
+
     // Thumbnail for gallery
     thumbnailUrl?: string;
-    
+
     createdAt: FirebaseTimestamp;
     updatedAt: FirebaseTimestamp;
 }
@@ -302,17 +310,17 @@ export interface EmailAutomation {
     name: string;
     type: AutomationType;
     status: AutomationStatus;
-    
+
     // Trigger configuration
     triggerConfig: AutomationTrigger;
-    
+
     // Email to send
     templateId: string;
     subject: string;
-    
+
     // Delay before sending
     delayMinutes: number;
-    
+
     // Stats
     stats: {
         triggered: number;
@@ -321,7 +329,7 @@ export interface EmailAutomation {
         clicked: number;
         converted: number;
     };
-    
+
     createdAt: FirebaseTimestamp;
     updatedAt: FirebaseTimestamp;
 }
@@ -460,16 +468,16 @@ export interface WelcomeEmailVariables {
 /**
  * Tipos de bloques disponibles en el editor de email
  */
-export type EmailBlockType = 
-    | 'hero' 
-    | 'text' 
-    | 'image' 
-    | 'button' 
-    | 'divider' 
-    | 'spacer' 
+export type EmailBlockType =
+    | 'hero'
+    | 'text'
+    | 'image'
+    | 'button'
+    | 'divider'
+    | 'spacer'
     | 'columns'
     | 'products'
-    | 'social' 
+    | 'social'
     | 'footer';
 
 /**
@@ -613,16 +621,16 @@ export interface EmailFooterContent {
 /**
  * Union type para contenido de bloques
  */
-export type EmailBlockContent = 
-    | EmailHeroContent 
-    | EmailTextContent 
-    | EmailImageContent 
-    | EmailButtonContent 
-    | EmailDividerContent 
-    | EmailSpacerContent 
+export type EmailBlockContent =
+    | EmailHeroContent
+    | EmailTextContent
+    | EmailImageContent
+    | EmailButtonContent
+    | EmailDividerContent
+    | EmailSpacerContent
     | EmailColumnsContent
     | EmailProductsContent
-    | EmailSocialContent 
+    | EmailSocialContent
     | EmailFooterContent;
 
 /**

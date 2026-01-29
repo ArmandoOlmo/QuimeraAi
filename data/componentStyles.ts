@@ -405,7 +405,7 @@ export const componentStyles: ComponentStyles = {
   },
   header: {
     style: 'sticky-solid',
-    layout: 'classic',
+    layout: 'minimal',
     isSticky: true,
     glassEffect: false,
     height: 70,

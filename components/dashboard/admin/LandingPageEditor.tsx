@@ -9,9 +9,12 @@ import { useTranslation } from 'react-i18next';
 import {
     ArrowLeft, Menu as MenuIcon, Save, Eye, EyeOff, Settings, Layers, Plus,
     GripVertical, Trash2, ChevronDown, ChevronUp, Monitor, Tablet,
-    Smartphone, RotateCcw, Loader2, Check, Image, Type, Layout,
+    Smartphone, Loader2, Check, Image, Type, Layout,
     Sparkles, X, RefreshCw, Palette
 } from 'lucide-react';
+import { useUndoRedo, UndoableAction } from '../../../hooks/useUndoRedo';
+import { UndoRedoGroup } from '../../ui/UndoButton';
+import { useUndo } from '../../../contexts/undo';
 import {
     DndContext,
     closestCenter,
@@ -162,7 +165,55 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
 
     // Editor state
     const [sections, setSections] = useState<LandingSection[]>([]);
-    const [originalSections, setOriginalSections] = useState<LandingSection[]>([]); // For undo/reset
+
+    // Undo/Redo integration
+    const undoContext = useUndo();
+    const {
+        pushAction,
+        undo,
+        redo,
+        canUndo,
+        canRedo,
+        lastActionDescription,
+        clear: clearHistory
+    } = useUndoRedo<LandingSection[]>({
+        moduleId: 'landing-page-editor',
+        maxHistory: 50,
+        onUndo: (action) => {
+            setSections(action.previousState);
+        },
+        onRedo: (action) => {
+            setSections(action.newState);
+        }
+    });
+
+    // Register with global undo context
+    useEffect(() => {
+        undoContext.registerModule('landing-page-editor', {
+            undo: () => undo(),
+            redo: () => redo(),
+            canUndo: () => canUndo,
+            canRedo: () => canRedo,
+            getLastActionDescription: () => lastActionDescription,
+        });
+        undoContext.setActiveModule('landing-page-editor');
+
+        return () => {
+            undoContext.unregisterModule('landing-page-editor');
+        };
+    }, [canUndo, canRedo, lastActionDescription]);
+
+    // Helper to update sections with undo tracking
+    const updateSectionsWithUndo = useCallback((newSections: LandingSection[], description: string) => {
+        pushAction({
+            type: 'update_sections',
+            description,
+            previousState: sections,
+            newState: newSections,
+        });
+        setSections(newSections);
+        setHasUnsavedChanges(true);
+    }, [sections, pushAction]);
     const [selectedSection, setSelectedSection] = useState<string | null>(null);
     const [selectedStructureItem, setSelectedStructureItem] = useState<string | null>(null);
     const [previewDevice, setPreviewDevice] = useState<PreviewDevice>('desktop');
@@ -202,6 +253,9 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
 
     // Iframe ref for postMessage
     const iframeRef = useRef<HTMLIFrameElement>(null);
+
+    // Saved sections ref for reset-all functionality
+    const savedSectionsRef = useRef<LandingSection[]>([]);
 
     // Send updates to preview iframe when sections change
     useEffect(() => {
@@ -246,7 +300,7 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
                     const data = settingsSnap.data();
                     if (data.sections && Array.isArray(data.sections)) {
                         setSections(data.sections);
-                        setOriginalSections(JSON.parse(JSON.stringify(data.sections))); // Deep copy for reset
+                        savedSectionsRef.current = JSON.parse(JSON.stringify(data.sections)); // Deep copy for reset
                         if (data.lastUpdated) {
                             setLastSaved(new Date(data.lastUpdated));
                         }
@@ -280,7 +334,7 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
                 { id: 'footer', type: 'footer', enabled: true, order: 7, data: {} },
             ];
             setSections(defaultSections);
-            setOriginalSections(JSON.parse(JSON.stringify(defaultSections))); // Deep copy for reset
+            savedSectionsRef.current = JSON.parse(JSON.stringify(defaultSections)); // Deep copy for reset
             setIsLoading(false);
         };
         loadConfiguration();
@@ -298,7 +352,8 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
             await setDoc(settingsRef, payload, { merge: true });
             setHasUnsavedChanges(false);
             setLastSaved(new Date());
-            setOriginalSections(JSON.parse(JSON.stringify(sections))); // Update original after save
+            savedSectionsRef.current = JSON.parse(JSON.stringify(sections)); // Update saved state
+            clearHistory(); // Clear undo history after save
             // Refresh preview
             setPreviewKey(prev => prev + 1);
             console.log('[LandingPageEditor] Saved to Firestore successfully');
@@ -312,28 +367,35 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
 
     // Toggle section visibility
     const toggleSection = (id: string) => {
-        setSections(prev => prev.map(s =>
+        const targetSection = sections.find(s => s.id === id);
+        const newSections = sections.map(s =>
             s.id === id ? { ...s, enabled: !s.enabled } : s
-        ));
-        setHasUnsavedChanges(true);
+        );
+        updateSectionsWithUndo(
+            newSections,
+            `${targetSection?.enabled ? 'Ocultó' : 'Mostró'} sección ${targetSection?.type || id}`
+        );
     };
 
-    // Move section up/down (legacy, replaced by drag and drop)
+    // Move section up/down via drag and drop
     const handleDragEnd = (event: DragEndEvent) => {
         const { active, over } = event;
         setActiveDragId(null);
 
         if (!over || active.id === over.id) return;
 
-        setSections(prev => {
-            const oldIndex = prev.findIndex(s => s.id === active.id);
-            const newIndex = prev.findIndex(s => s.id === over.id);
-            if (oldIndex === -1 || newIndex === -1) return prev;
+        const oldIndex = sections.findIndex(s => s.id === active.id);
+        const newIndex = sections.findIndex(s => s.id === over.id);
+        if (oldIndex === -1 || newIndex === -1) return;
 
-            const newSections = arrayMove(prev, oldIndex, newIndex);
-            return newSections.map((s, i) => ({ ...s, order: i }));
-        });
-        setHasUnsavedChanges(true);
+        const movedSection = sections[oldIndex];
+        const newSections = arrayMove(sections, oldIndex, newIndex)
+            .map((s, i) => ({ ...s, order: i }));
+
+        updateSectionsWithUndo(
+            newSections,
+            `Movió sección ${movedSection.type}`
+        );
     };
 
     // Delete section - triggers modal
@@ -344,9 +406,13 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
     // Confirm delete - executing the action
     const confirmDeleteSection = () => {
         if (!sectionToDelete) return;
-        setSections(prev => prev.filter(s => s.id !== sectionToDelete));
+        const deletedSection = sections.find(s => s.id === sectionToDelete);
+        const newSections = sections.filter(s => s.id !== sectionToDelete);
+        updateSectionsWithUndo(
+            newSections,
+            `Eliminó sección ${deletedSection?.type || sectionToDelete}`
+        );
         if (selectedSection === sectionToDelete) setSelectedSection(null);
-        setHasUnsavedChanges(true);
         setSectionToDelete(null);
     };
 
@@ -359,10 +425,13 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
             order: sections.length,
             data: {}
         };
-        setSections(prev => [...prev, newSection]);
+        const newSections = [...sections, newSection];
+        updateSectionsWithUndo(
+            newSections,
+            `Agregó sección ${type}`
+        );
         setSelectedSection(newSection.id);
         setShowAddComponent(false);
-        setHasUnsavedChanges(true);
     };
 
     // Update section data from controls
@@ -583,17 +652,16 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
                             {isPreviewVisible ? <EyeOff size={18} /> : <Eye size={18} />}
                         </button>
 
-                        {/* Reset/Undo button */}
-                        {hasUnsavedChanges && (
-                            <button
-                                onClick={() => setShowResetConfirm(true)}
-                                className="flex items-center gap-2 h-9 px-3 rounded-md text-sm font-medium transition-all bg-amber-500/10 text-amber-500 hover:bg-amber-500/20"
-                                title={t('landingEditor.resetChanges', 'Descartar cambios')}
-                            >
-                                <RotateCcw size={16} />
-                                <span className="hidden sm:inline">{t('landingEditor.reset', 'Deshacer')}</span>
-                            </button>
-                        )}
+                        {/* Undo/Redo buttons */}
+                        <UndoRedoGroup
+                            onUndo={undo}
+                            canUndo={canUndo}
+                            onRedo={redo}
+                            canRedo={canRedo}
+                            lastActionDescription={lastActionDescription}
+                            size="md"
+                            variant="ghost"
+                        />
 
                         {/* Save button */}
                         <button
@@ -862,7 +930,8 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
                         </button>
                         <button
                             onClick={() => {
-                                setSections(JSON.parse(JSON.stringify(originalSections)));
+                                setSections(JSON.parse(JSON.stringify(savedSectionsRef.current)));
+                                clearHistory();
                                 setHasUnsavedChanges(false);
                                 setPreviewKey(prev => prev + 1);
                                 setShowResetConfirm(false);

@@ -109,22 +109,22 @@ interface HeroBlockControlsProps {
 const HeroBlockControls: React.FC<HeroBlockControlsProps> = ({ block, activeTab }) => {
     const { t } = useTranslation();
     const { updateBlock } = useEmailEditor();
-    
+
     const content = block.content as EmailHeroContent;
     const styles = block.styles;
-    
+
     const updateContent = (updates: Partial<EmailHeroContent>) => {
         updateBlock(block.id, {
             content: { ...content, ...updates },
         });
     };
-    
+
     const updateStyles = (updates: Partial<EmailBlockStyles>) => {
         updateBlock(block.id, {
             styles: { ...styles, ...updates },
         });
     };
-    
+
     if (activeTab === 'content') {
         return (
             <div className="space-y-4">
@@ -134,35 +134,36 @@ const HeroBlockControls: React.FC<HeroBlockControlsProps> = ({ block, activeTab 
                     onChange={(e) => updateContent({ headline: e.target.value })}
                     placeholder={t('email.headlinePlaceholder', 'Escribe el título...')}
                 />
-                
+
                 <TextArea
                     label={t('email.subheadline', 'Subtítulo')}
                     value={content.subheadline || ''}
                     onChange={(e) => updateContent({ subheadline: e.target.value })}
                     placeholder={t('email.subheadlinePlaceholder', 'Escribe el subtítulo...')}
                 />
-                
+
                 <ImagePicker
                     label={t('email.heroImage', 'Imagen')}
                     value={content.imageUrl || ''}
                     onChange={(url) => updateContent({ imageUrl: url })}
+                    hideUrlInput={true}
                 />
-                
+
                 <Input
                     label={t('email.imageAlt', 'Texto alternativo')}
                     value={content.imageAlt || ''}
                     onChange={(e) => updateContent({ imageAlt: e.target.value })}
                     placeholder={t('email.imageAltPlaceholder', 'Descripción de la imagen...')}
                 />
-                
+
                 <hr className="border-editor-border" />
-                
+
                 <ToggleControl
                     label={t('email.showButton', 'Mostrar botón')}
                     checked={content.showButton ?? true}
                     onChange={(checked) => updateContent({ showButton: checked })}
                 />
-                
+
                 {content.showButton && (
                     <>
                         <Input
@@ -171,7 +172,7 @@ const HeroBlockControls: React.FC<HeroBlockControlsProps> = ({ block, activeTab 
                             onChange={(e) => updateContent({ buttonText: e.target.value })}
                             placeholder={t('email.buttonTextPlaceholder', 'Click aquí')}
                         />
-                        
+
                         <Input
                             label={t('email.buttonUrl', 'URL del botón')}
                             value={content.buttonUrl || ''}
@@ -183,7 +184,7 @@ const HeroBlockControls: React.FC<HeroBlockControlsProps> = ({ block, activeTab 
             </div>
         );
     }
-    
+
     // Style tab
     return (
         <div className="space-y-4">
@@ -192,41 +193,41 @@ const HeroBlockControls: React.FC<HeroBlockControlsProps> = ({ block, activeTab 
                 value={styles.backgroundColor || '#4f46e5'}
                 onChange={(color) => updateStyles({ backgroundColor: color })}
             />
-            
+
             <ColorControl
                 label={t('email.headingColor', 'Color del título')}
                 value={styles.headingColor || '#ffffff'}
                 onChange={(color) => updateStyles({ headingColor: color })}
             />
-            
+
             <ColorControl
                 label={t('email.textColor', 'Color del texto')}
                 value={styles.textColor || '#ffffff'}
                 onChange={(color) => updateStyles({ textColor: color })}
             />
-            
+
             <hr className="border-editor-border" />
-            
+
             <ColorControl
                 label={t('email.buttonColor', 'Color del botón')}
                 value={styles.buttonColor || '#ffffff'}
                 onChange={(color) => updateStyles({ buttonColor: color })}
             />
-            
+
             <ColorControl
                 label={t('email.buttonTextColor', 'Color texto del botón')}
                 value={styles.buttonTextColor || '#4f46e5'}
                 onChange={(color) => updateStyles({ buttonTextColor: color })}
             />
-            
+
             <hr className="border-editor-border" />
-            
+
             <PaddingSelector
                 label={t('email.padding', 'Espaciado')}
                 value={styles.padding || 'lg'}
                 onChange={(val) => updateStyles({ padding: val as any })}
             />
-            
+
             <AlignmentSelector
                 label={t('email.alignment', 'Alineación')}
                 value={styles.alignment || 'center'}

@@ -713,6 +713,12 @@ export const useEmailAudiences = (userId: string, projectId: string) => {
         source?: string[];
         filters?: any[];
         estimatedCount?: number;
+        staticMembers?: {
+            leadIds?: string[];
+            customerIds?: string[];
+            emails?: string[];
+        };
+        staticMemberCount?: number;
     }>) => {
         if (!userId || !projectId || projectId === 'default') return;
 

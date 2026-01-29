@@ -50,17 +50,20 @@ const BrowserPreview = forwardRef<HTMLDivElement, BrowserPreviewProps>(({ childr
           <div className="w-16"></div> {/* Spacer to balance the controls */}
         </div>
 
-        {/* Browser Content */}
+        {/* Browser Content - Container Query Context */}
         <div
           ref={ref}
-          className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-editor-border scrollbar-track-editor-bg"
+          className={`flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-editor-border scrollbar-track-editor-bg preview-${previewDevice} preview-container`}
           style={{
             // CRITICAL FIX: 
             // Adding transform: scale(1) creates a new containing block.
             // This ensures position: fixed elements (like the sticky/floating header) are 
             // positioned relative to THIS container, not the entire browser viewport.
             transform: 'scale(1)',
-            transformOrigin: 'top left'
+            transformOrigin: 'top left',
+            // Container Query setup - allows @container queries to respond to this container's width
+            containerType: 'inline-size',
+            containerName: 'preview',
           }}
         >
           {children}

@@ -300,10 +300,11 @@ const Features: React.FC<FeaturesProps> = ({
     };
   }, [actualColors]);
   
+  // Responsive grid columns - mobile-first approach
   const gridColsClasses: Record<number, string> = {
-      2: 'lg:grid-cols-2',
-      3: 'lg:grid-cols-3',
-      4: 'lg:grid-cols-4',
+      2: 'md:grid-cols-2',
+      3: 'md:grid-cols-2 lg:grid-cols-3',
+      4: 'md:grid-cols-2 lg:grid-cols-4',
   };
 
   // --- RENDERIZADO IMAGE OVERLAY ---
@@ -337,13 +338,10 @@ const Features: React.FC<FeaturesProps> = ({
                   </div>
               )}
 
-              {/* Full-width Image Grid - NO GAPS, 100% width */}
+              {/* Full-width Image Grid - NO GAPS, 100% width, responsive */}
               <div 
-                  className="grid w-full"
-                  style={{
-                      gridTemplateColumns: `repeat(${gridColumns}, 1fr)`,
-                      gap: '0px'
-                  }}
+                  className={`grid w-full grid-cols-1 sm:grid-cols-2 ${gridColumns >= 3 ? 'lg:grid-cols-3' : ''} ${gridColumns >= 4 ? 'xl:grid-cols-4' : ''}`}
+                  style={{ gap: '0px' }}
               >
                   {items.map((feature, index) => (
                       <ImageOverlayCard

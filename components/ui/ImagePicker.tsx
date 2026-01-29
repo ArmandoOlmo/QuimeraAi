@@ -26,9 +26,11 @@ interface ImagePickerProps {
     onRemove?: () => void;
     /** Destination for uploads and generation. Defaults to 'user' (project files). 'global' uses Super Admin library. */
     destination?: 'user' | 'global';
+    /** Optional flag to hide the raw URL text input */
+    hideUrlInput?: boolean;
 }
 
-const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, storeId, defaultOpen = false, onClose, onRemove, destination = 'user' }) => {
+const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, storeId, defaultOpen = false, onClose, onRemove, destination = 'user', hideUrlInput = false }) => {
     const { t } = useTranslation();
     const {
         files, uploadFile,
@@ -142,15 +144,17 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
                         </div>
 
                         {/* URL Input */}
-                        <div className="flex-1 min-w-0">
-                            <input
-                                type="text"
-                                value={value}
-                                onChange={(e) => onChange(e.target.value)}
-                                placeholder="https://..."
-                                className="w-full bg-editor-panel-bg border border-editor-border rounded-lg px-3 py-2 text-xs text-editor-text-primary focus:outline-none focus:ring-1 focus:ring-editor-accent placeholder:text-editor-text-secondary/50 truncate font-mono"
-                            />
-                        </div>
+                        {!hideUrlInput && (
+                            <div className="flex-1 min-w-0">
+                                <input
+                                    type="text"
+                                    value={value}
+                                    onChange={(e) => onChange(e.target.value)}
+                                    placeholder="https://..."
+                                    className="w-full bg-editor-panel-bg border border-editor-border rounded-lg px-3 py-2 text-xs text-editor-text-primary focus:outline-none focus:ring-1 focus:ring-editor-accent placeholder:text-editor-text-secondary/50 truncate font-mono"
+                                />
+                            </div>
+                        )}
 
                         {/* Action Buttons */}
                         <button
