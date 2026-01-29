@@ -5,7 +5,7 @@ import DashboardSidebar from '../DashboardSidebar';
 import { useUI } from '../../../contexts/core/UIContext';
 import { useCMS } from '../../../contexts/cms';
 import { useProject } from '../../../contexts/project';
-import { Menu as MenuIcon, Plus, ChevronRight, Trash2, LayoutGrid, Edit2, Copy, AlertCircle, Lightbulb, ArrowRight, Search, Layout, Info, Store, ChevronDown, Check, Layers, X } from 'lucide-react';
+import { Menu as MenuIcon, Plus, ChevronRight, Trash2, LayoutGrid, Edit2, Copy, AlertCircle, Lightbulb, ArrowRight, Search, Layout, Info, Store, ChevronDown, Check, Layers, X, LayoutList, Link as LinkIcon, Globe, MousePointerClick } from 'lucide-react';
 import MenuEditor from './MenuEditor';
 import { Menu } from '../../../types';
 import ProjectSelectorPage from './ProjectSelectorPage';
@@ -23,6 +23,7 @@ const NavigationDashboard: React.FC = () => {
     const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
     const [isProjectSelectorOpen, setIsProjectSelectorOpen] = useState(false);
     const [showProjectSelector, setShowProjectSelector] = useState(false);
+    const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
     // Determinar qué proyecto usar
     const effectiveProjectId = selectedProjectId || activeProjectId;
@@ -51,6 +52,21 @@ const NavigationDashboard: React.FC = () => {
             }
         });
     }, [menus, searchQuery, filterUsage, data]);
+
+    // Estadísticas
+    const stats = useMemo(() => {
+        const total = menus.length;
+        const active = menus.filter(m => {
+            const usedInHeader = data?.header?.menuId === m.id;
+            const usedInFooter = data?.footer?.linkColumns?.some(col => col.menuId === m.id);
+            return usedInHeader || usedInFooter;
+        }).length;
+        return {
+            total,
+            active,
+            orphans: total - active
+        };
+    }, [menus, data]);
 
     const handleCreateNew = () => {
         const newMenu: Menu = {
@@ -245,130 +261,271 @@ const NavigationDashboard: React.FC = () => {
                     </div>
                 </header>
 
-                <main className="flex-1 p-8 overflow-y-auto bg-background">
-                    <div className="max-w-5xl mx-auto">
+                <main className="flex-1 p-4 sm:p-8 overflow-y-auto bg-background/50">
+                    <div className="max-w-7xl mx-auto space-y-8">
 
-                        {/* Info Banner */}
+                        {/* Stats Overview */}
+                        {effectiveProject && (
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div className="bg-card border border-border p-5 rounded-xl shadow-sm hover:shadow-md transition-shadow">
+                                    <div className="flex items-center gap-4">
+                                        <div className="p-3 bg-primary/10 rounded-lg text-primary">
+                                            <Globe size={24} />
+                                        </div>
+                                        <div>
+                                            <p className="text-sm text-muted-foreground font-medium">{t('navigationDashboard.totalMenus', 'Total de Menús')}</p>
+                                            <h3 className="text-2xl font-bold text-foreground">{stats.total}</h3>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="bg-card border border-border p-5 rounded-xl shadow-sm hover:shadow-md transition-shadow">
+                                    <div className="flex items-center gap-4">
+                                        <div className="p-3 bg-green-500/10 rounded-lg text-green-500">
+                                            <Check size={24} />
+                                        </div>
+                                        <div>
+                                            <p className="text-sm text-muted-foreground font-medium">{t('navigationDashboard.activeMenus', 'Menús Activos')}</p>
+                                            <h3 className="text-2xl font-bold text-foreground">{stats.active}</h3>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="bg-card border border-border p-5 rounded-xl shadow-sm hover:shadow-md transition-shadow">
+                                    <div className="flex items-center gap-4">
+                                        <div className="p-3 bg-orange-500/10 rounded-lg text-orange-500">
+                                            <LinkIcon size={24} />
+                                        </div>
+                                        <div>
+                                            <p className="text-sm text-muted-foreground font-medium">{t('navigationDashboard.orphanMenus', 'Sin Asignar')}</p>
+                                            <h3 className="text-2xl font-bold text-foreground">{stats.orphans}</h3>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Info Banner for Unassigned */}
                         {effectiveProject && hasUnassignedMenus && (
-                            <div className="mb-6 p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg flex items-start gap-3">
-                                <Info className="text-blue-500 flex-shrink-0" size={20} />
+                            <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-xl flex items-start gap-4 shadow-sm">
+                                <Info className="text-blue-500 flex-shrink-0 mt-0.5" size={20} />
                                 <div className="flex-1">
                                     <h4 className="text-sm font-semibold text-foreground mb-1">
                                         {t('navigationDashboard.connectMenus')}
                                     </h4>
-                                    <p className="text-xs text-muted-foreground">
+                                    <p className="text-sm text-muted-foreground">
                                         {t('navigationDashboard.connectMenusDesc')}
                                         <button
                                             onClick={() => loadProject(effectiveProjectId!, false, true)}
-                                            className="ml-1 text-blue-600 dark:text-blue-400 hover:underline font-medium"
+                                            className="ml-1.5 text-blue-500 hover:text-blue-400 font-medium inline-flex items-center gap-1 transition-colors group"
                                         >
                                             {t('navigationDashboard.goToEditor')}
+                                            <ArrowRight size={14} className="group-hover:translate-x-0.5 transition-transform" />
                                         </button>
                                     </p>
                                 </div>
                             </div>
                         )}
 
-                        {/* Search and Filters */}
-                        <div className="flex justify-between items-center mb-6 flex-wrap gap-4">
-                            <div className="flex items-center gap-3">
-                                <h2 className="text-lg font-semibold text-foreground">{t('navigationDashboard.menus')}</h2>
-                                {menus.length > 0 && (
-                                    <span className="px-2 py-1 text-xs font-medium bg-secondary rounded-full text-muted-foreground">
-                                        {filteredMenus.length} {t('common.of')} {menus.length}
-                                    </span>
-                                )}
+                        {/* Controls Toolbar */}
+                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-card p-2 rounded-xl border border-border shadow-sm">
+                            <div className="flex items-center gap-2 w-full sm:w-auto p-1">
+                                <div className="relative flex-1 sm:flex-initial">
+                                    <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+                                    <input
+                                        type="text"
+                                        placeholder={t('navigationDashboard.searchMenus')}
+                                        value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                        className="pl-9 pr-4 py-2 bg-secondary/50 hover:bg-secondary border border-transparent focus:border-primary/30 rounded-lg text-sm outline-none transition-all w-full sm:w-64"
+                                    />
+                                    {searchQuery && (
+                                        <button onClick={() => setSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                                            <X size={14} />
+                                        </button>
+                                    )}
+                                </div>
+
+                                <div className="h-4 w-px bg-border mx-1 hidden sm:block"></div>
+
+                                <select
+                                    value={filterUsage}
+                                    onChange={(e) => setFilterUsage(e.target.value as any)}
+                                    className="px-3 py-2 text-sm bg-secondary/50 hover:bg-secondary border border-transparent focus:border-primary/30 rounded-lg outline-none cursor-pointer transition-all appearance-none"
+                                >
+                                    <option value="all">{t('navigationDashboard.allMenus')}</option>
+                                    <option value="used">{t('navigationDashboard.inUse')}</option>
+                                    <option value="unused">{t('navigationDashboard.notInUse')}</option>
+                                    <option value="empty">{t('navigationDashboard.empty')}</option>
+                                </select>
                             </div>
 
-                            {effectiveProject && menus.length > 0 && (
-                                <div className="flex items-center gap-3">
-                                    {/* Búsqueda */}
-                                    <div className="flex items-center gap-2 bg-secondary/50 border border-border rounded-lg px-3 py-1.5 w-48">
-                                        <Search size={14} className="text-muted-foreground flex-shrink-0" />
-                                        <input
-                                            type="text"
-                                            placeholder={t('navigationDashboard.searchMenus')}
-                                            value={searchQuery}
-                                            onChange={(e) => setSearchQuery(e.target.value)}
-                                            className="flex-1 bg-transparent outline-none text-sm min-w-0 text-foreground placeholder:text-muted-foreground"
-                                        />
-                                        {searchQuery && (
-                                            <button onClick={() => setSearchQuery('')} className="text-muted-foreground hover:text-foreground flex-shrink-0">
-                                                <X size={14} />
-                                            </button>
-                                        )}
-                                    </div>
-
-                                    {/* Filtro */}
-                                    <select
-                                        value={filterUsage}
-                                        onChange={(e) => setFilterUsage(e.target.value as any)}
-                                        className="px-3 py-1.5 text-sm bg-secondary/30 border border-border rounded-lg focus:ring-2 focus:ring-primary/50 outline-none"
+                            <div className="flex items-center gap-2 w-full sm:w-auto px-1">
+                                {/* Create Button */}
+                                {effectiveProject && (
+                                    <button
+                                        onClick={handleCreateNew}
+                                        className="flex-1 sm:flex-initial flex items-center justify-center gap-2 h-9 px-4 rounded-lg text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-all shadow-sm hover:shadow-md"
                                     >
-                                        <option value="all">{t('navigationDashboard.allMenus')}</option>
-                                        <option value="used">{t('navigationDashboard.inUse')}</option>
-                                        <option value="unused">{t('navigationDashboard.notInUse')}</option>
-                                        <option value="empty">{t('navigationDashboard.empty')}</option>
-                                    </select>
-                                </div>
-                            )}
+                                        <Plus className="w-4 h-4" />
+                                        <span>{t('navigationDashboard.addMenu')}</span>
+                                    </button>
+                                )}
 
-                            {effectiveProject && (
-                                <button
-                                    onClick={handleCreateNew}
-                                    className="flex items-center gap-1.5 h-9 px-3 rounded-md text-sm font-medium transition-all text-muted-foreground hover:text-foreground hover:bg-secondary"
-                                >
-                                    <Plus className="w-4 h-4" /> {t('navigationDashboard.addMenu')}
-                                </button>
-                            )}
+                                <div className="h-4 w-px bg-border mx-1 hidden sm:block"></div>
+
+                                {/* View Toggle */}
+                                <div className="flex bg-secondary/50 rounded-lg p-1 border border-border/50">
+                                    <button
+                                        onClick={() => setViewMode('grid')}
+                                        className={`p-1.5 rounded-md transition-all ${viewMode === 'grid' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+                                        title={t('navigationDashboard.gridView', 'Vista de cuadrícula')}
+                                    >
+                                        <LayoutGrid size={16} />
+                                    </button>
+                                    <button
+                                        onClick={() => setViewMode('list')}
+                                        className={`p-1.5 rounded-md transition-all ${viewMode === 'list' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+                                        title={t('navigationDashboard.listView', 'Vista de lista')}
+                                    >
+                                        <LayoutList size={16} />
+                                    </button>
+                                </div>
+                            </div>
                         </div>
 
-                        {/* Empty Menu Warning */}
-                        {menus.some(m => m.items.length === 0) && (
-                            <div className="mb-6 p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
-                                <div className="flex items-start gap-3">
-                                    <Lightbulb className="text-yellow-500 flex-shrink-0" size={20} />
-                                    <div className="flex-1">
-                                        <h4 className="text-sm font-semibold text-foreground mb-1">
-                                            {t('navigationDashboard.emptyMenuDetected')}
-                                        </h4>
-                                        <p className="text-xs text-muted-foreground mb-3">
-                                            "{menus.find(m => m.items.length === 0)?.title}" {t('navigationDashboard.emptyMenuDesc')}
-                                        </p>
-                                        <button
-                                            onClick={() => handleEdit(menus.find(m => m.items.length === 0)!)}
-                                            className="text-xs font-medium text-yellow-600 dark:text-yellow-400 hover:underline flex items-center gap-1"
-                                        >
-                                            {t('navigationDashboard.addItemsNow')}
-                                            <ArrowRight size={12} />
-                                        </button>
-                                    </div>
+                        {/* Content Area */}
+                        {filteredMenus.length === 0 ? (
+                            <div className="flex flex-col items-center justify-center py-20 bg-card/50 border border-border border-dashed rounded-xl">
+                                <div className="p-4 bg-muted/50 rounded-full mb-4">
+                                    <Search className="text-muted-foreground opacity-50" size={32} />
                                 </div>
+                                <h3 className="text-lg font-medium text-foreground mb-1">
+                                    {searchQuery || filterUsage !== 'all'
+                                        ? t('navigationDashboard.noMenusMatch')
+                                        : t('navigationDashboard.noMenusFound')}
+                                </h3>
+                                <p className="text-sm text-muted-foreground mb-6 text-center max-w-sm">
+                                    {t('navigationDashboard.tryAdjustingFilters', 'Intenta ajustar tu búsqueda o crea un nuevo menú.')}
+                                </p>
+                                {effectiveProject && (
+                                    <button
+                                        onClick={handleCreateNew}
+                                        className="flex items-center gap-2 px-4 py-2 bg-secondary hover:bg-secondary/80 text-foreground rounded-lg transition-colors"
+                                    >
+                                        <Plus size={16} />
+                                        {t('navigationDashboard.createNewMenu', 'Crear nuevo menú')}
+                                    </button>
+                                )}
                             </div>
-                        )}
+                        ) : viewMode === 'grid' ? (
+                            /* GRID VIEW */
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                {filteredMenus.map((menu) => {
+                                    const usedInHeader = data?.header?.menuId === menu.id;
+                                    const usedInFooter = data?.footer?.linkColumns?.some(col => col.menuId === menu.id);
+                                    const isEmpty = menu.items.length === 0;
 
-                        <div className="bg-card border border-border rounded-xl shadow-sm overflow-hidden">
-                            <div className="overflow-x-auto">
-                                <table className="w-full text-left border-collapse">
-                                    <thead>
-                                        <tr className="border-b border-border bg-muted/50">
-                                            <th className="p-4 font-medium text-sm text-muted-foreground">{t('editor.title')}</th>
-                                            <th className="p-4 font-medium text-sm text-muted-foreground">{t('navigationDashboard.items')}</th>
-                                            <th className="p-4 font-medium text-sm text-muted-foreground">{t('dashboard.usage')}</th>
-                                            <th className="p-4 font-medium text-sm text-muted-foreground w-32">{t('common.actions')}</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-border">
-                                        {filteredMenus.length === 0 ? (
-                                            <tr>
-                                                <td colSpan={4} className="p-8 text-center text-muted-foreground">
-                                                    {searchQuery || filterUsage !== 'all'
-                                                        ? t('navigationDashboard.noMenusMatch')
-                                                        : t('navigationDashboard.noMenusFound')}
-                                                </td>
+                                    return (
+                                        <div
+                                            key={menu.id}
+                                            onClick={() => handleEdit(menu)}
+                                            className="group bg-card border border-border rounded-xl p-5 shadow-sm hover:shadow-lg hover:border-primary/50 transition-all cursor-pointer relative overflow-hidden"
+                                        >
+                                            <div className="flex justify-between items-start mb-4">
+                                                <div>
+                                                    <h3 className="font-semibold text-lg text-foreground group-hover:text-primary transition-colors">
+                                                        {menu.title}
+                                                    </h3>
+                                                    <p className="text-xs text-muted-foreground mt-1 font-mono bg-secondary/50 inline-block px-1.5 py-0.5 rounded">
+                                                        {menu.handle}
+                                                    </p>
+                                                </div>
+                                                <div className="flex gap-1">
+                                                    {usedInHeader && (
+                                                        <span className="p-1.5 rounded-full bg-primary/10 text-primary" title={t('sections.header')}>
+                                                            <Layout size={14} />
+                                                        </span>
+                                                    )}
+                                                    {usedInFooter && (
+                                                        <span className="p-1.5 rounded-full bg-primary/10 text-primary" title={t('sections.footer')}>
+                                                            <LayoutGrid size={14} />
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </div>
+
+                                            {/* Preview of Items */}
+                                            <div className="space-y-2 mb-6 min-h-[80px]">
+                                                {isEmpty ? (
+                                                    <div className="flex items-center gap-2 text-sm text-orange-500 bg-orange-500/5 p-3 rounded-lg border border-orange-500/10">
+                                                        <AlertCircle size={16} />
+                                                        <span>{t('navigationDashboard.emptyMenuDescShort', 'Este menú está vacío')}</span>
+                                                    </div>
+                                                ) : (
+                                                    <>
+                                                        {menu.items.slice(0, 3).map((item, idx) => (
+                                                            <div key={idx} className="flex items-center gap-2 text-sm text-muted-foreground">
+                                                                <div className="w-1.5 h-1.5 rounded-full bg-border md:group-hover:bg-primary/50 transition-colors"></div>
+                                                                <span className="truncate">{item.text}</span>
+                                                            </div>
+                                                        ))}
+                                                        {menu.items.length > 3 && (
+                                                            <div className="text-xs text-muted-foreground pl-3.5 italic">
+                                                                + {menu.items.length - 3} {t('common.more')}
+                                                            </div>
+                                                        )}
+                                                    </>
+                                                )}
+                                            </div>
+
+                                            {/* Footer / Actions */}
+                                            <div className="flex items-center justify-between pt-4 border-t border-border/50">
+                                                <span className="text-xs text-muted-foreground">
+                                                    {menu.items.length} {t('navigationDashboard.items')}
+                                                </span>
+
+                                                <div className="flex items-center gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                                                    <button
+                                                        onClick={(e) => { e.stopPropagation(); handleEdit(menu); }}
+                                                        className="p-2 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-lg transition-colors"
+                                                        title={t('common.edit')}
+                                                    >
+                                                        <Edit2 size={16} />
+                                                    </button>
+                                                    <button
+                                                        onClick={(e) => { e.stopPropagation(); handleDuplicate(menu); }}
+                                                        className="p-2 text-muted-foreground hover:text-blue-500 hover:bg-blue-500/10 rounded-lg transition-colors"
+                                                        title={t('common.duplicate')}
+                                                    >
+                                                        <Copy size={16} />
+                                                    </button>
+                                                    <button
+                                                        onClick={(e) => handleDelete(e, menu.id)}
+                                                        className="p-2 text-muted-foreground hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
+                                                        title={t('common.delete')}
+                                                    >
+                                                        <Trash2 size={16} />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        ) : (
+                            /* LIST VIEW (Enhanced Table) */
+                            <div className="bg-card border border-border rounded-xl shadow-sm overflow-hidden">
+                                <div className="overflow-x-auto">
+                                    <table className="w-full text-left border-collapse">
+                                        <thead>
+                                            <tr className="border-b border-border bg-muted/30">
+                                                <th className="p-4 font-medium text-sm text-muted-foreground">{t('editor.title')}</th>
+                                                <th className="p-4 font-medium text-sm text-muted-foreground">{t('navigationDashboard.items')}</th>
+                                                <th className="p-4 font-medium text-sm text-muted-foreground">{t('dashboard.usage')}</th>
+                                                <th className="p-4 font-medium text-sm text-muted-foreground w-40 text-right pr-6">{t('common.actions')}</th>
                                             </tr>
-                                        ) : (
-                                            filteredMenus.map((menu) => {
+                                        </thead>
+                                        <tbody className="divide-y divide-border">
+                                            {filteredMenus.map((menu) => {
                                                 const usedInHeader = data?.header?.menuId === menu.id;
                                                 const usedInFooter = data?.footer?.linkColumns?.some(col => col.menuId === menu.id);
                                                 const isEmpty = menu.items.length === 0;
@@ -377,27 +534,28 @@ const NavigationDashboard: React.FC = () => {
                                                     <tr
                                                         key={menu.id}
                                                         onClick={() => handleEdit(menu)}
-                                                        className={`hover:bg-secondary/30 cursor-pointer transition-colors group ${isEmpty ? 'opacity-70' : ''}`}
+                                                        className="hover:bg-secondary/30 cursor-pointer transition-colors group"
                                                     >
                                                         <td className="p-4">
-                                                            <div className="flex items-center gap-2">
-                                                                <div className="font-semibold text-foreground">{menu.title}</div>
-                                                                {isEmpty && (
-                                                                    <span className="inline-flex items-center px-2 py-0.5 text-[10px] font-medium text-orange-500 bg-orange-500/10 rounded-full">
-                                                                        {t('navigationDashboard.empty')}
-                                                                    </span>
-                                                                )}
+                                                            <div className="flex items-center gap-3">
+                                                                <div className={`p-2 rounded-lg ${isEmpty ? 'bg-orange-500/10 text-orange-500' : 'bg-primary/10 text-primary'}`}>
+                                                                    <MenuIcon size={18} />
+                                                                </div>
+                                                                <div>
+                                                                    <div className="font-semibold text-foreground">{menu.title}</div>
+                                                                    <div className="text-xs text-muted-foreground mt-0.5 font-mono">{menu.handle}</div>
+                                                                </div>
                                                             </div>
-                                                            {menu.handle && <div className="text-xs text-muted-foreground mt-0.5">{t('navigationDashboard.handle')}: {menu.handle}</div>}
                                                         </td>
                                                         <td className="p-4 text-sm">
                                                             {isEmpty ? (
-                                                                <span className="text-orange-500 flex items-center gap-1">
-                                                                    <AlertCircle size={14} />
+                                                                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-medium text-orange-600 bg-orange-500/10 rounded-full">
+                                                                    <AlertCircle size={12} />
                                                                     {t('navigationDashboard.empty')}
                                                                 </span>
                                                             ) : (
-                                                                <span className="text-muted-foreground">
+                                                                <span className="text-muted-foreground inline-flex items-center gap-1.5">
+                                                                    <MousePointerClick size={14} />
                                                                     {menu.items.length} {menu.items.length === 1 ? t('navigationDashboard.item') : t('navigationDashboard.items')}
                                                                 </span>
                                                             )}
@@ -405,70 +563,63 @@ const NavigationDashboard: React.FC = () => {
                                                         <td className="p-4">
                                                             <div className="flex gap-2 flex-wrap">
                                                                 {usedInHeader && (
-                                                                    <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-primary bg-primary/10 rounded-full">
+                                                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-blue-600 bg-blue-500/10 rounded-full border border-blue-200 dark:border-blue-900/30">
                                                                         <Layout size={12} />
                                                                         {t('sections.header')}
                                                                     </span>
                                                                 )}
                                                                 {usedInFooter && (
-                                                                    <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-primary bg-primary/10 rounded-full">
+                                                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-purple-600 bg-purple-500/10 rounded-full border border-purple-200 dark:border-purple-900/30">
                                                                         <LayoutGrid size={12} />
                                                                         {t('sections.footer')}
                                                                     </span>
                                                                 )}
                                                                 {!usedInHeader && !usedInFooter && (
-                                                                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                                                                        <AlertCircle size={12} />
-                                                                        <span>{t('navigationDashboard.notAssigned')}</span>
-                                                                    </div>
+                                                                    <span className="text-xs text-muted-foreground/60 italic px-2">
+                                                                        — {t('navigationDashboard.notAssigned')}
+                                                                    </span>
                                                                 )}
                                                             </div>
                                                         </td>
-                                                        <td className="p-4">
-                                                            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                        <td className="p-4 text-right">
+                                                            <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                                                 <button
                                                                     onClick={(e) => { e.stopPropagation(); handleEdit(menu); }}
-                                                                    className="p-2 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-md transition-all"
-                                                                    title="Edit menu"
+                                                                    className="p-2 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-lg transition-all"
+                                                                    title={t('common.edit')}
                                                                 >
-                                                                    <Edit2 size={14} />
+                                                                    <Edit2 size={16} />
                                                                 </button>
                                                                 <button
                                                                     onClick={(e) => { e.stopPropagation(); handleDuplicate(menu); }}
-                                                                    className="p-2 text-muted-foreground hover:text-blue-500 hover:bg-blue-500/10 rounded-md transition-all"
-                                                                    title="Duplicate"
+                                                                    className="p-2 text-muted-foreground hover:text-blue-500 hover:bg-blue-500/10 rounded-lg transition-all"
+                                                                    title={t('common.duplicate')}
                                                                 >
-                                                                    <Copy size={14} />
+                                                                    <Copy size={16} />
                                                                 </button>
                                                                 <button
                                                                     onClick={(e) => handleDelete(e, menu.id)}
-                                                                    className="p-2 text-muted-foreground hover:text-red-500 hover:bg-red-500/10 rounded-md transition-all"
-                                                                    title="Delete"
+                                                                    className="p-2 text-muted-foreground hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all"
+                                                                    title={t('common.delete')}
                                                                 >
-                                                                    <Trash2 size={14} />
+                                                                    <Trash2 size={16} />
                                                                 </button>
                                                             </div>
                                                         </td>
                                                     </tr>
                                                 );
-                                            })
-                                        )}
-                                    </tbody>
-                                </table>
+                                            })}
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
-                        </div>
+                        )}
 
                         {effectiveProject && (
-                            <div className="mt-6 flex justify-between items-center">
-                                <div className="text-sm text-muted-foreground">
-                                    <p>{t('navigationDashboard.menusHelp')}</p>
-                                </div>
-                                <button
-                                    onClick={() => loadProject(effectiveProject.id, false, false)}
-                                    className="text-xs text-muted-foreground hover:text-foreground hover:underline transition-colors"
-                                >
-                                    {t('navigationDashboard.refreshData')}
-                                </button>
+                            <div className="flex justify-center mt-8">
+                                <p className="text-xs text-muted-foreground opacity-60">
+                                    {t('navigationDashboard.menusHelp', 'Los menús te permiten organizar la navegación de tu sitio web.')}
+                                </p>
                             </div>
                         )}
                     </div>
@@ -476,6 +627,7 @@ const NavigationDashboard: React.FC = () => {
             </div>
         </div>
     );
+
 };
 
 export default NavigationDashboard;

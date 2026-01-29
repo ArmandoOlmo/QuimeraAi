@@ -3965,7 +3965,14 @@
       "deleteConfirm": "¿Eliminar este menú? Esta acción no se puede deshacer.",
       "deleteUsedConfirm": "⚠️ Este menú se está usando actualmente en: {{locations}}.",
       "deleteUsedWarning": "Eliminarlo quitará estos enlaces de navegación de tu sitio web.",
-      "deleteUsedQuestion": "¿Estás seguro de que deseas continuar?"
+      "deleteUsedQuestion": "¿Estás seguro de que deseas continuar?",
+      "totalMenus": "Total de Menús",
+      "activeMenus": "Menús Activos",
+      "orphanMenus": "Sin Asignar",
+      "gridView": "Vista de cuadrícula",
+      "listView": "Vista de lista",
+      "createNewMenu": "Crear nuevo menú",
+      "emptyMenuDescShort": "Este menú está vacío"
     }
   },
   "domainsDashboard": {
