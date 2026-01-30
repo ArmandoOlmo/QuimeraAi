@@ -58,6 +58,9 @@ export * from './landingChatbot';
 // News & Updates Types (Dashboard news feed)
 export * from './news';
 
+// Agency Plans Types (Plans that agencies create for their clients)
+export * from './agencyPlans';
+
 
 
 

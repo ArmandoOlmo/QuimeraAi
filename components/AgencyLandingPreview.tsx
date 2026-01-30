@@ -338,6 +338,11 @@ export function AgencyLandingPreview() {
 
             if (event.data?.type === 'AGENCY_LANDING_UPDATE') {
                 console.log('[AgencyPreview] Received update:', event.data.sections?.length || 0, 'sections');
+                // #region agent log
+                const footerSection = event.data.sections?.find((s:any) => s.type === 'footer');
+                const headerSection = event.data.sections?.find((s:any) => s.type === 'header');
+                fetch('http://127.0.0.1:7243/ingest/9b551d4e-1f47-4487-b2ea-b09bf6698241',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AgencyLandingPreview.tsx:handleMessage',message:'Received update from editor',data:{sectionsCount:event.data.sections?.length||0,footerData:footerSection?.data,headerData:headerSection?.data},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H7'})}).catch(()=>{});
+                // #endregion
                 if (event.data.sections) {
                     setSections(event.data.sections);
                 }
@@ -482,6 +487,9 @@ export function AgencyLandingPreview() {
                 return <Banner key={section.id} {...data} buttonBorderRadius={buttonBorderRadius} />;
 
             case 'footer':
+                // #region agent log
+                fetch('http://127.0.0.1:7243/ingest/9b551d4e-1f47-4487-b2ea-b09bf6698241',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AgencyLandingPreview.tsx:renderFooter',message:'Rendering footer',data:{sectionId:section.id,sectionDataKeys:Object.keys(section.data||{}),mergedDataKeys:Object.keys(data),backgroundColor:data.backgroundColor},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H8'})}).catch(()=>{});
+                // #endregion
                 return <Footer key={section.id} {...data} />;
 
             default:
@@ -494,6 +502,16 @@ export function AgencyLandingPreview() {
     return (
         <div className="min-h-screen text-slate-200 overflow-x-hidden">
             <style>{`
+                /* Override global overflow:hidden from index.html to enable scrolling in preview iframe */
+                html, body {
+                    overflow: visible !important;
+                    overflow-x: hidden !important;
+                    height: auto !important;
+                    min-height: 100% !important;
+                }
+                body {
+                    overflow-y: auto !important;
+                }
                 :root {
                     --site-base-bg: ${pageBackground};
                     --site-surface-bg: ${theme.globalColors?.surface || pageBackground};

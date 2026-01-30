@@ -800,6 +800,51 @@
             }
           }
         }
+      },
+      "landing": {
+        "editorTitle": "Landing Page Editor",
+        "published": "✅ Landing page published successfully",
+        "publishedBadge": "Published",
+        "unpublish": "Unpublish",
+        "publish": "Publish",
+        "save": "Save",
+        "saving": "Saving...",
+        "back": "Back",
+        "refreshPreview": "Refresh preview",
+        "hidePreview": "Hide preview",
+        "showPreview": "Show preview",
+        "pageStructure": "PAGE STRUCTURE",
+        "addComponent": "Add component",
+        "structure": "STRUCTURE",
+        "content": "CONTENT",
+        "saved": "Saved",
+        "noTenant": "No agency selected",
+        "noSectionSelected": "No section selected",
+        "selectSectionHint": "Select a section from the list to edit it",
+        "edit": "Edit",
+        "deleteSection": "Delete Section",
+        "deleteSectionConfirm": "Are you sure you want to delete this section? This action cannot be undone.",
+        "cancel": "Cancel",
+        "delete": "Delete",
+        "discardChangesTitle": "Confirm",
+        "discardChangesMessage": "Discard all unsaved changes?",
+        "discard": "Discard",
+        "structureItems": {
+          "colors": "Colors",
+          "typography": "Typography",
+          "navigation": "Navigation",
+          "footer": "Footer",
+          "branding": "Branding",
+          "seo": "SEO",
+          "domain": "Domain"
+        },
+        "actions": {
+          "movedSection": "Moved section",
+          "hidSection": "Hid section",
+          "showedSection": "Showed section",
+          "deletedSection": "Deleted section",
+          "addedSection": "Added section"
+        }
       }
     },
     "team": "Team",

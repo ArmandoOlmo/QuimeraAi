@@ -166,6 +166,14 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
     // Editor state
     const [sections, setSections] = useState<LandingSection[]>([]);
 
+    // #region agent log v3 - Log sections on every render
+    React.useEffect(() => {
+        const logPayload = {location:'LandingPageEditor.tsx:sectionsEffect:v3',message:'Sections state changed',data:{sectionCount:sections.length,sectionsInfo:sections.map(s=>({id:s.id,type:s.type,dataKeys:Object.keys(s.data||{})}))},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'EDITOR_SECTIONS_V3'};
+        console.error('[DEBUG v3] Sections state:', logPayload.data);
+        fetch('http://127.0.0.1:7243/ingest/9b551d4e-1f47-4487-b2ea-b09bf6698241',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(logPayload)}).catch(()=>{});
+    }, [sections]);
+    // #endregion
+
     // Undo/Redo integration
     const undoContext = useUndo();
     const {
@@ -288,6 +296,87 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
         return () => window.removeEventListener('message', handleMessage);
     }, [sections]);
 
+    // Default section definitions for structure items
+    const defaultStructureSections: LandingSection[] = [
+        { id: 'header', type: 'header', enabled: true, order: 0, data: {
+            logoText: 'Quimera.ai',
+            showLoginButton: true,
+            showRegisterButton: true,
+            loginText: 'Iniciar Sesión',
+            registerText: 'Comenzar Gratis',
+            sticky: true,
+            transparent: false,
+            backgroundColor: '#000000',
+        } },
+        {
+            id: 'typography', type: 'typography', enabled: true, order: -1, data: {
+                headingFont: 'poppins',
+                bodyFont: 'mulish',
+                buttonFont: 'poppins',
+                headingsCaps: false,
+                buttonsCaps: false,
+                navLinksCaps: false,
+            }
+        },
+        {
+            id: 'colors', type: 'colors', enabled: true, order: -2, data: {
+                backgroundColor: '#000000',
+                textColor: '#ffffff',
+                accentColor: '#facc15',
+                secondaryColor: '#3b82f6',
+                mainColor: '#3b82f6',
+            }
+        },
+        { id: 'footer', type: 'footer', enabled: true, order: 99, data: {} },
+    ];
+
+    // Helper to ensure required structure sections exist AND normalize IDs
+    const ensureStructureSections = (loadedSections: LandingSection[]): LandingSection[] => {
+        const result = [...loadedSections];
+        
+        // FIX: Normalize section IDs to match their types for structure sections
+        // This fixes legacy data where sections were saved with wrong IDs (e.g., "navigation" instead of "header")
+        const structureTypeToId: Record<string, string> = {
+            'header': 'header',
+            'footer': 'footer',
+            'typography': 'typography',
+            'colors': 'colors',
+        };
+        
+        // First pass: normalize IDs for existing structure sections
+        for (let i = 0; i < result.length; i++) {
+            const section = result[i];
+            const expectedId = structureTypeToId[section.type];
+            if (expectedId && section.id !== expectedId) {
+                // #region agent log
+                console.error('[DEBUG FIX] Normalizing section ID:', { oldId: section.id, newId: expectedId, type: section.type });
+                fetch('http://127.0.0.1:7243/ingest/9b551d4e-1f47-4487-b2ea-b09bf6698241',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'LandingPageEditor.tsx:ensureStructureSections',message:'Normalizing section ID',data:{oldId:section.id,newId:expectedId,type:section.type},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'FIX'})}).catch(()=>{});
+                // #endregion
+                result[i] = { ...section, id: expectedId };
+            }
+        }
+        
+        // Second pass: add missing structure sections
+        for (const defaultSection of defaultStructureSections) {
+            const existingSection = result.find(s => s.type === defaultSection.type);
+            if (!existingSection) {
+                // Section doesn't exist, add it
+                result.push(defaultSection);
+            } else if (!existingSection.data || Object.keys(existingSection.data).length === 0) {
+                // Section exists but has no data, merge with defaults
+                const index = result.findIndex(s => s.id === existingSection.id);
+                if (index !== -1) {
+                    result[index] = {
+                        ...existingSection,
+                        data: { ...defaultSection.data, ...existingSection.data }
+                    };
+                }
+            }
+        }
+        
+        return result;
+    };
+
     // Load landing page configuration from Firestore
     useEffect(() => {
         const loadConfiguration = async () => {
@@ -299,8 +388,18 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
                 if (settingsSnap.exists()) {
                     const data = settingsSnap.data();
                     if (data.sections && Array.isArray(data.sections)) {
-                        setSections(data.sections);
-                        savedSectionsRef.current = JSON.parse(JSON.stringify(data.sections)); // Deep copy for reset
+                        // #region agent log
+                        fetch('http://127.0.0.1:7243/ingest/9b551d4e-1f47-4487-b2ea-b09bf6698241',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'LandingPageEditor.tsx:loadConfiguration',message:'Loaded from Firestore',data:{rawSections:data.sections.map((s:any)=>({id:s.id,type:s.type}))},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'B,C'})}).catch(()=>{});
+                        console.error('[DEBUG] Loaded from Firestore:', data.sections.map((s:any) => ({ id: s.id, type: s.type })));
+                        // #endregion
+                        // Ensure required structure sections exist
+                        const mergedSections = ensureStructureSections(data.sections);
+                        // #region agent log
+                        fetch('http://127.0.0.1:7243/ingest/9b551d4e-1f47-4487-b2ea-b09bf6698241',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'LandingPageEditor.tsx:loadConfiguration',message:'After ensureStructureSections',data:{mergedSections:mergedSections.map((s:any)=>({id:s.id,type:s.type}))},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'B,C'})}).catch(()=>{});
+                        console.error('[DEBUG] After merge:', mergedSections.map((s:any) => ({ id: s.id, type: s.type })));
+                        // #endregion
+                        setSections(mergedSections);
+                        savedSectionsRef.current = JSON.parse(JSON.stringify(mergedSections)); // Deep copy for reset
                         if (data.lastUpdated) {
                             setLastSaved(new Date(data.lastUpdated));
                         }
@@ -314,24 +413,13 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
 
             // Fallback to default sections if no saved data
             const defaultSections: LandingSection[] = [
-                { id: 'header', type: 'header', enabled: true, order: 0, data: {} },
-                {
-                    id: 'typography', type: 'typography', enabled: true, order: -1, data: {
-                        headingFont: 'poppins',
-                        bodyFont: 'mulish',
-                        buttonFont: 'poppins',
-                        headingsCaps: false,
-                        buttonsCaps: false,
-                        navLinksCaps: false,
-                    }
-                },
+                ...defaultStructureSections,
                 { id: 'hero', type: 'hero', enabled: true, order: 1, data: {} },
                 { id: 'features', type: 'features', enabled: true, order: 2, data: {} },
                 { id: 'pricing', type: 'pricing', enabled: true, order: 3, data: {} },
                 { id: 'testimonials', type: 'testimonials', enabled: true, order: 4, data: {} },
                 { id: 'faq', type: 'faq', enabled: true, order: 5, data: {} },
                 { id: 'cta', type: 'cta', enabled: true, order: 6, data: {} },
-                { id: 'footer', type: 'footer', enabled: true, order: 7, data: {} },
             ];
             setSections(defaultSections);
             savedSectionsRef.current = JSON.parse(JSON.stringify(defaultSections)); // Deep copy for reset
@@ -434,11 +522,32 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
         setShowAddComponent(false);
     };
 
-    // Update section data from controls
+    // Update section data from controls - FIXED v3
     const updateSectionData = useCallback((sectionId: string, newData: Record<string, any>) => {
-        setSections(prev => prev.map(s =>
-            s.id === sectionId ? { ...s, data: newData } : s
-        ));
+        // #region agent log v3
+        const logPayload = {location:'LandingPageEditor.tsx:updateSectionData:v3',message:'Function called v3',data:{sectionId,newDataKeys:Object.keys(newData||{}),newData},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'EDITOR_FIX_V3'};
+        console.error('[DEBUG v3] updateSectionData called:', logPayload.data);
+        fetch('http://127.0.0.1:7243/ingest/9b551d4e-1f47-4487-b2ea-b09bf6698241',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(logPayload)}).catch(()=>{});
+        // #endregion
+        setSections(prev => {
+            const foundSection = prev.find(s => s.id === sectionId);
+            const allIds = prev.map(s => s.id);
+            const allTypesAndIds = prev.map(s => ({ id: s.id, type: s.type }));
+            // #region agent log v3
+            const innerLogPayload = {location:'LandingPageEditor.tsx:updateSectionData:setSections:v3',message:'Inside setSections v3',data:{sectionId,foundSectionId:foundSection?.id||'NOT_FOUND',foundSectionType:foundSection?.type||'N/A',allIds,allTypesAndIds,sectionCount:prev.length},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'EDITOR_FIX_V3'};
+            console.error('[DEBUG v3] Inside setSections:', innerLogPayload.data);
+            fetch('http://127.0.0.1:7243/ingest/9b551d4e-1f47-4487-b2ea-b09bf6698241',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(innerLogPayload)}).catch(()=>{});
+            // #endregion
+            if (!foundSection) {
+                // #region agent log v3
+                console.error('[DEBUG v3] SECTION NOT FOUND! Looking for:', sectionId, 'Available:', allIds);
+                fetch('http://127.0.0.1:7243/ingest/9b551d4e-1f47-4487-b2ea-b09bf6698241',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'LandingPageEditor.tsx:updateSectionData:NOT_FOUND',message:'Section not found!',data:{sectionId,allIds},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'EDITOR_FIX_V3'})}).catch(()=>{});
+                // #endregion
+            }
+            return prev.map(s =>
+                s.id === sectionId ? { ...s, data: newData } : s
+            );
+        });
         setHasUnsavedChanges(true);
     }, []);
 
@@ -543,6 +652,35 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
         [sections, selectedSection]
     );
 
+    // Currently selected structure item section (for header, footer, typography, colors)
+    const currentStructureSection = useMemo(() => {
+        // #region agent log
+        fetch('http://127.0.0.1:7243/ingest/9b551d4e-1f47-4487-b2ea-b09bf6698241',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'LandingPageEditor.tsx:currentStructureSection',message:'useMemo called',data:{selectedStructureItem,sectionsCount:sections.length,allSections:sections.map(s=>({id:s.id,type:s.type}))},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'A,B'})}).catch(()=>{});
+        console.error('[DEBUG] currentStructureSection useMemo:', { selectedStructureItem, sections: sections.map(s => ({ id: s.id, type: s.type })) });
+        // #endregion
+        if (!selectedStructureItem) return null;
+        const structureItem = STRUCTURE_ITEMS.find(i => i.id === selectedStructureItem);
+        if (!structureItem) {
+            return null;
+        }
+        const actualSection = sections.find(s => s.type === structureItem.type);
+        // #region agent log
+        fetch('http://127.0.0.1:7243/ingest/9b551d4e-1f47-4487-b2ea-b09bf6698241',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'LandingPageEditor.tsx:currentStructureSection:found',message:'Section found',data:{structureItemType:structureItem.type,foundSectionId:actualSection?.id,foundSectionType:actualSection?.type},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'B,C'})}).catch(()=>{});
+        console.error('[DEBUG] Found section:', { looking_for_type: structureItem.type, found: actualSection ? { id: actualSection.id, type: actualSection.type } : null });
+        // #endregion
+        if (!actualSection) {
+            return null;
+        }
+        return actualSection;
+    }, [sections, selectedStructureItem]);
+
+    // Get the label for the current structure item
+    const currentStructureLabel = useMemo(() => {
+        if (!selectedStructureItem) return '';
+        const structureItem = STRUCTURE_ITEMS.find(i => i.id === selectedStructureItem);
+        return structureItem?.label || selectedStructureItem;
+    }, [selectedStructureItem]);
+
     // Scroll preview to section when selected
     const scrollToSection = useCallback((sectionType: string) => {
         if (iframeRef.current?.contentWindow) {
@@ -562,6 +700,10 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
 
     // Handle structure item selection (Colores, Tipografía, etc.)
     const handleStructureSelect = useCallback((itemId: string) => {
+        // #region agent log
+        console.error('[DEBUG] handleStructureSelect called with itemId:', itemId);
+        fetch('http://127.0.0.1:7243/ingest/9b551d4e-1f47-4487-b2ea-b09bf6698241',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'LandingPageEditor.tsx:handleStructureSelect',message:'Structure item clicked',data:{itemId},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'A'})}).catch(()=>{});
+        // #endregion
         setSelectedStructureItem(itemId);
         setSelectedSection(null); // Clear section selection
     }, []);
@@ -817,24 +959,24 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
                     {/* Right Panel - Component Controls */}
                     <div className={`${isPreviewVisible ? 'w-80 lg:w-96' : 'flex-1 max-w-2xl mx-auto'} border-l border-border bg-card/50 flex flex-col overflow-hidden`}>
                         {/* Structure Item Controls (Colores, Tipografía, etc.) */}
-                        {selectedStructureItem ? (
+                        {currentStructureSection ? (
                             <>
                                 <div className="p-4 border-b border-border">
                                     <h2 className="font-semibold text-sm flex items-center gap-2">
                                         <Settings size={16} className="text-primary" />
                                         {t('landingEditor.edit', 'Editar')}: <span className="capitalize">
-                                            {STRUCTURE_ITEMS.find(i => i.id === selectedStructureItem)?.label || selectedStructureItem}
+                                            {currentStructureLabel}
                                         </span>
                                     </h2>
                                 </div>
+                                {/* DEBUG BANNER - Remove after fixing */}
+                                <div className="p-2 m-2 bg-red-500/20 border border-red-500 rounded text-xs">
+                                    <strong>DEBUG v2:</strong> Section ID: {currentStructureSection.id}, Type: {currentStructureSection.type}, 
+                                    Data keys: {Object.keys(currentStructureSection.data || {}).join(', ') || 'empty'}
+                                </div>
                                 <LandingPageControls
-                                    section={{
-                                        id: selectedStructureItem,
-                                        type: STRUCTURE_ITEMS.find(i => i.id === selectedStructureItem)?.type || selectedStructureItem,
-                                        enabled: true,
-                                        order: 0,
-                                        data: sections.find(s => s.type === STRUCTURE_ITEMS.find(i => i.id === selectedStructureItem)?.type)?.data || {}
-                                    }}
+                                    key={currentStructureSection.id}
+                                    section={currentStructureSection}
                                     onUpdateSection={updateSectionData}
                                     onRefreshPreview={() => setPreviewKey(prev => prev + 1)}
                                     allSections={sections}

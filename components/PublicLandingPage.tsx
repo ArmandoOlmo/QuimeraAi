@@ -208,12 +208,32 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
   const getPreviewData = useMemo(() => (sectionType: string) => {
     // If no sections loaded, return null (use defaults)
     if (previewSections.length === 0) return null;
-    const section = previewSections.find(s =>
+    
+    // Find all matching sections
+    const matchingSections = previewSections.filter(s =>
       s.type === sectionType ||
       s.type.startsWith(sectionType) ||
       s.id === sectionType
     );
-    return section?.enabled !== false ? section?.data || null : null;
+    
+    // If multiple matches, prefer the one with data (fixes legacy data issue where sections might be duplicated)
+    let section = matchingSections[0];
+    if (matchingSections.length > 1) {
+      const sectionWithData = matchingSections.find(s => s.data && Object.keys(s.data).length > 0);
+      if (sectionWithData) {
+        section = sectionWithData;
+      }
+    }
+    
+    const result = section?.enabled !== false ? section?.data || null : null;
+    
+    // #region agent log
+    if (sectionType === 'header') {
+      fetch('http://127.0.0.1:7243/ingest/9b551d4e-1f47-4487-b2ea-b09bf6698241',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PublicLandingPage.tsx:getPreviewData',message:'Getting header data',data:{sectionType,totalSections:previewSections.length,matchingCount:matchingSections.length,matchingIds:matchingSections.map(s=>s.id),matchingTypes:matchingSections.map(s=>s.type),selectedSectionId:section?.id,selectedSectionData:section?.data,resultKeys:result?Object.keys(result):null},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'PREVIEW'})}).catch(()=>{});
+    }
+    // #endregion
+    
+    return result;
   }, [previewSections]);
 
   // Get preview overrides for Hero section
@@ -1263,7 +1283,7 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
                   className="text-sm text-gray-300 hover:text-white transition-colors"
                   style={{ textTransform: buttonsCaps ? 'uppercase' : 'none' }}
                 >
-                  {headerPreview?.loginButtonText || navigation.header.cta?.loginText || t('landing.login')}
+                  {headerPreview?.loginText || navigation.header.cta?.loginText || t('landing.login')}
                 </button>
               )}
               {(headerPreview?.showRegisterButton ?? true) && (
@@ -1275,7 +1295,7 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
                     textTransform: buttonsCaps ? 'uppercase' : 'none',
                   }}
                 >
-                  {headerPreview?.registerButtonText || navigation.header.cta?.registerText || t('landing.register')}
+                  {headerPreview?.registerText || navigation.header.cta?.registerText || t('landing.register')}
                 </button>
               )}
             </div>
@@ -1311,24 +1331,33 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
                 ))}
               </nav>
               <div className="flex flex-col gap-3">
-                <button
-                  onClick={() => {
-                    setIsMobileMenuOpen(false);
-                    onNavigateToLogin();
-                  }}
-                  className="w-full py-3 text-center text-gray-300 hover:text-white border border-white/10 rounded-xl transition-colors"
-                >
-                  {navigation.header.cta?.loginText || t('landing.login')}
-                </button>
-                <button
-                  onClick={() => {
-                    setIsMobileMenuOpen(false);
-                    onNavigateToRegister();
-                  }}
-                  className="w-full py-3 bg-yellow-400 text-black font-semibold rounded-xl hover:bg-yellow-300 transition-colors"
-                >
-                  {navigation.header.cta?.registerText || t('landing.register')}
-                </button>
+                {(headerPreview?.showLoginButton ?? true) && (
+                  <button
+                    onClick={() => {
+                      setIsMobileMenuOpen(false);
+                      onNavigateToLogin();
+                    }}
+                    className="w-full py-3 text-center text-gray-300 hover:text-white border border-white/10 rounded-xl transition-colors"
+                    style={{ textTransform: buttonsCaps ? 'uppercase' : 'none' }}
+                  >
+                    {headerPreview?.loginText || navigation.header.cta?.loginText || t('landing.login')}
+                  </button>
+                )}
+                {(headerPreview?.showRegisterButton ?? true) && (
+                  <button
+                    onClick={() => {
+                      setIsMobileMenuOpen(false);
+                      onNavigateToRegister();
+                    }}
+                    className="w-full py-3 bg-yellow-400 text-black font-semibold rounded-xl hover:bg-yellow-300 transition-colors"
+                    style={{
+                      fontFamily: `var(--font-button)`,
+                      textTransform: buttonsCaps ? 'uppercase' : 'none',
+                    }}
+                  >
+                    {headerPreview?.registerText || navigation.header.cta?.registerText || t('landing.register')}
+                  </button>
+                )}
               </div>
             </div>
           )}

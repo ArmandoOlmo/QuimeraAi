@@ -142,14 +142,14 @@ const DragOverlayItem: React.FC<{ section: AgencyLandingSection }> = ({ section 
 // STRUCTURE ITEMS WITH ICONS
 // =============================================================================
 
-const STRUCTURE_ITEMS_WITH_ICONS = [
-    { id: 'colors', type: 'colors', label: 'Colores', icon: <Palette size={18} /> },
-    { id: 'typography', type: 'typography', label: 'Tipografía', icon: <Type size={18} /> },
-    { id: 'navigation', type: 'header', label: 'Navegación', icon: <MenuIcon size={18} /> },
-    { id: 'footerGlobal', type: 'footer', label: 'Pie de Página', icon: <Layout size={18} /> },
-    { id: 'branding', type: 'branding', label: 'Marca', icon: <Image size={18} /> },
-    { id: 'seo', type: 'seo', label: 'SEO', icon: <Search size={18} /> },
-    { id: 'domain', type: 'domain', label: 'Dominio', icon: <Globe size={18} /> },
+const getStructureItemsWithIcons = (t: any) => [
+    { id: 'colors', type: 'colors', label: t('dashboard.agency.landing.structureItems.colors', 'Colores'), icon: <Palette size={18} /> },
+    { id: 'typography', type: 'typography', label: t('dashboard.agency.landing.structureItems.typography', 'Tipografía'), icon: <Type size={18} /> },
+    { id: 'navigation', type: 'header', label: t('dashboard.agency.landing.structureItems.navigation', 'Navegación'), icon: <MenuIcon size={18} /> },
+    { id: 'footerGlobal', type: 'footer', label: t('dashboard.agency.landing.structureItems.footer', 'Pie de Página'), icon: <Layout size={18} /> },
+    { id: 'branding', type: 'branding', label: t('dashboard.agency.landing.structureItems.branding', 'Marca'), icon: <Image size={18} /> },
+    { id: 'seo', type: 'seo', label: t('dashboard.agency.landing.structureItems.seo', 'SEO'), icon: <Search size={18} /> },
+    { id: 'domain', type: 'domain', label: t('dashboard.agency.landing.structureItems.domain', 'Dominio'), icon: <Globe size={18} /> },
 ];
 
 // =============================================================================
@@ -258,11 +258,14 @@ export function AgencyLandingEditor({ onBack }: AgencyLandingEditorProps) {
             setIsLoading(true);
             try {
                 const config = await getAgencyLanding(currentTenant.id);
-                
+
                 if (config) {
                     setLandingConfig(config);
                     setSections(config.sections || []);
                     savedSectionsRef.current = JSON.parse(JSON.stringify(config.sections || []));
+                    // #region agent log
+                    fetch('http://127.0.0.1:7243/ingest/9b551d4e-1f47-4487-b2ea-b09bf6698241',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AgencyLandingEditor.tsx:loadConfig',message:'Loaded from Firestore',data:{sectionsCount:config.sections?.length||0,sectionIds:(config.sections||[]).map((s:any)=>({id:s.id,type:s.type}))},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H5'})}).catch(()=>{});
+                    // #endregion
                     if (config.updatedAt) {
                         setLastSaved(config.updatedAt.toDate ? config.updatedAt.toDate() : new Date(config.updatedAt));
                     }
@@ -271,6 +274,9 @@ export function AgencyLandingEditor({ onBack }: AgencyLandingEditorProps) {
                     const defaultConfig = createDefaultAgencyLandingConfig(currentTenant.id, currentTenant.name);
                     setSections(defaultConfig.sections);
                     savedSectionsRef.current = JSON.parse(JSON.stringify(defaultConfig.sections));
+                    // #region agent log
+                    fetch('http://127.0.0.1:7243/ingest/9b551d4e-1f47-4487-b2ea-b09bf6698241',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AgencyLandingEditor.tsx:loadConfig',message:'Created default config',data:{sectionsCount:defaultConfig.sections.length,sectionIds:defaultConfig.sections.map(s=>({id:s.id,type:s.type}))},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H5'})}).catch(()=>{});
+                    // #endregion
                 }
             } catch (error) {
                 console.error('Error loading agency landing:', error);
@@ -283,6 +289,11 @@ export function AgencyLandingEditor({ onBack }: AgencyLandingEditorProps) {
 
     // Send updates to preview iframe
     useEffect(() => {
+        // #region agent log
+        const footerSection = sections.find(s => s.type === 'footer');
+        const headerSection = sections.find(s => s.type === 'header');
+        fetch('http://127.0.0.1:7243/ingest/9b551d4e-1f47-4487-b2ea-b09bf6698241',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AgencyLandingEditor.tsx:postMessage',message:'Sending to preview',data:{hasIframe:!!iframeRef.current?.contentWindow,sectionsCount:sections.length,footerDataKeys:Object.keys(footerSection?.data||{}),headerDataKeys:Object.keys(headerSection?.data||{})},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H6'})}).catch(()=>{});
+        // #endregion
         if (iframeRef.current?.contentWindow) {
             iframeRef.current.contentWindow.postMessage({
                 type: 'AGENCY_LANDING_UPDATE',
@@ -420,9 +431,19 @@ export function AgencyLandingEditor({ onBack }: AgencyLandingEditorProps) {
     };
 
     const updateSectionData = useCallback((sectionId: string, newData: Record<string, any>) => {
-        setSections(prev => prev.map(s =>
-            s.id === sectionId ? { ...s, data: newData } : s
-        ));
+        // #region agent log
+        fetch('http://127.0.0.1:7243/ingest/9b551d4e-1f47-4487-b2ea-b09bf6698241',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AgencyLandingEditor.tsx:updateSectionData',message:'Function called',data:{sectionId,newDataKeys:Object.keys(newData||{})},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H3'})}).catch(()=>{});
+        // #endregion
+        setSections(prev => {
+            const foundSection = prev.find(s => s.id === sectionId);
+            const allIds = prev.map(s => s.id);
+            // #region agent log
+            fetch('http://127.0.0.1:7243/ingest/9b551d4e-1f47-4487-b2ea-b09bf6698241',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AgencyLandingEditor.tsx:updateSectionData:inside',message:'Inside setSections',data:{sectionId,foundId:foundSection?.id||'NOT_FOUND',allIds,sectionCount:prev.length},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H4,H5'})}).catch(()=>{});
+            // #endregion
+            return prev.map(s =>
+                s.id === sectionId ? { ...s, data: newData } : s
+            );
+        });
         setHasUnsavedChanges(true);
     }, []);
 
@@ -492,6 +513,9 @@ export function AgencyLandingEditor({ onBack }: AgencyLandingEditorProps) {
         [sections, selectedSection]
     );
 
+    // Memoize structure items with translations - MUST be before any conditional returns
+    const structureItemsWithIcons = useMemo(() => getStructureItemsWithIcons(t), [t]);
+
     // Loading state
     if (isLoading) {
         return (
@@ -505,7 +529,7 @@ export function AgencyLandingEditor({ onBack }: AgencyLandingEditorProps) {
     if (!currentTenant?.id) {
         return (
             <div className="flex w-full h-full items-center justify-center bg-background">
-                <p className="text-muted-foreground">No hay agencia seleccionada</p>
+                <p className="text-muted-foreground">{t('dashboard.agency.landing.noTenant', 'No hay agencia seleccionada')}</p>
             </div>
         );
     }
@@ -519,7 +543,7 @@ export function AgencyLandingEditor({ onBack }: AgencyLandingEditorProps) {
                         <div className="flex items-center gap-2">
                             <Layout className="text-primary w-5 h-5" />
                             <h1 className="text-lg font-semibold text-foreground hidden sm:block">
-                                {t('agency.landing.editorTitle', 'Editor Landing Page')}
+                                {t('dashboard.agency.landing.editorTitle', 'Editor Landing Page')}
                             </h1>
                         </div>
 
@@ -531,7 +555,7 @@ export function AgencyLandingEditor({ onBack }: AgencyLandingEditorProps) {
 
                         {landingConfig?.isPublished && (
                             <span className="px-2 py-0.5 text-xs font-medium bg-green-500/10 text-green-500 rounded-full">
-                                Publicada
+                                {t('dashboard.agency.landing.publishedBadge', 'Publicada')}
                             </span>
                         )}
                     </div>
@@ -559,7 +583,7 @@ export function AgencyLandingEditor({ onBack }: AgencyLandingEditorProps) {
                         <button
                             onClick={() => setPreviewKey(prev => prev + 1)}
                             className="h-9 w-9 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-                            title="Refrescar vista previa"
+                            title={t('dashboard.agency.landing.refreshPreview', 'Refrescar vista previa')}
                         >
                             <RefreshCw size={18} />
                         </button>
@@ -567,7 +591,7 @@ export function AgencyLandingEditor({ onBack }: AgencyLandingEditorProps) {
                         <button
                             onClick={() => setIsPreviewVisible(!isPreviewVisible)}
                             className="h-9 w-9 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-                            title={isPreviewVisible ? 'Ocultar vista previa' : 'Mostrar vista previa'}
+                            title={isPreviewVisible ? t('dashboard.agency.landing.hidePreview', 'Ocultar vista previa') : t('dashboard.agency.landing.showPreview', 'Mostrar vista previa')}
                         >
                             {isPreviewVisible ? <EyeOff size={18} /> : <Eye size={18} />}
                         </button>
@@ -592,22 +616,21 @@ export function AgencyLandingEditor({ onBack }: AgencyLandingEditorProps) {
                                 }`}
                         >
                             {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save size={16} />}
-                            <span className="hidden sm:inline">{isSaving ? 'Guardando...' : 'Guardar'}</span>
+                            <span className="hidden sm:inline">{isSaving ? t('dashboard.agency.landing.saving', 'Guardando...') : t('dashboard.agency.landing.save', 'Guardar')}</span>
                         </button>
 
                         {/* Publish button */}
                         <button
                             onClick={landingConfig?.isPublished ? handleUnpublish : handlePublish}
                             disabled={isPublishing || hasUnsavedChanges}
-                            className={`flex items-center gap-2 h-9 px-4 rounded-md text-sm font-medium transition-all ${
-                                landingConfig?.isPublished
-                                    ? 'bg-amber-500/10 text-amber-500 hover:bg-amber-500/20'
-                                    : 'bg-green-500/10 text-green-500 hover:bg-green-500/20'
-                            } ${hasUnsavedChanges ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            className={`flex items-center gap-2 h-9 px-4 rounded-md text-sm font-medium transition-all ${landingConfig?.isPublished
+                                ? 'bg-amber-500/10 text-amber-500 hover:bg-amber-500/20'
+                                : 'bg-green-500/10 text-green-500 hover:bg-green-500/20'
+                                } ${hasUnsavedChanges ? 'opacity-50 cursor-not-allowed' : ''}`}
                         >
                             {isPublishing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Globe size={16} />}
                             <span className="hidden sm:inline">
-                                {landingConfig?.isPublished ? 'Despublicar' : 'Publicar'}
+                                {landingConfig?.isPublished ? t('dashboard.agency.landing.unpublish', 'Despublicar') : t('dashboard.agency.landing.publish', 'Publicar')}
                             </span>
                         </button>
 
@@ -630,7 +653,7 @@ export function AgencyLandingEditor({ onBack }: AgencyLandingEditorProps) {
                                 className="flex items-center gap-2 h-9 px-3 rounded-lg bg-secondary/50 hover:bg-secondary text-sm font-medium transition-all text-muted-foreground hover:text-foreground"
                             >
                                 <ArrowLeft className="w-4 h-4" />
-                                <span className="hidden sm:inline">Volver</span>
+                                <span className="hidden sm:inline">{t('dashboard.agency.landing.back', 'Volver')}</span>
                             </button>
                         )}
                     </div>
@@ -639,13 +662,13 @@ export function AgencyLandingEditor({ onBack }: AgencyLandingEditorProps) {
                 {/* Main Content - Three Panel Layout */}
                 <main className="flex-1 flex overflow-hidden">
                     {/* Left Panel - Component List */}
-                    <div className="w-64 lg:w-72 border-r border-border bg-card/50 flex flex-col overflow-hidden">
+                    <div className="w-48 lg:w-52 border-r border-border bg-card/50 flex flex-col overflow-hidden">
                         <div className="p-4 border-b border-border flex items-center justify-between">
-                            <h2 className="font-semibold text-sm">ESTRUCTURA DE PÁGINA</h2>
+                            <h2 className="font-semibold text-sm">{t('dashboard.agency.landing.pageStructure', 'ESTRUCTURA DE PÁGINA')}</h2>
                             <button
                                 onClick={() => setShowAddComponent(true)}
                                 className="h-8 w-8 flex items-center justify-center rounded-md bg-primary text-primary-foreground hover:opacity-90 transition-colors"
-                                title="Añadir componente"
+                                title={t('dashboard.agency.landing.addComponent', 'Añadir componente')}
                             >
                                 <Plus size={16} />
                             </button>
@@ -659,13 +682,13 @@ export function AgencyLandingEditor({ onBack }: AgencyLandingEditorProps) {
                                     className="w-full flex items-center gap-2 px-2 py-2 text-xs font-bold text-primary uppercase tracking-wider hover:bg-secondary/30 rounded transition-colors"
                                 >
                                     <ChevronDown size={14} className={`transition-transform ${isStructureExpanded ? '' : '-rotate-90'}`} />
-                                    <span>ESTRUCTURA</span>
-                                    <span className="text-muted-foreground">({STRUCTURE_ITEMS_WITH_ICONS.length})</span>
+                                    <span>{t('dashboard.agency.landing.structure', 'ESTRUCTURA')}</span>
+                                    <span className="text-muted-foreground">({structureItemsWithIcons.length})</span>
                                 </button>
 
                                 {isStructureExpanded && (
                                     <div className="mt-1 space-y-0.5 pl-2">
-                                        {STRUCTURE_ITEMS_WITH_ICONS.map((item) => (
+                                        {structureItemsWithIcons.map((item) => (
                                             <button
                                                 key={item.id}
                                                 onClick={() => handleStructureSelect(item.id)}
@@ -689,7 +712,7 @@ export function AgencyLandingEditor({ onBack }: AgencyLandingEditorProps) {
                                     className="w-full flex items-center gap-2 px-2 py-2 text-xs font-bold text-primary uppercase tracking-wider hover:bg-secondary/30 rounded transition-colors"
                                 >
                                     <ChevronDown size={14} className={`transition-transform ${isContentExpanded ? '' : '-rotate-90'}`} />
-                                    <span>CONTENIDO</span>
+                                    <span>{t('dashboard.agency.landing.content', 'CONTENIDO')}</span>
                                     <span className="text-muted-foreground">({sections.filter(s => s.type !== 'header' && s.type !== 'footer').length})</span>
                                 </button>
 
@@ -731,15 +754,15 @@ export function AgencyLandingEditor({ onBack }: AgencyLandingEditorProps) {
                         {lastSaved && (
                             <div className="p-3 border-t border-border flex items-center gap-2 text-xs text-muted-foreground">
                                 <Check size={12} className="text-green-500" />
-                                <span>Guardado: {lastSaved.toLocaleTimeString()}</span>
+                                <span>{t('dashboard.agency.landing.saved', 'Guardado')}: {lastSaved.toLocaleTimeString()}</span>
                             </div>
                         )}
                     </div>
 
                     {/* Center Panel - Preview */}
                     {isPreviewVisible && (
-                        <div className="flex-1 bg-muted/30 p-4 overflow-hidden flex flex-col">
-                            <div className={`flex-1 bg-white rounded-lg shadow-lg overflow-hidden mx-auto ${previewWidth} w-full transition-all duration-300`}>
+                        <div className="flex-1 bg-muted/30 p-4 flex flex-col min-h-0">
+                            <div className={`flex-1 flex flex-col bg-white rounded-lg shadow-lg mx-auto ${previewWidth} w-full transition-all duration-300 min-h-0`}>
                                 <iframe
                                     ref={iframeRef}
                                     key={previewKey}
@@ -752,25 +775,34 @@ export function AgencyLandingEditor({ onBack }: AgencyLandingEditorProps) {
                     )}
 
                     {/* Right Panel - Controls */}
-                    <div className={`${isPreviewVisible ? 'w-80 lg:w-96' : 'flex-1 max-w-2xl mx-auto'} border-l border-border bg-card/50 flex flex-col overflow-hidden`}>
+                    <div className={`${isPreviewVisible ? 'w-64 lg:w-72' : 'flex-1 max-w-2xl mx-auto'} border-l border-border bg-card/50 flex flex-col overflow-hidden`}>
                         {selectedStructureItem ? (
                             <>
                                 <div className="p-4 border-b border-border">
                                     <h2 className="font-semibold text-sm flex items-center gap-2">
                                         <Settings size={16} className="text-primary" />
-                                        Editar: <span className="capitalize">
-                                            {STRUCTURE_ITEMS_WITH_ICONS.find(i => i.id === selectedStructureItem)?.label || selectedStructureItem}
+                                        {t('dashboard.agency.landing.edit', 'Editar')}: <span className="capitalize">
+                                            {structureItemsWithIcons.find(i => i.id === selectedStructureItem)?.label || selectedStructureItem}
                                         </span>
                                     </h2>
                                 </div>
                                 <LandingPageControls
-                                    section={{
-                                        id: selectedStructureItem,
-                                        type: STRUCTURE_ITEMS_WITH_ICONS.find(i => i.id === selectedStructureItem)?.type || selectedStructureItem,
-                                        enabled: true,
-                                        order: 0,
-                                        data: sections.find(s => s.type === STRUCTURE_ITEMS_WITH_ICONS.find(i => i.id === selectedStructureItem)?.type)?.data || {}
-                                    }}
+                                    section={(() => {
+                                        // FIX: Use the ACTUAL section ID from sections array, not the structure item ID
+                                        const structureItem = structureItemsWithIcons.find(i => i.id === selectedStructureItem);
+                                        const actualSection = sections.find(s => s.type === structureItem?.type);
+                                        const result = actualSection || {
+                                            id: selectedStructureItem,
+                                            type: structureItem?.type || selectedStructureItem,
+                                            enabled: true,
+                                            order: 0,
+                                            data: {}
+                                        };
+                                        // #region agent log
+                                        fetch('http://127.0.0.1:7243/ingest/9b551d4e-1f47-4487-b2ea-b09bf6698241',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AgencyLandingEditor.tsx:sectionProp',message:'Section passed to controls',data:{selectedStructureItem,structureItemType:structureItem?.type,actualSectionFound:!!actualSection,resultId:result.id,resultType:result.type,resultDataKeys:Object.keys(result.data||{}),sectionsCount:sections.length,allSectionTypes:sections.map(s=>({id:s.id,type:s.type}))},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H1,H2'})}).catch(()=>{});
+                                        // #endregion
+                                        return result;
+                                    })()}
                                     onUpdateSection={updateSectionData}
                                     onRefreshPreview={() => setPreviewKey(prev => prev + 1)}
                                     allSections={sections}
@@ -782,7 +814,7 @@ export function AgencyLandingEditor({ onBack }: AgencyLandingEditorProps) {
                                 <div className="p-4 border-b border-border">
                                     <h2 className="font-semibold text-sm flex items-center gap-2">
                                         <Settings size={16} className="text-primary" />
-                                        Editar: <span className="capitalize">{currentSection.type}</span>
+                                        {t('dashboard.agency.landing.edit', 'Editar')}: <span className="capitalize">{currentSection.type}</span>
                                     </h2>
                                 </div>
                                 <LandingPageControls
@@ -797,9 +829,9 @@ export function AgencyLandingEditor({ onBack }: AgencyLandingEditorProps) {
                             <div className="flex-1 flex items-center justify-center p-8">
                                 <div className="text-center">
                                     <Layers className="w-12 h-12 text-muted-foreground mx-auto mb-4 opacity-50" />
-                                    <h3 className="font-semibold mb-2">Ninguna sección seleccionada</h3>
+                                    <h3 className="font-semibold mb-2">{t('dashboard.agency.landing.noSectionSelected', 'Ninguna sección seleccionada')}</h3>
                                     <p className="text-sm text-muted-foreground">
-                                        Selecciona una sección de la lista para editarla
+                                        {t('dashboard.agency.landing.selectSectionHint', 'Selecciona una sección de la lista para editarla')}
                                     </p>
                                 </div>
                             </div>
@@ -813,7 +845,7 @@ export function AgencyLandingEditor({ onBack }: AgencyLandingEditorProps) {
                 <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
                     <div className="bg-card rounded-xl border border-border w-full max-w-md shadow-xl">
                         <div className="p-4 border-b border-border flex items-center justify-between">
-                            <h3 className="font-semibold">Añadir componente</h3>
+                            <h3 className="font-semibold">{t('dashboard.agency.landing.addComponent', 'Añadir componente')}</h3>
                             <button onClick={() => setShowAddComponent(false)} className="p-1 rounded hover:bg-secondary">
                                 <X size={18} />
                             </button>
@@ -839,16 +871,16 @@ export function AgencyLandingEditor({ onBack }: AgencyLandingEditorProps) {
             {/* Delete Confirmation Modal */}
             <Modal isOpen={!!sectionToDelete} onClose={() => setSectionToDelete(null)} maxWidth="max-w-md">
                 <div className="p-6">
-                    <h3 className="text-xl font-bold mb-4">Eliminar Sección</h3>
+                    <h3 className="text-xl font-bold mb-4">{t('dashboard.agency.landing.deleteSection', 'Eliminar Sección')}</h3>
                     <p className="text-muted-foreground mb-6">
-                        ¿Estás seguro de que quieres eliminar esta sección? Esta acción no se puede deshacer.
+                        {t('dashboard.agency.landing.deleteSectionConfirm', '¿Estás seguro de que quieres eliminar esta sección? Esta acción no se puede deshacer.')}
                     </p>
                     <div className="flex justify-end gap-3">
                         <button onClick={() => setSectionToDelete(null)} className="px-4 py-2 rounded-lg hover:bg-secondary transition-colors">
-                            Cancelar
+                            {t('dashboard.agency.landing.cancel', 'Cancelar')}
                         </button>
                         <button onClick={confirmDeleteSection} className="px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white transition-colors">
-                            Eliminar
+                            {t('dashboard.agency.landing.delete', 'Eliminar')}
                         </button>
                     </div>
                 </div>
@@ -857,11 +889,11 @@ export function AgencyLandingEditor({ onBack }: AgencyLandingEditorProps) {
             {/* Reset Confirmation Modal */}
             <Modal isOpen={showResetConfirm} onClose={() => setShowResetConfirm(false)} maxWidth="max-w-md">
                 <div className="p-6">
-                    <h3 className="text-xl font-bold mb-4">Confirmar</h3>
-                    <p className="text-muted-foreground mb-6">¿Descartar todos los cambios no guardados?</p>
+                    <h3 className="text-xl font-bold mb-4">{t('dashboard.agency.landing.discardChangesTitle', 'Confirmar')}</h3>
+                    <p className="text-muted-foreground mb-6">{t('dashboard.agency.landing.discardChangesMessage', '¿Descartar todos los cambios no guardados?')}</p>
                     <div className="flex justify-end gap-3">
                         <button onClick={() => setShowResetConfirm(false)} className="px-4 py-2 rounded-lg hover:bg-secondary transition-colors">
-                            Cancelar
+                            {t('dashboard.agency.landing.cancel', 'Cancelar')}
                         </button>
                         <button
                             onClick={() => {
@@ -873,7 +905,7 @@ export function AgencyLandingEditor({ onBack }: AgencyLandingEditorProps) {
                             }}
                             className="px-4 py-2 rounded-lg bg-amber-500 hover:bg-amber-600 text-white transition-colors"
                         >
-                            Descartar
+                            {t('dashboard.agency.landing.discard', 'Descartar')}
                         </button>
                     </div>
                 </div>

@@ -102,6 +102,7 @@ export const ROUTES = {
   AGENCY_NEW_CLIENT: '/agency/new-client',
   AGENCY_ADDONS: '/agency/addons',
   AGENCY_LANDING: '/agency/landing',
+  AGENCY_PLANS: '/agency/plans',
 
   // Admin Routes
   SUPERADMIN: '/admin',
@@ -547,6 +548,16 @@ export const routeConfigs: RouteConfig[] = [
     view: 'agency',
     type: 'private',
     title: 'Agency Landing Editor',
+    requiresAuth: true,
+    requiresEmailVerified: true,
+    roles: ['owner', 'superadmin', 'agency_owner', 'agency_admin'],
+    parent: ROUTES.AGENCY,
+  },
+  {
+    path: ROUTES.AGENCY_PLANS,
+    view: 'agency',
+    type: 'private',
+    title: 'Agency Plans',
     requiresAuth: true,
     requiresEmailVerified: true,
     roles: ['owner', 'superadmin', 'agency_owner', 'agency_admin'],

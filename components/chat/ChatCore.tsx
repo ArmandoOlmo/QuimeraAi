@@ -8,7 +8,8 @@ import { useSafeAuth } from '../../contexts/core/AuthContext';
 import { useSafeAI } from '../../contexts/ai';
 import { useSafeProject } from '../../contexts/project';
 import { getGoogleGenAI, isProxyMode } from '../../utils/genAiClient';
-import { generateContentViaProxy } from '../../utils/geminiProxyClient';
+import { generateContentViaProxy, generateMultimodalContentViaProxy } from '../../utils/geminiProxyClient';
+import { captureCurrentView } from '../../utils/visionUtils';
 import { logApiCall } from '../../services/apiLoggingService';
 import { useEcommerceChat } from './hooks/useEcommerceChat';
 import { useWebChatConversation } from './hooks/useWebChatConversation';
@@ -145,6 +146,26 @@ const detectLeadIntent = (message: string): boolean => {
     return intentKeywords.some(keyword =>
         message.toLowerCase().includes(keyword)
     );
+};
+
+// Detect visual intent - when user asks about what they see on screen
+const detectVisualIntent = (message: string): boolean => {
+    const visualKeywords = [
+        // Spanish
+        'qué veo', 'que veo', 'qué estoy viendo', 'que estoy viendo',
+        'qué es esto', 'que es esto', 'qué hay aquí', 'que hay aqui',
+        'describe la pantalla', 'muéstrame', 'muestrame',
+        'cómo se ve', 'como se ve', 'analiza la pantalla',
+        'qué sección', 'que seccion', 'dónde estoy', 'donde estoy',
+        // English
+        'what do i see', 'what am i seeing', 'what\'s this',
+        'what is this', 'describe the screen', 'show me',
+        'what\'s on screen', 'analyze the page', 'what section',
+        'where am i', 'look at the screen', 'describe what you see'
+    ];
+
+    const lowerMessage = message.toLowerCase();
+    return visualKeywords.some(keyword => lowerMessage.includes(keyword));
 };
 
 const calculateLeadScore = (
@@ -576,6 +597,14 @@ ${suggestAvailableSlots()}
             
             ${appointmentInstructions}
             ${ecommerceInstructions}
+            
+            === VISUAL CONTEXT ===
+            You can SEE the user's screen. When an image is provided:
+            1. Use the screenshot to understand what the user is viewing
+            2. If they ask about something on screen, describe what you see
+            3. Reference specific elements, colors, text, or sections visible in the image
+            4. Help them understand how to use what they're seeing
+            5. Be specific about UI elements, buttons, or content shown
         `;
 
         return systemInstruction;
@@ -1243,16 +1272,44 @@ ${suggestAvailableSlots()}
 
             let botResponse: string;
 
-            // Use proxy in production, direct API in development
-            if (isProxyMode()) {
-                console.log('[ChatCore] 🔄 Using proxy mode for Gemini API');
+            // ALWAYS capture screen for visual context (like GlobalAiAssistant)
+            let screenCapture: string | null = null;
+            console.log('[ChatCore] 👁️ Capturing screen for visual context...');
+            try {
+                screenCapture = await captureCurrentView();
+                if (screenCapture) {
+                    console.log('[ChatCore] 📸 Screen captured successfully');
+                }
+            } catch (error) {
+                console.warn('[ChatCore] ⚠️ Could not capture screen:', error);
+            }
 
-                // Build full prompt with system context and conversation history
-                const fullPrompt = systemContext + '\n\n' +
-                    conversationHistory.map(msg =>
-                        `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.parts[0].text} `
-                    ).join('\n\n');
+            // Build full prompt with system context and conversation history
+            const fullPrompt = systemContext + '\n\n' +
+                conversationHistory.map(msg =>
+                    `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.parts[0].text}`
+                ).join('\n\n');
 
+            // Use multimodal API if we have a screen capture (preferred)
+            if (screenCapture) {
+                console.log('[ChatCore] 🖼️ Using multimodal API with screen capture');
+                const proxyResponse = await generateMultimodalContentViaProxy(
+                    project.id,
+                    fullPrompt,
+                    [{ mimeType: "image/jpeg", data: screenCapture }],
+                    'gemini-2.5-flash',
+                    {
+                        temperature: 0.7,
+                        maxOutputTokens: 2048
+                    },
+                    user?.uid
+                );
+
+                botResponse = proxyResponse?.response?.candidates?.[0]?.content?.parts?.[0]?.text ||
+                    t('chatbotWidget.errorResponse');
+            } else {
+                // Standard text-only API call
+                console.log('[ChatCore] 📝 Using text-only API');
                 const proxyResponse = await generateContentViaProxy(
                     project.id,
                     fullPrompt,
@@ -1268,30 +1325,6 @@ ${suggestAvailableSlots()}
 
                 botResponse = proxyResponse.response.candidates[0]?.content?.parts[0]?.text ||
                     t('chatbotWidget.errorResponse');
-            } else {
-                // Always use proxy for secure API access
-                console.log('[ChatCore] 🔐 Using secure proxy mode');
-
-                const fullPrompt = systemContext + '\n\n' +
-                    conversationHistory.map(msg =>
-                        `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.parts[0].text} `
-                    ).join('\n\n');
-
-                const proxyResponse = await generateContentViaProxy(
-                    project.id,
-                    fullPrompt,
-                    'gemini-2.5-flash',
-                    {
-                        temperature: 0.9,
-                        topK: 40,
-                        topP: 0.95,
-                        maxOutputTokens: 2048
-                    },
-                    user?.uid
-                );
-
-                botResponse = proxyResponse.response.candidates[0]?.content?.parts[0]?.text ||
-                    'Sorry, I could not generate a response.';
             }
 
             // Log API call
@@ -1976,26 +2009,26 @@ ${suggestAvailableSlots()}
                                     {msg.role === 'model' ? (
                                         <ReactMarkdown
                                             components={{
-                                                p: ({ node, ...props }) => <p className="mb-2 last:mb-0" {...props} />,
-                                                ul: ({ node, ...props }) => <ul className="list-disc list-inside mb-2 space-y-1" {...props} />,
-                                                ol: ({ node, ...props }) => <ol className="list-decimal list-inside mb-2 space-y-1" {...props} />,
-                                                li: ({ node, ...props }) => <li className="ml-2" {...props} />,
-                                                strong: ({ node, ...props }) => <strong className="font-bold" {...props} />,
+                                                p: ({ node, ...props }) => <p className="mb-4 last:mb-0 leading-relaxed" {...props} />,
+                                                ul: ({ node, ...props }) => <ul className="mb-4 last:mb-0 list-disc pl-5 space-y-2" {...props} />,
+                                                ol: ({ node, ...props }) => <ol className="mb-4 last:mb-0 list-decimal pl-5 space-y-2" {...props} />,
+                                                li: ({ node, ...props }) => <li className="mb-1" {...props} />,
+                                                strong: ({ node, ...props }) => <strong className="font-semibold" {...props} />,
                                                 em: ({ node, ...props }) => <em className="italic" {...props} />,
                                                 code: ({ node, className, ...props }) => {
                                                     const isInline = !className?.includes('language-');
                                                     return isInline ? (
-                                                        <code className="bg-black/10 px-1 py-0.5 rounded text-xs font-mono" {...props} />
+                                                        <code className="bg-black/10 px-1.5 py-0.5 rounded text-xs font-mono" {...props} />
                                                     ) : (
                                                         <code className="block bg-black/10 p-2 rounded my-2 text-xs font-mono overflow-x-auto" {...props} />
                                                     );
                                                 },
                                                 a: ({ node, ...props }) => <a className="underline hover:opacity-80" target="_blank" rel="noopener noreferrer" {...props} />,
-                                                h1: ({ node, ...props }) => <h1 className="text-base font-bold mb-2" {...props} />,
-                                                h2: ({ node, ...props }) => <h2 className="text-sm font-bold mb-2" {...props} />,
-                                                h3: ({ node, ...props }) => <h3 className="text-xs font-bold mb-1" {...props} />,
-                                                blockquote: ({ node, ...props }) => <blockquote className="border-l-2 border-current pl-2 italic my-2 opacity-80" {...props} />,
-                                                hr: ({ node, ...props }) => <hr className="my-2 border-current opacity-20" {...props} />,
+                                                h1: ({ node, ...props }) => <h1 className="text-base font-bold mb-3 mt-4 first:mt-0" {...props} />,
+                                                h2: ({ node, ...props }) => <h2 className="text-sm font-bold mb-3 mt-4 first:mt-0" {...props} />,
+                                                h3: ({ node, ...props }) => <h3 className="text-xs font-bold mb-2 mt-3 first:mt-0" {...props} />,
+                                                blockquote: ({ node, ...props }) => <blockquote className="border-l-2 border-current pl-3 italic my-4 opacity-80" {...props} />,
+                                                hr: ({ node, ...props }) => <hr className="my-4 border-current opacity-20" {...props} />,
                                             }}
                                         >
                                             {msg.text}

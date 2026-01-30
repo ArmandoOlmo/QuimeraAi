@@ -20,13 +20,56 @@ const DEFAULT_PROMPTS = {
 4. When asked "what am I seeing?" or "what's this section?", describe the specific content from the SYSTEM CONTEXT
 5. Available sections: {{visibleSections}}`,
 
-    formattingGuidelines: `FORMATTING:
-- Use **bold** for emphasis on important points
-- Use bullet points (- or *) for lists
-- Use numbered lists (1. 2. 3.) when order matters
-- Keep paragraphs short and readable
-- Use line breaks between different topics
-- Structure your responses clearly with headings if needed (## Heading)`,
+    formattingGuidelines: `*** FORMATO DE RESPUESTA (MUY IMPORTANTE) ***
+
+🚨 TUS RESPUESTAS DEBEN TENER BUEN FORMATO:
+
+1. **ESPACIADO OBLIGATORIO** - SIEMPRE agrega líneas en blanco entre párrafos
+2. **EMOJIS MODERADOS** - Usa 1-3 emojis por sección (✅, 🎨, 💡, ⚠️)
+3. **USA NEGRITA** para etiquetas: **Campo:** valor
+4. **ESTRUCTURA CLARA** - Headers, listas con espaciado
+5. 🔹 **Emojis en Bullets** - Usa emojis en los bullets principales
+
+❌ MAL FORMATO (nunca hagas esto):
+✅ Acción completada
+He cambiado el título.
+💡 Tip: Puedes cambiar más.
+
+✅ BUEN FORMATO (siempre haz esto):
+✅ **Acción Completada**
+
+He cambiado el título a "Bienvenido".
+
+💡 **Tip:** Puedes seguir editando.
+
+PATRONES DE RESPUESTA:
+
+Para confirmaciones:
+✅ **[Título]**
+
+[Descripción de lo hecho]
+
+💡 [Sugerencia opcional]
+
+Para información:
+📊 **[Título]**
+
+[Contenido organizado con bullets si es necesario]
+
+- 🎨 **Diseño:** descripción
+- ✏️ **Contenido:** descripción
+
+Para errores:
+⚠️ **[Título]**
+
+**Problema:** [explicación]
+
+**Solución:** [pasos]
+
+RECUERDA: 
+1. Espaciado entre párrafos = respuestas legibles.
+2. Emojis en los bullets importantes.
+3. Sé amigable y profesional.`,
 
     appointmentInstructions: `=== APPOINTMENT SCHEDULING (VERY IMPORTANT) ===
 You CAN and SHOULD help users schedule appointments/meetings/citas.
@@ -253,12 +296,12 @@ const GlobalChatbotPromptsSettings: React.FC<GlobalChatbotPromptsSettingsProps> 
                             onClick={handleSave}
                             disabled={isSaving || !hasChanges}
                             className={`flex items-center gap-1.5 h-9 px-4 text-sm font-semibold rounded-lg transition-all ${saveStatus === 'success'
-                                    ? 'bg-green-500/20 text-green-400'
-                                    : saveStatus === 'error'
-                                        ? 'bg-red-500/20 text-red-400'
-                                        : hasChanges
-                                            ? 'bg-editor-accent text-editor-bg hover:bg-editor-accent-hover'
-                                            : 'bg-editor-border text-editor-text-secondary cursor-not-allowed'
+                                ? 'bg-green-500/20 text-green-400'
+                                : saveStatus === 'error'
+                                    ? 'bg-red-500/20 text-red-400'
+                                    : hasChanges
+                                        ? 'bg-editor-accent text-editor-bg hover:bg-editor-accent-hover'
+                                        : 'bg-editor-border text-editor-text-secondary cursor-not-allowed'
                                 }`}
                         >
                             {isSaving ? (
@@ -308,8 +351,8 @@ const GlobalChatbotPromptsSettings: React.FC<GlobalChatbotPromptsSettingsProps> 
                                                 key={tab.id}
                                                 onClick={() => setActiveTab(tab.id)}
                                                 className={`w-full text-left p-3 rounded-lg transition-all ${activeTab === tab.id
-                                                        ? 'bg-editor-accent/15 text-editor-accent border border-editor-accent/30'
-                                                        : 'text-editor-text-secondary hover:bg-editor-border/50 hover:text-editor-text-primary'
+                                                    ? 'bg-editor-accent/15 text-editor-accent border border-editor-accent/30'
+                                                    : 'text-editor-text-secondary hover:bg-editor-border/50 hover:text-editor-text-primary'
                                                     }`}
                                             >
                                                 <div className="font-medium text-sm">{tab.label}</div>

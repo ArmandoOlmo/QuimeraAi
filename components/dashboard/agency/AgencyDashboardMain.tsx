@@ -5,7 +5,7 @@
 
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Building2, Menu, CreditCard, FileText, UserPlus, Package, LayoutDashboard, BarChart3, Globe } from 'lucide-react';
+import { Building2, Menu, CreditCard, FileText, UserPlus, Package, LayoutDashboard, BarChart3, Globe, Layers } from 'lucide-react';
 import { useRouter } from '../../../hooks/useRouter';
 import { ROUTES } from '../../../routes/config';
 import { useAgency } from '../../../contexts/agency/AgencyContext';
@@ -18,8 +18,9 @@ import { BillingSettings } from './BillingSettings';
 import { ReportsGenerator } from './ReportsGenerator';
 import { ClientIntakeForm } from './ClientIntakeForm';
 import { AddonsManager } from './AddonsManager';
+import { AgencyPlanManager } from './plans';
 
-type AgencyTab = 'overview' | 'analytics' | 'landing' | 'billing' | 'reports' | 'new-client' | 'addons';
+type AgencyTab = 'overview' | 'analytics' | 'landing' | 'billing' | 'reports' | 'new-client' | 'addons' | 'plans';
 
 const AgencyDashboardMain: React.FC = () => {
     const { t } = useTranslation();
@@ -36,6 +37,7 @@ const AgencyDashboardMain: React.FC = () => {
         if (path.includes('/reports')) return 'reports';
         if (path.includes('/new-client')) return 'new-client';
         if (path.includes('/addons')) return 'addons';
+        if (path.includes('/plans')) return 'plans';
         return 'overview';
     };
 
@@ -64,6 +66,9 @@ const AgencyDashboardMain: React.FC = () => {
             case 'addons':
                 navigate(ROUTES.AGENCY_ADDONS);
                 break;
+            case 'plans':
+                navigate(ROUTES.AGENCY_PLANS);
+                break;
         }
     };
 
@@ -87,6 +92,11 @@ const AgencyDashboardMain: React.FC = () => {
             id: 'billing' as AgencyTab,
             label: t('agency.billing', 'Facturación'),
             icon: CreditCard,
+        },
+        {
+            id: 'plans' as AgencyTab,
+            label: t('agency.plans', 'Planes'),
+            icon: Layers,
         },
         {
             id: 'reports' as AgencyTab,
@@ -296,6 +306,10 @@ const AgencyDashboardMain: React.FC = () => {
                                             </div>
                                             <AddonsManager />
                                         </div>
+                                    )}
+
+                                    {activeTab === 'plans' && (
+                                        <AgencyPlanManager />
                                     )}
                                 </>
                             )}

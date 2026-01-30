@@ -144,6 +144,17 @@ const Header: React.FC<HeaderData & {
   onSearch?: (term: string) => void;
   /** Callback for internal navigation (prevents page reload in preview mode) */
   onNavigate?: (href: string) => void;
+  /** Top-level backgroundColor prop from editor */
+  backgroundColor?: string;
+  /** Top-level textColor prop from editor */
+  textColor?: string;
+  /** Alternative prop names from editor */
+  logoImage?: string;
+  showLoginButton?: boolean;
+  showRegisterButton?: boolean;
+  registerText?: string;
+  sticky?: boolean;
+  transparent?: boolean;
 }> = ({
   style = 'sticky-solid', layout, isSticky, glassEffect, height,
   logoType, logoText, logoImageUrl, logoWidth,
@@ -162,7 +173,23 @@ const Header: React.FC<HeaderData & {
   forceSolid = false,
   onSearch,
   onNavigate,
+  backgroundColor, // Accept top-level color prop from editor
+  textColor, // Accept top-level color prop from editor
+  // Alternative prop names from editor
+  logoImage,
+  showLoginButton,
+  showRegisterButton,
+  registerText,
+  sticky,
+  transparent,
 }) => {
+    // Use alternative prop names if original ones are not provided
+    const actualLogoImageUrl = logoImageUrl || logoImage;
+    const actualShowLogin = showLogin ?? showLoginButton;
+    const actualShowCta = showCta ?? showRegisterButton;
+    const actualCtaText = ctaText || registerText;
+    const actualIsSticky = isSticky ?? sticky;
+    const actualStyle = transparent ? 'sticky-transparent' : style;
     // Use safe versions of hooks that work outside EditorProvider (for public preview)
     const editorContext = useSafeEditor();
     const previewRef = containerRef || editorContext?.previewRef || null;
@@ -220,9 +247,10 @@ const Header: React.FC<HeaderData & {
     const defaultBackground = isAnyTransparentStyle ? 'transparent' : primaryColor;
 
     // Merge component colors with Design Tokens - component colors take priority
+    // Also accept top-level backgroundColor/textColor props from the landing page editor
     const actualColors = {
-      background: colors?.background || defaultBackground,
-      text: colors?.text,
+      background: backgroundColor || colors?.background || defaultBackground,
+      text: textColor || colors?.text,
       accent: colors?.accent || primaryColor,
     };
 
@@ -368,7 +396,7 @@ const Header: React.FC<HeaderData & {
     `}
         style={{ color: actualColors.accent }}
       >
-        {ctaText}
+        {actualCtaText}
         <ArrowRight size={16} className="ml-2" />
       </a>
     );
@@ -526,7 +554,7 @@ const Header: React.FC<HeaderData & {
         case 'minimal':
           return (
             <>
-              <div className="flex-shrink-0 mr-4"><Logo logoType={logoType} logoText={logoText} logoImageUrl={logoImageUrl} logoWidth={logoWidth} textColor={finalTextColor} onNavigate={onNavigate} /></div>
+              <div className="flex-shrink-0 mr-4"><Logo logoType={logoType} logoText={logoText} logoImageUrl={actualLogoImageUrl} logoWidth={logoWidth} textColor={finalTextColor} onNavigate={onNavigate} /></div>
               <div className="hidden nav:flex flex-1 justify-center">
                 <NavLinks links={allLinks} textColor={finalTextColor} accentColor={colors?.accent} hoverStyle={hoverStyle} className="flex items-center gap-8" linkFontSize={linkFontSize} onNavigate={onNavigate} />
               </div>
@@ -543,8 +571,8 @@ const Header: React.FC<HeaderData & {
                   />
                 )}
                 {showCart && <CartButton />}
-                {showLogin && <LoginButton />}
-                {showCta && <CtaButton />}
+                {actualShowLogin && <LoginButton />}
+                {actualShowCta && <CtaButton />}
               </div>
             </>
           );
@@ -555,7 +583,7 @@ const Header: React.FC<HeaderData & {
                 <NavLinks links={allLinks} textColor={finalTextColor} accentColor={colors?.accent} hoverStyle={hoverStyle} className="flex items-center gap-8" linkFontSize={linkFontSize} onNavigate={onNavigate} />
               </div>
               <div className="flex-shrink-0 nav:mx-auto absolute left-1/2 -translate-x-1/2 nav:static nav:translate-x-0">
-                <Logo logoType={logoType} logoText={logoText} logoImageUrl={logoImageUrl} logoWidth={logoWidth} textColor={finalTextColor} onNavigate={onNavigate} />
+                <Logo logoType={logoType} logoText={logoText} logoImageUrl={actualLogoImageUrl} logoWidth={logoWidth} textColor={finalTextColor} onNavigate={onNavigate} />
               </div>
               <div className="hidden nav:flex flex-1 justify-end items-center gap-4">
                 {showSearch && (
@@ -570,8 +598,8 @@ const Header: React.FC<HeaderData & {
                   />
                 )}
                 {showCart && <CartButton />}
-                {showLogin && <LoginButton />}
-                {showCta && <CtaButton />}
+                {actualShowLogin && <LoginButton />}
+                {actualShowCta && <CtaButton />}
               </div>
             </>
           );
@@ -579,7 +607,7 @@ const Header: React.FC<HeaderData & {
           return (
             <div className="flex flex-col w-full py-2">
               <div className="flex justify-center mb-4">
-                <Logo logoType={logoType} logoText={logoText} logoImageUrl={logoImageUrl} logoWidth={logoWidth} textColor={finalTextColor} onNavigate={onNavigate} />
+                <Logo logoType={logoType} logoText={logoText} logoImageUrl={actualLogoImageUrl} logoWidth={logoWidth} textColor={finalTextColor} onNavigate={onNavigate} />
               </div>
               <div className="hidden nav:flex justify-center items-center border-t border-white/10 pt-2">
                 <NavLinks links={allLinks} textColor={finalTextColor} accentColor={colors?.accent} hoverStyle={hoverStyle} className="flex items-center gap-8" linkFontSize={linkFontSize} onNavigate={onNavigate} />
@@ -605,7 +633,7 @@ const Header: React.FC<HeaderData & {
         default: // Classic
           return (
             <>
-              <div className="flex-shrink-0 mr-8"><Logo logoType={logoType} logoText={logoText} logoImageUrl={logoImageUrl} logoWidth={logoWidth} textColor={finalTextColor} onNavigate={onNavigate} /></div>
+              <div className="flex-shrink-0 mr-8"><Logo logoType={logoType} logoText={logoText} logoImageUrl={actualLogoImageUrl} logoWidth={logoWidth} textColor={finalTextColor} onNavigate={onNavigate} /></div>
               <div className="hidden nav:flex flex-1 justify-end items-center gap-8">
                 <NavLinks links={allLinks} textColor={finalTextColor} accentColor={colors?.accent} hoverStyle={hoverStyle} className="flex items-center gap-8" linkFontSize={linkFontSize} onNavigate={onNavigate} />
                 <div className="flex items-center ml-4 gap-4">
@@ -640,12 +668,12 @@ const Header: React.FC<HeaderData & {
     const getPositionClass = () => {
       // When forceSolid is true, always behave like a normal sticky/relative header
       if (forceSolid) {
-        return isSticky ? 'sticky' : 'relative';
+        return actualIsSticky ? 'sticky' : 'relative';
       }
 
       // Edge styles - siempre sticky o relative
-      if (style.startsWith('edge-')) {
-        return isSticky ? 'sticky' : 'relative';
+      if (actualStyle.startsWith('edge-')) {
+        return actualIsSticky ? 'sticky' : 'relative';
       }
 
       // Floating styles - absolute o fixed
@@ -821,7 +849,7 @@ const Header: React.FC<HeaderData & {
 
             {/* Footer Actions */}
             <div className="pt-4 border-t border-white/10 space-y-3">
-              {showLogin && (
+              {actualShowLogin && (
                 <a
                   href={loginUrl || '#'}
                   onClick={() => setIsMenuOpen(false)}
@@ -831,7 +859,7 @@ const Header: React.FC<HeaderData & {
                   {loginText}
                 </a>
               )}
-              {showCta && <CtaButton fullWidth />}
+              {actualShowCta && <CtaButton fullWidth />}
             </div>
           </div>
         </div>

@@ -770,6 +770,51 @@
             }
           }
         }
+      },
+      "landing": {
+        "editorTitle": "Editor Landing Page",
+        "published": "✅ Landing page publicada correctamente",
+        "publishedBadge": "Publicada",
+        "unpublish": "Despublicar",
+        "publish": "Publicar",
+        "save": "Guardar",
+        "saving": "Guardando...",
+        "back": "Volver",
+        "refreshPreview": "Refrescar vista previa",
+        "hidePreview": "Ocultar vista previa",
+        "showPreview": "Mostrar vista previa",
+        "pageStructure": "ESTRUCTURA DE PÁGINA",
+        "addComponent": "Añadir componente",
+        "structure": "ESTRUCTURA",
+        "content": "CONTENIDO",
+        "saved": "Guardado",
+        "noTenant": "No hay agencia seleccionada",
+        "noSectionSelected": "Ninguna sección seleccionada",
+        "selectSectionHint": "Selecciona una sección de la lista para editarla",
+        "edit": "Editar",
+        "deleteSection": "Eliminar Sección",
+        "deleteSectionConfirm": "¿Estás seguro de que quieres eliminar esta sección? Esta acción no se puede deshacer.",
+        "cancel": "Cancelar",
+        "delete": "Eliminar",
+        "discardChangesTitle": "Confirmar",
+        "discardChangesMessage": "¿Descartar todos los cambios no guardados?",
+        "discard": "Descartar",
+        "structureItems": {
+          "colors": "Colores",
+          "typography": "Tipografía",
+          "navigation": "Navegación",
+          "footer": "Pie de Página",
+          "branding": "Marca",
+          "seo": "SEO",
+          "domain": "Dominio"
+        },
+        "actions": {
+          "movedSection": "Movió sección",
+          "hidSection": "Ocultó sección",
+          "showedSection": "Mostró sección",
+          "deletedSection": "Eliminó sección",
+          "addedSection": "Agregó sección"
+        }
       }
     },
     "createWebsite": "Crear Sitio Web",

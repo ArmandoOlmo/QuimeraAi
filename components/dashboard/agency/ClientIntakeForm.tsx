@@ -14,7 +14,11 @@ import {
   Users,
   CheckCircle2,
   AlertCircle,
+  Package,
 } from 'lucide-react';
+import { useTenant } from '../../../contexts/tenant/TenantContext';
+import { AgencyPlanCardSelector } from './plans';
+import { AgencyPlan } from '../../../types/agencyPlans';
 
 // ============================================================================
 // TYPES
@@ -40,6 +44,10 @@ interface ClientIntakeData {
   // Billing (optional)
   monthlyPrice: number;
   setupBilling: boolean;
+  
+  // Plan assignment (optional)
+  selectedPlanId: string | null;
+  selectedPlanName: string | null;
 }
 
 interface InitialUser {
@@ -59,6 +67,7 @@ interface ClientIntakeFormProps {
 
 export function ClientIntakeForm({ onSubmit, onCancel }: ClientIntakeFormProps) {
   const { t } = useTranslation();
+  const { currentTenant } = useTenant();
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -105,7 +114,28 @@ export function ClientIntakeForm({ onSubmit, onCancel }: ClientIntakeFormProps) 
     secondaryColor: '#10B981',
     monthlyPrice: 0,
     setupBilling: false,
+    selectedPlanId: null,
+    selectedPlanName: null,
   });
+  
+  // Handle plan selection
+  const handlePlanSelect = (plan: AgencyPlan | null) => {
+    if (plan) {
+      setFormData({
+        ...formData,
+        selectedPlanId: plan.id,
+        selectedPlanName: plan.name,
+        monthlyPrice: plan.price,
+        setupBilling: true,
+      });
+    } else {
+      setFormData({
+        ...formData,
+        selectedPlanId: null,
+        selectedPlanName: null,
+      });
+    }
+  };
 
   const totalSteps = 4;
 
@@ -541,38 +571,83 @@ export function ClientIntakeForm({ onSubmit, onCancel }: ClientIntakeFormProps) 
         </div>
       )}
 
-      {/* Billing Section */}
+      {/* Plan Selection Section */}
+      <div className="border-t pt-6 mt-6">
+        <div className="flex items-center gap-3 mb-4">
+          <Package className="h-5 w-5 text-primary" />
+          <h4 className="font-semibold text-foreground">
+            {t('dashboard.agency.newClientPage.planAssignment', 'Asignar Plan de Servicio')}
+          </h4>
+        </div>
+        <p className="text-sm text-muted-foreground mb-4">
+          {t('dashboard.agency.newClientPage.planAssignmentDesc', 'Selecciona un plan predefinido o configura facturación manual abajo.')}
+        </p>
+
+        {currentTenant?.id && (
+          <AgencyPlanCardSelector
+            tenantId={currentTenant.id}
+            selectedPlanId={formData.selectedPlanId}
+            onChange={handlePlanSelect}
+            showDetails={true}
+          />
+        )}
+
+        {formData.selectedPlanId && (
+          <div className="mt-4 p-4 bg-primary/5 border border-primary/20 rounded-lg">
+            <div className="flex items-center gap-2 text-primary">
+              <CheckCircle2 className="h-5 w-5" />
+              <span className="font-medium">
+                {t('dashboard.agency.newClientPage.planSelected', 'Plan seleccionado')}: {formData.selectedPlanName}
+              </span>
+            </div>
+            <p className="text-sm text-muted-foreground mt-1">
+              {t('dashboard.agency.newClientPage.planSelectedDesc', 'El cliente heredará los límites y precio de este plan.')}
+            </p>
+          </div>
+        )}
+      </div>
+
+      {/* Manual Billing Section */}
       <div className="border-t pt-6 mt-6">
         <div className="flex items-center gap-3 mb-4">
           <CreditCard className="h-5 w-5 text-primary" />
           <h4 className="font-semibold text-foreground">
-            {t('dashboard.agency.newClientPage.billingSetupOptional')}
+            {formData.selectedPlanId 
+              ? t('dashboard.agency.newClientPage.billingOverride', 'Sobrescribir Precio (Opcional)')
+              : t('dashboard.agency.newClientPage.billingSetupOptional')}
           </h4>
         </div>
 
-        <label className="flex items-start gap-3 p-4 border border-border rounded-lg cursor-pointer hover:bg-gray-50">
-          <input
-            type="checkbox"
-            checked={formData.setupBilling}
-            onChange={(e) =>
-              setFormData({ ...formData, setupBilling: e.target.checked })
-            }
-            className="mt-1"
-          />
-          <div>
-            <p className="font-medium text-foreground">
-              {t('dashboard.agency.newClientPage.setupBillingNow')}
-            </p>
-            <p className="text-sm text-muted-foreground">
-              {t('dashboard.agency.newClientPage.defineMonthlyPrice')}
-            </p>
-          </div>
-        </label>
+        {!formData.selectedPlanId && (
+          <label className="flex items-start gap-3 p-4 border border-border rounded-lg cursor-pointer hover:bg-gray-50">
+            <input
+              type="checkbox"
+              checked={formData.setupBilling}
+              onChange={(e) =>
+                setFormData({ ...formData, setupBilling: e.target.checked })
+              }
+              className="mt-1"
+            />
+            <div>
+              <p className="font-medium text-foreground">
+                {t('dashboard.agency.newClientPage.setupBillingNow')}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                {t('dashboard.agency.newClientPage.defineMonthlyPrice')}
+              </p>
+            </div>
+          </label>
+        )}
 
-        {formData.setupBilling && (
+        {(formData.setupBilling || formData.selectedPlanId) && (
           <div className="mt-4">
             <label className="block text-sm font-medium text-gray-700 mb-2">
               {t('dashboard.agency.newClientPage.monthlyPriceUsd')}
+              {formData.selectedPlanId && (
+                <span className="text-muted-foreground font-normal ml-2">
+                  ({t('dashboard.agency.newClientPage.fromPlan', 'del plan')})
+                </span>
+              )}
             </label>
             <input
               type="number"
@@ -588,6 +663,11 @@ export function ClientIntakeForm({ onSubmit, onCancel }: ClientIntakeFormProps) 
               className="w-full px-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
               placeholder="99"
             />
+            {formData.selectedPlanId && (
+              <p className="text-xs text-muted-foreground mt-1">
+                {t('dashboard.agency.newClientPage.priceFromPlanNote', 'Puedes modificar el precio si deseas cobrar diferente al plan.')}
+              </p>
+            )}
           </div>
         )}
       </div>

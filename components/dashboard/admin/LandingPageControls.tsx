@@ -53,11 +53,18 @@ const TextInput: React.FC<{
     placeholder?: string;
     multiline?: boolean;
 }> = ({ value, onChange, placeholder, multiline }) => {
+    const handleChange = (newValue: string) => {
+        // #region agent log
+        console.error('[DEBUG] TextInput onChange:', { oldValue: value, newValue, placeholder });
+        fetch('http://127.0.0.1:7243/ingest/9b551d4e-1f47-4487-b2ea-b09bf6698241',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'LandingPageControls.tsx:TextInput',message:'Input onChange fired',data:{oldValue:value,newValue,placeholder},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'D'})}).catch(()=>{});
+        // #endregion
+        onChange(newValue);
+    };
     if (multiline) {
         return (
             <textarea
                 value={value}
-                onChange={(e) => onChange(e.target.value)}
+                onChange={(e) => handleChange(e.target.value)}
                 placeholder={placeholder}
                 className="w-full px-3 py-2 rounded-lg border border-border bg-background text-sm resize-none min-h-[80px] focus:outline-none focus:ring-2 focus:ring-primary/50"
             />
@@ -67,7 +74,7 @@ const TextInput: React.FC<{
         <input
             type="text"
             value={value}
-            onChange={(e) => onChange(e.target.value)}
+            onChange={(e) => handleChange(e.target.value)}
             placeholder={placeholder}
             className="w-full px-3 py-2 rounded-lg border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
         />
@@ -176,9 +183,36 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
     // Get section data with defaults
     const data = section.data || {};
 
-    // Update handler
+    // #region agent log
+    fetch('http://127.0.0.1:7243/ingest/9b551d4e-1f47-4487-b2ea-b09bf6698241',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'LandingPageControls.tsx:render',message:'Component render',data:{sectionId:section.id,sectionType:section.type,dataKeys:Object.keys(data),logoText:data.logoText},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'B,E'})}).catch(()=>{});
+    // #endregion
+
+    // Update handler - use the ACTUAL section.id from props (not a mapped ID)
+    // This ensures we update the correct section in the state
     const updateData = (key: string, value: any) => {
-        onUpdateSection(section.id, { ...data, [key]: value });
+        // #region agent log
+        const isOnUpdateSectionDefined = typeof onUpdateSection === 'function';
+        console.error('[DEBUG] updateData called:', { sectionId: section.id, key, value, isOnUpdateSectionDefined });
+        fetch('http://127.0.0.1:7243/ingest/9b551d4e-1f47-4487-b2ea-b09bf6698241',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'LandingPageControls.tsx:updateData',message:'updateData called',data:{sectionId:section.id,sectionType:section.type,key,value,currentDataKeys:Object.keys(data),isOnUpdateSectionDefined},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'FIX2'})}).catch(()=>{});
+        // #endregion
+        const newData = { ...data, [key]: value };
+        // #region agent log
+        console.error('[DEBUG] About to call onUpdateSection:', { sectionId: section.id, newDataKeys: Object.keys(newData) });
+        fetch('http://127.0.0.1:7243/ingest/9b551d4e-1f47-4487-b2ea-b09bf6698241',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'LandingPageControls.tsx:updateData:beforeCall',message:'About to call onUpdateSection',data:{sectionId:section.id,newDataKeys:Object.keys(newData),newData},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'FIX2'})}).catch(()=>{});
+        // #endregion
+        try {
+            // Use the ACTUAL section ID from props - this is the ID in the state array
+            onUpdateSection(section.id, newData);
+            // #region agent log
+            console.error('[DEBUG] onUpdateSection returned successfully');
+            fetch('http://127.0.0.1:7243/ingest/9b551d4e-1f47-4487-b2ea-b09bf6698241',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'LandingPageControls.tsx:updateData:afterCall',message:'onUpdateSection completed',data:{usedId:section.id},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'FIX2'})}).catch(()=>{});
+            // #endregion
+        } catch (error: any) {
+            // #region agent log
+            console.error('[DEBUG] onUpdateSection threw error:', error?.message || error);
+            fetch('http://127.0.0.1:7243/ingest/9b551d4e-1f47-4487-b2ea-b09bf6698241',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'LandingPageControls.tsx:updateData:error',message:'onUpdateSection error',data:{error:error?.message||String(error)},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'FIX2'})}).catch(()=>{});
+            // #endregion
+        }
     };
 
     // Tab buttons
@@ -1071,77 +1105,78 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
 
     const renderHeaderControls = () => (
         <div className="space-y-6">
-            {activeTab === 'content' && (
-                <>
-                    <ControlGroup label={t('landingEditor.logoImage', 'Logo')}>
-                        {/* Logo Preview & Picker */}
-                        <div className="space-y-3">
-                            {data.logoImage && (
-                                <div className="relative w-full h-20 rounded-lg border border-border overflow-hidden bg-muted flex items-center justify-center">
-                                    <img
-                                        src={data.logoImage}
-                                        alt="Logo"
-                                        className="max-h-full max-w-full object-contain"
-                                    />
-                                    <button
-                                        onClick={() => updateData('logoImage', '')}
-                                        className="absolute top-1 right-1 p-1 rounded bg-destructive/80 text-white hover:bg-destructive"
-                                    >
-                                        <Trash2 size={12} />
-                                    </button>
-                                </div>
-                            )}
+            {/* Content controls - always show for header since tabs are hidden */}
+            <ControlGroup label={t('landingEditor.logoImage', 'Logo')}>
+                {/* Logo Preview & Picker */}
+                <div className="space-y-3">
+                    {data.logoImage && (
+                        <div className="relative w-full h-20 rounded-lg border border-border overflow-hidden bg-muted flex items-center justify-center">
+                            <img
+                                src={data.logoImage}
+                                alt="Logo"
+                                className="max-h-full max-w-full object-contain"
+                            />
                             <button
-                                onClick={() => setIsLogoPickerOpen(true)}
-                                className="w-full py-3 px-4 rounded-lg border border-dashed border-primary/50 text-primary hover:bg-primary/5 transition-colors flex items-center justify-center gap-2"
+                                onClick={() => updateData('logoImage', '')}
+                                className="absolute top-1 right-1 p-1 rounded bg-destructive/80 text-white hover:bg-destructive"
                             >
-                                <Image size={18} />
-                                {data.logoImage
-                                    ? t('landingEditor.changeLogo', 'Cambiar Logo')
-                                    : t('landingEditor.selectLogo', 'Seleccionar Logo de Biblioteca')
-                                }
+                                <Trash2 size={12} />
                             </button>
                         </div>
-                    </ControlGroup>
+                    )}
+                    <button
+                        onClick={() => setIsLogoPickerOpen(true)}
+                        className="w-full py-3 px-4 rounded-lg border border-dashed border-primary/50 text-primary hover:bg-primary/5 transition-colors flex items-center justify-center gap-2"
+                    >
+                        <Image size={18} />
+                        {data.logoImage
+                            ? t('landingEditor.changeLogo', 'Cambiar Logo')
+                            : t('landingEditor.selectLogo', 'Seleccionar Logo de Biblioteca')
+                        }
+                    </button>
+                </div>
+            </ControlGroup>
 
-                    <ControlGroup label={t('landingEditor.logoText', 'Texto del Logo')}>
-                        <TextInput
-                            value={data.logoText || ''}
-                            onChange={(v) => updateData('logoText', v)}
-                            placeholder="Ej: Quimera.ai"
-                        />
-                    </ControlGroup>
+            <ControlGroup label={t('landingEditor.logoText', 'Texto del Logo')}>
+                <TextInput
+                    value={data.logoText || ''}
+                    onChange={(v) => updateData('logoText', v)}
+                    placeholder="Ej: Quimera.ai"
+                />
+            </ControlGroup>
 
-                    <ControlGroup label={t('landingEditor.ctaButtons', 'Botones CTA')}>
-                        <Toggle
-                            label={t('landingEditor.showLoginButton', 'Mostrar botón de login')}
-                            checked={data.showLoginButton ?? true}
-                            onChange={(v) => updateData('showLoginButton', v)}
-                        />
-                        <Toggle
-                            label={t('landingEditor.showRegisterButton', 'Mostrar botón de registro')}
-                            checked={data.showRegisterButton ?? true}
-                            onChange={(v) => updateData('showRegisterButton', v)}
-                        />
-                    </ControlGroup>
+            <ControlGroup label={t('landingEditor.ctaButtons', 'Botones CTA')}>
+                <Toggle
+                    label={t('landingEditor.showLoginButton', 'Mostrar botón de login')}
+                    checked={data.showLoginButton ?? true}
+                    onChange={(v) => updateData('showLoginButton', v)}
+                />
+                <Toggle
+                    label={t('landingEditor.showRegisterButton', 'Mostrar botón de registro')}
+                    checked={data.showRegisterButton ?? true}
+                    onChange={(v) => updateData('showRegisterButton', v)}
+                />
+            </ControlGroup>
 
-                    <ControlGroup label={t('landingEditor.ctaButtonTexts', 'Textos de Botones')}>
-                        <TextInput
-                            value={data.loginText || ''}
-                            onChange={(v) => updateData('loginText', v)}
-                            placeholder="Login"
-                        />
-                        <TextInput
-                            value={data.registerText || ''}
-                            onChange={(v) => updateData('registerText', v)}
-                            placeholder="Comenzar Gratis"
-                        />
-                    </ControlGroup>
-                </>
-            )}
+            <ControlGroup label={t('landingEditor.ctaButtonTexts', 'Textos de Botones')}>
+                <TextInput
+                    value={data.loginText || ''}
+                    onChange={(v) => updateData('loginText', v)}
+                    placeholder="Login"
+                />
+                <TextInput
+                    value={data.registerText || ''}
+                    onChange={(v) => updateData('registerText', v)}
+                    placeholder="Comenzar Gratis"
+                />
+            </ControlGroup>
 
-            {activeTab === 'style' && (
-                <>
+            {/* Style controls - included inline since tabs are hidden */}
+            <div className="border-t border-border pt-4 mt-4">
+                <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3 block">
+                    {t('landingEditor.style', 'ESTILO')}
+                </label>
+                <div className="space-y-4">
                     <Toggle
                         label={t('landingEditor.stickyHeader', 'Header fijo')}
                         checked={data.sticky ?? true}
@@ -1160,8 +1195,8 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                         onChange={(v) => updateData('backgroundColor', v)}
                         paletteColors={getSelectedPaletteColors()}
                     />
-                </>
-            )}
+                </div>
+            </div>
 
             {/* Logo Picker Modal */}
             <ImagePickerModal

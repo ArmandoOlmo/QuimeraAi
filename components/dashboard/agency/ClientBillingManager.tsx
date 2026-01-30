@@ -5,6 +5,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useAgency } from '../../../contexts/agency/AgencyContext';
+import { useTenant } from '../../../contexts/tenant/TenantContext';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import {
     DollarSign,
@@ -16,7 +17,10 @@ import {
     Loader2,
     AlertCircle,
     Plus,
+    Settings,
+    Package,
 } from 'lucide-react';
+import { AssignPlanModal } from './plans';
 
 const functions = getFunctions();
 
@@ -28,10 +32,14 @@ interface ClientBillingInfo {
     paymentMethod?: string;
     nextBillingDate?: Date;
     subscriptionId?: string;
+    agencyPlanId?: string;
+    agencyPlanName?: string;
+    limits?: any;
 }
 
 export function ClientBillingManager() {
     const { subClients } = useAgency();
+    const { currentTenant } = useTenant();
     const [clientsBilling, setClientsBilling] = useState<ClientBillingInfo[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -42,6 +50,14 @@ export function ClientBillingManager() {
     const [editLimitsClient, setEditLimitsClient] = useState<string | null>(null);
     const [editLimits, setEditLimits] = useState<any>(null);
     const [processingAction, setProcessingAction] = useState<string | null>(null);
+    
+    // Plan assignment modal state
+    const [assignPlanModal, setAssignPlanModal] = useState<{
+        isOpen: boolean;
+        clientId: string;
+        clientName: string;
+        currentPlanId: string | null;
+    }>({ isOpen: false, clientId: '', clientName: '', currentPlanId: null });
 
     useEffect(() => {
         loadClientsBilling();
@@ -58,10 +74,26 @@ export function ClientBillingManager() {
                 ? new Date((client.billing.nextBillingDate as any).seconds * 1000)
                 : undefined,
             subscriptionId: client.billing?.stripeSubscriptionId,
+            agencyPlanId: (client as any).agencyPlanId,
+            agencyPlanName: (client as any).agencyPlanName,
             limits: client.limits,
         }));
 
         setClientsBilling(billingInfo);
+    };
+    
+    const handleOpenAssignPlan = (client: ClientBillingInfo) => {
+        setAssignPlanModal({
+            isOpen: true,
+            clientId: client.clientId,
+            clientName: client.clientName,
+            currentPlanId: client.agencyPlanId || null,
+        });
+    };
+    
+    const handlePlanAssigned = () => {
+        // Refresh the client list - the parent component should reload
+        loadClientsBilling();
     };
 
     const handleUpdateLimits = async () => {
@@ -267,6 +299,9 @@ export function ClientBillingManager() {
                                     Cliente
                                 </th>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">
+                                    Plan
+                                </th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">
                                     Precio Mensual
                                 </th>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">
@@ -294,6 +329,27 @@ export function ClientBillingManager() {
                                         <div className="font-medium text-foreground">
                                             {client.clientName}
                                         </div>
+                                    </td>
+
+                                    {/* Plan */}
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                        {client.agencyPlanName ? (
+                                            <button
+                                                onClick={() => handleOpenAssignPlan(client)}
+                                                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+                                            >
+                                                <Package className="h-3 w-3" />
+                                                {client.agencyPlanName}
+                                            </button>
+                                        ) : (
+                                            <button
+                                                onClick={() => handleOpenAssignPlan(client)}
+                                                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-muted text-muted-foreground hover:bg-muted/80 transition-colors"
+                                            >
+                                                <Plus className="h-3 w-3" />
+                                                Asignar Plan
+                                            </button>
+                                        )}
                                     </td>
 
                                     {/* Monthly Price */}
@@ -627,6 +683,19 @@ export function ClientBillingManager() {
                         </div>
                     </div>
                 </div>
+            )}
+
+            {/* Assign Plan Modal */}
+            {currentTenant?.id && (
+                <AssignPlanModal
+                    isOpen={assignPlanModal.isOpen}
+                    onClose={() => setAssignPlanModal({ ...assignPlanModal, isOpen: false })}
+                    clientTenantId={assignPlanModal.clientId}
+                    clientName={assignPlanModal.clientName}
+                    agencyTenantId={currentTenant.id}
+                    currentPlanId={assignPlanModal.currentPlanId}
+                    onAssigned={handlePlanAssigned}
+                />
             )}
         </div>
     );

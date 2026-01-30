@@ -30,10 +30,24 @@ const descriptionSizeClasses: Record<FontSize, string> = {
   xl: 'text-lg md:text-xl',
 };
 
-const Footer: React.FC<FooterData & { onNavigate?: (href: string) => void }> = ({
+const Footer: React.FC<FooterData & { 
+  onNavigate?: (href: string) => void; 
+  backgroundColor?: string; 
+  textColor?: string;
+  // Alternative prop names from editor controls
+  companyName?: string;
+  tagline?: string;
+  copyright?: string;
+}> = ({
   title, description, linkColumns = [], socialLinks = [], copyrightText, colors, titleFontSize = 'sm', descriptionFontSize = 'sm',
-  logoType = 'text', logoImageUrl, contactInfo, onNavigate, hideBranding
+  logoType = 'text', logoImageUrl, contactInfo, onNavigate, hideBranding,
+  backgroundColor, textColor, // Accept top-level color props from editor
+  companyName, tagline, copyright // Accept alternative prop names from editor
 }) => {
+  // Use alternative prop names if original ones are not provided
+  const actualTitle = title || companyName;
+  const actualDescription = description || tagline;
+  const actualCopyrightText = copyrightText || copyright;
   // Get design tokens with fallback to component colors
   const { getColor } = useDesignTokens();
 
@@ -41,16 +55,17 @@ const Footer: React.FC<FooterData & { onNavigate?: (href: string) => void }> = (
   const primaryColor = getColor('primary.main', '#4f46e5');
 
   // Merge component colors with Design Tokens - component colors take priority
+  // Also accept top-level backgroundColor/textColor props from the landing page editor
   const actualColors = {
-    background: colors?.background || primaryColor, // Fallback to primary if not set
+    background: backgroundColor || colors?.background || primaryColor, // Accept both formats
     border: colors?.border,
-    text: colors?.text,
+    text: textColor || colors?.text,
     heading: colors?.heading,
     linkHover: colors?.linkHover || primaryColor,
   };
 
   const currentYear = new Date().getFullYear();
-  const finalCopyrightText = (copyrightText || '© {YEAR} All rights reserved.').replace('{YEAR}', currentYear.toString());
+  const finalCopyrightText = (actualCopyrightText || '© {YEAR} All rights reserved.').replace('{YEAR}', currentYear.toString());
 
   return (
     <footer id="contact" className="border-t" style={{ backgroundColor: actualColors.background, borderColor: actualColors.border }}>
@@ -62,14 +77,14 @@ const Footer: React.FC<FooterData & { onNavigate?: (href: string) => void }> = (
             {logoType === 'image' && logoImageUrl ? (
               <img
                 src={logoImageUrl}
-                alt={title}
+                alt={actualTitle}
                 className="h-10 md:h-12 w-auto mb-4 object-contain"
               />
             ) : (
-              <h3 className={`${titleSizeClasses[titleFontSize]} font-bold text-site-heading mb-4 font-header`} style={{ color: actualColors.heading, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>{title}</h3>
+              <h3 className={`${titleSizeClasses[titleFontSize]} font-bold text-site-heading mb-4 font-header`} style={{ color: actualColors.heading, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>{actualTitle}</h3>
             )}
             <p className={`${descriptionSizeClasses[descriptionFontSize]} font-body max-w-xs`} style={{ color: actualColors.text }}>
-              {description}
+              {actualDescription}
             </p>
 
             {/* Contact Information */}
