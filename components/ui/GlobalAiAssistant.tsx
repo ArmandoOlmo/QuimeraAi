@@ -928,6 +928,51 @@ COMMON PHRASES (Spanish → English):
 FONT SIZES: xs, sm, base, lg, xl, 2xl, 3xl, 4xl, 5xl, 6xl, 7xl, 8xl, 9xl
 PADDING SIZES: none, xs, sm, md, lg, xl, 2xl, 3xl
 FONT FAMILIES: roboto, open-sans, lato, montserrat, playfair-display, oswald, source-sans-pro, raleway, poppins, inter
+
+*** RESPONSE FORMAT RULES (CRITICAL!) ***
+
+🚨 YOUR RESPONSES MUST BE WELL-FORMATTED AND EASY TO READ:
+
+1. **MANDATORY SPACING** - ALWAYS add blank lines between paragraphs and sections
+2. **MODERATE EMOJIS** - Use 1-3 emojis per section (✅, 🎨, 💡, ⚠️, etc.) - NOT every line
+3. **USE BOLD** for labels: **Campo:** valor
+4. **MATCH LANGUAGE** - Respond in Spanish if user writes in Spanish
+5. **CLEAR STRUCTURE** - Use headers, bullet lists with spacing
+
+❌ WRONG FORMAT (never do this):
+✅ Cambios aplicados
+He cambiado el título.
+💡 Tip: Puedes cambiar más.
+
+✅ CORRECT FORMAT (always do this):
+✅ **Cambios Aplicados**
+
+He cambiado el título a "Bienvenido".
+
+💡 **Tip:** Puedes seguir editando con otros comandos.
+
+EXAMPLE PATTERNS:
+
+For confirmations:
+✅ **Acción Completada**
+
+He actualizado [lo que se cambió].
+
+💡 Puedes continuar con más cambios.
+
+For errors:
+⚠️ **No se pudo completar**
+
+**Problema:** [explicación]
+
+**Solución:** [pasos a seguir]
+
+For questions:
+❓ **Necesito más información**
+
+¿Qué [detalle] te gustaría [acción]?
+
+REMEMBER: Spacing between paragraphs = readable responses!
 `;
 
 const cleanJson = (text: string) => {
@@ -2564,7 +2609,7 @@ const GlobalAiAssistant: React.FC = () => {
 
         // 5. Compile final instruction
         // 5. Compile final instruction
-        return `${baseInstruction}\n\n${templatesInstruction}\n\n${scopeText}\n\n${crmInstructions}\n\n${projectContext}\n${dataStructureContext}\n${cmsContext}\n${leadsContext}\n${domainsContext}\n${componentsContext}\n${customContext}\n${activeContext}`;
+        return `${baseInstruction}\n\n${templatesInstruction}\n\n${ACTION_PROTOCOL}\n\n${scopeText}\n\n${crmInstructions}\n\n${projectContext}\n${dataStructureContext}\n${cmsContext}\n${leadsContext}\n${domainsContext}\n${componentsContext}\n${customContext}\n${activeContext}`;
     };
 
     // DEPRECATED: Old hardcoded content (now in prompt templates)
@@ -3417,7 +3462,57 @@ MAPEO DE ÁREAS:
 - Appointments: Calendario y citas
 - Super Admin: Configuración global
 
-Sé amigable, rápido y útil.`;
+*** FORMATO DE RESPUESTA (MUY IMPORTANTE) ***
+
+🚨 TUS RESPUESTAS DEBEN TENER BUEN FORMATO:
+
+1. **ESPACIADO OBLIGATORIO** - SIEMPRE agrega líneas en blanco entre párrafos
+2. **EMOJIS MODERADOS** - Usa 1-3 emojis por sección (✅, 🎨, 💡, ⚠️)
+3. **USA NEGRITA** para etiquetas: **Campo:** valor
+4. **ESTRUCTURA CLARA** - Headers, listas con espaciado
+5. 🔹 **Emojis en Bullets** - Usa emojis en los bullets principales
+
+❌ MAL FORMATO (nunca hagas esto):
+✅ Acción completada
+He cambiado el título.
+💡 Tip: Puedes cambiar más.
+
+✅ BUEN FORMATO (siempre haz esto):
+✅ **Acción Completada**
+
+He cambiado el título a "Bienvenido".
+
+💡 **Tip:** Puedes seguir editando.
+
+PATRONES DE RESPUESTA:
+
+Para confirmaciones:
+✅ **[Título]**
+
+[Descripción de lo hecho]
+
+💡 [Sugerencia opcional]
+
+Para información:
+📊 **[Título]**
+
+[Contenido organizado con bullets si es necesario]
+
+- 🎨 **Diseño:** descripción
+- ✏️ **Contenido:** descripción
+
+Para errores:
+⚠️ **[Título]**
+
+**Problema:** [explicación]
+
+**Solución:** [pasos]
+
+RECUERDA: 
+1. Espaciado entre párrafos = respuestas legibles.
+2. Emojis en los bullets importantes.
+3. Sé amigable y profesional.`;
+
 
                 // Always capture screen for context (fast with html2canvas-pro)
                 console.time('[Global Assistant] Screen Capture');
@@ -3649,7 +3744,26 @@ Usuario: ${userMsg}`;
                                 ? 'bg-secondary/50 text-muted-foreground text-xs font-mono border border-dashed border-border w-full'
                                 : 'bg-card text-foreground border border-border rounded-tl-sm'
                             }`}>
-                            {msg.role === 'model' && !msg.isToolOutput ? <ReactMarkdown>{msg.text}</ReactMarkdown> : msg.text}
+                            {msg.role === 'model' && !msg.isToolOutput ? (
+                                <ReactMarkdown
+                                    components={{
+                                        p: ({ node, ...props }) => <p className="mb-4 last:mb-0 leading-relaxed" {...props} />,
+                                        ul: ({ node, ...props }) => <ul className="mb-4 last:mb-0 list-disc pl-5 space-y-1" {...props} />,
+                                        ol: ({ node, ...props }) => <ol className="mb-4 last:mb-0 list-decimal pl-5 space-y-1" {...props} />,
+                                        li: ({ node, ...props }) => <li className="mb-1" {...props} />,
+                                        h1: ({ node, ...props }) => <h1 className="text-lg font-bold mb-3 mt-4 first:mt-0" {...props} />,
+                                        h2: ({ node, ...props }) => <h2 className="text-base font-bold mb-3 mt-4 first:mt-0" {...props} />,
+                                        h3: ({ node, ...props }) => <h3 className="text-sm font-bold mb-2 mt-3 first:mt-0" {...props} />,
+                                        strong: ({ node, ...props }) => <strong className="font-semibold text-foreground" {...props} />,
+                                        blockquote: ({ node, ...props }) => <blockquote className="border-l-2 border-primary/50 pl-4 italic my-4 bg-primary/5 rounded-r py-2" {...props} />,
+                                        code: ({ node, ...props }) => <code className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono text-foreground" {...props} />,
+                                    }}
+                                >
+                                    {msg.text}
+                                </ReactMarkdown>
+                            ) : (
+                                <p className="leading-relaxed whitespace-pre-wrap">{msg.text}</p>
+                            )}
                         </div>
                         {msg.role === 'user' && (
                             <div className="w-8 h-8 rounded-full bg-secondary/50 border border-border flex items-center justify-center ml-2 shrink-0 overflow-hidden">

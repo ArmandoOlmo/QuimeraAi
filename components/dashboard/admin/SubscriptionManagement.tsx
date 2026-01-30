@@ -78,6 +78,8 @@ import {
     initializePlansInFirestore,
     syncPlansFromHardcoded,
     getPlanStatistics,
+    migrateToNewPlanStructure,
+    isMigrationNeeded,
     StoredPlan,
     PlanStats,
 } from '../../../services/plansService';
@@ -108,7 +110,7 @@ interface GlobalStats {
     averageUsagePercentage: number;
     tenantsNearLimit: number;
     tenantsOverLimit: number;
-    planDistribution: Record<SubscriptionPlanId, number>;
+    planDistribution: Partial<Record<SubscriptionPlanId, number>>;
     usageByOperation: Record<string, number>;
     dailyUsage: Array<{ date: string; credits: number }>;
 }
@@ -547,6 +549,8 @@ const SubscriptionManagement: React.FC<SubscriptionManagementProps> = ({ onBack 
     const [plans, setPlans] = useState<Record<string, StoredPlan>>({});
     const [planStats, setPlanStats] = useState<Record<string, PlanStats>>({});
     const [showArchivedPlans, setShowArchivedPlans] = useState(false);
+    const [needsMigration, setNeedsMigration] = useState(false);
+    const [isMigrating, setIsMigrating] = useState(false);
 
     // Modal states
     const [addCreditsModal, setAddCreditsModal] = useState<{
@@ -572,9 +576,8 @@ const SubscriptionManagement: React.FC<SubscriptionManagementProps> = ({ onBack 
             let totalCreditsAllocated = 0;
             let tenantsNearLimit = 0;
             let tenantsOverLimit = 0;
-            const planDistribution: Record<SubscriptionPlanId, number> = {
-                free: 0, starter: 0, pro: 0, agency: 0, enterprise: 0
-            };
+            // Inicializar distribución con todos los planes disponibles
+            const planDistribution: Partial<Record<SubscriptionPlanId, number>> = {};
             const usageByOperation: Record<string, number> = {};
             const dailyUsageMap: Record<string, number> = {};
 
@@ -621,7 +624,7 @@ const SubscriptionManagement: React.FC<SubscriptionManagementProps> = ({ onBack 
                 // Actualizar estadísticas globales
                 totalCreditsUsed += data.creditsUsed || 0;
                 totalCreditsAllocated += data.creditsIncluded || 0;
-                planDistribution[planId]++;
+                planDistribution[planId] = (planDistribution[planId] || 0) + 1;
 
                 if (usagePercentage >= 80 && usagePercentage < 100) tenantsNearLimit++;
                 if (usagePercentage >= 100) tenantsOverLimit++;
@@ -689,6 +692,10 @@ const SubscriptionManagement: React.FC<SubscriptionManagementProps> = ({ onBack 
             // Cargar estadísticas de planes
             const stats = await getPlanStatistics();
             setPlanStats(stats);
+
+            // Verificar si necesita migración a nuevos planes
+            const migrationNeeded = await isMigrationNeeded();
+            setNeedsMigration(migrationNeeded);
 
         } catch (err) {
             console.error('Error loading subscription data:', err);
@@ -778,6 +785,71 @@ const SubscriptionManagement: React.FC<SubscriptionManagementProps> = ({ onBack 
             setError('Error al sincronizar planes desde el código');
         }
         setIsRefreshing(false);
+    };
+
+    const handleMigrateToNewPlans = async () => {
+        const confirmMsg = `¿Migrar a la nueva estructura de planes?
+
+Esta acción:
+- ARCHIVARÁ los planes legacy: Hobby, Starter, Pro, Agency, Agency Plus
+- CREARÁ/ACTUALIZARÁ los nuevos planes: Free, Individual, Agency Starter, Agency Pro, Agency Scale, Enterprise
+- SINCRONIZARÁ todos los nuevos planes con Stripe
+
+Los usuarios existentes NO serán afectados, mantendrán su plan actual.
+
+¿Continuar?`;
+
+        if (!confirm(confirmMsg)) return;
+
+        setIsMigrating(true);
+        setError(null);
+
+        try {
+            console.log('[Migration] Starting migration...');
+            const result = await migrateToNewPlanStructure(user?.uid);
+            console.log('[Migration] Result:', result);
+
+            // Build detailed message
+            const details: string[] = [];
+            
+            if (result.archived.length > 0) {
+                details.push(`✅ Planes archivados: ${result.archived.join(', ')}`);
+            } else {
+                details.push(`ℹ️ No se archivaron planes (ya estaban archivados o no existían)`);
+            }
+            
+            if (result.created.length > 0) {
+                details.push(`✅ Planes creados: ${result.created.join(', ')}`);
+            }
+            
+            if (result.updated.length > 0) {
+                details.push(`✅ Planes actualizados: ${result.updated.join(', ')}`);
+            }
+            
+            if (result.created.length === 0 && result.updated.length === 0) {
+                details.push(`ℹ️ No se crearon ni actualizaron planes`);
+            }
+            
+            if (result.errors.length > 0) {
+                details.push(`\n⚠️ Errores:\n${result.errors.join('\n')}`);
+            }
+
+            await loadData();
+            
+            const statusEmoji = result.success ? '✅' : '⚠️';
+            const statusText = result.success ? 'Migración completada' : 'Migración completada con advertencias';
+            
+            alert(`${statusEmoji} ${statusText}\n\n${details.join('\n')}`);
+
+            if (!result.success) {
+                setError(`Algunos errores durante la migración: ${result.errors.join('; ')}`);
+            }
+        } catch (err) {
+            console.error('[Migration] Error:', err);
+            setError(`Error en la migración: ${err instanceof Error ? err.message : 'desconocido'}`);
+        }
+
+        setIsMigrating(false);
     };
 
     // Filtrar y ordenar tenants
@@ -1117,6 +1189,51 @@ const SubscriptionManagement: React.FC<SubscriptionManagementProps> = ({ onBack 
                         {/* Plans Tab */}
                         {activeTab === 'plans' && (
                             <div className="space-y-6">
+                                {/* Migration Banner */}
+                                {needsMigration && (
+                                    <div className="p-4 bg-gradient-to-r from-purple-500/20 to-indigo-500/20 border border-purple-500/30 rounded-xl">
+                                        <div className="flex items-start gap-3">
+                                            <div className="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center flex-shrink-0">
+                                                <Zap className="w-5 h-5 text-purple-400" />
+                                            </div>
+                                            <div className="flex-1">
+                                                <h4 className="font-semibold text-purple-300 mb-1">
+                                                    Nueva Estructura de Planes Disponible
+                                                </h4>
+                                                <p className="text-sm text-purple-300/80 mb-3">
+                                                    Hay una nueva estructura de planes lista para implementar:
+                                                </p>
+                                                <ul className="text-sm text-purple-300/70 space-y-1 mb-3">
+                                                    <li>• <strong>Individual</strong> - $49/mes con 7 días trial, todas las features</li>
+                                                    <li>• <strong>Agency Starter</strong> - $99/mes + $29/proyecto, pool 2,000 créditos</li>
+                                                    <li>• <strong>Agency Pro</strong> - $199/mes + $29/proyecto, pool 5,000 créditos</li>
+                                                    <li>• <strong>Agency Scale</strong> - $399/mes + $29/proyecto, pool 15,000 créditos</li>
+                                                </ul>
+                                                <p className="text-xs text-purple-300/60">
+                                                    Los planes legacy (Hobby, Starter, Pro, Agency, Agency Plus) serán archivados. Los usuarios existentes no serán afectados.
+                                                </p>
+                                            </div>
+                                            <button
+                                                onClick={handleMigrateToNewPlans}
+                                                disabled={isMigrating}
+                                                className="px-4 py-2 rounded-lg bg-purple-500 text-white text-sm font-medium hover:bg-purple-600 transition-colors flex items-center gap-2 flex-shrink-0"
+                                            >
+                                                {isMigrating ? (
+                                                    <>
+                                                        <RefreshCw className="w-4 h-4 animate-spin" />
+                                                        Migrando...
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <Zap className="w-4 h-4" />
+                                                        Migrar Ahora
+                                                    </>
+                                                )}
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+
                                 {/* Header con acciones */}
                                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                                     <div>
@@ -1127,7 +1244,7 @@ const SubscriptionManagement: React.FC<SubscriptionManagementProps> = ({ onBack 
                                             Administra los planes de suscripción y sus límites
                                         </p>
                                     </div>
-                                    <div className="flex gap-2">
+                                    <div className="flex flex-wrap gap-2">
                                         <button
                                             onClick={() => setShowArchivedPlans(!showArchivedPlans)}
                                             className={`
@@ -1152,10 +1269,27 @@ const SubscriptionManagement: React.FC<SubscriptionManagementProps> = ({ onBack 
                                             </button>
                                         )}
                                         <button
+                                            onClick={handleMigrateToNewPlans}
+                                            disabled={isMigrating || isRefreshing}
+                                            className={`px-4 py-2 rounded-lg text-white text-sm font-medium hover:opacity-90 transition-colors flex items-center gap-2 ${
+                                                needsMigration 
+                                                    ? 'bg-gradient-to-r from-purple-500 to-indigo-500 animate-pulse' 
+                                                    : 'bg-purple-600'
+                                            }`}
+                                            title="Migrar a los nuevos planes (Individual, Agency Starter/Pro/Scale)"
+                                        >
+                                            {isMigrating ? (
+                                                <RefreshCw className="w-4 h-4 animate-spin" />
+                                            ) : (
+                                                <Zap className="w-4 h-4" />
+                                            )}
+                                            {isMigrating ? 'Migrando...' : 'Migrar Planes'}
+                                        </button>
+                                        <button
                                             onClick={handleSyncPlansFromCode}
                                             disabled={isRefreshing}
                                             className="px-4 py-2 rounded-lg bg-cyan-500/20 text-cyan-400 text-sm font-medium hover:bg-cyan-500/30 transition-colors flex items-center gap-2"
-                                            title="Sincronizar planes del código a Firestore (crea Hobby y actualiza Free)"
+                                            title="Sincronizar planes del código a Firestore"
                                         >
                                             <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
                                             Sync desde Código
@@ -1203,6 +1337,11 @@ const SubscriptionManagement: React.FC<SubscriptionManagementProps> = ({ onBack 
                                                                 <div>
                                                                     <h4 className="font-semibold text-editor-text-primary flex items-center gap-2">
                                                                         {plan.name}
+                                                                        {plan._fromCode && (
+                                                                            <span className="px-2 py-0.5 bg-amber-500/20 text-amber-400 text-xs rounded-full animate-pulse">
+                                                                                Nuevo
+                                                                            </span>
+                                                                        )}
                                                                         {plan.isPopular && (
                                                                             <span className="px-2 py-0.5 bg-editor-accent text-white text-xs rounded-full">
                                                                                 Popular

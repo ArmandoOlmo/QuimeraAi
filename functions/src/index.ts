@@ -43,6 +43,27 @@ import {
     getSubscriptionDetails,
 } from './stripeBilling';
 
+// Agency Stripe Connect Billing functions
+import {
+    createStripeConnectAccount,
+    getStripeConnectStatus,
+    setupClientBilling,
+    updateClientMonthlyPrice,
+    cancelClientSubscription,
+    generateClientInvoice,
+    updateAgencyProjectCount,
+    getAgencyBillingSummary,
+    onTenantProjectChange
+} from './billing/stripeConnectAgency';
+
+// Add-ons Management functions
+import {
+    getAddonsPricing,
+    calculateAddonsPrice,
+    checkAddonsEligibility,
+    updateSubscriptionAddons
+} from './billing/addonsManagement';
+
 import {
     onProductWrite,
     onCategoryWrite,
@@ -219,6 +240,19 @@ export const stripeConnect = {
     createPaymentIntent: createConnectPaymentIntent,
     webhook: stripeConnectWebhook,
     disconnect: disconnectConnectAccount
+};
+
+// Export Agency Stripe Connect Billing functions
+export const agencyBilling = {
+    createStripeConnectAccount,
+    getStripeConnectStatus,
+    setupClientBilling,
+    updateClientMonthlyPrice,
+    cancelClientSubscription,
+    generateClientInvoice,
+    updateAgencyProjectCount,
+    getAgencyBillingSummary,
+    onTenantProjectChange
 };
 
 // Export Ecommerce Sync functions (Firestore triggers)
@@ -493,6 +527,21 @@ export {
     // User Role Claims exports (Security)
     onUserRoleChange,
     syncUserRoleClaims,
-    batchSyncAllUserClaims
+    batchSyncAllUserClaims,
+    // Agency Stripe Connect Billing exports
+    createStripeConnectAccount,
+    getStripeConnectStatus,
+    setupClientBilling,
+    updateClientMonthlyPrice,
+    cancelClientSubscription,
+    generateClientInvoice,
+    updateAgencyProjectCount,
+    getAgencyBillingSummary,
+    onTenantProjectChange,
+    // Add-ons Management exports
+    getAddonsPricing,
+    calculateAddonsPrice,
+    checkAddonsEligibility,
+    updateSubscriptionAddons
 };
 

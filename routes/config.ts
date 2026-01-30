@@ -96,10 +96,12 @@ export const ROUTES = {
   // Agency Routes (Private - Agency Owners/Admins only)
   AGENCY: '/agency',
   AGENCY_OVERVIEW: '/agency/overview',
+  AGENCY_ANALYTICS: '/agency/analytics',
   AGENCY_BILLING: '/agency/billing',
   AGENCY_REPORTS: '/agency/reports',
   AGENCY_NEW_CLIENT: '/agency/new-client',
   AGENCY_ADDONS: '/agency/addons',
+  AGENCY_LANDING: '/agency/landing',
 
   // Admin Routes
   SUPERADMIN: '/admin',
@@ -491,6 +493,16 @@ export const routeConfigs: RouteConfig[] = [
     parent: ROUTES.AGENCY,
   },
   {
+    path: ROUTES.AGENCY_ANALYTICS,
+    view: 'agency',
+    type: 'private',
+    title: 'Agency Analytics',
+    requiresAuth: true,
+    requiresEmailVerified: true,
+    roles: ['owner', 'superadmin', 'agency_owner', 'agency_admin'],
+    parent: ROUTES.AGENCY,
+  },
+  {
     path: ROUTES.AGENCY_BILLING,
     view: 'agency',
     type: 'private',
@@ -525,6 +537,16 @@ export const routeConfigs: RouteConfig[] = [
     view: 'agency',
     type: 'private',
     title: 'Agency Add-ons',
+    requiresAuth: true,
+    requiresEmailVerified: true,
+    roles: ['owner', 'superadmin', 'agency_owner', 'agency_admin'],
+    parent: ROUTES.AGENCY,
+  },
+  {
+    path: ROUTES.AGENCY_LANDING,
+    view: 'agency',
+    type: 'private',
+    title: 'Agency Landing Editor',
     requiresAuth: true,
     requiresEmailVerified: true,
     roles: ['owner', 'superadmin', 'agency_owner', 'agency_admin'],

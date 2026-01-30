@@ -85,12 +85,26 @@ export interface PortalTheme {
     footerText: string;
 }
 
+export interface AgencyLandingResolutionResult {
+    tenantId: string;
+    landingId: string;
+    subdomain?: string;
+    customDomain?: string;
+    isAgencyLanding: true;
+    config: any; // AgencyLandingConfig
+}
+
+export type DomainResolutionResult = 
+    | (PortalResolutionResult & { isAgencyLanding?: false })
+    | AgencyLandingResolutionResult;
+
 // =============================================================================
 // CACHE
 // =============================================================================
 
 // In-memory cache for portal domain lookups (TTL: 5 minutes)
 const portalCache = new Map<string, { data: PortalResolutionResult | null; timestamp: number }>();
+const landingCache = new Map<string, { data: AgencyLandingResolutionResult | null; timestamp: number }>();
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
 // =============================================================================
@@ -367,6 +381,173 @@ function escapeHtml(text: string): string {
 }
 
 // =============================================================================
+// AGENCY LANDING RESOLUTION
+// =============================================================================
+
+/**
+ * Check if a domain is an agency landing subdomain
+ * Format: {subdomain}.quimera.ai or {subdomain}.quimeraai.web.app
+ */
+export function isAgencyLandingSubdomain(hostname: string): boolean {
+    const normalized = normalizeDomain(hostname);
+    
+    // Check for quimera.ai subdomains (not www, app, api)
+    const quimeraMatch = normalized.match(/^([a-z0-9-]+)\.quimera\.ai$/);
+    if (quimeraMatch) {
+        const subdomain = quimeraMatch[1];
+        const reservedSubdomains = ['www', 'app', 'api', 'admin', 'help', 'support', 'blog', 'docs', 'portal'];
+        return !reservedSubdomains.includes(subdomain);
+    }
+    
+    return false;
+}
+
+/**
+ * Extract subdomain from hostname
+ */
+export function extractSubdomain(hostname: string): string | null {
+    const normalized = normalizeDomain(hostname);
+    
+    const quimeraMatch = normalized.match(/^([a-z0-9-]+)\.quimera\.ai$/);
+    if (quimeraMatch) {
+        return quimeraMatch[1];
+    }
+    
+    return null;
+}
+
+/**
+ * Resolve agency landing by subdomain
+ */
+export async function resolveAgencyLanding(subdomain: string): Promise<AgencyLandingResolutionResult | null> {
+    // Check cache first
+    const cacheKey = `landing:${subdomain}`;
+    const cached = landingCache.get(cacheKey);
+    if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+        console.log(`[PortalResolver] Landing cache hit for ${subdomain}`);
+        return cached.data;
+    }
+
+    try {
+        console.log(`[PortalResolver] Looking up agency landing for subdomain: ${subdomain}`);
+        
+        // Query agencyLandings collection
+        const landingQuery = await db.collection('agencyLandings')
+            .where('subdomain', '==', subdomain)
+            .where('enabled', '==', true)
+            .where('status', '==', 'published')
+            .limit(1)
+            .get();
+
+        if (landingQuery.empty) {
+            console.log(`[PortalResolver] No landing found for subdomain ${subdomain}`);
+            landingCache.set(cacheKey, { data: null, timestamp: Date.now() });
+            return null;
+        }
+
+        const landingDoc = landingQuery.docs[0];
+        const landingData = landingDoc.data();
+
+        const result: AgencyLandingResolutionResult = {
+            tenantId: landingData.tenantId,
+            landingId: landingDoc.id,
+            subdomain: landingData.subdomain,
+            customDomain: landingData.customDomain,
+            isAgencyLanding: true,
+            config: landingData,
+        };
+
+        landingCache.set(cacheKey, { data: result, timestamp: Date.now() });
+        console.log(`[PortalResolver] Resolved landing ${subdomain} -> Tenant ${result.tenantId}`);
+        
+        return result;
+
+    } catch (error) {
+        console.error(`[PortalResolver] Error resolving agency landing ${subdomain}:`, error);
+        return null;
+    }
+}
+
+/**
+ * Resolve agency landing by custom domain
+ */
+export async function resolveAgencyLandingByDomain(domain: string): Promise<AgencyLandingResolutionResult | null> {
+    const normalized = normalizeDomain(domain);
+    const cacheKey = `landing-domain:${normalized}`;
+    
+    const cached = landingCache.get(cacheKey);
+    if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+        return cached.data;
+    }
+
+    try {
+        const landingQuery = await db.collection('agencyLandings')
+            .where('customDomain', '==', normalized)
+            .where('customDomainVerified', '==', true)
+            .where('enabled', '==', true)
+            .where('status', '==', 'published')
+            .limit(1)
+            .get();
+
+        if (landingQuery.empty) {
+            landingCache.set(cacheKey, { data: null, timestamp: Date.now() });
+            return null;
+        }
+
+        const landingDoc = landingQuery.docs[0];
+        const landingData = landingDoc.data();
+
+        const result: AgencyLandingResolutionResult = {
+            tenantId: landingData.tenantId,
+            landingId: landingDoc.id,
+            subdomain: landingData.subdomain,
+            customDomain: landingData.customDomain,
+            isAgencyLanding: true,
+            config: landingData,
+        };
+
+        landingCache.set(cacheKey, { data: result, timestamp: Date.now() });
+        return result;
+
+    } catch (error) {
+        console.error(`[PortalResolver] Error resolving landing by domain ${domain}:`, error);
+        return null;
+    }
+}
+
+/**
+ * Universal domain resolver - determines if portal or landing
+ */
+export async function resolveDomain(hostname: string): Promise<DomainResolutionResult | null> {
+    const normalized = normalizeDomain(hostname);
+
+    // Check if it's an agency landing subdomain first
+    if (isAgencyLandingSubdomain(hostname)) {
+        const subdomain = extractSubdomain(hostname);
+        if (subdomain) {
+            const landingResult = await resolveAgencyLanding(subdomain);
+            if (landingResult) {
+                return landingResult;
+            }
+        }
+    }
+
+    // Check for custom domain landing
+    const customDomainLanding = await resolveAgencyLandingByDomain(normalized);
+    if (customDomainLanding) {
+        return customDomainLanding;
+    }
+
+    // Fall back to portal resolution
+    const portalResult = await resolvePortalDomain(hostname);
+    if (portalResult) {
+        return { ...portalResult, isAgencyLanding: false };
+    }
+
+    return null;
+}
+
+// =============================================================================
 // CACHE MANAGEMENT
 // =============================================================================
 
@@ -418,7 +599,21 @@ export async function clearTenantPortalCache(tenantId: string): Promise<void> {
  */
 export function clearAllPortalCache(): void {
     portalCache.clear();
+    landingCache.clear();
     console.log('[PortalResolver] All cache cleared');
+}
+
+/**
+ * Clear cache for an agency landing
+ */
+export function clearAgencyLandingCache(subdomain?: string, customDomain?: string): void {
+    if (subdomain) {
+        landingCache.delete(`landing:${subdomain}`);
+    }
+    if (customDomain) {
+        landingCache.delete(`landing-domain:${normalizeDomain(customDomain)}`);
+    }
+    console.log(`[PortalResolver] Landing cache cleared for ${subdomain || customDomain}`);
 }
 
 /**

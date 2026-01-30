@@ -384,6 +384,10 @@ export const createSubscriptionCheckout = functions.https.onCall(
                 throw new functions.https.HttpsError('not-found', `Price for ${billingCycle} billing not found`);
             }
 
+            // Check if this plan has a trial period (7 days for Individual and Agency plans)
+            const planHasTrial = ['individual', 'agency_starter', 'agency_pro', 'agency_scale'].includes(planId);
+            const trialDays = planHasTrial ? 7 : undefined;
+
             // Create checkout session
             const session = await stripe.checkout.sessions.create({
                 payment_method_types: ['card'],
@@ -405,6 +409,8 @@ export const createSubscriptionCheckout = functions.https.onCall(
                         tenantId,
                         planId,
                     },
+                    // Add 7-day trial for eligible plans
+                    ...(trialDays && { trial_period_days: trialDays }),
                 },
             });
 
@@ -856,9 +862,15 @@ export const getSubscriptionDetails = functions.https.onCall(
 async function getPlanLimits(planId: string): Promise<{ maxAiCredits: number }> {
     const planCredits: Record<string, number> = {
         free: 30,
+        hobby: 100,
         starter: 300,
+        individual: 500,        // Nuevo plan Individual
         pro: 1500,
         agency: 5000,
+        agency_starter: 2000,   // Nuevos planes de agencia
+        agency_pro: 5000,
+        agency_scale: 15000,
+        agency_plus: 10000,
         enterprise: 25000,
     };
     

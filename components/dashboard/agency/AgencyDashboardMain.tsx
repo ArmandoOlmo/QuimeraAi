@@ -5,19 +5,21 @@
 
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Building2, Menu, CreditCard, FileText, UserPlus, Package, LayoutDashboard } from 'lucide-react';
+import { Building2, Menu, CreditCard, FileText, UserPlus, Package, LayoutDashboard, BarChart3, Globe } from 'lucide-react';
 import { useRouter } from '../../../hooks/useRouter';
 import { ROUTES } from '../../../routes/config';
 import { useAgency } from '../../../contexts/agency/AgencyContext';
 import { useTenant } from '../../../contexts/tenant/TenantContext';
 import DashboardSidebar from '../DashboardSidebar';
 import { AgencyOverview } from './AgencyOverview';
+import { AgencyAnalytics } from './AgencyAnalytics';
+import { AgencyLandingEditor } from './landing';
 import { BillingSettings } from './BillingSettings';
 import { ReportsGenerator } from './ReportsGenerator';
 import { ClientIntakeForm } from './ClientIntakeForm';
 import { AddonsManager } from './AddonsManager';
 
-type AgencyTab = 'overview' | 'billing' | 'reports' | 'new-client' | 'addons';
+type AgencyTab = 'overview' | 'analytics' | 'landing' | 'billing' | 'reports' | 'new-client' | 'addons';
 
 const AgencyDashboardMain: React.FC = () => {
     const { t } = useTranslation();
@@ -28,6 +30,8 @@ const AgencyDashboardMain: React.FC = () => {
 
     // Determine active tab from URL
     const getTabFromPath = (): AgencyTab => {
+        if (path.includes('/analytics')) return 'analytics';
+        if (path.includes('/landing')) return 'landing';
         if (path.includes('/billing')) return 'billing';
         if (path.includes('/reports')) return 'reports';
         if (path.includes('/new-client')) return 'new-client';
@@ -41,6 +45,12 @@ const AgencyDashboardMain: React.FC = () => {
         switch (tab) {
             case 'overview':
                 navigate(ROUTES.AGENCY);
+                break;
+            case 'analytics':
+                navigate(ROUTES.AGENCY_ANALYTICS);
+                break;
+            case 'landing':
+                navigate(ROUTES.AGENCY_LANDING);
                 break;
             case 'billing':
                 navigate(ROUTES.AGENCY_BILLING);
@@ -62,6 +72,16 @@ const AgencyDashboardMain: React.FC = () => {
             id: 'overview' as AgencyTab,
             label: t('agency.overview', 'Vista General'),
             icon: LayoutDashboard,
+        },
+        {
+            id: 'analytics' as AgencyTab,
+            label: t('agency.analytics', 'Analytics'),
+            icon: BarChart3,
+        },
+        {
+            id: 'landing' as AgencyTab,
+            label: t('agency.landing', 'Landing Page'),
+            icon: Globe,
         },
         {
             id: 'billing' as AgencyTab,
@@ -86,7 +106,7 @@ const AgencyDashboardMain: React.FC = () => {
     ];
 
     return (
-        <div className="flex h-screen bg-background text-foreground">
+        <div className="flex h-screen bg-background text-foreground overflow-hidden">
             {/* Sidebar */}
             <DashboardSidebar
                 isMobileOpen={isMobileMenuOpen}
@@ -170,103 +190,117 @@ const AgencyDashboardMain: React.FC = () => {
                 </div>
 
                 {/* Main Content Area */}
-                <main id="main-content" className="flex-1 overflow-y-auto">
-                    <div className="max-w-7xl mx-auto p-6">
-                        {loadingClients ? (
-                            <div className="flex items-center justify-center h-64">
-                                <div className="text-center">
-                                    <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary mx-auto mb-4" />
-                                    <p className="text-muted-foreground text-sm">
-                                        {t('common.loading', 'Cargando...')}
-                                    </p>
+                <main id="main-content" className="flex-1 overflow-y-auto flex flex-col">
+                    {/* Landing Editor - Full width without container restrictions */}
+                    {activeTab === 'landing' && !loadingClients && (
+                        <div className="flex-1 w-full h-full">
+                            <AgencyLandingEditor />
+                        </div>
+                    )}
+
+                    {/* Other tabs with standard container */}
+                    {activeTab !== 'landing' && (
+                        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 w-full">
+                            {loadingClients ? (
+                                <div className="flex items-center justify-center h-64">
+                                    <div className="text-center">
+                                        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary mx-auto mb-4" />
+                                        <p className="text-muted-foreground text-sm">
+                                            {t('common.loading', 'Cargando...')}
+                                        </p>
+                                    </div>
                                 </div>
-                            </div>
-                        ) : (
-                            <>
-                                {activeTab === 'overview' && (
-                                    <AgencyOverview />
-                                )}
+                            ) : (
+                                <>
+                                    {activeTab === 'overview' && (
+                                        <AgencyOverview />
+                                    )}
 
-                                {activeTab === 'billing' && (
-                                    <div>
-                                        <div className="mb-6">
-                                            <h2 className="text-2xl font-bold text-foreground">
-                                                {t('agency.billing', 'Facturación')}
-                                            </h2>
-                                            <p className="text-muted-foreground mt-1">
-                                                {t('agency.billingDesc', 'Gestiona Stripe Connect y facturación de clientes')}
-                                            </p>
+                                    {activeTab === 'analytics' && (
+                                        <AgencyAnalytics />
+                                    )}
+
+                                    {activeTab === 'billing' && (
+                                        <div>
+                                            <div className="mb-6">
+                                                <h2 className="text-2xl font-bold text-foreground">
+                                                    {t('agency.billing', 'Facturación')}
+                                                </h2>
+                                                <p className="text-muted-foreground mt-1">
+                                                    {t('agency.billingDesc', 'Gestiona Stripe Connect y facturación de clientes')}
+                                                </p>
+                                            </div>
+                                            <BillingSettings />
                                         </div>
-                                        <BillingSettings />
-                                    </div>
-                                )}
+                                    )}
 
-                                {activeTab === 'reports' && (
-                                    <div>
+                                    {activeTab === 'reports' && (
+                                        <div>
 
-                                        <ReportsGenerator />
-                                    </div>
-                                )}
-
-                                {activeTab === 'new-client' && (
-                                    <div>
-                                        <div className="mb-6">
-                                            <h2 className="text-2xl font-bold text-foreground">
-                                                {t('agency.newClient', 'Nuevo Cliente')}
-                                            </h2>
-                                            <p className="text-muted-foreground mt-1">
-                                                {t('agency.newClientDesc', 'Onboarding automatizado para sub-clientes')}
-                                            </p>
+                                            <ReportsGenerator />
                                         </div>
-                                        <ClientIntakeForm
-                                            onSubmit={async (data) => {
-                                                try {
-                                                    console.log('Creating client:', data);
+                                    )}
 
-                                                    await createSubClient(
-                                                        {
-                                                            name: data.businessName,
-                                                            type: 'agency_client',
-                                                            branding: {
-                                                                primaryColor: data.primaryColor,
-                                                                secondaryColor: data.secondaryColor,
-                                                                companyName: data.businessName,
-                                                            }
-                                                        },
-                                                        data.initialUsers.map(u => ({
-                                                            email: u.email,
-                                                            name: u.name,
-                                                            role: (u.role === 'client_admin' || u.role === 'client_user') ? 'client' : u.role
-                                                        })) as { email: string, name: string, role: string }[] as any // Simple fix for type mismatch in this specific context
-                                                    );
+                                    {activeTab === 'new-client' && (
+                                        <div>
+                                            <div className="mb-6">
+                                                <h2 className="text-2xl font-bold text-foreground">
+                                                    {t('agency.newClient', 'Nuevo Cliente')}
+                                                </h2>
+                                                <p className="text-muted-foreground mt-1">
+                                                    {t('agency.newClientDesc', 'Onboarding automatizado para sub-clientes')}
+                                                </p>
+                                            </div>
+                                            <ClientIntakeForm
+                                                onSubmit={async (data) => {
+                                                    try {
+                                                        console.log('Creating client:', data);
 
-                                                    handleTabChange('overview');
-                                                } catch (error) {
-                                                    console.error('Error creating client:', error);
-                                                    throw error; // Re-throw to be caught by the form's error handler
-                                                }
-                                            }}
-                                            onCancel={() => handleTabChange('overview')}
-                                        />
-                                    </div>
-                                )}
+                                                        await createSubClient(
+                                                            {
+                                                                name: data.businessName,
+                                                                type: 'agency_client',
+                                                                branding: {
+                                                                    primaryColor: data.primaryColor,
+                                                                    secondaryColor: data.secondaryColor,
+                                                                    companyName: data.businessName,
+                                                                }
+                                                            },
+                                                            data.initialUsers.map(u => ({
+                                                                email: u.email,
+                                                                name: u.name,
+                                                                role: (u.role === 'client_admin' || u.role === 'client_user') ? 'client' : u.role
+                                                            })) as { email: string, name: string, role: string }[] as any // Simple fix for type mismatch in this specific context
+                                                        );
 
-                                {activeTab === 'addons' && (
-                                    <div>
-                                        <div className="mb-6">
-                                            <h2 className="text-2xl font-bold text-foreground">
-                                                {t('agency.addons', 'Add-ons')}
-                                            </h2>
-                                            <p className="text-muted-foreground mt-1">
-                                                {t('agency.addonsDesc', 'Gestiona complementos de tu subscription')}
-                                            </p>
+                                                        handleTabChange('overview');
+                                                    } catch (error) {
+                                                        console.error('Error creating client:', error);
+                                                        throw error; // Re-throw to be caught by the form's error handler
+                                                    }
+                                                }}
+                                                onCancel={() => handleTabChange('overview')}
+                                            />
                                         </div>
-                                        <AddonsManager />
-                                    </div>
-                                )}
-                            </>
-                        )}
-                    </div>
+                                    )}
+
+                                    {activeTab === 'addons' && (
+                                        <div>
+                                            <div className="mb-6">
+                                                <h2 className="text-2xl font-bold text-foreground">
+                                                    {t('agency.addons', 'Add-ons')}
+                                                </h2>
+                                                <p className="text-muted-foreground mt-1">
+                                                    {t('agency.addonsDesc', 'Gestiona complementos de tu subscription')}
+                                                </p>
+                                            </div>
+                                            <AddonsManager />
+                                        </div>
+                                    )}
+                                </>
+                            )}
+                        </div>
+                    )}
                 </main>
             </div>
         </div>

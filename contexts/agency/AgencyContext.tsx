@@ -66,7 +66,7 @@ export function AgencyProvider({ children }: AgencyProviderProps) {
     // Check if current tenant is an agency plan
     useEffect(() => {
         if (currentTenant) {
-            const agencyPlans = ['agency', 'agency_plus', 'enterprise'];
+            const agencyPlans = ['agency_starter', 'agency_pro', 'agency_scale', 'enterprise'];
             setIsAgencyPlan(agencyPlans.includes(currentTenant.subscriptionPlan));
         } else {
             setIsAgencyPlan(false);
@@ -165,8 +165,8 @@ export function canAccessAgencyDashboard(
 ): boolean {
     if (!tenant || !role) return false;
 
-    // Must be on agency/agency_plus/enterprise plan
-    const agencyPlans = ['agency', 'agency_plus', 'enterprise'];
+    // Must be on agency plan (new structure: agency_starter, agency_pro, agency_scale)
+    const agencyPlans = ['agency_starter', 'agency_pro', 'agency_scale', 'enterprise'];
     if (!agencyPlans.includes(tenant.subscriptionPlan)) return false;
 
     // Must be owner or admin

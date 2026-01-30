@@ -53,18 +53,22 @@ export function AddonsManager() {
   const loadPricing = async () => {
     if (!currentTenant) return;
 
+    // Default pricing values (used as fallback if Cloud Function unavailable)
+    const defaultPricing: AddonPricing = {
+      extraSubClients: 15, // $15 per additional sub-client
+      extraStorageGB: 10,  // $10 per 100GB block
+      extraAiCredits: 20,  // $20 per 1000 credits block
+    };
+
     try {
-      const getPricing = httpsCallable(functions, 'agencyBilling-getAddonsPricing');
+      const getPricing = httpsCallable(functions, 'getAddonsPricing');
       const result = await getPricing({ tenantId: currentTenant.id }) as any;
       const data = result.data;
 
-      // Extract pricing from availableAddons array
-      if (data.availableAddons) {
-        const pricingObj: AddonPricing = {
-          extraSubClients: 15, // default values
-          extraStorageGB: 10,
-          extraAiCredits: 20,
-        };
+      // Extract pricing from addons array (backend returns 'addons' not 'availableAddons')
+      const addonsArray = data.addons || data.availableAddons;
+      if (addonsArray) {
+        const pricingObj: AddonPricing = { ...defaultPricing };
 
         const currentAddonsFromBackend: Record<string, number> = {
           extraSubClients: 0,
@@ -72,7 +76,7 @@ export function AddonsManager() {
           extraAiCredits: 0,
         };
 
-        data.availableAddons.forEach((addon: any) => {
+        addonsArray.forEach((addon: any) => {
           if (addon.id in pricingObj) {
             pricingObj[addon.id as keyof AddonPricing] = addon.pricePerUnit;
             currentAddonsFromBackend[addon.id] = addon.currentQuantity || 0;
@@ -82,12 +86,22 @@ export function AddonsManager() {
         setPricing(pricingObj);
         setAddons(currentAddonsFromBackend);
         setPendingAddons(currentAddonsFromBackend);
+      } else if (data.pricing) {
+        // Fallback: use direct pricing object if available
+        setPricing(data.pricing);
+        // Load current addons from tenant data
+        loadCurrentAddons();
       }
     } catch (error: any) {
       console.error('Error loading pricing:', error);
-      toast.error('Error al cargar precios');
+      // Use default pricing as fallback when function is unavailable
+      console.log('Using default pricing values');
+      setPricing(defaultPricing);
+      loadCurrentAddons();
+      toast.error('Precios cargados localmente (función no disponible)');
     }
   };
+
 
   const loadCurrentAddons = async () => {
     if (!currentTenant) return;
@@ -129,7 +143,7 @@ export function AddonsManager() {
 
     try {
       setLoading(true);
-      const update = httpsCallable(functions, 'agencyBilling-updateSubscriptionAddons');
+      const update = httpsCallable(functions, 'updateSubscriptionAddons');
       await update({
         tenantId: currentTenant.id,
         addons: pendingAddons,

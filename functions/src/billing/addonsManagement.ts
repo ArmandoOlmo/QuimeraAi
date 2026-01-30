@@ -35,16 +35,31 @@ async function verifyAgencyOwner(userId: string, tenantId: string): Promise<void
     throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated');
   }
 
+  // First, check if user is the direct owner of the tenant
+  const tenantDoc = await db.collection('tenants').doc(tenantId).get();
+  if (tenantDoc.exists) {
+    const tenantData = tenantDoc.data();
+    if (tenantData?.ownerId === userId || tenantData?.createdBy === userId) {
+      return; // User is the tenant owner, allow access
+    }
+  }
+
+  // Check tenantMembers for valid roles (including 'owner', 'Owner', 'agency_owner', 'agency_admin')
   const memberSnapshot = await db.collection('tenantMembers')
     .where('userId', '==', userId)
     .where('tenantId', '==', tenantId)
-    .where('role', 'in', ['agency_owner', 'agency_admin'])
     .limit(1)
     .get();
 
-  if (memberSnapshot.empty) {
-    throw new functions.https.HttpsError('permission-denied', 'User does not have permission to manage billing');
+  if (!memberSnapshot.empty) {
+    const memberData = memberSnapshot.docs[0].data();
+    const role = memberData.role?.toLowerCase();
+    if (['owner', 'agency_owner', 'agency_admin', 'super_admin', 'superadmin'].includes(role)) {
+      return; // User has valid role
+    }
   }
+
+  throw new functions.https.HttpsError('permission-denied', 'User does not have permission to manage billing');
 }
 
 function calculateTotalAddonsPrice(addons: Record<string, number>): number {

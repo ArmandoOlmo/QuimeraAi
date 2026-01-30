@@ -6,8 +6,14 @@
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
 import * as crypto from 'crypto';
+import { sendEmail } from './email/emailService';
+import { generateInviteEmailHtml, InviteEmailData } from './email/templates/inviteEmail';
+import { isPlatformAdmin } from './utils/platformAdmin';
 
 const db = admin.firestore();
+
+// App URL for invite links
+const APP_URL = process.env.APP_URL || 'https://app.quimera.ai';
 
 // =============================================================================
 // TYPES
@@ -202,13 +208,18 @@ export const createTenantInvite = functions.https.onCall(
 
         const userId = context.auth.uid;
 
-        // Check if user has permission to invite
-        const hasPermission = await hasTenantPermission(tenantId, userId, 'canInviteMembers');
-        if (!hasPermission) {
-            throw new functions.https.HttpsError(
-                'permission-denied',
-                'No tienes permiso para invitar miembros a este workspace'
-            );
+        // Check if user is platform Owner/SuperAdmin (full access)
+        const isAdmin = await isPlatformAdmin(userId);
+
+        // Check if user has permission to invite (skip for platform admins)
+        if (!isAdmin) {
+            const hasPermission = await hasTenantPermission(tenantId, userId, 'canInviteMembers');
+            if (!hasPermission) {
+                throw new functions.https.HttpsError(
+                    'permission-denied',
+                    'No tienes permiso para invitar miembros a este workspace'
+                );
+            }
         }
 
         // Get tenant data for email
@@ -294,14 +305,36 @@ export const createTenantInvite = functions.https.onCall(
 
         const inviteRef = await db.collection('tenantInvites').add(inviteData);
 
-        // TODO: Send invite email
-        // await sendInviteEmail(email, {
-        //     inviteUrl: `${process.env.APP_URL}/invite/${token}`,
-        //     inviterName: inviterData?.name || 'Someone',
-        //     tenantName: tenantData?.name || 'a workspace',
-        //     role: role,
-        //     message: message
-        // });
+        // Send invite email
+        const inviteUrl = `${APP_URL}/invite/${token}`;
+        const emailData: InviteEmailData = {
+            inviteUrl,
+            inviterName: inviterData?.name || inviterData?.displayName || 'Alguien',
+            tenantName: tenantData?.name || 'un workspace',
+            tenantLogo: tenantData?.branding?.logoUrl,
+            role,
+            message: message || undefined,
+            email: email.toLowerCase(),
+            expiresAt: expiresAt.toDate(),
+            brandingColor: tenantData?.branding?.primaryColor,
+        };
+
+        try {
+            const emailHtml = generateInviteEmailHtml(emailData);
+            await sendEmail({
+                to: email,
+                subject: `${inviterData?.name || 'Alguien'} te ha invitado a ${tenantData?.name || 'un workspace'}`,
+                html: emailHtml,
+            });
+            
+            functions.logger.info('Invite email sent', { email, tenantId });
+        } catch (emailError) {
+            // Log but don't fail the invite creation
+            functions.logger.error('Failed to send invite email', { 
+                email, 
+                error: emailError instanceof Error ? emailError.message : 'Unknown error' 
+            });
+        }
 
         functions.logger.info('Tenant invite created', {
             inviteId: inviteRef.id,
@@ -655,13 +688,18 @@ export const cancelTenantInvite = functions.https.onCall(
 
         const invite = inviteDoc.data()!;
 
-        // Check permission
-        const hasPermission = await hasTenantPermission(invite.tenantId, userId, 'canInviteMembers');
-        if (!hasPermission) {
-            throw new functions.https.HttpsError(
-                'permission-denied',
-                'No tienes permiso para cancelar esta invitación'
-            );
+        // Check if user is platform Owner/SuperAdmin (full access)
+        const isAdmin = await isPlatformAdmin(userId);
+
+        // Check permission (skip for platform admins)
+        if (!isAdmin) {
+            const hasPermission = await hasTenantPermission(invite.tenantId, userId, 'canInviteMembers');
+            if (!hasPermission) {
+                throw new functions.https.HttpsError(
+                    'permission-denied',
+                    'No tienes permiso para cancelar esta invitación'
+                );
+            }
         }
 
         if (invite.status !== 'pending') {
@@ -707,13 +745,18 @@ export const resendTenantInvite = functions.https.onCall(
 
         const invite = inviteDoc.data()!;
 
-        // Check permission
-        const hasPermission = await hasTenantPermission(invite.tenantId, userId, 'canInviteMembers');
-        if (!hasPermission) {
-            throw new functions.https.HttpsError(
-                'permission-denied',
-                'No tienes permiso para reenviar esta invitación'
-            );
+        // Check if user is platform Owner/SuperAdmin (full access)
+        const isAdmin = await isPlatformAdmin(userId);
+
+        // Check permission (skip for platform admins)
+        if (!isAdmin) {
+            const hasPermission = await hasTenantPermission(invite.tenantId, userId, 'canInviteMembers');
+            if (!hasPermission) {
+                throw new functions.https.HttpsError(
+                    'permission-denied',
+                    'No tienes permiso para reenviar esta invitación'
+                );
+            }
         }
 
         // Generate new token and extend expiration
@@ -730,8 +773,41 @@ export const resendTenantInvite = functions.https.onCall(
             resentBy: userId,
         });
 
-        // TODO: Resend invite email
-        // await sendInviteEmail(invite.email, { ... });
+        // Get tenant and inviter info for email
+        const tenantDoc = await db.collection('tenants').doc(invite.tenantId).get();
+        const tenantData = tenantDoc.data();
+        const inviterDoc = await db.collection('users').doc(userId).get();
+        const inviterData = inviterDoc.data();
+
+        // Resend invite email
+        const inviteUrl = `${APP_URL}/invite/${newToken}`;
+        const emailData: InviteEmailData = {
+            inviteUrl,
+            inviterName: inviterData?.name || inviterData?.displayName || 'Alguien',
+            tenantName: tenantData?.name || invite.tenantName || 'un workspace',
+            tenantLogo: tenantData?.branding?.logoUrl,
+            role: invite.role,
+            message: invite.message || undefined,
+            email: invite.email,
+            expiresAt: newExpiresAt.toDate(),
+            brandingColor: tenantData?.branding?.primaryColor,
+        };
+
+        try {
+            const emailHtml = generateInviteEmailHtml(emailData);
+            await sendEmail({
+                to: invite.email,
+                subject: `Recordatorio: ${inviterData?.name || 'Alguien'} te ha invitado a ${tenantData?.name || 'un workspace'}`,
+                html: emailHtml,
+            });
+            
+            functions.logger.info('Resend invite email sent', { email: invite.email, inviteId });
+        } catch (emailError) {
+            functions.logger.error('Failed to resend invite email', { 
+                email: invite.email, 
+                error: emailError instanceof Error ? emailError.message : 'Unknown error' 
+            });
+        }
 
         functions.logger.info('Tenant invite resent', {
             inviteId,

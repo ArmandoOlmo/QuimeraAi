@@ -387,6 +387,11 @@ export const createCheckoutSession = functions.https.onCall(async (data, context
             });
         }
 
+        // Check if this plan has a trial period
+        // Individual plan has 7 days trial, agency plans may have trial too
+        const planHasTrial = ['individual', 'agency_starter', 'agency_pro', 'agency_scale'].includes(planId);
+        const trialDays = planHasTrial ? 7 : undefined;
+
         // Create checkout session
         const session = await stripe.checkout.sessions.create({
             customer: customerId,
@@ -407,6 +412,8 @@ export const createCheckoutSession = functions.https.onCall(async (data, context
                     tenantId,
                     planId,
                 },
+                // Add 7-day trial for eligible plans
+                ...(trialDays && { trial_period_days: trialDays }),
             },
         });
 

@@ -6,6 +6,7 @@
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
 import Stripe from 'stripe';
+import { isPlatformAdmin } from '../utils/platformAdmin';
 
 const db = admin.firestore();
 const stripe = new Stripe(functions.config().stripe.secret_key);
@@ -21,6 +22,18 @@ async function verifyAgencyOwner(userId: string, tenantId?: string): Promise<str
     throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated');
   }
 
+  // Check if user is platform Owner/SuperAdmin (full access to all tenants)
+  const isAdmin = await isPlatformAdmin(userId);
+  
+  if (isAdmin && tenantId) {
+    // Platform admins can access any tenant
+    const tenantDoc = await db.collection('tenants').doc(tenantId).get();
+    if (!tenantDoc.exists) {
+      throw new functions.https.HttpsError('not-found', 'Tenant not found');
+    }
+    return tenantId;
+  }
+
   // If tenantId provided, verify ownership of that specific tenant
   if (tenantId) {
     const tenantDoc = await db.collection('tenants').doc(tenantId).get();
@@ -29,7 +42,9 @@ async function verifyAgencyOwner(userId: string, tenantId?: string): Promise<str
     }
 
     const tenantData = tenantDoc.data()!;
-    if (tenantData.ownerUserId !== userId) {
+    
+    // Platform admins bypass owner check
+    if (!isAdmin && tenantData.ownerUserId !== userId) {
       throw new functions.https.HttpsError('permission-denied', 'Not the owner of this tenant');
     }
 
@@ -53,7 +68,7 @@ async function verifyAgencyOwner(userId: string, tenantId?: string): Promise<str
   const tenantDoc = await db.collection('tenants').doc(agencyTenantId).get();
   const tenantData = tenantDoc.data()!;
 
-  if (!['agency', 'agency_plus', 'enterprise'].includes(tenantData.subscriptionPlan)) {
+  if (!['agency_starter', 'agency_pro', 'agency_scale', 'enterprise'].includes(tenantData.subscriptionPlan)) {
     throw new functions.https.HttpsError('permission-denied', 'Tenant is not an agency');
   }
 
@@ -481,3 +496,314 @@ export const generateClientInvoice = functions.https.onCall(async (data, context
     throw new functions.https.HttpsError('internal', `Failed to generate invoice: ${error.message}`);
   }
 });
+
+// ============================================================================
+// AGENCY PROJECT BILLING (Fee + Per-Project Model)
+// ============================================================================
+
+/**
+ * Agency billing plan details
+ */
+const AGENCY_BILLING_PLANS: Record<string, { baseFee: number; projectCost: number; poolCredits: number }> = {
+  agency_starter: { baseFee: 99, projectCost: 29, poolCredits: 2000 },
+  agency_pro: { baseFee: 199, projectCost: 29, poolCredits: 5000 },
+  agency_scale: { baseFee: 399, projectCost: 29, poolCredits: 15000 },
+};
+
+/**
+ * Check if plan uses project-based billing
+ */
+function isProjectBillingPlan(plan: string): boolean {
+  return Object.keys(AGENCY_BILLING_PLANS).includes(plan);
+}
+
+/**
+ * Calculate total monthly bill for agency
+ */
+function calculateAgencyBill(plan: string, activeProjects: number): number {
+  const details = AGENCY_BILLING_PLANS[plan];
+  if (!details) return 0;
+  return details.baseFee + (details.projectCost * activeProjects);
+}
+
+/**
+ * Update agency project count and recalculate billing
+ */
+export const updateAgencyProjectCount = functions.https.onCall(async (data, context) => {
+  const userId = context.auth?.uid;
+  if (!userId) {
+    throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated');
+  }
+
+  const { tenantId } = data;
+  const agencyTenantId = await verifyAgencyOwner(userId, tenantId);
+
+  try {
+    // Get agency tenant
+    const agencyDoc = await db.collection('tenants').doc(agencyTenantId).get();
+    const agencyData = agencyDoc.data()!;
+
+    // Check if this plan uses project billing
+    if (!isProjectBillingPlan(agencyData.subscriptionPlan)) {
+      return {
+        success: true,
+        message: 'Plan does not use project-based billing',
+        activeProjects: 0,
+        totalMonthlyBill: agencyData.billing?.monthlyPrice || 0,
+      };
+    }
+
+    // Count all active projects across agency and sub-clients
+    let totalActiveProjects = 0;
+    const projectsByClient: Record<string, { name: string; count: number }> = {};
+
+    // Count agency's own projects
+    const agencyProjectsSnapshot = await db.collection('tenants').doc(agencyTenantId)
+      .collection('projects')
+      .where('status', 'in', ['active', 'published'])
+      .get();
+    
+    const agencyProjectCount = agencyProjectsSnapshot.size;
+    totalActiveProjects += agencyProjectCount;
+    projectsByClient[agencyTenantId] = { name: agencyData.name, count: agencyProjectCount };
+
+    // Get all sub-clients
+    const subClientsSnapshot = await db.collection('tenants')
+      .where('ownerTenantId', '==', agencyTenantId)
+      .where('status', '==', 'active')
+      .get();
+
+    // Count projects for each sub-client
+    for (const clientDoc of subClientsSnapshot.docs) {
+      const clientData = clientDoc.data();
+      
+      // Projects can be in tenant's subcollection or in users collection
+      const clientProjectsSnapshot = await db.collection('tenants').doc(clientDoc.id)
+        .collection('projects')
+        .where('status', 'in', ['active', 'published'])
+        .get();
+
+      const clientProjectCount = clientProjectsSnapshot.size;
+      totalActiveProjects += clientProjectCount;
+      projectsByClient[clientDoc.id] = { name: clientData.name, count: clientProjectCount };
+    }
+
+    // Calculate new monthly bill
+    const planDetails = AGENCY_BILLING_PLANS[agencyData.subscriptionPlan];
+    const totalMonthlyBill = calculateAgencyBill(agencyData.subscriptionPlan, totalActiveProjects);
+
+    // Update agency billing info
+    await db.collection('tenants').doc(agencyTenantId).update({
+      'billing.isAgencyBilling': true,
+      'billing.agencyBaseFee': planDetails.baseFee,
+      'billing.projectCost': planDetails.projectCost,
+      'billing.activeProjectsCount': totalActiveProjects,
+      'billing.totalMonthlyBill': totalMonthlyBill,
+      'billing.lastProjectCountUpdate': admin.firestore.FieldValue.serverTimestamp(),
+      'billing.projectBreakdown': projectsByClient,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+
+    // Update Stripe subscription if exists
+    if (agencyData.billing?.stripeSubscriptionId) {
+      try {
+        const subscription = await stripe.subscriptions.retrieve(agencyData.billing.stripeSubscriptionId);
+        
+        // Update subscription with new amount
+        await stripe.subscriptions.update(agencyData.billing.stripeSubscriptionId, {
+          items: [{
+            id: subscription.items.data[0].id,
+            price_data: {
+              currency: 'usd',
+              product: subscription.items.data[0].price.product as string,
+              recurring: { interval: 'month' },
+              unit_amount: totalMonthlyBill * 100, // Convert to cents
+            },
+          }],
+          proration_behavior: 'create_prorations',
+          metadata: {
+            ...subscription.metadata,
+            activeProjects: totalActiveProjects.toString(),
+            baseFee: planDetails.baseFee.toString(),
+            projectCost: planDetails.projectCost.toString(),
+          },
+        });
+
+        functions.logger.info('Stripe subscription updated with new project count', {
+          agencyTenantId,
+          activeProjects: totalActiveProjects,
+          newAmount: totalMonthlyBill,
+        });
+      } catch (stripeError: any) {
+        functions.logger.warn('Could not update Stripe subscription', { error: stripeError.message });
+      }
+    }
+
+    functions.logger.info('Agency project count updated', {
+      agencyTenantId,
+      activeProjects: totalActiveProjects,
+      totalMonthlyBill,
+    });
+
+    return {
+      success: true,
+      activeProjects: totalActiveProjects,
+      totalMonthlyBill,
+      baseFee: planDetails.baseFee,
+      projectCost: planDetails.projectCost,
+      breakdown: projectsByClient,
+    };
+
+  } catch (error: any) {
+    functions.logger.error('Error updating agency project count', { error: error.message, agencyTenantId });
+    throw new functions.https.HttpsError('internal', `Failed to update project count: ${error.message}`);
+  }
+});
+
+/**
+ * Get agency billing summary
+ */
+export const getAgencyBillingSummary = functions.https.onCall(async (data, context) => {
+  const userId = context.auth?.uid;
+  if (!userId) {
+    throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated');
+  }
+
+  const { tenantId } = data;
+  const agencyTenantId = await verifyAgencyOwner(userId, tenantId);
+
+  try {
+    const agencyDoc = await db.collection('tenants').doc(agencyTenantId).get();
+    const agencyData = agencyDoc.data()!;
+
+    const billing = agencyData.billing || {};
+    const plan = agencyData.subscriptionPlan;
+    const planDetails = AGENCY_BILLING_PLANS[plan];
+
+    if (!planDetails) {
+      return {
+        success: true,
+        isProjectBilling: false,
+        plan,
+        monthlyPrice: billing.monthlyPrice || 0,
+      };
+    }
+
+    return {
+      success: true,
+      isProjectBilling: true,
+      plan,
+      baseFee: planDetails.baseFee,
+      projectCost: planDetails.projectCost,
+      poolCredits: planDetails.poolCredits,
+      activeProjects: billing.activeProjectsCount || 0,
+      totalMonthlyBill: billing.totalMonthlyBill || planDetails.baseFee,
+      breakdown: billing.projectBreakdown || {},
+      lastUpdated: billing.lastProjectCountUpdate,
+    };
+
+  } catch (error: any) {
+    functions.logger.error('Error getting billing summary', { error: error.message, agencyTenantId });
+    throw new functions.https.HttpsError('internal', `Failed to get billing summary: ${error.message}`);
+  }
+});
+
+/**
+ * Firestore trigger: Update agency billing when projects change
+ * Monitors tenant project subcollections
+ */
+export const onTenantProjectChange = functions.firestore
+  .document('tenants/{tenantId}/projects/{projectId}')
+  .onWrite(async (change, context) => {
+    const { tenantId } = context.params;
+
+    try {
+      // Get tenant info
+      const tenantDoc = await db.collection('tenants').doc(tenantId).get();
+      if (!tenantDoc.exists) return;
+
+      const tenantData = tenantDoc.data()!;
+      let agencyTenantId: string | null = null;
+
+      // Check if this is an agency or a sub-client
+      if (isProjectBillingPlan(tenantData.subscriptionPlan)) {
+        // This is the agency itself
+        agencyTenantId = tenantId;
+      } else if (tenantData.ownerTenantId) {
+        // This is a sub-client, get parent agency
+        const parentDoc = await db.collection('tenants').doc(tenantData.ownerTenantId).get();
+        if (parentDoc.exists) {
+          const parentData = parentDoc.data()!;
+          if (isProjectBillingPlan(parentData.subscriptionPlan)) {
+            agencyTenantId = tenantData.ownerTenantId;
+          }
+        }
+      }
+
+      if (!agencyTenantId) {
+        // Not related to project billing
+        return;
+      }
+
+      // Debounce: check if we updated recently (within 5 seconds)
+      const agencyDoc = await db.collection('tenants').doc(agencyTenantId).get();
+      const agencyData = agencyDoc.data()!;
+      const lastUpdate = agencyData.billing?.lastProjectCountUpdate;
+      
+      if (lastUpdate) {
+        const lastUpdateTime = lastUpdate.toDate ? lastUpdate.toDate() : new Date(lastUpdate.seconds * 1000);
+        const timeSinceUpdate = Date.now() - lastUpdateTime.getTime();
+        if (timeSinceUpdate < 5000) {
+          functions.logger.info('Skipping project count update (debounce)', { agencyTenantId, timeSinceUpdate });
+          return;
+        }
+      }
+
+      // Recount projects
+      let totalActiveProjects = 0;
+
+      // Count agency's own projects
+      const agencyProjectsSnapshot = await db.collection('tenants').doc(agencyTenantId)
+        .collection('projects')
+        .where('status', 'in', ['active', 'published'])
+        .get();
+      totalActiveProjects += agencyProjectsSnapshot.size;
+
+      // Get all sub-clients
+      const subClientsSnapshot = await db.collection('tenants')
+        .where('ownerTenantId', '==', agencyTenantId)
+        .where('status', '==', 'active')
+        .get();
+
+      // Count projects for each sub-client
+      for (const clientDoc of subClientsSnapshot.docs) {
+        const clientProjectsSnapshot = await db.collection('tenants').doc(clientDoc.id)
+          .collection('projects')
+          .where('status', 'in', ['active', 'published'])
+          .get();
+        totalActiveProjects += clientProjectsSnapshot.size;
+      }
+
+      // Calculate and update billing
+      const planDetails = AGENCY_BILLING_PLANS[agencyData.subscriptionPlan];
+      if (planDetails) {
+        const totalMonthlyBill = calculateAgencyBill(agencyData.subscriptionPlan, totalActiveProjects);
+
+        await db.collection('tenants').doc(agencyTenantId).update({
+          'billing.activeProjectsCount': totalActiveProjects,
+          'billing.totalMonthlyBill': totalMonthlyBill,
+          'billing.lastProjectCountUpdate': admin.firestore.FieldValue.serverTimestamp(),
+        });
+
+        functions.logger.info('Agency project count auto-updated', {
+          agencyTenantId,
+          activeProjects: totalActiveProjects,
+          totalMonthlyBill,
+          trigger: 'project_change',
+        });
+      }
+
+    } catch (error: any) {
+      functions.logger.error('Error in project change trigger', { error: error.message, tenantId });
+    }
+  });

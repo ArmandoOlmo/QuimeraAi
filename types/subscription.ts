@@ -7,7 +7,13 @@
 // PLAN TYPES
 // =============================================================================
 
-export type SubscriptionPlanId = 'free' | 'hobby' | 'starter' | 'pro' | 'agency' | 'agency_plus' | 'enterprise';
+export type SubscriptionPlanId = 
+    | 'free' 
+    | 'individual'           // Plan Individual $49/mes
+    | 'agency_starter'       // Fee $99 + $29/proyecto
+    | 'agency_pro'           // Fee $199 + $29/proyecto
+    | 'agency_scale'         // Fee $399 + $29/proyecto
+    | 'enterprise';
 export type BillingCycle = 'monthly' | 'annually';
 export type SubscriptionStatus = 'active' | 'trial' | 'past_due' | 'cancelled' | 'expired';
 
@@ -105,6 +111,14 @@ export interface SubscriptionPlan {
     stripeProductId?: string;
     stripePriceIdMonthly?: string;
     stripePriceIdAnnually?: string;
+
+    // Agency-specific fields (Fase 3)
+    isAgencyPlan?: boolean;           // Es plan de agencia con fee base + proyecto
+    projectCost?: number;             // Costo por proyecto activo (ej: $29/mes)
+    hasSharedCreditsPool?: boolean;   // Los créditos se comparten entre sub-clientes
+
+    // Trial configuration
+    trialDays?: number;               // Días de trial (default: 7 para Individual)
 }
 
 // =============================================================================
@@ -199,6 +213,17 @@ export interface AiCreditsUsage {
 
     // Last updated
     lastUpdated: { seconds: number; nanoseconds: number };
+
+    // === Pool compartido para agencias (Fase 4) ===
+    parentTenantId?: string;          // Si es sub-cliente, ID de la agencia padre
+    isAgencyPool?: boolean;           // Si este es el pool principal de una agencia
+    subClientsUsage?: {               // Uso desglosado por sub-cliente (solo en pool de agencia)
+        [subClientId: string]: {
+            tenantName: string;
+            creditsUsed: number;
+            lastUpdated: { seconds: number; nanoseconds: number };
+        };
+    };
 }
 
 /**
@@ -337,116 +362,27 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionPlanId, SubscriptionPlan> = 
         icon: 'Sparkles',
     },
 
-    hobby: {
-        id: 'hobby',
-        name: 'Hobby',
-        description: 'Para proyectos personales y portfolios',
-        price: { monthly: 9, annually: 7 },
-        limits: {
-            maxProjects: 2,
-            maxUsers: 1,
-            maxStorageGB: 2,
-            maxAiCredits: 100,
-            maxDomains: 1,
-            maxLeads: 200,
-            maxProducts: 0,
-            maxEmailsPerMonth: 0,
-        },
-        features: {
-            aiWebBuilder: true,
-            visualEditor: true,
-            templates: true,
-            cmsEnabled: false,
-            cmsAdvanced: false,
-            crmEnabled: false,
-            crmPipelines: false,
-            crmAutomations: false,
-            ecommerceEnabled: false,
-            ecommerceTransactionFee: 0,
-            chatbotEnabled: false,
-            chatbotCustomization: false,
-            aiAssistant: true,
-            aiImageGeneration: true,
-            emailMarketing: false,
-            emailAutomation: false,
-            customDomains: true,
-            removeBranding: false,
-            whiteLabel: false,
-            analyticsBasic: true,
-            analyticsAdvanced: false,
-            supportLevel: 'email',
-            apiAccess: false,
-            webhooks: false,
-        },
-        isFeatured: false,
-        isPopular: false,
-        color: '#06b6d4',
-        icon: 'Heart',
-    },
-
-    starter: {
-        id: 'starter',
-        name: 'Starter',
-        description: 'Para emprendedores y pequeños negocios',
-        price: { monthly: 19, annually: 15 },
-        limits: {
-            maxProjects: 5,
-            maxUsers: 2,
-            maxStorageGB: 5,
-            maxAiCredits: 300,
-            maxDomains: 1,
-            maxLeads: 500,
-            maxProducts: 0,
-            maxEmailsPerMonth: 1000,
-        },
-        features: {
-            aiWebBuilder: true,
-            visualEditor: true,
-            templates: true,
-            cmsEnabled: true,
-            cmsAdvanced: false,
-            crmEnabled: true,
-            crmPipelines: false,
-            crmAutomations: false,
-            ecommerceEnabled: false,
-            ecommerceTransactionFee: 0,
-            chatbotEnabled: false,
-            chatbotCustomization: false,
-            aiAssistant: true,
-            aiImageGeneration: true,
-            emailMarketing: true,
-            emailAutomation: false,
-            customDomains: true,
-            removeBranding: false,
-            whiteLabel: false,
-            analyticsBasic: true,
-            analyticsAdvanced: false,
-            supportLevel: 'email',
-            apiAccess: false,
-            webhooks: false,
-        },
-        isFeatured: false,
-        isPopular: false,
-        color: '#3b82f6',
-        icon: 'Rocket',
-    },
-
-    pro: {
-        id: 'pro',
-        name: 'Pro',
-        description: 'Para negocios en crecimiento que necesitan más',
+    // =========================================================================
+    // PLAN INDIVIDUAL - $49/mes con 7 días trial
+    // 1 proyecto, todas las features habilitadas
+    // =========================================================================
+    individual: {
+        id: 'individual',
+        name: 'Individual',
+        description: 'Todo incluido para emprendedores y freelancers',
         price: { monthly: 49, annually: 39 },
         limits: {
-            maxProjects: 20,
-            maxUsers: 10,
-            maxStorageGB: 50,
-            maxAiCredits: 1500,
-            maxDomains: 5,
-            maxLeads: 5000,
+            maxProjects: 1,
+            maxUsers: 1,
+            maxStorageGB: 10,
+            maxAiCredits: 500,
+            maxDomains: 1,
+            maxLeads: 1000,
             maxProducts: 100,
             maxEmailsPerMonth: 5000,
         },
         features: {
+            // Todas las features habilitadas
             aiWebBuilder: true,
             visualEditor: true,
             templates: true,
@@ -454,11 +390,11 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionPlanId, SubscriptionPlan> = 
             cmsAdvanced: true,
             crmEnabled: true,
             crmPipelines: true,
-            crmAutomations: false,
+            crmAutomations: true,
             ecommerceEnabled: true,
-            ecommerceTransactionFee: 2,
+            ecommerceTransactionFee: 2,        // 2% fee en transacciones
             chatbotEnabled: true,
-            chatbotCustomization: false,
+            chatbotCustomization: true,
             aiAssistant: true,
             aiImageGeneration: true,
             emailMarketing: true,
@@ -469,32 +405,38 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionPlanId, SubscriptionPlan> = 
             analyticsBasic: true,
             analyticsAdvanced: true,
             supportLevel: 'chat',
-            apiAccess: false,
+            apiAccess: true,                   // API básico incluido
             webhooks: true,
         },
         isFeatured: true,
         isPopular: true,
-        color: '#8b5cf6',
-        icon: 'Zap',
+        color: '#6366f1',
+        icon: 'User',
+        trialDays: 7,                          // 7 días de trial gratis
     },
 
-    agency: {
-        id: 'agency',
-        name: 'Agency',
-        description: 'Para agencias digitales y equipos',
-        price: { monthly: 129, annually: 99 },
+    // =========================================================================
+    // PLANES DE AGENCIA - Fee base + $29/proyecto
+    // Pool de créditos IA compartidos entre todos los sub-clientes
+    // =========================================================================
+
+    agency_starter: {
+        id: 'agency_starter',
+        name: 'Agency Starter',
+        description: 'Para agencias que comienzan - Fee base + costo por proyecto',
+        price: { monthly: 99, annually: 79 },
         limits: {
-            maxProjects: 50,
-            maxUsers: 25,
-            maxStorageGB: 200,
-            maxAiCredits: 5000,
-            maxSubClients: 10,
-            maxDomains: 50,
-            maxLeads: 25000,
-            maxProducts: 1000,
-            maxEmailsPerMonth: 25000,
-            maxReports: 50,
-            maxApiCalls: 10000,
+            maxProjects: -1,                   // Sin límite de proyectos (pago por proyecto)
+            maxUsers: 5,
+            maxStorageGB: 50,
+            maxAiCredits: 2000,                // Pool compartido
+            maxSubClients: -1,                 // Sin límite de clientes
+            maxDomains: -1,                    // Sin límite de dominios
+            maxLeads: 10000,
+            maxProducts: 500,
+            maxEmailsPerMonth: 10000,
+            maxReports: 25,
+            maxApiCalls: 5000,
         },
         features: {
             aiWebBuilder: true,
@@ -526,25 +468,29 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionPlanId, SubscriptionPlan> = 
         isPopular: false,
         color: '#10b981',
         icon: 'Building2',
+        // Campos específicos de agencia
+        isAgencyPlan: true,
+        projectCost: 29,                       // $29/mes por proyecto activo
+        hasSharedCreditsPool: true,            // Créditos compartidos
     },
 
-    agency_plus: {
-        id: 'agency_plus',
-        name: 'Agency Plus',
-        description: 'Premium para agencias con alto volumen de clientes',
-        price: { monthly: 199, annually: 149 },
+    agency_pro: {
+        id: 'agency_pro',
+        name: 'Agency Pro',
+        description: 'Para agencias en crecimiento - Más créditos y soporte',
+        price: { monthly: 199, annually: 159 },
         limits: {
-            maxProjects: 100,
-            maxUsers: 50,
-            maxStorageGB: 500,
-            maxAiCredits: 10000,
-            maxSubClients: 25,
-            maxDomains: 100,
+            maxProjects: -1,
+            maxUsers: 15,
+            maxStorageGB: 200,
+            maxAiCredits: 5000,                // Pool compartido más grande
+            maxSubClients: -1,
+            maxDomains: -1,
             maxLeads: 50000,
-            maxProducts: 2500,
+            maxProducts: 2000,
             maxEmailsPerMonth: 50000,
-            maxReports: 200,
-            maxApiCalls: 50000,
+            maxReports: 100,
+            maxApiCalls: 25000,
         },
         features: {
             aiWebBuilder: true,
@@ -573,9 +519,65 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionPlanId, SubscriptionPlan> = 
             webhooks: true,
         },
         isFeatured: true,
-        isPopular: false,
+        isPopular: true,
         color: '#8b5cf6',
+        icon: 'Building2',
+        isAgencyPlan: true,
+        projectCost: 29,
+        hasSharedCreditsPool: true,
+    },
+
+    agency_scale: {
+        id: 'agency_scale',
+        name: 'Agency Scale',
+        description: 'Para agencias de alto volumen - Máximos recursos',
+        price: { monthly: 399, annually: 319 },
+        limits: {
+            maxProjects: -1,
+            maxUsers: 50,
+            maxStorageGB: 1000,
+            maxAiCredits: 15000,               // Pool compartido máximo
+            maxSubClients: -1,
+            maxDomains: -1,
+            maxLeads: -1,                      // Ilimitado
+            maxProducts: -1,                   // Ilimitado
+            maxEmailsPerMonth: -1,             // Ilimitado
+            maxReports: -1,                    // Ilimitado
+            maxApiCalls: -1,                   // Ilimitado
+        },
+        features: {
+            aiWebBuilder: true,
+            visualEditor: true,
+            templates: true,
+            cmsEnabled: true,
+            cmsAdvanced: true,
+            crmEnabled: true,
+            crmPipelines: true,
+            crmAutomations: true,
+            ecommerceEnabled: true,
+            ecommerceTransactionFee: 0,        // Sin fee de transacción
+            chatbotEnabled: true,
+            chatbotCustomization: true,
+            aiAssistant: true,
+            aiImageGeneration: true,
+            emailMarketing: true,
+            emailAutomation: true,
+            customDomains: true,
+            removeBranding: true,
+            whiteLabel: true,
+            analyticsBasic: true,
+            analyticsAdvanced: true,
+            supportLevel: 'dedicated',
+            apiAccess: true,
+            webhooks: true,
+        },
+        isFeatured: false,
+        isPopular: false,
+        color: '#f59e0b',
         icon: 'Crown',
+        isAgencyPlan: true,
+        projectCost: 29,
+        hasSharedCreditsPool: true,
     },
 
     enterprise: {
@@ -753,6 +755,78 @@ export function getUsageColor(percentage: number): string {
     if (percentage >= 70) return '#f59e0b';  // Amber
     if (percentage >= 50) return '#eab308';  // Yellow
     return '#10b981';                         // Green
+}
+
+// =============================================================================
+// AGENCY PLAN HELPERS (Fase 3)
+// =============================================================================
+
+/**
+ * Verifica si un plan es de tipo agencia con modelo fee + proyecto
+ */
+export function isAgencyPlan(planId: SubscriptionPlanId): boolean {
+    const plan = SUBSCRIPTION_PLANS[planId];
+    return plan?.isAgencyPlan === true;
+}
+
+/**
+ * Obtiene el costo por proyecto de un plan de agencia
+ */
+export function getProjectCost(planId: SubscriptionPlanId): number {
+    const plan = SUBSCRIPTION_PLANS[planId];
+    return plan?.projectCost ?? 0;
+}
+
+/**
+ * Calcula el costo total mensual de un plan de agencia
+ * @param planId - ID del plan
+ * @param activeProjects - Número de proyectos activos
+ * @param isAnnual - Si se paga anualmente
+ */
+export function calculateAgencyTotalCost(
+    planId: SubscriptionPlanId, 
+    activeProjects: number,
+    isAnnual: boolean = false
+): number {
+    const plan = SUBSCRIPTION_PLANS[planId];
+    if (!plan?.isAgencyPlan) {
+        return isAnnual ? plan.price.annually : plan.price.monthly;
+    }
+    
+    const baseFee = isAnnual ? plan.price.annually : plan.price.monthly;
+    const projectsCost = (plan.projectCost ?? 0) * activeProjects;
+    
+    return baseFee + projectsCost;
+}
+
+/**
+ * Verifica si un plan tiene pool de créditos compartidos
+ */
+export function hasSharedCreditsPool(planId: SubscriptionPlanId): boolean {
+    const plan = SUBSCRIPTION_PLANS[planId];
+    return plan?.hasSharedCreditsPool === true;
+}
+
+/**
+ * Obtiene los días de trial para un plan
+ */
+export function getPlanTrialDays(planId: SubscriptionPlanId): number {
+    const plan = SUBSCRIPTION_PLANS[planId];
+    return plan?.trialDays ?? 0;
+}
+
+/**
+ * Obtiene todos los planes de tipo agencia
+ */
+export function getAgencyPlans(): SubscriptionPlan[] {
+    return Object.values(SUBSCRIPTION_PLANS).filter(plan => plan.isAgencyPlan);
+}
+
+/**
+ * Obtiene los planes individuales (no agencia)
+ */
+export function getIndividualPlans(): SubscriptionPlan[] {
+    return Object.values(SUBSCRIPTION_PLANS).filter(plan => !plan.isAgencyPlan);
 }
 
 

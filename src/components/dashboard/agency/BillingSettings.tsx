@@ -54,7 +54,7 @@ export function BillingSettings() {
       setLoading(true);
 
       // Get Stripe Connect status
-      const getStatus = httpsCallable(functions, 'agencyBilling-getStripeConnectStatus');
+      const getStatus = httpsCallable(functions, 'getStripeConnectStatus');
       const statusResult = await getStatus({ tenantId: currentTenant.id });
       setStripeStatus(statusResult.data as StripeConnectStatus);
 
@@ -79,7 +79,7 @@ export function BillingSettings() {
   const handleConnectStripe = async () => {
     try {
       setLoading(true);
-      const connectStripe = httpsCallable(functions, 'agencyBilling-createConnectAccount');
+      const connectStripe = httpsCallable(functions, 'createStripeConnectAccount');
       const result = await connectStripe({ tenantId: currentTenant?.id });
       const { url } = result.data as { url: string };
       window.location.href = url;
@@ -92,7 +92,7 @@ export function BillingSettings() {
 
   const handleUpdatePrice = async (clientId: string) => {
     try {
-      const updatePrice = httpsCallable(functions, 'agencyBilling-updateClientPrice');
+      const updatePrice = httpsCallable(functions, 'updateClientMonthlyPrice');
       await updatePrice({ clientId, price: editingPrice });
       setSubClients(prev => prev.map(c => c.id === clientId ? { ...c, billing: { ...c.billing, monthlyPrice: editingPrice } } : c));
       setEditingClientId(null);

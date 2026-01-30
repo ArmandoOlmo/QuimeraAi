@@ -47,6 +47,9 @@ export interface StoredPlan extends SubscriptionPlan {
     // Statistics (computed)
     activeSubscribers?: number;
     totalRevenue?: number;
+
+    // Internal flag to indicate plan is from code (not yet in Firestore)
+    _fromCode?: boolean;
 }
 
 export interface PlanStats {
@@ -104,19 +107,32 @@ export async function getAllPlans(forceRefresh = false): Promise<Record<string, 
             query(collection(db, PLANS_COLLECTION), orderBy('price.monthly', 'asc'))
         );
 
-        if (plansSnapshot.empty) {
-            // No plans in Firestore, return hardcoded plans
-            console.log('No plans in Firestore, using hardcoded SUBSCRIPTION_PLANS');
-            plansCache = { ...SUBSCRIPTION_PLANS } as Record<string, StoredPlan>;
-            cacheTimestamp = Date.now();
-            return plansCache;
+        // Start with hardcoded plans as base (ensures new plans from code are always included)
+        const plans: Record<string, StoredPlan> = {};
+        
+        // Add all hardcoded plans first
+        for (const [planId, plan] of Object.entries(SUBSCRIPTION_PLANS)) {
+            plans[planId] = { 
+                ...plan, 
+                id: planId as SubscriptionPlanId,
+                // Mark as not in Firestore yet
+                _fromCode: true,
+            } as StoredPlan;
         }
 
-        const plans: Record<string, StoredPlan> = {};
-        plansSnapshot.docs.forEach((doc) => {
-            const data = doc.data() as StoredPlan;
-            plans[doc.id] = { ...data, id: doc.id as SubscriptionPlanId };
-        });
+        // Override with Firestore data where it exists
+        if (!plansSnapshot.empty) {
+            plansSnapshot.docs.forEach((doc) => {
+                const data = doc.data() as StoredPlan;
+                plans[doc.id] = { 
+                    ...data, 
+                    id: doc.id as SubscriptionPlanId,
+                    _fromCode: false, // This plan exists in Firestore
+                };
+            });
+        } else {
+            console.log('No plans in Firestore, using hardcoded SUBSCRIPTION_PLANS');
+        }
 
         plansCache = plans;
         cacheTimestamp = Date.now();
@@ -684,6 +700,250 @@ export function validatePlan(plan: Partial<StoredPlan>): { valid: boolean; error
 }
 
 // =============================================================================
+// MIGRATION TO NEW PLAN STRUCTURE (Jan 2026)
+// =============================================================================
+
+/**
+ * Plans to archive (legacy plans - kept for migration of existing Firestore data)
+ */
+const LEGACY_PLANS_TO_ARCHIVE = ['hobby', 'starter', 'pro', 'agency', 'agency_plus'];
+
+/**
+ * Current active plans
+ */
+const ACTIVE_PLANS = ['free', 'individual', 'agency_starter', 'agency_pro', 'agency_scale', 'enterprise'];
+
+/**
+ * Migrate to new plan structure
+ * - Archives legacy plans (hobby, starter, pro, agency, agency_plus)
+ * - Creates/updates new plans (free, individual, agency_starter, agency_pro, agency_scale, enterprise)
+ * - Syncs all new plans to Stripe
+ */
+export async function migrateToNewPlanStructure(userId?: string): Promise<{
+    success: boolean;
+    archived: string[];
+    created: string[];
+    updated: string[];
+    errors: string[];
+}> {
+    const archived: string[] = [];
+    const created: string[] = [];
+    const updated: string[] = [];
+    const errors: string[] = [];
+
+    try {
+        console.log('[migrateToNewPlanStructure] Starting migration...');
+        console.log('[migrateToNewPlanStructure] Legacy plans to archive:', LEGACY_PLANS_TO_ARCHIVE);
+        console.log('[migrateToNewPlanStructure] New plans to create/update:', ACTIVE_PLANS);
+        console.log('[migrateToNewPlanStructure] SUBSCRIPTION_PLANS keys:', Object.keys(SUBSCRIPTION_PLANS));
+
+        // Step 1: Archive legacy plans
+        console.log('[migrate] Step 1: Archiving legacy plans...');
+        for (const planId of LEGACY_PLANS_TO_ARCHIVE) {
+            try {
+                console.log(`[migrate] Checking legacy plan: ${planId}`);
+                const planRef = doc(db, PLANS_COLLECTION, planId);
+                const planDoc = await getDoc(planRef);
+
+                if (planDoc.exists()) {
+                    const planData = planDoc.data();
+                    console.log(`[migrate] Plan ${planId} exists, isArchived: ${planData.isArchived}`);
+                    
+                    // Only archive if not already archived
+                    if (!planData.isArchived) {
+                        // Archive in Stripe first if has product ID
+                        if (planData.stripeProductId) {
+                            try {
+                                const response = await fetch(ARCHIVE_PLAN_URL, {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ productId: planData.stripeProductId }),
+                                });
+                                if (!response.ok) {
+                                    console.warn(`[migrate] Warning: Could not archive ${planId} in Stripe`);
+                                }
+                            } catch (e) {
+                                console.warn(`[migrate] Stripe archive error for ${planId}:`, e);
+                            }
+                        }
+
+                        // Archive in Firestore
+                        const updateData: Record<string, any> = {
+                            isArchived: true,
+                            archivedAt: serverTimestamp(),
+                            updatedAt: serverTimestamp(),
+                            showInLanding: false,
+                        };
+                        if (userId) updateData.updatedBy = userId;
+
+                        await updateDoc(planRef, updateData);
+                        archived.push(planId);
+                        console.log(`[migrate] Archived plan: ${planId}`);
+                    } else {
+                        console.log(`[migrate] Plan ${planId} already archived, skipping`);
+                    }
+                }
+            } catch (error) {
+                const msg = `Error archiving ${planId}: ${error instanceof Error ? error.message : 'Unknown'}`;
+                errors.push(msg);
+                console.error(`[migrate] ${msg}`);
+            }
+        }
+
+        // Step 2: Create/update new active plans from SUBSCRIPTION_PLANS
+        console.log('[migrate] Step 2: Creating/updating new plans...');
+        for (const planId of ACTIVE_PLANS) {
+            console.log(`[migrate] Processing new plan: ${planId}`);
+            const hardcodedPlan = SUBSCRIPTION_PLANS[planId as SubscriptionPlanId];
+            if (!hardcodedPlan) {
+                console.error(`[migrate] Plan ${planId} NOT FOUND in SUBSCRIPTION_PLANS!`);
+                errors.push(`Plan ${planId} not found in SUBSCRIPTION_PLANS`);
+                continue;
+            }
+            console.log(`[migrate] Found hardcoded plan: ${planId}, price: $${hardcodedPlan.price.monthly}/month`);
+
+            try {
+                const planRef = doc(db, PLANS_COLLECTION, planId);
+                const existingPlan = await getDoc(planRef);
+                console.log(`[migrate] Plan ${planId} exists in Firestore: ${existingPlan.exists()}`);
+
+                const planData: Record<string, any> = {
+                    ...hardcodedPlan,
+                    id: planId,
+                    isArchived: false,
+                    showInLanding: true,
+                    landingOrder: ACTIVE_PLANS.indexOf(planId),
+                    updatedAt: serverTimestamp(),
+                };
+
+                if (userId) planData.updatedBy = userId;
+
+                if (!existingPlan.exists()) {
+                    // Create new plan
+                    console.log(`[migrate] Creating NEW plan in Firestore: ${planId}`);
+                    planData.createdAt = serverTimestamp();
+                    if (userId) planData.createdBy = userId;
+
+                    const cleanData = cleanForFirestore(planData);
+                    console.log(`[migrate] Data to save for ${planId}:`, JSON.stringify(cleanData, null, 2));
+                    await setDoc(planRef, cleanData);
+                    created.push(planId);
+                    console.log(`[migrate] ✅ Created plan: ${planId}`);
+                } else {
+                    // Update existing plan - preserve Stripe IDs
+                    console.log(`[migrate] Updating EXISTING plan in Firestore: ${planId}`);
+                    const existingData = existingPlan.data();
+                    planData.createdAt = existingData.createdAt;
+                    planData.createdBy = existingData.createdBy;
+                    if (existingData.stripeProductId) planData.stripeProductId = existingData.stripeProductId;
+                    if (existingData.stripePriceIdMonthly) planData.stripePriceIdMonthly = existingData.stripePriceIdMonthly;
+                    if (existingData.stripePriceIdAnnually) planData.stripePriceIdAnnually = existingData.stripePriceIdAnnually;
+
+                    const cleanData = cleanForFirestore(planData);
+                    await updateDoc(planRef, cleanData);
+                    updated.push(planId);
+                    console.log(`[migrate] ✅ Updated plan: ${planId}`);
+                }
+
+                // Sync to Stripe for paid plans
+                if (hardcodedPlan.price.monthly > 0) {
+                    const stripeResult = await syncPlanToStripe({
+                        ...hardcodedPlan,
+                        id: planId as SubscriptionPlanId,
+                        stripeProductId: planData.stripeProductId,
+                        stripePriceIdMonthly: planData.stripePriceIdMonthly,
+                        stripePriceIdAnnually: planData.stripePriceIdAnnually,
+                    });
+
+                    if (stripeResult.success) {
+                        // Update with new Stripe IDs
+                        const stripeUpdate: Record<string, any> = {};
+                        if (stripeResult.productId) stripeUpdate.stripeProductId = stripeResult.productId;
+                        if (stripeResult.priceIdMonthly) stripeUpdate.stripePriceIdMonthly = stripeResult.priceIdMonthly;
+                        if (stripeResult.priceIdAnnually) stripeUpdate.stripePriceIdAnnually = stripeResult.priceIdAnnually;
+
+                        if (Object.keys(stripeUpdate).length > 0) {
+                            await updateDoc(planRef, stripeUpdate);
+                            console.log(`[migrate] Synced ${planId} to Stripe`);
+                        }
+                    } else {
+                        errors.push(`Stripe sync failed for ${planId}: ${stripeResult.error}`);
+                    }
+                }
+            } catch (error) {
+                const msg = `Error processing ${planId}: ${error instanceof Error ? error.message : 'Unknown'}`;
+                errors.push(msg);
+                console.error(`[migrate] ${msg}`);
+            }
+        }
+
+        clearPlansCache();
+
+        console.log('[migrateToNewPlanStructure] Migration complete:', {
+            archived: archived.length,
+            created: created.length,
+            updated: updated.length,
+            errors: errors.length,
+        });
+
+        return {
+            success: errors.length === 0,
+            archived,
+            created,
+            updated,
+            errors,
+        };
+
+    } catch (error) {
+        console.error('[migrateToNewPlanStructure] Fatal error:', error);
+        return {
+            success: false,
+            archived,
+            created,
+            updated,
+            errors: [...errors, error instanceof Error ? error.message : 'Error desconocido'],
+        };
+    }
+}
+
+/**
+ * Check if migration is needed
+ */
+export async function isMigrationNeeded(): Promise<boolean> {
+    try {
+        const plans = await getAllPlans(true);
+        
+        // Check if new plans exist IN FIRESTORE (not just from code) and are active
+        const hasNewPlansInFirestore = ACTIVE_PLANS.every(planId => {
+            const plan = plans[planId];
+            // Plan must exist, NOT be from code only, and NOT be archived
+            return plan && !plan._fromCode && !plan.isArchived;
+        });
+
+        // Check if legacy plans are archived (or don't exist in Firestore)
+        const legacyArchived = LEGACY_PLANS_TO_ARCHIVE.every(planId => {
+            const plan = plans[planId];
+            // Plan either doesn't exist, or is archived, or is only from code
+            return !plan || plan.isArchived || plan._fromCode;
+        });
+
+        // Migration needed if new plans aren't in Firestore OR legacy plans aren't archived
+        const migrationNeeded = !hasNewPlansInFirestore || !legacyArchived;
+        
+        console.log('[isMigrationNeeded] Check result:', {
+            hasNewPlansInFirestore,
+            legacyArchived,
+            migrationNeeded,
+        });
+
+        return migrationNeeded;
+    } catch (error) {
+        console.error('Error checking migration status:', error);
+        return true; // Assume migration needed if we can't check
+    }
+}
+
+// =============================================================================
 // EXPORTS
 // =============================================================================
 
@@ -704,5 +964,7 @@ export default {
     createEmptyPlan,
     validatePlan,
     clearPlansCache,
+    migrateToNewPlanStructure,
+    isMigrationNeeded,
 };
 

@@ -4,6 +4,8 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/core/AuthContext';
 import { useUI } from '../../contexts/core/UIContext';
 import { useProject } from '../../contexts/project';
+import { useDomains } from '../../contexts/domains/DomainsContext';
+import { useCMS } from '../../contexts/cms';
 import { useRouter } from '../../hooks/useRouter';
 import { ROUTES } from '../../routes/config';
 import DashboardSidebar from './DashboardSidebar';
@@ -16,6 +18,7 @@ import FilterChip from './FilterChip';
 import EmptyState from './EmptyState';
 import UpgradeBanner from './UpgradeBanner';
 import NewsUpdates from './NewsUpdates';
+import DashboardHelpGuide from './DashboardHelpGuide';
 import { Plus, Menu, Search, LayoutGrid, Globe, Images, List, ArrowUpDown, CheckCircle, FileEdit, X, Loader2, Sparkles, MousePointerClick, Palette, Rocket, LayoutTemplate, BookOpen, ArrowLeft } from 'lucide-react';
 import { trackSearchPerformed, trackFilterApplied, trackSortChanged, trackViewModeChanged, trackDashboardView } from '../../utils/analytics';
 import { useInfiniteScroll, paginateArray, hasMoreItems } from '../../hooks/useInfiniteScroll';
@@ -25,6 +28,8 @@ const Dashboard: React.FC = () => {
     const { user, userDocument } = useAuth();
     const { view, setIsOnboardingOpen } = useUI();
     const { projects, isLoadingProjects, addNewProject } = useProject();
+    const { domains } = useDomains();
+    const { cmsPosts } = useCMS();
     const { navigate } = useRouter();
 
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -383,405 +388,295 @@ const Dashboard: React.FC = () => {
                             </section>
                         )}
 
-                        {/* Instructions Banner - Dismissible */}
+
                         {isDashboard && showInstructions && (
-                            <section className="w-full animate-fade-in">
-                                <div className="relative flex flex-col lg:flex-row items-stretch gap-6 lg:gap-0">
-                                    {/* Floating Image - Outside the box, full height */}
-                                    <div className="hidden lg:flex relative z-10 flex-shrink-0 -mr-6 items-end">
-                                        <img
-                                            src="https://firebasestorage.googleapis.com/v0/b/quimeraai.firebasestorage.app/o/quimera%2FALeTxAC97FPhl7ymtEhAn.jpg?alt=media&token=e1ed6666-f72c-41bc-ad51-165161f361c2"
-                                            alt="Quimera AI Guide"
-                                            className="w-auto h-full max-h-[400px] object-contain"
-                                            loading="lazy"
-                                            decoding="async"
-                                        />
-                                    </div>
-
-                                    {/* Content Box */}
-                                    <div className="relative flex-1 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border border-primary/20 rounded-2xl overflow-hidden lg:pl-10">
-                                        {/* Background decoration */}
-                                        <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-primary/10 to-transparent rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-
-                                        {/* Close button */}
-                                        <button
-                                            onClick={dismissInstructions}
-                                            className="absolute top-4 right-4 p-2 rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors z-20"
-                                            aria-label={t('common.close')}
-                                        >
-                                            <X size={18} />
-                                        </button>
-
-                                        {/* Content Section */}
-                                        <div className="relative z-10 p-6">
-                                            <div className="flex items-center gap-3 mb-4">
-                                                <div className="p-3 bg-primary/20 rounded-xl">
-                                                    <BookOpen className="w-6 h-6 text-primary" />
-                                                </div>
-                                                <div>
-                                                    <h2 className="text-xl font-bold text-foreground">
-                                                        {t('dashboard.instructionsTitle')}
-                                                    </h2>
-                                                    <p className="text-sm text-muted-foreground">
-                                                        {t('dashboard.instructionsSubtitle')}
-                                                    </p>
-                                                </div>
-                                            </div>
-
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                {/* Step 1 */}
-                                                <div className="flex items-start gap-3 p-4 bg-card/50 rounded-xl border border-border/50 hover:border-primary/30 transition-colors">
-                                                    <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary text-primary-foreground font-bold text-sm flex-shrink-0">
-                                                        1
-                                                    </div>
-                                                    <div>
-                                                        <div className="flex items-center gap-2 mb-1">
-                                                            <Sparkles className="w-4 h-4 text-primary" />
-                                                            <span className="font-semibold text-foreground text-sm">
-                                                                {t('dashboard.step1Title')}
-                                                            </span>
-                                                        </div>
-                                                        <p className="text-xs text-muted-foreground">
-                                                            {t('dashboard.step1Desc')}
-                                                        </p>
-                                                    </div>
-                                                </div>
-
-                                                {/* Step 2 */}
-                                                <div className="flex items-start gap-3 p-4 bg-card/50 rounded-xl border border-border/50 hover:border-primary/30 transition-colors">
-                                                    <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary text-primary-foreground font-bold text-sm flex-shrink-0">
-                                                        2
-                                                    </div>
-                                                    <div>
-                                                        <div className="flex items-center gap-2 mb-1">
-                                                            <Palette className="w-4 h-4 text-purple-500" />
-                                                            <span className="font-semibold text-foreground text-sm">
-                                                                {t('dashboard.step2Title')}
-                                                            </span>
-                                                        </div>
-                                                        <p className="text-xs text-muted-foreground">
-                                                            {t('dashboard.step2Desc')}
-                                                        </p>
-                                                    </div>
-                                                </div>
-
-                                                {/* Step 3 */}
-                                                <div className="flex items-start gap-3 p-4 bg-card/50 rounded-xl border border-border/50 hover:border-primary/30 transition-colors">
-                                                    <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary text-primary-foreground font-bold text-sm flex-shrink-0">
-                                                        3
-                                                    </div>
-                                                    <div>
-                                                        <div className="flex items-center gap-2 mb-1">
-                                                            <LayoutTemplate className="w-4 h-4 text-blue-500" />
-                                                            <span className="font-semibold text-foreground text-sm">
-                                                                {t('dashboard.step3Title')}
-                                                            </span>
-                                                        </div>
-                                                        <p className="text-xs text-muted-foreground">
-                                                            {t('dashboard.step3Desc')}
-                                                        </p>
-                                                    </div>
-                                                </div>
-
-                                                {/* Step 4 */}
-                                                <div className="flex items-start gap-3 p-4 bg-card/50 rounded-xl border border-border/50 hover:border-primary/30 transition-colors">
-                                                    <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary text-primary-foreground font-bold text-sm flex-shrink-0">
-                                                        4
-                                                    </div>
-                                                    <div>
-                                                        <div className="flex items-center gap-2 mb-1">
-                                                            <Rocket className="w-4 h-4 text-green-500" />
-                                                            <span className="font-semibold text-foreground text-sm">
-                                                                {t('dashboard.step4Title')}
-                                                            </span>
-                                                        </div>
-                                                        <p className="text-xs text-muted-foreground">
-                                                            {t('dashboard.step4Desc')}
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <div className="flex items-center justify-between mt-4 pt-4 border-t border-border/50">
-                                                <p className="text-xs text-muted-foreground">
-                                                    {t('dashboard.instructionsTip')}
-                                                </p>
-                                                <button
-                                                    onClick={dismissInstructions}
-                                                    className="text-xs font-medium text-primary hover:text-primary/80 transition-colors"
-                                                >
-                                                    {t('dashboard.gotIt')}
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </section>
+                            <div className="w-full animate-fade-in-up">
+                                <DashboardHelpGuide
+                                    onClose={dismissInstructions}
+                                    hasProjects={allUserProjects.length > 0}
+                                    hasPublished={domains.some(d => d.status === 'active' || d.status === 'deployed')}
+                                    hasDomain={domains.length > 0}
+                                    hasCMSContent={cmsPosts.length > 0}
+                                    onCreateProject={() => setIsOnboardingOpen(true)}
+                                />
+                            </div>
                         )}
 
                         {/* Upgrade Banner - Show on Dashboard */}
-                        {isDashboard && (
-                            <section className="w-full">
-                                <UpgradeBanner />
-                            </section>
-                        )}
+                        {
+                            isDashboard && (
+                                <section className="w-full">
+                                    <UpgradeBanner />
+                                </section>
+                            )
+                        }
 
                         {/* Statistics Section - Only on Websites view */}
-                        {isWebsites && (
-                            <section className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4">
-                                <div className="bg-card/50 border border-border hover:border-primary/30 rounded-xl md:rounded-2xl p-2.5 md:p-4 hover:shadow-lg transition-all">
-                                    <div className="flex items-center gap-2 md:gap-3 mb-1 md:mb-2">
-                                        <div className="p-1.5 md:p-2 rounded-md md:rounded-lg bg-primary/20">
-                                            <Globe className="text-primary w-4 h-4 md:w-5 md:h-5" />
+                        {
+                            isWebsites && (
+                                <section className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4">
+                                    <div className="bg-card/50 border border-border hover:border-primary/30 rounded-xl md:rounded-2xl p-2.5 md:p-4 hover:shadow-lg transition-all">
+                                        <div className="flex items-center gap-2 md:gap-3 mb-1 md:mb-2">
+                                            <div className="p-1.5 md:p-2 rounded-md md:rounded-lg bg-primary/20">
+                                                <Globe className="text-primary w-4 h-4 md:w-5 md:h-5" />
+                                            </div>
                                         </div>
+                                        <div className="text-xl md:text-3xl font-extrabold text-foreground">{allUserProjects.length}</div>
+                                        <div className="text-[10px] md:text-xs font-semibold text-muted-foreground uppercase tracking-wider mt-0.5 md:mt-1 leading-tight">{t('dashboard.totalWebsites')}</div>
                                     </div>
-                                    <div className="text-xl md:text-3xl font-extrabold text-foreground">{allUserProjects.length}</div>
-                                    <div className="text-[10px] md:text-xs font-semibold text-muted-foreground uppercase tracking-wider mt-0.5 md:mt-1 leading-tight">{t('dashboard.totalWebsites')}</div>
-                                </div>
 
-                                <div className="bg-card/50 border border-border hover:border-green-500/30 rounded-xl md:rounded-2xl p-2.5 md:p-4 hover:shadow-lg transition-all">
-                                    <div className="flex items-center gap-2 md:gap-3 mb-1 md:mb-2">
-                                        <div className="p-1.5 md:p-2 rounded-md md:rounded-lg bg-green-500/20">
-                                            <CheckCircle className="text-green-500 w-4 h-4 md:w-5 md:h-5" />
+                                    <div className="bg-card/50 border border-border hover:border-green-500/30 rounded-xl md:rounded-2xl p-2.5 md:p-4 hover:shadow-lg transition-all">
+                                        <div className="flex items-center gap-2 md:gap-3 mb-1 md:mb-2">
+                                            <div className="p-1.5 md:p-2 rounded-md md:rounded-lg bg-green-500/20">
+                                                <CheckCircle className="text-green-500 w-4 h-4 md:w-5 md:h-5" />
+                                            </div>
                                         </div>
+                                        <div className="text-xl md:text-3xl font-extrabold text-foreground">{publishedCount}</div>
+                                        <div className="text-[10px] md:text-xs font-semibold text-muted-foreground uppercase tracking-wider mt-0.5 md:mt-1 leading-tight">{t('dashboard.published')}</div>
                                     </div>
-                                    <div className="text-xl md:text-3xl font-extrabold text-foreground">{publishedCount}</div>
-                                    <div className="text-[10px] md:text-xs font-semibold text-muted-foreground uppercase tracking-wider mt-0.5 md:mt-1 leading-tight">{t('dashboard.published')}</div>
-                                </div>
 
-                                <div className="bg-card/50 border border-border hover:border-muted-foreground/30 rounded-xl md:rounded-2xl p-2.5 md:p-4 hover:shadow-lg transition-all">
-                                    <div className="flex items-center gap-2 md:gap-3 mb-1 md:mb-2">
-                                        <div className="p-1.5 md:p-2 rounded-md md:rounded-lg bg-muted">
-                                            <FileEdit className="text-muted-foreground w-4 h-4 md:w-5 md:h-5" />
+                                    <div className="bg-card/50 border border-border hover:border-muted-foreground/30 rounded-xl md:rounded-2xl p-2.5 md:p-4 hover:shadow-lg transition-all">
+                                        <div className="flex items-center gap-2 md:gap-3 mb-1 md:mb-2">
+                                            <div className="p-1.5 md:p-2 rounded-md md:rounded-lg bg-muted">
+                                                <FileEdit className="text-muted-foreground w-4 h-4 md:w-5 md:h-5" />
+                                            </div>
                                         </div>
+                                        <div className="text-xl md:text-3xl font-extrabold text-foreground">{draftCount}</div>
+                                        <div className="text-[10px] md:text-xs font-semibold text-muted-foreground uppercase tracking-wider mt-0.5 md:mt-1 leading-tight">{t('dashboard.draft')}</div>
                                     </div>
-                                    <div className="text-xl md:text-3xl font-extrabold text-foreground">{draftCount}</div>
-                                    <div className="text-[10px] md:text-xs font-semibold text-muted-foreground uppercase tracking-wider mt-0.5 md:mt-1 leading-tight">{t('dashboard.draft')}</div>
-                                </div>
 
-                                <div className="bg-card/50 border border-border hover:border-primary/30 rounded-xl md:rounded-2xl p-2.5 md:p-4 hover:shadow-lg transition-all">
-                                    <div className="flex items-center gap-2 md:gap-3 mb-1 md:mb-2">
-                                        <div className="p-1.5 md:p-2 rounded-md md:rounded-lg bg-primary/20">
-                                            <LayoutGrid className="text-primary w-4 h-4 md:w-5 md:h-5" />
+                                    <div className="bg-card/50 border border-border hover:border-primary/30 rounded-xl md:rounded-2xl p-2.5 md:p-4 hover:shadow-lg transition-all">
+                                        <div className="flex items-center gap-2 md:gap-3 mb-1 md:mb-2">
+                                            <div className="p-1.5 md:p-2 rounded-md md:rounded-lg bg-primary/20">
+                                                <LayoutGrid className="text-primary w-4 h-4 md:w-5 md:h-5" />
+                                            </div>
                                         </div>
+                                        <div className="text-xl md:text-3xl font-extrabold text-foreground">{userProjects.length}</div>
+                                        <div className="text-[10px] md:text-xs font-semibold text-muted-foreground uppercase tracking-wider mt-0.5 md:mt-1 leading-tight">{t('dashboard.filtered')}</div>
                                     </div>
-                                    <div className="text-xl md:text-3xl font-extrabold text-foreground">{userProjects.length}</div>
-                                    <div className="text-[10px] md:text-xs font-semibold text-muted-foreground uppercase tracking-wider mt-0.5 md:mt-1 leading-tight">{t('dashboard.filtered')}</div>
-                                </div>
-                            </section>
-                        )}
+                                </section>
+                            )
+                        }
 
                         {/* Projects Section */}
-                        {(isDashboard || isWebsites) && (
-                            <section>
-                                {/* Only show section header on Dashboard view, since Websites view has it in main header */}
-                                {isDashboard && (
-                                    <div className="flex items-center justify-between mb-6">
-                                        <h2 className="text-2xl font-bold text-foreground flex items-center gap-3">
-                                            <LayoutGrid className="text-primary" size={24} />
-                                            {t('dashboard.recentProjects')}
-                                        </h2>
-                                        {allUserProjects.length > 0 && (
-                                            <button onClick={() => navigate(ROUTES.WEBSITES)} className="text-sm font-semibold text-yellow-400 hover:text-yellow-300 transition-colors flex items-center">
-                                                {t('dashboard.viewAll')} <Globe size={14} className="ml-1" />
-                                            </button>
-                                        )}
-                                    </div>
-                                )}
+                        {
+                            (isDashboard || isWebsites) && (
+                                <section>
+                                    {/* Only show section header on Dashboard view, since Websites view has it in main header */}
+                                    {isDashboard && (
+                                        <div className="flex items-center justify-between mb-6">
+                                            <h2 className="text-2xl font-bold text-foreground flex items-center gap-3">
+                                                <LayoutGrid className="text-primary" size={24} />
+                                                {t('dashboard.recentProjects')}
+                                            </h2>
+                                            {allUserProjects.length > 0 && (
+                                                <button onClick={() => navigate(ROUTES.WEBSITES)} className="text-sm font-semibold text-yellow-400 hover:text-yellow-300 transition-colors flex items-center">
+                                                    {t('dashboard.viewAll')} <Globe size={14} className="ml-1" />
+                                                </button>
+                                            )}
+                                        </div>
+                                    )}
 
-                                {/* Filter Chips - Only on Websites view */}
-                                {isWebsites && (
-                                    <div className="mb-4 md:mb-6 space-y-3 md:space-y-4">
-                                        <div className="flex flex-wrap items-center gap-2 md:gap-3">
-                                            <FilterChip
-                                                label={t('dashboard.allStatus')}
-                                                active={filterStatus === 'all'}
-                                                count={allUserProjects.length}
-                                                onClick={() => setFilterStatus('all')}
-                                            />
-                                            <FilterChip
-                                                label={t('dashboard.published')}
-                                                active={filterStatus === 'Published'}
-                                                count={publishedCount}
-                                                onClick={() => setFilterStatus('Published')}
-                                                color="green"
-                                            />
-                                            <FilterChip
-                                                label={t('dashboard.draft')}
-                                                active={filterStatus === 'Draft'}
-                                                count={draftCount}
-                                                onClick={() => setFilterStatus('Draft')}
-                                                color="gray"
-                                            />
+                                    {/* Filter Chips - Only on Websites view */}
+                                    {isWebsites && (
+                                        <div className="mb-4 md:mb-6 space-y-3 md:space-y-4">
+                                            <div className="flex flex-wrap items-center gap-2 md:gap-3">
+                                                <FilterChip
+                                                    label={t('dashboard.allStatus')}
+                                                    active={filterStatus === 'all'}
+                                                    count={allUserProjects.length}
+                                                    onClick={() => setFilterStatus('all')}
+                                                />
+                                                <FilterChip
+                                                    label={t('dashboard.published')}
+                                                    active={filterStatus === 'Published'}
+                                                    count={publishedCount}
+                                                    onClick={() => setFilterStatus('Published')}
+                                                    color="green"
+                                                />
+                                                <FilterChip
+                                                    label={t('dashboard.draft')}
+                                                    active={filterStatus === 'Draft'}
+                                                    count={draftCount}
+                                                    onClick={() => setFilterStatus('Draft')}
+                                                    color="gray"
+                                                />
 
-                                            {/* Spacer */}
-                                            <div className="flex-1" />
+                                                {/* Spacer */}
+                                                <div className="flex-1" />
 
-                                            {/* Sort Button */}
-                                            <button
-                                                onClick={() => {
-                                                    if (sortBy === 'lastUpdated') {
-                                                        setSortBy('name');
-                                                        setSortOrder('asc');
-                                                    } else if (sortBy === 'name' && sortOrder === 'asc') {
-                                                        setSortOrder('desc');
-                                                    } else {
-                                                        setSortBy('lastUpdated');
-                                                        setSortOrder('desc');
-                                                    }
-                                                }}
-                                                className="hidden sm:flex items-center gap-1.5 h-9 px-3 rounded-lg text-sm font-medium transition-all bg-secondary/50 text-muted-foreground hover:text-foreground hover:bg-secondary"
-                                                aria-label={`Sort by ${sortBy} (${sortOrder}ending)`}
-                                            >
-                                                <ArrowUpDown size={14} aria-hidden="true" />
-                                                <span className="hidden md:inline">
-                                                    {sortBy === 'name' ? t('common.name') : t('common.updated')}
+                                                {/* Sort Button */}
+                                                <button
+                                                    onClick={() => {
+                                                        if (sortBy === 'lastUpdated') {
+                                                            setSortBy('name');
+                                                            setSortOrder('asc');
+                                                        } else if (sortBy === 'name' && sortOrder === 'asc') {
+                                                            setSortOrder('desc');
+                                                        } else {
+                                                            setSortBy('lastUpdated');
+                                                            setSortOrder('desc');
+                                                        }
+                                                    }}
+                                                    className="hidden sm:flex items-center gap-1.5 h-9 px-3 rounded-lg text-sm font-medium transition-all bg-secondary/50 text-muted-foreground hover:text-foreground hover:bg-secondary"
+                                                    aria-label={`Sort by ${sortBy} (${sortOrder}ending)`}
+                                                >
+                                                    <ArrowUpDown size={14} aria-hidden="true" />
+                                                    <span className="hidden md:inline">
+                                                        {sortBy === 'name' ? t('common.name') : t('common.updated')}
+                                                    </span>
+                                                </button>
+
+
+                                                {/* View Mode Toggle */}
+                                                <div className="hidden sm:flex items-center gap-1 bg-secondary/40 rounded-lg p-1" role="group" aria-label="View mode">
+                                                    <button
+                                                        onClick={() => setViewMode('grid')}
+                                                        className={`h-8 w-8 flex items-center justify-center rounded-md transition-all ${viewMode === 'grid' ? 'text-primary bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+                                                        aria-label={t('dashboard.gridView')}
+                                                        aria-pressed={viewMode === 'grid'}
+                                                    >
+                                                        <LayoutGrid size={15} aria-hidden="true" />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => setViewMode('list')}
+                                                        className={`h-8 w-8 flex items-center justify-center rounded-md transition-all ${viewMode === 'list' ? 'text-primary bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+                                                        aria-label={t('dashboard.listView')}
+                                                        aria-pressed={viewMode === 'list'}
+                                                    >
+                                                        <List size={15} aria-hidden="true" />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-xs md:text-sm text-muted-foreground">
+                                                    {t('dashboard.showingProjects', { count: userProjects.length, total: allUserProjects.length })}
                                                 </span>
-                                            </button>
-
-
-                                            {/* View Mode Toggle */}
-                                            <div className="hidden sm:flex items-center gap-1 bg-secondary/40 rounded-lg p-1" role="group" aria-label="View mode">
-                                                <button
-                                                    onClick={() => setViewMode('grid')}
-                                                    className={`h-8 w-8 flex items-center justify-center rounded-md transition-all ${viewMode === 'grid' ? 'text-primary bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
-                                                    aria-label={t('dashboard.gridView')}
-                                                    aria-pressed={viewMode === 'grid'}
-                                                >
-                                                    <LayoutGrid size={15} aria-hidden="true" />
-                                                </button>
-                                                <button
-                                                    onClick={() => setViewMode('list')}
-                                                    className={`h-8 w-8 flex items-center justify-center rounded-md transition-all ${viewMode === 'list' ? 'text-primary bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
-                                                    aria-label={t('dashboard.listView')}
-                                                    aria-pressed={viewMode === 'list'}
-                                                >
-                                                    <List size={15} aria-hidden="true" />
-                                                </button>
+                                                {/* Mobile controls */}
+                                                <div className="flex items-center gap-2 sm:hidden">
+                                                    <button
+                                                        onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
+                                                        className="p-2 bg-secondary/50 rounded-lg text-muted-foreground hover:text-foreground transition-colors"
+                                                    >
+                                                        {viewMode === 'grid' ? <List size={16} /> : <LayoutGrid size={16} />}
+                                                    </button>
+                                                </div>
                                             </div>
                                         </div>
-                                        <div className="flex items-center justify-between">
-                                            <span className="text-xs md:text-sm text-muted-foreground">
-                                                {t('dashboard.showingProjects', { count: userProjects.length, total: allUserProjects.length })}
-                                            </span>
-                                            {/* Mobile controls */}
-                                            <div className="flex items-center gap-2 sm:hidden">
-                                                <button
-                                                    onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
-                                                    className="p-2 bg-secondary/50 rounded-lg text-muted-foreground hover:text-foreground transition-colors"
-                                                >
-                                                    {viewMode === 'grid' ? <List size={16} /> : <LayoutGrid size={16} />}
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
+                                    )}
 
-                                {isLoadingProjects ? (
-                                    <>
-                                        {/* Grid View Skeleton */}
-                                        {viewMode === 'grid' && (
-                                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                                                {[1, 2, 3, 4, 5, 6, 7, 8].map(i => (
-                                                    <ProjectCardSkeleton key={i} />
-                                                ))}
-                                            </div>
-                                        )}
+                                    {isLoadingProjects ? (
+                                        <>
+                                            {/* Grid View Skeleton */}
+                                            {viewMode === 'grid' && (
+                                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                                                    {[1, 2, 3, 4, 5, 6, 7, 8].map(i => (
+                                                        <ProjectCardSkeleton key={i} />
+                                                    ))}
+                                                </div>
+                                            )}
 
-                                        {/* List View Skeleton */}
-                                        {viewMode === 'list' && isWebsites && (
-                                            <div className="space-y-4">
-                                                {[1, 2, 3, 4].map(i => (
-                                                    <ProjectCardSkeleton key={i} />
-                                                ))}
-                                            </div>
-                                        )}
-                                    </>
-                                ) : userProjects.length > 0 ? (
-                                    <>
-                                        {/* Grid View */}
-                                        {viewMode === 'grid' && (
-                                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                                                {(isWebsites ? userProjects : userProjects.slice(0, 4)).map(project => (
-                                                    <ProjectCard key={project.id} project={project} />
-                                                ))}
-                                            </div>
-                                        )}
+                                            {/* List View Skeleton */}
+                                            {viewMode === 'list' && isWebsites && (
+                                                <div className="space-y-4">
+                                                    {[1, 2, 3, 4].map(i => (
+                                                        <ProjectCardSkeleton key={i} />
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </>
+                                    ) : userProjects.length > 0 ? (
+                                        <>
+                                            {/* Grid View */}
+                                            {viewMode === 'grid' && (
+                                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                                                    {(isWebsites ? userProjects : userProjects.slice(0, 4)).map(project => (
+                                                        <ProjectCard key={project.id} project={project} />
+                                                    ))}
+                                                </div>
+                                            )}
 
-                                        {/* List View */}
-                                        {viewMode === 'list' && isWebsites && (
-                                            <div className="space-y-4">
-                                                {userProjects.map(project => (
-                                                    <ProjectListItem key={project.id} project={project} />
-                                                ))}
-                                            </div>
-                                        )}
-                                    </>
-                                ) : (
-                                    <EmptyState
-                                        icon={searchQuery ? Search : Globe}
-                                        title={searchQuery ? t('dashboard.emptyState.titleNoProjects') : t('dashboard.emptyState.titleNoWebsites')}
-                                        description={
-                                            searchQuery
-                                                ? t('dashboard.emptyState.descNoProjects', { query: searchQuery })
-                                                : t('dashboard.emptyState.descNoWebsites')
-                                        }
-                                        illustration={searchQuery ? 'search' : 'website'}
-                                        action={searchQuery ? undefined : {
-                                            label: t('dashboard.emptyState.createFirst'),
-                                            onClick: () => setIsOnboardingOpen(true),
-                                            icon: Plus
-                                        }}
-                                        secondaryAction={searchQuery ? {
-                                            label: 'Clear Search',
-                                            onClick: () => setSearchQuery('')
-                                        } : undefined}
-                                    />
-                                )}
-                            </section>
-                        )}
+                                            {/* List View */}
+                                            {viewMode === 'list' && isWebsites && (
+                                                <div className="space-y-4">
+                                                    {userProjects.map(project => (
+                                                        <ProjectListItem key={project.id} project={project} />
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </>
+                                    ) : (
+                                        <EmptyState
+                                            icon={searchQuery ? Search : Globe}
+                                            title={searchQuery ? t('dashboard.emptyState.titleNoProjects') : t('dashboard.emptyState.titleNoWebsites')}
+                                            description={
+                                                searchQuery
+                                                    ? t('dashboard.emptyState.descNoProjects', { query: searchQuery })
+                                                    : t('dashboard.emptyState.descNoWebsites')
+                                            }
+                                            illustration={searchQuery ? 'search' : 'website'}
+                                            action={searchQuery ? undefined : {
+                                                label: t('dashboard.emptyState.createFirst'),
+                                                onClick: () => setIsOnboardingOpen(true),
+                                                icon: Plus
+                                            }}
+                                            secondaryAction={searchQuery ? {
+                                                label: 'Clear Search',
+                                                onClick: () => setSearchQuery('')
+                                            } : undefined}
+                                        />
+                                    )}
+                                </section>
+                            )
+                        }
 
                         {/* Templates Section (Only on Dashboard) */}
-                        {isDashboard && (
-                            <section>
-                                <div className="flex items-center justify-between mb-6">
-                                    <h2 className="text-2xl font-bold text-foreground flex items-center gap-3">
-                                        <LayoutTemplate className="text-primary" size={24} />
-                                        {t('dashboard.startFromTemplate')}
-                                    </h2>
-                                </div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                                    {templates.slice(0, 4).map(template => (
-                                        <ProjectCard key={template.id} project={template} />
-                                    ))}
-                                </div>
-                            </section>
-                        )}
+                        {
+                            isDashboard && (
+                                <section>
+                                    <div className="flex items-center justify-between mb-6">
+                                        <h2 className="text-2xl font-bold text-foreground flex items-center gap-3">
+                                            <LayoutTemplate className="text-primary" size={24} />
+                                            {t('dashboard.startFromTemplate')}
+                                        </h2>
+                                    </div>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                                        {templates.slice(0, 4).map(template => (
+                                            <ProjectCard key={template.id} project={template} />
+                                        ))}
+                                    </div>
+                                </section>
+                            )
+                        }
 
                         {/* News & Updates Section - Show on Dashboard (after templates) */}
-                        {isDashboard && (
-                            <section className="w-full">
-                                <NewsUpdates maxItems={4} />
-                            </section>
-                        )}
+                        {
+                            isDashboard && (
+                                <section className="w-full">
+                                    <NewsUpdates maxItems={4} />
+                                </section>
+                            )
+                        }
 
 
 
                         {/* File History (Full Assets View) */}
-                        {isAssets && (
-                            <section className="h-full flex flex-col">
-                                {/* Header title moved to top bar, just rendering content now */}
-                                <div className="flex-1">
-                                    <FileHistory variant="full" />
-                                </div>
-                            </section>
-                        )}
+                        {
+                            isAssets && (
+                                <section className="h-full flex flex-col">
+                                    {/* Header title moved to top bar, just rendering content now */}
+                                    <div className="flex-1">
+                                        <FileHistory variant="full" />
+                                    </div>
+                                </section>
+                            )
+                        }
 
-                    </div>
-                </main>
+                    </div >
+                </main >
 
-            </div>
-        </div>
+            </div >
+        </div >
     );
 };
 

@@ -37,6 +37,9 @@ const ChangelogPage = lazyWithRetry(() => import('../components/ChangelogPage'))
 // Admin pages
 const SeedArticlesPage = lazyWithRetry(() => import('../components/admin/SeedArticlesPage'));
 
+// Agency Landing Preview (for Agency Landing Editor iframe)
+const AgencyLandingPreview = lazyWithRetry(() => import('../components/AgencyLandingPreview'));
+
 // Lazy-loaded ecommerce components
 const ProductDetailPageWithCart = lazyWithRetry(() => import('../components/ecommerce/ProductDetailPageWithCart'));
 const CheckoutPageEnhanced = lazyWithRetry(() => import('../components/ecommerce/CheckoutPageEnhanced'));
@@ -315,6 +318,15 @@ const Router: React.FC<RouterProps> = ({
     return (
       <Suspense fallback={<LoadingScreen />}>
         <AcceptInvite token={token} />
+      </Suspense>
+    );
+  }
+
+  // Agency Landing Preview (for Agency Landing Editor iframe)
+  if (path === '/agency-landing-preview') {
+    return (
+      <Suspense fallback={<LoadingScreen />}>
+        <AgencyLandingPreview />
       </Suspense>
     );
   }

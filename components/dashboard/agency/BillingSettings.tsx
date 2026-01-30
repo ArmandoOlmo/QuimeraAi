@@ -15,6 +15,17 @@ import {
     Loader2,
     DollarSign,
     TrendingUp,
+    HelpCircle,
+    ChevronDown,
+    ChevronUp,
+    Building2,
+    User,
+    FileText,
+    Landmark,
+    Shield,
+    Clock,
+    ArrowRight,
+    Info,
 } from 'lucide-react';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import { ClientBillingManager } from './ClientBillingManager';
@@ -43,6 +54,7 @@ export function BillingSettings() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [activeTab, setActiveTab] = useState<'overview' | 'clients' | 'history'>('overview');
+    const [showInstructions, setShowInstructions] = useState(false);
 
     useEffect(() => {
         loadConnectStatus();
@@ -114,16 +126,6 @@ export function BillingSettings() {
 
     return (
         <div className="max-w-7xl mx-auto space-y-6">
-            {/* Header */}
-            <div>
-                <h1 className="text-3xl font-bold text-foreground">
-                    {t('dashboard.agency.billingPage.title')}
-                </h1>
-                <p className="text-muted-foreground mt-1">
-                    {t('dashboard.agency.billingPage.subtitle')}
-                </p>
-            </div>
-
             {/* Error Alert */}
             {error && (
                 <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
@@ -136,6 +138,284 @@ export function BillingSettings() {
                     </div>
                 </div>
             )}
+
+            {/* Collapsible Instructions Section */}
+            <div className="bg-card border border-border rounded-xl overflow-hidden">
+                <button
+                    onClick={() => setShowInstructions(!showInstructions)}
+                    className="w-full px-6 py-4 flex items-center justify-between hover:bg-muted/50 transition-colors"
+                >
+                    <div className="flex items-center gap-3">
+                        <div className="p-2 bg-primary/10 rounded-lg">
+                            <HelpCircle className="h-5 w-5 text-primary" />
+                        </div>
+                        <div className="text-left">
+                            <h3 className="font-semibold text-foreground">
+                                {connectStatus.status === 'not_configured'
+                                    ? '¿Cómo configuro mi cuenta de pagos?'
+                                    : '¿Cómo completo la verificación de Stripe?'}
+                            </h3>
+                            <p className="text-sm text-muted-foreground">
+                                Guía paso a paso con instrucciones detalladas
+                            </p>
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium text-primary">
+                            {showInstructions ? 'Ocultar guía' : 'Ver guía'}
+                        </span>
+                        {showInstructions ? (
+                            <ChevronUp className="h-5 w-5 text-primary" />
+                        ) : (
+                            <ChevronDown className="h-5 w-5 text-primary" />
+                        )}
+                    </div>
+                </button>
+
+                {showInstructions && (
+                    <div className="px-6 pb-6 space-y-6">
+                        {/* Divider */}
+                        <div className="border-t border-border" />
+
+                        {/* What is Stripe Connect */}
+                        <div className="bg-muted/30 rounded-xl p-5 border border-border">
+                            <div className="flex items-start gap-4">
+                                <div className="p-3 bg-background rounded-xl flex-shrink-0 border border-border">
+                                    <Info className="h-6 w-6 text-primary" />
+                                </div>
+                                <div>
+                                    <h4 className="font-bold text-foreground text-lg mb-2">
+                                        ¿Qué es Stripe Connect?
+                                    </h4>
+                                    <p className="text-muted-foreground leading-relaxed">
+                                        Stripe Connect es un sistema de pagos seguro que te permite <strong>cobrar a tus clientes directamente</strong>.
+                                        Es como tener tu propia cuenta bancaria digital para recibir pagos de forma automática.
+                                        Los pagos van directo a tu cuenta, y tú controlas cuánto cobras.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Step by Step Guide */}
+                        <div>
+                            <h4 className="font-bold text-foreground text-lg mb-4 flex items-center gap-2">
+                                <span className="p-1.5 bg-primary/10 rounded-lg">
+                                    <FileText className="h-4 w-4 text-primary" />
+                                </span>
+                                Pasos para configurar tu cuenta
+                            </h4>
+
+                            <div className="space-y-4">
+                                {/* Step 1 */}
+                                <div className="relative pl-8 pb-4 border-l-2 border-border ml-4">
+                                    <div className="absolute -left-4 top-0 w-8 h-8 bg-primary rounded-full flex items-center justify-center text-primary-foreground font-bold text-sm shadow-lg">
+                                        1
+                                    </div>
+                                    <div className="bg-muted/30 rounded-xl p-4 border border-border ml-4">
+                                        <div className="flex items-center gap-3 mb-2">
+                                            <CreditCard className="h-5 w-5 text-primary" />
+                                            <h5 className="font-semibold text-foreground">
+                                                Haz clic en "Conectar con Stripe"
+                                            </h5>
+                                        </div>
+                                        <p className="text-muted-foreground text-sm">
+                                            Busca el botón azul que dice <span className="bg-primary/10 px-2 py-0.5 rounded text-primary font-medium">"Conectar con Stripe"</span> y haz clic.
+                                            Serás redirigido a la página oficial de Stripe.
+                                        </p>
+                                    </div>
+                                </div>
+
+                                {/* Step 2 */}
+                                <div className="relative pl-8 pb-4 border-l-2 border-border ml-4">
+                                    <div className="absolute -left-4 top-0 w-8 h-8 bg-primary rounded-full flex items-center justify-center text-primary-foreground font-bold text-sm shadow-lg">
+                                        2
+                                    </div>
+                                    <div className="bg-muted/30 rounded-xl p-4 border border-border ml-4">
+                                        <div className="flex items-center gap-3 mb-2">
+                                            <Building2 className="h-5 w-5 text-primary" />
+                                            <h5 className="font-semibold text-foreground">
+                                                Ingresa información de tu negocio
+                                            </h5>
+                                        </div>
+                                        <p className="text-muted-foreground text-sm mb-3">
+                                            Stripe te pedirá datos básicos de tu empresa o agencia:
+                                        </p>
+                                        <ul className="space-y-2 text-sm">
+                                            <li className="flex items-center gap-2 text-muted-foreground">
+                                                <CheckCircle className="h-4 w-4 text-green-500 flex-shrink-0" />
+                                                <span>Nombre legal de tu negocio</span>
+                                            </li>
+                                            <li className="flex items-center gap-2 text-muted-foreground">
+                                                <CheckCircle className="h-4 w-4 text-green-500 flex-shrink-0" />
+                                                <span>Dirección comercial</span>
+                                            </li>
+                                            <li className="flex items-center gap-2 text-muted-foreground">
+                                                <CheckCircle className="h-4 w-4 text-green-500 flex-shrink-0" />
+                                                <span>Número de identificación fiscal (EIN o equivalente)</span>
+                                            </li>
+                                            <li className="flex items-center gap-2 text-muted-foreground">
+                                                <CheckCircle className="h-4 w-4 text-green-500 flex-shrink-0" />
+                                                <span>Tipo de negocio (individual, LLC, corporación, etc.)</span>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+
+                                {/* Step 3 */}
+                                <div className="relative pl-8 pb-4 border-l-2 border-border ml-4">
+                                    <div className="absolute -left-4 top-0 w-8 h-8 bg-primary rounded-full flex items-center justify-center text-primary-foreground font-bold text-sm shadow-lg">
+                                        3
+                                    </div>
+                                    <div className="bg-muted/30 rounded-xl p-4 border border-border ml-4">
+                                        <div className="flex items-center gap-3 mb-2">
+                                            <User className="h-5 w-5 text-primary" />
+                                            <h5 className="font-semibold text-foreground">
+                                                Verifica tu identidad
+                                            </h5>
+                                        </div>
+                                        <p className="text-muted-foreground text-sm mb-3">
+                                            Por seguridad, Stripe necesita verificar quién eres. Necesitarás:
+                                        </p>
+                                        <ul className="space-y-2 text-sm">
+                                            <li className="flex items-center gap-2 text-muted-foreground">
+                                                <Shield className="h-4 w-4 text-primary flex-shrink-0" />
+                                                <span>Documento de identidad (pasaporte, licencia de conducir o ID nacional)</span>
+                                            </li>
+                                            <li className="flex items-center gap-2 text-muted-foreground">
+                                                <Shield className="h-4 w-4 text-primary flex-shrink-0" />
+                                                <span>Una selfie o foto tuya (para comparar con tu documento)</span>
+                                            </li>
+                                            <li className="flex items-center gap-2 text-muted-foreground">
+                                                <Shield className="h-4 w-4 text-primary flex-shrink-0" />
+                                                <span>Fecha de nacimiento y últimos 4 dígitos de tu SSN (en EE.UU.)</span>
+                                            </li>
+                                        </ul>
+                                        <div className="mt-3 p-3 bg-muted/50 rounded-lg border border-border">
+                                            <p className="text-xs text-muted-foreground flex items-start gap-2">
+                                                <Info className="h-4 w-4 flex-shrink-0 mt-0.5" />
+                                                <span>
+                                                    <strong>Consejo:</strong> Ten tu documento listo antes de comenzar.
+                                                    Si usas tu teléfono, asegúrate de tener buena iluminación para las fotos.
+                                                </span>
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Step 4 */}
+                                <div className="relative pl-8 pb-4 border-l-2 border-border ml-4">
+                                    <div className="absolute -left-4 top-0 w-8 h-8 bg-primary rounded-full flex items-center justify-center text-primary-foreground font-bold text-sm shadow-lg">
+                                        4
+                                    </div>
+                                    <div className="bg-muted/30 rounded-xl p-4 border border-border ml-4">
+                                        <div className="flex items-center gap-3 mb-2">
+                                            <Landmark className="h-5 w-5 text-primary" />
+                                            <h5 className="font-semibold text-foreground">
+                                                Agrega tu cuenta bancaria
+                                            </h5>
+                                        </div>
+                                        <p className="text-muted-foreground text-sm mb-3">
+                                            Para recibir tus pagos, necesitas conectar una cuenta bancaria:
+                                        </p>
+                                        <ul className="space-y-2 text-sm">
+                                            <li className="flex items-center gap-2 text-muted-foreground">
+                                                <ArrowRight className="h-4 w-4 text-primary flex-shrink-0" />
+                                                <span>Número de cuenta y número de ruta (routing number)</span>
+                                            </li>
+                                            <li className="flex items-center gap-2 text-muted-foreground">
+                                                <ArrowRight className="h-4 w-4 text-primary flex-shrink-0" />
+                                                <span>La cuenta debe estar a nombre del negocio o del dueño</span>
+                                            </li>
+                                        </ul>
+                                        <div className="mt-3 p-3 bg-muted/50 rounded-lg border border-border">
+                                            <p className="text-xs text-muted-foreground flex items-start gap-2">
+                                                <CheckCircle className="h-4 w-4 flex-shrink-0 mt-0.5" />
+                                                <span>
+                                                    <strong>Tranquilo:</strong> Stripe es una plataforma segura usada por millones de negocios.
+                                                    Tus datos están encriptados y protegidos.
+                                                </span>
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Step 5 */}
+                                <div className="relative pl-8 ml-4">
+                                    <div className="absolute -left-4 top-0 w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-lg">
+                                        <CheckCircle className="h-5 w-5" />
+                                    </div>
+                                    <div className="bg-green-500/10 rounded-xl p-4 border border-green-500/20 ml-4">
+                                        <div className="flex items-center gap-3 mb-2">
+                                            <Clock className="h-5 w-5 text-green-600" />
+                                            <h5 className="font-semibold text-foreground">
+                                                ¡Espera la activación!
+                                            </h5>
+                                        </div>
+                                        <p className="text-muted-foreground text-sm">
+                                            Una vez completados todos los pasos, Stripe verificará tu información.
+                                            Esto puede tomar desde <strong>unos minutos hasta 24-48 horas</strong>.
+                                            Te notificaremos cuando tu cuenta esté lista para recibir pagos.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* FAQ Section */}
+                        <div className="bg-muted/30 rounded-xl p-5 border border-border">
+                            <h4 className="font-bold text-foreground text-lg mb-4">
+                                Preguntas frecuentes
+                            </h4>
+                            <div className="space-y-4">
+                                <div>
+                                    <h5 className="font-semibold text-foreground text-sm mb-1">
+                                        ¿Stripe cobra comisiones?
+                                    </h5>
+                                    <p className="text-muted-foreground text-sm">
+                                        Sí, Stripe cobra una pequeña comisión por cada transacción (generalmente 2.9% + $0.30 por cobro).
+                                        Esto se descuenta automáticamente antes de depositar en tu cuenta.
+                                    </p>
+                                </div>
+                                <div>
+                                    <h5 className="font-semibold text-foreground text-sm mb-1">
+                                        ¿Cuándo recibo mis pagos?
+                                    </h5>
+                                    <p className="text-muted-foreground text-sm">
+                                        Los pagos se depositan automáticamente en tu cuenta bancaria.
+                                        El tiempo estándar es de 2 días hábiles después de recibir un pago de un cliente.
+                                    </p>
+                                </div>
+                                <div>
+                                    <h5 className="font-semibold text-foreground text-sm mb-1">
+                                        ¿Puedo usar mi cuenta personal?
+                                    </h5>
+                                    <p className="text-muted-foreground text-sm">
+                                        Sí, si eres un profesional independiente puedes usar tu cuenta personal.
+                                        Si tienes una empresa registrada, es mejor usar la cuenta bancaria empresarial.
+                                    </p>
+                                </div>
+                                <div>
+                                    <h5 className="font-semibold text-foreground text-sm mb-1">
+                                        ¿Qué pasa si Stripe rechaza mi verificación?
+                                    </h5>
+                                    <p className="text-muted-foreground text-sm">
+                                        Stripe te indicará qué información falta o es incorrecta.
+                                        Podrás corregirla haciendo clic en "Ir a Stripe" y completando los datos pendientes.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Support Note */}
+                        <div className="flex items-center gap-3 p-4 bg-primary/10 rounded-xl">
+                            <HelpCircle className="h-5 w-5 text-primary flex-shrink-0" />
+                            <p className="text-sm text-foreground">
+                                ¿Tienes problemas o dudas? Contacta a nuestro equipo de soporte y te ayudaremos a completar la configuración.
+                            </p>
+                        </div>
+                    </div>
+                )}
+            </div>
 
             {/* Stripe Connect Setup */}
             {connectStatus.status === 'not_configured' ? (

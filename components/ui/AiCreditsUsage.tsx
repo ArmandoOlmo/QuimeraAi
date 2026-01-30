@@ -29,6 +29,7 @@ import {
 } from '../../types/subscription';
 import { useSafeUpgrade } from '../../contexts/UpgradeContext';
 import { useAuth } from '../../contexts/core/AuthContext';
+import { getCreditsUsageWithPoolDetection } from '../../services/aiCreditsService';
 
 // =============================================================================
 // TYPES
@@ -151,6 +152,13 @@ const CircularProgress: React.FC<{
 // MAIN COMPONENT
 // =============================================================================
 
+// Pool info interface for shared credits
+interface SharedPoolInfo {
+    isSharedPool: boolean;
+    poolTenantId: string;
+    agencyName?: string;
+}
+
 export const AiCreditsUsage: React.FC<AiCreditsUsageProps> = ({
     tenantId,
     userId,
@@ -186,6 +194,29 @@ export const AiCreditsUsage: React.FC<AiCreditsUsageProps> = ({
 
     const [usageByOperation, setUsageByOperation] = useState<Record<string, { count: number; credits: number }>>({});
     const [isRefreshing, setIsRefreshing] = useState(false);
+    
+    // Shared pool info for agency sub-clients
+    const [poolInfo, setPoolInfo] = useState<SharedPoolInfo>({
+        isSharedPool: false,
+        poolTenantId: tenantId,
+    });
+
+    // Detect shared pool on mount
+    useEffect(() => {
+        const detectSharedPool = async () => {
+            try {
+                const info = await getCreditsUsageWithPoolDetection(tenantId);
+                setPoolInfo({
+                    isSharedPool: info.isSharedPool,
+                    poolTenantId: info.poolTenantId,
+                    agencyName: info.agencyName,
+                });
+            } catch (err) {
+                console.error('Error detecting shared pool:', err);
+            }
+        };
+        detectSharedPool();
+    }, [tenantId]);
 
     // Handler for upgrade click - uses context if available, or prop callback
     const handleUpgradeClick = () => {
@@ -301,6 +332,23 @@ export const AiCreditsUsage: React.FC<AiCreditsUsageProps> = ({
                         <RefreshCw className={`w-4 h-4 text-white/60 ${isRefreshing ? 'animate-spin' : ''}`} />
                     </button>
                 </div>
+
+                {/* Shared Pool Indicator for Agency Sub-clients */}
+                {poolInfo.isSharedPool && poolInfo.agencyName && (
+                    <div className="mt-3 flex items-center gap-2 px-3 py-2 rounded-lg bg-indigo-500/10 border border-indigo-500/20">
+                        <div className="w-6 h-6 rounded-full bg-indigo-500/20 flex items-center justify-center">
+                            <Sparkles className="w-3 h-3 text-indigo-400" />
+                        </div>
+                        <div className="flex-1">
+                            <p className="text-xs text-indigo-300 font-medium">
+                                Pool compartido
+                            </p>
+                            <p className="text-xs text-indigo-400/70">
+                                Créditos de {poolInfo.agencyName}
+                            </p>
+                        </div>
+                    </div>
+                )}
             </div>
 
             {/* Usage display */}

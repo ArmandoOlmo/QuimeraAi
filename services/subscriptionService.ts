@@ -28,6 +28,10 @@ import {
     PlanFeatures,
     PlanLimits,
     getAnnualSavings,
+    getPlanTrialDays,
+    isAgencyPlan,
+    getProjectCost,
+    calculateAgencyTotalCost,
 } from '../types/subscription';
 import { initializeCreditsUsage, handlePlanChange } from './aiCreditsService';
 
@@ -36,7 +40,7 @@ import { initializeCreditsUsage, handlePlanChange } from './aiCreditsService';
 // =============================================================================
 
 const SUBSCRIPTIONS_COLLECTION = 'subscriptions';
-const TRIAL_DAYS = 14;
+const TRIAL_DAYS = 7;  // Cambiado de 14 a 7 días de trial
 
 // =============================================================================
 // SUBSCRIPTION MANAGEMENT
@@ -426,7 +430,20 @@ export function comparePlans(
     currentPlanId: SubscriptionPlanId,
     targetPlanId: SubscriptionPlanId
 ): 'upgrade' | 'downgrade' | 'same' {
-    const planOrder: SubscriptionPlanId[] = ['free', 'starter', 'pro', 'agency', 'enterprise'];
+    // Orden de planes por nivel (de menor a mayor)
+    const planOrder: SubscriptionPlanId[] = [
+        'free', 
+        'hobby', 
+        'starter', 
+        'individual',      // Nuevo plan individual
+        'pro', 
+        'agency', 
+        'agency_starter',  // Nuevos planes de agencia
+        'agency_plus',
+        'agency_pro', 
+        'agency_scale',
+        'enterprise'
+    ];
 
     const currentIndex = planOrder.indexOf(currentPlanId);
     const targetIndex = planOrder.indexOf(targetPlanId);
@@ -442,16 +459,28 @@ export function comparePlans(
 export function getUpgradeHighlight(currentPlanId: SubscriptionPlanId): string[] {
     const highlights: Record<SubscriptionPlanId, string[]> = {
         free: [
+            'Todas las features incluidas',
+            '7 días de prueba gratis',
+            '500 AI credits/mes',
             'Dominio personalizado',
-            'CMS para blog',
-            'CRM básico',
-            '300 AI credits/mes',
+        ],
+        hobby: [
+            'Todas las features incluidas',
+            'E-commerce y CRM completo',
+            'Chatbot con IA',
+            '500 AI credits/mes',
         ],
         starter: [
+            'Todas las features incluidas',
             'E-commerce completo',
             'Chatbot con IA',
-            '1,500 AI credits/mes',
-            'Sin branding de Quimera',
+            '500 AI credits/mes',
+        ],
+        individual: [
+            'Gestiona múltiples clientes',
+            'Pool de créditos compartido',
+            'White-label completo',
+            'Factura a tus clientes',
         ],
         pro: [
             'White-label completo',
@@ -460,8 +489,28 @@ export function getUpgradeHighlight(currentPlanId: SubscriptionPlanId): string[]
             'API access',
         ],
         agency: [
-            'Credits ilimitados',
+            'Modelo fee + proyecto',
+            'Pool de créditos compartido',
+            'Sin límite de proyectos',
+            'Soporte prioritario',
+        ],
+        agency_starter: [
+            'Más créditos en el pool',
+            'Soporte prioritario mejorado',
+            'Más usuarios permitidos',
+        ],
+        agency_plus: [
+            'Pool de 5,000 créditos',
+            'Menor fee de transacción',
+            'Más recursos',
+        ],
+        agency_pro: [
+            'Pool de 15,000 créditos',
+            'Recursos ilimitados',
             'Soporte dedicado',
+        ],
+        agency_scale: [
+            'Soporte enterprise',
             'SLA garantizado',
             'Integraciones custom',
         ],
