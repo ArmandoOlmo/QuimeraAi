@@ -11,7 +11,7 @@ import {
     ArrowLeft, Menu as MenuIcon, Save, Eye, EyeOff, Settings, Layers, Plus,
     GripVertical, Trash2, ChevronDown, Monitor, Tablet,
     Smartphone, Loader2, Check, Image, Type, Layout,
-    X, RefreshCw, Palette, Globe, Search, ExternalLink
+    X, RefreshCw, Palette, Globe, Search, ExternalLink, PanelRightClose, PanelRightOpen
 } from 'lucide-react';
 import { useUndoRedo } from '../../../../hooks/useUndoRedo';
 import { UndoRedoGroup } from '../../../ui/UndoButton';
@@ -171,6 +171,7 @@ export function AgencyLandingEditor({ onBack }: AgencyLandingEditorProps) {
     const [selectedStructureItem, setSelectedStructureItem] = useState<string | null>(null);
     const [previewDevice, setPreviewDevice] = useState<PreviewDevice>('desktop');
     const [isPreviewVisible, setIsPreviewVisible] = useState(true);
+    const [isControlsPanelOpen, setIsControlsPanelOpen] = useState(true);
     const [showAddComponent, setShowAddComponent] = useState(false);
 
     // Group expansion state
@@ -263,9 +264,6 @@ export function AgencyLandingEditor({ onBack }: AgencyLandingEditorProps) {
                     setLandingConfig(config);
                     setSections(config.sections || []);
                     savedSectionsRef.current = JSON.parse(JSON.stringify(config.sections || []));
-                    // #region agent log
-                    fetch('http://127.0.0.1:7243/ingest/9b551d4e-1f47-4487-b2ea-b09bf6698241',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AgencyLandingEditor.tsx:loadConfig',message:'Loaded from Firestore',data:{sectionsCount:config.sections?.length||0,sectionIds:(config.sections||[]).map((s:any)=>({id:s.id,type:s.type}))},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H5'})}).catch(()=>{});
-                    // #endregion
                     if (config.updatedAt) {
                         setLastSaved(config.updatedAt.toDate ? config.updatedAt.toDate() : new Date(config.updatedAt));
                     }
@@ -274,9 +272,6 @@ export function AgencyLandingEditor({ onBack }: AgencyLandingEditorProps) {
                     const defaultConfig = createDefaultAgencyLandingConfig(currentTenant.id, currentTenant.name);
                     setSections(defaultConfig.sections);
                     savedSectionsRef.current = JSON.parse(JSON.stringify(defaultConfig.sections));
-                    // #region agent log
-                    fetch('http://127.0.0.1:7243/ingest/9b551d4e-1f47-4487-b2ea-b09bf6698241',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AgencyLandingEditor.tsx:loadConfig',message:'Created default config',data:{sectionsCount:defaultConfig.sections.length,sectionIds:defaultConfig.sections.map(s=>({id:s.id,type:s.type}))},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H5'})}).catch(()=>{});
-                    // #endregion
                 }
             } catch (error) {
                 console.error('Error loading agency landing:', error);
@@ -287,22 +282,19 @@ export function AgencyLandingEditor({ onBack }: AgencyLandingEditorProps) {
         loadConfiguration();
     }, [currentTenant?.id, currentTenant?.name]);
 
+
     // Send updates to preview iframe
     useEffect(() => {
-        // #region agent log
-        const footerSection = sections.find(s => s.type === 'footer');
-        const headerSection = sections.find(s => s.type === 'header');
-        fetch('http://127.0.0.1:7243/ingest/9b551d4e-1f47-4487-b2ea-b09bf6698241',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AgencyLandingEditor.tsx:postMessage',message:'Sending to preview',data:{hasIframe:!!iframeRef.current?.contentWindow,sectionsCount:sections.length,footerDataKeys:Object.keys(footerSection?.data||{}),headerDataKeys:Object.keys(headerSection?.data||{})},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H6'})}).catch(()=>{});
-        // #endregion
         if (iframeRef.current?.contentWindow) {
             iframeRef.current.contentWindow.postMessage({
                 type: 'AGENCY_LANDING_UPDATE',
                 sections: sections,
                 theme: landingConfig?.theme,
                 branding: landingConfig?.branding,
+                previewDevice: previewDevice,
             }, window.location.origin);
         }
-    }, [sections, landingConfig]);
+    }, [sections, landingConfig, previewDevice]);
 
     // Listen for preview ready message
     useEffect(() => {
@@ -315,6 +307,7 @@ export function AgencyLandingEditor({ onBack }: AgencyLandingEditorProps) {
                         sections: sections,
                         theme: landingConfig?.theme,
                         branding: landingConfig?.branding,
+                        previewDevice: previewDevice,
                     }, window.location.origin);
                 }
             }
@@ -322,7 +315,7 @@ export function AgencyLandingEditor({ onBack }: AgencyLandingEditorProps) {
 
         window.addEventListener('message', handleMessage);
         return () => window.removeEventListener('message', handleMessage);
-    }, [sections, landingConfig]);
+    }, [sections, landingConfig, previewDevice]);
 
     // Save handler
     const handleSave = useCallback(async () => {
@@ -431,15 +424,9 @@ export function AgencyLandingEditor({ onBack }: AgencyLandingEditorProps) {
     };
 
     const updateSectionData = useCallback((sectionId: string, newData: Record<string, any>) => {
-        // #region agent log
-        fetch('http://127.0.0.1:7243/ingest/9b551d4e-1f47-4487-b2ea-b09bf6698241',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AgencyLandingEditor.tsx:updateSectionData',message:'Function called',data:{sectionId,newDataKeys:Object.keys(newData||{})},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H3'})}).catch(()=>{});
-        // #endregion
         setSections(prev => {
             const foundSection = prev.find(s => s.id === sectionId);
             const allIds = prev.map(s => s.id);
-            // #region agent log
-            fetch('http://127.0.0.1:7243/ingest/9b551d4e-1f47-4487-b2ea-b09bf6698241',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AgencyLandingEditor.tsx:updateSectionData:inside',message:'Inside setSections',data:{sectionId,foundId:foundSection?.id||'NOT_FOUND',allIds,sectionCount:prev.length},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H4,H5'})}).catch(()=>{});
-            // #endregion
             return prev.map(s =>
                 s.id === sectionId ? { ...s, data: newData } : s
             );
@@ -660,9 +647,9 @@ export function AgencyLandingEditor({ onBack }: AgencyLandingEditorProps) {
                 </header>
 
                 {/* Main Content - Three Panel Layout */}
-                <main className="flex-1 flex overflow-hidden">
+                <main className="flex-1 flex overflow-hidden relative">
                     {/* Left Panel - Component List */}
-                    <div className="w-48 lg:w-52 border-r border-border bg-card/50 flex flex-col overflow-hidden">
+                    <div className="w-64 lg:w-72 border-r border-border bg-card/50 flex flex-col overflow-hidden">
                         <div className="p-4 border-b border-border flex items-center justify-between">
                             <h2 className="font-semibold text-sm">{t('dashboard.agency.landing.pageStructure', 'ESTRUCTURA DE PÁGINA')}</h2>
                             <button
@@ -762,81 +749,101 @@ export function AgencyLandingEditor({ onBack }: AgencyLandingEditorProps) {
                     {/* Center Panel - Preview */}
                     {isPreviewVisible && (
                         <div className="flex-1 bg-muted/30 p-4 flex flex-col min-h-0">
-                            <div className={`flex-1 flex flex-col bg-white rounded-lg shadow-lg mx-auto ${previewWidth} w-full transition-all duration-300 min-h-0`}>
+                            <div className={`flex-1 flex flex-col rounded-xl shadow-2xl bg-card border border-border mx-auto ${previewWidth} w-full transition-all duration-300 min-h-0 overflow-hidden`}>
+                                {/* Browser Header */}
+                                <div className="flex-shrink-0 h-12 bg-background border-b border-border flex items-center px-4 space-x-2 z-10">
+                                    <div className="flex space-x-2">
+                                        <span className="w-3.5 h-3.5 bg-red-500 rounded-full"></span>
+                                        <span className="w-3.5 h-3.5 bg-yellow-500 rounded-full"></span>
+                                        <span className="w-3.5 h-3.5 bg-green-500 rounded-full"></span>
+                                    </div>
+                                    <div className="flex-grow flex items-center justify-center">
+                                        <div className="bg-secondary/50 text-muted-foreground text-sm rounded-full px-4 py-1.5 w-full max-w-md text-center truncate flex items-center justify-center cursor-default select-none border border-border/50">
+                                            <span className="opacity-50 mr-0.5">https://</span>
+                                            <span className="font-medium text-foreground">{currentTenant?.name?.toLowerCase().replace(/\s+/g, '-') || 'agency'}.quimera.app</span>
+                                        </div>
+                                    </div>
+                                    <div className="w-16"></div>
+                                </div>
+                                {/* Browser Content */}
                                 <iframe
                                     ref={iframeRef}
                                     key={previewKey}
                                     src={`/agency-landing-preview?tenantId=${currentTenant.id}`}
-                                    className="w-full h-full border-0"
+                                    className="flex-1 w-full border-0"
                                     title="Agency Landing Preview"
                                 />
                             </div>
                         </div>
                     )}
 
-                    {/* Right Panel - Controls */}
-                    <div className={`${isPreviewVisible ? 'w-64 lg:w-72' : 'flex-1 max-w-2xl mx-auto'} border-l border-border bg-card/50 flex flex-col overflow-hidden`}>
-                        {selectedStructureItem ? (
-                            <>
-                                <div className="p-4 border-b border-border">
-                                    <h2 className="font-semibold text-sm flex items-center gap-2">
-                                        <Settings size={16} className="text-primary" />
-                                        {t('dashboard.agency.landing.edit', 'Editar')}: <span className="capitalize">
-                                            {structureItemsWithIcons.find(i => i.id === selectedStructureItem)?.label || selectedStructureItem}
-                                        </span>
-                                    </h2>
-                                </div>
-                                <LandingPageControls
-                                    section={(() => {
-                                        // FIX: Use the ACTUAL section ID from sections array, not the structure item ID
-                                        const structureItem = structureItemsWithIcons.find(i => i.id === selectedStructureItem);
-                                        const actualSection = sections.find(s => s.type === structureItem?.type);
-                                        const result = actualSection || {
-                                            id: selectedStructureItem,
-                                            type: structureItem?.type || selectedStructureItem,
-                                            enabled: true,
-                                            order: 0,
-                                            data: {}
-                                        };
-                                        // #region agent log
-                                        fetch('http://127.0.0.1:7243/ingest/9b551d4e-1f47-4487-b2ea-b09bf6698241',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AgencyLandingEditor.tsx:sectionProp',message:'Section passed to controls',data:{selectedStructureItem,structureItemType:structureItem?.type,actualSectionFound:!!actualSection,resultId:result.id,resultType:result.type,resultDataKeys:Object.keys(result.data||{}),sectionsCount:sections.length,allSectionTypes:sections.map(s=>({id:s.id,type:s.type}))},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H1,H2'})}).catch(()=>{});
-                                        // #endregion
-                                        return result;
-                                    })()}
-                                    onUpdateSection={updateSectionData}
-                                    onRefreshPreview={() => setPreviewKey(prev => prev + 1)}
-                                    allSections={sections}
-                                    onApplyGlobalColors={applyGlobalColorsToAllSections}
-                                />
-                            </>
-                        ) : currentSection ? (
-                            <>
-                                <div className="p-4 border-b border-border">
-                                    <h2 className="font-semibold text-sm flex items-center gap-2">
-                                        <Settings size={16} className="text-primary" />
-                                        {t('dashboard.agency.landing.edit', 'Editar')}: <span className="capitalize">{currentSection.type}</span>
-                                    </h2>
-                                </div>
-                                <LandingPageControls
-                                    section={currentSection}
-                                    onUpdateSection={updateSectionData}
-                                    onRefreshPreview={() => setPreviewKey(prev => prev + 1)}
-                                    allSections={sections}
-                                    onApplyGlobalColors={applyGlobalColorsToAllSections}
-                                />
-                            </>
-                        ) : (
-                            <div className="flex-1 flex items-center justify-center p-8">
-                                <div className="text-center">
-                                    <Layers className="w-12 h-12 text-muted-foreground mx-auto mb-4 opacity-50" />
-                                    <h3 className="font-semibold mb-2">{t('dashboard.agency.landing.noSectionSelected', 'Ninguna sección seleccionada')}</h3>
-                                    <p className="text-sm text-muted-foreground">
-                                        {t('dashboard.agency.landing.selectSectionHint', 'Selecciona una sección de la lista para editarla')}
-                                    </p>
-                                </div>
-                            </div>
-                        )}
-                    </div>
+
+                    {/* Controls Panel Toggle Button - Only visible when a section is selected */}
+                    {(selectedStructureItem || currentSection) && (
+                        <button
+                            onClick={() => setIsControlsPanelOpen(!isControlsPanelOpen)}
+                            className={`absolute top-1/2 -translate-y-1/2 z-30 p-2 bg-card border border-border shadow-lg hover:bg-accent transition-all duration-300 overflow-hidden rounded-lg ${isControlsPanelOpen
+                                ? (isPreviewVisible ? 'right-[calc(16rem-18px)] lg:right-[calc(18rem-18px)]' : 'right-[calc(42rem-18px)]')
+                                : 'right-0 rounded-l-lg rounded-r-none'
+                                }`}
+                            title={isControlsPanelOpen ? t('dashboard.agency.landing.hideControls', 'Ocultar controles') : t('dashboard.agency.landing.showControls', 'Mostrar controles')}
+                        >
+                            {isControlsPanelOpen ? <PanelRightClose size={18} /> : <PanelRightOpen size={18} />}
+                        </button>
+                    )}
+
+                    {/* Right Panel - Controls - Only visible when a section is selected */}
+                    {(selectedStructureItem || currentSection) && (
+                        <div className={`${isControlsPanelOpen ? (isPreviewVisible ? 'w-64 lg:w-72' : 'flex-1 max-w-2xl mx-auto') : 'w-0 overflow-hidden'} border-l border-border bg-card/50 flex flex-col overflow-hidden transition-all duration-300`}>
+                            {selectedStructureItem ? (
+                                <>
+                                    <div className="p-4 border-b border-border">
+                                        <h2 className="font-semibold text-sm flex items-center gap-2">
+                                            <Settings size={16} className="text-primary" />
+                                            {t('dashboard.agency.landing.edit', 'Editar')}: <span className="capitalize">
+                                                {structureItemsWithIcons.find(i => i.id === selectedStructureItem)?.label || selectedStructureItem}
+                                            </span>
+                                        </h2>
+                                    </div>
+                                    <LandingPageControls
+                                        section={(() => {
+                                            // FIX: Use the ACTUAL section ID from sections array, not the structure item ID
+                                            const structureItem = structureItemsWithIcons.find(i => i.id === selectedStructureItem);
+                                            const actualSection = sections.find(s => s.type === structureItem?.type);
+                                            const result = actualSection || {
+                                                id: selectedStructureItem,
+                                                type: structureItem?.type || selectedStructureItem,
+                                                enabled: true,
+                                                order: 0,
+                                                data: {}
+                                            };
+                                            return result;
+                                        })()}
+                                        onUpdateSection={updateSectionData}
+                                        onRefreshPreview={() => setPreviewKey(prev => prev + 1)}
+                                        allSections={sections}
+                                        onApplyGlobalColors={applyGlobalColorsToAllSections}
+                                    />
+                                </>
+                            ) : (
+                                <>
+                                    <div className="p-4 border-b border-border">
+                                        <h2 className="font-semibold text-sm flex items-center gap-2">
+                                            <Settings size={16} className="text-primary" />
+                                            {t('dashboard.agency.landing.edit', 'Editar')}: <span className="capitalize">{currentSection!.type}</span>
+                                        </h2>
+                                    </div>
+                                    <LandingPageControls
+                                        section={currentSection!}
+                                        onUpdateSection={updateSectionData}
+                                        onRefreshPreview={() => setPreviewKey(prev => prev + 1)}
+                                        allSections={sections}
+                                        onApplyGlobalColors={applyGlobalColorsToAllSections}
+                                    />
+                                </>
+                            )}
+                        </div>
+                    )}
                 </main>
             </div>
 

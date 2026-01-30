@@ -10,7 +10,7 @@ import {
     ArrowLeft, Menu as MenuIcon, Save, Eye, EyeOff, Settings, Layers, Plus,
     GripVertical, Trash2, ChevronDown, ChevronUp, Monitor, Tablet,
     Smartphone, Loader2, Check, Image, Type, Layout,
-    Sparkles, X, RefreshCw, Palette
+    Sparkles, X, RefreshCw, Palette, PanelRightClose, PanelRightOpen
 } from 'lucide-react';
 import { useUndoRedo, UndoableAction } from '../../../hooks/useUndoRedo';
 import { UndoRedoGroup } from '../../ui/UndoButton';
@@ -166,14 +166,6 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
     // Editor state
     const [sections, setSections] = useState<LandingSection[]>([]);
 
-    // #region agent log v3 - Log sections on every render
-    React.useEffect(() => {
-        const logPayload = {location:'LandingPageEditor.tsx:sectionsEffect:v3',message:'Sections state changed',data:{sectionCount:sections.length,sectionsInfo:sections.map(s=>({id:s.id,type:s.type,dataKeys:Object.keys(s.data||{})}))},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'EDITOR_SECTIONS_V3'};
-        console.error('[DEBUG v3] Sections state:', logPayload.data);
-        fetch('http://127.0.0.1:7243/ingest/9b551d4e-1f47-4487-b2ea-b09bf6698241',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(logPayload)}).catch(()=>{});
-    }, [sections]);
-    // #endregion
-
     // Undo/Redo integration
     const undoContext = useUndo();
     const {
@@ -226,6 +218,7 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
     const [selectedStructureItem, setSelectedStructureItem] = useState<string | null>(null);
     const [previewDevice, setPreviewDevice] = useState<PreviewDevice>('desktop');
     const [isPreviewVisible, setIsPreviewVisible] = useState(true);
+    const [isControlsPanelOpen, setIsControlsPanelOpen] = useState(true);
     const [showAddComponent, setShowAddComponent] = useState(false);
 
     // Group expansion state
@@ -298,16 +291,18 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
 
     // Default section definitions for structure items
     const defaultStructureSections: LandingSection[] = [
-        { id: 'header', type: 'header', enabled: true, order: 0, data: {
-            logoText: 'Quimera.ai',
-            showLoginButton: true,
-            showRegisterButton: true,
-            loginText: 'Iniciar Sesión',
-            registerText: 'Comenzar Gratis',
-            sticky: true,
-            transparent: false,
-            backgroundColor: '#000000',
-        } },
+        {
+            id: 'header', type: 'header', enabled: true, order: 0, data: {
+                logoText: 'Quimera.ai',
+                showLoginButton: true,
+                showRegisterButton: true,
+                loginText: 'Iniciar Sesión',
+                registerText: 'Comenzar Gratis',
+                sticky: true,
+                transparent: false,
+                backgroundColor: '#000000',
+            }
+        },
         {
             id: 'typography', type: 'typography', enabled: true, order: -1, data: {
                 headingFont: 'poppins',
@@ -333,7 +328,7 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
     // Helper to ensure required structure sections exist AND normalize IDs
     const ensureStructureSections = (loadedSections: LandingSection[]): LandingSection[] => {
         const result = [...loadedSections];
-        
+
         // FIX: Normalize section IDs to match their types for structure sections
         // This fixes legacy data where sections were saved with wrong IDs (e.g., "navigation" instead of "header")
         const structureTypeToId: Record<string, string> = {
@@ -342,20 +337,16 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
             'typography': 'typography',
             'colors': 'colors',
         };
-        
+
         // First pass: normalize IDs for existing structure sections
         for (let i = 0; i < result.length; i++) {
             const section = result[i];
             const expectedId = structureTypeToId[section.type];
             if (expectedId && section.id !== expectedId) {
-                // #region agent log
-                console.error('[DEBUG FIX] Normalizing section ID:', { oldId: section.id, newId: expectedId, type: section.type });
-                fetch('http://127.0.0.1:7243/ingest/9b551d4e-1f47-4487-b2ea-b09bf6698241',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'LandingPageEditor.tsx:ensureStructureSections',message:'Normalizing section ID',data:{oldId:section.id,newId:expectedId,type:section.type},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'FIX'})}).catch(()=>{});
-                // #endregion
                 result[i] = { ...section, id: expectedId };
             }
         }
-        
+
         // Second pass: add missing structure sections
         for (const defaultSection of defaultStructureSections) {
             const existingSection = result.find(s => s.type === defaultSection.type);
@@ -373,7 +364,7 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
                 }
             }
         }
-        
+
         return result;
     };
 
@@ -388,16 +379,8 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
                 if (settingsSnap.exists()) {
                     const data = settingsSnap.data();
                     if (data.sections && Array.isArray(data.sections)) {
-                        // #region agent log
-                        fetch('http://127.0.0.1:7243/ingest/9b551d4e-1f47-4487-b2ea-b09bf6698241',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'LandingPageEditor.tsx:loadConfiguration',message:'Loaded from Firestore',data:{rawSections:data.sections.map((s:any)=>({id:s.id,type:s.type}))},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'B,C'})}).catch(()=>{});
-                        console.error('[DEBUG] Loaded from Firestore:', data.sections.map((s:any) => ({ id: s.id, type: s.type })));
-                        // #endregion
                         // Ensure required structure sections exist
                         const mergedSections = ensureStructureSections(data.sections);
-                        // #region agent log
-                        fetch('http://127.0.0.1:7243/ingest/9b551d4e-1f47-4487-b2ea-b09bf6698241',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'LandingPageEditor.tsx:loadConfiguration',message:'After ensureStructureSections',data:{mergedSections:mergedSections.map((s:any)=>({id:s.id,type:s.type}))},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'B,C'})}).catch(()=>{});
-                        console.error('[DEBUG] After merge:', mergedSections.map((s:any) => ({ id: s.id, type: s.type })));
-                        // #endregion
                         setSections(mergedSections);
                         savedSectionsRef.current = JSON.parse(JSON.stringify(mergedSections)); // Deep copy for reset
                         if (data.lastUpdated) {
@@ -524,25 +507,11 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
 
     // Update section data from controls - FIXED v3
     const updateSectionData = useCallback((sectionId: string, newData: Record<string, any>) => {
-        // #region agent log v3
-        const logPayload = {location:'LandingPageEditor.tsx:updateSectionData:v3',message:'Function called v3',data:{sectionId,newDataKeys:Object.keys(newData||{}),newData},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'EDITOR_FIX_V3'};
-        console.error('[DEBUG v3] updateSectionData called:', logPayload.data);
-        fetch('http://127.0.0.1:7243/ingest/9b551d4e-1f47-4487-b2ea-b09bf6698241',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(logPayload)}).catch(()=>{});
-        // #endregion
         setSections(prev => {
             const foundSection = prev.find(s => s.id === sectionId);
             const allIds = prev.map(s => s.id);
             const allTypesAndIds = prev.map(s => ({ id: s.id, type: s.type }));
-            // #region agent log v3
-            const innerLogPayload = {location:'LandingPageEditor.tsx:updateSectionData:setSections:v3',message:'Inside setSections v3',data:{sectionId,foundSectionId:foundSection?.id||'NOT_FOUND',foundSectionType:foundSection?.type||'N/A',allIds,allTypesAndIds,sectionCount:prev.length},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'EDITOR_FIX_V3'};
-            console.error('[DEBUG v3] Inside setSections:', innerLogPayload.data);
-            fetch('http://127.0.0.1:7243/ingest/9b551d4e-1f47-4487-b2ea-b09bf6698241',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(innerLogPayload)}).catch(()=>{});
-            // #endregion
             if (!foundSection) {
-                // #region agent log v3
-                console.error('[DEBUG v3] SECTION NOT FOUND! Looking for:', sectionId, 'Available:', allIds);
-                fetch('http://127.0.0.1:7243/ingest/9b551d4e-1f47-4487-b2ea-b09bf6698241',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'LandingPageEditor.tsx:updateSectionData:NOT_FOUND',message:'Section not found!',data:{sectionId,allIds},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'EDITOR_FIX_V3'})}).catch(()=>{});
-                // #endregion
             }
             return prev.map(s =>
                 s.id === sectionId ? { ...s, data: newData } : s
@@ -654,20 +623,12 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
 
     // Currently selected structure item section (for header, footer, typography, colors)
     const currentStructureSection = useMemo(() => {
-        // #region agent log
-        fetch('http://127.0.0.1:7243/ingest/9b551d4e-1f47-4487-b2ea-b09bf6698241',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'LandingPageEditor.tsx:currentStructureSection',message:'useMemo called',data:{selectedStructureItem,sectionsCount:sections.length,allSections:sections.map(s=>({id:s.id,type:s.type}))},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'A,B'})}).catch(()=>{});
-        console.error('[DEBUG] currentStructureSection useMemo:', { selectedStructureItem, sections: sections.map(s => ({ id: s.id, type: s.type })) });
-        // #endregion
         if (!selectedStructureItem) return null;
         const structureItem = STRUCTURE_ITEMS.find(i => i.id === selectedStructureItem);
         if (!structureItem) {
             return null;
         }
         const actualSection = sections.find(s => s.type === structureItem.type);
-        // #region agent log
-        fetch('http://127.0.0.1:7243/ingest/9b551d4e-1f47-4487-b2ea-b09bf6698241',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'LandingPageEditor.tsx:currentStructureSection:found',message:'Section found',data:{structureItemType:structureItem.type,foundSectionId:actualSection?.id,foundSectionType:actualSection?.type},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'B,C'})}).catch(()=>{});
-        console.error('[DEBUG] Found section:', { looking_for_type: structureItem.type, found: actualSection ? { id: actualSection.id, type: actualSection.type } : null });
-        // #endregion
         if (!actualSection) {
             return null;
         }
@@ -700,10 +661,6 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
 
     // Handle structure item selection (Colores, Tipografía, etc.)
     const handleStructureSelect = useCallback((itemId: string) => {
-        // #region agent log
-        console.error('[DEBUG] handleStructureSelect called with itemId:', itemId);
-        fetch('http://127.0.0.1:7243/ingest/9b551d4e-1f47-4487-b2ea-b09bf6698241',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'LandingPageEditor.tsx:handleStructureSelect',message:'Structure item clicked',data:{itemId},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'A'})}).catch(()=>{});
-        // #endregion
         setSelectedStructureItem(itemId);
         setSelectedSection(null); // Clear section selection
     }, []);
@@ -836,7 +793,7 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
                 </header>
 
                 {/* Main Content - Three Panel Layout */}
-                <main className="flex-1 flex overflow-hidden">
+                <main className="flex-1 flex overflow-hidden relative">
                     {/* Left Panel - Grouped Component List */}
                     <div className="w-64 lg:w-72 border-r border-border bg-card/50 flex flex-col overflow-hidden">
                         <div className="p-4 border-b border-border flex items-center justify-between">
@@ -944,73 +901,90 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
                     {/* Center Panel - Preview */}
                     {isPreviewVisible && (
                         <div className="flex-1 bg-muted/30 p-4 overflow-hidden flex flex-col">
-                            <div className={`flex-1 bg-white rounded-lg shadow-lg overflow-hidden mx-auto ${previewWidth} w-full transition-all duration-300`}>
+                            <div className={`flex-1 rounded-xl shadow-2xl bg-card border border-border flex flex-col overflow-hidden mx-auto ${previewWidth} w-full transition-all duration-300`}>
+                                {/* Browser Header */}
+                                <div className="flex-shrink-0 h-12 bg-background border-b border-border flex items-center px-4 space-x-2 z-10">
+                                    <div className="flex space-x-2">
+                                        <span className="w-3.5 h-3.5 bg-red-500 rounded-full"></span>
+                                        <span className="w-3.5 h-3.5 bg-yellow-500 rounded-full"></span>
+                                        <span className="w-3.5 h-3.5 bg-green-500 rounded-full"></span>
+                                    </div>
+                                    <div className="flex-grow flex items-center justify-center">
+                                        <div className="bg-secondary/50 text-muted-foreground text-sm rounded-full px-4 py-1.5 w-full max-w-md text-center truncate flex items-center justify-center cursor-default select-none border border-border/50">
+                                            <span className="opacity-50 mr-0.5">https://quimera.ai/</span>
+                                            <span className="font-medium text-foreground">landing</span>
+                                        </div>
+                                    </div>
+                                    <div className="w-16"></div>
+                                </div>
+                                {/* Browser Content */}
                                 <iframe
                                     ref={iframeRef}
                                     key={previewKey}
                                     src="/?preview=landing"
-                                    className="w-full h-full border-0"
+                                    className="flex-1 w-full border-0"
                                     title="Landing Page Preview"
                                 />
                             </div>
                         </div>
                     )}
 
-                    {/* Right Panel - Component Controls */}
-                    <div className={`${isPreviewVisible ? 'w-80 lg:w-96' : 'flex-1 max-w-2xl mx-auto'} border-l border-border bg-card/50 flex flex-col overflow-hidden`}>
-                        {/* Structure Item Controls (Colores, Tipografía, etc.) */}
-                        {currentStructureSection ? (
-                            <>
-                                <div className="p-4 border-b border-border">
-                                    <h2 className="font-semibold text-sm flex items-center gap-2">
-                                        <Settings size={16} className="text-primary" />
-                                        {t('landingEditor.edit', 'Editar')}: <span className="capitalize">
-                                            {currentStructureLabel}
-                                        </span>
-                                    </h2>
-                                </div>
-                                {/* DEBUG BANNER - Remove after fixing */}
-                                <div className="p-2 m-2 bg-red-500/20 border border-red-500 rounded text-xs">
-                                    <strong>DEBUG v2:</strong> Section ID: {currentStructureSection.id}, Type: {currentStructureSection.type}, 
-                                    Data keys: {Object.keys(currentStructureSection.data || {}).join(', ') || 'empty'}
-                                </div>
-                                <LandingPageControls
-                                    key={currentStructureSection.id}
-                                    section={currentStructureSection}
-                                    onUpdateSection={updateSectionData}
-                                    onRefreshPreview={() => setPreviewKey(prev => prev + 1)}
-                                    allSections={sections}
-                                    onApplyGlobalColors={applyGlobalColorsToAllSections}
-                                />
-                            </>
-                        ) : currentSection ? (
-                            <>
-                                <div className="p-4 border-b border-border">
-                                    <h2 className="font-semibold text-sm flex items-center gap-2">
-                                        <Settings size={16} className="text-primary" />
-                                        {t('landingEditor.editSection', 'Editar')}: <span className="capitalize">{currentSection.type}</span>
-                                    </h2>
-                                </div>
-                                <LandingPageControls
-                                    section={currentSection}
-                                    onUpdateSection={updateSectionData}
-                                    onRefreshPreview={() => setPreviewKey(prev => prev + 1)}
-                                    allSections={sections}
-                                    onApplyGlobalColors={applyGlobalColorsToAllSections}
-                                />
-                            </>
-                        ) : (
-                            <div className="flex-1 flex items-center justify-center p-8">
-                                <div className="text-center">
-                                    <Layers className="w-12 h-12 text-muted-foreground mx-auto mb-4 opacity-50" />
-                                    <h3 className="font-semibold mb-2">{t('landingEditor.noSelection', 'Ninguna sección seleccionada')}</h3>
-                                    <p className="text-sm text-muted-foreground">
-                                        {t('landingEditor.selectSectionHint', 'Selecciona una sección de la lista para editarla')}
-                                    </p>
-                                </div>
-                            </div>
-                        )}
-                    </div>
+                    {/* Controls Panel Toggle Button - Only visible when a section is selected */}
+                    {(currentStructureSection || currentSection) && (
+                        <button
+                            onClick={() => setIsControlsPanelOpen(!isControlsPanelOpen)}
+                            className={`absolute top-1/2 -translate-y-1/2 z-30 p-2 bg-card border border-border shadow-lg hover:bg-accent transition-all duration-300 overflow-hidden rounded-lg ${isControlsPanelOpen
+                                ? (isPreviewVisible ? 'right-[calc(20rem-18px)] lg:right-[calc(24rem-18px)]' : 'right-[calc(42rem-18px)]')
+                                : 'right-0 rounded-l-lg rounded-r-none'
+                                }`}
+                            title={isControlsPanelOpen ? 'Ocultar controles' : 'Mostrar controles'}
+                        >
+                            {isControlsPanelOpen ? <PanelRightClose size={18} /> : <PanelRightOpen size={18} />}
+                        </button>
+                    )}
+
+                    {/* Right Panel - Component Controls - Only visible when a section is selected */}
+                    {(currentStructureSection || currentSection) && (
+                        <div className={`${isControlsPanelOpen ? (isPreviewVisible ? 'w-80 lg:w-96' : 'flex-1 max-w-2xl mx-auto') : 'w-0 overflow-hidden'} border-l border-border bg-card/50 flex flex-col overflow-hidden transition-all duration-300`}>
+                            {/* Structure Item Controls (Colores, Tipografía, etc.) */}
+                            {currentStructureSection ? (
+                                <>
+                                    <div className="p-4 border-b border-border">
+                                        <h2 className="font-semibold text-sm flex items-center gap-2">
+                                            <Settings size={16} className="text-primary" />
+                                            {t('landingEditor.edit', 'Editar')}: <span className="capitalize">
+                                                {currentStructureLabel}
+                                            </span>
+                                        </h2>
+                                    </div>
+                                    <LandingPageControls
+                                        key={currentStructureSection.id}
+                                        section={currentStructureSection}
+                                        onUpdateSection={updateSectionData}
+                                        onRefreshPreview={() => setPreviewKey(prev => prev + 1)}
+                                        allSections={sections}
+                                        onApplyGlobalColors={applyGlobalColorsToAllSections}
+                                    />
+                                </>
+                            ) : (
+                                <>
+                                    <div className="p-4 border-b border-border">
+                                        <h2 className="font-semibold text-sm flex items-center gap-2">
+                                            <Settings size={16} className="text-primary" />
+                                            {t('landingEditor.editSection', 'Editar')}: <span className="capitalize">{currentSection!.type}</span>
+                                        </h2>
+                                    </div>
+                                    <LandingPageControls
+                                        section={currentSection!}
+                                        onUpdateSection={updateSectionData}
+                                        onRefreshPreview={() => setPreviewKey(prev => prev + 1)}
+                                        allSections={sections}
+                                        onApplyGlobalColors={applyGlobalColorsToAllSections}
+                                    />
+                                </>
+                            )}
+                        </div>
+                    )}
                 </main>
             </div>
 

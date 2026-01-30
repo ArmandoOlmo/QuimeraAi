@@ -27,8 +27,12 @@ interface LogoProps {
 }
 
 const Logo: React.FC<LogoProps> = ({ logoType, logoText, logoImageUrl, logoWidth, textColor, compact = false, onNavigate }) => {
-  const showImage = (logoType === 'image' || logoType === 'both') && logoImageUrl;
-  const showText = (logoType === 'text' || logoType === 'both');
+  // Respect explicit logoType selection:
+  // 'image' = show only image, 'text' = show only text, 'both' = show both
+  // Fallback: if no explicit type but image URL exists, show image
+  const hasImage = !!logoImageUrl;
+  const showImage = (logoType === 'image' || logoType === 'both') ? hasImage : (hasImage && logoType !== 'text');
+  const showText = logoType === 'text' || logoType === 'both' || (!logoType && !hasImage);
 
   return (
     <a

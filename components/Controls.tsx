@@ -25,7 +25,7 @@ import {
   Trash2, Plus, ChevronDown, ChevronRight, ChevronLeft, ChevronUp, ArrowLeft, HelpCircle,
   Layout, Image, List, Star, PlaySquare, Users, DollarSign,
   Briefcase, MessageCircle, Mail, Send, Type, MousePointerClick,
-  Settings, AlignJustify, MonitorPlay, Grid, GripVertical, Upload, Menu as MenuIcon, MessageSquare, FileText, PlusCircle, X, Palette, AlertCircle, TrendingUp, Sparkles, MapPin, Map as MapIcon, Columns, Search, Loader2, ShoppingBag, Info, Store, SlidersHorizontal, LayoutGrid, Check, Link, FolderOpen, Maximize2, Clock
+  Settings, AlignJustify, MonitorPlay, Grid, GripVertical, Upload, Menu as MenuIcon, MessageSquare, FileText, PlusCircle, X, Palette, AlertCircle, TrendingUp, Sparkles, MapPin, Map as MapIcon, Columns, Search, Loader2, ShoppingBag, Info, Store, SlidersHorizontal, LayoutGrid, Check, Link, FolderOpen, Maximize2, Clock, PanelRightClose, PanelRightOpen
 } from 'lucide-react';
 import { usePublicProducts } from '../hooks/usePublicProducts';
 import AIFormControl from './ui/AIFormControl';
@@ -459,6 +459,7 @@ const Controls: React.FC = () => {
   const [isAddComponentOpen, setIsAddComponentOpen] = useState(false);
   const addComponentRef = useRef<HTMLDivElement>(null);
   const [isTreeHiddenMobile, setIsTreeHiddenMobile] = useState(false);
+  const [isControlsPanelOpen, setIsControlsPanelOpen] = useState(true);
 
   // State for save button feedback
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
@@ -8208,9 +8209,23 @@ const Controls: React.FC = () => {
         </div>
       </MobileBottomSheet>
 
+      {/* Controls Panel Toggle Button - Desktop only, only when section is selected, centered on border line */}
+      {activeSection && isDesktop && (
+        <button
+          onClick={() => setIsControlsPanelOpen(!isControlsPanelOpen)}
+          className={`fixed top-1/2 -translate-y-1/2 z-30 p-2 bg-card border border-border shadow-lg hover:bg-accent transition-all duration-300 overflow-hidden rounded-lg ${isControlsPanelOpen
+            ? 'right-[calc(20rem-18px)] lg:right-[calc(24rem-18px)]'
+            : 'right-0 rounded-l-lg rounded-r-none'
+            }`}
+          title={isControlsPanelOpen ? 'Ocultar controles' : 'Mostrar controles'}
+        >
+          {isControlsPanelOpen ? <PanelRightClose size={18} /> : <PanelRightOpen size={18} />}
+        </button>
+      )}
+
       {/* Right Panel: Properties/Controls - Desktop only */}
       {activeSection && isDesktop && (
-        <div className="w-80 lg:w-96 border-l border-border bg-card/50 flex flex-col overflow-hidden flex-shrink-0 order-last hidden md:flex">
+        <div className={`${isControlsPanelOpen ? 'w-80 lg:w-96' : 'w-0 overflow-hidden'} border-l border-border bg-card/50 flex flex-col overflow-hidden flex-shrink-0 order-last hidden md:flex transition-all duration-300`}>
           {/* Header */}
           <div className="p-4 border-b border-border flex items-center justify-between">
             <h2 className="font-semibold text-sm flex items-center gap-2">

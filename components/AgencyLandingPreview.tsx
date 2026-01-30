@@ -329,6 +329,7 @@ export function AgencyLandingPreview() {
     const [sections, setSections] = useState<AgencyLandingSection[]>(DEFAULT_AGENCY_SECTIONS);
     const [theme, setTheme] = useState(DEFAULT_AGENCY_THEME);
     const [branding, setBranding] = useState<any>(null);
+    const [previewDevice, setPreviewDevice] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
 
     // Listen for updates from the editor
     useEffect(() => {
@@ -338,11 +339,6 @@ export function AgencyLandingPreview() {
 
             if (event.data?.type === 'AGENCY_LANDING_UPDATE') {
                 console.log('[AgencyPreview] Received update:', event.data.sections?.length || 0, 'sections');
-                // #region agent log
-                const footerSection = event.data.sections?.find((s:any) => s.type === 'footer');
-                const headerSection = event.data.sections?.find((s:any) => s.type === 'header');
-                fetch('http://127.0.0.1:7243/ingest/9b551d4e-1f47-4487-b2ea-b09bf6698241',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AgencyLandingPreview.tsx:handleMessage',message:'Received update from editor',data:{sectionsCount:event.data.sections?.length||0,footerData:footerSection?.data,headerData:headerSection?.data},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H7'})}).catch(()=>{});
-                // #endregion
                 if (event.data.sections) {
                     setSections(event.data.sections);
                 }
@@ -351,6 +347,9 @@ export function AgencyLandingPreview() {
                 }
                 if (event.data.branding) {
                     setBranding(event.data.branding);
+                }
+                if (event.data.previewDevice) {
+                    setPreviewDevice(event.data.previewDevice);
                 }
             }
 
@@ -487,9 +486,6 @@ export function AgencyLandingPreview() {
                 return <Banner key={section.id} {...data} buttonBorderRadius={buttonBorderRadius} />;
 
             case 'footer':
-                // #region agent log
-                fetch('http://127.0.0.1:7243/ingest/9b551d4e-1f47-4487-b2ea-b09bf6698241',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AgencyLandingPreview.tsx:renderFooter',message:'Rendering footer',data:{sectionId:section.id,sectionDataKeys:Object.keys(section.data||{}),mergedDataKeys:Object.keys(data),backgroundColor:data.backgroundColor},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H8'})}).catch(()=>{});
-                // #endregion
                 return <Footer key={section.id} {...data} />;
 
             default:
@@ -500,7 +496,7 @@ export function AgencyLandingPreview() {
     const pageBackground = theme.pageBackground || theme.globalColors?.background || '#0f172a';
 
     return (
-        <div className="min-h-screen text-slate-200 overflow-x-hidden">
+        <div className={`min-h-screen text-slate-200 overflow-x-hidden preview-${previewDevice}`}>
             <style>{`
                 /* Override global overflow:hidden from index.html to enable scrolling in preview iframe */
                 html, body {

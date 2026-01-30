@@ -4,9 +4,9 @@
  * Used for selecting logos, backgrounds, and other images in the landing page editor
  */
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { X, Search, Image, Check, Star } from 'lucide-react';
+import { X, Search, Image, Check, Star, Upload, Loader2 } from 'lucide-react';
 import { useFiles } from '../../contexts/files';
 import { BRAND_ASSETS } from '../../constants/brandAssets';
 import { FileRecord } from '../../types';
@@ -25,9 +25,64 @@ const ImagePickerModal: React.FC<ImagePickerModalProps> = ({
     title = 'Seleccionar Imagen'
 }) => {
     const { t } = useTranslation();
-    const { globalFiles, isGlobalFilesLoading } = useFiles();
+    const { globalFiles, isGlobalFilesLoading, fetchGlobalFiles, uploadGlobalFile } = useFiles();
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedUrl, setSelectedUrl] = useState<string | null>(null);
+    const [isUploading, setIsUploading] = useState(false);
+    const [uploadError, setUploadError] = useState<string | null>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
+    // Fetch global files when modal opens and reset state when closed
+    useEffect(() => {
+        if (isOpen) {
+            // Only fetch if we don't already have global files loaded
+            if (globalFiles.length === 0) {
+                fetchGlobalFiles();
+            }
+        } else {
+            // Reset state when modal closes
+            setSelectedUrl(null);
+            setSearchQuery('');
+            setUploadError(null);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isOpen]);
+
+    // Handle file upload
+    const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        // Validate file type
+        if (!file.type.startsWith('image/')) {
+            setUploadError(t('landingEditor.invalidImageType', 'Solo se permiten archivos de imagen'));
+            return;
+        }
+
+        // Validate file size (max 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+            setUploadError(t('landingEditor.imageTooLarge', 'La imagen no puede superar 5MB'));
+            return;
+        }
+
+        setIsUploading(true);
+        setUploadError(null);
+
+        try {
+            await uploadGlobalFile(file);
+            // Refresh the files list to show the new upload
+            await fetchGlobalFiles();
+        } catch (error) {
+            console.error('Error uploading image:', error);
+            setUploadError(t('landingEditor.uploadError', 'Error al subir la imagen'));
+        } finally {
+            setIsUploading(false);
+            // Reset the input so the same file can be selected again
+            if (fileInputRef.current) {
+                fileInputRef.current.value = '';
+            }
+        }
+    };
 
     // Combine brand assets with global files
     const allImages = useMemo(() => {
@@ -96,8 +151,9 @@ const ImagePickerModal: React.FC<ImagePickerModalProps> = ({
                     </button>
                 </div>
 
-                {/* Search */}
-                <div className="p-4 border-b border-border">
+                {/* Search and Upload */}
+                <div className="p-4 border-b border-border space-y-3">
+                    {/* Search */}
                     <div className="flex items-center gap-2 bg-muted rounded-lg px-3 py-2">
                         <Search size={16} className="text-muted-foreground" />
                         <input
@@ -116,19 +172,59 @@ const ImagePickerModal: React.FC<ImagePickerModalProps> = ({
                             </button>
                         )}
                     </div>
+
+                    {/* Upload Button */}
+                    <div className="flex items-center gap-3">
+                        <input
+                            ref={fileInputRef}
+                            type="file"
+                            accept="image/*"
+                            onChange={handleFileUpload}
+                            className="hidden"
+                        />
+                        <button
+                            onClick={() => fileInputRef.current?.click()}
+                            disabled={isUploading}
+                            className="flex items-center gap-2 px-4 py-2 rounded-lg border border-dashed border-primary/50 text-primary hover:bg-primary/5 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            {isUploading ? (
+                                <>
+                                    <Loader2 size={16} className="animate-spin" />
+                                    {t('common.uploading', 'Subiendo...')}
+                                </>
+                            ) : (
+                                <>
+                                    <Upload size={16} />
+                                    {t('landingEditor.uploadImage', 'Subir imagen')}
+                                </>
+                            )}
+                        </button>
+                        <span className="text-xs text-muted-foreground">
+                            {t('landingEditor.maxFileSize', 'Máx. 5MB • PNG, JPG, SVG')}
+                        </span>
+                    </div>
+
+                    {/* Upload Error */}
+                    {uploadError && (
+                        <div className="text-sm text-destructive bg-destructive/10 px-3 py-2 rounded-lg">
+                            {uploadError}
+                        </div>
+                    )}
                 </div>
 
                 {/* Image Grid */}
                 <div className="flex-1 overflow-y-auto p-4">
-                    {isGlobalFilesLoading ? (
-                        <div className="flex items-center justify-center h-40">
-                            <div className="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full" />
-                        </div>
-                    ) : filteredImages.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center h-40 text-muted-foreground">
-                            <Image size={40} className="mb-2 opacity-50" />
-                            <p className="text-sm">{t('landingEditor.noImagesFound', 'No se encontraron imágenes')}</p>
-                        </div>
+                    {filteredImages.length === 0 ? (
+                        isGlobalFilesLoading ? (
+                            <div className="flex items-center justify-center h-40">
+                                <div className="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full" />
+                            </div>
+                        ) : (
+                            <div className="flex flex-col items-center justify-center h-40 text-muted-foreground">
+                                <Image size={40} className="mb-2 opacity-50" />
+                                <p className="text-sm">{t('landingEditor.noImagesFound', 'No se encontraron imágenes')}</p>
+                            </div>
+                        )
                     ) : (
                         <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
                             {filteredImages.map((img) => (
@@ -144,6 +240,7 @@ const ImagePickerModal: React.FC<ImagePickerModalProps> = ({
                                         src={img.downloadURL}
                                         alt={img.name}
                                         className="w-full h-full object-cover"
+                                        loading="lazy"
                                     />
                                     {/* System asset badge */}
                                     {img.isSystemAsset && (
@@ -165,6 +262,12 @@ const ImagePickerModal: React.FC<ImagePickerModalProps> = ({
                                     </div>
                                 </button>
                             ))}
+                            {/* Loading indicator for more images */}
+                            {isGlobalFilesLoading && (
+                                <div className="aspect-square rounded-lg border-2 border-dashed border-muted-foreground/30 flex items-center justify-center">
+                                    <div className="animate-spin w-5 h-5 border-2 border-primary border-t-transparent rounded-full" />
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>

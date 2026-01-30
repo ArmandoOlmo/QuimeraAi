@@ -227,12 +227,6 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
     
     const result = section?.enabled !== false ? section?.data || null : null;
     
-    // #region agent log
-    if (sectionType === 'header') {
-      fetch('http://127.0.0.1:7243/ingest/9b551d4e-1f47-4487-b2ea-b09bf6698241',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PublicLandingPage.tsx:getPreviewData',message:'Getting header data',data:{sectionType,totalSections:previewSections.length,matchingCount:matchingSections.length,matchingIds:matchingSections.map(s=>s.id),matchingTypes:matchingSections.map(s=>s.type),selectedSectionId:section?.id,selectedSectionData:section?.data,resultKeys:result?Object.keys(result):null},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'PREVIEW'})}).catch(()=>{});
-    }
-    // #endregion
-    
     return result;
   }, [previewSections]);
 

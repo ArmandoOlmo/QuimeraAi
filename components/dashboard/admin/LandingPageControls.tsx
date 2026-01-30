@@ -54,10 +54,6 @@ const TextInput: React.FC<{
     multiline?: boolean;
 }> = ({ value, onChange, placeholder, multiline }) => {
     const handleChange = (newValue: string) => {
-        // #region agent log
-        console.error('[DEBUG] TextInput onChange:', { oldValue: value, newValue, placeholder });
-        fetch('http://127.0.0.1:7243/ingest/9b551d4e-1f47-4487-b2ea-b09bf6698241',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'LandingPageControls.tsx:TextInput',message:'Input onChange fired',data:{oldValue:value,newValue,placeholder},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'D'})}).catch(()=>{});
-        // #endregion
         onChange(newValue);
     };
     if (multiline) {
@@ -183,35 +179,14 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
     // Get section data with defaults
     const data = section.data || {};
 
-    // #region agent log
-    fetch('http://127.0.0.1:7243/ingest/9b551d4e-1f47-4487-b2ea-b09bf6698241',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'LandingPageControls.tsx:render',message:'Component render',data:{sectionId:section.id,sectionType:section.type,dataKeys:Object.keys(data),logoText:data.logoText},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'B,E'})}).catch(()=>{});
-    // #endregion
-
     // Update handler - use the ACTUAL section.id from props (not a mapped ID)
     // This ensures we update the correct section in the state
     const updateData = (key: string, value: any) => {
-        // #region agent log
-        const isOnUpdateSectionDefined = typeof onUpdateSection === 'function';
-        console.error('[DEBUG] updateData called:', { sectionId: section.id, key, value, isOnUpdateSectionDefined });
-        fetch('http://127.0.0.1:7243/ingest/9b551d4e-1f47-4487-b2ea-b09bf6698241',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'LandingPageControls.tsx:updateData',message:'updateData called',data:{sectionId:section.id,sectionType:section.type,key,value,currentDataKeys:Object.keys(data),isOnUpdateSectionDefined},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'FIX2'})}).catch(()=>{});
-        // #endregion
         const newData = { ...data, [key]: value };
-        // #region agent log
-        console.error('[DEBUG] About to call onUpdateSection:', { sectionId: section.id, newDataKeys: Object.keys(newData) });
-        fetch('http://127.0.0.1:7243/ingest/9b551d4e-1f47-4487-b2ea-b09bf6698241',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'LandingPageControls.tsx:updateData:beforeCall',message:'About to call onUpdateSection',data:{sectionId:section.id,newDataKeys:Object.keys(newData),newData},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'FIX2'})}).catch(()=>{});
-        // #endregion
         try {
             // Use the ACTUAL section ID from props - this is the ID in the state array
             onUpdateSection(section.id, newData);
-            // #region agent log
-            console.error('[DEBUG] onUpdateSection returned successfully');
-            fetch('http://127.0.0.1:7243/ingest/9b551d4e-1f47-4487-b2ea-b09bf6698241',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'LandingPageControls.tsx:updateData:afterCall',message:'onUpdateSection completed',data:{usedId:section.id},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'FIX2'})}).catch(()=>{});
-            // #endregion
         } catch (error: any) {
-            // #region agent log
-            console.error('[DEBUG] onUpdateSection threw error:', error?.message || error);
-            fetch('http://127.0.0.1:7243/ingest/9b551d4e-1f47-4487-b2ea-b09bf6698241',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'LandingPageControls.tsx:updateData:error',message:'onUpdateSection error',data:{error:error?.message||String(error)},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'FIX2'})}).catch(()=>{});
-            // #endregion
         }
     };
 
@@ -235,8 +210,16 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
             case 'heroModern':
             case 'heroGradient':
                 return renderHeroControls();
+            case 'heroSplit':
+                return renderHeroSplitControls();
             case 'features':
                 return renderFeaturesControls();
+            case 'services':
+                return renderServicesControls();
+            case 'portfolio':
+                return renderPortfolioControls();
+            case 'team':
+                return renderTeamControls();
             case 'pricing':
                 return renderPricingControls();
             case 'testimonials':
@@ -245,6 +228,22 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                 return renderFaqControls();
             case 'cta':
                 return renderCtaControls();
+            case 'leads':
+                return renderLeadsControls();
+            case 'newsletter':
+                return renderNewsletterControls();
+            case 'video':
+                return renderVideoControls();
+            case 'slideshow':
+                return renderSlideshowControls();
+            case 'howItWorks':
+                return renderHowItWorksControls();
+            case 'map':
+                return renderMapControls();
+            case 'menu':
+                return renderMenuControls();
+            case 'banner':
+                return renderBannerControls();
             case 'footer':
                 return renderFooterControls();
             case 'header':
@@ -1105,45 +1104,82 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
 
     const renderHeaderControls = () => (
         <div className="space-y-6">
-            {/* Content controls - always show for header since tabs are hidden */}
-            <ControlGroup label={t('landingEditor.logoImage', 'Logo')}>
-                {/* Logo Preview & Picker */}
-                <div className="space-y-3">
-                    {data.logoImage && (
-                        <div className="relative w-full h-20 rounded-lg border border-border overflow-hidden bg-muted flex items-center justify-center">
-                            <img
-                                src={data.logoImage}
-                                alt="Logo"
-                                className="max-h-full max-w-full object-contain"
-                            />
-                            <button
-                                onClick={() => updateData('logoImage', '')}
-                                className="absolute top-1 right-1 p-1 rounded bg-destructive/80 text-white hover:bg-destructive"
-                            >
-                                <Trash2 size={12} />
-                            </button>
-                        </div>
-                    )}
-                    <button
-                        onClick={() => setIsLogoPickerOpen(true)}
-                        className="w-full py-3 px-4 rounded-lg border border-dashed border-primary/50 text-primary hover:bg-primary/5 transition-colors flex items-center justify-center gap-2"
-                    >
-                        <Image size={18} />
-                        {data.logoImage
-                            ? t('landingEditor.changeLogo', 'Cambiar Logo')
-                            : t('landingEditor.selectLogo', 'Seleccionar Logo de Biblioteca')
-                        }
-                    </button>
-                </div>
-            </ControlGroup>
-
-            <ControlGroup label={t('landingEditor.logoText', 'Texto del Logo')}>
-                <TextInput
-                    value={data.logoText || ''}
-                    onChange={(v) => updateData('logoText', v)}
-                    placeholder="Ej: Quimera.ai"
+            {/* Logo Type Selector */}
+            <ControlGroup label={t('landingEditor.logoType', 'Tipo de Logo')}>
+                <SelectControl
+                    label=""
+                    value={data.logoType || 'text'}
+                    onChange={(v) => updateData('logoType', v)}
+                    options={[
+                        { value: 'text', label: t('landingEditor.logoTypeText', 'Solo Texto') },
+                        { value: 'image', label: t('landingEditor.logoTypeImage', 'Solo Imagen') },
+                        { value: 'both', label: t('landingEditor.logoTypeBoth', 'Imagen + Texto') },
+                    ]}
                 />
             </ControlGroup>
+
+            {/* Logo Image - Show if type is 'image' or 'both' */}
+            {(data.logoType === 'image' || data.logoType === 'both' || data.logoImage) && (
+                <ControlGroup label={t('landingEditor.logoImage', 'Imagen del Logo')}>
+                    <div className="space-y-3">
+                        {data.logoImage && (
+                            <div className="relative w-full h-20 rounded-lg border border-border overflow-hidden bg-muted flex items-center justify-center">
+                                <img
+                                    src={data.logoImage}
+                                    alt="Logo"
+                                    className="max-h-full max-w-full object-contain"
+                                />
+                                <button
+                                    onClick={() => {
+                                        updateData('logoImage', '');
+                                        if (data.logoType === 'image') {
+                                            updateData('logoType', 'text');
+                                        }
+                                    }}
+                                    className="absolute top-1 right-1 p-1 rounded bg-destructive/80 text-white hover:bg-destructive"
+                                >
+                                    <Trash2 size={12} />
+                                </button>
+                            </div>
+                        )}
+                        <button
+                            onClick={() => setIsLogoPickerOpen(true)}
+                            className="w-full py-3 px-4 rounded-lg border border-dashed border-primary/50 text-primary hover:bg-primary/5 transition-colors flex items-center justify-center gap-2"
+                        >
+                            <Image size={18} />
+                            {data.logoImage
+                                ? t('landingEditor.changeLogo', 'Cambiar Logo')
+                                : t('landingEditor.selectLogo', 'Seleccionar Logo')
+                            }
+                        </button>
+                    </div>
+                </ControlGroup>
+            )}
+
+            {/* Logo Size - Show if there's an image */}
+            {data.logoImage && (
+                <ControlGroup label={t('landingEditor.logoSize', 'Tamaño del Logo')}>
+                    <RangeControl
+                        label=""
+                        value={data.logoWidth || 120}
+                        onChange={(v) => updateData('logoWidth', v)}
+                        min={40}
+                        max={250}
+                        unit="px"
+                    />
+                </ControlGroup>
+            )}
+
+            {/* Logo Text - Show if type is 'text' or 'both' */}
+            {(data.logoType === 'text' || data.logoType === 'both' || !data.logoType) && (
+                <ControlGroup label={t('landingEditor.logoText', 'Texto del Logo')}>
+                    <TextInput
+                        value={data.logoText || ''}
+                        onChange={(v) => updateData('logoText', v)}
+                        placeholder="Ej: Quimera.ai"
+                    />
+                </ControlGroup>
+            )}
 
             <ControlGroup label={t('landingEditor.ctaButtons', 'Botones CTA')}>
                 <Toggle
@@ -1198,13 +1234,6 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                 </div>
             </div>
 
-            {/* Logo Picker Modal */}
-            <ImagePickerModal
-                isOpen={isLogoPickerOpen}
-                onClose={() => setIsLogoPickerOpen(false)}
-                onSelect={(url) => updateData('logoImage', url)}
-                title={t('landingEditor.selectLogo', 'Seleccionar Logo')}
-            />
         </div>
     );
 
@@ -1762,6 +1791,781 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
     );
 
     // ========================================================================
+    // SERVICES CONTROLS
+    // ========================================================================
+    const renderServicesControls = () => (
+        <div className="space-y-6">
+            {activeTab === 'content' && (
+                <>
+                    <ControlGroup label={t('landingEditor.sectionTitle', 'Título de Sección')}>
+                        <TextInput
+                            value={data.title || ''}
+                            onChange={(v) => updateData('title', v)}
+                            placeholder={t('landingEditor.titlePlaceholder', 'Nuestros Servicios')}
+                        />
+                    </ControlGroup>
+                    <ControlGroup label={t('landingEditor.description', 'Descripción')}>
+                        <TextInput
+                            value={data.description || ''}
+                            onChange={(v) => updateData('description', v)}
+                            placeholder={t('landingEditor.descriptionPlaceholder', 'Servicios que ofrecemos')}
+                            multiline
+                        />
+                    </ControlGroup>
+                    <ControlGroup label={t('landingEditor.variant', 'Variante')}>
+                        <SelectControl
+                            value={data.servicesVariant || 'cards'}
+                            onChange={(v) => updateData('servicesVariant', v)}
+                            options={[
+                                { value: 'cards', label: t('landingEditor.variantCards', 'Tarjetas') },
+                                { value: 'grid', label: t('landingEditor.variantGrid', 'Cuadrícula') },
+                                { value: 'minimal', label: t('landingEditor.variantMinimal', 'Minimal') },
+                            ]}
+                        />
+                    </ControlGroup>
+                </>
+            )}
+            {activeTab === 'style' && (
+                <>
+                    <ControlGroup label={t('landingEditor.paddingY', 'Espaciado Vertical')}>
+                        <SelectControl
+                            value={data.paddingY || 'lg'}
+                            onChange={(v) => updateData('paddingY', v)}
+                            options={[
+                                { value: 'sm', label: t('landingEditor.small', 'Pequeño') },
+                                { value: 'md', label: t('landingEditor.medium', 'Mediano') },
+                                { value: 'lg', label: t('landingEditor.large', 'Grande') },
+                            ]}
+                        />
+                    </ControlGroup>
+                    <ControlGroup label={t('landingEditor.backgroundColor', 'Color de Fondo')}>
+                        <ColorControl
+                            value={data.colors?.background || '#0f172a'}
+                            onChange={(v) => updateData('colors', { ...data.colors, background: v })}
+                        />
+                    </ControlGroup>
+                    <ControlGroup label={t('landingEditor.accentColor', 'Color de Acento')}>
+                        <ColorControl
+                            value={data.colors?.accent || '#6366f1'}
+                            onChange={(v) => updateData('colors', { ...data.colors, accent: v })}
+                        />
+                    </ControlGroup>
+                </>
+            )}
+        </div>
+    );
+
+    // ========================================================================
+    // PORTFOLIO CONTROLS
+    // ========================================================================
+    const renderPortfolioControls = () => (
+        <div className="space-y-6">
+            {activeTab === 'content' && (
+                <>
+                    <ControlGroup label={t('landingEditor.sectionTitle', 'Título de Sección')}>
+                        <TextInput
+                            value={data.title || ''}
+                            onChange={(v) => updateData('title', v)}
+                            placeholder={t('landingEditor.portfolioTitle', 'Nuestro Portfolio')}
+                        />
+                    </ControlGroup>
+                    <ControlGroup label={t('landingEditor.description', 'Descripción')}>
+                        <TextInput
+                            value={data.description || ''}
+                            onChange={(v) => updateData('description', v)}
+                            placeholder={t('landingEditor.portfolioDesc', 'Proyectos destacados')}
+                            multiline
+                        />
+                    </ControlGroup>
+                    <ControlGroup label={t('landingEditor.variant', 'Variante')}>
+                        <SelectControl
+                            value={data.portfolioVariant || 'classic'}
+                            onChange={(v) => updateData('portfolioVariant', v)}
+                            options={[
+                                { value: 'classic', label: t('landingEditor.variantClassic', 'Clásico') },
+                                { value: 'masonry', label: t('landingEditor.variantMasonry', 'Masonry') },
+                                { value: 'grid', label: t('landingEditor.variantGrid', 'Cuadrícula') },
+                            ]}
+                        />
+                    </ControlGroup>
+                </>
+            )}
+            {activeTab === 'style' && (
+                <>
+                    <ControlGroup label={t('landingEditor.paddingY', 'Espaciado Vertical')}>
+                        <SelectControl
+                            value={data.paddingY || 'lg'}
+                            onChange={(v) => updateData('paddingY', v)}
+                            options={[
+                                { value: 'sm', label: t('landingEditor.small', 'Pequeño') },
+                                { value: 'md', label: t('landingEditor.medium', 'Mediano') },
+                                { value: 'lg', label: t('landingEditor.large', 'Grande') },
+                            ]}
+                        />
+                    </ControlGroup>
+                    <ControlGroup label={t('landingEditor.backgroundColor', 'Color de Fondo')}>
+                        <ColorControl
+                            value={data.colors?.background || '#0f172a'}
+                            onChange={(v) => updateData('colors', { ...data.colors, background: v })}
+                        />
+                    </ControlGroup>
+                </>
+            )}
+        </div>
+    );
+
+    // ========================================================================
+    // TEAM CONTROLS
+    // ========================================================================
+    const renderTeamControls = () => (
+        <div className="space-y-6">
+            {activeTab === 'content' && (
+                <>
+                    <ControlGroup label={t('landingEditor.sectionTitle', 'Título de Sección')}>
+                        <TextInput
+                            value={data.title || ''}
+                            onChange={(v) => updateData('title', v)}
+                            placeholder={t('landingEditor.teamTitle', 'Nuestro Equipo')}
+                        />
+                    </ControlGroup>
+                    <ControlGroup label={t('landingEditor.description', 'Descripción')}>
+                        <TextInput
+                            value={data.description || ''}
+                            onChange={(v) => updateData('description', v)}
+                            placeholder={t('landingEditor.teamDesc', 'Conoce al equipo')}
+                            multiline
+                        />
+                    </ControlGroup>
+                    <ControlGroup label={t('landingEditor.variant', 'Variante')}>
+                        <SelectControl
+                            value={data.teamVariant || 'classic'}
+                            onChange={(v) => updateData('teamVariant', v)}
+                            options={[
+                                { value: 'classic', label: t('landingEditor.variantClassic', 'Clásico') },
+                                { value: 'cards', label: t('landingEditor.variantCards', 'Tarjetas') },
+                                { value: 'minimal', label: t('landingEditor.variantMinimal', 'Minimal') },
+                                { value: 'overlay', label: t('landingEditor.variantOverlay', 'Overlay') },
+                            ]}
+                        />
+                    </ControlGroup>
+                </>
+            )}
+            {activeTab === 'style' && (
+                <>
+                    <ControlGroup label={t('landingEditor.paddingY', 'Espaciado Vertical')}>
+                        <SelectControl
+                            value={data.paddingY || 'lg'}
+                            onChange={(v) => updateData('paddingY', v)}
+                            options={[
+                                { value: 'sm', label: t('landingEditor.small', 'Pequeño') },
+                                { value: 'md', label: t('landingEditor.medium', 'Mediano') },
+                                { value: 'lg', label: t('landingEditor.large', 'Grande') },
+                            ]}
+                        />
+                    </ControlGroup>
+                    <ControlGroup label={t('landingEditor.backgroundColor', 'Color de Fondo')}>
+                        <ColorControl
+                            value={data.colors?.background || '#0f172a'}
+                            onChange={(v) => updateData('colors', { ...data.colors, background: v })}
+                        />
+                    </ControlGroup>
+                    <ControlGroup label={t('landingEditor.accentColor', 'Color de Acento')}>
+                        <ColorControl
+                            value={data.colors?.accent || '#6366f1'}
+                            onChange={(v) => updateData('colors', { ...data.colors, accent: v })}
+                        />
+                    </ControlGroup>
+                </>
+            )}
+        </div>
+    );
+
+    // ========================================================================
+    // LEADS/CONTACT FORM CONTROLS
+    // ========================================================================
+    const renderLeadsControls = () => (
+        <div className="space-y-6">
+            {activeTab === 'content' && (
+                <>
+                    <ControlGroup label={t('landingEditor.sectionTitle', 'Título de Sección')}>
+                        <TextInput
+                            value={data.title || ''}
+                            onChange={(v) => updateData('title', v)}
+                            placeholder={t('landingEditor.leadsTitle', 'Contáctanos')}
+                        />
+                    </ControlGroup>
+                    <ControlGroup label={t('landingEditor.description', 'Descripción')}>
+                        <TextInput
+                            value={data.description || ''}
+                            onChange={(v) => updateData('description', v)}
+                            placeholder={t('landingEditor.leadsDesc', 'Estamos aquí para ayudarte')}
+                            multiline
+                        />
+                    </ControlGroup>
+                    <ControlGroup label={t('landingEditor.buttonText', 'Texto del Botón')}>
+                        <TextInput
+                            value={data.buttonText || ''}
+                            onChange={(v) => updateData('buttonText', v)}
+                            placeholder={t('landingEditor.sendMessage', 'Enviar Mensaje')}
+                        />
+                    </ControlGroup>
+                    <ControlGroup label={t('landingEditor.variant', 'Variante')}>
+                        <SelectControl
+                            value={data.leadsVariant || 'classic'}
+                            onChange={(v) => updateData('leadsVariant', v)}
+                            options={[
+                                { value: 'classic', label: t('landingEditor.variantClassic', 'Clásico') },
+                                { value: 'split', label: t('landingEditor.variantSplit', 'Dividido') },
+                                { value: 'minimal', label: t('landingEditor.variantMinimal', 'Minimal') },
+                            ]}
+                        />
+                    </ControlGroup>
+                </>
+            )}
+            {activeTab === 'style' && (
+                <>
+                    <ControlGroup label={t('landingEditor.paddingY', 'Espaciado Vertical')}>
+                        <SelectControl
+                            value={data.paddingY || 'lg'}
+                            onChange={(v) => updateData('paddingY', v)}
+                            options={[
+                                { value: 'sm', label: t('landingEditor.small', 'Pequeño') },
+                                { value: 'md', label: t('landingEditor.medium', 'Mediano') },
+                                { value: 'lg', label: t('landingEditor.large', 'Grande') },
+                            ]}
+                        />
+                    </ControlGroup>
+                    <ControlGroup label={t('landingEditor.backgroundColor', 'Color de Fondo')}>
+                        <ColorControl
+                            value={data.colors?.background || '#1e293b'}
+                            onChange={(v) => updateData('colors', { ...data.colors, background: v })}
+                        />
+                    </ControlGroup>
+                    <ControlGroup label={t('landingEditor.buttonBackground', 'Color del Botón')}>
+                        <ColorControl
+                            value={data.colors?.buttonBackground || '#6366f1'}
+                            onChange={(v) => updateData('colors', { ...data.colors, buttonBackground: v })}
+                        />
+                    </ControlGroup>
+                </>
+            )}
+        </div>
+    );
+
+    // ========================================================================
+    // NEWSLETTER CONTROLS
+    // ========================================================================
+    const renderNewsletterControls = () => (
+        <div className="space-y-6">
+            {activeTab === 'content' && (
+                <>
+                    <ControlGroup label={t('landingEditor.sectionTitle', 'Título de Sección')}>
+                        <TextInput
+                            value={data.title || ''}
+                            onChange={(v) => updateData('title', v)}
+                            placeholder={t('landingEditor.newsletterTitle', 'Suscríbete')}
+                        />
+                    </ControlGroup>
+                    <ControlGroup label={t('landingEditor.description', 'Descripción')}>
+                        <TextInput
+                            value={data.description || ''}
+                            onChange={(v) => updateData('description', v)}
+                            placeholder={t('landingEditor.newsletterDesc', 'Recibe noticias y actualizaciones')}
+                            multiline
+                        />
+                    </ControlGroup>
+                    <ControlGroup label={t('landingEditor.buttonText', 'Texto del Botón')}>
+                        <TextInput
+                            value={data.buttonText || ''}
+                            onChange={(v) => updateData('buttonText', v)}
+                            placeholder={t('landingEditor.subscribe', 'Suscribirse')}
+                        />
+                    </ControlGroup>
+                </>
+            )}
+            {activeTab === 'style' && (
+                <>
+                    <ControlGroup label={t('landingEditor.paddingY', 'Espaciado Vertical')}>
+                        <SelectControl
+                            value={data.paddingY || 'lg'}
+                            onChange={(v) => updateData('paddingY', v)}
+                            options={[
+                                { value: 'sm', label: t('landingEditor.small', 'Pequeño') },
+                                { value: 'md', label: t('landingEditor.medium', 'Mediano') },
+                                { value: 'lg', label: t('landingEditor.large', 'Grande') },
+                            ]}
+                        />
+                    </ControlGroup>
+                    <ControlGroup label={t('landingEditor.backgroundColor', 'Color de Fondo')}>
+                        <ColorControl
+                            value={data.colors?.background || '#0f172a'}
+                            onChange={(v) => updateData('colors', { ...data.colors, background: v })}
+                        />
+                    </ControlGroup>
+                    <ControlGroup label={t('landingEditor.accentColor', 'Color de Acento')}>
+                        <ColorControl
+                            value={data.colors?.accent || '#6366f1'}
+                            onChange={(v) => updateData('colors', { ...data.colors, accent: v })}
+                        />
+                    </ControlGroup>
+                </>
+            )}
+        </div>
+    );
+
+    // ========================================================================
+    // VIDEO CONTROLS
+    // ========================================================================
+    const renderVideoControls = () => (
+        <div className="space-y-6">
+            {activeTab === 'content' && (
+                <>
+                    <ControlGroup label={t('landingEditor.sectionTitle', 'Título de Sección')}>
+                        <TextInput
+                            value={data.title || ''}
+                            onChange={(v) => updateData('title', v)}
+                            placeholder={t('landingEditor.videoTitle', 'Video')}
+                        />
+                    </ControlGroup>
+                    <ControlGroup label={t('landingEditor.videoUrl', 'URL del Video')}>
+                        <TextInput
+                            value={data.videoUrl || ''}
+                            onChange={(v) => updateData('videoUrl', v)}
+                            placeholder="https://youtube.com/watch?v=..."
+                        />
+                    </ControlGroup>
+                    <ControlGroup label={t('landingEditor.description', 'Descripción')}>
+                        <TextInput
+                            value={data.description || ''}
+                            onChange={(v) => updateData('description', v)}
+                            placeholder={t('landingEditor.videoDesc', 'Descripción del video')}
+                            multiline
+                        />
+                    </ControlGroup>
+                </>
+            )}
+            {activeTab === 'style' && (
+                <>
+                    <ControlGroup label={t('landingEditor.paddingY', 'Espaciado Vertical')}>
+                        <SelectControl
+                            value={data.paddingY || 'lg'}
+                            onChange={(v) => updateData('paddingY', v)}
+                            options={[
+                                { value: 'sm', label: t('landingEditor.small', 'Pequeño') },
+                                { value: 'md', label: t('landingEditor.medium', 'Mediano') },
+                                { value: 'lg', label: t('landingEditor.large', 'Grande') },
+                            ]}
+                        />
+                    </ControlGroup>
+                    <ControlGroup label={t('landingEditor.backgroundColor', 'Color de Fondo')}>
+                        <ColorControl
+                            value={data.colors?.background || '#0f172a'}
+                            onChange={(v) => updateData('colors', { ...data.colors, background: v })}
+                        />
+                    </ControlGroup>
+                </>
+            )}
+        </div>
+    );
+
+    // ========================================================================
+    // SLIDESHOW/CAROUSEL CONTROLS
+    // ========================================================================
+    const renderSlideshowControls = () => (
+        <div className="space-y-6">
+            {activeTab === 'content' && (
+                <>
+                    <ControlGroup label={t('landingEditor.sectionTitle', 'Título de Sección')}>
+                        <TextInput
+                            value={data.title || ''}
+                            onChange={(v) => updateData('title', v)}
+                            placeholder={t('landingEditor.slideshowTitle', 'Galería')}
+                        />
+                    </ControlGroup>
+                    <ControlGroup label={t('landingEditor.variant', 'Variante')}>
+                        <SelectControl
+                            value={data.slideshowVariant || 'classic'}
+                            onChange={(v) => updateData('slideshowVariant', v)}
+                            options={[
+                                { value: 'classic', label: t('landingEditor.variantClassic', 'Clásico') },
+                                { value: 'kenburns', label: 'Ken Burns' },
+                                { value: 'cards3d', label: '3D Cards' },
+                                { value: 'thumbnails', label: t('landingEditor.thumbnails', 'Miniaturas') },
+                            ]}
+                        />
+                    </ControlGroup>
+                    <Toggle
+                        label={t('landingEditor.showArrows', 'Mostrar Flechas')}
+                        checked={data.showArrows !== false}
+                        onChange={(v) => updateData('showArrows', v)}
+                    />
+                    <Toggle
+                        label={t('landingEditor.showDots', 'Mostrar Indicadores')}
+                        checked={data.showDots !== false}
+                        onChange={(v) => updateData('showDots', v)}
+                    />
+                </>
+            )}
+            {activeTab === 'style' && (
+                <>
+                    <ControlGroup label={t('landingEditor.autoPlaySpeed', 'Velocidad Auto-play (ms)')}>
+                        <RangeControl
+                            value={data.autoPlaySpeed || 5000}
+                            onChange={(v) => updateData('autoPlaySpeed', v)}
+                            min={2000}
+                            max={10000}
+                            step={500}
+                        />
+                    </ControlGroup>
+                    <ControlGroup label={t('landingEditor.paddingY', 'Espaciado Vertical')}>
+                        <SelectControl
+                            value={data.paddingY || 'lg'}
+                            onChange={(v) => updateData('paddingY', v)}
+                            options={[
+                                { value: 'sm', label: t('landingEditor.small', 'Pequeño') },
+                                { value: 'md', label: t('landingEditor.medium', 'Mediano') },
+                                { value: 'lg', label: t('landingEditor.large', 'Grande') },
+                            ]}
+                        />
+                    </ControlGroup>
+                    <ControlGroup label={t('landingEditor.backgroundColor', 'Color de Fondo')}>
+                        <ColorControl
+                            value={data.colors?.background || '#1e293b'}
+                            onChange={(v) => updateData('colors', { ...data.colors, background: v })}
+                        />
+                    </ControlGroup>
+                </>
+            )}
+        </div>
+    );
+
+    // ========================================================================
+    // HOW IT WORKS CONTROLS
+    // ========================================================================
+    const renderHowItWorksControls = () => (
+        <div className="space-y-6">
+            {activeTab === 'content' && (
+                <>
+                    <ControlGroup label={t('landingEditor.sectionTitle', 'Título de Sección')}>
+                        <TextInput
+                            value={data.title || ''}
+                            onChange={(v) => updateData('title', v)}
+                            placeholder={t('landingEditor.howItWorksTitle', '¿Cómo Funciona?')}
+                        />
+                    </ControlGroup>
+                    <ControlGroup label={t('landingEditor.description', 'Descripción')}>
+                        <TextInput
+                            value={data.description || ''}
+                            onChange={(v) => updateData('description', v)}
+                            placeholder={t('landingEditor.howItWorksDesc', 'Pasos simples')}
+                            multiline
+                        />
+                    </ControlGroup>
+                </>
+            )}
+            {activeTab === 'style' && (
+                <>
+                    <ControlGroup label={t('landingEditor.paddingY', 'Espaciado Vertical')}>
+                        <SelectControl
+                            value={data.paddingY || 'lg'}
+                            onChange={(v) => updateData('paddingY', v)}
+                            options={[
+                                { value: 'sm', label: t('landingEditor.small', 'Pequeño') },
+                                { value: 'md', label: t('landingEditor.medium', 'Mediano') },
+                                { value: 'lg', label: t('landingEditor.large', 'Grande') },
+                            ]}
+                        />
+                    </ControlGroup>
+                    <ControlGroup label={t('landingEditor.backgroundColor', 'Color de Fondo')}>
+                        <ColorControl
+                            value={data.colors?.background || '#0f172a'}
+                            onChange={(v) => updateData('colors', { ...data.colors, background: v })}
+                        />
+                    </ControlGroup>
+                    <ControlGroup label={t('landingEditor.accentColor', 'Color de Acento')}>
+                        <ColorControl
+                            value={data.colors?.accent || '#6366f1'}
+                            onChange={(v) => updateData('colors', { ...data.colors, accent: v })}
+                        />
+                    </ControlGroup>
+                </>
+            )}
+        </div>
+    );
+
+    // ========================================================================
+    // MAP CONTROLS
+    // ========================================================================
+    const renderMapControls = () => (
+        <div className="space-y-6">
+            {activeTab === 'content' && (
+                <>
+                    <ControlGroup label={t('landingEditor.sectionTitle', 'Título de Sección')}>
+                        <TextInput
+                            value={data.title || ''}
+                            onChange={(v) => updateData('title', v)}
+                            placeholder={t('landingEditor.mapTitle', 'Ubicación')}
+                        />
+                    </ControlGroup>
+                    <ControlGroup label={t('landingEditor.address', 'Dirección')}>
+                        <TextInput
+                            value={data.address || ''}
+                            onChange={(v) => updateData('address', v)}
+                            placeholder={t('landingEditor.addressPlaceholder', 'Dirección completa')}
+                        />
+                    </ControlGroup>
+                    <ControlGroup label={t('landingEditor.latitude', 'Latitud')}>
+                        <TextInput
+                            value={String(data.latitude || '')}
+                            onChange={(v) => updateData('latitude', parseFloat(v) || 0)}
+                            placeholder="40.7128"
+                        />
+                    </ControlGroup>
+                    <ControlGroup label={t('landingEditor.longitude', 'Longitud')}>
+                        <TextInput
+                            value={String(data.longitude || '')}
+                            onChange={(v) => updateData('longitude', parseFloat(v) || 0)}
+                            placeholder="-74.0060"
+                        />
+                    </ControlGroup>
+                </>
+            )}
+            {activeTab === 'style' && (
+                <>
+                    <ControlGroup label={t('landingEditor.mapZoom', 'Zoom del Mapa')}>
+                        <RangeControl
+                            value={data.zoom || 15}
+                            onChange={(v) => updateData('zoom', v)}
+                            min={10}
+                            max={20}
+                            step={1}
+                        />
+                    </ControlGroup>
+                    <ControlGroup label={t('landingEditor.mapHeight', 'Altura del Mapa')}>
+                        <RangeControl
+                            value={data.height || 400}
+                            onChange={(v) => updateData('height', v)}
+                            min={200}
+                            max={800}
+                            step={50}
+                        />
+                    </ControlGroup>
+                    <ControlGroup label={t('landingEditor.paddingY', 'Espaciado Vertical')}>
+                        <SelectControl
+                            value={data.paddingY || 'lg'}
+                            onChange={(v) => updateData('paddingY', v)}
+                            options={[
+                                { value: 'sm', label: t('landingEditor.small', 'Pequeño') },
+                                { value: 'md', label: t('landingEditor.medium', 'Mediano') },
+                                { value: 'lg', label: t('landingEditor.large', 'Grande') },
+                            ]}
+                        />
+                    </ControlGroup>
+                </>
+            )}
+        </div>
+    );
+
+    // ========================================================================
+    // MENU CONTROLS (Restaurant/Service Menu)
+    // ========================================================================
+    const renderMenuControls = () => (
+        <div className="space-y-6">
+            {activeTab === 'content' && (
+                <>
+                    <ControlGroup label={t('landingEditor.sectionTitle', 'Título de Sección')}>
+                        <TextInput
+                            value={data.title || ''}
+                            onChange={(v) => updateData('title', v)}
+                            placeholder={t('landingEditor.menuTitle', 'Nuestro Menú')}
+                        />
+                    </ControlGroup>
+                    <ControlGroup label={t('landingEditor.description', 'Descripción')}>
+                        <TextInput
+                            value={data.description || ''}
+                            onChange={(v) => updateData('description', v)}
+                            placeholder={t('landingEditor.menuDesc', 'Descubre nuestras opciones')}
+                            multiline
+                        />
+                    </ControlGroup>
+                    <ControlGroup label={t('landingEditor.variant', 'Variante')}>
+                        <SelectControl
+                            value={data.menuVariant || 'classic'}
+                            onChange={(v) => updateData('menuVariant', v)}
+                            options={[
+                                { value: 'classic', label: t('landingEditor.variantClassic', 'Clásico') },
+                                { value: 'cards', label: t('landingEditor.variantCards', 'Tarjetas') },
+                                { value: 'minimal', label: t('landingEditor.variantMinimal', 'Minimal') },
+                            ]}
+                        />
+                    </ControlGroup>
+                </>
+            )}
+            {activeTab === 'style' && (
+                <>
+                    <ControlGroup label={t('landingEditor.paddingY', 'Espaciado Vertical')}>
+                        <SelectControl
+                            value={data.paddingY || 'lg'}
+                            onChange={(v) => updateData('paddingY', v)}
+                            options={[
+                                { value: 'sm', label: t('landingEditor.small', 'Pequeño') },
+                                { value: 'md', label: t('landingEditor.medium', 'Mediano') },
+                                { value: 'lg', label: t('landingEditor.large', 'Grande') },
+                            ]}
+                        />
+                    </ControlGroup>
+                    <ControlGroup label={t('landingEditor.backgroundColor', 'Color de Fondo')}>
+                        <ColorControl
+                            value={data.colors?.background || '#0f172a'}
+                            onChange={(v) => updateData('colors', { ...data.colors, background: v })}
+                        />
+                    </ControlGroup>
+                    <ControlGroup label={t('landingEditor.accentColor', 'Color de Acento')}>
+                        <ColorControl
+                            value={data.colors?.accent || '#6366f1'}
+                            onChange={(v) => updateData('colors', { ...data.colors, accent: v })}
+                        />
+                    </ControlGroup>
+                </>
+            )}
+        </div>
+    );
+
+    // ========================================================================
+    // BANNER CONTROLS
+    // ========================================================================
+    const renderBannerControls = () => (
+        <div className="space-y-6">
+            {activeTab === 'content' && (
+                <>
+                    <ControlGroup label={t('landingEditor.bannerText', 'Texto del Banner')}>
+                        <TextInput
+                            value={data.text || ''}
+                            onChange={(v) => updateData('text', v)}
+                            placeholder={t('landingEditor.bannerTextPlaceholder', 'Oferta especial...')}
+                        />
+                    </ControlGroup>
+                    <ControlGroup label={t('landingEditor.buttonText', 'Texto del Botón')}>
+                        <TextInput
+                            value={data.buttonText || ''}
+                            onChange={(v) => updateData('buttonText', v)}
+                            placeholder={t('landingEditor.learnMore', 'Ver más')}
+                        />
+                    </ControlGroup>
+                    <ControlGroup label={t('landingEditor.buttonLink', 'Enlace del Botón')}>
+                        <TextInput
+                            value={data.buttonLink || ''}
+                            onChange={(v) => updateData('buttonLink', v)}
+                            placeholder="#"
+                        />
+                    </ControlGroup>
+                </>
+            )}
+            {activeTab === 'style' && (
+                <>
+                    <ControlGroup label={t('landingEditor.backgroundColor', 'Color de Fondo')}>
+                        <ColorControl
+                            value={data.colors?.background || '#6366f1'}
+                            onChange={(v) => updateData('colors', { ...data.colors, background: v })}
+                        />
+                    </ControlGroup>
+                    <ControlGroup label={t('landingEditor.textColor', 'Color de Texto')}>
+                        <ColorControl
+                            value={data.colors?.text || '#ffffff'}
+                            onChange={(v) => updateData('colors', { ...data.colors, text: v })}
+                        />
+                    </ControlGroup>
+                </>
+            )}
+        </div>
+    );
+
+    // ========================================================================
+    // HERO SPLIT CONTROLS
+    // ========================================================================
+    const renderHeroSplitControls = () => (
+        <div className="space-y-6">
+            {activeTab === 'content' && (
+                <>
+                    <ControlGroup label={t('landingEditor.headline', 'Título Principal')}>
+                        <TextInput
+                            value={data.headline || ''}
+                            onChange={(v) => updateData('headline', v)}
+                            placeholder={t('landingEditor.headlinePlaceholder', 'Tu título aquí')}
+                        />
+                    </ControlGroup>
+                    <ControlGroup label={t('landingEditor.subheadline', 'Subtítulo')}>
+                        <TextInput
+                            value={data.subheadline || ''}
+                            onChange={(v) => updateData('subheadline', v)}
+                            placeholder={t('landingEditor.subheadlinePlaceholder', 'Descripción breve')}
+                            multiline
+                        />
+                    </ControlGroup>
+                    <ControlGroup label={t('landingEditor.primaryCta', 'Botón Principal')}>
+                        <TextInput
+                            value={data.primaryCta || ''}
+                            onChange={(v) => updateData('primaryCta', v)}
+                            placeholder={t('landingEditor.ctaPlaceholder', 'Comenzar')}
+                        />
+                    </ControlGroup>
+                    <ControlGroup label={t('landingEditor.secondaryCta', 'Botón Secundario')}>
+                        <TextInput
+                            value={data.secondaryCta || ''}
+                            onChange={(v) => updateData('secondaryCta', v)}
+                            placeholder={t('landingEditor.ctaSecondaryPlaceholder', 'Saber más')}
+                        />
+                    </ControlGroup>
+                    <ControlGroup label={t('landingEditor.image', 'Imagen')}>
+                        <ImagePicker
+                            currentImage={data.imageUrl || ''}
+                            onSelectImage={(url) => updateData('imageUrl', url)}
+                            prompt={data.headline || 'hero image'}
+                        />
+                    </ControlGroup>
+                </>
+            )}
+            {activeTab === 'style' && (
+                <>
+                    <ControlGroup label={t('landingEditor.imagePosition', 'Posición de Imagen')}>
+                        <SelectControl
+                            value={data.imagePosition || 'right'}
+                            onChange={(v) => updateData('imagePosition', v)}
+                            options={[
+                                { value: 'left', label: t('landingEditor.left', 'Izquierda') },
+                                { value: 'right', label: t('landingEditor.right', 'Derecha') },
+                            ]}
+                        />
+                    </ControlGroup>
+                    <ControlGroup label={t('landingEditor.paddingY', 'Espaciado Vertical')}>
+                        <SelectControl
+                            value={data.paddingY || 'lg'}
+                            onChange={(v) => updateData('paddingY', v)}
+                            options={[
+                                { value: 'sm', label: t('landingEditor.small', 'Pequeño') },
+                                { value: 'md', label: t('landingEditor.medium', 'Mediano') },
+                                { value: 'lg', label: t('landingEditor.large', 'Grande') },
+                            ]}
+                        />
+                    </ControlGroup>
+                    <ControlGroup label={t('landingEditor.backgroundColor', 'Color de Fondo')}>
+                        <ColorControl
+                            value={data.colors?.background || '#0f172a'}
+                            onChange={(v) => updateData('colors', { ...data.colors, background: v })}
+                        />
+                    </ControlGroup>
+                    <ControlGroup label={t('landingEditor.primaryColor', 'Color Primario')}>
+                        <ColorControl
+                            value={data.colors?.primary || '#6366f1'}
+                            onChange={(v) => updateData('colors', { ...data.colors, primary: v })}
+                        />
+                    </ControlGroup>
+                </>
+            )}
+        </div>
+    );
+
+    // ========================================================================
     // GENERIC CONTROLS (for unsupported section types)
     // ========================================================================
     const renderGenericControls = () => (
@@ -1864,6 +2668,17 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                     destination="global"
                 />
             )}
+
+            {/* Logo Picker Modal (Header section) */}
+            <ImagePickerModal
+                isOpen={isLogoPickerOpen}
+                onClose={() => setIsLogoPickerOpen(false)}
+                onSelect={(url) => {
+                    updateData('logoImage', url);
+                    updateData('logoType', 'image');
+                }}
+                title={t('landingEditor.selectLogo', 'Seleccionar Logo')}
+            />
         </div>
     );
 };
