@@ -1,0 +1,25 @@
+# Caddy configuration for Quimera custom domains
+# This accepts ANY domain and routes to the correct project
+
+# Global options
+{
+    # Enable automatic HTTPS for all domains
+    auto_https on
+    
+    # Admin API for dynamic config (optional)
+    admin off
+}
+
+# Catch-all server - accepts ANY domain
+:443, :80 {
+    # Reverse proxy to the Node.js app that handles routing
+    reverse_proxy localhost:3000
+    
+    # Enable automatic TLS for any domain
+    tls {
+        on_demand
+    }
+}
+
+
+

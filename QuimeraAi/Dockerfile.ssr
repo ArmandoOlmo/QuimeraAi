@@ -1,0 +1,117 @@
+# =============================================================================
+# Dockerfile for SSR Server (Custom Domains)
+# =============================================================================
+# This Dockerfile builds and runs the SSR server for serving storefronts
+# on custom domains. It uses Node.js instead of nginx.
+# =============================================================================
+
+# Build stage
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+# Declarar ARGs para todas las API keys y configuraciones
+ARG VITE_GEMINI_API_KEY
+ARG VITE_FIREBASE_API_KEY
+ARG VITE_FIREBASE_AUTH_DOMAIN
+ARG VITE_FIREBASE_PROJECT_ID
+ARG VITE_FIREBASE_STORAGE_BUCKET
+ARG VITE_FIREBASE_MESSAGING_SENDER_ID
+ARG VITE_FIREBASE_APP_ID
+ARG VITE_FIREBASE_MEASUREMENT_ID
+
+ENV VITE_GEMINI_API_KEY=${VITE_GEMINI_API_KEY}
+ENV VITE_FIREBASE_API_KEY=${VITE_FIREBASE_API_KEY}
+ENV VITE_FIREBASE_AUTH_DOMAIN=${VITE_FIREBASE_AUTH_DOMAIN}
+ENV VITE_FIREBASE_PROJECT_ID=${VITE_FIREBASE_PROJECT_ID}
+ENV VITE_FIREBASE_STORAGE_BUCKET=${VITE_FIREBASE_STORAGE_BUCKET}
+ENV VITE_FIREBASE_MESSAGING_SENDER_ID=${VITE_FIREBASE_MESSAGING_SENDER_ID}
+ENV VITE_FIREBASE_APP_ID=${VITE_FIREBASE_APP_ID}
+ENV VITE_FIREBASE_MEASUREMENT_ID=${VITE_FIREBASE_MEASUREMENT_ID}
+
+# Copy package files
+COPY package*.json ./
+COPY server/package*.json ./server/
+
+# Install dependencies
+RUN npm ci
+
+# Install server dependencies
+WORKDIR /app/server
+RUN npm ci
+WORKDIR /app
+
+# Copy source code
+COPY . .
+
+# Remove any .env files
+RUN rm -f .env*
+
+# Create .env with build-time configuration
+RUN echo "VITE_GEMINI_API_KEY=${VITE_GEMINI_API_KEY}" > .env && \
+    echo "VITE_FIREBASE_API_KEY=${VITE_FIREBASE_API_KEY}" >> .env && \
+    echo "VITE_FIREBASE_AUTH_DOMAIN=${VITE_FIREBASE_AUTH_DOMAIN}" >> .env && \
+    echo "VITE_FIREBASE_PROJECT_ID=${VITE_FIREBASE_PROJECT_ID}" >> .env && \
+    echo "VITE_FIREBASE_STORAGE_BUCKET=${VITE_FIREBASE_STORAGE_BUCKET}" >> .env && \
+    echo "VITE_FIREBASE_MESSAGING_SENDER_ID=${VITE_FIREBASE_MESSAGING_SENDER_ID}" >> .env && \
+    echo "VITE_FIREBASE_APP_ID=${VITE_FIREBASE_APP_ID}" >> .env && \
+    echo "VITE_FIREBASE_MEASUREMENT_ID=${VITE_FIREBASE_MEASUREMENT_ID}" >> .env
+
+# Build client bundle
+RUN npm run build
+
+# Build SSR bundle
+RUN npx vite build --config vite.config.ssr.ts
+
+# Build server
+WORKDIR /app/server
+RUN npm run build
+WORKDIR /app
+
+# =============================================================================
+# Production stage
+# =============================================================================
+FROM node:20-alpine AS production
+
+WORKDIR /app
+
+# Copy package files for production
+COPY --from=builder /app/package*.json ./
+COPY --from=builder /app/server/package*.json ./server/
+
+# Install production dependencies only
+RUN npm ci --only=production
+
+WORKDIR /app/server
+RUN npm ci --only=production
+WORKDIR /app
+
+# Copy built files - server expects files in dist/client/ and dist/server/
+COPY --from=builder /app/dist ./dist/client
+COPY --from=builder /app/dist/server ./dist/server
+COPY --from=builder /app/server/dist ./server/dist
+COPY --from=builder /app/index.html ./index.html
+
+# Set environment variables
+ENV NODE_ENV=production
+ENV PORT=8080
+
+# Expose port
+EXPOSE 8080
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD wget --no-verbose --tries=1 --spider http://localhost:8080/health || exit 1
+
+# Start the SSR server
+CMD ["node", "server/dist/index.js"]
+
+
+
+
+
+
+
+
+
+

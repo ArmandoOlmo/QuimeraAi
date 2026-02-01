@@ -1,0 +1,71 @@
+# =============================================================================
+# QUIMERA AI - Firebase Functions Environment Variables
+# =============================================================================
+# 
+# INSTRUCCIONES:
+# 1. Copia este archivo a .env en la carpeta functions/
+# 2. Reemplaza TODOS los valores con tus API keys reales
+# 3. NUNCA compartas o commits el archivo .env
+#
+# El archivo .env está en .gitignore para proteger tus secretos
+# =============================================================================
+
+# =============================================================================
+# STRIPE (Pagos y Suscripciones)
+# Dashboard: https://dashboard.stripe.com/apikeys
+# =============================================================================
+STRIPE_SECRET_KEY=your_stripe_secret_key_here
+STRIPE_WEBHOOK_SECRET=whsec_XXXXXXXXXXXXXXXXXXXXXXXX
+STRIPE_CONNECT_WEBHOOK_SECRET=whsec_XXXXXXXXXXXXXXXXXXXXXXXX
+
+# =============================================================================
+# RESEND (Emails Transaccionales)
+# Dashboard: https://resend.com/api-keys
+# =============================================================================
+RESEND_API_KEY=re_XXXXXXXXXXXXXXXXXXXXXXXX
+
+# =============================================================================
+# GEMINI (Inteligencia Artificial)
+# Dashboard: https://aistudio.google.com/apikey
+# =============================================================================
+GEMINI_API_KEY=AIza_XXXXXXXXXXXXXXXXXXXXXXXX
+
+# =============================================================================
+# CLOUDFLARE (DNS y Workers para Dominios Personalizados)
+# Dashboard: https://dash.cloudflare.com/profile/api-tokens
+# =============================================================================
+CLOUDFLARE_API_TOKEN=XXXXXXXXXXXXXXXXXXXXXXXX
+CLOUDFLARE_ACCOUNT_ID=XXXXXXXXXXXXXXXXXXXXXXXX
+CLOUDFLARE_ZONE_ID=XXXXXXXXXXXXXXXXXXXXXXXX
+CLOUDFLARE_GLOBAL_API_KEY=XXXXXXXXXXXXXXXXXXXXXXXX
+CLOUDFLARE_EMAIL=tu-email@cloudflare.com
+CLOUDFLARE_WORKERS_TOKEN=XXXXXXXXXXXXXXXXXXXXXXXX
+
+# =============================================================================
+# NAME.COM (Registro de Dominios)
+# Dashboard: https://www.name.com/account/settings/api
+# =============================================================================
+NAMECOM_USERNAME=tu_usuario
+NAMECOM_TOKEN=XXXXXXXXXXXXXXXXXXXXXXXX
+NAMECOM_ENVIRONMENT=production
+
+# =============================================================================
+# META (Facebook, Instagram, WhatsApp Business)
+# Dashboard: https://developers.facebook.com/apps/
+# =============================================================================
+META_APP_ID=XXXXXXXXXXXXXXXX
+META_APP_SECRET=XXXXXXXXXXXXXXXXXXXXXXXX
+META_REDIRECT_URI=https://us-central1-quimeraai.cloudfunctions.net/metaOAuth-callback
+META_VERIFY_TOKEN=quimera_verify_token_2024
+
+# =============================================================================
+# APP CONFIG
+# =============================================================================
+APP_BASE_URL=https://quimera.ai
+SUPPORT_EMAIL=soporte@quimera.ai
+
+# =============================================================================
+# OWNER/ADMIN CONFIG (SECURITY)
+# The email of the platform owner - has full admin access
+# =============================================================================
+OWNER_EMAIL=your-owner-email@example.com

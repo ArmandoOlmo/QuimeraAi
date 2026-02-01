@@ -1,0 +1,182 @@
+{
+  "navigation": {
+    "home": "Accueil",
+    "dashboard": "Tableau de bord",
+    "projects": "Projets",
+    "leads": "Prospects",
+    "products": "Produits",
+    "orders": "Commandes",
+    "analytics": "Analytique",
+    "settings": "Paramètres",
+    "help": "Aide",
+    "logout": "Déconnexion"
+  },
+  "dashboard": {
+    "welcome": "Bienvenue, {{name}}",
+    "overview": "Vue d'ensemble",
+    "quickActions": "Actions rapides",
+    "recentActivity": "Activité récente",
+    "stats": {
+      "totalProjects": "Total des projets",
+      "activeLeads": "Prospects actifs",
+      "totalRevenue": "Revenus totaux",
+      "conversionRate": "Taux de conversion"
+    }
+  },
+  "projects": {
+    "title": "Mes projets",
+    "createNew": "Créer un projet",
+    "editProject": "Modifier le projet",
+    "deleteProject": "Supprimer le projet",
+    "publishProject": "Publier le projet",
+    "status": {
+      "draft": "Brouillon",
+      "published": "Publié",
+      "archived": "Archivé"
+    },
+    "empty": "Vous n'avez pas encore de projets",
+    "emptyDescription": "Créez votre premier projet pour commencer"
+  },
+  "leads": {
+    "title": "Gestion des prospects",
+    "newLead": "Nouveau prospect",
+    "exportLeads": "Exporter les prospects",
+    "importLeads": "Importer les prospects",
+    "filters": {
+      "all": "Tous",
+      "new": "Nouveaux",
+      "contacted": "Contactés",
+      "qualified": "Qualifiés",
+      "converted": "Convertis",
+      "lost": "Perdus"
+    },
+    "columns": {
+      "name": "Nom",
+      "email": "Email",
+      "phone": "Téléphone",
+      "status": "Statut",
+      "source": "Source",
+      "createdAt": "Date de création",
+      "actions": "Actions"
+    }
+  },
+  "ecommerce": {
+    "products": {
+      "title": "Produits",
+      "addProduct": "Ajouter un produit",
+      "editProduct": "Modifier le produit",
+      "categories": "Catégories",
+      "inventory": "Inventaire",
+      "pricing": "Prix"
+    },
+    "orders": {
+      "title": "Commandes",
+      "orderDetails": "Détails de la commande",
+      "status": {
+        "pending": "En attente",
+        "processing": "En cours",
+        "shipped": "Expédié",
+        "delivered": "Livré",
+        "cancelled": "Annulé"
+      }
+    }
+  },
+  "settings": {
+    "title": "Paramètres",
+    "tabs": {
+      "general": "Général",
+      "profile": "Profil",
+      "security": "Sécurité",
+      "notifications": "Notifications",
+      "billing": "Facturation",
+      "integrations": "Intégrations"
+    },
+    "language": {
+      "label": "Langue",
+      "description": "Sélectionnez votre langue préférée"
+    },
+    "timezone": {
+      "label": "Fuseau horaire",
+      "description": "Définissez votre fuseau horaire local"
+    }
+  },
+  "common": {
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "delete": "Supprimer",
+    "edit": "Modifier",
+    "view": "Voir",
+    "create": "Créer",
+    "update": "Mettre à jour",
+    "search": "Rechercher",
+    "filter": "Filtrer",
+    "sort": "Trier",
+    "export": "Exporter",
+    "import": "Importer",
+    "loading": "Chargement...",
+    "error": "Erreur",
+    "success": "Succès",
+    "confirm": "Confirmer",
+    "yes": "Oui",
+    "no": "Non",
+    "back": "Retour",
+    "next": "Suivant",
+    "previous": "Précédent",
+    "close": "Fermer"
+  },
+  "messages": {
+    "saveSuccess": "Modifications enregistrées avec succès",
+    "saveError": "Erreur lors de l'enregistrement",
+    "deleteSuccess": "Supprimé avec succès",
+    "deleteError": "Erreur lors de la suppression",
+    "deleteConfirm": "Êtes-vous sûr de vouloir supprimer ceci?",
+    "noData": "Aucune donnée disponible",
+    "unauthorized": "Vous n'avez pas la permission d'effectuer cette action",
+    "networkError": "Erreur de connexion. Veuillez réessayer."
+  },
+  "auth": {
+    "login": "Connexion",
+    "logout": "Déconnexion",
+    "register": "S'inscrire",
+    "forgotPassword": "Mot de passe oublié?",
+    "resetPassword": "Réinitialiser le mot de passe",
+    "email": "Email",
+    "password": "Mot de passe",
+    "confirmPassword": "Confirmer le mot de passe",
+    "rememberMe": "Se souvenir de moi",
+    "loginSuccess": "Connexion réussie",
+    "logoutSuccess": "Déconnexion réussie",
+    "invalidCredentials": "Identifiants invalides"
+  },
+  "footer": {
+    "copyright": "© {{year}} {{companyName}}. Tous droits réservés.",
+    "poweredBy": "Propulsé par",
+    "privacy": "Confidentialité",
+    "terms": "Conditions",
+    "contact": "Contact"
+  },
+  "portalLanguageSettings": {
+    "title": "Langue du Portail",
+    "description": "Configurez la langue par défaut pour votre portail en marque blanche",
+    "successMessage": "Paramètres de langue mis à jour avec succès",
+    "errorMessage": "Erreur lors de la mise à jour des paramètres. Veuillez réessayer.",
+    "saved": "Enregistré!",
+    "error": "Erreur",
+    "defaultLanguageLabel": "Langue par défaut du portail",
+    "autoTranslateTitle": "Traduction Automatique du Contenu",
+    "autoTranslateBadge": "BETA",
+    "autoTranslateDescription": "Traduisez automatiquement le contenu du portail dans la langue de l'utilisateur à l'aide de l'API Google Translate",
+    "autoTranslateFeature1": "Traduit les pages, projets et composants",
+    "autoTranslateFeature2": "Support pour l'espagnol, l'anglais, le portugais et le français",
+    "autoTranslateFeature3": "Les utilisateurs peuvent choisir leur langue préférée",
+    "autoTranslateWarning": "Note:",
+    "autoTranslateWarningText": "La traduction automatique peut ne pas être parfaite. Nous recommandons de vérifier manuellement les traductions importantes.",
+    "previewTitle": "Aperçu du Portail",
+    "previewDescription": "Le portail sera affiché en",
+    "previewDescriptionDefault": "par défaut pour tous les utilisateurs.",
+    "previewDescriptionWithTranslate": "Les utilisateurs pourront changer la langue et le contenu sera traduit automatiquement.",
+    "cancelButton": "Annuler",
+    "saveButton": "Enregistrer les modifications",
+    "saving": "Enregistrement..."
+  }
+}

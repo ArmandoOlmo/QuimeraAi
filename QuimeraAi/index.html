@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <!-- Theme initialization script - runs BEFORE any rendering to prevent flash -->
+  <script>
+    (function() {
+      try {
+        var savedTheme = localStorage.getItem('themeMode');
+        var theme = savedTheme && ['light', 'dark', 'black'].includes(savedTheme) ? savedTheme : 'dark';
+        document.documentElement.classList.add(theme);
+      } catch (e) {
+        // If localStorage fails, default to dark
+        document.documentElement.classList.add('dark');
+      }
+    })();
+  </script>
+  <meta charset="UTF-8" />
+  <!-- Favicon: SVG fallback, will be replaced dynamically by GlobalSEO from Firestore config -->
+  <link rel="icon" type="image/png"
+    href="https://firebasestorage.googleapis.com/v0/b/quimeraai.firebasestorage.app/o/quimera%2Fquimeralogo.png?alt=media&token=82368c1c-0f63-42b7-831f-72780006f032" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quimera.ai | AI Website Builder for High-Converting Experiences</title>
+  <meta name="description"
+    content="Build, localize, and scale marketing websites using AI. Templates, CMS, localization, and analytics included. Powered by Quimera.ai." />
+  <!-- Performance: Preconnect to critical third-party origins -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://firebasestorage.googleapis.com" crossorigin>
+  <link rel="preconnect" href="https://storage.googleapis.com" crossorigin>
+  <link rel="preconnect" href="https://www.googleapis.com" crossorigin>
+
+  <!-- DNS-prefetch for less critical origins (fallback for older browsers) -->
+  <link rel="dns-prefetch" href="https://firebasestorage.googleapis.com">
+  <link rel="dns-prefetch" href="https://storage.googleapis.com">
+  <link rel="dns-prefetch" href="https://identitytoolkit.googleapis.com">
+  <link rel="dns-prefetch" href="https://securetoken.googleapis.com">
+  <link rel="dns-prefetch" href="https://www.gstatic.com">
+
+  <!-- Performance Optimization: Load only essential UI fonts. Project fonts are loaded dynamically. -->
+  <link
+    href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@300;400;500;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
+  <!-- Critical CSS to prevent FOUC before main.css loads -->
+  <style>
+    /* Minimal dark mode defaults - prevents flash of white */
+    html.dark {
+      background-color: oklch(0.1919 0.0511 306.1849);
+      color: oklch(0.9551 0 0);
+    }
+
+    html.light {
+      background-color: oklch(1.0000 0 0);
+      color: oklch(0.1919 0.0511 306.1849);
+    }
+
+    html.black {
+      background-color: #000;
+      color: #fff;
+    }
+
+    body {
+      background-color: inherit;
+      color: inherit;
+      font-family: 'Ubuntu', 'Plus Jakarta Sans', sans-serif;
+      margin: 0;
+      overflow: hidden;
+    }
+
+    html {
+      overflow: hidden;
+      height: 100%;
+    }
+
+    body, #root {
+      height: 100%;
+    }
+
+    /* Hide content until React hydrates */
+    #root:empty::before {
+      content: '';
+      display: block;
+      height: 100vh;
+      background: inherit;
+    }
+  </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "react": "https://aistudiocdn.com/react@^19.2.0",
+    "firebase/": "https://aistudiocdn.com/firebase@^12.6.0/",
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.30.0",
+    "react-dom": "https://aistudiocdn.com/react-dom@^19.2.0",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.554.0",
+    "react-markdown": "https://aistudiocdn.com/react-markdown@^10.1.0"
+  }
+}
+</script>
+</head>
+
+<body>
+  <div id="root"><!--ssr-outlet--></div>
+  <div id="portal-root"></div>
+  <script type="module" src="./entry-client.tsx"></script>
+</body>
+
+</html>

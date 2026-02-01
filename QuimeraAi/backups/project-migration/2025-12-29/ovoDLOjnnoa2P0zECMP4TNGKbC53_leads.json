@@ -1,0 +1,194 @@
+[
+  {
+    "id": "2x9O7BVDF8OOLh15doxq",
+    "data": {
+      "name": "Jose Ventura",
+      "email": "demo@demo.com",
+      "phone": "dsdfsdf",
+      "company": "sdfsdf",
+      "value": 200,
+      "source": "manual",
+      "notes": "",
+      "createdAt": {
+        "_seconds": 1763770153,
+        "_nanoseconds": 916000000
+      },
+      "status": "qualified"
+    }
+  },
+  {
+    "id": "LPzIIEZD4ljsPe7l3Mai",
+    "data": {
+      "name": "Jose Hernandez",
+      "email": "info@josehernandez",
+      "phone": "",
+      "company": "",
+      "value": 0,
+      "source": "manual",
+      "notes": "",
+      "createdAt": {
+        "_seconds": 1763656866,
+        "_nanoseconds": 750000000
+      },
+      "recommendedAction": "Discard",
+      "aiScore": 5,
+      "color": "pink",
+      "emojiMarker": "👍",
+      "status": "new",
+      "aiAnalysis": "This lead lacks fundamental qualifying information such as company affiliation, potential value, or any contextual notes, rendering its immediate sales potential extremely low.",
+      "updatedAt": {
+        "_seconds": 1765643649,
+        "_nanoseconds": 776000000
+      }
+    }
+  },
+  {
+    "id": "Y1VTO3u1RmQujionGlzM",
+    "data": {
+      "name": "armandoolmomiranda",
+      "email": "armandoolmomiranda@gmail.com",
+      "status": "new",
+      "message": "Capturado durante conversación",
+      "value": 0,
+      "leadScore": 49,
+      "conversationTranscript": "model: 👋 Hello! How can I help you today?\nuser: Hola como estas?\nmodel: ¡Hola! Soy Max, el asistente virtual de Bike Shack, ¡y estoy genial, listo para pedalear y ayudarte en lo que necesites! 🚲\n\nComo buen ciclista, siempre estoy con la energía al tope. ¿En qué puedo asistirte hoy? ¿Buscando una nueva bici, accesorios, o tienes alguna duda sobre el emocionante mundo del ciclismo? ¡Cuéntame! ✨\nuser: Hola\nmodel: ¡Hola! Soy Max, el asistente virtual de Bike Shack. ¡Qué gusto saludarte! 🚲\n\n¿En qué puedo ayudarte hoy? ¿Estás buscando una nueva bicicleta, accesorios, o tienes alguna pregunta sobre el ciclismo? ¡Estoy aquí para resolver tus dudas! ✨\nuser: que costo tienen?\nmodel: ¡Genial! Me encantaría ayudarte con eso. Para brindarte la mejor información, ¿podrías compartir tu email? 📧",
+      "tags": [
+        "quimera-chat",
+        "chatbot",
+        "mid-conversation",
+        "high-intent"
+      ],
+      "notes": "Lead capturado después de {count} mensajes",
+      "source": "quimera-chat",
+      "createdAt": {
+        "_seconds": 1765769041,
+        "_nanoseconds": 774000000
+      },
+      "updatedAt": {
+        "_seconds": 1765769041,
+        "_nanoseconds": 774000000
+      }
+    }
+  },
+  {
+    "id": "YTuaBnQdzQrP84UypqQU",
+    "data": {
+      "name": "Armando Olmo",
+      "source": "quimera-chat",
+      "status": "new",
+      "message": "Cita agendada: Cita con Armando Olmo",
+      "tags": [
+        "quimera-chat",
+        "appointment-scheduled"
+      ],
+      "notes": "Cita programada para 12/18/2025",
+      "email": "armandoolmomiranda@gmail.com",
+      "createdAt": {
+        "_seconds": 1765777231,
+        "_nanoseconds": 68000000
+      },
+      "updatedAt": {
+        "_seconds": 1765777231,
+        "_nanoseconds": 68000000
+      }
+    }
+  },
+  {
+    "id": "bKp0UENmFGbbVsCe9OUt",
+    "data": {
+      "name": "armandoolmomiranda",
+      "email": "armandoolmomiranda@gmail.com",
+      "status": "new",
+      "message": "Capturado durante conversación",
+      "value": 0,
+      "leadScore": 32,
+      "tags": [
+        "quimera-chat",
+        "chatbot",
+        "mid-conversation",
+        "low-intent"
+      ],
+      "notes": "Lead capturado después de {count} mensajes",
+      "source": "quimera-chat",
+      "createdAt": {
+        "_seconds": 1765777500,
+        "_nanoseconds": 149000000
+      },
+      "conversationTranscript": "Bike Shack: 👋 Hello! How can I help you today?\n\nUsuario: Necesito una cita de ajuste\n\nBike Shack: ¡Hola! Soy Max de Bike Shack, y me encanta que estés pensando en un ajuste para tu bici. ¡Es clave para una experiencia ciclista increíble! 🚲\n\nPara agendar tu **cita de ajuste**, necesito algunos datos:\n\n1.  **Tu nombre completo:**\n2.  **Tu correo electrónico:**\n3.  **Fecha preferida:**\n4.  **Hora preferida:**\n\nMientras tanto, te comento que tenemos estos horarios disponibles pronto que podrían interesarte:\n\n*   Martes 16 de Diciembre a las 3:00 PM\n*   Miércoles 17 de Diciembre a las 10:00 AM\n*   Miércoles 17 de Diciembre a las 3:00 PM\n*   Jueves 18 de Diciembre a las 10:00 AM\n*   Viernes 19 de Diciembre a las 10:00 AM\n\nDime, ¿cuál te viene mejor? ¡Estoy aquí para ayudarte a rodar con la mayor comodidad! ✨\n\nUsuario: el 19 a las 10am\n\nBike Shack: ¡Excelente elección! El **Viernes 19 de Diciembre a las 10:00 AM** está disponible para tu cita de ajuste. 🎯\n\nPara poder confirmarla, solo me faltaría tu **nombre completo** y tu **correo electrónico**.\n\nEn cuanto me los proporciones, ¡quedará agendada!\n\nUsuario: armandoolmomiranda@gmail.com\n\nBike Shack: ¡Perfecto! Ya tengo tu correo electrónico: armandoolmomiranda@gmail.com.\n\nSolo me falta tu **nombre completo** para agendar la cita para el **Viernes 19 de Diciembre a las 10:00 AM**.\n\nEn cuanto me digas tu nombre, ¡la agendamos al instante!\n\nUsuario: Armando Olmo\n\nBike Shack: ¡Genial, Armando! Ya tenemos todos los datos.\n\n\n\n¡Perfecto! Tu cita de ajuste ha sido agendada para el **Viernes, 19 de Diciembre de 2025 a las 10:00 AM** con el nombre de Armando Olmo. 🚲 Te esperamos en Bike Shack para dejar tu bici lista para rodar con la máxima comodidad.\n\n¿Hay algo más en lo que pueda ayudarte hoy, Armando? ¡No dudes en preguntar!\n\n✅ **¡Cita agendada exitosamente!**\n\nBike Shack: ¡Me encanta ayudarte! Para brindarte información más personalizada, ¿podrías compartir tu email? 📧\n\nBike Shack: ¡Perfecto! Te contactaremos pronto. ¿En qué más puedo ayudarte? 😊",
+      "updatedAt": {
+        "_seconds": 1765777514,
+        "_nanoseconds": 665000000
+      }
+    }
+  },
+  {
+    "id": "nH2qjiEWVMGTKIx3YhnY",
+    "data": {
+      "name": "Armando Olmo",
+      "source": "quimera-chat",
+      "status": "new",
+      "message": "Cita agendada: Cita con Armando Olmo",
+      "tags": [
+        "quimera-chat",
+        "appointment-scheduled"
+      ],
+      "notes": "Cita programada para 12/19/2025",
+      "email": "armandoolmomiranda@gmail.com",
+      "createdAt": {
+        "_seconds": 1765777487,
+        "_nanoseconds": 994000000
+      },
+      "updatedAt": {
+        "_seconds": 1765777487,
+        "_nanoseconds": 994000000
+      }
+    }
+  },
+  {
+    "id": "tQKWAB3oRoKVTGtZnSYF",
+    "data": {
+      "name": "Armando Olmo Miranda",
+      "source": "quimera-chat",
+      "status": "new",
+      "message": "Cita agendada: Cita con Armando Olmo Miranda",
+      "tags": [
+        "quimera-chat",
+        "appointment-scheduled"
+      ],
+      "notes": "Cita programada para 12/17/2025",
+      "email": "armandoolmomiranda@gmail.com",
+      "createdAt": {
+        "_seconds": 1765776282,
+        "_nanoseconds": 658000000
+      },
+      "updatedAt": {
+        "_seconds": 1765776282,
+        "_nanoseconds": 658000000
+      }
+    }
+  },
+  {
+    "id": "xYadvG3eN7u547vCkS9u",
+    "data": {
+      "name": "Armando Olmo",
+      "email": "armandoolmomiranda@gmail.com",
+      "phone": "7876488629",
+      "source": "quimera-chat",
+      "status": "new",
+      "message": "Cita agendada: Cita - Armando Olmo",
+      "tags": [
+        "quimera-chat",
+        "appointment-scheduled"
+      ],
+      "notes": "Cita programada para 12/19/2025",
+      "createdAt": {
+        "_seconds": 1765775514,
+        "_nanoseconds": 977000000
+      },
+      "updatedAt": {
+        "_seconds": 1765775514,
+        "_nanoseconds": 977000000
+      }
+    }
+  }
+]

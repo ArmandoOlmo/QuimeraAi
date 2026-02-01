@@ -1,0 +1,249 @@
+/* TipTap Modern CMS Editor Styles */
+
+/* Base Editor Styles */
+.ProseMirror {
+  outline: none;
+}
+
+.ProseMirror p.is-editor-empty:first-child::before {
+  color: #adb5bd;
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
+
+/* Table Styles */
+.ProseMirror table {
+  border-collapse: collapse;
+  table-layout: fixed;
+  width: 100%;
+  margin: 1.5rem 0;
+  overflow: hidden;
+}
+
+.ProseMirror td,
+.ProseMirror th {
+  min-width: 1em;
+  border: 2px solid #e5e7eb;
+  padding: 8px 12px;
+  vertical-align: top;
+  box-sizing: border-box;
+  position: relative;
+}
+
+.ProseMirror th {
+  font-weight: bold;
+  text-align: left;
+  background-color: #f3f4f6;
+}
+
+.ProseMirror .selectedCell:after {
+  z-index: 2;
+  position: absolute;
+  content: "";
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  background: rgba(59, 130, 246, 0.15);
+  pointer-events: none;
+}
+
+.ProseMirror .column-resize-handle {
+  position: absolute;
+  right: -2px;
+  top: 0;
+  bottom: -2px;
+  width: 4px;
+  background-color: #3b82f6;
+  pointer-events: none;
+}
+
+/* Dark Mode Table Styles */
+.dark .ProseMirror td,
+.dark .ProseMirror th {
+  border-color: #374151;
+}
+
+.dark .ProseMirror th {
+  background-color: #1f2937;
+}
+
+/* Code Block Styles */
+.ProseMirror pre {
+  background: #1e293b;
+  color: #e2e8f0;
+  font-family: 'Courier New', monospace;
+  padding: 1rem 1.5rem;
+  border-radius: 0.5rem;
+  overflow-x: auto;
+}
+
+.ProseMirror code {
+  background: #f1f5f9;
+  color: #0f172a;
+  border-radius: 0.25rem;
+  padding: 0.2em 0.4em;
+  font-size: 0.9em;
+  font-family: 'Courier New', monospace;
+}
+
+.dark .ProseMirror code {
+  background: #334155;
+  color: #e2e8f0;
+}
+
+/* Blockquote Styles */
+.ProseMirror blockquote {
+  border-left: 4px solid #3b82f6;
+  padding-left: 1.5rem;
+  margin-left: 0;
+  margin-right: 0;
+  font-style: italic;
+  color: #64748b;
+}
+
+.dark .ProseMirror blockquote {
+  border-left-color: #60a5fa;
+  color: #94a3b8;
+}
+
+/* Horizontal Rule */
+.ProseMirror hr {
+  border: none;
+  border-top: 2px solid #e5e7eb;
+  margin: 2rem 0;
+}
+
+.dark .ProseMirror hr {
+  border-top-color: #374151;
+}
+
+/* Image Styles */
+.ProseMirror img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 1rem 0;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.ProseMirror img.ProseMirror-selectednode {
+  outline: 3px solid #3b82f6;
+}
+
+/* Link Styles */
+.ProseMirror a {
+  color: #3b82f6;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.ProseMirror a:hover {
+  color: #2563eb;
+}
+
+/* Highlight Styles */
+.ProseMirror mark {
+  background-color: #fef08a;
+  padding: 0.1em 0.2em;
+  border-radius: 0.2em;
+}
+
+/* Selection */
+.ProseMirror ::selection {
+  background: #dbeafe;
+}
+
+.dark .ProseMirror ::selection {
+  background: #1e3a8a;
+}
+
+/* Focus */
+.ProseMirror:focus {
+  outline: none;
+}
+
+/* List Styles */
+.ProseMirror ul,
+.ProseMirror ol {
+  padding-left: 1.5rem;
+  margin: 1rem 0;
+}
+
+.ProseMirror li {
+  margin: 0.5rem 0;
+}
+
+/* Heading Styles */
+.ProseMirror h1 {
+  font-size: 2.25rem;
+  font-weight: 800;
+  line-height: 1.2;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+  color: hsl(var(--foreground));
+}
+
+.ProseMirror h2 {
+  font-size: 1.875rem;
+  font-weight: 700;
+  line-height: 1.3;
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+  color: hsl(var(--foreground));
+}
+
+.ProseMirror h3 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 1.4;
+  margin-top: 1.25rem;
+  margin-bottom: 0.5rem;
+  color: hsl(var(--foreground));
+}
+
+/* Paragraph */
+.ProseMirror p {
+  line-height: 1.75;
+  margin: 1rem 0;
+  color: hsl(var(--foreground));
+}
+
+/* List item text color */
+.ProseMirror li {
+  margin: 0.5rem 0;
+  color: hsl(var(--foreground));
+}
+
+/* Ensure all text content inherits foreground color */
+.ProseMirror {
+  color: hsl(var(--foreground));
+}
+
+/* Strong/Bold text */
+.ProseMirror strong {
+  color: hsl(var(--foreground));
+  font-weight: 700;
+}
+
+/* Animation for fade in - uses global definition from main.css */
+
+/* Animation for toast slide in */
+@keyframes slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-slide-in-right {
+  animation: slide-in-right 0.3s ease-out;
+}
+

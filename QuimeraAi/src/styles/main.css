@@ -1,0 +1,2000 @@
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+/* ============================================
+   QUIMERA THEME CSS VARIABLES
+   ============================================ */
+
+/* Light Mode (Default) - Claude-inspired palette with Cadmium Yellow accent */
+:root,
+html.light {
+  /* Background & Foreground - Pampas (#F4F3EE) inspired */
+  --background: 40 33% 95%;
+  --foreground: 30 10% 20%;
+
+  /* Card - Pure White */
+  --card: 0 0% 100%;
+  --card-foreground: 30 10% 20%;
+
+  /* Popover - Pure White */
+  --popover: 0 0% 100%;
+  --popover-foreground: 30 10% 20%;
+
+  /* Primary - Cadmium Yellow (preserved) */
+  --primary: 41 96% 58%;
+  --primary-foreground: 30 10% 15%;
+
+  /* Secondary - Cloudy (#B1ADA1) inspired */
+  --secondary: 36 8% 90%;
+  --secondary-foreground: 30 10% 20%;
+
+  /* Muted - Cloudy tones */
+  --muted: 36 8% 90%;
+  --muted-foreground: 36 8% 50%;
+
+  /* Accent - Cadmium Yellow tint (preserved yellow theme) */
+  --accent: 41 40% 94%;
+  --accent-foreground: 30 10% 20%;
+
+  /* Destructive */
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 0 0% 100%;
+
+  /* Border & Input - Cloudy inspired */
+  --border: 36 12% 85%;
+  --input: 36 12% 85%;
+  --ring: 41 96% 58%;
+
+  /* Radius */
+  --radius: 0.375rem;
+
+  /* Editor Specific - Updated for Claude aesthetic */
+  --editor-bg: #F4F3EE;
+  --editor-panel-bg: #FFFFFF;
+  --editor-border: #D9D6CE;
+  --editor-accent: #FBB92B;
+  --editor-text-primary: #33302B;
+  --editor-text-secondary: #7A746A;
+
+  /* Site Content Colors */
+  --site-heading-color: #33302B;
+  --site-body-color: #5C5750;
+
+  /* Blue Violet Palette */
+  --color-blue-violet-50: #f2e9fc;
+  --color-blue-violet-100: #e5d3f8;
+  --color-blue-violet-200: #cca7f1;
+  --color-blue-violet-300: #b27bea;
+  --color-blue-violet-400: #994fe3;
+  --color-blue-violet-500: #7f22dd;
+  --color-blue-violet-600: #661cb0;
+  --color-blue-violet-700: #4c1584;
+  --color-blue-violet-800: #330e58;
+  --color-blue-violet-900: #19072c;
+  --color-blue-violet-950: #12051f;
+
+  /* Amber Glow Palette */
+  --color-amber-glow-50: #fff5e5;
+  --color-amber-glow-100: #ffebcc;
+  --color-amber-glow-200: #ffd899;
+  --color-amber-glow-300: #ffc466;
+  --color-amber-glow-400: #ffb133;
+  --color-amber-glow-500: #ff9d00;
+  --color-amber-glow-600: #cc7e00;
+  --color-amber-glow-700: #995e00;
+  --color-amber-glow-800: #663f00;
+
+  /* Emerald Teal Palette */
+  --color-emerald-teal-50: #ecfdf5;
+  --color-emerald-teal-100: #d1fae5;
+  --color-emerald-teal-200: #a7f3d0;
+  --color-emerald-teal-300: #6ee7b7;
+  --color-emerald-teal-400: #34d399;
+  --color-emerald-teal-500: #10b981;
+  --color-emerald-teal-600: #059669;
+  --color-emerald-teal-700: #047857;
+  --color-emerald-teal-800: #065f46;
+  --color-emerald-teal-900: #064e3b;
+  --color-emerald-teal-950: #022c22;
+
+  /* Rose Coral Palette */
+  --color-rose-coral-50: #fff1f2;
+  --color-rose-coral-100: #ffe4e6;
+  --color-rose-coral-200: #fecdd3;
+  --color-rose-coral-300: #fda4af;
+  --color-rose-coral-400: #fb7185;
+  --color-rose-coral-500: #f43f5e;
+  --color-rose-coral-600: #e11d48;
+  --color-rose-coral-700: #be123c;
+  --color-rose-coral-800: #9f1239;
+  --color-rose-coral-900: #881337;
+  --color-rose-coral-950: #4c0519;
+  --color-amber-glow-900: #331f00;
+  --color-amber-glow-950: #241600;
+}
+
+/* Dark Mode */
+html.dark {
+  --background: 272 45% 14%;
+  --foreground: 0 0% 98%;
+  --card: 268 35% 22%;
+  --card-foreground: 0 0% 98%;
+  --popover: 268 35% 22%;
+  --popover-foreground: 0 0% 98%;
+  --primary: 41 96% 58%;
+  --primary-foreground: 272 47% 10%;
+  --secondary: 268 38% 35%;
+  --secondary-foreground: 0 0% 100%;
+  --muted: 268 25% 25%;
+  --muted-foreground: 265 12% 75%;
+  --accent: 268 45% 45%;
+  --accent-foreground: 0 0% 100%;
+  --destructive: 0 65% 50%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 266 30% 32%;
+  --input: 266 30% 32%;
+  --ring: 41 96% 58%;
+
+  --editor-bg: hsl(272, 45%, 14%);
+  --editor-panel-bg: hsl(268, 35%, 22%);
+  --editor-border: hsl(266, 30%, 32%);
+  --editor-accent: hsl(41, 96%, 58%);
+  --editor-text-primary: hsl(0, 0%, 98%);
+  --editor-text-secondary: hsl(265, 12%, 75%);
+
+  --site-heading-color: #F9FAFB;
+  --site-body-color: #9CA3AF;
+}
+
+/* Black Mode (OLED) */
+html.black {
+  --background: 0 0% 0%;
+  --foreground: 0 0% 100%;
+  --card: 0 0% 6%;
+  --card-foreground: 0 0% 100%;
+  --popover: 0 0% 8%;
+  --popover-foreground: 0 0% 100%;
+  --primary: 41 96% 58%;
+  --primary-foreground: 0 0% 0%;
+  --secondary: 0 0% 18%;
+  --secondary-foreground: 0 0% 100%;
+  --muted: 0 0% 18%;
+  --muted-foreground: 0 0% 70%;
+  --accent: 41 96% 58%;
+  --accent-foreground: 0 0% 0%;
+  --destructive: 0 70% 55%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 0 0% 20%;
+  --input: 0 0% 20%;
+  --ring: 41 96% 58%;
+
+  --editor-bg: #000000;
+  --editor-panel-bg: #0F0F0F;
+  --editor-border: #333333;
+  --editor-accent: #FBB92B;
+  --editor-text-primary: #FFFFFF;
+  --editor-text-secondary: #B3B3B3;
+
+  --site-heading-color: #FFFFFF;
+  --site-body-color: #A1A1AA;
+}
+
+/* ============================================
+   COLOR PALETTE OVERRIDES
+   These use !important to override base theme values
+   ============================================ */
+
+/* Blue Violet Palette */
+html[class*="palette-blue-violet"] {
+  --primary: 274 77% 50% !important;
+  --primary-foreground: 0 0% 100% !important;
+  --ring: 274 77% 50% !important;
+  --accent: 274 50% 90% !important;
+  --accent-foreground: 274 77% 30% !important;
+  --editor-accent: #7f22dd !important;
+}
+
+html.dark[class*="palette-blue-violet"] {
+  --accent: 274 45% 35% !important;
+  --accent-foreground: 0 0% 100% !important;
+}
+
+html.black[class*="palette-blue-violet"] {
+  --primary: 274 77% 55% !important;
+  --ring: 274 77% 55% !important;
+  --accent: 274 77% 55% !important;
+  --accent-foreground: 0 0% 100% !important;
+  --editor-accent: #994fe3 !important;
+}
+
+/* Amber Glow Palette */
+html[class*="palette-amber-glow"] {
+  --primary: 37 100% 50% !important;
+  --primary-foreground: 0 0% 0% !important;
+  --ring: 37 100% 50% !important;
+  --accent: 37 100% 92% !important;
+  --accent-foreground: 37 100% 25% !important;
+  --editor-accent: #ff9d00 !important;
+}
+
+html.dark[class*="palette-amber-glow"] {
+  --accent: 37 50% 30% !important;
+  --accent-foreground: 0 0% 100% !important;
+}
+
+html.black[class*="palette-amber-glow"] {
+  --primary: 37 100% 55% !important;
+  --ring: 37 100% 55% !important;
+  --accent: 37 100% 55% !important;
+  --accent-foreground: 0 0% 0% !important;
+  --editor-accent: #ffb133 !important;
+}
+
+/* Emerald Teal Palette */
+html[class*="palette-emerald-teal"] {
+  --primary: 160 84% 39% !important;
+  --primary-foreground: 0 0% 100% !important;
+  --ring: 160 84% 39% !important;
+  --accent: 160 60% 90% !important;
+  --accent-foreground: 160 84% 25% !important;
+  --editor-accent: #10b981 !important;
+}
+
+html.dark[class*="palette-emerald-teal"] {
+  --primary: 160 84% 45% !important;
+  --ring: 160 84% 45% !important;
+  --accent: 160 50% 30% !important;
+  --accent-foreground: 0 0% 100% !important;
+}
+
+html.black[class*="palette-emerald-teal"] {
+  --primary: 160 84% 50% !important;
+  --ring: 160 84% 50% !important;
+  --accent: 160 84% 50% !important;
+  --accent-foreground: 0 0% 100% !important;
+  --editor-accent: #34d399 !important;
+}
+
+/* Rose Coral Palette */
+html[class*="palette-rose-coral"] {
+  --primary: 350 89% 60% !important;
+  --primary-foreground: 0 0% 100% !important;
+  --ring: 350 89% 60% !important;
+  --accent: 350 60% 92% !important;
+  --accent-foreground: 350 89% 35% !important;
+  --editor-accent: #f43f5e !important;
+}
+
+html.dark[class*="palette-rose-coral"] {
+  --primary: 350 89% 55% !important;
+  --ring: 350 89% 55% !important;
+  --accent: 350 50% 35% !important;
+  --accent-foreground: 0 0% 100% !important;
+}
+
+html.black[class*="palette-rose-coral"] {
+  --primary: 350 89% 60% !important;
+  --ring: 350 89% 60% !important;
+  --accent: 350 89% 60% !important;
+  --accent-foreground: 0 0% 100% !important;
+  --editor-accent: #fb7185 !important;
+}
+
+/* Theme buttons - default to Cadmium Yellow */
+.theme-btn-active {
+  background-color: #FBB92B !important;
+  color: white !important;
+}
+
+/* Palette-specific button colors - direct background override */
+html.palette-blue-violet .theme-btn-active {
+  background-color: #7f22dd !important;
+  color: white !important;
+}
+
+html.palette-amber-glow .theme-btn-active {
+  background-color: #ff9d00 !important;
+  color: black !important;
+}
+
+html.palette-emerald-teal .theme-btn-active {
+  background-color: #10b981 !important;
+  color: white !important;
+}
+
+html.palette-rose-coral .theme-btn-active {
+  background-color: #f43f5e !important;
+  color: white !important;
+}
+
+/* ============================================
+   TAILWIND THEME CONFIG (Reference CSS Vars)
+   ============================================ */
+@theme {
+  /* Custom breakpoint for navigation - tablet threshold at 1080px */
+  --breakpoint-nav: 1300px;
+
+  /* Colors that reference CSS variables for dynamic theming */
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+
+  /* Editor-specific colors (for admin/dashboard) */
+  --color-editor-bg: var(--editor-bg);
+  --color-editor-panel-bg: var(--editor-panel-bg);
+  --color-editor-border: var(--editor-border);
+  --color-editor-accent: var(--editor-accent);
+  --color-editor-text-primary: var(--editor-text-primary);
+  --color-editor-text-secondary: var(--editor-text-secondary);
+
+  /* Blue Violet Palette */
+  --color-blue-violet-50: var(--color-blue-violet-50);
+  --color-blue-violet-100: var(--color-blue-violet-100);
+  --color-blue-violet-200: var(--color-blue-violet-200);
+  --color-blue-violet-300: var(--color-blue-violet-300);
+  --color-blue-violet-400: var(--color-blue-violet-400);
+  --color-blue-violet-500: var(--color-blue-violet-500);
+  --color-blue-violet-600: var(--color-blue-violet-600);
+  --color-blue-violet-700: var(--color-blue-violet-700);
+  --color-blue-violet-800: var(--color-blue-violet-800);
+  --color-blue-violet-900: var(--color-blue-violet-900);
+  --color-blue-violet-950: var(--color-blue-violet-950);
+
+  /* Amber Glow Palette */
+  --color-amber-glow-50: var(--color-amber-glow-50);
+  --color-amber-glow-100: var(--color-amber-glow-100);
+  --color-amber-glow-200: var(--color-amber-glow-200);
+  --color-amber-glow-300: var(--color-amber-glow-300);
+  --color-amber-glow-400: var(--color-amber-glow-400);
+  --color-amber-glow-500: var(--color-amber-glow-500);
+  --color-amber-glow-600: var(--color-amber-glow-600);
+  --color-amber-glow-700: var(--color-amber-glow-700);
+  --color-amber-glow-800: var(--color-amber-glow-800);
+  --color-amber-glow-900: var(--color-amber-glow-900);
+  --color-amber-glow-950: var(--color-amber-glow-950);
+
+  /* Site Colors */
+  --color-site-heading: var(--site-heading-color);
+  --color-site-body: var(--site-body-color);
+
+  /* Radius */
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
+
+  /* Fonts */
+  --font-sans: 'Ubuntu', 'Plus Jakarta Sans', sans-serif;
+  --font-header: 'Plus Jakarta Sans', sans-serif;
+  --font-body: 'Ubuntu', sans-serif;
+  --font-button: 'Ubuntu', sans-serif;
+
+  /* All Caps - default values */
+  --headings-transform: none;
+  --headings-spacing: normal;
+  --buttons-transform: none;
+  --buttons-spacing: normal;
+  --navlinks-transform: none;
+  --navlinks-spacing: normal;
+}
+
+/* ============================================
+   BASE STYLES
+   ============================================ */
+
+/* Global theme transition for smooth color changes */
+html {
+  /* Optimize rendering during theme transitions */
+  color-scheme: light dark;
+}
+
+html,
+html * {
+  /* Smooth transition for theme color changes - applies to all elements */
+  transition-property: background-color, border-color, color, fill, stroke, box-shadow;
+  transition-duration: 200ms;
+  transition-timing-function: ease-out;
+}
+
+/* Disable transitions for elements that shouldn't animate */
+html *[data-no-theme-transition],
+html *[data-no-theme-transition] *,
+html img,
+html video,
+html canvas,
+html svg path,
+html input[type="range"]::-webkit-slider-thumb,
+html .no-theme-transition,
+html .no-theme-transition * {
+  transition-property: none !important;
+}
+
+/* Prevent transition flash on page load */
+html.theme-transitioning * {
+  transition-duration: 0ms !important;
+}
+
+body {
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-family: 'Ubuntu', 'Plus Jakarta Sans', sans-serif;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: hsl(var(--background));
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--border));
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--primary));
+}
+
+/* ============================================
+   UTILITY CLASSES
+   ============================================ */
+
+/* All Caps Typography Transforms */
+/* Headings - applied to section titles */
+.heading-caps {
+  text-transform: var(--headings-transform, none);
+  letter-spacing: var(--headings-spacing, normal);
+}
+
+/* Buttons - applied to all buttons */
+.button-caps {
+  text-transform: var(--buttons-transform, none);
+  letter-spacing: var(--buttons-spacing, normal);
+}
+
+/* Nav Links - applied to navigation links */
+.navlink-caps {
+  text-transform: var(--navlinks-transform, none);
+  letter-spacing: var(--navlinks-spacing, normal);
+}
+
+/* Drag & Drop */
+.drag-container:active {
+  cursor: grabbing;
+}
+
+.drag-container.dragging {
+  opacity: 0.4;
+  background: hsl(var(--accent));
+}
+
+.drag-container.drag-over>div {
+  outline: 2px dashed hsl(var(--primary));
+  outline-offset: -2px;
+  background-color: hsla(var(--primary), 0.1);
+}
+
+.editing-section>section {
+  outline: 2px solid hsl(var(--primary));
+  outline-offset: 2px;
+  box-shadow: 0 0 15px hsla(var(--primary), 0.4);
+  transition: all 0.3s ease-in-out;
+}
+
+.editable-section:hover>section {
+  outline: 2px dashed hsl(var(--primary));
+  outline-offset: 2px;
+  transition: outline 0.2s ease-in-out;
+}
+
+/* Image Styles */
+.img-style-float {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
+  transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+}
+
+.img-style-float:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 25px 50px -12px hsla(var(--primary), 0.2);
+}
+
+.img-style-hexagon {
+  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+}
+
+.img-style-polaroid {
+  background: white;
+  padding: 1rem 1rem 3rem 1rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transform: rotate(-3deg);
+  transition: transform 0.3s ease-in-out;
+}
+
+.img-style-polaroid:hover {
+  transform: rotate(0deg) scale(1.05);
+}
+
+/* Animation Delays */
+.animation-delay-2000 {
+  animation-delay: 2s;
+}
+
+.animation-delay-4000 {
+  animation-delay: 4s;
+}
+
+/* Stagger Children */
+.stagger-children>* {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.stagger-children.animate>*:nth-child(1) {
+  animation: fadeInUp 0.5s ease forwards 0.1s;
+}
+
+.stagger-children.animate>*:nth-child(2) {
+  animation: fadeInUp 0.5s ease forwards 0.2s;
+}
+
+.stagger-children.animate>*:nth-child(3) {
+  animation: fadeInUp 0.5s ease forwards 0.3s;
+}
+
+.stagger-children.animate>*:nth-child(4) {
+  animation: fadeInUp 0.5s ease forwards 0.4s;
+}
+
+.stagger-children.animate>*:nth-child(5) {
+  animation: fadeInUp 0.5s ease forwards 0.5s;
+}
+
+.stagger-children.animate>*:nth-child(6) {
+  animation: fadeInUp 0.5s ease forwards 0.6s;
+}
+
+/* ============================================
+   ANIMATIONS
+   ============================================ */
+
+@keyframes heroFloat {
+
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-30px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes bounceIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+
+  70% {
+    transform: scale(0.9);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes gradientShift {
+
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+@keyframes blob {
+
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+
+  25% {
+    transform: translate(20px, -30px) scale(1.1);
+  }
+
+  50% {
+    transform: translate(-20px, 20px) scale(0.95);
+  }
+
+  75% {
+    transform: translate(30px, 10px) scale(1.05);
+  }
+}
+
+@keyframes scroll-indicator {
+
+  0%,
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  50% {
+    opacity: 0.5;
+    transform: translateY(6px);
+  }
+}
+
+@keyframes marquee {
+  0% {
+    transform: translateX(0%);
+  }
+
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes glow-pulse {
+
+  0%,
+  100% {
+    box-shadow: 0 0 20px rgba(79, 70, 229, 0.3);
+  }
+
+  50% {
+    box-shadow: 0 0 40px rgba(79, 70, 229, 0.6);
+  }
+}
+
+@keyframes float-gentle {
+
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+
+  50% {
+    transform: translateY(-15px) rotate(1deg);
+  }
+}
+
+@keyframes ping-soft {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+
+  75%,
+  100% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
+
+@keyframes text-gradient {
+
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+@keyframes gradient-rotate {
+  0% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes shine {
+  0% {
+    transform: translateX(-100%) skewX(-15deg);
+  }
+
+  100% {
+    transform: translateX(200%) skewX(-15deg);
+  }
+}
+
+/* Mobile Navigation Animations */
+@keyframes slideInFromLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInFromRight {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Animation Classes */
+.animate-hero-float {
+  animation: heroFloat 6s ease-in-out infinite;
+}
+
+.animate-shimmer {
+  animation: shimmer 2s infinite linear;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.6s ease-out forwards;
+}
+
+.animate-fade-in-down {
+  animation: fadeInDown 0.6s ease-out forwards;
+}
+
+.animate-slide-down {
+  animation: slideDown 0.4s ease-out forwards;
+}
+
+.animate-slide-up {
+  animation: slideUp 0.4s ease-out forwards;
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.5s ease-out forwards;
+}
+
+.animate-bounce-in {
+  animation: bounceIn 0.7s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+}
+
+.animate-blob {
+  animation: blob 8s ease-in-out infinite;
+}
+
+.animate-scroll-indicator {
+  animation: scroll-indicator 1.5s ease-in-out infinite;
+}
+
+.animate-marquee {
+  animation: marquee 25s linear infinite;
+}
+
+.animate-marquee:hover {
+  animation-play-state: paused;
+}
+
+.animate-glow-pulse {
+  animation: glow-pulse 3s ease-in-out infinite;
+}
+
+.animate-float-gentle {
+  animation: float-gentle 5s ease-in-out infinite;
+}
+
+.animate-ping-soft {
+  animation: ping-soft 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+.animate-text-gradient {
+  background-size: 200% auto;
+  animation: text-gradient 4s linear infinite;
+}
+
+.animate-gradient-border {
+  background: linear-gradient(90deg, #4f46e5, #10b981, #4f46e5);
+  background-size: 200% 200%;
+  animation: gradient-rotate 3s ease infinite;
+}
+
+.animate-shine::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  animation: shine 3s ease-in-out infinite;
+}
+
+/* Mobile Drawer Animation - Slide up from bottom */
+@keyframes slideUpMobile {
+  from {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-up-mobile {
+  animation: slideUpMobile 0.3s cubic-bezier(0.32, 0.72, 0, 1) forwards;
+}
+
+/* ============================================
+   MOBILE OPTIMIZATIONS
+   ============================================ */
+
+/* Safe Area Support for notched devices (iPhone X+) */
+.safe-area-inset-top {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+.safe-area-inset-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.safe-area-inset-left {
+  padding-left: env(safe-area-inset-left, 0px);
+}
+
+.safe-area-inset-right {
+  padding-right: env(safe-area-inset-right, 0px);
+}
+
+/* Touch optimizations */
+.touch-manipulation {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Prevent text selection on interactive elements */
+.no-select {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Smooth momentum scrolling for iOS */
+.scroll-smooth-ios {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+/* Switch/Toggle component - fixed dimensions to prevent deformation */
+[role="switch"] {
+  width: 44px !important;
+  height: 24px !important;
+  min-width: 44px !important;
+  min-height: 24px !important;
+  max-height: 24px !important;
+  flex-shrink: 0 !important;
+}
+
+[role="switch"]>span {
+  width: 20px !important;
+  height: 20px !important;
+  min-width: 20px !important;
+  min-height: 20px !important;
+  flex-shrink: 0 !important;
+}
+
+/* Custom peer-based toggle switches - prevent deformation in flex containers */
+/* Target the label wrapper that contains peer toggles */
+label:has(> input.peer + div.rounded-full),
+label:has(> input.sr-only.peer) {
+  flex-shrink: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+}
+
+/* Target the toggle track (background) - standard size w-11 h-6 */
+input.peer + div.rounded-full,
+input.sr-only.peer + div.rounded-full {
+  flex-shrink: 0 !important;
+  min-width: 44px !important;
+  width: 44px !important;
+  min-height: 24px !important;
+  height: 24px !important;
+  max-height: 24px !important;
+  position: relative !important;
+  box-sizing: border-box !important;
+}
+
+/* Target larger toggle variant w-14 h-7 */
+input.peer + div.rounded-full.w-14,
+input.sr-only.peer + div.rounded-full.w-14 {
+  min-width: 56px !important;
+  width: 56px !important;
+  min-height: 28px !important;
+  height: 28px !important;
+  max-height: 28px !important;
+}
+
+/* Ensure the toggle knob (::after pseudo-element) maintains circular shape */
+input.peer + div.rounded-full::after,
+input.sr-only.peer + div.rounded-full::after {
+  flex-shrink: 0 !important;
+  aspect-ratio: 1 / 1 !important;
+  border-radius: 9999px !important;
+}
+
+/* Rounded-full elements that should maintain their shape */
+.rounded-full {
+  flex-shrink: 0;
+}
+
+/* Protect aspect-square elements from deformation */
+.aspect-square {
+  flex-shrink: 0 !important;
+  aspect-ratio: 1 / 1 !important;
+}
+
+/* Button-style toggles with inline-flex */
+button.rounded-full[class*="h-6"][class*="w-11"],
+button.rounded-full[class*="h-6 w-11"] {
+  flex-shrink: 0 !important;
+  min-width: 44px !important;
+  min-height: 24px !important;
+  max-height: 24px !important;
+}
+
+/* Toggle knob inside button toggles */
+button.rounded-full > span.rounded-full {
+  flex-shrink: 0 !important;
+  aspect-ratio: 1 / 1 !important;
+  min-width: 16px !important;
+  min-height: 16px !important;
+}
+
+/* Toggle pattern with nested div for the knob (instead of ::after) */
+input.peer + div.rounded-full > div.rounded-full,
+input.sr-only.peer + div.rounded-full > div.rounded-full {
+  flex-shrink: 0 !important;
+  aspect-ratio: 1 / 1 !important;
+  min-width: 20px !important;
+  min-height: 20px !important;
+  width: 20px !important;
+  height: 20px !important;
+  border-radius: 9999px !important;
+}
+
+/* Avatar circles and status indicators - prevent deformation */
+div.rounded-full[class*="w-"][class*="h-"]:not([class*="w-full"]) {
+  flex-shrink: 0;
+  aspect-ratio: 1 / 1;
+}
+
+/* Protect small indicator circles (online status, badges, etc) */
+span.rounded-full[class*="w-"][class*="h-"]:not([class*="w-full"]),
+div.rounded-full.w-2,
+div.rounded-full.w-3,
+div.rounded-full.w-4,
+span.rounded-full.w-2,
+span.rounded-full.w-3,
+span.rounded-full.w-4 {
+  flex-shrink: 0 !important;
+  aspect-ratio: 1 / 1 !important;
+}
+
+/* Mobile-first button reset for better touch targets */
+@media (max-width: 767px) {
+
+  /* Ensure minimum touch target size for buttons/links - exclude switches */
+  button:not(.no-min-touch):not([role="switch"]),
+  [role="button"]:not(.no-min-touch):not([role="switch"]) {
+    min-height: 44px;
+  }
+
+  /* Larger touch targets on mobile for nav items */
+  nav button,
+  nav a {
+    padding: 12px 16px;
+  }
+
+  /* Improved form input sizes on mobile */
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="search"],
+  input[type="tel"],
+  input[type="url"],
+  input[type="number"],
+  textarea,
+  select {
+    font-size: 16px;
+    /* Prevents iOS zoom on focus */
+    min-height: 48px;
+  }
+
+  /* Stack flex items vertically on small screens */
+  .mobile-stack {
+    flex-direction: column !important;
+  }
+
+  /* Hide elements on mobile */
+  .hide-on-mobile {
+    display: none !important;
+  }
+
+  /* Full width on mobile */
+  .mobile-full-width {
+    width: 100% !important;
+  }
+
+  /* Responsive padding adjustments */
+  .mobile-px-4 {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+
+  .mobile-py-4 {
+    padding-top: 1rem !important;
+    padding-bottom: 1rem !important;
+  }
+
+  /* Responsive text size */
+  .mobile-text-sm {
+    font-size: 0.875rem !important;
+  }
+
+  .mobile-text-base {
+    font-size: 1rem !important;
+  }
+}
+
+/* Tablet adjustments */
+@media (min-width: 768px) and (max-width: 1023px) {
+
+  /* Show elements only on tablet */
+  .tablet-only {
+    display: block;
+  }
+
+  /* Hide elements on tablet */
+  .hide-on-tablet {
+    display: none !important;
+  }
+}
+
+/* Desktop only styles */
+@media (min-width: 1024px) {
+  .hide-on-desktop {
+    display: none !important;
+  }
+
+  .show-on-mobile {
+    display: none !important;
+  }
+}
+
+/* Show only on mobile */
+@media (max-width: 767px) {
+  .show-on-mobile {
+    display: block !important;
+  }
+}
+
+/* Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Bottom sheet modal style for mobile */
+@media (max-width: 639px) {
+  .bottom-sheet {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    top: auto;
+    border-radius: 1.5rem 1.5rem 0 0;
+    max-height: 90dvh;
+  }
+}
+
+/* Floating action button for mobile */
+.fab-button {
+  position: fixed;
+  bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px));
+  right: 1.5rem;
+  z-index: 40;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* Pull to refresh indicator */
+.pull-indicator {
+  position: absolute;
+  top: -40px;
+  left: 50%;
+  transform: translateX(-50%);
+  transition: transform 0.2s ease;
+}
+
+/* Mobile-optimized grid helpers */
+@media (max-width: 639px) {
+  .grid-mobile-1 {
+    grid-template-columns: 1fr !important;
+  }
+
+  .grid-mobile-2 {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
+/* Card hover effects - disable on touch devices */
+@media (hover: none) {
+  .hover\:scale-105:hover {
+    transform: none !important;
+  }
+
+  .hover\:-translate-y-1:hover {
+    transform: none !important;
+  }
+
+  .hover\:-translate-y-2:hover {
+    transform: none !important;
+  }
+}
+
+/* Active states for touch devices */
+@media (hover: none) {
+
+  button:active,
+  [role="button"]:active,
+  a:active {
+    opacity: 0.8;
+  }
+}
+
+/* Custom thin scrollbar for sidebar navigation */
+.scrollbar-thin {
+  scrollbar-width: thin;
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  width: 4px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: hsl(var(--border));
+  border-radius: 2px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground));
+}
+
+/* ============================================
+   VOICE AGENT MODAL ANIMATIONS (Gemini-style)
+   ============================================ */
+
+/* Voice Orb Pulse Animation */
+@keyframes voice-orb-pulse {
+
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+
+  50% {
+    transform: scale(1.08);
+    opacity: 0.9;
+  }
+}
+
+/* Voice Orb Glow Animation */
+@keyframes voice-orb-glow {
+
+  0%,
+  100% {
+    box-shadow:
+      0 0 60px 20px hsla(var(--primary), 0.3),
+      0 0 100px 40px hsla(var(--primary), 0.1),
+      inset 0 0 30px hsla(var(--primary), 0.2);
+  }
+
+  50% {
+    box-shadow:
+      0 0 80px 30px hsla(var(--primary), 0.4),
+      0 0 140px 60px hsla(var(--primary), 0.15),
+      inset 0 0 50px hsla(var(--primary), 0.3);
+  }
+}
+
+/* Voice Orb Morph Animation - subtle shape distortion */
+@keyframes voice-orb-morph {
+
+  0%,
+  100% {
+    border-radius: 50%;
+    transform: scale(1) rotate(0deg);
+  }
+
+  25% {
+    border-radius: 48% 52% 52% 48% / 52% 48% 52% 48%;
+    transform: scale(1.02) rotate(1deg);
+  }
+
+  50% {
+    border-radius: 52% 48% 48% 52% / 48% 52% 48% 52%;
+    transform: scale(0.98) rotate(-1deg);
+  }
+
+  75% {
+    border-radius: 48% 52% 52% 48% / 48% 52% 48% 52%;
+    transform: scale(1.01) rotate(0.5deg);
+  }
+}
+
+/* Voice Orb Ring Expand Animation */
+@keyframes voice-orb-ring {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.8;
+  }
+
+  100% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
+
+/* Audio Visualizer Bar Animation */
+@keyframes voice-bar-dance {
+
+  0%,
+  100% {
+    transform: scaleY(0.3);
+  }
+
+  50% {
+    transform: scaleY(1);
+  }
+}
+
+/* Slide up from bottom for drawer */
+@keyframes drawer-slide-up {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Slide down for drawer close */
+@keyframes drawer-slide-down {
+  from {
+    transform: translateY(0);
+    opacity: 1;
+  }
+
+  to {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+}
+
+/* Voice Modal Fade In */
+@keyframes voice-modal-in {
+  from {
+    opacity: 0;
+    backdrop-filter: blur(0px);
+  }
+
+  to {
+    opacity: 1;
+    backdrop-filter: blur(20px);
+  }
+}
+
+/* Voice Modal Fade Out */
+@keyframes voice-modal-out {
+  from {
+    opacity: 1;
+    backdrop-filter: blur(20px);
+  }
+
+  to {
+    opacity: 0;
+    backdrop-filter: blur(0px);
+  }
+}
+
+/* Animation Classes for Voice Modal */
+.animate-voice-orb-pulse {
+  animation: voice-orb-pulse 2s ease-in-out infinite;
+}
+
+.animate-voice-orb-glow {
+  animation: voice-orb-glow 3s ease-in-out infinite;
+}
+
+.animate-voice-orb-morph {
+  animation: voice-orb-morph 8s ease-in-out infinite;
+}
+
+/* Combined orb animation - use this instead of individual classes */
+.animate-voice-orb-combined {
+  animation:
+    voice-orb-pulse 2s ease-in-out infinite,
+    voice-orb-glow 3s ease-in-out infinite;
+  border-radius: 50%;
+}
+
+.animate-voice-orb-ring {
+  animation: voice-orb-ring 2s ease-out infinite;
+}
+
+.animate-drawer-slide-up {
+  animation: drawer-slide-up 0.35s cubic-bezier(0.32, 0.72, 0, 1) forwards;
+}
+
+.animate-drawer-slide-down {
+  animation: drawer-slide-down 0.25s cubic-bezier(0.32, 0.72, 0, 1) forwards;
+}
+
+.animate-voice-modal-in {
+  animation: voice-modal-in 0.3s ease-out forwards;
+}
+
+.animate-voice-modal-out {
+  animation: voice-modal-out 0.2s ease-in forwards;
+}
+
+/* Voice Bar individual delays for staggered effect */
+.voice-bar:nth-child(1) {
+  animation-delay: 0ms;
+}
+
+.voice-bar:nth-child(2) {
+  animation-delay: 100ms;
+}
+
+.voice-bar:nth-child(3) {
+  animation-delay: 200ms;
+}
+
+.voice-bar:nth-child(4) {
+  animation-delay: 150ms;
+}
+
+.voice-bar:nth-child(5) {
+  animation-delay: 50ms;
+}
+
+.voice-bar:nth-child(6) {
+  animation-delay: 180ms;
+}
+
+.voice-bar:nth-child(7) {
+  animation-delay: 80ms;
+}
+
+.voice-bar:nth-child(8) {
+  animation-delay: 250ms;
+}
+
+/* Footer Assistant Trigger Bar */
+.assistant-footer-trigger {
+  transition: all 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.assistant-footer-trigger:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px -5px hsla(var(--primary), 0.3);
+}
+
+/* Drawer handle for mobile swipe */
+.drawer-handle {
+  width: 36px;
+  height: 4px;
+  border-radius: 2px;
+  background: hsl(var(--muted-foreground) / 0.3);
+  transition: background 0.2s ease;
+}
+
+
+.drawer-handle:hover {
+  background: hsl(var(--muted-foreground) / 0.5);
+}
+
+/* Utility to hide scrollbar but keep functionality */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  /* IE and Edge */
+  scrollbar-width: none;
+  /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+  /* Chrome, Safari and Opera */
+}
+
+/* ============================================
+   PREVIEW CONTAINER QUERIES
+   Production-ready responsive preview using CSS Container Queries.
+   These respond to the preview container width, not viewport.
+   ============================================ */
+
+/* 
+ * Container Query Breakpoints (matching Tailwind):
+ * - sm: 640px
+ * - md: 768px  
+ * - lg: 1024px
+ * 
+ * Preview widths:
+ * - Mobile: 384px (max-w-sm) - smaller than sm
+ * - Tablet: 768px (max-w-3xl) - at md breakpoint
+ * - Desktop: full width
+ */
+
+/* Base mobile styles for preview container */
+.preview-container {
+  /* CSS custom properties for responsive values */
+  --preview-text-5xl: 2.25rem;  /* 36px - mobile */
+  --preview-text-6xl: 2.75rem;  /* 44px - mobile */
+  --preview-text-7xl: 3.5rem;   /* 56px - mobile */
+  --preview-text-8xl: 4rem;     /* 64px - mobile */
+}
+
+/* Container query: when container is >= 640px (sm breakpoint) */
+@container preview (min-width: 640px) {
+  .preview-container {
+    --preview-text-5xl: 3rem;     /* 48px */
+    --preview-text-6xl: 3.5rem;   /* 56px */
+    --preview-text-7xl: 4rem;     /* 64px */
+    --preview-text-8xl: 5rem;     /* 80px */
+  }
+}
+
+/* Container query: when container is >= 768px (md breakpoint) */
+@container preview (min-width: 768px) {
+  .preview-container {
+    --preview-text-5xl: 3rem;     /* 48px - text-5xl */
+    --preview-text-6xl: 3.75rem;  /* 60px - text-6xl */
+    --preview-text-7xl: 4.5rem;   /* 72px - text-7xl */
+    --preview-text-8xl: 6rem;     /* 96px - text-8xl */
+  }
+}
+
+/* 
+ * Hero headline responsive sizing using container queries
+ * Targets hero h1 elements and applies container-responsive font sizes
+ */
+.preview-container h1.font-header {
+  font-size: var(--preview-text-6xl) !important;
+  line-height: 1.1 !important;
+}
+
+/* Size variants based on Tailwind classes */
+.preview-container h1.font-header.text-4xl {
+  font-size: calc(var(--preview-text-5xl) * 0.85) !important;
+}
+
+.preview-container h1.font-header.text-5xl {
+  font-size: var(--preview-text-5xl) !important;
+}
+
+.preview-container h1.font-header.text-6xl {
+  font-size: var(--preview-text-6xl) !important;
+}
+
+.preview-container h1.font-header.text-7xl {
+  font-size: var(--preview-text-7xl) !important;
+}
+
+.preview-container h1.font-header.text-8xl {
+  font-size: var(--preview-text-8xl) !important;
+}
+
+/* ============================================
+   MOBILE PREVIEW (container < 640px / sm breakpoint)
+   Forces single-column layouts and mobile styles
+   ============================================ */
+@container preview (max-width: 639px) {
+  /* Force mobile layout - all flex-row variants to column */
+  .sm\:flex-row,
+  .md\:flex-row,
+  .lg\:flex-row {
+    flex-direction: column !important;
+  }
+  
+  .md\:flex-row-reverse,
+  .lg\:flex-row-reverse {
+    flex-direction: column !important;
+  }
+  
+  /* Force single-column grids on mobile */
+  .sm\:grid-cols-2,
+  .sm\:grid-cols-3,
+  .sm\:grid-cols-4,
+  .md\:grid-cols-2,
+  .md\:grid-cols-3,
+  .md\:grid-cols-4,
+  .lg\:grid-cols-2,
+  .lg\:grid-cols-3,
+  .lg\:grid-cols-4 {
+    grid-template-columns: repeat(1, minmax(0, 1fr)) !important;
+  }
+  
+  /* Force mobile widths */
+  .sm\:w-1\/2,
+  .md\:w-1\/2,
+  .lg\:w-1\/2,
+  .md\:w-1\/3,
+  .md\:w-2\/3 {
+    width: 100% !important;
+  }
+  
+  /* 
+   * Elements with "hidden md:flex" or "hidden lg:flex" should stay hidden on mobile
+   * because their BASE state is hidden, and we're simulating mobile viewport
+   */
+  .hidden.sm\:flex,
+  .hidden.md\:flex,
+  .hidden.lg\:flex,
+  .hidden.nav\:flex,
+  .hidden.sm\:block,
+  .hidden.md\:block,
+  .hidden.lg\:block,
+  .hidden.nav\:block {
+    display: none !important;
+  }
+  
+  /* 
+   * Elements with "md:hidden" or "nav:hidden" (no base hidden) should be VISIBLE on mobile
+   * These are mobile-only elements like hamburger menus
+   * The actual viewport triggers @media(min-width:768px) which hides them,
+   * but we need to override that in the mobile preview container.
+   * Using higher specificity with .preview-container prefix
+   */
+  .preview-container .md\:hidden,
+  .preview-mobile .md\:hidden,
+  .preview-container .nav\:hidden,
+  .preview-mobile .nav\:hidden {
+    display: flex !important;
+  }
+  
+  .preview-container .md\:hidden.block,
+  .preview-mobile .md\:hidden.block,
+  .preview-container .nav\:hidden.block,
+  .preview-mobile .nav\:hidden.block {
+    display: block !important;
+  }
+  
+  /* Force text alignment for mobile */
+  .sm\:text-left,
+  .md\:text-left,
+  .lg\:text-left,
+  .sm\:text-right,
+  .md\:text-right,
+  .lg\:text-right {
+    text-align: center !important;
+  }
+  
+  /* Force centering for mobile */
+  .sm\:justify-start,
+  .md\:justify-start,
+  .lg\:justify-start,
+  .sm\:justify-end,
+  .md\:justify-end,
+  .lg\:justify-end {
+    justify-content: center !important;
+  }
+  
+  .sm\:items-start,
+  .md\:items-start,
+  .lg\:items-start {
+    align-items: center !important;
+  }
+  
+  /* Force max-width adjustments */
+  .sm\:max-w-lg,
+  .md\:max-w-lg,
+  .md\:max-w-xl,
+  .md\:max-w-2xl,
+  .lg\:max-w-xl {
+    max-width: 100% !important;
+  }
+  
+  /* Responsive text sizes for mobile */
+  .sm\:text-4xl,
+  .md\:text-4xl { font-size: 1.875rem !important; }
+  .sm\:text-5xl,
+  .md\:text-5xl { font-size: 2.25rem !important; }
+  .md\:text-6xl { font-size: 2.75rem !important; }
+  .md\:text-7xl { font-size: 3rem !important; }
+  .md\:text-8xl { font-size: 3.5rem !important; }
+  
+  /* Gap adjustments for mobile */
+  .sm\:gap-6,
+  .md\:gap-6 { gap: 1rem !important; }
+  .sm\:gap-8,
+  .md\:gap-8 { gap: 1.5rem !important; }
+  .md\:gap-12 { gap: 2rem !important; }
+  
+  /* Padding adjustments for mobile */
+  .sm\:py-16,
+  .md\:py-16 {
+    padding-top: 2rem !important;
+    padding-bottom: 2rem !important;
+  }
+  .md\:py-24 {
+    padding-top: 2.5rem !important;
+    padding-bottom: 2.5rem !important;
+  }
+  .md\:py-32 {
+    padding-top: 3rem !important;
+    padding-bottom: 3rem !important;
+  }
+  .md\:py-40 {
+    padding-top: 4rem !important;
+    padding-bottom: 4rem !important;
+  }
+  
+  /* Margin adjustments for mobile */
+  .sm\:mt-0,
+  .md\:mt-0 { margin-top: 1.5rem !important; }
+  .md\:mt-\[60px\] { margin-top: 1.5rem !important; }
+  .md\:mb-\[60px\] { margin-bottom: 1.5rem !important; }
+  
+  /* Team/Features image sizes for mobile */
+  .sm\:w-40,
+  .md\:w-40 { width: 8rem !important; }
+  .sm\:h-40,
+  .md\:h-40 { height: 8rem !important; }
+  
+  /* Column span overrides for bento/modern layouts */
+  .md\:col-span-2,
+  .lg\:col-span-2,
+  .lg\:row-span-2 {
+    grid-column: span 1 !important;
+    grid-row: span 1 !important;
+  }
+}
+
+/* ============================================
+   TABLET PREVIEW (640px - 767px)
+   2-column layouts for medium screens
+   ============================================ */
+@container preview (min-width: 640px) and (max-width: 767px) {
+  /* Allow 2 columns on tablet for sm: breakpoints */
+  .sm\:grid-cols-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+  
+  /* But limit 3+ columns to 2 */
+  .sm\:grid-cols-3,
+  .sm\:grid-cols-4,
+  .md\:grid-cols-3,
+  .md\:grid-cols-4,
+  .lg\:grid-cols-3,
+  .lg\:grid-cols-4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+  
+  /* Tablet text sizes */
+  .md\:text-7xl,
+  .md\:text-8xl {
+    font-size: 3.25rem !important;
+  }
+  
+  /* Show sm: display elements on tablet */
+  .sm\:flex {
+    display: flex !important;
+  }
+  
+  .sm\:block {
+    display: block !important;
+  }
+  
+  /* Allow sm:flex-row on tablet */
+  .sm\:flex-row {
+    flex-direction: row !important;
+  }
+  
+  /* Nav breakpoint for tablet preview - show mobile menu since tablet (640-767px) < nav breakpoint (1300px) */
+  .nav\:hidden {
+    display: flex !important;
+  }
+  
+  .hidden.nav\:flex,
+  .hidden.nav\:block {
+    display: none !important;
+  }
+}
+
+/* ============================================
+   LARGE TABLET (768px - 1023px)
+   Allow md: styles but limit lg: to 3 columns max
+   ============================================ */
+@container preview (min-width: 768px) and (max-width: 1023px) {
+  /* Allow md: grid columns */
+  .md\:grid-cols-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+  
+  .md\:grid-cols-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+  
+  /* Limit lg: columns to 3 max */
+  .lg\:grid-cols-4 {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+  
+  /* Show md: display elements */
+  .md\:flex {
+    display: flex !important;
+  }
+  
+  .md\:block {
+    display: block !important;
+  }
+  
+  /* Hide md:hidden elements */
+  .md\:hidden {
+    display: none !important;
+  }
+  
+  /* But show nav:hidden elements (hamburger) since large tablet (768-1023px) < nav breakpoint (1300px) */
+  .nav\:hidden {
+    display: flex !important;
+  }
+  
+  /* Hide nav:flex elements (desktop navigation) since large tablet < nav breakpoint */
+  .hidden.nav\:flex,
+  .hidden.nav\:block {
+    display: none !important;
+  }
+  
+  /* Allow md:flex-row */
+  .md\:flex-row {
+    flex-direction: row !important;
+  }
+  
+  /* Allow md: col-span */
+  .md\:col-span-2 {
+    grid-column: span 2 !important;
+  }
+}
+
+/* ============================================
+   PREVIEW CLASS OVERRIDES (Non-Container Query)
+   These use the .preview-mobile class which IS applied regardless of container queries
+   ============================================ */
+.preview-mobile .md\:hidden,
+.preview-mobile .nav\:hidden {
+  display: flex !important;
+}
+
+.preview-mobile .md\:hidden.block,
+.preview-mobile .nav\:hidden.block {
+  display: block !important;
+}
+
+.preview-mobile .hidden.md\:flex,
+.preview-mobile .hidden.md\:block,
+.preview-mobile .hidden.lg\:flex,
+.preview-mobile .hidden.lg\:block,
+.preview-mobile .hidden.nav\:flex,
+.preview-mobile .hidden.nav\:block {
+  display: none !important;
+}
+
+/* Force single column grids */
+.preview-mobile .md\:grid-cols-2,
+.preview-mobile .md\:grid-cols-3,
+.preview-mobile .md\:grid-cols-4,
+.preview-mobile .lg\:grid-cols-2,
+.preview-mobile .lg\:grid-cols-3,
+.preview-mobile .lg\:grid-cols-4 {
+  grid-template-columns: repeat(1, minmax(0, 1fr)) !important;
+}
+
+/* Force column direction */
+.preview-mobile .md\:flex-row,
+.preview-mobile .lg\:flex-row {
+  flex-direction: column !important;
+}
+
+/* Reset column spans for bento layouts */
+.preview-mobile .md\:col-span-2,
+.preview-mobile .lg\:col-span-2,
+.preview-mobile .lg\:row-span-2 {
+  grid-column: span 1 !important;
+  grid-row: span 1 !important;
+}
+
+/* Hero headline responsive text sizes for mobile preview */
+.preview-mobile h1.font-header {
+  font-size: var(--preview-text-6xl, 2.75rem) !important;
+}
+
+.preview-mobile h1.font-header.text-5xl {
+  font-size: var(--preview-text-5xl, 2.25rem) !important;
+}
+
+.preview-mobile h1.font-header.text-7xl {
+  font-size: var(--preview-text-7xl, 3rem) !important;
+}
+
+.preview-mobile .md\:text-7xl {
+  font-size: 3rem !important;
+}
+
+.preview-mobile .md\:text-8xl {
+  font-size: 3.5rem !important;
+}
+
+/* Tablet preview styles */
+.preview-tablet .lg\:grid-cols-4 {
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+}
+
+.preview-tablet .md\:hidden {
+  display: none !important;
+}
+
+.preview-tablet .hidden.md\:flex,
+.preview-tablet .hidden.md\:block {
+  display: flex !important;
+}
+
+/* Nav breakpoint for tablet preview - show mobile menu since tablet (768px) < nav breakpoint (1300px) */
+.preview-tablet .nav\:hidden {
+  display: flex !important;
+}
+
+.preview-tablet .hidden.nav\:flex,
+.preview-tablet .hidden.nav\:block {
+  display: none !important;
+}

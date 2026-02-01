@@ -1,0 +1,173 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // ============================================
+    // HELPER FUNCTIONS
+    // ============================================
+    
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    // Check if user has admin role via Custom Claims
+    // Custom claims are set via Firebase Admin SDK
+    // Roles: owner, superadmin, admin
+    function isAdmin() {
+      return isAuthenticated() && (
+        request.auth.token.role == 'owner' ||
+        request.auth.token.role == 'superadmin' ||
+        request.auth.token.role == 'admin'
+      );
+    }
+    
+    // Check if user is superadmin or owner
+    function isSuperAdminOrOwner() {
+      return isAuthenticated() && (
+        request.auth.token.role == 'owner' ||
+        request.auth.token.role == 'superadmin'
+      );
+    }
+    
+    // Validate file size (in bytes)
+    function isValidSize(maxSize) {
+      return request.resource.size <= maxSize;
+    }
+    
+    // Validate content type starts with image/
+    function isImage() {
+      return request.resource.contentType.matches('image/.*');
+    }
+    
+    // ============================================
+    // PROFILE PICTURES
+    // Anyone can view, only owner can upload their own
+    // ============================================
+    
+    match /profile-pictures/{userId} {
+      allow read: if true;
+      allow write: if isOwner(userId) 
+        && isImage() 
+        && isValidSize(5 * 1024 * 1024); // 5MB max
+    }
+    
+    match /profile-pictures/{userId}/{allPaths=**} {
+      allow read: if true;
+      allow write: if isOwner(userId) 
+        && isImage() 
+        && isValidSize(5 * 1024 * 1024); // 5MB max
+    }
+    
+    // ============================================
+    // USER UPLOADS
+    // Users can manage their own files
+    // ============================================
+    
+    match /user_uploads/{userId}/{allPaths=**} {
+      allow read: if true;
+      allow write: if isOwner(userId) 
+        && isValidSize(50 * 1024 * 1024); // 50MB max per file
+    }
+    
+    // ============================================
+    // USERS FOLDER (alternative structure)
+    // Users can manage their own files including store assets
+    // ============================================
+    
+    match /users/{userId}/{allPaths=**} {
+      allow read: if true;
+      allow write: if isOwner(userId) 
+        && isValidSize(50 * 1024 * 1024); // 50MB max per file
+    }
+    
+    // ============================================
+    // GLOBAL ASSETS
+    // Public read, authenticated users can write
+    // Access control is enforced at UI/Firestore level
+    // ============================================
+    
+    match /global_assets/{allPaths=**} {
+      allow read: if true;
+      // Restrict writes to admin SDK or specific validation (removed generic auth write)
+      allow write: if false; 
+    }
+    
+    // ============================================
+    // GLOBAL SETTINGS (App information, brand assets)
+    // Public read for serving assets
+    // SECURED: Only superadmin/owner can write
+    // ============================================
+    
+    match /global_settings/{allPaths=**} {
+      allow read: if true;
+      // Only superadmin/owner can write global settings
+      allow write: if isSuperAdminOrOwner() 
+        && isValidSize(10 * 1024 * 1024); // 10MB max per file
+    }
+    
+    // ============================================
+    // GLOBAL FILES
+    // SECURED: Only admin roles can manage global files
+    // ============================================
+    
+    match /global/{allPaths=**} {
+      allow read: if true;
+      // Only admin roles can write global files
+      allow write: if isAdmin() 
+        && isValidSize(50 * 1024 * 1024); // 50MB max per file
+    }
+    
+    // ============================================
+    // TEMPLATES & THUMBNAILS
+    // SECURED: Only superadmin/owner can manage templates
+    // ============================================
+    
+    match /templates/{allPaths=**} {
+      allow read: if true;
+      // Only superadmin/owner can write templates
+      allow write: if isSuperAdminOrOwner() 
+        && isValidSize(10 * 1024 * 1024); // 10MB max
+    }
+    
+    // ============================================
+    // ADMIN ASSETS (for admin-uploaded content like article images)
+    // SECURED: Only admin roles can manage admin assets
+    // ============================================
+    
+    match /tenants/{tenantId}/{allPaths=**} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() 
+        && isValidSize(50 * 1024 * 1024); // 50MB max
+    }
+
+    // ============================================
+    // ADMIN ASSETS (for admin-uploaded content like article images)
+    // SECURED: Only admin roles can manage admin assets
+    // ============================================
+    
+    match /admin/{allPaths=**} {
+      allow read: if true;
+      // Only admin roles can write admin assets
+      allow write: if isAdmin() 
+        && isValidSize(50 * 1024 * 1024); // 50MB max per file
+    }
+    
+    // ============================================
+    // DEFAULT: Deny all other paths
+    // ============================================
+    
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
+
+
+
+
+
+

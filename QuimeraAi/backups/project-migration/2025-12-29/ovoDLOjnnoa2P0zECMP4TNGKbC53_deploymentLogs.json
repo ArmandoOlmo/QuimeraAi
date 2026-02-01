@@ -1,0 +1,464 @@
+[
+  {
+    "id": "0TEncz2udDg4816r8HNa",
+    "data": {
+      "domainId": "quimeraapp.com",
+      "action": "deploy_start",
+      "provider": "cloudflare",
+      "timestamp": "2025-12-19T03:32:36.812Z",
+      "status": "in_progress"
+    }
+  },
+  {
+    "id": "0zNUrRnBjS0epnIR80dl",
+    "data": {
+      "domainId": "quimeraapp.com",
+      "action": "deploy_error",
+      "timestamp": "2025-12-19T16:36:22.335Z",
+      "status": "failed",
+      "message": "Error inesperado durante el despliegue",
+      "error": "internal"
+    }
+  },
+  {
+    "id": "36aLjtoBEDXpQmImMmGU",
+    "data": {
+      "domainId": "quimeraapp.com",
+      "action": "deploy_start",
+      "provider": "cloudflare",
+      "timestamp": "2025-12-19T04:06:45.742Z",
+      "status": "in_progress"
+    }
+  },
+  {
+    "id": "58IXwKCedtRdpY29fzO6",
+    "data": {
+      "domainId": "lUDHDRMnR1EPzSsyRZ9Q",
+      "action": "deploy_start",
+      "provider": "cloud_run",
+      "timestamp": "2025-12-22T15:30:52.409Z",
+      "status": "started",
+      "message": "Iniciando despliegue en cloud_run..."
+    }
+  },
+  {
+    "id": "5acbEM2CVYx9CR06ttI8",
+    "data": {
+      "domainId": "quimeraapp.com",
+      "action": "deploy_start",
+      "provider": "cloudflare",
+      "timestamp": "2025-12-19T03:33:51.534Z",
+      "status": "in_progress"
+    }
+  },
+  {
+    "id": "7eZemLLJj5kPmzIkyxke",
+    "data": {
+      "domainId": "quimeraapp.com",
+      "action": "deploy_start",
+      "provider": "cloud_run",
+      "timestamp": "2025-12-19T16:29:38.660Z",
+      "status": "started",
+      "message": "Iniciando despliegue en cloud_run..."
+    }
+  },
+  {
+    "id": "9afJbZOo5fRXPnLTMJRc",
+    "data": {
+      "domainId": "quimeraapp.com",
+      "action": "deploy_error",
+      "timestamp": "2025-12-19T16:11:59.710Z",
+      "status": "failed",
+      "message": "Error inesperado durante el despliegue",
+      "error": "internal"
+    }
+  },
+  {
+    "id": "9v9GnqOq8cqZZwHTja9T",
+    "data": {
+      "domainId": "lUDHDRMnR1EPzSsyRZ9Q",
+      "action": "deploy_success",
+      "provider": "cloud_run",
+      "timestamp": "2025-12-22T15:30:53.235Z",
+      "status": "success",
+      "message": "Sitio desplegado correctamente en Quimera Cloud",
+      "url": "https://yooeat.com"
+    }
+  },
+  {
+    "id": "A506XcfWJEvf6ZfLyVW9",
+    "data": {
+      "domainId": "lUDHDRMnR1EPzSsyRZ9Q",
+      "action": "deploy_start",
+      "provider": "cloud_run",
+      "timestamp": "2025-12-22T15:30:42.183Z",
+      "status": "started",
+      "message": "Iniciando despliegue en cloud_run..."
+    }
+  },
+  {
+    "id": "AOYzFib5atbTJTOe4Kn4",
+    "data": {
+      "domainId": "quimeraapp.com",
+      "action": "deploy_success",
+      "provider": "cloudflare",
+      "timestamp": "2025-12-19T04:06:48.801Z",
+      "status": "success",
+      "error": null,
+      "url": "https://quimeraapp.com"
+    }
+  },
+  {
+    "id": "AuzI5gHFduvY46iELyQ0",
+    "data": {
+      "domainId": "quimeraapp.com",
+      "action": "deploy_success",
+      "provider": "cloudflare",
+      "timestamp": "2025-12-19T03:33:54.879Z",
+      "status": "success",
+      "error": null,
+      "url": "https://quimeraapp.com"
+    }
+  },
+  {
+    "id": "BlCEIgYcP7UzJ5w7GbCQ",
+    "data": {
+      "domainId": "loC8IvEHPQtq8hMndzO3",
+      "action": "deploy_start",
+      "provider": "cloud_run",
+      "timestamp": "2025-12-22T15:25:30.581Z",
+      "status": "started",
+      "message": "Iniciando despliegue en cloud_run..."
+    }
+  },
+  {
+    "id": "CUadm4efMRACUxVHkT0a",
+    "data": {
+      "domainId": "yooeat.com",
+      "action": "deploy_success",
+      "provider": "cloud_run",
+      "timestamp": "2025-12-22T20:21:53.320Z",
+      "status": "success",
+      "message": "Sitio desplegado correctamente en Quimera Cloud",
+      "url": "https://yooeat.com"
+    }
+  },
+  {
+    "id": "HOAMyKPlJRQjfCWZGEuN",
+    "data": {
+      "domainId": "dom_1766097856635",
+      "domainName": "goboricua.com",
+      "action": "domain_deleted",
+      "timestamp": "2025-12-19T17:09:53.831Z",
+      "status": "success",
+      "message": "Domain goboricua.com deleted successfully"
+    }
+  },
+  {
+    "id": "HP0isaBrN7puEyw81b34",
+    "data": {
+      "domainId": "quimeraapp.com",
+      "action": "deploy_error",
+      "timestamp": "2025-12-19T16:17:18.588Z",
+      "status": "failed",
+      "message": "Error inesperado durante el despliegue",
+      "error": "internal"
+    }
+  },
+  {
+    "id": "HoD8SmV6O2EQEo2wUzyq",
+    "data": {
+      "domainId": "quimeraapp.com",
+      "action": "deploy_start",
+      "provider": "cloudflare",
+      "timestamp": "2025-12-19T05:26:21.908Z",
+      "status": "in_progress"
+    }
+  },
+  {
+    "id": "I0mkEbliFAsN9LS1UhsZ",
+    "data": {
+      "domainId": "quimeraapp.com",
+      "action": "deploy_success",
+      "provider": "cloudflare",
+      "timestamp": "2025-12-19T15:59:23.822Z",
+      "status": "success",
+      "error": null,
+      "url": "https://quimeraapp.com"
+    }
+  },
+  {
+    "id": "IAW26zTRJHPVuJ469q0U",
+    "data": {
+      "domainId": "yooeat.com",
+      "action": "deploy_start",
+      "provider": "cloud_run",
+      "timestamp": "2025-12-22T20:21:52.395Z",
+      "status": "started",
+      "message": "Iniciando despliegue en cloud_run..."
+    }
+  },
+  {
+    "id": "IEvfjHWkRvbScZBPptdx",
+    "data": {
+      "domainId": "tknxx678v3sJaIk9VpmG",
+      "action": "deploy_success",
+      "provider": "cloud_run",
+      "timestamp": "2025-12-22T14:32:10.300Z",
+      "status": "success",
+      "message": "Sitio desplegado correctamente en Quimera Cloud",
+      "url": "https://yooeat.com"
+    }
+  },
+  {
+    "id": "ILxaXJkIW5UYydjE6WFf",
+    "data": {
+      "domainId": "sIUV69MeUlMkRiYxeBUN",
+      "action": "deploy_start",
+      "provider": "cloud_run",
+      "timestamp": "2025-12-22T16:16:14.497Z",
+      "status": "started",
+      "message": "Iniciando despliegue en cloud_run..."
+    }
+  },
+  {
+    "id": "J43UtMfpcEAAVQLgnhg9",
+    "data": {
+      "domainId": "dom_1766097856635",
+      "domainName": "goboricua.com",
+      "action": "domain_deleted",
+      "timestamp": "2025-12-19T17:13:42.412Z",
+      "status": "success",
+      "message": "Domain goboricua.com deleted successfully"
+    }
+  },
+  {
+    "id": "MHmrKsYqJcz147mSKvGE",
+    "data": {
+      "domainId": "quimeraapp.com",
+      "action": "deploy_start",
+      "provider": "cloud_run",
+      "timestamp": "2025-12-19T16:17:17.929Z",
+      "status": "started",
+      "message": "Iniciando despliegue en cloud_run..."
+    }
+  },
+  {
+    "id": "N8oYtWSdiT5ypCTjNTzg",
+    "data": {
+      "domainId": "quimeraapp.com",
+      "action": "deploy_start",
+      "provider": "cloudflare",
+      "timestamp": "2025-12-19T03:29:21.960Z",
+      "status": "in_progress"
+    }
+  },
+  {
+    "id": "NMgCXNAOTSYrg6NWGgwi",
+    "data": {
+      "domainId": "dom_1766097856635",
+      "domainName": "goboricua.com",
+      "action": "domain_deleted",
+      "timestamp": "2025-12-19T17:14:48.205Z",
+      "status": "success",
+      "message": "Domain goboricua.com deleted successfully"
+    }
+  },
+  {
+    "id": "O6gStOXy3qnmqMkUB4Jc",
+    "data": {
+      "domainId": "quimeraapp.com",
+      "action": "deploy_error",
+      "timestamp": "2025-12-19T03:29:25.228Z",
+      "status": "failed",
+      "error": "Function updateDoc() called with invalid data. Unsupported field value: undefined (found in field deployment.error in document users/ovoDLOjnnoa2P0zECMP4TNGKbC53/domains/quimeraapp.com)"
+    }
+  },
+  {
+    "id": "T3I4aOQxzZOrmIHl4T8h",
+    "data": {
+      "domainId": "quimeraapp.com",
+      "action": "deploy_start",
+      "provider": "cloudflare",
+      "timestamp": "2025-12-19T15:59:20.422Z",
+      "status": "in_progress"
+    }
+  },
+  {
+    "id": "TDOczBs53rQbLl77SvRn",
+    "data": {
+      "domainId": "quimeraapp.com",
+      "action": "deploy_start",
+      "provider": "cloudflare",
+      "timestamp": "2025-12-19T05:24:35.217Z",
+      "status": "in_progress"
+    }
+  },
+  {
+    "id": "THUJESvKkBS6BeFJ1Z92",
+    "data": {
+      "domainId": "tknxx678v3sJaIk9VpmG",
+      "action": "deploy_start",
+      "provider": "cloud_run",
+      "timestamp": "2025-12-22T14:32:09.334Z",
+      "status": "started",
+      "message": "Iniciando despliegue en cloud_run..."
+    }
+  },
+  {
+    "id": "VqXmFqU8GgDuwHpqhSVi",
+    "data": {
+      "domainId": "quimeraapp.com",
+      "action": "deploy_error",
+      "timestamp": "2025-12-19T05:26:24.598Z",
+      "status": "failed",
+      "error": "Function updateDoc() called with invalid data. Unsupported field value: undefined (found in field deployment.error in document users/ovoDLOjnnoa2P0zECMP4TNGKbC53/domains/quimeraapp.com)"
+    }
+  },
+  {
+    "id": "VsH2PkFCdE0d4XVGj6Kc",
+    "data": {
+      "domainId": "loC8IvEHPQtq8hMndzO3",
+      "action": "deploy_success",
+      "provider": "cloud_run",
+      "timestamp": "2025-12-22T15:25:31.706Z",
+      "status": "success",
+      "message": "Sitio desplegado correctamente en Quimera Cloud",
+      "url": "https://yooeat.com"
+    }
+  },
+  {
+    "id": "Y3oTXN7j5RnWmRLKdZ9C",
+    "data": {
+      "domainId": "yooeat.com",
+      "action": "deploy_success",
+      "provider": "cloud_run",
+      "timestamp": "2025-12-22T20:23:09.262Z",
+      "status": "success",
+      "message": "Sitio desplegado correctamente en Quimera Cloud",
+      "url": "https://yooeat.com"
+    }
+  },
+  {
+    "id": "afBzxxsmhkhTHi8XChgD",
+    "data": {
+      "domainId": "quimeraapp.com",
+      "action": "deploy_error",
+      "timestamp": "2025-12-19T03:32:39.791Z",
+      "status": "failed",
+      "error": "Function addDoc() called with invalid data. Unsupported field value: undefined (found in field error in document users/ovoDLOjnnoa2P0zECMP4TNGKbC53/deploymentLogs/EZXUEta2twOgqhZuFoEU)"
+    }
+  },
+  {
+    "id": "dRAqXh0ZPcv4uoAEYdly",
+    "data": {
+      "domainId": "yooeat.com",
+      "action": "deploy_start",
+      "provider": "cloud_run",
+      "timestamp": "2025-12-22T20:23:08.441Z",
+      "status": "started",
+      "message": "Iniciando despliegue en cloud_run..."
+    }
+  },
+  {
+    "id": "frPlCpE2iuqikR8rwJ0u",
+    "data": {
+      "domainId": "quimeraapp.com",
+      "action": "deploy_start",
+      "provider": "cloud_run",
+      "timestamp": "2025-12-19T16:36:21.704Z",
+      "status": "started",
+      "message": "Iniciando despliegue en cloud_run..."
+    }
+  },
+  {
+    "id": "gRQZ5kfCYFxNAEqaQM0Y",
+    "data": {
+      "domainId": "quimeraapp.com",
+      "action": "deploy_success",
+      "provider": "cloud_run",
+      "timestamp": "2025-12-19T17:03:57.621Z",
+      "status": "success",
+      "message": "Sitio desplegado correctamente en Quimera Cloud",
+      "url": "https://quimeraapp.com"
+    }
+  },
+  {
+    "id": "jrKqXN4xPGLY3nfLpfE3",
+    "data": {
+      "domainId": "quimeraapp.com",
+      "action": "deploy_error",
+      "timestamp": "2025-12-19T05:24:38.065Z",
+      "status": "failed",
+      "error": "Function updateDoc() called with invalid data. Unsupported field value: undefined (found in field deployment.error in document users/ovoDLOjnnoa2P0zECMP4TNGKbC53/domains/quimeraapp.com)"
+    }
+  },
+  {
+    "id": "kKEmgXC9JctbhIFpAczU",
+    "data": {
+      "domainId": "quimeraapp.com",
+      "action": "deploy_start",
+      "provider": "cloud_run",
+      "timestamp": "2025-12-19T16:11:59.194Z",
+      "status": "started",
+      "message": "Iniciando despliegue en cloud_run..."
+    }
+  },
+  {
+    "id": "oKJHFqZ4JhCsfK1kHOMR",
+    "data": {
+      "domainId": "dom_1766097856635",
+      "domainName": "goboricua.com",
+      "action": "domain_deleted",
+      "timestamp": "2025-12-19T17:18:15.289Z",
+      "status": "success",
+      "message": "Domain goboricua.com deleted successfully"
+    }
+  },
+  {
+    "id": "qnA45nWEf9E5H7IUKT1v",
+    "data": {
+      "domainId": "sIUV69MeUlMkRiYxeBUN",
+      "action": "deploy_success",
+      "provider": "cloud_run",
+      "timestamp": "2025-12-22T16:16:15.460Z",
+      "status": "success",
+      "message": "Sitio desplegado correctamente en Quimera Cloud",
+      "url": "https://yooeat.com"
+    }
+  },
+  {
+    "id": "r9baBC3tGG1qmzdlJ9Q0",
+    "data": {
+      "domainId": "lUDHDRMnR1EPzSsyRZ9Q",
+      "action": "deploy_success",
+      "provider": "cloud_run",
+      "timestamp": "2025-12-22T15:30:42.978Z",
+      "status": "success",
+      "message": "Sitio desplegado correctamente en Quimera Cloud",
+      "url": "https://yooeat.com"
+    }
+  },
+  {
+    "id": "sNx9xMWxbNXipvOBiOnE",
+    "data": {
+      "domainId": "quimeraapp.com",
+      "action": "deploy_error",
+      "timestamp": "2025-12-19T16:29:39.541Z",
+      "status": "failed",
+      "message": "Error inesperado durante el despliegue",
+      "error": "internal"
+    }
+  },
+  {
+    "id": "xMsLO6vglPb5zfEdklZ2",
+    "data": {
+      "domainId": "quimeraapp.com",
+      "action": "deploy_start",
+      "provider": "cloud_run",
+      "timestamp": "2025-12-19T17:03:56.406Z",
+      "status": "started",
+      "message": "Iniciando despliegue en cloud_run..."
+    }
+  }
+]

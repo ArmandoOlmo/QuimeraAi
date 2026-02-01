@@ -1,0 +1,433 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ============================================
+    // HELPER FUNCTIONS
+    // ============================================
+    
+    // Owner email - This must match VITE_OWNER_EMAIL in .env
+    // This is the only user who can set themselves as 'owner' role  
+    function isOwnerEmail() {
+      return request.auth != null && 
+             request.auth.token.email != null &&
+             (request.auth.token.email == 'armandoolmomiranda@gmail.com' ||
+              request.auth.token.email == 'ARMANDOOLMOMIRANDA@GMAIL.COM' ||
+              request.auth.token.email == 'ArmandoOlmoMiranda@gmail.com');
+    }
+    
+    // Check if user has superadmin or owner role in their user document
+    // Note: Handle both capitalized and lowercase variants
+    function hasAdminRole() {
+      let userDoc = /databases/$(database)/documents/users/$(request.auth.uid);
+      return request.auth != null && 
+             exists(userDoc) && 
+             (get(userDoc).data.get('role', '') == 'superadmin' || 
+              get(userDoc).data.get('role', '') == 'Superadmin' || 
+              get(userDoc).data.get('role', '') == 'SuperAdmin' ||
+              get(userDoc).data.get('role', '') == 'owner' || 
+              get(userDoc).data.get('role', '') == 'Owner');
+    }
+    
+    function isSuperAdminOrOwner() {
+      // First check owner by email (fast path, no document read)
+      // Then check role in user document (only if exists)
+      return isOwnerEmail() || hasAdminRole();
+    }
+    
+    function isValidEmail(email) {
+      return email.matches('^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$');
+    }
+    
+    // Check if user is tenant owner
+    function isTenantOwner(tenantId) {
+      return isTenantMember(tenantId) && get(/databases/$(database)/documents/tenantMembers/$(tenantId + '_' + request.auth.uid)).data.role == 'agency_owner';
+    }
+    
+    // Check if user is tenant admin (owner or admin role)
+    function isTenantAdmin(tenantId) {
+      let memberDoc = get(/databases/$(database)/documents/tenantMembers/$(tenantId + '_' + request.auth.uid));
+      return memberDoc.exists && (memberDoc.data.role == 'agency_owner' || memberDoc.data.role == 'admin');
+    }
+    
+    // Extract tenantId from membershipId (format: tenantId_userId)
+    function getTenantIdFromMembership(membershipId) {
+      return membershipId.split('_')[0];
+    }
+    
+    // Check if user owns a public store (via userId field)
+    function isStoreOwner(storeId) {
+      let storeDoc = get(/databases/$(database)/documents/publicStores/$(storeId));
+      return storeDoc.exists && storeDoc.data.userId == request.auth.uid;
+    }
+    
+    // Check if user owns a custom domain (via userId field)
+    function isDomainOwner(domainName) {
+      let domainDoc = get(/databases/$(database)/documents/customDomains/$(domainName));
+      return !domainDoc.exists || domainDoc.data.userId == request.auth.uid;
+    }
+    
+    // ============================================
+    // USER DATA (TODO lo que cuelga de /users/{userId})
+    // ============================================
+    match /users/{userId} {
+      allow read: if request.auth != null && (request.auth.uid == userId || isSuperAdminOrOwner());
+      
+      // CREATE: Allow if user is self and role is 'user' (or missing), OR if admin
+      allow create: if request.auth != null && (
+        (request.auth.uid == userId && 
+         (!request.resource.data.keys().has('role') || request.resource.data.role == 'user')) ||
+        isSuperAdminOrOwner()
+      );
+      
+      // UPDATE: Allow if user is self AND role is not changing, OR if admin
+      allow update: if request.auth != null && (
+        (request.auth.uid == userId && 
+         request.resource.data.get('role', 'user') == resource.data.get('role', 'user')) ||
+        isSuperAdminOrOwner()
+      );
+      
+      // DELETE: Allow user to delete themselves or admin
+      allow delete: if request.auth != null && (request.auth.uid == userId || isSuperAdminOrOwner());
+      
+      // ============================================
+      // PROJECT-SCOPED DATA
+      // All project data follows: /users/{userId}/projects/{projectId}/...
+      // ============================================
+      match /projects/{projectId} {
+        allow read, write: if request.auth != null && (request.auth.uid == userId || isSuperAdminOrOwner());
+        
+        // Leads (CRM)
+        match /leads/{leadId} {
+          allow read, write: if request.auth != null && (request.auth.uid == userId || isSuperAdminOrOwner());
+        }
+        
+        // Lead Activities
+        match /leadActivities/{activityId} {
+          allow read, write: if request.auth != null && (request.auth.uid == userId || isSuperAdminOrOwner());
+        }
+        
+        // Lead Tasks
+        match /leadTasks/{taskId} {
+          allow read, write: if request.auth != null && (request.auth.uid == userId || isSuperAdminOrOwner());
+        }
+        
+        // Library Leads (for import)
+        match /libraryLeads/{leadId} {
+          allow read, write: if request.auth != null && (request.auth.uid == userId || isSuperAdminOrOwner());
+        }
+        
+        // Files
+        match /files/{fileId} {
+          allow read, write: if request.auth != null && (request.auth.uid == userId || isSuperAdminOrOwner());
+        }
+        
+        // Appointments
+        match /appointments/{appointmentId} {
+          allow read, write: if request.auth != null && (request.auth.uid == userId || isSuperAdminOrOwner());
+        }
+        
+        // Deployment Logs
+        match /deploymentLogs/{logId} {
+          allow read, write: if request.auth != null && (request.auth.uid == userId || isSuperAdminOrOwner());
+        }
+        
+        // CMS Posts
+        match /posts/{postId} {
+          allow read, write: if request.auth != null && (request.auth.uid == userId || isSuperAdminOrOwner());
+        }
+        
+        // Email Campaigns
+        match /emailCampaigns/{campaignId} {
+          allow read, write: if request.auth != null && (request.auth.uid == userId || isSuperAdminOrOwner());
+        }
+        
+        // Email Audiences
+        match /emailAudiences/{audienceId} {
+          allow read, write: if request.auth != null && (request.auth.uid == userId || isSuperAdminOrOwner());
+        }
+        
+        // Finance
+        match /finance/{document=**} {
+          allow read, write: if request.auth != null && (request.auth.uid == userId || isSuperAdminOrOwner());
+        }
+        
+        // Settings
+        match /settings/{settingId} {
+          allow read, write: if request.auth != null && (request.auth.uid == userId || isSuperAdminOrOwner());
+        }
+        
+        // Catch-all for any other project subcollections
+        match /{subcollection}/{docId} {
+          allow read, write: if request.auth != null && (request.auth.uid == userId || isSuperAdminOrOwner());
+        }
+      }
+      
+      // ============================================
+      // USER-LEVEL DATA (not project-scoped)
+      // ============================================
+      
+      // Domains (user-level, with projectId field for filtering)
+      match /domains/{domainId} {
+        allow read, write: if request.auth != null && (request.auth.uid == userId || isSuperAdminOrOwner());
+      }
+      
+      // Stores (for e-commerce, linked to projects via storeId = projectId)
+      match /stores/{storeId}/{document=**} {
+        allow read, write: if request.auth != null && (request.auth.uid == userId || isSuperAdminOrOwner());
+      }
+      
+      // LEGACY: Old user-level collections (maintained for backward compatibility during migration)
+      // These should be migrated to project-scoped paths
+      match /leads/{leadId} {
+        allow read, write: if request.auth != null && (request.auth.uid == userId || isSuperAdminOrOwner());
+      }
+      match /leadActivities/{activityId} {
+        allow read, write: if request.auth != null && (request.auth.uid == userId || isSuperAdminOrOwner());
+      }
+      match /leadTasks/{taskId} {
+        allow read, write: if request.auth != null && (request.auth.uid == userId || isSuperAdminOrOwner());
+      }
+      match /libraryLeads/{leadId} {
+        allow read, write: if request.auth != null && (request.auth.uid == userId || isSuperAdminOrOwner());
+      }
+      match /files/{fileId} {
+        allow read, write: if request.auth != null && (request.auth.uid == userId || isSuperAdminOrOwner());
+      }
+      match /appointments/{appointmentId} {
+        allow read, write: if request.auth != null && (request.auth.uid == userId || isSuperAdminOrOwner());
+      }
+      match /deploymentLogs/{logId} {
+        allow read, write: if request.auth != null && (request.auth.uid == userId || isSuperAdminOrOwner());
+      }
+      
+      // Catch-all for any other user subcollections
+      match /{allPaths=**} {
+        allow read, write: if request.auth != null && (request.auth.uid == userId || isSuperAdminOrOwner());
+      }
+    }
+    
+    // ============================================
+    // MULTI-TENANT SYSTEM
+    // ============================================
+    function isTenantMember(tenantId) {
+      return exists(/databases/$(database)/documents/tenantMembers/$(tenantId + '_' + request.auth.uid));
+    }
+    
+    match /tenants/{tenantId} {
+      allow read: if request.auth != null && (isTenantMember(tenantId) || isSuperAdminOrOwner());
+      allow create: if request.auth != null && request.resource.data.ownerUserId == request.auth.uid;
+      allow update, delete: if request.auth != null && (isTenantOwner(tenantId) || isSuperAdminOrOwner());
+      
+      match /{allPaths=**} {
+        allow read, write: if request.auth != null && isTenantMember(tenantId);
+      }
+    }
+
+    // ============================================
+    // TENANT MEMBERS - SECURED
+    // Only tenant owners/admins can manage memberships
+    // Users can read their own memberships
+    // ============================================
+    match /tenantMembers/{membershipId} {
+      // Anyone authenticated can read (needed to check membership)
+      allow read: if request.auth != null;
+      // Only tenant owner/admin or superadmin can create/update/delete memberships
+      // Also allow the user to delete their own membership (leave tenant)
+      allow create: if request.auth != null && (
+        isSuperAdminOrOwner() || 
+        isTenantAdmin(membershipId.split('_')[0])
+      );
+      allow update: if request.auth != null && (
+        isSuperAdminOrOwner() || 
+        isTenantAdmin(membershipId.split('_')[0])
+      );
+      allow delete: if request.auth != null && (
+        isSuperAdminOrOwner() || 
+        isTenantAdmin(membershipId.split('_')[0]) ||
+        membershipId.split('_')[1] == request.auth.uid  // User can leave (delete own membership)
+      );
+    }
+    
+    // ============================================
+    // TENANT INVITES - SECURED
+    // Only tenant owners/admins can create/manage invites
+    // Anyone can read to verify invite tokens
+    // ============================================
+    match /tenantInvites/{inviteId} {
+      // Read allowed for checking invite validity
+      allow read: if request.auth != null;
+      // Only tenant owner/admin or superadmin can create/update invites
+      allow create: if request.auth != null && (
+        isSuperAdminOrOwner() || 
+        (request.resource.data.tenantId != null && isTenantAdmin(request.resource.data.tenantId))
+      );
+      allow update: if request.auth != null && (
+        isSuperAdminOrOwner() || 
+        (resource.data.tenantId != null && isTenantAdmin(resource.data.tenantId))
+      );
+      allow delete: if request.auth != null && (
+        isSuperAdminOrOwner() || 
+        (resource.data.tenantId != null && isTenantAdmin(resource.data.tenantId))
+      );
+    }
+    
+    // ============================================
+    // GLOBAL & PUBLIC COLLECTIONS
+    // ============================================
+    match /globalSettings/{settingId} {
+      // Allow public read for landingPage (needed for public landing page preview)
+      allow read: if request.auth != null || settingId == 'landingPage';
+      // Write access restricted to Super Admins and Owners
+      allow write: if request.auth != null && isSuperAdminOrOwner();
+      
+      // Service Availability Audit Log subcollection
+      // Only accessible by Super Admins/Owners
+      match /auditLog/{entryId} {
+        allow read: if request.auth != null && isSuperAdminOrOwner();
+        allow write: if request.auth != null && isSuperAdminOrOwner();
+      }
+    }
+    
+    match /globalFiles/{fileId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && isSuperAdminOrOwner();
+    }
+    
+    match /adminAssets/{assetId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && isSuperAdminOrOwner();
+    }
+    
+    match /appContent/{docId} {
+      allow read: if true;
+      allow write: if request.auth != null && isSuperAdminOrOwner();
+      match /{allPaths=**} { allow read: if true; allow write: if request.auth != null && isSuperAdminOrOwner(); }
+    }
+    
+    match /settings/{settingId} {
+      allow read: if request.auth != null || settingId == 'landingChatbot';
+      allow write: if request.auth != null && (isSuperAdminOrOwner() || settingId == 'landingChatbot');
+    }
+    
+    match /subscriptionPlans/{planId} {
+      allow read: if true;
+      allow write: if request.auth != null && isSuperAdminOrOwner();
+    }
+
+    // ============================================
+    // CHANGELOG COLLECTION
+    // Public changelog entries visible to everyone
+    // Only superadmin/owner can create, update, or delete entries
+    // ============================================
+    match /changelog/{entryId} {
+      // Anyone can read changelog entries (public content)
+      allow read: if true;
+      // Only superadmin/owner can write (create, update, delete)
+      allow write: if request.auth != null && isSuperAdminOrOwner();
+    }
+
+    // ============================================
+    // TEMPLATES COLLECTION
+    // Templates are created by Super Admin but readable by all authenticated users
+    // ============================================
+    match /templates/{templateId} {
+      // Any authenticated user can read templates
+      allow read: if request.auth != null;
+      // Only superadmin/owner can create, update, or delete templates
+      allow write: if request.auth != null && isSuperAdminOrOwner();
+    }
+
+    // ============================================
+    // SUBSCRIPTIONS COLLECTION
+    // Stores subscription data for each tenant
+    // ============================================
+    match /subscriptions/{tenantId} {
+      // Tenant members can read their subscription
+      allow read: if request.auth != null && isTenantMember(tenantId);
+      // Only backend (admin SDK) or superadmin can write
+      allow write: if request.auth != null && isSuperAdminOrOwner();
+    }
+
+    // ============================================
+    // AI CREDITS USAGE COLLECTION
+    // Tracks AI credits usage for each tenant
+    // ============================================
+    match /aiCreditsUsage/{tenantId} {
+      // Tenant members can read their credits usage
+      allow read: if request.auth != null && isTenantMember(tenantId);
+      // Only backend (admin SDK) or superadmin can write
+      allow write: if request.auth != null && isSuperAdminOrOwner();
+    }
+
+    // ============================================
+    // PUBLIC STORES - SECURED
+    // Public read for customer-facing stores
+    // Write only by store owner or superadmin
+    // ============================================
+    match /publicStores/{storeId} {
+      allow read: if true;
+      
+      // Helper: Check if user owns the source project
+      // This allows publishing even if publicStore has stale userId
+      function ownsSourceProject() {
+        return exists(/databases/$(database)/documents/users/$(request.auth.uid)/projects/$(storeId));
+      }
+      
+      // Only the store owner or superadmin can write
+      // Also allow if user owns the source project (fixes stale ownership)
+      allow create: if request.auth != null && (
+        isSuperAdminOrOwner() || 
+        request.resource.data.userId == request.auth.uid ||
+        ownsSourceProject()
+      );
+      
+      // For update: allow if user owns existing doc, OR owns source project, OR is superadmin
+      // The ownsSourceProject check handles cases where publicStore has incorrect userId
+      allow update, delete: if request.auth != null && (
+        isSuperAdminOrOwner() || 
+        resource.data.userId == request.auth.uid ||
+        ownsSourceProject()
+      );
+      
+      // Subcollections (products, orders, etc.)
+      match /{allPaths=**} { 
+        allow read: if true; 
+        allow write: if request.auth != null && (
+          isSuperAdminOrOwner() || 
+          get(/databases/$(database)/documents/publicStores/$(storeId)).data.userId == request.auth.uid ||
+          exists(/databases/$(database)/documents/users/$(request.auth.uid)/projects/$(storeId))
+        ); 
+      }
+    }
+
+    // ============================================
+    // CUSTOM DOMAINS - SECURED
+    // Public read for domain resolution
+    // Write only by domain owner or superadmin
+    // ============================================
+    match /customDomains/{domainName} {
+      allow read: if true;
+      // Only the domain owner or superadmin can write
+      // On create, the userId must match the authenticated user
+      allow create: if request.auth != null && (
+        isSuperAdminOrOwner() || 
+        request.resource.data.userId == request.auth.uid
+      );
+      allow update, delete: if request.auth != null && (
+        isSuperAdminOrOwner() || 
+        resource.data.userId == request.auth.uid
+      );
+    }
+    
+    match /domainOrders/{orderId} {
+      allow read: if request.auth != null;
+      allow write: if false;
+    }
+
+    // Default deny
+    match /{document=**} {
+      allow read, write: if request.auth != null && isSuperAdminOrOwner();
+    }
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "name": "quimera-domain-router",
+  "version": "1.0.0",
+  "description": "Routes custom domains to Quimera projects",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "firebase-admin": "^12.0.0"
+  }
+}
+
+
+

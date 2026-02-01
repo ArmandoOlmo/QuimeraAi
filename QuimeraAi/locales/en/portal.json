@@ -1,0 +1,182 @@
+{
+  "navigation": {
+    "home": "Home",
+    "dashboard": "Dashboard",
+    "projects": "Projects",
+    "leads": "Leads",
+    "products": "Products",
+    "orders": "Orders",
+    "analytics": "Analytics",
+    "settings": "Settings",
+    "help": "Help",
+    "logout": "Logout"
+  },
+  "dashboard": {
+    "welcome": "Welcome, {{name}}",
+    "overview": "Overview",
+    "quickActions": "Quick Actions",
+    "recentActivity": "Recent Activity",
+    "stats": {
+      "totalProjects": "Total Projects",
+      "activeLeads": "Active Leads",
+      "totalRevenue": "Total Revenue",
+      "conversionRate": "Conversion Rate"
+    }
+  },
+  "projects": {
+    "title": "My Projects",
+    "createNew": "Create Project",
+    "editProject": "Edit Project",
+    "deleteProject": "Delete Project",
+    "publishProject": "Publish Project",
+    "status": {
+      "draft": "Draft",
+      "published": "Published",
+      "archived": "Archived"
+    },
+    "empty": "You don't have any projects yet",
+    "emptyDescription": "Create your first project to get started"
+  },
+  "leads": {
+    "title": "Lead Management",
+    "newLead": "New Lead",
+    "exportLeads": "Export Leads",
+    "importLeads": "Import Leads",
+    "filters": {
+      "all": "All",
+      "new": "New",
+      "contacted": "Contacted",
+      "qualified": "Qualified",
+      "converted": "Converted",
+      "lost": "Lost"
+    },
+    "columns": {
+      "name": "Name",
+      "email": "Email",
+      "phone": "Phone",
+      "status": "Status",
+      "source": "Source",
+      "createdAt": "Created At",
+      "actions": "Actions"
+    }
+  },
+  "ecommerce": {
+    "products": {
+      "title": "Products",
+      "addProduct": "Add Product",
+      "editProduct": "Edit Product",
+      "categories": "Categories",
+      "inventory": "Inventory",
+      "pricing": "Pricing"
+    },
+    "orders": {
+      "title": "Orders",
+      "orderDetails": "Order Details",
+      "status": {
+        "pending": "Pending",
+        "processing": "Processing",
+        "shipped": "Shipped",
+        "delivered": "Delivered",
+        "cancelled": "Cancelled"
+      }
+    }
+  },
+  "settings": {
+    "title": "Settings",
+    "tabs": {
+      "general": "General",
+      "profile": "Profile",
+      "security": "Security",
+      "notifications": "Notifications",
+      "billing": "Billing",
+      "integrations": "Integrations"
+    },
+    "language": {
+      "label": "Language",
+      "description": "Select your preferred language"
+    },
+    "timezone": {
+      "label": "Timezone",
+      "description": "Set your local timezone"
+    }
+  },
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "view": "View",
+    "create": "Create",
+    "update": "Update",
+    "search": "Search",
+    "filter": "Filter",
+    "sort": "Sort",
+    "export": "Export",
+    "import": "Import",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "confirm": "Confirm",
+    "yes": "Yes",
+    "no": "No",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "close": "Close"
+  },
+  "messages": {
+    "saveSuccess": "Changes saved successfully",
+    "saveError": "Error saving changes",
+    "deleteSuccess": "Deleted successfully",
+    "deleteError": "Error deleting",
+    "deleteConfirm": "Are you sure you want to delete this?",
+    "noData": "No data available",
+    "unauthorized": "You don't have permission to perform this action",
+    "networkError": "Connection error. Please try again."
+  },
+  "auth": {
+    "login": "Login",
+    "logout": "Logout",
+    "register": "Register",
+    "forgotPassword": "Forgot Password?",
+    "resetPassword": "Reset Password",
+    "email": "Email",
+    "password": "Password",
+    "confirmPassword": "Confirm Password",
+    "rememberMe": "Remember Me",
+    "loginSuccess": "Login successful",
+    "logoutSuccess": "Logged out successfully",
+    "invalidCredentials": "Invalid credentials"
+  },
+  "footer": {
+    "copyright": "© {{year}} {{companyName}}. All rights reserved.",
+    "poweredBy": "Powered by",
+    "privacy": "Privacy",
+    "terms": "Terms",
+    "contact": "Contact"
+  },
+  "portalLanguageSettings": {
+    "title": "Portal Language",
+    "description": "Configure the default language for your white-label portal",
+    "successMessage": "Language settings updated successfully",
+    "errorMessage": "Error updating settings. Please try again.",
+    "saved": "Saved!",
+    "error": "Error",
+    "defaultLanguageLabel": "Default Portal Language",
+    "autoTranslateTitle": "Automatic Content Translation",
+    "autoTranslateBadge": "BETA",
+    "autoTranslateDescription": "Automatically translate portal content to user's language using Google Translate API",
+    "autoTranslateFeature1": "Translates pages, projects, and components",
+    "autoTranslateFeature2": "Support for Spanish, English, Portuguese, and French",
+    "autoTranslateFeature3": "Users can choose their preferred language",
+    "autoTranslateWarning": "Note:",
+    "autoTranslateWarningText": "Automatic translation may not be perfect. We recommend manually reviewing important translations.",
+    "previewTitle": "Portal Preview",
+    "previewDescription": "The portal will be displayed in",
+    "previewDescriptionDefault": "by default for all users.",
+    "previewDescriptionWithTranslate": "Users will be able to change the language and content will be automatically translated.",
+    "cancelButton": "Cancel",
+    "saveButton": "Save Changes",
+    "saving": "Saving..."
+  }
+}
