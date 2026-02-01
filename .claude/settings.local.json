@@ -1,0 +1,40 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run build:*)",
+      "Bash(ls:*)",
+      "Bash(firebase deploy:*)",
+      "Bash(npm run dev:*)",
+      "Read(//private/var/folders/25/pbl1t7ns2zn4dqcmcrppsx5h0000gn/T/claude/-Users-armandoolmo-QuimeraAppCursor/tasks/**)",
+      "Bash(npx tsc:*)",
+      "Bash(python3:*)",
+      "Bash(while read file)",
+      "Bash(do)",
+      "Bash(if [ -f \"/Users/armandoolmo/QuimeraAppCursor/QuimeraAi/$file\" ])",
+      "Bash(then)",
+      "Bash(echo:*)",
+      "Bash(else)",
+      "Bash(fi)",
+      "Bash(done)",
+      "Bash(components/dashboard/agency/AgencyDashboard.tsx)",
+      "Bash(components/dashboard/agency/AgencyOverview.tsx)",
+      "Bash(components/dashboard/agency/ClientListTable.tsx)",
+      "Bash(components/dashboard/agency/ClientActivityFeed.tsx)",
+      "Bash(components/dashboard/agency/ResourceAlertsPanel.tsx)",
+      "Bash(components/dashboard/agency/UpcomingRenewalsPanel.tsx)",
+      "Bash(components/dashboard/agency/ReportsGenerator.tsx)",
+      "Bash(components/dashboard/agency/ClientBillingManager.tsx)",
+      "Bash(components/dashboard/agency/BillingSettings.tsx)",
+      "Bash(components/dashboard/agency/InvoiceHistory.tsx)",
+      "Bash(contexts/agency/AgencyContext.tsx)",
+      "Bash(hooks/useAgencyMetrics.ts)",
+      "Bash(types/multiTenant.ts)",
+      "Bash(types/subscription.ts)",
+      "Bash(types/permissionTemplates.ts)",
+      "Bash(types/reports.ts)",
+      "Bash(EOF)",
+      "Bash(test:*)",
+      "Bash(grep:*)"
+    ]
+  }
+}
