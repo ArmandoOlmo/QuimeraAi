@@ -29,6 +29,7 @@ import { AgencyProvider } from './agency/AgencyContext';
 import { AgencyContentProvider } from './agency/AgencyContentContext';
 import { NewsProvider } from './news';
 import { UndoProvider } from './undo';
+import { BioPageProvider } from './bioPage';
 
 interface AppProvidersProps {
     children: ReactNode;
@@ -59,7 +60,9 @@ export const AppProviders: React.FC<AppProvidersProps> = ({ children }) => {
                                                                             <NewsProvider>
                                                                                 <UpgradeProvider>
                                                                                     <UndoProvider>
-                                                                                        {children}
+                                                                                        <BioPageProvider>
+                                                                                            {children}
+                                                                                        </BioPageProvider>
                                                                                     </UndoProvider>
                                                                                 </UpgradeProvider>
                                                                             </NewsProvider>
@@ -94,7 +97,9 @@ export const LightProviders: React.FC<AppProvidersProps> = ({ children }) => {
                 <LanguageProvider>
                     <UIProvider>
                         <AppContentProvider>
-                            {children}
+                            <PlansProvider>
+                                {children}
+                            </PlansProvider>
                         </AppContentProvider>
                     </UIProvider>
                 </LanguageProvider>
