@@ -63,6 +63,9 @@ export const ROUTES = {
   STORE_CHECKOUT: '/store/:storeId/checkout',
   STORE_ORDER_CONFIRMATION: '/store/:storeId/order/:orderId',
 
+  // Public Bio Page Route
+  PUBLIC_BIO: '/bio/:username',
+
   // Dashboard Routes
   DASHBOARD: '/dashboard',
   WEBSITES: '/websites',
@@ -83,6 +86,7 @@ export const ROUTES = {
   FINANCE: '/finance',
   ECOMMERCE: '/ecommerce',
   EMAIL: '/email',
+  BIOPAGE: '/biopage',
 
   // Settings Routes (Workspace/Team)
   SETTINGS: '/settings',
@@ -105,6 +109,9 @@ export const ROUTES = {
   AGENCY_PLANS: '/agency/plans',
   AGENCY_CMS: '/agency/cms',
   AGENCY_NAVIGATION: '/agency/navigation',
+
+  // Agency Signup (Public)
+  AGENCY_SIGNUP: '/agency-signup',
 
   // Admin Routes
   SUPERADMIN: '/admin',
@@ -257,6 +264,16 @@ export const routeConfigs: RouteConfig[] = [
     path: ROUTES.STORE_ORDER_CONFIRMATION,
     type: 'preview',
     title: 'Order Confirmation',
+    requiresAuth: false,
+  },
+
+  // =========================================================================
+  // PUBLIC BIO PAGE ROUTE
+  // =========================================================================
+  {
+    path: ROUTES.PUBLIC_BIO,
+    type: 'public',
+    title: 'Bio Page',
     requiresAuth: false,
   },
 
@@ -419,6 +436,16 @@ export const routeConfigs: RouteConfig[] = [
     showInNav: true,
     icon: 'Mail',
   },
+  {
+    path: ROUTES.BIOPAGE,
+    view: 'biopage',
+    type: 'private',
+    title: 'Bio Page',
+    requiresAuth: true,
+    requiresEmailVerified: true,
+    showInNav: true,
+    icon: 'Link2',
+  },
 
   // =========================================================================
   // SETTINGS ROUTES (Private - Workspace/Team Management)
@@ -468,6 +495,16 @@ export const routeConfigs: RouteConfig[] = [
     path: ROUTES.INVITE,
     type: 'public',
     title: 'Accept Invitation',
+    requiresAuth: false,
+  },
+
+  // =========================================================================
+  // AGENCY SIGNUP ROUTE (Public)
+  // =========================================================================
+  {
+    path: ROUTES.AGENCY_SIGNUP,
+    type: 'public',
+    title: 'Agency Plans',
     requiresAuth: false,
   },
 

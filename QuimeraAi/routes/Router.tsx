@@ -40,6 +40,10 @@ const SeedArticlesPage = lazyWithRetry(() => import('../components/admin/SeedArt
 // Agency Landing Preview (for Agency Landing Editor iframe)
 const AgencyLandingPreview = lazyWithRetry(() => import('../components/AgencyLandingPreview'));
 
+// Agency Signup (Public page for agency plan registration)
+const AgencySignup = lazyWithRetry(() => import('../components/AgencySignup'));
+
+
 // Lazy-loaded ecommerce components
 const ProductDetailPageWithCart = lazyWithRetry(() => import('../components/ecommerce/ProductDetailPageWithCart'));
 const CheckoutPageEnhanced = lazyWithRetry(() => import('../components/ecommerce/CheckoutPageEnhanced'));
@@ -339,6 +343,16 @@ const Router: React.FC<RouterProps> = ({
       </Suspense>
     );
   }
+
+  // Agency Signup (public page for agency plan registration)
+  if (path === '/agency-signup') {
+    return (
+      <Suspense fallback={<LoadingScreen />}>
+        <AgencySignup />
+      </Suspense>
+    );
+  }
+
 
   // Landing page (for unauthenticated users OR when preview=landing param is present)
   // The preview=landing param allows the Landing Page Editor to show the landing page in an iframe
