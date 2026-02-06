@@ -387,7 +387,7 @@ const PublicBioPage: React.FC<PublicBioPageProps> = ({ username }) => {
             </div>
 
             {/* Chatbot Modal */}
-            {isChatbotOpen && bioPageData?.aiAssistant && (
+            {isChatbotOpen && (
                 <div
                     className="fixed inset-0 bg-black/60 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
                     onClick={() => setIsChatbotOpen(false)}
@@ -396,73 +396,102 @@ const PublicBioPage: React.FC<PublicBioPageProps> = ({ username }) => {
                         className="bg-white w-full sm:max-w-md sm:rounded-2xl overflow-hidden shadow-2xl flex flex-col h-[85vh] sm:h-[600px]"
                         onClick={(e) => e.stopPropagation()}
                     >
-                        <ChatCore
-                            config={bioPageData.aiAssistant}
-                            project={{
-                                id: bioPageData.projectId || bioPageData.id,
-                                name: bioPageData.profile.name,
-                            } as any}
-                            appearance={bioPageData.aiAssistant.appearance || {
-                                branding: {
-                                    logoType: 'none',
-                                    logoSize: 'md',
-                                    showBotAvatar: true,
-                                    showUserAvatar: false,
-                                    userAvatarStyle: 'initials',
-                                },
-                                colors: {
-                                    primaryColor: theme.buttonColor,
-                                    secondaryColor: theme.buttonColor,
-                                    accentColor: theme.buttonColor,
-                                    userBubbleColor: theme.buttonColor,
-                                    userTextColor: '#ffffff',
-                                    botBubbleColor: '#f3f4f6',
-                                    botTextColor: '#1f2937',
-                                    backgroundColor: '#ffffff',
-                                    inputBackground: '#f9fafb',
-                                    inputBorder: '#e5e7eb',
-                                    inputText: '#1f2937',
-                                    headerBackground: theme.buttonColor,
-                                    headerText: '#ffffff',
-                                },
-                                behavior: {
-                                    position: 'bottom-right',
-                                    offsetX: 0,
-                                    offsetY: 0,
-                                    width: 'md',
-                                    height: 'lg',
-                                    autoOpen: true,
-                                    autoOpenDelay: 0,
-                                    openOnScroll: 0,
-                                    openOnTime: 0,
-                                    fullScreenOnMobile: true,
-                                },
-                                messages: {
-                                    welcomeMessage: 'Hi! How can I help you today?',
-                                    welcomeMessageEnabled: true,
-                                    welcomeDelay: 0,
-                                    inputPlaceholder: 'Type a message...',
-                                    quickReplies: [],
-                                    showTypingIndicator: true,
-                                },
-                                button: {
-                                    buttonStyle: 'circle',
-                                    buttonSize: 'md',
-                                    buttonIcon: 'chat',
-                                    showButtonText: false,
-                                    pulseEffect: false,
-                                    shadowSize: 'md',
-                                    showTooltip: false,
-                                    tooltipText: '',
-                                },
-                                theme: 'light',
-                            }}
-                            showHeader={true}
-                            onClose={() => setIsChatbotOpen(false)}
-                            autoOpen={true}
-                            isEmbedded={true}
-                            className="h-full"
-                        />
+                        {/* Header with close button */}
+                        <div className="flex items-center justify-between p-4 border-b" style={{ backgroundColor: theme.buttonColor }}>
+                            <span className="font-medium text-white">Chat with {profile.name}</span>
+                            <button
+                                onClick={() => setIsChatbotOpen(false)}
+                                className="p-1 rounded-full hover:bg-white/20 transition-colors"
+                            >
+                                <X size={20} className="text-white" />
+                            </button>
+                        </div>
+
+                        {/* Chatbot content */}
+                        {bioPageData?.aiAssistant ? (
+                            <ChatCore
+                                config={bioPageData.aiAssistant}
+                                project={{
+                                    id: bioPageData.projectId || bioPageData.id,
+                                    name: bioPageData.profile.name || 'Chat',
+                                    description: bioPageData.profile.bio || '',
+                                } as any}
+                                appearance={bioPageData.aiAssistant.appearance || {
+                                    branding: {
+                                        logoType: 'none',
+                                        logoSize: 'md',
+                                        showBotAvatar: true,
+                                        showUserAvatar: false,
+                                        userAvatarStyle: 'initials',
+                                    },
+                                    colors: {
+                                        primaryColor: theme.buttonColor,
+                                        secondaryColor: theme.buttonColor,
+                                        accentColor: theme.buttonColor,
+                                        userBubbleColor: theme.buttonColor,
+                                        userTextColor: '#ffffff',
+                                        botBubbleColor: '#f3f4f6',
+                                        botTextColor: '#1f2937',
+                                        backgroundColor: '#ffffff',
+                                        inputBackground: '#f9fafb',
+                                        inputBorder: '#e5e7eb',
+                                        inputText: '#1f2937',
+                                        headerBackground: theme.buttonColor,
+                                        headerText: '#ffffff',
+                                    },
+                                    behavior: {
+                                        position: 'bottom-right',
+                                        offsetX: 0,
+                                        offsetY: 0,
+                                        width: 'md',
+                                        height: 'lg',
+                                        autoOpen: true,
+                                        autoOpenDelay: 0,
+                                        openOnScroll: 0,
+                                        openOnTime: 0,
+                                        fullScreenOnMobile: true,
+                                    },
+                                    messages: {
+                                        welcomeMessage: 'Hi! How can I help you today?',
+                                        welcomeMessageEnabled: true,
+                                        welcomeDelay: 0,
+                                        inputPlaceholder: 'Type a message...',
+                                        quickReplies: [],
+                                        showTypingIndicator: true,
+                                    },
+                                    button: {
+                                        buttonStyle: 'circle',
+                                        buttonSize: 'md',
+                                        buttonIcon: 'chat',
+                                        showButtonText: false,
+                                        pulseEffect: false,
+                                        shadowSize: 'md',
+                                        showTooltip: false,
+                                        tooltipText: '',
+                                    },
+                                    theme: 'light',
+                                }}
+                                showHeader={false}
+                                onClose={() => setIsChatbotOpen(false)}
+                                autoOpen={true}
+                                isEmbedded={true}
+                                className="h-full flex-1"
+                            />
+                        ) : (
+                            <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
+                                <MessageCircle size={48} className="text-gray-300 mb-4" />
+                                <h3 className="text-lg font-medium text-gray-700 mb-2">Chat unavailable</h3>
+                                <p className="text-sm text-gray-500">
+                                    The chatbot configuration is not available for this page.
+                                </p>
+                                <button
+                                    onClick={() => setIsChatbotOpen(false)}
+                                    className="mt-4 px-4 py-2 bg-gray-100 rounded-lg text-gray-700 hover:bg-gray-200 transition-colors"
+                                >
+                                    Close
+                                </button>
+                            </div>
+                        )}
                     </div>
                 </div>
             )}
