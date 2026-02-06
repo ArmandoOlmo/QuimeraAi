@@ -20,6 +20,16 @@ import {
 import { useAuth } from '../core/AuthContext';
 import { useSafeTenant } from '../tenant';
 
+// Helper to get the correct projects collection path
+// Returns tenant path if tenantId provided (and not a personal tenant), otherwise user path
+const getProjectsCollectionPath = (userId: string, tenantId?: string | null): string[] => {
+    const isPersonalTenant = tenantId && tenantId.startsWith(`tenant_${userId}`);
+    if (tenantId && !isPersonalTenant) {
+        return ['tenants', tenantId, 'projects'];
+    }
+    return ['users', userId, 'projects'];
+};
+
 // =============================================================================
 // TYPES
 // =============================================================================
@@ -450,11 +460,25 @@ export const BioPageProvider: React.FC<{ children: ReactNode }> = ({ children })
             let aiAssistant = null;
             if (bioPage.projectId) {
                 try {
-                    const projectRef = doc(db, 'projects', bioPage.projectId);
-                    const projectSnap = await getDoc(projectRef);
+                    // Try the correct projects collection path based on tenant
+                    const projectPathSegments = getProjectsCollectionPath(user.uid, currentTenantId);
+                    const projectRef = doc(db, ...projectPathSegments, bioPage.projectId);
+                    let projectSnap = await getDoc(projectRef);
+
+                    // If not found, try the alternate path (in case project is stored in user path when using tenant)
+                    if (!projectSnap.exists() && currentTenantId) {
+                        console.log('[BioPageContext] Project not found in tenant path, trying user path...');
+                        const userProjectRef = doc(db, 'users', user.uid, 'projects', bioPage.projectId);
+                        projectSnap = await getDoc(userProjectRef);
+                    }
+
                     if (projectSnap.exists()) {
                         const projectData = projectSnap.data();
-                        aiAssistant = projectData?.aiAssistant || null;
+                        // Try both aiAssistant and aiAssistantConfig (different naming conventions)
+                        aiAssistant = projectData?.aiAssistant || projectData?.aiAssistantConfig || null;
+                        console.log('[BioPageContext] Found aiAssistant config:', !!aiAssistant);
+                    } else {
+                        console.warn('[BioPageContext] Project not found for aiAssistant:', bioPage.projectId);
                     }
                 } catch (e) {
                     console.warn('[BioPageContext] Could not fetch aiAssistant:', e);
