@@ -2393,7 +2393,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                                     }
                                 }
                             }}
-                            disabled={!profile.name && !bioPage?.username}
+                            disabled={!bioPage?.isPublished && !profile.name && !bioPage?.username}
                             className={`flex items-center gap-2 h-9 px-3 rounded-lg text-sm font-medium transition-all ${bioPage?.isPublished
                                 ? 'bg-green-500/20 hover:bg-green-500/30 text-green-500'
                                 : 'bg-primary/20 hover:bg-primary/30 text-primary'
@@ -2406,6 +2406,28 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                                     : t('bioPage.publish', 'Publish')}
                             </span>
                         </button>
+
+                        {/* Update Published Button - shows when published and has unsaved changes */}
+                        {bioPage?.isPublished && (
+                            <button
+                                onClick={async () => {
+                                    const success = await publishBioPage();
+                                    if (success) {
+                                        setNotificationModal({
+                                            isOpen: true,
+                                            title: t('bioPage.updated', 'Updated!'),
+                                            message: t('bioPage.updatedMessage', 'Your Bio Page has been updated.'),
+                                            type: 'success'
+                                        });
+                                    }
+                                }}
+                                className="flex items-center gap-2 h-9 px-3 rounded-lg text-sm font-medium transition-all bg-primary/20 hover:bg-primary/30 text-primary"
+                            >
+                                <Share2 size={16} />
+                                <span className="hidden sm:inline">{t('bioPage.update', 'Update')}</span>
+                            </button>
+                        )}
+
                         <button
                             onClick={() => navigate(ROUTES.DASHBOARD)}
                             className="flex items-center gap-2 h-9 px-3 rounded-lg text-sm font-medium bg-secondary/50 hover:bg-secondary text-muted-foreground hover:text-foreground transition-all"
