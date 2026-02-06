@@ -2361,11 +2361,21 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                                         message: publicUrl,
                                         type: 'success'
                                     });
-                                } else if (bioPage?.username) {
+                                } else {
+                                    // Create bio page first if it doesn't exist
+                                    if (!bioPage && activeProjectId) {
+                                        const username = profile.name?.toLowerCase().replace(/\s+/g, '-') || `bio-${Date.now()}`;
+                                        await createBioPage(activeProjectId, username);
+                                        await saveBioPage();
+                                        // Wait a bit for state to update
+                                        await new Promise(resolve => setTimeout(resolve, 100));
+                                    }
+
                                     // Publish the bio page
                                     const success = await publishBioPage();
                                     if (success) {
-                                        const publicUrl = `${window.location.origin}/bio/${bioPage.username.toLowerCase()}`;
+                                        const usernameForUrl = bioPage?.username || profile.name?.toLowerCase().replace(/\s+/g, '-') || 'bio';
+                                        const publicUrl = `${window.location.origin}/bio/${usernameForUrl.toLowerCase()}`;
                                         await navigator.clipboard.writeText(publicUrl);
                                         setNotificationModal({
                                             isOpen: true,
@@ -2383,7 +2393,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                                     }
                                 }
                             }}
-                            disabled={!bioPage?.username}
+                            disabled={!profile.name && !bioPage?.username}
                             className={`flex items-center gap-2 h-9 px-3 rounded-lg text-sm font-medium transition-all ${bioPage?.isPublished
                                 ? 'bg-green-500/20 hover:bg-green-500/30 text-green-500'
                                 : 'bg-primary/20 hover:bg-primary/30 text-primary'

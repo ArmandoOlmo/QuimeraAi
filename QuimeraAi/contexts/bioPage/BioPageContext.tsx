@@ -222,6 +222,15 @@ export const BioPageProvider: React.FC<{ children: ReactNode }> = ({ children })
     // Auto-save ref
     const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
     const isInitialLoadRef = useRef(true);
+    // Prevent re-marking unsaved after save
+    const postSaveProtectionRef = useRef(false);
+
+    // Helper to safely mark unsaved changes (respects post-save protection)
+    const markUnsaved = useCallback(() => {
+        if (!postSaveProtectionRef.current && !isInitialLoadRef.current) {
+            setHasUnsavedChanges(true);
+        }
+    }, []);
 
     // Load bio page for a project
     const loadBioPage = useCallback(async (projectId: string) => {
@@ -303,6 +312,9 @@ export const BioPageProvider: React.FC<{ children: ReactNode }> = ({ children })
         if (!user || !bioPage) return;
 
         setIsSaving(true);
+        // Enable post-save protection
+        postSaveProtectionRef.current = true;
+
         try {
             const pathSegments = getBioPagesCollectionPath(user.uid, currentTenantId);
             const bioPageRef = doc(db, ...pathSegments, bioPage.id);
@@ -322,8 +334,14 @@ export const BioPageProvider: React.FC<{ children: ReactNode }> = ({ children })
             setHasUnsavedChanges(false);
 
             console.log('[BioPageContext] Saved bio page');
+
+            // Disable protection after a short delay
+            setTimeout(() => {
+                postSaveProtectionRef.current = false;
+            }, 500);
         } catch (error) {
             console.error('[BioPageContext] Error saving bio page:', error);
+            postSaveProtectionRef.current = false;
             throw error;
         } finally {
             setIsSaving(false);
@@ -348,20 +366,20 @@ export const BioPageProvider: React.FC<{ children: ReactNode }> = ({ children })
         };
 
         setLinks(prev => [newLink, ...prev]);
-        setHasUnsavedChanges(true);
-    }, [links.length]);
+        markUnsaved();
+    }, [links.length, markUnsaved]);
 
     const updateLink = useCallback((linkId: string, updates: Partial<BioLink>) => {
         setLinks(prev => prev.map(link =>
             link.id === linkId ? { ...link, ...updates } : link
         ));
-        setHasUnsavedChanges(true);
-    }, []);
+        markUnsaved();
+    }, [markUnsaved]);
 
     const deleteLink = useCallback((linkId: string) => {
         setLinks(prev => prev.filter(link => link.id !== linkId));
-        setHasUnsavedChanges(true);
-    }, []);
+        markUnsaved();
+    }, [markUnsaved]);
 
     const reorderLinks = useCallback((linkIds: string[]) => {
         setLinks(prev => {
@@ -371,15 +389,15 @@ export const BioPageProvider: React.FC<{ children: ReactNode }> = ({ children })
                 return link ? { ...link, order: index } : null;
             }).filter(Boolean) as BioLink[];
         });
-        setHasUnsavedChanges(true);
-    }, []);
+        markUnsaved();
+    }, [markUnsaved]);
 
     const toggleLink = useCallback((linkId: string) => {
         setLinks(prev => prev.map(link =>
             link.id === linkId ? { ...link, enabled: !link.enabled } : link
         ));
-        setHasUnsavedChanges(true);
-    }, []);
+        markUnsaved();
+    }, [markUnsaved]);
 
     // ==========================================================================
     // PROFILE OPERATIONS
@@ -387,8 +405,8 @@ export const BioPageProvider: React.FC<{ children: ReactNode }> = ({ children })
 
     const updateProfile = useCallback((updates: Partial<BioProfile>) => {
         setProfile(prev => ({ ...prev, ...updates }));
-        setHasUnsavedChanges(true);
-    }, []);
+        markUnsaved();
+    }, [markUnsaved]);
 
     // ==========================================================================
     // THEME OPERATIONS
@@ -396,8 +414,8 @@ export const BioPageProvider: React.FC<{ children: ReactNode }> = ({ children })
 
     const updateTheme = useCallback((updates: Partial<BioTheme>) => {
         setTheme(prev => ({ ...prev, ...updates }));
-        setHasUnsavedChanges(true);
-    }, []);
+        markUnsaved();
+    }, [markUnsaved]);
 
     // ==========================================================================
     // EMAIL SIGNUP
@@ -405,8 +423,8 @@ export const BioPageProvider: React.FC<{ children: ReactNode }> = ({ children })
 
     const handleSetEmailSignupEnabled = useCallback((enabled: boolean) => {
         setEmailSignupEnabled(enabled);
-        setHasUnsavedChanges(true);
-    }, []);
+        markUnsaved();
+    }, [markUnsaved]);
 
     // ==========================================================================
     // PUBLISH
