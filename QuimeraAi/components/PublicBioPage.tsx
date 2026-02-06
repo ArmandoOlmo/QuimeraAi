@@ -259,7 +259,7 @@ const PublicBioPage: React.FC<PublicBioPageProps> = ({ username }) => {
     const bodyColor = theme.bodyColor || theme.textColor || '#ffffff';
 
     return (
-        <div className="min-h-screen relative">
+        <div className="min-h-screen relative overflow-x-hidden w-screen max-w-full">
             {/* Video Background */}
             {theme.backgroundType === 'video' && theme.backgroundVideo && (
                 <video

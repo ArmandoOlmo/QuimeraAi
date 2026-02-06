@@ -345,40 +345,57 @@ async function getProjectData(projectId: string, userId?: string): Promise<Proje
 }
 
 /**
- * AI Credit costs per operation type
- * ~$0.01 USD real cost per credit
+ * Token-based credit calculation multipliers per model
+ * Formula: Math.ceil(tokensUsed / 1000) * multiplier
  */
-const AI_CREDIT_COSTS = {
-    // Gemini 2.5 series (latest)
-    'gemini-2.5-flash': 1,              // ~$0.01 per request
-    'gemini-2.5-flash-lite': 1,         // ~$0.01 per request
-    'gemini-2.5-pro': 3,                // ~$0.03 per request
-    // Gemini 2.0 series
-    'gemini-2.0-flash': 1,              // ~$0.01 per request
-    'gemini-2.0-flash-lite': 1,         // ~$0.01 per request
-    'gemini-2.0-flash-exp': 1,          // ~$0.01 per request
-    // Gemini 3.0 preview models (experimental)
-    'gemini-3-pro-preview': 3,          // ~$0.03 per request
-    'gemini-3-pro-image-preview': 4,    // ~$0.04 per request
-    // Legacy models
-    'gemini-1.5-flash': 1,              // ~$0.01 per request
-    'gemini-1.5-pro': 2,                // ~$0.02 per request
-    // Image generation - Imagen 3.0
-    'gemini-2.5-flash-image': 4,        // ~$0.04 per image
-    'gemini-2.0-flash-image': 4,        // ~$0.04 per image
-    'imagen-3.0-generate-001': 4,       // ~$0.04 per image
-    'imagen-3.0-fast-generate-001': 2,  // ~$0.02 per image
-    // Image generation - Imagen 4.0
-    'imagen-4.0-generate-001': 4,       // ~$0.04 per image
-    'imagen-4.0-ultra-generate-001': 6, // ~$0.06 per image (highest quality)
-    'imagen-4.0-fast-generate-001': 2,  // ~$0.02 per image
+const MODEL_TOKEN_MULTIPLIERS: Record<string, number> = {
+    // Gemini Flash models: 1x multiplier (most economical)
+    'gemini-2.5-flash': 1,
+    'gemini-2.5-flash-lite': 1,
+    'gemini-2.0-flash': 1,
+    'gemini-2.0-flash-lite': 1,
+    'gemini-2.0-flash-exp': 1,
+    'gemini-1.5-flash': 1,
+    // Gemini Pro models: 3x multiplier
+    'gemini-2.5-pro': 3,
+    'gemini-3-pro-preview': 3,
+    'gemini-3-pro-image-preview': 3,
+    'gemini-1.5-pro': 3,
+    // Image generation - Imagen Ultra: 10x multiplier
+    'imagen-4.0-ultra-generate-001': 10,
+    // Other image models: 5x multiplier
+    'gemini-2.5-flash-image': 5,
+    'gemini-2.0-flash-image': 5,
+    'gemini-2.0-flash-exp-image-generation': 5,
+    'gemini-2.0-flash-preview-image-generation': 5,
+    'imagen-3.0-generate-001': 5,
+    'imagen-4.0-generate-001': 5,
+    // Fast image models: 3x multiplier
+    'imagen-3.0-fast-generate-001': 3,
+    'imagen-4.0-fast-generate-001': 3,
 };
 
+/** Tokens required for 1 credit base unit */
+const TOKENS_PER_CREDIT = 1000;
+
 /**
- * Get credit cost for a model
+ * Calculate credits based on tokens consumed and model multiplier
+ * @param tokensUsed - Total tokens consumed (input + output)
+ * @param model - Model name to get multiplier
+ * @returns Credits to charge (minimum 1)
+ */
+function calculateCreditsFromTokens(tokensUsed: number, model: string): number {
+    const multiplier = MODEL_TOKEN_MULTIPLIERS[model] || 1;
+    // Minimum 1 credit per request, scale up based on tokens
+    return Math.max(1, Math.ceil(tokensUsed / TOKENS_PER_CREDIT) * multiplier);
+}
+
+/**
+ * Get minimum credit cost for a model (backwards compatibility)
+ * Used when tokens are unknown (e.g., errors, image generation)
  */
 function getCreditCostForModel(model: string): number {
-    return AI_CREDIT_COSTS[model as keyof typeof AI_CREDIT_COSTS] || 1;
+    return MODEL_TOKEN_MULTIPLIERS[model] || 1;
 }
 
 /**
@@ -393,8 +410,8 @@ async function trackUsage(
     operationType?: string
 ) {
     try {
-        // Calculate credits to consume
-        const creditsUsed = getCreditCostForModel(model);
+        // Calculate credits based on tokens consumed (new token-based billing)
+        const creditsUsed = calculateCreditsFromTokens(tokensUsed, model);
 
         // Track in apiUsage collection (existing behavior)
         await db.collection('apiUsage').add({
@@ -424,7 +441,7 @@ async function trackUsage(
                 return;
             }
 
-            // Record the credit transaction
+            // Record the credit transaction with token details
             await db.collection('aiCreditsTransactions').add({
                 tenantId: effectiveTenantId,
                 userId,
@@ -432,7 +449,8 @@ async function trackUsage(
                 operation: operationType || getOperationTypeFromModel(model),
                 creditsUsed,
                 model,
-                tokensInput: Math.floor(tokensUsed * 0.3),  // Estimate
+                tokensTotal: tokensUsed,
+                tokensInput: Math.floor(tokensUsed * 0.3),  // Estimate (API doesn't split input/output)
                 tokensOutput: Math.floor(tokensUsed * 0.7), // Estimate
                 timestamp: admin.firestore.FieldValue.serverTimestamp(),
             });
@@ -1092,8 +1110,8 @@ export const generateImage = functions.https.onRequest(async (req, res) => {
                 return;
             }
 
-            // Track usage asynchronously
-            trackUsage(`image-gen-${userId}`, userId, 1, model).catch(console.error);
+            // Track usage asynchronously (use TOKENS_PER_CREDIT as equivalent for image generation)
+            trackUsage(`image-gen-${userId}`, userId, TOKENS_PER_CREDIT, model).catch(console.error);
 
             // Return response
             res.set('X-RateLimit-Remaining', String(rateLimitCheck.remaining || 0));
