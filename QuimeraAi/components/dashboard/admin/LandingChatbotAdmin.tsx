@@ -10,6 +10,7 @@ import { useUI } from '../../../contexts/core/UIContext';
 import DashboardSidebar from '../DashboardSidebar';
 import FAQManager from '../ai/FAQManager';
 import KnowledgeDocumentUploader from '../ai/KnowledgeDocumentUploader';
+import ColorControl from '../../ui/ColorControl';
 import {
     Menu,
     Bot,
@@ -75,6 +76,29 @@ import LandingChatSimulator from './LandingChatSimulator';
 
 // Color presets for quick selection
 const colorPresets = [
+    // Quimera App preset - applies ALL brand colors automatically
+    {
+        name: '🦋 Quimera App',
+        primary: '#facc15',
+        secondary: '#0f172a',
+        isAppPreset: true,
+        fullColors: {
+            headerBackground: '#0f172a',
+            headerText: '#facc15',
+            botBubbleBackground: '#1e293b',
+            botBubbleText: '#f1f5f9',
+            userBubbleBackground: '#facc15',
+            userBubbleText: '#0f172a',
+            background: '#0f172a',
+            inputBackground: '#1e293b',
+            inputBorder: '#334155',
+            inputText: '#f1f5f9',
+            buttonBackground: '#facc15',
+            buttonIcon: '#0f172a',
+            primary: '#facc15',
+            mutedText: '#94a3b8',
+        }
+    },
     { name: 'Quimera Purple', primary: '#6366f1', secondary: '#8b5cf6' },
     { name: 'Ocean Blue', primary: '#0ea5e9', secondary: '#06b6d4' },
     { name: 'Forest Green', primary: '#10b981', secondary: '#059669' },
@@ -1092,19 +1116,32 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                 // Apply color preset
                 const applyColorPreset = (preset: typeof colorPresets[0]) => {
                     setHasLocalChanges(true);
-                    setFormData(prev => ({
-                        ...prev,
-                        appearance: {
-                            ...prev.appearance,
-                            customColors: {
-                                ...prev.appearance.customColors,
-                                headerBackground: preset.primary,
-                                userBubbleBackground: preset.primary,
-                                buttonBackground: preset.primary,
-                                primary: preset.primary,
+
+                    // If preset has fullColors (like Quimera App), apply all colors
+                    if ((preset as any).fullColors) {
+                        setFormData(prev => ({
+                            ...prev,
+                            appearance: {
+                                ...prev.appearance,
+                                customColors: (preset as any).fullColors
                             }
-                        }
-                    }));
+                        }));
+                    } else {
+                        // For other presets, just apply primary colors
+                        setFormData(prev => ({
+                            ...prev,
+                            appearance: {
+                                ...prev.appearance,
+                                customColors: {
+                                    ...prev.appearance.customColors,
+                                    headerBackground: preset.primary,
+                                    userBubbleBackground: preset.primary,
+                                    buttonBackground: preset.primary,
+                                    primary: preset.primary,
+                                }
+                            }
+                        }));
+                    }
                 };
 
                 // Get current colors (from app or custom)
@@ -1182,40 +1219,16 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                                     <div className="p-4 bg-secondary/10 rounded-lg border border-border/50">
                                         <h4 className="font-medium text-sm mb-3 text-muted-foreground uppercase tracking-wider">Header</h4>
                                         <div className="grid grid-cols-2 gap-3">
-                                            <div>
-                                                <label className="block text-xs text-muted-foreground mb-1">Fondo</label>
-                                                <div className="flex items-center gap-2">
-                                                    <input
-                                                        type="color"
-                                                        value={currentColors.headerBackground}
-                                                        onChange={(e) => updateCustomColor('headerBackground', e.target.value)}
-                                                        className="w-10 h-10 rounded-lg cursor-pointer border-0"
-                                                    />
-                                                    <input
-                                                        type="text"
-                                                        value={currentColors.headerBackground}
-                                                        onChange={(e) => updateCustomColor('headerBackground', e.target.value)}
-                                                        className="flex-1 bg-background border border-border rounded-lg px-3 py-2 text-xs font-mono"
-                                                    />
-                                                </div>
-                                            </div>
-                                            <div>
-                                                <label className="block text-xs text-muted-foreground mb-1">Texto</label>
-                                                <div className="flex items-center gap-2">
-                                                    <input
-                                                        type="color"
-                                                        value={currentColors.headerText}
-                                                        onChange={(e) => updateCustomColor('headerText', e.target.value)}
-                                                        className="w-10 h-10 rounded-lg cursor-pointer border-0"
-                                                    />
-                                                    <input
-                                                        type="text"
-                                                        value={currentColors.headerText}
-                                                        onChange={(e) => updateCustomColor('headerText', e.target.value)}
-                                                        className="flex-1 bg-background border border-border rounded-lg px-3 py-2 text-xs font-mono"
-                                                    />
-                                                </div>
-                                            </div>
+                                            <ColorControl
+                                                label="Fondo"
+                                                value={currentColors.headerBackground}
+                                                onChange={(value) => updateCustomColor('headerBackground', value)}
+                                            />
+                                            <ColorControl
+                                                label="Texto"
+                                                value={currentColors.headerText}
+                                                onChange={(value) => updateCustomColor('headerText', value)}
+                                            />
                                         </div>
                                     </div>
 
@@ -1223,40 +1236,16 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                                     <div className="p-4 bg-secondary/10 rounded-lg border border-border/50">
                                         <h4 className="font-medium text-sm mb-3 text-muted-foreground uppercase tracking-wider">Mensajes</h4>
                                         <div className="grid grid-cols-2 gap-3">
-                                            <div>
-                                                <label className="block text-xs text-muted-foreground mb-1">Burbuja Bot</label>
-                                                <div className="flex items-center gap-2">
-                                                    <input
-                                                        type="color"
-                                                        value={currentColors.botBubbleBackground}
-                                                        onChange={(e) => updateCustomColor('botBubbleBackground', e.target.value)}
-                                                        className="w-10 h-10 rounded-lg cursor-pointer border-0"
-                                                    />
-                                                    <input
-                                                        type="text"
-                                                        value={currentColors.botBubbleBackground}
-                                                        onChange={(e) => updateCustomColor('botBubbleBackground', e.target.value)}
-                                                        className="flex-1 bg-background border border-border rounded-lg px-3 py-2 text-xs font-mono"
-                                                    />
-                                                </div>
-                                            </div>
-                                            <div>
-                                                <label className="block text-xs text-muted-foreground mb-1">Burbuja Usuario</label>
-                                                <div className="flex items-center gap-2">
-                                                    <input
-                                                        type="color"
-                                                        value={currentColors.userBubbleBackground}
-                                                        onChange={(e) => updateCustomColor('userBubbleBackground', e.target.value)}
-                                                        className="w-10 h-10 rounded-lg cursor-pointer border-0"
-                                                    />
-                                                    <input
-                                                        type="text"
-                                                        value={currentColors.userBubbleBackground}
-                                                        onChange={(e) => updateCustomColor('userBubbleBackground', e.target.value)}
-                                                        className="flex-1 bg-background border border-border rounded-lg px-3 py-2 text-xs font-mono"
-                                                    />
-                                                </div>
-                                            </div>
+                                            <ColorControl
+                                                label="Burbuja Bot"
+                                                value={currentColors.botBubbleBackground}
+                                                onChange={(value) => updateCustomColor('botBubbleBackground', value)}
+                                            />
+                                            <ColorControl
+                                                label="Burbuja Usuario"
+                                                value={currentColors.userBubbleBackground}
+                                                onChange={(value) => updateCustomColor('userBubbleBackground', value)}
+                                            />
                                         </div>
                                     </div>
 
@@ -1264,40 +1253,16 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                                     <div className="p-4 bg-secondary/10 rounded-lg border border-border/50">
                                         <h4 className="font-medium text-sm mb-3 text-muted-foreground uppercase tracking-wider">Botón Flotante</h4>
                                         <div className="grid grid-cols-2 gap-3">
-                                            <div>
-                                                <label className="block text-xs text-muted-foreground mb-1">Fondo del Botón</label>
-                                                <div className="flex items-center gap-2">
-                                                    <input
-                                                        type="color"
-                                                        value={currentColors.buttonBackground}
-                                                        onChange={(e) => updateCustomColor('buttonBackground', e.target.value)}
-                                                        className="w-10 h-10 rounded-lg cursor-pointer border-0"
-                                                    />
-                                                    <input
-                                                        type="text"
-                                                        value={currentColors.buttonBackground}
-                                                        onChange={(e) => updateCustomColor('buttonBackground', e.target.value)}
-                                                        className="flex-1 bg-background border border-border rounded-lg px-3 py-2 text-xs font-mono"
-                                                    />
-                                                </div>
-                                            </div>
-                                            <div>
-                                                <label className="block text-xs text-muted-foreground mb-1">Ícono del Botón</label>
-                                                <div className="flex items-center gap-2">
-                                                    <input
-                                                        type="color"
-                                                        value={currentColors.buttonIcon}
-                                                        onChange={(e) => updateCustomColor('buttonIcon', e.target.value)}
-                                                        className="w-10 h-10 rounded-lg cursor-pointer border-0"
-                                                    />
-                                                    <input
-                                                        type="text"
-                                                        value={currentColors.buttonIcon}
-                                                        onChange={(e) => updateCustomColor('buttonIcon', e.target.value)}
-                                                        className="flex-1 bg-background border border-border rounded-lg px-3 py-2 text-xs font-mono"
-                                                    />
-                                                </div>
-                                            </div>
+                                            <ColorControl
+                                                label="Fondo del Botón"
+                                                value={currentColors.buttonBackground}
+                                                onChange={(value) => updateCustomColor('buttonBackground', value)}
+                                            />
+                                            <ColorControl
+                                                label="Ícono del Botón"
+                                                value={currentColors.buttonIcon}
+                                                onChange={(value) => updateCustomColor('buttonIcon', value)}
+                                            />
                                         </div>
                                     </div>
 
@@ -1305,40 +1270,16 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                                     <div className="p-4 bg-secondary/10 rounded-lg border border-border/50">
                                         <h4 className="font-medium text-sm mb-3 text-muted-foreground uppercase tracking-wider">Fondos</h4>
                                         <div className="grid grid-cols-2 gap-3">
-                                            <div>
-                                                <label className="block text-xs text-muted-foreground mb-1">Chat Background</label>
-                                                <div className="flex items-center gap-2">
-                                                    <input
-                                                        type="color"
-                                                        value={currentColors.background}
-                                                        onChange={(e) => updateCustomColor('background', e.target.value)}
-                                                        className="w-10 h-10 rounded-lg cursor-pointer border-0"
-                                                    />
-                                                    <input
-                                                        type="text"
-                                                        value={currentColors.background}
-                                                        onChange={(e) => updateCustomColor('background', e.target.value)}
-                                                        className="flex-1 bg-background border border-border rounded-lg px-3 py-2 text-xs font-mono"
-                                                    />
-                                                </div>
-                                            </div>
-                                            <div>
-                                                <label className="block text-xs text-muted-foreground mb-1">Input Background</label>
-                                                <div className="flex items-center gap-2">
-                                                    <input
-                                                        type="color"
-                                                        value={currentColors.inputBackground}
-                                                        onChange={(e) => updateCustomColor('inputBackground', e.target.value)}
-                                                        className="w-10 h-10 rounded-lg cursor-pointer border-0"
-                                                    />
-                                                    <input
-                                                        type="text"
-                                                        value={currentColors.inputBackground}
-                                                        onChange={(e) => updateCustomColor('inputBackground', e.target.value)}
-                                                        className="flex-1 bg-background border border-border rounded-lg px-3 py-2 text-xs font-mono"
-                                                    />
-                                                </div>
-                                            </div>
+                                            <ColorControl
+                                                label="Chat Background"
+                                                value={currentColors.background}
+                                                onChange={(value) => updateCustomColor('background', value)}
+                                            />
+                                            <ColorControl
+                                                label="Input Background"
+                                                value={currentColors.inputBackground}
+                                                onChange={(value) => updateCustomColor('inputBackground', value)}
+                                            />
                                         </div>
                                     </div>
 

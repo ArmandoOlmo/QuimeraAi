@@ -15,9 +15,10 @@ interface ImageGeneratorPanelProps {
     onClose?: () => void;
     onCollapse?: () => void;
     hidePreview?: boolean;
+    onImageGenerated?: (imageUrl: string) => void;
 }
 
-const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, className = '', onClose, onCollapse, hidePreview = false }) => {
+const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, className = '', onClose, onCollapse, hidePreview = false, onImageGenerated }) => {
     const { generateImage, enhancePrompt } = useAI();
     const { uploadGlobalFile, uploadFile, hasActiveProject } = useFiles();
     const { t } = useTranslation();
@@ -355,7 +356,12 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
             });
 
             // Automatically save to library after successful generation
-            await saveToLibrary(imageDataUrl, prompt);
+            const savedUrl = await saveToLibrary(imageDataUrl, prompt);
+
+            // Call callback with the saved URL or the data URL
+            if (onImageGenerated) {
+                onImageGenerated(savedUrl || imageDataUrl);
+            }
 
         } catch (error) {
             console.error(error);

@@ -459,6 +459,10 @@ export const useOnboarding = () => {
         }
     }, [updateProgress]);
 
+    const updateBioPageSettings = useCallback((hasBioPage: boolean) => {
+        updateProgress({ hasBioPage });
+    }, [updateProgress]);
+
     const updateStoreSetup = useCallback((storeSetup: OnboardingStoreSetup) => {
         updateProgress({ storeSetup });
     }, [updateProgress]);
@@ -2360,6 +2364,9 @@ TEMPLATE #${t.index}: "${t.name}"
         // Ecommerce Updates
         updateEcommerceSettings,
         updateStoreSetup,
+
+        // Bio Page Updates
+        updateBioPageSettings,
 
         // Website Analysis (Step 0)
         analyzeWebsite,

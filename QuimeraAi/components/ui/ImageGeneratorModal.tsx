@@ -6,23 +6,26 @@ interface ImageGeneratorModalProps {
     isOpen: boolean;
     onClose: () => void;
     destination: 'user' | 'global';
+    onImageGenerated?: (imageUrl: string) => void;
 }
 
-const ImageGeneratorModal: React.FC<ImageGeneratorModalProps> = ({ isOpen, onClose, destination }) => {
+const ImageGeneratorModal: React.FC<ImageGeneratorModalProps> = ({ isOpen, onClose, destination, onImageGenerated }) => {
     return (
-        <Modal 
-            isOpen={isOpen} 
-            onClose={onClose} 
+        <Modal
+            isOpen={isOpen}
+            onClose={onClose}
             maxWidth="max-w-5xl"
             fullScreenMobile
         >
-            <ImageGeneratorPanel 
-                destination={destination} 
+            <ImageGeneratorPanel
+                destination={destination}
                 onClose={onClose}
                 className="h-[85vh] sm:h-[85vh]"
+                onImageGenerated={onImageGenerated}
             />
         </Modal>
     );
 };
 
 export default ImageGeneratorModal;
+

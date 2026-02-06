@@ -30,7 +30,7 @@ import { usePlans } from '../../../contexts/PlansContext';
 import { useSafeUpgrade } from '../../../contexts/UpgradeContext';
 import { useCreditsUsage } from '../../../hooks/useCreditsUsage';
 import { useAuth } from '../../../contexts/core/AuthContext';
-import { useSafeTenant } from '../../../contexts/tenant';
+import { useTenant } from '../../../contexts/tenant';
 import { httpsCallable, getFunctionsInstance } from '../../../firebase';
 import {
     SUBSCRIPTION_PLANS,
@@ -60,10 +60,12 @@ interface SubscriptionDetails {
 
 const SubscriptionSettings: React.FC = () => {
     const { t } = useTranslation();
-    const { isUserOwner } = useAuth();
+    const { isUserOwner, user } = useAuth();
     const { plansArray, getPlan } = usePlans();
     const upgradeContext = useSafeUpgrade();
-    const tenantContext = useSafeTenant();
+    // Use useTenant to get the full context - we're in the dashboard where TenantProvider is always available
+    const tenantContext = useTenant();
+    const { currentTenant, isLoadingTenant } = tenantContext;
     const { usage, isLoading: isLoadingUsage, refresh } = useCreditsUsage();
     const [loadingPlanId, setLoadingPlanId] = useState<string | null>(null);
     const [checkoutError, setCheckoutError] = useState<string | null>(null);
@@ -75,7 +77,7 @@ const SubscriptionSettings: React.FC = () => {
     // Fetch subscription details on mount
     useEffect(() => {
         const fetchSubscriptionDetails = async () => {
-            if (!tenantContext?.currentTenant?.id) return;
+            if (!currentTenant?.id) return;
 
             try {
                 const functions = await getFunctionsInstance();
@@ -84,7 +86,7 @@ const SubscriptionSettings: React.FC = () => {
                     { subscription: SubscriptionDetails; invoices: any[] }
                 >(functions, 'getSubscriptionDetails');
 
-                const result = await getDetails({ tenantId: tenantContext.currentTenant.id });
+                const result = await getDetails({ tenantId: currentTenant.id });
                 setSubscriptionDetails(result.data.subscription);
             } catch (error) {
                 console.error('Error fetching subscription details:', error);
@@ -92,7 +94,7 @@ const SubscriptionSettings: React.FC = () => {
         };
 
         fetchSubscriptionDetails();
-    }, [tenantContext?.currentTenant?.id]);
+    }, [currentTenant?.id]);
 
     // Get current plan from usage or default to free
     const currentPlanId: SubscriptionPlanId = usage?.planId || 'free';
@@ -120,8 +122,16 @@ const SubscriptionSettings: React.FC = () => {
      * Handle plan selection - upgrade/downgrade or new checkout
      */
     const handleSelectPlan = async (planId: SubscriptionPlanId, billingCycle: 'monthly' | 'annually' = 'monthly') => {
-        if (!tenantContext?.currentTenant?.id) {
-            setCheckoutError(t('settings.subscription.noTenantError', 'No workspace found'));
+        // Use currentTenant.id if available, otherwise construct from userId
+        let tenantId = currentTenant?.id;
+
+        if (!tenantId && user?.uid) {
+            // Fallback: construct tenantId from userId using the standard pattern
+            tenantId = `tenant_${user.uid}`;
+        }
+
+        if (!tenantId) {
+            setCheckoutError(t('settings.subscription.noTenantError', 'No workspace found. Please refresh the page and try again.'));
             return;
         }
 
@@ -130,10 +140,10 @@ const SubscriptionSettings: React.FC = () => {
 
         try {
             const functions = await getFunctionsInstance();
-            const tenantId = tenantContext.currentTenant.id;
 
             // If user already has a paid subscription, try to update it
             if (currentPlanId !== 'free') {
+                console.log('[SubscriptionSettings] User has paid plan, trying to update subscription...');
                 // Try to update existing subscription
                 const updateSub = httpsCallable<
                     { tenantId: string; newPlanId: string; billingCycle?: string },
@@ -141,6 +151,7 @@ const SubscriptionSettings: React.FC = () => {
                 >(functions, 'updateSubscription');
 
                 try {
+                    console.log('[SubscriptionSettings] Calling updateSubscription...');
                     const result = await updateSub({
                         tenantId,
                         newPlanId: planId,
@@ -161,7 +172,6 @@ const SubscriptionSettings: React.FC = () => {
                     if (!updateError.message?.includes('No active Stripe subscription')) {
                         throw updateError;
                     }
-                    console.log('No existing Stripe subscription, creating new checkout');
                 }
             }
 
@@ -171,18 +181,21 @@ const SubscriptionSettings: React.FC = () => {
                 { sessionId: string; url: string }
             >(functions, 'createSubscriptionCheckout');
 
-            const result = await createCheckout({
+            const checkoutParams = {
                 tenantId,
                 planId,
                 billingCycle,
                 successUrl: `${window.location.origin}/settings/subscription?success=true&plan=${planId}`,
                 cancelUrl: `${window.location.origin}/settings/subscription?cancelled=true`,
-            });
+            };
+
+            const result = await createCheckout(checkoutParams);
 
             // Redirect to Stripe Checkout
             if (result.data.url) {
                 window.location.href = result.data.url;
             } else {
+                console.error('Failed to get checkout URL');
                 setCheckoutError(t('settings.subscription.checkoutError', 'Failed to create checkout session'));
             }
         } catch (error: any) {
@@ -197,7 +210,7 @@ const SubscriptionSettings: React.FC = () => {
      * Handle subscription cancellation
      */
     const handleCancelSubscription = async (immediately: boolean = false) => {
-        if (!tenantContext?.currentTenant?.id) return;
+        if (!currentTenant?.id) return;
 
         const confirmMessage = immediately
             ? t('settings.subscription.confirmCancelImmediately', '¿Estás seguro de que deseas cancelar inmediatamente? Perderás acceso a las funciones de tu plan actual.')
@@ -214,7 +227,7 @@ const SubscriptionSettings: React.FC = () => {
             >(functions, 'cancelSubscription');
 
             const result = await cancelSub({
-                tenantId: tenantContext.currentTenant.id,
+                tenantId: currentTenant.id,
                 immediately,
             });
 
@@ -226,7 +239,7 @@ const SubscriptionSettings: React.FC = () => {
                 { tenantId: string },
                 { subscription: SubscriptionDetails; invoices: any[] }
             >(functions, 'getSubscriptionDetails');
-            const details = await getDetails({ tenantId: tenantContext.currentTenant.id });
+            const details = await getDetails({ tenantId: currentTenant.id });
             setSubscriptionDetails(details.data.subscription);
 
         } catch (error: any) {
@@ -241,7 +254,7 @@ const SubscriptionSettings: React.FC = () => {
      * Handle subscription reactivation
      */
     const handleReactivateSubscription = async () => {
-        if (!tenantContext?.currentTenant?.id) return;
+        if (!currentTenant?.id) return;
 
         setIsReactivating(true);
         try {
@@ -251,7 +264,7 @@ const SubscriptionSettings: React.FC = () => {
                 { success: boolean; message: string }
             >(functions, 'reactivateSubscription');
 
-            const result = await reactivateSub({ tenantId: tenantContext.currentTenant.id });
+            const result = await reactivateSub({ tenantId: currentTenant.id });
             alert(result.data.message);
             refresh();
 
@@ -260,7 +273,7 @@ const SubscriptionSettings: React.FC = () => {
                 { tenantId: string },
                 { subscription: SubscriptionDetails; invoices: any[] }
             >(functions, 'getSubscriptionDetails');
-            const details = await getDetails({ tenantId: tenantContext.currentTenant.id });
+            const details = await getDetails({ tenantId: currentTenant.id });
             setSubscriptionDetails(details.data.subscription);
 
         } catch (error: any) {
@@ -390,15 +403,15 @@ const SubscriptionSettings: React.FC = () => {
                                 {/* Warnings (Compact) */}
                                 {(usage?.isNearLimit || usage?.hasExceededLimit) && !isUserOwner && (
                                     <div className={`mt-3 p-2 rounded-lg border flex items-start gap-2 ${usage?.hasExceededLimit
-                                            ? 'bg-red-500/5 border-red-500/10'
-                                            : 'bg-amber-500/5 border-amber-500/10'
+                                        ? 'bg-red-500/5 border-red-500/10'
+                                        : 'bg-amber-500/5 border-amber-500/10'
                                         }`}>
                                         <AlertTriangle className={`w-3.5 h-3.5 mt-0.5 ${usage?.hasExceededLimit ? 'text-red-500' : 'text-amber-500'
                                             }`} />
                                         <div className="flex-1">
                                             <p className={`text-xs font-medium ${usage?.hasExceededLimit
-                                                    ? 'text-red-600 dark:text-red-400'
-                                                    : 'text-amber-600 dark:text-amber-400'
+                                                ? 'text-red-600 dark:text-red-400'
+                                                : 'text-amber-600 dark:text-amber-400'
                                                 }`}>
                                                 {usage?.hasExceededLimit
                                                     ? t('settings.subscription.exceededLimit')
@@ -516,7 +529,11 @@ const SubscriptionSettings: React.FC = () => {
                                     </button>
                                 ) : (
                                     <button
-                                        onClick={() => handleSelectPlan(plan.id)}
+                                        type="button"
+                                        onClick={() => {
+                                            console.log('[SubscriptionSettings] Button clicked for plan:', plan.id);
+                                            handleSelectPlan(plan.id);
+                                        }}
                                         disabled={isLoading || loadingPlanId !== null}
                                         className={`w-full py-2 rounded-lg text-xs font-medium transition-colors flex items-center justify-center gap-2 disabled:opacity-50 ${isUpgrade
                                             ? 'bg-primary text-primary-foreground hover:bg-primary/90'

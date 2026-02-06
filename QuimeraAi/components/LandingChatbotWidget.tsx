@@ -42,6 +42,15 @@ interface LeadFormData {
 const generateMessageId = () => `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 const generateSessionId = () => `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
+// Helper to convert hex color to rgba with opacity
+const hexToRgba = (hex: string, alpha: number): string => {
+    const cleanHex = hex?.replace('#', '') || '0f172a';
+    const r = parseInt(cleanHex.substring(0, 2), 16);
+    const g = parseInt(cleanHex.substring(2, 4), 16);
+    const b = parseInt(cleanHex.substring(4, 6), 16);
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+};
+
 
 // =============================================================================
 // MAIN COMPONENT
@@ -530,25 +539,26 @@ Asistente:`;
         );
     }
 
-    // Open state - Chat window like GlobalAiAssistant
+    // Open state - Chat window with Glassmorphism style matching landing page
     const widgetContent = (
         <div
-            className="fixed z-[9999] bg-card border border-border shadow-2xl transition-all duration-300 flex flex-col overflow-hidden rounded-2xl"
+            className="fixed z-[9999] backdrop-blur-xl border border-white/10 shadow-2xl shadow-black/50 transition-all duration-300 flex flex-col overflow-hidden rounded-3xl"
             style={{
                 ...getPositionStyle(),
                 width: sizeClasses.width.includes('[') ? sizeClasses.width.match(/\d+/)?.[0] + 'px' : '400px',
                 height: sizeClasses.height.includes('[') ? sizeClasses.height.match(/\d+/)?.[0] + 'px' : '600px',
+                backgroundColor: hexToRgba(colors?.background || '#0f172a', 0.95),
             }}
         >
-            {/* Header - Like GlobalAiAssistant */}
+            {/* Header - Glassmorphism style */}
             <div
-                className="p-4 flex justify-between items-center shrink-0 cursor-pointer"
-                style={{ backgroundColor: colors?.headerBackground }}
+                className="p-4 flex justify-between items-center shrink-0 cursor-pointer backdrop-blur-sm border-b border-white/10"
+                style={{ backgroundColor: hexToRgba(colors?.headerBackground || '#0f172a', 0.8) }}
             >
                 <div className="flex items-center gap-3">
                     <div className="relative">
                         <div
-                            className="w-10 h-10 rounded-full flex items-center justify-center bg-white/10 border border-white/20 overflow-hidden"
+                            className="w-10 h-10 rounded-full flex items-center justify-center bg-white/5 border border-white/20 overflow-hidden backdrop-blur-sm"
                         >
                             {config.appearance.avatarUrl ? (
                                 <img src={config.appearance.avatarUrl} alt={config.agentName} className="w-full h-full object-cover" />
@@ -557,13 +567,13 @@ Asistente:`;
                             )}
                         </div>
                         {/* Status indicator */}
-                        <div className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 bg-green-400" style={{ borderColor: colors?.headerBackground }}></div>
+                        <div className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 bg-green-400 border-slate-900"></div>
                     </div>
                     <div>
                         <h3 className="font-bold text-sm leading-tight" style={{ color: colors?.headerText }}>
                             {config.agentName}
                         </h3>
-                        <p className="text-[10px] opacity-90 font-medium" style={{ color: colors?.headerText }}>
+                        <p className="text-[10px] opacity-80 font-medium text-white/70">
                             {isLoading ? 'Escribiendo...' : 'En línea'}
                         </p>
                     </div>
@@ -571,16 +581,16 @@ Asistente:`;
                 <div className="flex gap-1 items-center">
                     <button
                         onClick={() => setIsOpen(false)}
-                        className="p-1.5 hover:bg-white/20 rounded-md transition-colors"
+                        className="p-1.5 hover:bg-white/10 rounded-lg transition-colors"
                     >
                         <X size={18} style={{ color: colors?.headerText }} />
                     </button>
                 </div>
             </div>
 
-            {/* Messages area - Like GlobalAiAssistant */}
-            <div className="flex-1 flex flex-col overflow-hidden relative" style={{ backgroundColor: colors?.background }}>
-                <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar" style={{ backgroundColor: `${colors?.inputBackground}20` }}>
+            {/* Messages area - Glassmorphism style */}
+            <div className="flex-1 flex flex-col overflow-hidden relative" style={{ backgroundColor: 'transparent' }}>
+                <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar" style={{ backgroundColor: hexToRgba(colors?.botBubbleBackground || '#1e293b', 0.5) }}>
                     {messages.map((message) => (
                         <div
                             key={message.id}
@@ -600,16 +610,15 @@ Asistente:`;
                                 </div>
                             )}
 
-                            {/* Message bubble */}
+                            {/* Message bubble - Glassmorphism style */}
                             <div
-                                className={`max-w-[80%] p-3.5 rounded-2xl text-sm leading-relaxed shadow-sm ${message.role === 'user'
-                                    ? 'rounded-tr-sm'
-                                    : 'rounded-tl-sm border'
+                                className={`max-w-[80%] p-3.5 rounded-2xl text-sm leading-relaxed shadow-lg ${message.role === 'user'
+                                    ? 'rounded-tr-sm shadow-yellow-500/10'
+                                    : 'rounded-tl-sm border border-white/10 backdrop-blur-sm'
                                     }`}
                                 style={{
-                                    backgroundColor: message.role === 'user' ? colors?.userBubbleBackground : colors?.background,
+                                    backgroundColor: message.role === 'user' ? colors?.userBubbleBackground : hexToRgba(colors?.botBubbleBackground || '#1e293b', 0.8),
                                     color: message.role === 'user' ? colors?.userBubbleText : colors?.botBubbleText,
-                                    borderColor: message.role === 'user' ? 'transparent' : colors?.inputBorder
                                 }}
                             >
                                 <ReactMarkdown
@@ -662,8 +671,8 @@ Asistente:`;
                                 )}
                             </div>
                             <div
-                                className="px-4 py-3 rounded-2xl rounded-tl-sm shadow-sm flex items-center gap-2 text-sm border"
-                                style={{ backgroundColor: colors?.background, color: colors?.mutedText, borderColor: colors?.inputBorder }}
+                                className="px-4 py-3 rounded-2xl rounded-tl-sm shadow-lg flex items-center gap-2 text-sm border border-white/10 backdrop-blur-sm"
+                                style={{ backgroundColor: hexToRgba(colors?.botBubbleBackground || '#1e293b', 0.8), color: colors?.mutedText }}
                             >
                                 <Loader2 size={14} className="animate-spin" style={{ color: colors?.primary }} />
                                 <span>Pensando...</span>
@@ -674,8 +683,8 @@ Asistente:`;
                     {/* Lead capture form */}
                     {showLeadForm && (
                         <div
-                            className="p-4 rounded-xl border shadow-sm"
-                            style={{ backgroundColor: colors?.background, borderColor: colors?.inputBorder }}
+                            className="p-4 rounded-2xl border border-white/10 shadow-lg backdrop-blur-sm"
+                            style={{ backgroundColor: hexToRgba(colors?.botBubbleBackground || '#1e293b', 0.9) }}
                         >
                             <h4 className="font-semibold mb-3" style={{ color: colors?.botBubbleText }}>
                                 {t('landingChatbot.leadForm.title', '¿Te gustaría que te contactemos?')}
@@ -742,22 +751,21 @@ Asistente:`;
                     <div ref={messagesEndRef} />
                 </div>
 
-                {/* Input area - Like GlobalAiAssistant */}
+                {/* Input area - Glassmorphism style */}
                 <div
-                    className="p-4 border-t shrink-0"
-                    style={{ backgroundColor: colors?.background, borderColor: colors?.inputBorder }}
+                    className="p-4 border-t border-white/10 shrink-0 backdrop-blur-sm"
+                    style={{ backgroundColor: hexToRgba(colors?.headerBackground || '#0f172a', 0.8) }}
                 >
                     <div
-                        className="flex items-center gap-2 p-1.5 rounded-full border transition-all focus-within:ring-2"
+                        className="flex items-center gap-2 p-1.5 rounded-full border border-white/20 transition-all focus-within:ring-2 focus-within:ring-yellow-500/30 backdrop-blur-sm"
                         style={{
-                            backgroundColor: `${colors?.inputBackground}50`,
-                            borderColor: colors?.inputBorder,
+                            backgroundColor: hexToRgba(colors?.inputBackground || '#1e293b', 0.6),
                         }}
                     >
                         {/* Clear chat button */}
                         <button
                             onClick={() => setMessages([])}
-                            className="p-2 rounded-full transition-colors hover:bg-red-500/10"
+                            className="p-2 rounded-full transition-colors hover:bg-white/10"
                             style={{ color: colors?.mutedText }}
                             title="Limpiar chat"
                         >
@@ -772,7 +780,7 @@ Asistente:`;
                             onKeyPress={handleKeyPress}
                             placeholder={config.inputPlaceholder}
                             disabled={isLoading}
-                            className="flex-1 bg-transparent px-2 text-sm outline-none"
+                            className="flex-1 bg-transparent px-2 text-sm outline-none placeholder:text-white/40"
                             style={{ color: colors?.inputText }}
                         />
 
@@ -780,7 +788,7 @@ Asistente:`;
                         <button
                             onClick={() => sendMessage(inputValue)}
                             disabled={isLoading || !inputValue.trim()}
-                            className="p-2 rounded-full shadow-md transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="p-2 rounded-full shadow-lg shadow-yellow-500/20 transition-all hover:scale-105 hover:shadow-yellow-500/30 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
                             style={{ backgroundColor: colors?.buttonBackground, color: colors?.buttonIcon }}
                         >
                             <Send size={18} />
@@ -789,11 +797,11 @@ Asistente:`;
 
                     {/* Footer info */}
                     <div className="mt-2 flex justify-between items-center px-2">
-                        <p className="text-[10px] flex items-center" style={{ color: colors?.mutedText }}>
+                        <p className="text-[10px] flex items-center text-white/50">
                             <span className="w-1.5 h-1.5 rounded-full bg-green-500 mr-1.5"></span>
                             {config.agentRole}
                         </p>
-                        <p className="text-[10px]" style={{ color: colors?.mutedText }}>
+                        <p className="text-[10px] text-white/50">
                             Powered by <span style={{ color: colors?.primary }} className="font-medium">Quimera.ai</span>
                         </p>
                     </div>

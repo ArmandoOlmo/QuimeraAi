@@ -183,6 +183,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
     { id: 'cms', icon: PenTool, label: t('dashboard.contentManager'), view: 'cms', route: ROUTES.CMS, requiredFeature: 'cmsEnabled', upgradeTrigger: 'generic', serviceId: 'cms' },
     { id: 'domains', icon: Link2, label: t('domains.title'), view: 'domains', route: ROUTES.DOMAINS, requiredFeature: 'customDomains', upgradeTrigger: 'domains', serviceId: 'domains' },
     { id: 'seo', icon: Search, label: t('dashboard.seoAndMeta'), view: 'seo', route: ROUTES.SEO },
+    { id: 'biopage', icon: Link2, label: t('bioPage.title', 'Bio Page'), view: 'biopage', route: ROUTES.BIOPAGE },
   ];
 
   // Ecommerce section items (sección independiente con árbol de componentes)

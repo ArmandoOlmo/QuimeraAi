@@ -118,21 +118,22 @@ export interface LandingChatbotColors {
     mutedText: string;
 }
 
+// Quimera.ai brand colors: Yellow/Gold primary, Dark blue backgrounds
 export const defaultChatbotColors: LandingChatbotColors = {
-    headerBackground: '#6366f1',
-    headerText: '#ffffff',
-    botBubbleBackground: '#f4f4f5',
-    botBubbleText: '#09090b',
-    userBubbleBackground: '#6366f1',
-    userBubbleText: '#ffffff',
-    background: '#ffffff',
-    inputBackground: '#f4f4f5',
-    inputBorder: '#e4e4e7',
-    inputText: '#09090b',
-    buttonBackground: '#6366f1',
-    buttonIcon: '#ffffff',
-    primary: '#6366f1',
-    mutedText: '#71717a',
+    headerBackground: '#0f172a',      // Dark blue (slate-900)
+    headerText: '#facc15',            // Yellow/Gold
+    botBubbleBackground: '#1e293b',   // Slate-800
+    botBubbleText: '#f1f5f9',         // Slate-100
+    userBubbleBackground: '#facc15',  // Yellow/Gold primary
+    userBubbleText: '#0f172a',        // Dark text on yellow
+    background: '#0f172a',            // Dark blue background
+    inputBackground: '#1e293b',       // Slate-800
+    inputBorder: '#334155',           // Slate-700
+    inputText: '#f1f5f9',             // Slate-100
+    buttonBackground: '#facc15',      // Yellow/Gold
+    buttonIcon: '#0f172a',            // Dark icon on yellow button
+    primary: '#facc15',               // Yellow/Gold
+    mutedText: '#94a3b8',             // Slate-400
 };
 
 export interface LandingChatbotAppearance {
@@ -201,13 +202,13 @@ export interface LandingChatbotBehavior {
 export interface LandingChatbotConfig {
     // Estado
     isActive: boolean;
-    
+
     // Identidad
     agentName: string;
     agentRole: string;
     welcomeMessage: string;
     inputPlaceholder: string;
-    
+
     // Secciones de configuración
     knowledgeBase: LandingKnowledgeBase;
     personality: LandingChatbotPersonality;
@@ -216,7 +217,7 @@ export interface LandingChatbotConfig {
     appearance: LandingChatbotAppearance;
     socialChannels: LandingSocialChannels;
     behavior: LandingChatbotBehavior;
-    
+
     // Metadata
     lastUpdated?: { seconds: number; nanoseconds: number };
     updatedBy?: string;
@@ -232,7 +233,7 @@ export const defaultLandingChatbotConfig: LandingChatbotConfig = {
     agentRole: 'AI Assistant',
     welcomeMessage: '¡Hola! 👋 Soy **Quibo**, el asistente de IA de Quimera.ai. Puedo ayudarte a conocer nuestra plataforma de creación de sitios web. ¿Qué te gustaría saber?',
     inputPlaceholder: 'Pregúntame sobre Quimera.ai...',
-    
+
     knowledgeBase: {
         companyInfo: `**Quimera.ai** es una plataforma revolucionaria de creación de sitios web impulsada por inteligencia artificial. Permitimos que emprendedores, negocios y agencias digitales creen websites profesionales sin necesidad de programar.
 
@@ -252,16 +253,16 @@ export const defaultLandingChatbotConfig: LandingChatbotConfig = {
             { id: 'ai-image-generation', name: 'Generación de Imágenes con IA', description: 'Crea imágenes únicas para tu sitio con inteligencia artificial. Genera ilustraciones, fotos de productos y banners profesionales.', icon: 'Image', includedInPlans: ['free', 'starter', 'pro', 'agency', 'enterprise'] },
             { id: 'templates', name: 'Plantillas Profesionales', description: 'Biblioteca de plantillas diseñadas para diferentes industrias: restaurantes, tecnología, salud, fitness, fotografía, bienes raíces y más.', icon: 'Layout', includedInPlans: ['free', 'starter', 'pro', 'agency', 'enterprise'] },
             { id: 'responsive-design', name: 'Diseño Responsive', description: 'Todos los sitios se adaptan automáticamente a móviles, tablets y desktop. Perfecto en cualquier dispositivo.', icon: 'Smartphone', includedInPlans: ['free', 'starter', 'pro', 'agency', 'enterprise'] },
-            
+
             // CMS
             { id: 'cms', name: 'CMS / Blog', description: 'Sistema de gestión de contenido integrado. Crea y publica artículos de blog con editor visual moderno, categorías, tags y SEO.', icon: 'FileText', includedInPlans: ['starter', 'pro', 'agency', 'enterprise'] },
             { id: 'cms-advanced', name: 'CMS Avanzado', description: 'Blog con categorías, programación de publicaciones, SEO avanzado por artículo y URLs amigables.', icon: 'BookOpen', includedInPlans: ['pro', 'agency', 'enterprise'] },
-            
+
             // CRM & Leads
             { id: 'crm', name: 'CRM / Gestión de Leads', description: 'Captura y gestiona leads desde tu sitio. Pipeline visual, actividades, tareas y seguimiento automatizado.', icon: 'Users', includedInPlans: ['starter', 'pro', 'agency', 'enterprise'] },
             { id: 'crm-pipelines', name: 'Múltiples Pipelines', description: 'Crea pipelines personalizados para diferentes procesos de venta. Visualiza el estado de cada lead.', icon: 'GitBranch', includedInPlans: ['pro', 'agency', 'enterprise'] },
             { id: 'crm-automations', name: 'Automatizaciones CRM', description: 'Automatiza acciones basadas en comportamiento de leads: emails automáticos, asignación de tareas y notificaciones.', icon: 'Zap', includedInPlans: ['agency', 'enterprise'] },
-            
+
             // E-commerce
             { id: 'ecommerce', name: 'Tienda Online / E-commerce', description: 'Vende productos físicos o digitales. Catálogo de productos, carrito de compras, checkout con Stripe, gestión de inventario y envíos.', icon: 'ShoppingCart', includedInPlans: ['pro', 'agency', 'enterprise'] },
             { id: 'ecommerce-products', name: 'Gestión de Productos', description: 'Hasta 100 productos en Pro, 1,000 en Agency e ilimitados en Enterprise. Variantes, categorías y precios de oferta.', icon: 'Package', includedInPlans: ['pro', 'agency', 'enterprise'] },
@@ -269,38 +270,38 @@ export const defaultLandingChatbotConfig: LandingChatbotConfig = {
             { id: 'ecommerce-customers', name: 'Clientes y Descuentos', description: 'Gestión de clientes con historial de compras. Códigos de descuento, cupones y promociones.', icon: 'Tag', includedInPlans: ['pro', 'agency', 'enterprise'] },
             { id: 'ecommerce-reviews', name: 'Reseñas de Productos', description: 'Sistema de reseñas verificadas. Los clientes pueden valorar productos después de la compra.', icon: 'Star', includedInPlans: ['pro', 'agency', 'enterprise'] },
             { id: 'stripe-connect', name: 'Pagos con Stripe', description: 'Integración nativa con Stripe para pagos seguros con tarjeta de crédito, débito y métodos locales.', icon: 'CreditCard', includedInPlans: ['pro', 'agency', 'enterprise'] },
-            
+
             // AI Chatbot
             { id: 'ai-chatbot', name: 'Chatbot con IA', description: 'Asistente virtual inteligente para tu sitio. Responde preguntas de clientes, captura leads y agenda citas automáticamente.', icon: 'Bot', includedInPlans: ['pro', 'agency', 'enterprise'] },
             { id: 'chatbot-customization', name: 'Personalización Avanzada de Chatbot', description: 'Personaliza completamente la apariencia, personalidad y base de conocimiento del chatbot.', icon: 'Settings', includedInPlans: ['agency', 'enterprise'] },
             { id: 'chatbot-voice', name: 'Chat por Voz', description: 'Habilita conversaciones de voz con el chatbot. Múltiples voces disponibles con IA de última generación.', icon: 'Mic', includedInPlans: ['pro', 'agency', 'enterprise'] },
             { id: 'chatbot-social', name: 'Chatbot Multi-Canal', description: 'Conecta el chatbot a WhatsApp Business, Facebook Messenger e Instagram DMs para atención unificada.', icon: 'MessageCircle', includedInPlans: ['agency', 'enterprise'] },
-            
+
             // Appointments
             { id: 'appointments', name: 'Sistema de Citas', description: 'Los clientes pueden agendar citas desde el chatbot o sitio web. Sincronización con Google Calendar.', icon: 'Calendar', includedInPlans: ['pro', 'agency', 'enterprise'] },
             { id: 'appointments-ai', name: 'Preparación de Citas con IA', description: 'La IA prepara resúmenes, puntos de conversación y recordatorios automáticos antes de cada reunión.', icon: 'BrainCircuit', includedInPlans: ['agency', 'enterprise'] },
-            
+
             // Email Marketing
             { id: 'email-marketing', name: 'Email Marketing', description: 'Crea y envía campañas de email a tu lista de contactos. Editor drag & drop, plantillas y métricas.', icon: 'Mail', includedInPlans: ['starter', 'pro', 'agency', 'enterprise'] },
             { id: 'email-automation', name: 'Automatización de Emails', description: 'Secuencias automatizadas: bienvenida, carritos abandonados, seguimiento post-compra y más.', icon: 'Send', includedInPlans: ['pro', 'agency', 'enterprise'] },
-            
+
             // Domains & Publishing
             { id: 'custom-domains', name: 'Dominios Personalizados', description: 'Conecta tu propio dominio (tunegocio.com) con SSL gratuito. Configuración DNS guiada.', icon: 'Globe', includedInPlans: ['starter', 'pro', 'agency', 'enterprise'] },
             { id: 'remove-branding', name: 'Quitar Branding de Quimera', description: 'Elimina el "Powered by Quimera.ai" de tu sitio para una experiencia completamente white-label.', icon: 'EyeOff', includedInPlans: ['pro', 'agency', 'enterprise'] },
             { id: 'white-label', name: 'White Label Completo', description: 'Portal personalizado para agencias: logo propio, colores de marca y dominio personalizado para el panel.', icon: 'Shield', includedInPlans: ['agency', 'enterprise'] },
-            
+
             // Analytics
             { id: 'analytics-basic', name: 'Analytics Básico', description: 'Métricas de visitas, páginas vistas, fuentes de tráfico y dispositivos. Dashboard visual.', icon: 'BarChart', includedInPlans: ['starter', 'pro', 'agency', 'enterprise'] },
             { id: 'analytics-advanced', name: 'Analytics Avanzado', description: 'Embudo de conversión, mapas de calor, grabación de sesiones y reportes personalizados.', icon: 'TrendingUp', includedInPlans: ['pro', 'agency', 'enterprise'] },
-            
+
             // Agency Features
             { id: 'multi-tenant', name: 'Multi-Tenant / Sub-Clientes', description: 'Gestiona múltiples clientes desde un solo panel. Cada cliente tiene su propio workspace aislado.', icon: 'Building2', includedInPlans: ['agency', 'enterprise'] },
             { id: 'team-collaboration', name: 'Colaboración en Equipo', description: 'Invita a miembros de tu equipo con diferentes roles y permisos: admin, editor, visor.', icon: 'UserPlus', includedInPlans: ['starter', 'pro', 'agency', 'enterprise'] },
-            
+
             // Developer
             { id: 'api-access', name: 'Acceso a API', description: 'API REST para integraciones personalizadas. Gestiona proyectos, contenido y leads programáticamente.', icon: 'Code', includedInPlans: ['agency', 'enterprise'] },
             { id: 'webhooks', name: 'Webhooks', description: 'Recibe notificaciones en tiempo real de eventos: nuevo lead, nueva venta, nuevo mensaje, etc.', icon: 'Webhook', includedInPlans: ['pro', 'agency', 'enterprise'] },
-            
+
             // AI Credits
             { id: 'ai-credits', name: 'AI Credits', description: 'Sistema de créditos para operaciones de IA. Genera contenido, imágenes, chatbot y más. Los créditos no usados no se acumulan.', icon: 'Coins', includedInPlans: ['free', 'starter', 'pro', 'agency', 'enterprise'] },
         ],
@@ -471,7 +472,7 @@ export const defaultLandingChatbotConfig: LandingChatbotConfig = {
 - Integraciones con más pasarelas de pago
 - Editor de video con IA`,
     },
-    
+
     personality: {
         tone: 'enthusiastic',
         languages: ['es', 'en'],
@@ -511,13 +512,13 @@ export const defaultLandingChatbotConfig: LandingChatbotConfig = {
         salesMode: 'proactive',
         customInstructions: '',
     },
-    
+
     voice: {
         enabled: true,
         voiceName: 'Kore',
         autoPlayGreeting: false,
     },
-    
+
     leadCapture: {
         enabled: true,
         triggerAfterMessages: 3,
@@ -529,9 +530,9 @@ export const defaultLandingChatbotConfig: LandingChatbotConfig = {
         progressiveProfilingEnabled: true,
         highIntentKeywords: ['precio', 'plan', 'demo', 'comprar', 'contratar', 'suscripción', 'prueba', 'ecommerce', 'tienda', 'chatbot', 'agencia', 'enterprise'],
     },
-    
+
     appearance: {
-        colorSource: 'app',
+        colorSource: 'custom',  // Use custom colors (designTokens not available on public landing)
         customColors: { ...defaultChatbotColors },
         position: 'bottom-right',
         offsetX: 20,
@@ -546,9 +547,9 @@ export const defaultLandingChatbotConfig: LandingChatbotConfig = {
         showOnAllPages: true,
         excludedPaths: ['/dashboard', '/admin'],  // Only exclude authenticated areas
     },
-    
+
     socialChannels: {},
-    
+
     behavior: {
         maxTokens: 600,
         temperature: 0.7,

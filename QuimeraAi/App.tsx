@@ -27,6 +27,7 @@ const OnboardingModal = lazyWithRetry(() => import('./components/onboarding/Onbo
 const ViewRouter = lazyWithRetry(() => import('./components/ViewRouter'));
 const PublicWebsitePreview = lazyWithRetry(() => import('./components/PublicWebsitePreview'));
 const StorefrontApp = lazyWithRetry(() => import('./components/ecommerce/StorefrontApp'));
+const PublicBioPage = lazyWithRetry(() => import('./components/PublicBioPage'));
 
 // Minimal loading fallback for lazy components
 const MinimalLoader = () => (
@@ -59,6 +60,12 @@ const GlobalAdPixels: React.FC = () => {
 const isPreviewRoute = () => {
   const path = window.location.pathname;
   return path.startsWith('/preview/');
+};
+
+// Check for public bio page route
+const isBioRoute = () => {
+  const path = window.location.pathname;
+  return path.startsWith('/bio/');
 };
 
 // =============================================================================
@@ -239,6 +246,18 @@ const App: React.FC = () => {
       <ErrorBoundary>
         <Suspense fallback={<MinimalLoader />}>
           <PublicWebsitePreview />
+        </Suspense>
+      </ErrorBoundary>
+    );
+  }
+
+  // Public Bio Page route - no providers needed
+  if (isBioRoute()) {
+    const username = window.location.pathname.split('/bio/')[1];
+    return (
+      <ErrorBoundary>
+        <Suspense fallback={<MinimalLoader />}>
+          <PublicBioPage username={username} />
         </Suspense>
       </ErrorBoundary>
     );

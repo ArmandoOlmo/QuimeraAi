@@ -164,6 +164,9 @@ export interface OnboardingProgress {
     hasEcommerce?: boolean;
     ecommerceType?: EcommerceType;
 
+    // Step 1: Bio Page Option (Link in Bio)
+    hasBioPage?: boolean;
+
     // Step 2: Description
     description?: string;
     tagline?: string;

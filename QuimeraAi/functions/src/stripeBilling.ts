@@ -111,21 +111,21 @@ export const getBillingMetrics = functions.https.onRequest(async (req, res) => {
                 const price = item.price;
                 if (price.recurring) {
                     let monthlyAmount = price.unit_amount || 0;
-                    
+
                     // Convert to monthly if annual
                     if (price.recurring.interval === 'year') {
                         monthlyAmount = monthlyAmount / 12;
                     } else if (price.recurring.interval === 'week') {
                         monthlyAmount = monthlyAmount * 4;
                     }
-                    
+
                     mrr += monthlyAmount;
 
                     // Count by plan
                     const productId = typeof price.product === 'string' ? price.product : (price.product as Stripe.Product)?.id || 'unknown';
                     const productObj = price.product as Stripe.Product | undefined;
                     const productName = productObj && 'name' in productObj ? productObj.name : 'Unknown Plan';
-                    
+
                     if (!planCounts[productId]) {
                         planCounts[productId] = { name: productName, count: 0 };
                     }
@@ -176,7 +176,7 @@ export const getBillingMetrics = functions.https.onRequest(async (req, res) => {
 
     } catch (error) {
         console.error('Error fetching billing metrics:', error);
-        res.status(500).json({ 
+        res.status(500).json({
             error: 'Failed to fetch billing metrics',
             message: error instanceof Error ? error.message : 'Unknown error'
         });
@@ -193,7 +193,7 @@ async function calculateRevenueTrend(stripe: Stripe): Promise<{ month: string; r
     for (let i = 11; i >= 0; i--) {
         const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
         const monthName = date.toLocaleString('en-US', { month: 'short' });
-        
+
         const startOfMonth = Math.floor(new Date(date.getFullYear(), date.getMonth(), 1).getTime() / 1000);
         const endOfMonth = Math.floor(new Date(date.getFullYear(), date.getMonth() + 1, 0, 23, 59, 59).getTime() / 1000);
 
@@ -225,7 +225,7 @@ function buildPlansFromStripe(products: Stripe.Product[], prices: Stripe.Price[]
 
     for (const product of products) {
         const productPrices = prices.filter(p => p.product === product.id);
-        
+
         const monthlyPrice = productPrices.find(p => p.recurring?.interval === 'month');
         const annualPrice = productPrices.find(p => p.recurring?.interval === 'year');
 
@@ -326,7 +326,7 @@ export const createOrUpdatePlan = functions.https.onRequest(async (req, res) => 
 
     } catch (error) {
         console.error('Error creating/updating plan:', error);
-        res.status(500).json({ 
+        res.status(500).json({
             error: 'Failed to save plan',
             message: error instanceof Error ? error.message : 'Unknown error'
         });
@@ -338,9 +338,9 @@ export const createOrUpdatePlan = functions.https.onRequest(async (req, res) => 
  * Used when a user wants to upgrade their plan
  */
 export const createSubscriptionCheckout = functions.https.onCall(
-    async (data: { 
-        tenantId: string; 
-        planId: string; 
+    async (data: {
+        tenantId: string;
+        planId: string;
         billingCycle: 'monthly' | 'annually';
         successUrl: string;
         cancelUrl: string;
@@ -359,22 +359,63 @@ export const createSubscriptionCheckout = functions.https.onCall(
         try {
             const stripe = getStripe();
 
+            // Mapeo de planId a nombres de producto en Stripe
+            const PLAN_NAME_MAPPING: Record<string, string[]> = {
+                'free': ['free', 'gratis'],
+                'individual': ['individual', 'indie', 'personal'],
+                'agency_starter': ['agency starter', 'agency-starter', 'starter'],
+                'agency_pro': ['agency pro', 'agency-pro', 'pro'],
+                'agency_scale': ['agency scale', 'agency-scale', 'scale'],
+                'enterprise': ['enterprise', 'empresarial'],
+            };
+
             // Get the product and price from Stripe based on plan name
             const products = await stripe.products.list({ active: true, limit: 100 });
-            const product = products.data.find(p => 
-                p.name.toLowerCase().includes(planId.toLowerCase()) ||
-                p.metadata?.planId === planId
-            );
+
+            console.log(`[Stripe Checkout] Looking for plan: ${planId}`);
+            console.log(`[Stripe Checkout] Available products:`, products.data.map(p => ({
+                id: p.id,
+                name: p.name,
+                metadata: p.metadata
+            })));
+
+            // Try multiple matching strategies
+            let product = products.data.find(p => p.metadata?.planId === planId);
 
             if (!product) {
-                throw new functions.https.HttpsError('not-found', `Plan ${planId} not found in Stripe`);
+                // Try exact name match
+                product = products.data.find(p =>
+                    p.name.toLowerCase() === planId.toLowerCase() ||
+                    p.name.toLowerCase().replace(/\s+/g, '_') === planId.toLowerCase()
+                );
             }
 
+            if (!product) {
+                // Try name mapping
+                const possibleNames = PLAN_NAME_MAPPING[planId] || [planId];
+                product = products.data.find(p =>
+                    possibleNames.some(name =>
+                        p.name.toLowerCase().includes(name.toLowerCase())
+                    )
+                );
+            }
+
+            if (!product) {
+                console.error(`[Stripe Checkout] Plan ${planId} not found. Available products:`,
+                    products.data.map(p => p.name));
+                throw new functions.https.HttpsError(
+                    'not-found',
+                    `Plan "${planId}" not found in Stripe. Tip: Add planId="${planId}" to product metadata in Stripe Dashboard.`
+                );
+            }
+
+            console.log(`[Stripe Checkout] Found product for plan ${planId}:`, product.name, product.id);
+
             // Get the price for this product
-            const prices = await stripe.prices.list({ 
-                product: product.id, 
+            const prices = await stripe.prices.list({
+                product: product.id,
                 active: true,
-                limit: 10 
+                limit: 10
             });
 
             const interval = billingCycle === 'annually' ? 'year' : 'month';
@@ -455,7 +496,7 @@ export const updateSubscription = functions.https.onCall(
 
             // Get current subscription from Firestore
             const subscriptionDoc = await db.doc(`subscriptions/${tenantId}`).get();
-            
+
             if (!subscriptionDoc.exists) {
                 throw new functions.https.HttpsError('not-found', 'No subscription found for this tenant');
             }
@@ -466,14 +507,14 @@ export const updateSubscription = functions.https.onCall(
             if (!stripeSubscriptionId) {
                 // No Stripe subscription, create new checkout
                 throw new functions.https.HttpsError(
-                    'failed-precondition', 
+                    'failed-precondition',
                     'No active Stripe subscription. Please use checkout to subscribe.'
                 );
             }
 
             // Get the Stripe subscription
             const stripeSubscription = await stripe.subscriptions.retrieve(stripeSubscriptionId);
-            
+
             if (stripeSubscription.status !== 'active' && stripeSubscription.status !== 'trialing') {
                 throw new functions.https.HttpsError(
                     'failed-precondition',
@@ -481,21 +522,62 @@ export const updateSubscription = functions.https.onCall(
                 );
             }
 
+            // Mapeo de planId a nombres de producto en Stripe
+            const PLAN_NAME_MAPPING: Record<string, string[]> = {
+                'free': ['free', 'gratis'],
+                'individual': ['individual', 'indie', 'personal'],
+                'agency_starter': ['agency starter', 'agency-starter', 'starter'],
+                'agency_pro': ['agency pro', 'agency-pro', 'pro'],
+                'agency_scale': ['agency scale', 'agency-scale', 'scale'],
+                'enterprise': ['enterprise', 'empresarial'],
+            };
+
             // Find the new price
             const products = await stripe.products.list({ active: true, limit: 100 });
-            const product = products.data.find(p => 
-                p.name.toLowerCase().includes(newPlanId.toLowerCase()) ||
-                p.metadata?.planId === newPlanId
-            );
+
+            console.log(`[Stripe] Looking for plan: ${newPlanId}`);
+            console.log(`[Stripe] Available products:`, products.data.map(p => ({
+                id: p.id,
+                name: p.name,
+                metadata: p.metadata
+            })));
+
+            // Try multiple matching strategies
+            let product = products.data.find(p => p.metadata?.planId === newPlanId);
 
             if (!product) {
-                throw new functions.https.HttpsError('not-found', `Plan ${newPlanId} not found in Stripe`);
+                // Try exact name match
+                product = products.data.find(p =>
+                    p.name.toLowerCase() === newPlanId.toLowerCase() ||
+                    p.name.toLowerCase().replace(/\s+/g, '_') === newPlanId.toLowerCase()
+                );
             }
 
-            const prices = await stripe.prices.list({ 
-                product: product.id, 
+            if (!product) {
+                // Try name mapping
+                const possibleNames = PLAN_NAME_MAPPING[newPlanId] || [newPlanId];
+                product = products.data.find(p =>
+                    possibleNames.some(name =>
+                        p.name.toLowerCase().includes(name.toLowerCase())
+                    )
+                );
+            }
+
+            if (!product) {
+                console.error(`[Stripe] Plan ${newPlanId} not found. Available products:`,
+                    products.data.map(p => p.name));
+                throw new functions.https.HttpsError(
+                    'not-found',
+                    `Plan "${newPlanId}" not found in Stripe. Tip: Add planId="${newPlanId}" to product metadata in Stripe Dashboard.`
+                );
+            }
+
+            console.log(`[Stripe] Found product for plan ${newPlanId}:`, product.name, product.id);
+
+            const prices = await stripe.prices.list({
+                product: product.id,
                 active: true,
-                limit: 10 
+                limit: 10
             });
 
             const interval = billingCycle === 'annually' ? 'year' : 'month';
@@ -507,7 +589,7 @@ export const updateSubscription = functions.https.onCall(
 
             // Update the subscription with proration and immediate invoice
             const currentItem = stripeSubscription.items.data[0];
-            
+
             const updatedSubscription = await stripe.subscriptions.update(stripeSubscriptionId, {
                 items: [{
                     id: currentItem.id,
@@ -525,14 +607,14 @@ export const updateSubscription = functions.https.onCall(
             const upcomingInvoice = await stripe.invoices.retrieveUpcoming({
                 subscription: stripeSubscriptionId,
             });
-            
+
             const prorationAmount = upcomingInvoice.lines.data
                 .filter(line => line.proration)
                 .reduce((sum, line) => sum + line.amount, 0) / 100;
 
             // Update Firestore
             const planLimits = await getPlanLimits(newPlanId);
-            
+
             await db.doc(`subscriptions/${tenantId}`).update({
                 planId: newPlanId,
                 billingCycle: billingCycle || currentSub?.billingCycle || 'monthly',
@@ -570,7 +652,7 @@ export const updateSubscription = functions.https.onCall(
                 },
                 proration: {
                     amount: prorationAmount,
-                    description: prorationAmount > 0 
+                    description: prorationAmount > 0
                         ? `You'll be charged $${prorationAmount.toFixed(2)} for the upgrade`
                         : prorationAmount < 0
                             ? `You'll receive a credit of $${Math.abs(prorationAmount).toFixed(2)}`
@@ -615,7 +697,7 @@ export const cancelSubscription = functions.https.onCall(
 
             // Get current subscription
             const subscriptionDoc = await db.doc(`subscriptions/${tenantId}`).get();
-            
+
             if (!subscriptionDoc.exists) {
                 throw new functions.https.HttpsError('not-found', 'No subscription found');
             }
@@ -691,7 +773,7 @@ export const cancelSubscription = functions.https.onCall(
 
             return {
                 success: true,
-                message: immediately 
+                message: immediately
                     ? 'Subscription cancelled immediately'
                     : `Subscription will cancel on ${new Date(cancelledSubscription.current_period_end * 1000).toLocaleDateString()}`,
                 cancelsAt: immediately ? null : new Date(cancelledSubscription.current_period_end * 1000).toISOString(),
@@ -728,7 +810,7 @@ export const reactivateSubscription = functions.https.onCall(
             const db = admin.firestore();
 
             const subscriptionDoc = await db.doc(`subscriptions/${tenantId}`).get();
-            
+
             if (!subscriptionDoc.exists) {
                 throw new functions.https.HttpsError('not-found', 'No subscription found');
             }
@@ -788,7 +870,7 @@ export const getSubscriptionDetails = functions.https.onCall(
             const db = admin.firestore();
 
             const subscriptionDoc = await db.doc(`subscriptions/${tenantId}`).get();
-            
+
             if (!subscriptionDoc.exists) {
                 return { subscription: null, invoices: [] };
             }
@@ -805,7 +887,7 @@ export const getSubscriptionDetails = functions.https.onCall(
                     const stripeSub = await stripe.subscriptions.retrieve(stripeSubscriptionId, {
                         expand: ['items.data.price.product'],
                     });
-                    
+
                     stripeDetails = {
                         status: stripeSub.status,
                         currentPeriodStart: new Date(stripeSub.current_period_start * 1000).toISOString(),
@@ -873,7 +955,7 @@ async function getPlanLimits(planId: string): Promise<{ maxAiCredits: number }> 
         agency_plus: 10000,
         enterprise: 25000,
     };
-    
+
     return {
         maxAiCredits: planCredits[planId] || 30,
     };
@@ -910,7 +992,7 @@ export const archivePlan = functions.https.onRequest(async (req, res) => {
 
     } catch (error) {
         console.error('Error archiving plan:', error);
-        res.status(500).json({ 
+        res.status(500).json({
             error: 'Failed to archive plan',
             message: error instanceof Error ? error.message : 'Unknown error'
         });

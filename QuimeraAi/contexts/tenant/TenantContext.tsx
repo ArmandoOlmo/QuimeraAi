@@ -265,7 +265,6 @@ export const TenantProvider: React.FC<{ children: ReactNode }> = ({ children }) 
 
                 if (memberships.length === 0) {
                     // Auto-create a personal workspace for the user
-                    console.log('No tenants found, creating personal workspace...');
                     try {
                         const personalTenantId = await createPersonalTenant(user);
                         // Reload memberships after creating tenant

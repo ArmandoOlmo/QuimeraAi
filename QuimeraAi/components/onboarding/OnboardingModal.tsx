@@ -56,6 +56,8 @@ const OnboardingModal: React.FC = () => {
         isAnalyzingWebsite,
         analyzeWebsite,
         skipWebsiteAnalysis,
+        // Bio Page Updates
+        updateBioPageSettings,
     } = useOnboarding();
 
     // State for emergency cancel confirmation
@@ -163,8 +165,10 @@ const OnboardingModal: React.FC = () => {
                         subIndustry={progress.subIndustry}
                         hasEcommerce={progress.hasEcommerce}
                         ecommerceType={progress.ecommerceType}
+                        hasBioPage={progress.hasBioPage}
                         onUpdate={updateBusinessInfo}
                         onEcommerceUpdate={updateEcommerceSettings}
+                        onBioPageUpdate={updateBioPageSettings}
                     />
                 );
             case 2:

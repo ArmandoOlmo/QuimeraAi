@@ -4,10 +4,11 @@
  */
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
-import { Building2, Search, ChevronDown, ShoppingBag, Package, FileText, Layers } from 'lucide-react';
+import { Building2, Search, ChevronDown, ShoppingBag, Package, FileText, Layers, Link2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { INDUSTRIES, INDUSTRY_CATEGORIES } from '../../../data/industries';
 import { ECOMMERCE_INDUSTRIES, EcommerceType } from '../../../types/onboarding';
+import { useCanAccessService } from '../../../hooks/useServiceAvailability';
 
 interface Step1BusinessInfoProps {
     businessName: string;
@@ -15,8 +16,10 @@ interface Step1BusinessInfoProps {
     subIndustry?: string;
     hasEcommerce?: boolean;
     ecommerceType?: EcommerceType;
+    hasBioPage?: boolean;
     onUpdate: (name: string, industry: string, subIndustry?: string) => void;
     onEcommerceUpdate: (hasEcommerce: boolean, ecommerceType?: EcommerceType) => void;
+    onBioPageUpdate?: (hasBioPage: boolean) => void;
 }
 
 const Step1BusinessInfo: React.FC<Step1BusinessInfoProps> = ({
@@ -25,10 +28,16 @@ const Step1BusinessInfo: React.FC<Step1BusinessInfoProps> = ({
     subIndustry,
     hasEcommerce = false,
     ecommerceType,
+    hasBioPage = false,
     onUpdate,
     onEcommerceUpdate,
+    onBioPageUpdate,
 }) => {
     const { t } = useTranslation();
+
+    // Check service availability from Super Admin settings
+    const canAccessEcommerce = useCanAccessService('ecommerce');
+
     const [searchQuery, setSearchQuery] = useState('');
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const triggerRef = useRef<HTMLButtonElement>(null);
@@ -69,9 +78,9 @@ const Step1BusinessInfo: React.FC<Step1BusinessInfoProps> = ({
     // Group industries by category
     const groupedIndustries = useMemo(() => {
         const groups: Record<string, typeof INDUSTRIES> = {};
-        
+
         Object.entries(INDUSTRY_CATEGORIES).forEach(([categoryKey, industryIds]) => {
-            const categoryIndustries = filteredIndustries.filter(ind => 
+            const categoryIndustries = filteredIndustries.filter(ind =>
                 industryIds.includes(ind.id)
             );
             if (categoryIndustries.length > 0) {
@@ -164,8 +173,8 @@ const Step1BusinessInfo: React.FC<Step1BusinessInfoProps> = ({
                         className={`
                             w-full px-4 py-3 bg-card border rounded-xl text-left
                             flex items-center justify-between transition-all touch-manipulation
-                            ${isDropdownOpen 
-                                ? 'border-primary ring-2 ring-primary/50' 
+                            ${isDropdownOpen
+                                ? 'border-primary ring-2 ring-primary/50'
                                 : 'border-border hover:border-muted-foreground'
                             }
                         `}
@@ -173,9 +182,9 @@ const Step1BusinessInfo: React.FC<Step1BusinessInfoProps> = ({
                         <span className={`text-sm sm:text-base ${industry ? 'text-foreground' : 'text-muted-foreground/50'}`}>
                             {selectedIndustryLabel || t('onboarding.selectIndustry', 'Select your industry')}
                         </span>
-                        <ChevronDown 
-                            size={18} 
-                            className={`text-muted-foreground transition-transform flex-shrink-0 ${isDropdownOpen ? 'rotate-180' : ''}`} 
+                        <ChevronDown
+                            size={18}
+                            className={`text-muted-foreground transition-transform flex-shrink-0 ${isDropdownOpen ? 'rotate-180' : ''}`}
                         />
                     </button>
 
@@ -183,11 +192,11 @@ const Step1BusinessInfo: React.FC<Step1BusinessInfoProps> = ({
                     {isDropdownOpen && (
                         <>
                             {/* Backdrop to close dropdown when clicking outside */}
-                            <div 
-                                className="fixed inset-0 z-[60] bg-black/20" 
+                            <div
+                                className="fixed inset-0 z-[60] bg-black/20"
                                 onClick={() => setIsDropdownOpen(false)}
                             />
-                            <div 
+                            <div
                                 className="fixed z-[70] rounded-xl shadow-2xl overflow-hidden border border-border bg-popover"
                                 style={{
                                     top: `${Math.min(dropdownPosition.top, window.innerHeight - 320)}px`,
@@ -224,8 +233,8 @@ const Step1BusinessInfo: React.FC<Step1BusinessInfoProps> = ({
                                                     onClick={() => handleIndustrySelect(ind.id)}
                                                     className={`
                                                         w-full px-3 sm:px-4 py-2.5 text-left text-sm transition-colors touch-manipulation
-                                                        ${industry === ind.id 
-                                                            ? 'bg-primary/20 text-primary' 
+                                                        ${industry === ind.id
+                                                            ? 'bg-primary/20 text-primary'
                                                             : 'text-popover-foreground hover:bg-accent active:bg-accent'
                                                         }
                                                     `}
@@ -247,106 +256,140 @@ const Step1BusinessInfo: React.FC<Step1BusinessInfoProps> = ({
                 </div>
             </div>
 
-            {/* Ecommerce Toggle */}
-            <div className="space-y-3 sm:space-y-4">
-                <div className="flex items-center justify-between p-3 sm:p-4 bg-card border border-border rounded-xl gap-3">
-                    <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-                        <div className="p-1.5 sm:p-2 bg-primary/10 rounded-lg flex-shrink-0">
-                            <ShoppingBag size={18} className="sm:w-5 sm:h-5 text-primary" />
+            {/* Ecommerce Toggle - Only shown if service is enabled in Super Admin */}
+            {canAccessEcommerce && (
+                <div className="space-y-3 sm:space-y-4">
+                    <div className="flex items-center justify-between p-3 sm:p-4 bg-card border border-border rounded-xl gap-3">
+                        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                            <div className="p-1.5 sm:p-2 bg-primary/10 rounded-lg flex-shrink-0">
+                                <ShoppingBag size={18} className="sm:w-5 sm:h-5 text-primary" />
+                            </div>
+                            <div className="min-w-0">
+                                <p className="font-medium text-foreground text-sm sm:text-base">
+                                    {t('onboarding.sellProductsOnline', 'Sell products online?')}
+                                </p>
+                                <p className="text-[10px] sm:text-xs text-muted-foreground truncate">
+                                    {t('onboarding.sellProductsOnlineDesc', 'We will include a store in your website')}
+                                </p>
+                            </div>
                         </div>
-                        <div className="min-w-0">
-                            <p className="font-medium text-foreground text-sm sm:text-base">
-                                {t('onboarding.sellProductsOnline', 'Sell products online?')}
-                            </p>
-                            <p className="text-[10px] sm:text-xs text-muted-foreground truncate">
-                                {t('onboarding.sellProductsOnlineDesc', 'We will include a store in your website')}
-                            </p>
-                        </div>
+                        <button
+                            type="button"
+                            onClick={() => onEcommerceUpdate(!hasEcommerce, hasEcommerce ? undefined : 'physical')}
+                            className={`relative inline-flex items-center cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 touch-manipulation ${hasEcommerce ? 'bg-primary' : 'bg-muted'
+                                }`}
+                            style={{ width: 44, height: 24, minWidth: 44, minHeight: 24, maxHeight: 24 }}
+                            role="switch"
+                            aria-checked={hasEcommerce}
+                        >
+                            <span
+                                className={`pointer-events-none absolute rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out`}
+                                style={{
+                                    width: 18,
+                                    height: 18,
+                                    top: 1,
+                                    left: hasEcommerce ? 23 : 1,
+                                }}
+                            />
+                        </button>
                     </div>
-                    <button
-                        type="button"
-                        onClick={() => onEcommerceUpdate(!hasEcommerce, hasEcommerce ? undefined : 'physical')}
-                        className={`relative inline-flex items-center cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 touch-manipulation ${
-                            hasEcommerce ? 'bg-primary' : 'bg-muted'
-                        }`}
-                        style={{ width: 44, height: 24, minWidth: 44, minHeight: 24, maxHeight: 24 }}
-                        role="switch"
-                        aria-checked={hasEcommerce}
-                    >
-                        <span
-                            className={`pointer-events-none absolute rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out`}
-                            style={{ 
-                                width: 18, 
-                                height: 18, 
-                                top: 1,
-                                left: hasEcommerce ? 23 : 1,
-                            }}
-                        />
-                    </button>
+
+                    {/* Ecommerce suggestion for retail industries */}
+                    {isEcommerceIndustry && !hasEcommerce && (
+                        <div className="p-2.5 sm:p-3 bg-secondary/10 border border-secondary/30 rounded-xl">
+                            <p className="text-xs sm:text-sm text-foreground">
+                                <span className="font-semibold">💡 {t('onboarding.suggestion', 'Suggestion')}:</span>{' '}
+                                {t('onboarding.ecommerceSuggestion', 'Your industry usually involves selling products. Do you want to add an online store?')}
+                            </p>
+                        </div>
+                    )}
+
+                    {/* Product Type Selector - Only shown if ecommerce is enabled */}
+                    {hasEcommerce && (
+                        <div className="space-y-2 sm:space-y-3 p-3 sm:p-4 bg-muted/30 rounded-xl border border-border">
+                            <p className="text-xs sm:text-sm font-medium text-foreground">
+                                {t('onboarding.productType', 'Tipo de productos')}
+                            </p>
+                            <div className="grid grid-cols-3 gap-2 sm:gap-3">
+                                <button
+                                    type="button"
+                                    onClick={() => onEcommerceUpdate(true, 'physical')}
+                                    className={`flex flex-col items-center gap-1.5 sm:gap-2 p-2.5 sm:p-3 rounded-xl border-2 transition-all touch-manipulation active:scale-95 ${ecommerceType === 'physical'
+                                        ? 'border-primary bg-primary/10'
+                                        : 'border-border hover:border-muted-foreground'
+                                        }`}
+                                >
+                                    <Package size={20} className="sm:w-6 sm:h-6" style={{ color: ecommerceType === 'physical' ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))' }} />
+                                    <span className={`text-[10px] sm:text-xs font-medium ${ecommerceType === 'physical' ? 'text-primary' : 'text-foreground'}`}>
+                                        {t('onboarding.physical', 'Physical')}
+                                    </span>
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => onEcommerceUpdate(true, 'digital')}
+                                    className={`flex flex-col items-center gap-1.5 sm:gap-2 p-2.5 sm:p-3 rounded-xl border-2 transition-all touch-manipulation active:scale-95 ${ecommerceType === 'digital'
+                                        ? 'border-primary bg-primary/10'
+                                        : 'border-border hover:border-muted-foreground'
+                                        }`}
+                                >
+                                    <FileText size={20} className="sm:w-6 sm:h-6" style={{ color: ecommerceType === 'digital' ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))' }} />
+                                    <span className={`text-[10px] sm:text-xs font-medium ${ecommerceType === 'digital' ? 'text-primary' : 'text-foreground'}`}>
+                                        {t('onboarding.digital', 'Digital')}
+                                    </span>
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => onEcommerceUpdate(true, 'both')}
+                                    className={`flex flex-col items-center gap-1.5 sm:gap-2 p-2.5 sm:p-3 rounded-xl border-2 transition-all touch-manipulation active:scale-95 ${ecommerceType === 'both'
+                                        ? 'border-primary bg-primary/10'
+                                        : 'border-border hover:border-muted-foreground'
+                                        }`}
+                                >
+                                    <Layers size={20} className="sm:w-6 sm:h-6" style={{ color: ecommerceType === 'both' ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))' }} />
+                                    <span className={`text-[10px] sm:text-xs font-medium ${ecommerceType === 'both' ? 'text-primary' : 'text-foreground'}`}>
+                                        {t('onboarding.both', 'Both')}
+                                    </span>
+                                </button>
+                            </div>
+                        </div>
+                    )}
                 </div>
+            )}
 
-                {/* Ecommerce suggestion for retail industries */}
-                {isEcommerceIndustry && !hasEcommerce && (
-                    <div className="p-2.5 sm:p-3 bg-secondary/10 border border-secondary/30 rounded-xl">
-                        <p className="text-xs sm:text-sm text-foreground">
-                            <span className="font-semibold">💡 {t('onboarding.suggestion', 'Suggestion')}:</span>{' '}
-                            {t('onboarding.ecommerceSuggestion', 'Your industry usually involves selling products. Do you want to add an online store?')}
+            {/* Bio Page Toggle */}
+            <div className="flex items-center justify-between p-3 sm:p-4 bg-card border border-border rounded-xl gap-3">
+                <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                    <div className="p-1.5 sm:p-2 bg-primary/10 rounded-lg flex-shrink-0">
+                        <Link2 size={18} className="sm:w-5 sm:h-5 text-primary" />
+                    </div>
+                    <div className="min-w-0">
+                        <p className="font-medium text-foreground text-sm sm:text-base">
+                            {t('onboarding.createBioPage', 'Create a "Link in Bio" page?')}
+                        </p>
+                        <p className="text-[10px] sm:text-xs text-muted-foreground truncate">
+                            {t('onboarding.createBioPageDesc', 'Perfect for social media profiles')}
                         </p>
                     </div>
-                )}
-
-                {/* Product Type Selector - Only shown if ecommerce is enabled */}
-                {hasEcommerce && (
-                    <div className="space-y-2 sm:space-y-3 p-3 sm:p-4 bg-muted/30 rounded-xl border border-border">
-                        <p className="text-xs sm:text-sm font-medium text-foreground">
-                            {t('onboarding.productType', 'Tipo de productos')}
-                        </p>
-                        <div className="grid grid-cols-3 gap-2 sm:gap-3">
-                            <button
-                                type="button"
-                                onClick={() => onEcommerceUpdate(true, 'physical')}
-                                className={`flex flex-col items-center gap-1.5 sm:gap-2 p-2.5 sm:p-3 rounded-xl border-2 transition-all touch-manipulation active:scale-95 ${
-                                    ecommerceType === 'physical'
-                                        ? 'border-primary bg-primary/10'
-                                        : 'border-border hover:border-muted-foreground'
-                                }`}
-                            >
-                                <Package size={20} className="sm:w-6 sm:h-6" style={{ color: ecommerceType === 'physical' ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))' }} />
-                                <span className={`text-[10px] sm:text-xs font-medium ${ecommerceType === 'physical' ? 'text-primary' : 'text-foreground'}`}>
-                                    {t('onboarding.physical', 'Physical')}
-                                </span>
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => onEcommerceUpdate(true, 'digital')}
-                                className={`flex flex-col items-center gap-1.5 sm:gap-2 p-2.5 sm:p-3 rounded-xl border-2 transition-all touch-manipulation active:scale-95 ${
-                                    ecommerceType === 'digital'
-                                        ? 'border-primary bg-primary/10'
-                                        : 'border-border hover:border-muted-foreground'
-                                }`}
-                            >
-                                <FileText size={20} className="sm:w-6 sm:h-6" style={{ color: ecommerceType === 'digital' ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))' }} />
-                                <span className={`text-[10px] sm:text-xs font-medium ${ecommerceType === 'digital' ? 'text-primary' : 'text-foreground'}`}>
-                                    {t('onboarding.digital', 'Digital')}
-                                </span>
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => onEcommerceUpdate(true, 'both')}
-                                className={`flex flex-col items-center gap-1.5 sm:gap-2 p-2.5 sm:p-3 rounded-xl border-2 transition-all touch-manipulation active:scale-95 ${
-                                    ecommerceType === 'both'
-                                        ? 'border-primary bg-primary/10'
-                                        : 'border-border hover:border-muted-foreground'
-                                }`}
-                            >
-                                <Layers size={20} className="sm:w-6 sm:h-6" style={{ color: ecommerceType === 'both' ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))' }} />
-                                <span className={`text-[10px] sm:text-xs font-medium ${ecommerceType === 'both' ? 'text-primary' : 'text-foreground'}`}>
-                                    {t('onboarding.both', 'Both')}
-                                </span>
-                            </button>
-                        </div>
-                    </div>
-                )}
+                </div>
+                <button
+                    type="button"
+                    onClick={() => onBioPageUpdate?.(!hasBioPage)}
+                    className={`relative inline-flex items-center cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 touch-manipulation ${hasBioPage ? 'bg-primary' : 'bg-muted'
+                        }`}
+                    style={{ width: 44, height: 24, minWidth: 44, minHeight: 24, maxHeight: 24 }}
+                    role="switch"
+                    aria-checked={hasBioPage}
+                >
+                    <span
+                        className={`pointer-events-none absolute rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out`}
+                        style={{
+                            width: 18,
+                            height: 18,
+                            top: 1,
+                            left: hasBioPage ? 23 : 1,
+                        }}
+                    />
+                </button>
             </div>
 
             {/* Tip - Hidden on small screens when ecommerce is enabled to save space */}
