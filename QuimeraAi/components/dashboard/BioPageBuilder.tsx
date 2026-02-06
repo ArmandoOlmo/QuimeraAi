@@ -103,13 +103,14 @@ import { ROUTES } from '../../routes/config';
 import DashboardSidebar from './DashboardSidebar';
 import ImagePicker from '../ui/ImagePicker';
 import ColorControl from '../ui/ColorControl';
+import ChatCore from '../chat/ChatCore';
 import { hexToRgba } from '../../utils/colorUtils';
 
 // =============================================================================
 // TYPES
 // =============================================================================
 
-type LinkType = 'link' | 'collection' | 'product' | 'form' | 'social' | 'embed';
+type LinkType = 'link' | 'collection' | 'product' | 'form' | 'social' | 'embed' | 'chatbot';
 type LinkCategory = 'suggested' | 'commerce' | 'social' | 'media' | 'contact' | 'events' | 'text' | 'all';
 
 interface BioLink {
@@ -167,13 +168,6 @@ const LINK_CATEGORIES: { id: LinkCategory; icon: any; label: string }[] = [
     { id: 'all', icon: Grid, label: 'View all' },
 ];
 
-// Link Types (top tabs)
-const LINK_TYPES: { id: LinkType; icon: any; label: string }[] = [
-    { id: 'collection', icon: Layers, label: 'Collection' },
-    { id: 'link', icon: Link2, label: 'Link' },
-    { id: 'product', icon: Tag, label: 'Product' },
-    { id: 'form', icon: FileText, label: 'Form' },
-];
 
 // Social/Media Integrations
 interface Integration {
@@ -187,6 +181,9 @@ interface Integration {
 }
 
 const INTEGRATIONS: Integration[] = [
+    // AI Assistant
+    { id: 'chatbot', name: 'AI Chatbot', description: 'Let visitors chat with your AI assistant', icon: MessageCircle, category: 'contact', platform: 'chatbot', color: '#10B981', linkType: 'chatbot' },
+
     // Social
     { id: 'instagram', name: 'Instagram', description: 'Display your posts and reels', icon: Instagram, category: 'social', platform: 'instagram', color: '#E4405F' },
     { id: 'tiktok', name: 'TikTok', description: 'Share your TikToks directly', icon: Music, category: 'social', platform: 'tiktok', color: '#000000' },
@@ -359,25 +356,32 @@ const SortableLinkItem: React.FC<SortableLinkItemProps> = ({
                         placeholder={t('bioPage.linkTitle', 'Link title')}
                         className="w-full bg-transparent text-foreground font-medium outline-none placeholder:text-muted-foreground/50"
                     />
-                    <input
-                        type="url"
-                        value={link.url}
-                        onChange={(e) => onUpdate({ url: e.target.value })}
-                        placeholder="https://"
-                        className="w-full bg-muted/50 rounded-lg px-3 py-2 text-sm text-foreground outline-none focus:ring-2 focus:ring-primary/50"
-                    />
+
+                    {/* Only show URL field if not chatbot */}
+                    {link.linkType !== 'chatbot' && (
+                        <input
+                            type="url"
+                            value={link.url}
+                            onChange={(e) => onUpdate({ url: e.target.value })}
+                            placeholder="https://"
+                            className="w-full bg-muted/50 rounded-lg px-3 py-2 text-sm text-foreground outline-none focus:ring-2 focus:ring-primary/50"
+                        />
+                    )}
 
                     {/* Stats */}
                     <div className="flex items-center justify-between text-xs text-muted-foreground">
                         <span>{link.clicks.toLocaleString()} {t('bioPage.clicks', 'clicks')}</span>
                         <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <button
-                                onClick={() => window.open(link.url, '_blank')}
-                                className="p-1.5 hover:bg-muted rounded-md"
-                                title={t('bioPage.openLink', 'Open link')}
-                            >
-                                <ExternalLink size={14} />
-                            </button>
+                            {/* Only show open link button if not chatbot */}
+                            {link.linkType !== 'chatbot' && (
+                                <button
+                                    onClick={() => window.open(link.url, '_blank')}
+                                    className="p-1.5 hover:bg-muted rounded-md"
+                                    title={t('bioPage.openLink', 'Open link')}
+                                >
+                                    <ExternalLink size={14} />
+                                </button>
+                            )}
                             <button
                                 onClick={onDelete}
                                 className="p-1.5 hover:bg-destructive/20 hover:text-destructive rounded-md"
@@ -410,7 +414,7 @@ const SortableLinkItem: React.FC<SortableLinkItemProps> = ({
 // =============================================================================
 
 const BioPageBuilder: React.FC = () => {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const { activeProjectId, activeProject } = useProject();
     const { generateImage, hasApiKey, promptForKeySelection } = useAI();
     const { navigate } = useRouter();
@@ -509,7 +513,6 @@ const BioPageBuilder: React.FC = () => {
     const [isAddLinkModalOpen, setIsAddLinkModalOpen] = useState(false);
     const [addLinkSearch, setAddLinkSearch] = useState('');
     const [addLinkCategory, setAddLinkCategory] = useState<LinkCategory>('suggested');
-    const [addLinkType, setAddLinkType] = useState<LinkType>('link');
 
     // Form Configuration Modal state
     const [isFormConfigOpen, setIsFormConfigOpen] = useState(false);
@@ -524,6 +527,17 @@ const BioPageBuilder: React.FC = () => {
     const [showImagePicker, setShowImagePicker] = useState(false);
     const [isEnhancingBio, setIsEnhancingBio] = useState(false);
 
+    // Chatbot Preview Modal state
+    const [isChatbotPreviewOpen, setIsChatbotPreviewOpen] = useState(false);
+
+    // Notification Modal state
+    const [notificationModal, setNotificationModal] = useState<{ isOpen: boolean; title: string; message: string; type: 'success' | 'error' }>({
+        isOpen: false,
+        title: '',
+        message: '',
+        type: 'success'
+    });
+
     // ==========================================================================
     // HANDLERS
     // ==========================================================================
@@ -531,7 +545,6 @@ const BioPageBuilder: React.FC = () => {
     const openAddLinkModal = () => {
         setAddLinkSearch('');
         setAddLinkCategory('suggested');
-        setAddLinkType('link');
         setIsAddLinkModalOpen(true);
     };
 
@@ -541,8 +554,11 @@ const BioPageBuilder: React.FC = () => {
     };
 
     const addLink = (linkType: LinkType = 'link', platform?: string, integration?: Integration) => {
+        // Use special title for chatbot
+        const defaultTitle = linkType === 'chatbot' ? 'Chat with me' : (integration?.name || 'New Link');
+
         contextAddLink({
-            title: integration?.name || 'New Link',
+            title: defaultTitle,
             url: '',
             linkType,
             platform: platform || integration?.platform,
@@ -559,7 +575,9 @@ const BioPageBuilder: React.FC = () => {
         if (FORM_INTEGRATION_IDS.includes(integration.id)) {
             openFormConfig(integration);
         } else {
-            addLink('social', integration.platform, integration);
+            // Use integration's linkType if provided (for chatbot), otherwise use 'social'
+            const linkType = integration.linkType || 'social';
+            addLink(linkType, integration.platform, integration);
         }
     };
 
@@ -596,7 +614,7 @@ const BioPageBuilder: React.FC = () => {
         contextAddLink({
             title: isUrl ? 'New Link' : addLinkSearch || 'New Link',
             url: isUrl ? (addLinkSearch.startsWith('http') ? addLinkSearch : `https://${addLinkSearch}`) : '',
-            linkType: addLinkType,
+            linkType: 'link',
         });
         closeAddLinkModal();
     };
@@ -680,9 +698,11 @@ const BioPageBuilder: React.FC = () => {
 
         setIsEnhancingBio(true);
         try {
+            const currentLang = i18n.language?.startsWith('es') ? 'Spanish' : 'English';
             const prompt = `You are an expert copywriter specializing in "Link in Bio" profiles for maximum engagement and conversion.
 
 Rewrite this bio description following these best practices:
+- WRITE IN ${currentLang.toUpperCase()} LANGUAGE ONLY
 - Keep it under 150 characters (CRITICAL - must be concise)
 - Start with a hook or value proposition
 - Include a clear call-to-action or benefit
@@ -694,7 +714,7 @@ Rewrite this bio description following these best practices:
 Original bio: "${profile.bio}"
 Name: "${profile.name}"
 
-Return ONLY the improved bio text, nothing else. No quotes, no explanation.`;
+Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no explanation.`;
 
             const projectId = activeProjectId || 'bio-page-builder';
             const response = await generateContentViaProxy(projectId, prompt, 'gemini-2.5-flash', {}, user?.uid);
@@ -844,7 +864,7 @@ Return ONLY the improved bio text, nothing else. No quotes, no explanation.`;
                                 <label className="text-sm font-medium text-foreground">
                                     {t('bioPage.titleStyle', 'Title style')}
                                 </label>
-                                <div className="grid grid-cols-2 gap-3">
+                                <div className="grid grid-cols-3 gap-2">
                                     <button
                                         onClick={() => contextUpdateTheme({ titleStyle: 'text' })}
                                         className={`p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2 ${theme.titleStyle === 'text'
@@ -853,7 +873,7 @@ Return ONLY the improved bio text, nothing else. No quotes, no explanation.`;
                                             }`}
                                     >
                                         <span className="text-lg font-bold">Aa</span>
-                                        <span className="text-xs font-medium">{t('bioPage.text', 'Text')}</span>
+                                        <span className="text-[10px] font-medium">{t('bioPage.text', 'Text')}</span>
                                     </button>
                                     <button
                                         onClick={() => contextUpdateTheme({ titleStyle: 'logo' })}
@@ -863,9 +883,54 @@ Return ONLY the improved bio text, nothing else. No quotes, no explanation.`;
                                             }`}
                                     >
                                         <Image size={20} className="text-muted-foreground" />
-                                        <span className="text-xs font-medium">{t('bioPage.logo', 'Logo')}</span>
+                                        <span className="text-[10px] font-medium">{t('bioPage.logo', 'Logo')}</span>
+                                    </button>
+                                    <button
+                                        onClick={() => contextUpdateTheme({ titleStyle: 'both' })}
+                                        className={`p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2 ${theme.titleStyle === 'both'
+                                            ? 'border-primary bg-primary/5'
+                                            : 'border-border hover:border-muted-foreground'
+                                            }`}
+                                    >
+                                        <div className="flex flex-col items-center gap-0.5">
+                                            <Image size={14} className="text-muted-foreground" />
+                                            <span className="text-[10px] font-bold leading-none">Aa</span>
+                                        </div>
+                                        <span className="text-[10px] font-medium">{t('bioPage.both', 'Both')}</span>
                                     </button>
                                 </div>
+
+                                {/* Logo Upload - Shows when logo or both is selected */}
+                                {(theme.titleStyle === 'logo' || theme.titleStyle === 'both') && (
+                                    <div className="pt-3 space-y-2">
+                                        <label className="text-xs font-medium text-muted-foreground">
+                                            {t('bioPage.uploadLogo', 'Upload your logo')}
+                                        </label>
+                                        <ImagePicker
+                                            value={profile.logoUrl || ''}
+                                            onChange={(url) => contextUpdateProfile({ logoUrl: url })}
+                                            label={t('bioPage.selectLogo', 'Select logo image')}
+                                            showAIGeneration={true}
+                                            aspectRatio="1:1"
+                                            hideUrlInput={true}
+                                        />
+                                        {profile.logoUrl && (
+                                            <div className="relative w-24 h-24 mx-auto rounded-lg overflow-hidden bg-muted/50">
+                                                <img
+                                                    src={profile.logoUrl}
+                                                    alt="Logo preview"
+                                                    className="w-full h-full object-contain"
+                                                />
+                                                <button
+                                                    onClick={() => contextUpdateProfile({ logoUrl: '' })}
+                                                    className="absolute top-1 right-1 p-1 rounded bg-black/50 hover:bg-black/70 text-white"
+                                                >
+                                                    <X size={12} />
+                                                </button>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
                             </div>
 
                             {/* Size */}
@@ -1083,6 +1148,115 @@ Return ONLY the improved bio text, nothing else. No quotes, no explanation.`;
                                         {t('bioPage.backgroundImage', 'Background image')}
                                     </label>
 
+                                    {/* Contrast Overlay Controls - Above Image */}
+                                    <div className="p-4 rounded-xl border border-border/50 bg-card/30 space-y-3">
+                                        {/* Toggle Row */}
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-8 h-8 rounded-lg bg-gradient-to-b from-black/60 to-transparent flex items-center justify-center">
+                                                    <Layers size={16} className="text-white" />
+                                                </div>
+                                                <div>
+                                                    <p className="text-sm font-medium text-foreground">
+                                                        {t('bioPage.headerOverlay', 'Contrast overlay')}
+                                                    </p>
+                                                    <p className="text-xs text-muted-foreground">
+                                                        {t('bioPage.headerOverlayDesc', 'Better text readability')}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <button
+                                                onClick={() => contextUpdateTheme({ headerOverlay: !theme.headerOverlay })}
+                                                className={`relative w-11 h-6 rounded-full transition-colors ${theme.headerOverlay ? 'bg-primary' : 'bg-muted'
+                                                    }`}
+                                            >
+                                                <span
+                                                    className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-transform ${theme.headerOverlay ? 'translate-x-5' : 'translate-x-0'
+                                                        }`}
+                                                />
+                                            </button>
+                                        </div>
+
+                                        {/* Color Picker - Shows when overlay enabled */}
+                                        {theme.headerOverlay && (
+                                            <div className="pt-3 border-t border-border/50">
+                                                <ColorControl
+                                                    label={t('bioPage.overlayColor', 'Overlay color')}
+                                                    value={theme.headerOverlayColor || '#000000'}
+                                                    onChange={(value) => contextUpdateTheme({ headerOverlayColor: value })}
+                                                />
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Profile Box Controls */}
+                                    <div className="p-4 rounded-xl border border-border/50 bg-card/30 space-y-3">
+                                        {/* Toggle Row */}
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-8 h-8 rounded-lg bg-muted/80 flex items-center justify-center border border-border/50">
+                                                    <Square size={16} className="text-foreground" />
+                                                </div>
+                                                <div>
+                                                    <p className="text-sm font-medium text-foreground">
+                                                        {t('bioPage.profileBox', 'Profile box')}
+                                                    </p>
+                                                    <p className="text-xs text-muted-foreground">
+                                                        {t('bioPage.profileBoxDesc', 'Card behind name & bio')}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <button
+                                                onClick={() => contextUpdateTheme({ profileBox: !theme.profileBox })}
+                                                className={`relative w-11 h-6 rounded-full transition-colors ${theme.profileBox ? 'bg-primary' : 'bg-muted'
+                                                    }`}
+                                            >
+                                                <span
+                                                    className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-transform ${theme.profileBox ? 'translate-x-5' : 'translate-x-0'
+                                                        }`}
+                                                />
+                                            </button>
+                                        </div>
+
+                                        {/* Options when enabled */}
+                                        {theme.profileBox && (
+                                            <div className="pt-3 border-t border-border/50 space-y-4">
+                                                {/* Color Picker */}
+                                                <ColorControl
+                                                    label={t('bioPage.profileBoxColor', 'Box color')}
+                                                    value={theme.profileBoxColor || '#000000'}
+                                                    onChange={(value) => contextUpdateTheme({ profileBoxColor: value })}
+                                                />
+
+                                                {/* Corner Radius - Same style as buttons */}
+                                                <div className="space-y-2">
+                                                    <label className="text-xs font-medium text-muted-foreground">
+                                                        {t('bioPage.profileBoxCorners', 'Corners')}
+                                                    </label>
+                                                    <div className="grid grid-cols-4 gap-2">
+                                                        {(['none', 'sm', 'md', 'lg'] as const).map((radius) => (
+                                                            <button
+                                                                key={radius}
+                                                                onClick={() => contextUpdateTheme({ profileBoxRadius: radius })}
+                                                                className={`p-2 rounded-lg border transition-colors ${(theme.profileBoxRadius || 'md') === radius
+                                                                    ? 'border-primary bg-primary/10'
+                                                                    : 'border-border hover:border-muted-foreground'
+                                                                    }`}
+                                                            >
+                                                                <div
+                                                                    className="w-full aspect-[2/1] bg-muted-foreground/30"
+                                                                    style={{
+                                                                        borderRadius: radius === 'none' ? '0px' : radius === 'sm' ? '4px' : radius === 'md' ? '8px' : '16px'
+                                                                    }}
+                                                                />
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+
                                     {/* Image Picker */}
                                     <ImagePicker
                                         value={theme.backgroundImage || ''}
@@ -1109,49 +1283,6 @@ Return ONLY the improved bio text, nothing else. No quotes, no explanation.`;
                                             </button>
                                         </div>
                                     )}
-
-                                    {/* Contrast Overlay Controls - Unified Row */}
-                                    {theme.backgroundImage && (
-                                        <div className="p-4 rounded-xl border border-border/50 bg-card/30 space-y-3">
-                                            {/* Toggle Row */}
-                                            <div className="flex items-center justify-between">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="w-8 h-8 rounded-lg bg-gradient-to-b from-black/60 to-transparent flex items-center justify-center">
-                                                        <Layers size={16} className="text-white" />
-                                                    </div>
-                                                    <div>
-                                                        <p className="text-sm font-medium text-foreground">
-                                                            {t('bioPage.headerOverlay', 'Contrast overlay')}
-                                                        </p>
-                                                        <p className="text-xs text-muted-foreground">
-                                                            {t('bioPage.headerOverlayDesc', 'Better text readability')}
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                                <button
-                                                    onClick={() => contextUpdateTheme({ headerOverlay: !theme.headerOverlay })}
-                                                    className={`relative w-11 h-6 rounded-full transition-colors ${theme.headerOverlay ? 'bg-primary' : 'bg-muted'
-                                                        }`}
-                                                >
-                                                    <span
-                                                        className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-transform ${theme.headerOverlay ? 'translate-x-5' : 'translate-x-0'
-                                                            }`}
-                                                    />
-                                                </button>
-                                            </div>
-
-                                            {/* Color Picker - Shows when overlay enabled */}
-                                            {theme.headerOverlay && (
-                                                <div className="pt-3 border-t border-border/50">
-                                                    <ColorControl
-                                                        label={t('bioPage.overlayColor', 'Overlay color')}
-                                                        value={theme.headerOverlayColor || '#000000'}
-                                                        onChange={(value) => contextUpdateTheme({ headerOverlayColor: value })}
-                                                    />
-                                                </div>
-                                            )}
-                                        </div>
-                                    )}
                                 </div>
                             )}
 
@@ -1162,6 +1293,115 @@ Return ONLY the improved bio text, nothing else. No quotes, no explanation.`;
                                     <label className="text-sm font-medium text-foreground">
                                         {t('bioPage.backgroundVideo', 'Background video')}
                                     </label>
+
+                                    {/* Contrast Overlay Controls - Above Video */}
+                                    <div className="p-4 rounded-xl border border-border/50 bg-card/30 space-y-3">
+                                        {/* Toggle Row */}
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-8 h-8 rounded-lg bg-gradient-to-b from-black/60 to-transparent flex items-center justify-center">
+                                                    <Layers size={16} className="text-white" />
+                                                </div>
+                                                <div>
+                                                    <p className="text-sm font-medium text-foreground">
+                                                        {t('bioPage.headerOverlay', 'Contrast overlay')}
+                                                    </p>
+                                                    <p className="text-xs text-muted-foreground">
+                                                        {t('bioPage.headerOverlayDesc', 'Better text readability')}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <button
+                                                onClick={() => contextUpdateTheme({ headerOverlay: !theme.headerOverlay })}
+                                                className={`relative w-11 h-6 rounded-full transition-colors ${theme.headerOverlay ? 'bg-primary' : 'bg-muted'
+                                                    }`}
+                                            >
+                                                <span
+                                                    className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-transform ${theme.headerOverlay ? 'translate-x-5' : 'translate-x-0'
+                                                        }`}
+                                                />
+                                            </button>
+                                        </div>
+
+                                        {/* Color Picker - Shows when overlay enabled */}
+                                        {theme.headerOverlay && (
+                                            <div className="pt-3 border-t border-border/50">
+                                                <ColorControl
+                                                    label={t('bioPage.overlayColor', 'Overlay color')}
+                                                    value={theme.headerOverlayColor || '#000000'}
+                                                    onChange={(value) => contextUpdateTheme({ headerOverlayColor: value })}
+                                                />
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Profile Box Controls */}
+                                    <div className="p-4 rounded-xl border border-border/50 bg-card/30 space-y-3">
+                                        {/* Toggle Row */}
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-8 h-8 rounded-lg bg-muted/80 flex items-center justify-center border border-border/50">
+                                                    <Square size={16} className="text-foreground" />
+                                                </div>
+                                                <div>
+                                                    <p className="text-sm font-medium text-foreground">
+                                                        {t('bioPage.profileBox', 'Profile box')}
+                                                    </p>
+                                                    <p className="text-xs text-muted-foreground">
+                                                        {t('bioPage.profileBoxDesc', 'Card behind name & bio')}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <button
+                                                onClick={() => contextUpdateTheme({ profileBox: !theme.profileBox })}
+                                                className={`relative w-11 h-6 rounded-full transition-colors ${theme.profileBox ? 'bg-primary' : 'bg-muted'
+                                                    }`}
+                                            >
+                                                <span
+                                                    className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-transform ${theme.profileBox ? 'translate-x-5' : 'translate-x-0'
+                                                        }`}
+                                                />
+                                            </button>
+                                        </div>
+
+                                        {/* Options when enabled */}
+                                        {theme.profileBox && (
+                                            <div className="pt-3 border-t border-border/50 space-y-4">
+                                                {/* Color Picker */}
+                                                <ColorControl
+                                                    label={t('bioPage.profileBoxColor', 'Box color')}
+                                                    value={theme.profileBoxColor || '#000000'}
+                                                    onChange={(value) => contextUpdateTheme({ profileBoxColor: value })}
+                                                />
+
+                                                {/* Corner Radius - Same style as buttons */}
+                                                <div className="space-y-2">
+                                                    <label className="text-xs font-medium text-muted-foreground">
+                                                        {t('bioPage.profileBoxCorners', 'Corners')}
+                                                    </label>
+                                                    <div className="grid grid-cols-4 gap-2">
+                                                        {(['none', 'sm', 'md', 'lg'] as const).map((radius) => (
+                                                            <button
+                                                                key={radius}
+                                                                onClick={() => contextUpdateTheme({ profileBoxRadius: radius })}
+                                                                className={`p-2 rounded-lg border transition-colors ${(theme.profileBoxRadius || 'md') === radius
+                                                                    ? 'border-primary bg-primary/10'
+                                                                    : 'border-border hover:border-muted-foreground'
+                                                                    }`}
+                                                            >
+                                                                <div
+                                                                    className="w-full aspect-[2/1] bg-muted-foreground/30"
+                                                                    style={{
+                                                                        borderRadius: radius === 'none' ? '0px' : radius === 'sm' ? '4px' : radius === 'md' ? '8px' : '16px'
+                                                                    }}
+                                                                />
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
 
                                     {/* Video URL Input */}
                                     <div className="flex items-center gap-2">
@@ -1218,49 +1458,6 @@ Return ONLY the improved bio text, nothing else. No quotes, no explanation.`;
                                             >
                                                 <X size={14} />
                                             </button>
-                                        </div>
-                                    )}
-
-                                    {/* Contrast Overlay Controls - Unified Row */}
-                                    {theme.backgroundVideo && (
-                                        <div className="p-4 rounded-xl border border-border/50 bg-card/30 space-y-3">
-                                            {/* Toggle Row */}
-                                            <div className="flex items-center justify-between">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="w-8 h-8 rounded-lg bg-gradient-to-b from-black/60 to-transparent flex items-center justify-center">
-                                                        <Layers size={16} className="text-white" />
-                                                    </div>
-                                                    <div>
-                                                        <p className="text-sm font-medium text-foreground">
-                                                            {t('bioPage.headerOverlay', 'Contrast overlay')}
-                                                        </p>
-                                                        <p className="text-xs text-muted-foreground">
-                                                            {t('bioPage.headerOverlayDesc', 'Better text readability')}
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                                <button
-                                                    onClick={() => contextUpdateTheme({ headerOverlay: !theme.headerOverlay })}
-                                                    className={`relative w-11 h-6 rounded-full transition-colors ${theme.headerOverlay ? 'bg-primary' : 'bg-muted'
-                                                        }`}
-                                                >
-                                                    <span
-                                                        className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-transform ${theme.headerOverlay ? 'translate-x-5' : 'translate-x-0'
-                                                            }`}
-                                                    />
-                                                </button>
-                                            </div>
-
-                                            {/* Color Picker - Shows when overlay enabled */}
-                                            {theme.headerOverlay && (
-                                                <div className="pt-3 border-t border-border/50">
-                                                    <ColorControl
-                                                        label={t('bioPage.overlayColor', 'Overlay color')}
-                                                        value={theme.headerOverlayColor || '#000000'}
-                                                        onChange={(value) => contextUpdateTheme({ headerOverlayColor: value })}
-                                                    />
-                                                </div>
-                                            )}
                                         </div>
                                     )}
                                 </div>
@@ -1594,6 +1791,7 @@ Return ONLY the improved bio text, nothing else. No quotes, no explanation.`;
         );
     };
 
+
     const renderShopEditor = () => (
         <div className="space-y-6">
             <div className="text-center py-12">
@@ -1787,23 +1985,69 @@ Return ONLY the improved bio text, nothing else. No quotes, no explanation.`;
 
                     {/* Profile - Hero Layout */}
                     {theme.profileLayout === 'hero' ? (
-                        <div className="mb-8 relative z-10">
+                        <div
+                            className="mb-8 relative z-10"
+                            style={theme.profileBox ? {
+                                backgroundColor: theme.profileBoxColor || '#000000',
+                                borderRadius: theme.profileBoxRadius === 'none' ? '0px' :
+                                    theme.profileBoxRadius === 'sm' ? '8px' :
+                                        theme.profileBoxRadius === 'lg' ? '20px' : '12px',
+                                padding: '16px',
+                            } : undefined}
+                        >
                             {profile.avatarUrl && (
                                 <div
                                     className="w-full h-32 rounded-xl mb-3 bg-cover bg-center"
                                     style={{ backgroundImage: `url(${profile.avatarUrl})` }}
                                 />
                             )}
-                            <h2 className={`font-bold ${titleSize}`} style={{ fontFamily: theme.titleFont, color: titleColor }}>
-                                {profile.name}
-                            </h2>
+                            {/* Title - Logo and/or Text */}
+                            {theme.titleStyle === 'both' && profile.logoUrl ? (
+                                <div className="flex items-center gap-2 mb-2">
+                                    <img
+                                        src={profile.logoUrl}
+                                        alt={profile.name}
+                                        className="h-10 w-auto object-contain"
+                                    />
+                                    <h2 className={`font-bold ${titleSize}`} style={{ fontFamily: theme.titleFont, color: titleColor }}>
+                                        {profile.name}
+                                    </h2>
+                                </div>
+                            ) : (
+                                <>
+                                    {theme.titleStyle === 'logo' && profile.logoUrl && (
+                                        <div className="mb-2">
+                                            <img
+                                                src={profile.logoUrl}
+                                                alt={profile.name}
+                                                className="h-10 max-w-[200px] object-contain"
+                                            />
+                                        </div>
+                                    )}
+
+                                    {(theme.titleStyle === 'text' || !profile.logoUrl) && (
+                                        <h2 className={`font-bold ${titleSize}`} style={{ fontFamily: theme.titleFont, color: titleColor }}>
+                                            {profile.name}
+                                        </h2>
+                                    )}
+                                </>
+                            )}
                             <p className="text-sm opacity-70" style={{ fontFamily: theme.bodyFont, color: bodyColor }}>
                                 {profile.bio}
                             </p>
                         </div>
                     ) : (
                         // Circle Layout (default)
-                        <div className="text-center mb-8 relative z-10">
+                        <div
+                            className="text-center mb-8 relative z-10"
+                            style={theme.profileBox ? {
+                                backgroundColor: theme.profileBoxColor || '#000000',
+                                borderRadius: theme.profileBoxRadius === 'none' ? '0px' :
+                                    theme.profileBoxRadius === 'sm' ? '8px' :
+                                        theme.profileBoxRadius === 'lg' ? '20px' : '12px',
+                                padding: '16px',
+                            } : undefined}
+                        >
                             {/* Avatar */}
                             <div className="relative inline-block mb-3">
                                 <div
@@ -1818,9 +2062,37 @@ Return ONLY the improved bio text, nothing else. No quotes, no explanation.`;
                                     {!profile.avatarUrl && profile.name.charAt(0)}
                                 </div>
                             </div>
-                            <h2 className={`font-bold ${titleSize}`} style={{ fontFamily: theme.titleFont, color: titleColor }}>
-                                {profile.name}
-                            </h2>
+                            {/* Title - Logo and/or Text */}
+                            {theme.titleStyle === 'both' && profile.logoUrl ? (
+                                <div className="flex items-center justify-center gap-2">
+                                    <img
+                                        src={profile.logoUrl}
+                                        alt={profile.name}
+                                        className="h-10 w-auto object-contain"
+                                    />
+                                    <h2 className={`font-bold ${titleSize}`} style={{ fontFamily: theme.titleFont, color: titleColor }}>
+                                        {profile.name}
+                                    </h2>
+                                </div>
+                            ) : (
+                                <>
+                                    {theme.titleStyle === 'logo' && profile.logoUrl && (
+                                        <div className="mb-2 flex justify-center">
+                                            <img
+                                                src={profile.logoUrl}
+                                                alt={profile.name}
+                                                className="h-10 max-w-[200px] object-contain"
+                                            />
+                                        </div>
+                                    )}
+
+                                    {(theme.titleStyle === 'text' || !profile.logoUrl) && (
+                                        <h2 className={`font-bold ${titleSize}`} style={{ fontFamily: theme.titleFont, color: titleColor }}>
+                                            {profile.name}
+                                        </h2>
+                                    )}
+                                </>
+                            )}
                             <p className="text-sm opacity-70" style={{ fontFamily: theme.bodyFont, color: bodyColor }}>
                                 {profile.bio}
                             </p>
@@ -1867,12 +2139,14 @@ Return ONLY the improved bio text, nothing else. No quotes, no explanation.`;
                             return (
                                 <div
                                     key={link.id}
-                                    className="w-full py-3 px-4 text-center font-medium text-sm"
+                                    className={`w-full py-3 px-4 text-center font-medium text-sm ${link.linkType === 'chatbot' ? 'flex items-center justify-center gap-2 cursor-pointer hover:opacity-90 transition-opacity' : ''}`}
                                     style={{
                                         borderRadius,
                                         ...buttonStyles[theme.buttonStyle] || buttonStyles.fill,
                                     }}
+                                    onClick={link.linkType === 'chatbot' ? () => setIsChatbotPreviewOpen(true) : undefined}
                                 >
+                                    {link.linkType === 'chatbot' && <MessageCircle size={16} />}
                                     {link.title}
                                 </div>
                             );
@@ -1912,6 +2186,97 @@ Return ONLY the improved bio text, nothing else. No quotes, no explanation.`;
                         Made with Quimera.ai
                     </a>
                 </div>
+
+                {/* Chatbot Preview - Floating inside phone preview */}
+                {isChatbotPreviewOpen && activeProject && (
+                    <div className="absolute inset-0 bg-black/40 z-50 flex flex-col justify-end p-3 pt-8">
+                        <div
+                            className="bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col"
+                            style={{ height: '90%' }}
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <ChatCore
+                                config={activeProject.aiAssistant || {
+                                    agentName: 'AI Assistant',
+                                    tone: 'Professional',
+                                    languages: 'Spanish, English',
+                                    businessProfile: profile.bio,
+                                    productsServices: '',
+                                    policiesContact: '',
+                                    specialInstructions: '',
+                                    faqs: [],
+                                    knowledgeDocuments: [],
+                                    widgetColor: theme.buttonColor,
+                                    isActive: true,
+                                    leadCaptureEnabled: false,
+                                    enableLiveVoice: false,
+                                    voiceName: 'Puck',
+                                }}
+                                project={activeProject}
+                                appearance={activeProject.aiAssistant?.appearance || {
+                                    branding: {
+                                        logoType: 'none',
+                                        logoSize: 'md',
+                                        showBotAvatar: true,
+                                        showUserAvatar: false,
+                                        userAvatarStyle: 'initials',
+                                    },
+                                    colors: {
+                                        primaryColor: theme.buttonColor,
+                                        secondaryColor: theme.buttonColor,
+                                        accentColor: theme.buttonColor,
+                                        userBubbleColor: theme.buttonColor,
+                                        userTextColor: '#ffffff',
+                                        botBubbleColor: '#f3f4f6',
+                                        botTextColor: '#1f2937',
+                                        backgroundColor: '#ffffff',
+                                        inputBackground: '#f9fafb',
+                                        inputBorder: '#e5e7eb',
+                                        inputText: '#1f2937',
+                                        headerBackground: theme.buttonColor,
+                                        headerText: '#ffffff',
+                                    },
+                                    behavior: {
+                                        position: 'bottom-right',
+                                        offsetX: 0,
+                                        offsetY: 0,
+                                        width: 'md',
+                                        height: 'lg',
+                                        autoOpen: true,
+                                        autoOpenDelay: 0,
+                                        openOnScroll: 0,
+                                        openOnTime: 0,
+                                        fullScreenOnMobile: false,
+                                    },
+                                    messages: {
+                                        welcomeMessage: t('bioPage.chatWelcome', 'Hi! How can I help you today?'),
+                                        welcomeMessageEnabled: true,
+                                        welcomeDelay: 0,
+                                        inputPlaceholder: t('bioPage.chatPlaceholder', 'Type a message...'),
+                                        quickReplies: [],
+                                        showTypingIndicator: true,
+                                    },
+                                    button: {
+                                        buttonStyle: 'circle',
+                                        buttonSize: 'md',
+                                        buttonIcon: 'chat',
+                                        showButtonText: false,
+                                        pulseEffect: false,
+                                        shadowSize: 'md',
+                                        showTooltip: false,
+                                        tooltipText: '',
+                                    },
+                                    theme: 'light',
+                                }}
+                                showHeader={true}
+                                onClose={() => setIsChatbotPreviewOpen(false)}
+                                autoOpen={true}
+                                isEmbedded={true}
+                                className="h-full"
+                            />
+                        </div>
+                    </div>
+                )}
             </div>
         );
     };
@@ -1984,24 +2349,37 @@ Return ONLY the improved bio text, nothing else. No quotes, no explanation.`;
                     </div>
 
                     <div className="flex items-center gap-2">
-                        {/* Publish / Copy URL Button */}
                         <button
                             onClick={async () => {
                                 if (bioPage?.isPublished) {
                                     // Copy URL to clipboard
                                     const publicUrl = `${window.location.origin}/bio/${bioPage.username.toLowerCase()}`;
                                     await navigator.clipboard.writeText(publicUrl);
-                                    // Could add toast notification here
-                                    alert(`URL copied: ${publicUrl}`);
+                                    setNotificationModal({
+                                        isOpen: true,
+                                        title: t('bioPage.urlCopied', 'URL Copied'),
+                                        message: publicUrl,
+                                        type: 'success'
+                                    });
                                 } else if (bioPage?.username) {
                                     // Publish the bio page
                                     const success = await publishBioPage();
                                     if (success) {
                                         const publicUrl = `${window.location.origin}/bio/${bioPage.username.toLowerCase()}`;
                                         await navigator.clipboard.writeText(publicUrl);
-                                        alert(`Published! URL copied: ${publicUrl}`);
+                                        setNotificationModal({
+                                            isOpen: true,
+                                            title: t('bioPage.published', 'Published!'),
+                                            message: `${t('bioPage.urlCopiedMessage', 'URL copied')}: ${publicUrl}`,
+                                            type: 'success'
+                                        });
                                     } else {
-                                        alert('Failed to publish. Please try again.');
+                                        setNotificationModal({
+                                            isOpen: true,
+                                            title: t('bioPage.error', 'Error'),
+                                            message: t('bioPage.publishFailed', 'Failed to publish. Please try again.'),
+                                            type: 'error'
+                                        });
                                     }
                                 }
                             }}
@@ -2190,22 +2568,6 @@ Return ONLY the improved bio text, nothing else. No quotes, no explanation.`;
 
                             {/* Right Content Area */}
                             <div className="flex-1 overflow-y-auto p-5">
-                                {/* Link Type Tabs */}
-                                <div className="flex gap-2 mb-6">
-                                    {LINK_TYPES.map((type) => (
-                                        <button
-                                            key={type.id}
-                                            onClick={() => setAddLinkType(type.id)}
-                                            className={`flex flex-col items-center gap-2 px-6 py-3 rounded-xl border-2 transition-all ${addLinkType === type.id
-                                                ? 'border-primary bg-primary/10 text-primary'
-                                                : 'border-border text-muted-foreground hover:border-muted-foreground hover:text-foreground'
-                                                }`}
-                                        >
-                                            <type.icon size={20} />
-                                            <span className="text-xs font-medium">{t(`bioPage.linkType.${type.id}`, type.label)}</span>
-                                        </button>
-                                    ))}
-                                </div>
 
                                 {/* Category Label */}
                                 <p className="text-sm font-medium text-muted-foreground mb-4">
@@ -2250,7 +2612,7 @@ Return ONLY the improved bio text, nothing else. No quotes, no explanation.`;
                                                 {t('bioPage.noResultsFound', 'No integrations found')}
                                             </p>
                                             <button
-                                                onClick={() => addLink(addLinkType)}
+                                                onClick={() => addLink('link')}
                                                 className="mt-4 px-4 py-2 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors"
                                             >
                                                 {t('bioPage.createCustomLink', 'Create custom link')}
@@ -2532,6 +2894,27 @@ Return ONLY the improved bio text, nothing else. No quotes, no explanation.`;
                     onClose={() => { setShowImagePicker(false); setIsProfileModalOpen(true); }}
                     hideUrlInput={true}
                 />
+            )}
+
+            {/* ===== NOTIFICATION MODAL ===== */}
+            {notificationModal.isOpen && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]" onClick={() => setNotificationModal({ ...notificationModal, isOpen: false })}>
+                    <div className="bg-card border border-border rounded-2xl p-6 max-w-md w-full mx-4 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+                        <div className="text-center">
+                            <div className={`mx-auto w-12 h-12 rounded-full flex items-center justify-center mb-4 ${notificationModal.type === 'success' ? 'bg-green-500/20 text-green-500' : 'bg-red-500/20 text-red-500'}`}>
+                                {notificationModal.type === 'success' ? <Check size={24} /> : <X size={24} />}
+                            </div>
+                            <h3 className="text-lg font-bold text-foreground mb-2">{notificationModal.title}</h3>
+                            <p className="text-sm text-muted-foreground break-all mb-6">{notificationModal.message}</p>
+                            <button
+                                onClick={() => setNotificationModal({ ...notificationModal, isOpen: false })}
+                                className="w-full bg-primary text-primary-foreground px-6 py-2.5 rounded-lg font-medium hover:bg-primary/90 transition-colors"
+                            >
+                                OK
+                            </button>
+                        </div>
+                    </div>
+                </div>
             )}
         </div>
     );

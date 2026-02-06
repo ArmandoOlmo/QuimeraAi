@@ -41,6 +41,7 @@ export interface BioProfile {
     name: string;
     bio: string;
     avatarUrl?: string;
+    logoUrl?: string; // Logo to display instead of text name when titleStyle is 'logo'
 }
 
 export interface BioTheme {
@@ -67,9 +68,13 @@ export interface BioTheme {
     // Profile/Header settings
     profileLayout: 'circle' | 'hero';
     profileSize: 'small' | 'large';
-    titleStyle: 'text' | 'logo';
+    titleStyle: 'text' | 'logo' | 'both';
     headerOverlay?: boolean; // Gradient overlay behind profile for better contrast
     headerOverlayColor?: string; // Custom color for the overlay
+    // Profile Box (card behind name/bio)
+    profileBox?: boolean;
+    profileBoxColor?: string;
+    profileBoxRadius?: 'none' | 'sm' | 'md' | 'lg' | 'xl' | 'full';
 }
 
 export interface BioProduct {
