@@ -5,9 +5,11 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { ExternalLink, Loader2, Link2 } from 'lucide-react';
+import { ExternalLink, Loader2, Link2, MessageCircle, X, Send } from 'lucide-react';
 import { db, collection, query, where, getDocs } from '../firebase';
 import type { BioLink, BioProfile, BioTheme } from '../contexts/bioPage';
+import type { AiAssistantConfig } from '../types/ai-assistant';
+import ChatCore from './chat/ChatCore';
 
 interface PublicBioPageData {
     id: string;
@@ -16,6 +18,8 @@ interface PublicBioPageData {
     theme: BioTheme;
     links: BioLink[];
     isPublished: boolean;
+    projectId?: string;
+    aiAssistant?: AiAssistantConfig;
 }
 
 interface PublicBioPageProps {
@@ -26,6 +30,7 @@ const PublicBioPage: React.FC<PublicBioPageProps> = ({ username }) => {
     const [bioPageData, setBioPageData] = useState<PublicBioPageData | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [isChatbotOpen, setIsChatbotOpen] = useState(false);
 
     // Extract username from URL if not passed as prop
     const bioUsername = username || window.location.pathname.split('/bio/')[1];
@@ -73,6 +78,11 @@ const PublicBioPage: React.FC<PublicBioPageProps> = ({ username }) => {
 
     // Track link click
     const handleLinkClick = (link: BioLink) => {
+        // Handle chatbot links
+        if (link.linkType === 'chatbot') {
+            setIsChatbotOpen(true);
+            return;
+        }
         // Could add analytics tracking here
         window.open(link.url, '_blank');
     };
@@ -354,8 +364,9 @@ const PublicBioPage: React.FC<PublicBioPageProps> = ({ username }) => {
                                 className="w-full p-4 flex items-center justify-center gap-2 font-medium transition-all hover:scale-[1.02] hover:shadow-lg active:scale-[0.98]"
                                 style={getButtonStyle()}
                             >
+                                {link.linkType === 'chatbot' && <MessageCircle size={16} className="opacity-80" />}
                                 <span>{link.title}</span>
-                                <ExternalLink size={16} className="opacity-60" />
+                                {link.linkType !== 'chatbot' && <ExternalLink size={16} className="opacity-60" />}
                             </button>
                         ))}
                     </div>
@@ -374,6 +385,87 @@ const PublicBioPage: React.FC<PublicBioPageProps> = ({ username }) => {
                     </div>
                 </div>
             </div>
+
+            {/* Chatbot Modal */}
+            {isChatbotOpen && bioPageData?.aiAssistant && (
+                <div
+                    className="fixed inset-0 bg-black/60 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
+                    onClick={() => setIsChatbotOpen(false)}
+                >
+                    <div
+                        className="bg-white w-full sm:max-w-md sm:rounded-2xl overflow-hidden shadow-2xl flex flex-col h-[85vh] sm:h-[600px]"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <ChatCore
+                            config={bioPageData.aiAssistant}
+                            project={{
+                                id: bioPageData.projectId || bioPageData.id,
+                                name: bioPageData.profile.name,
+                            } as any}
+                            appearance={bioPageData.aiAssistant.appearance || {
+                                branding: {
+                                    logoType: 'none',
+                                    logoSize: 'md',
+                                    showBotAvatar: true,
+                                    showUserAvatar: false,
+                                    userAvatarStyle: 'initials',
+                                },
+                                colors: {
+                                    primaryColor: theme.buttonColor,
+                                    secondaryColor: theme.buttonColor,
+                                    accentColor: theme.buttonColor,
+                                    userBubbleColor: theme.buttonColor,
+                                    userTextColor: '#ffffff',
+                                    botBubbleColor: '#f3f4f6',
+                                    botTextColor: '#1f2937',
+                                    backgroundColor: '#ffffff',
+                                    inputBackground: '#f9fafb',
+                                    inputBorder: '#e5e7eb',
+                                    inputText: '#1f2937',
+                                    headerBackground: theme.buttonColor,
+                                    headerText: '#ffffff',
+                                },
+                                behavior: {
+                                    position: 'bottom-right',
+                                    offsetX: 0,
+                                    offsetY: 0,
+                                    width: 'md',
+                                    height: 'lg',
+                                    autoOpen: true,
+                                    autoOpenDelay: 0,
+                                    openOnScroll: 0,
+                                    openOnTime: 0,
+                                    fullScreenOnMobile: true,
+                                },
+                                messages: {
+                                    welcomeMessage: 'Hi! How can I help you today?',
+                                    welcomeMessageEnabled: true,
+                                    welcomeDelay: 0,
+                                    inputPlaceholder: 'Type a message...',
+                                    quickReplies: [],
+                                    showTypingIndicator: true,
+                                },
+                                button: {
+                                    buttonStyle: 'circle',
+                                    buttonSize: 'md',
+                                    buttonIcon: 'chat',
+                                    showButtonText: false,
+                                    pulseEffect: false,
+                                    shadowSize: 'md',
+                                    showTooltip: false,
+                                    tooltipText: '',
+                                },
+                                theme: 'light',
+                            }}
+                            showHeader={true}
+                            onClose={() => setIsChatbotOpen(false)}
+                            autoOpen={true}
+                            isEmbedded={true}
+                            className="h-full"
+                        />
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

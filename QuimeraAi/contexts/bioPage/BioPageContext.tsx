@@ -30,7 +30,7 @@ export interface BioLink {
     url: string;
     enabled: boolean;
     clicks: number;
-    linkType?: 'link' | 'collection' | 'product' | 'form' | 'social' | 'embed';
+    linkType?: 'link' | 'collection' | 'product' | 'form' | 'social' | 'embed' | 'chatbot';
     platform?: string;
     icon?: string;
     thumbnail?: string;
@@ -428,11 +428,26 @@ export const BioPageProvider: React.FC<{ children: ReactNode }> = ({ children })
                 updatedAt: new Date().toISOString(),
             });
 
+            // Fetch the project's aiAssistant config if projectId is available
+            let aiAssistant = null;
+            if (bioPage.projectId) {
+                try {
+                    const projectRef = doc(db, 'projects', bioPage.projectId);
+                    const projectSnap = await getDoc(projectRef);
+                    if (projectSnap.exists()) {
+                        const projectData = projectSnap.data();
+                        aiAssistant = projectData?.aiAssistant || null;
+                    }
+                } catch (e) {
+                    console.warn('[BioPageContext] Could not fetch aiAssistant:', e);
+                }
+            }
+
             // Create/update public bio page for anonymous access
             // Using username as the document ID for direct URL access
             const publicBioRef = doc(db, 'publicBioPages', bioPage.username.toLowerCase());
 
-            const publicBioData = {
+            const publicBioData: Record<string, any> = {
                 username: bioPage.username.toLowerCase(),
                 profile: removeUndefinedValues(bioPage.profile),
                 theme: removeUndefinedValues(bioPage.theme),
@@ -443,6 +458,11 @@ export const BioPageProvider: React.FC<{ children: ReactNode }> = ({ children })
                 projectId: bioPage.projectId || bioPage.id,
                 updatedAt: new Date().toISOString(),
             };
+
+            // Include aiAssistant if available
+            if (aiAssistant) {
+                publicBioData.aiAssistant = aiAssistant;
+            }
 
             await setDoc(publicBioRef, publicBioData, { merge: true });
 
