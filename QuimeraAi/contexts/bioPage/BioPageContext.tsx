@@ -68,6 +68,8 @@ export interface BioTheme {
     profileLayout: 'circle' | 'hero';
     profileSize: 'small' | 'large';
     titleStyle: 'text' | 'logo';
+    headerOverlay?: boolean; // Gradient overlay behind profile for better contrast
+    headerOverlayColor?: string; // Custom color for the overlay
 }
 
 export interface BioProduct {

@@ -103,6 +103,7 @@ import { ROUTES } from '../../routes/config';
 import DashboardSidebar from './DashboardSidebar';
 import ImagePicker from '../ui/ImagePicker';
 import ColorControl from '../ui/ColorControl';
+import { hexToRgba } from '../../utils/colorUtils';
 
 // =============================================================================
 // TYPES
@@ -430,6 +431,7 @@ const BioPageBuilder: React.FC = () => {
         hasUnsavedChanges,
         loadBioPage,
         createBioPage,
+        saveBioPage,
         links,
         addLink: contextAddLink,
         updateLink: contextUpdateLink,
@@ -1075,17 +1077,23 @@ Return ONLY the improved bio text, nothing else. No quotes, no explanation.`;
 
                             {/* Background Image (shown for image type) */}
                             {theme.backgroundType === 'image' && (
-                                <div className="space-y-3">
+                                <div className="space-y-4">
+                                    {/* Section Title */}
                                     <label className="text-sm font-medium text-foreground">
                                         {t('bioPage.backgroundImage', 'Background image')}
                                     </label>
+
+                                    {/* Image Picker */}
                                     <ImagePicker
                                         value={theme.backgroundImage || ''}
                                         onChange={(url) => contextUpdateTheme({ backgroundImage: url })}
                                         label={t('bioPage.selectBackgroundImage', 'Select background image')}
                                         showAIGeneration={true}
                                         aspectRatio="16:9"
+                                        hideUrlInput={true}
                                     />
+
+                                    {/* Image Preview with Remove Button */}
                                     {theme.backgroundImage && (
                                         <div className="relative rounded-xl overflow-hidden aspect-video bg-muted/50">
                                             <img
@@ -1101,77 +1109,164 @@ Return ONLY the improved bio text, nothing else. No quotes, no explanation.`;
                                             </button>
                                         </div>
                                     )}
+
+                                    {/* Contrast Overlay Controls - Unified Row */}
+                                    {theme.backgroundImage && (
+                                        <div className="p-4 rounded-xl border border-border/50 bg-card/30 space-y-3">
+                                            {/* Toggle Row */}
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-8 h-8 rounded-lg bg-gradient-to-b from-black/60 to-transparent flex items-center justify-center">
+                                                        <Layers size={16} className="text-white" />
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-sm font-medium text-foreground">
+                                                            {t('bioPage.headerOverlay', 'Contrast overlay')}
+                                                        </p>
+                                                        <p className="text-xs text-muted-foreground">
+                                                            {t('bioPage.headerOverlayDesc', 'Better text readability')}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                <button
+                                                    onClick={() => contextUpdateTheme({ headerOverlay: !theme.headerOverlay })}
+                                                    className={`relative w-11 h-6 rounded-full transition-colors ${theme.headerOverlay ? 'bg-primary' : 'bg-muted'
+                                                        }`}
+                                                >
+                                                    <span
+                                                        className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-transform ${theme.headerOverlay ? 'translate-x-5' : 'translate-x-0'
+                                                            }`}
+                                                    />
+                                                </button>
+                                            </div>
+
+                                            {/* Color Picker - Shows when overlay enabled */}
+                                            {theme.headerOverlay && (
+                                                <div className="pt-3 border-t border-border/50">
+                                                    <ColorControl
+                                                        label={t('bioPage.overlayColor', 'Overlay color')}
+                                                        value={theme.headerOverlayColor || '#000000'}
+                                                        onChange={(value) => contextUpdateTheme({ headerOverlayColor: value })}
+                                                    />
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
                                 </div>
                             )}
 
                             {/* Background Video (shown for video type) */}
                             {theme.backgroundType === 'video' && (
-                                <div className="space-y-3">
+                                <div className="space-y-4">
+                                    {/* Section Title */}
                                     <label className="text-sm font-medium text-foreground">
                                         {t('bioPage.backgroundVideo', 'Background video')}
                                     </label>
-                                    <div className="space-y-3">
-                                        {/* Video URL Input */}
-                                        <div className="flex items-center gap-2">
-                                            <input
-                                                type="text"
-                                                value={theme.backgroundVideo || ''}
-                                                onChange={(e) => contextUpdateTheme({ backgroundVideo: e.target.value })}
-                                                placeholder={t('bioPage.pasteVideoUrl', 'Paste video URL (MP4)')}
-                                                className="flex-1 bg-muted/50 rounded-lg px-3 py-2.5 text-sm border border-border focus:ring-2 focus:ring-primary/50 outline-none"
-                                            />
+
+                                    {/* Video URL Input */}
+                                    <div className="flex items-center gap-2">
+                                        <input
+                                            type="text"
+                                            value={theme.backgroundVideo || ''}
+                                            onChange={(e) => contextUpdateTheme({ backgroundVideo: e.target.value })}
+                                            placeholder={t('bioPage.pasteVideoUrl', 'Paste video URL (MP4)')}
+                                            className="flex-1 bg-muted/50 rounded-lg px-3 py-2.5 text-sm border border-border focus:ring-2 focus:ring-primary/50 outline-none"
+                                        />
+                                    </div>
+
+                                    {/* Video Upload */}
+                                    <label className="flex items-center gap-3 p-4 rounded-xl border-2 border-dashed border-border hover:border-muted-foreground transition-colors cursor-pointer">
+                                        <div className="w-12 h-12 rounded-xl bg-muted/50 flex items-center justify-center">
+                                            <Upload size={20} className="text-muted-foreground" />
                                         </div>
+                                        <div className="flex-1">
+                                            <p className="text-sm font-medium text-foreground">
+                                                {t('bioPage.uploadVideo', 'Upload video')}
+                                            </p>
+                                            <p className="text-xs text-muted-foreground">
+                                                {t('bioPage.videoFormats', 'MP4, WebM (max 50MB)')}
+                                            </p>
+                                        </div>
+                                        <input
+                                            type="file"
+                                            accept="video/mp4,video/webm"
+                                            className="hidden"
+                                            onChange={async (e) => {
+                                                const file = e.target.files?.[0];
+                                                if (file) {
+                                                    const url = URL.createObjectURL(file);
+                                                    contextUpdateTheme({ backgroundVideo: url });
+                                                }
+                                            }}
+                                        />
+                                    </label>
 
-                                        {/* Video Upload */}
-                                        <label className="flex items-center gap-3 p-4 rounded-xl border-2 border-dashed border-border hover:border-muted-foreground transition-colors cursor-pointer">
-                                            <div className="w-12 h-12 rounded-xl bg-muted/50 flex items-center justify-center">
-                                                <Upload size={20} className="text-muted-foreground" />
-                                            </div>
-                                            <div className="flex-1">
-                                                <p className="text-sm font-medium text-foreground">
-                                                    {t('bioPage.uploadVideo', 'Upload video')}
-                                                </p>
-                                                <p className="text-xs text-muted-foreground">
-                                                    {t('bioPage.videoFormats', 'MP4, WebM (max 50MB)')}
-                                                </p>
-                                            </div>
-                                            <input
-                                                type="file"
-                                                accept="video/mp4,video/webm"
-                                                className="hidden"
-                                                onChange={async (e) => {
-                                                    const file = e.target.files?.[0];
-                                                    if (file) {
-                                                        // For now, create a local URL - in production would upload to storage
-                                                        const url = URL.createObjectURL(file);
-                                                        contextUpdateTheme({ backgroundVideo: url });
-                                                    }
-                                                }}
+                                    {/* Video Preview */}
+                                    {theme.backgroundVideo && (
+                                        <div className="relative rounded-xl overflow-hidden aspect-video bg-black">
+                                            <video
+                                                src={theme.backgroundVideo}
+                                                className="w-full h-full object-cover"
+                                                autoPlay
+                                                loop
+                                                muted
+                                                playsInline
                                             />
-                                        </label>
+                                            <button
+                                                onClick={() => contextUpdateTheme({ backgroundVideo: '' })}
+                                                className="absolute top-2 right-2 p-1.5 rounded-lg bg-black/50 hover:bg-black/70 text-white transition-colors"
+                                            >
+                                                <X size={14} />
+                                            </button>
+                                        </div>
+                                    )}
 
-                                        {/* Video Preview */}
-                                        {theme.backgroundVideo && (
-                                            <div className="relative rounded-xl overflow-hidden aspect-video bg-black">
-                                                <video
-                                                    src={theme.backgroundVideo}
-                                                    className="w-full h-full object-cover"
-                                                    autoPlay
-                                                    loop
-                                                    muted
-                                                    playsInline
-                                                />
+                                    {/* Contrast Overlay Controls - Unified Row */}
+                                    {theme.backgroundVideo && (
+                                        <div className="p-4 rounded-xl border border-border/50 bg-card/30 space-y-3">
+                                            {/* Toggle Row */}
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-8 h-8 rounded-lg bg-gradient-to-b from-black/60 to-transparent flex items-center justify-center">
+                                                        <Layers size={16} className="text-white" />
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-sm font-medium text-foreground">
+                                                            {t('bioPage.headerOverlay', 'Contrast overlay')}
+                                                        </p>
+                                                        <p className="text-xs text-muted-foreground">
+                                                            {t('bioPage.headerOverlayDesc', 'Better text readability')}
+                                                        </p>
+                                                    </div>
+                                                </div>
                                                 <button
-                                                    onClick={() => contextUpdateTheme({ backgroundVideo: '' })}
-                                                    className="absolute top-2 right-2 p-1.5 rounded-lg bg-black/50 hover:bg-black/70 text-white transition-colors"
+                                                    onClick={() => contextUpdateTheme({ headerOverlay: !theme.headerOverlay })}
+                                                    className={`relative w-11 h-6 rounded-full transition-colors ${theme.headerOverlay ? 'bg-primary' : 'bg-muted'
+                                                        }`}
                                                 >
-                                                    <X size={14} />
+                                                    <span
+                                                        className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-transform ${theme.headerOverlay ? 'translate-x-5' : 'translate-x-0'
+                                                            }`}
+                                                    />
                                                 </button>
                                             </div>
-                                        )}
-                                    </div>
+
+                                            {/* Color Picker - Shows when overlay enabled */}
+                                            {theme.headerOverlay && (
+                                                <div className="pt-3 border-t border-border/50">
+                                                    <ColorControl
+                                                        label={t('bioPage.overlayColor', 'Overlay color')}
+                                                        value={theme.headerOverlayColor || '#000000'}
+                                                        onChange={(value) => contextUpdateTheme({ headerOverlayColor: value })}
+                                                    />
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
                                 </div>
                             )}
+
+
                         </div>
                     )}
 
@@ -1332,7 +1427,7 @@ Return ONLY the improved bio text, nothing else. No quotes, no explanation.`;
                                 <button
                                     onClick={() => {
                                         // Import colors from the current project theme
-                                        const projectTheme = project?.theme;
+                                        const projectTheme = activeProject?.theme;
                                         if (projectTheme?.paletteColors?.length) {
                                             const colors = projectTheme.paletteColors;
                                             // Map project palette to bio page theme
@@ -1360,9 +1455,9 @@ Return ONLY the improved bio text, nothing else. No quotes, no explanation.`;
                                             {t('bioPage.syncWithProject', 'Sync with your project theme palette')}
                                         </p>
                                     </div>
-                                    {project?.theme?.paletteColors && (
+                                    {activeProject?.theme?.paletteColors && (
                                         <div className="flex gap-1">
-                                            {project.theme.paletteColors.slice(0, 5).map((c, i) => (
+                                            {activeProject.theme.paletteColors.slice(0, 5).map((c, i) => (
                                                 <div key={i} className="w-4 h-4 rounded border border-border" style={{ backgroundColor: c }} />
                                             ))}
                                         </div>
@@ -1635,6 +1730,16 @@ Return ONLY the improved bio text, nothing else. No quotes, no explanation.`;
                         backgroundSize: p.size,
                     };
                 }
+                case 'image':
+                    if (theme.backgroundImage) {
+                        return {
+                            backgroundImage: `url(${theme.backgroundImage})`,
+                            backgroundSize: 'cover',
+                            backgroundPosition: 'center',
+                            backgroundRepeat: 'no-repeat',
+                        };
+                    }
+                    return { backgroundColor: baseColor };
                 case 'video':
                 case 'solid':
                 default:
@@ -1669,10 +1774,20 @@ Return ONLY the improved bio text, nothing else. No quotes, no explanation.`;
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-neutral-800 rounded-b-2xl z-10" />
 
                 {/* Content */}
-                <div className="h-full overflow-y-auto p-6 pt-10">
+                <div className="h-full overflow-y-auto p-6 pt-10 relative">
+                    {/* Header Gradient Overlay */}
+                    {theme.headerOverlay && (theme.backgroundType === 'image' || theme.backgroundType === 'video') && (
+                        <div
+                            className="absolute top-0 left-0 right-0 h-48 pointer-events-none z-0"
+                            style={{
+                                background: `linear-gradient(to bottom, ${hexToRgba(theme.headerOverlayColor || '#000000', 0.6)} 0%, ${hexToRgba(theme.headerOverlayColor || '#000000', 0.3)} 50%, transparent 100%)`,
+                            }}
+                        />
+                    )}
+
                     {/* Profile - Hero Layout */}
                     {theme.profileLayout === 'hero' ? (
-                        <div className="mb-8">
+                        <div className="mb-8 relative z-10">
                             {profile.avatarUrl && (
                                 <div
                                     className="w-full h-32 rounded-xl mb-3 bg-cover bg-center"
@@ -1688,7 +1803,7 @@ Return ONLY the improved bio text, nothing else. No quotes, no explanation.`;
                         </div>
                     ) : (
                         // Circle Layout (default)
-                        <div className="text-center mb-8">
+                        <div className="text-center mb-8 relative z-10">
                             {/* Avatar */}
                             <div className="relative inline-block mb-3">
                                 <div
@@ -1832,18 +1947,34 @@ Return ONLY the improved bio text, nothing else. No quotes, no explanation.`;
                         </div>
                     </div>
 
-                    {/* Save Status Indicator */}
-                    <div className="flex items-center gap-2 text-xs">
+                    {/* Save Status Indicator + Save Button */}
+                    <div className="flex items-center gap-3 text-xs">
                         {isSaving ? (
                             <span className="flex items-center gap-1.5 text-muted-foreground">
                                 <Loader2 size={14} className="animate-spin" />
                                 <span className="hidden sm:inline">{t('common.saving', 'Saving...')}</span>
                             </span>
                         ) : hasUnsavedChanges ? (
-                            <span className="flex items-center gap-1.5 text-yellow-500">
-                                <span className="w-2 h-2 rounded-full bg-yellow-500" />
-                                <span className="hidden sm:inline">{t('common.unsavedChanges', 'Unsaved')}</span>
-                            </span>
+                            <>
+                                <span className="flex items-center gap-1.5 text-yellow-500">
+                                    <span className="w-2 h-2 rounded-full bg-yellow-500" />
+                                    <span className="hidden sm:inline">{t('common.unsavedChanges', 'Unsaved')}</span>
+                                </span>
+                                <button
+                                    onClick={async () => {
+                                        if (!bioPage && activeProjectId) {
+                                            // Create bio page first if it doesn't exist
+                                            const username = profile.name?.toLowerCase().replace(/\s+/g, '-') || `bio-${Date.now()}`;
+                                            await createBioPage(activeProjectId, username);
+                                        }
+                                        await saveBioPage();
+                                    }}
+                                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary text-primary-foreground font-medium hover:bg-primary/90 transition-all"
+                                >
+                                    <Check size={14} />
+                                    <span>{t('common.save', 'Save')}</span>
+                                </button>
+                            </>
                         ) : bioPage ? (
                             <span className="flex items-center gap-1.5 text-green-500">
                                 <Check size={14} />
