@@ -565,6 +565,74 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
     if (session.mode === 'subscription' && tenantId && planId) {
         console.log(`[Stripe Webhook] Subscription checkout completed for tenant: ${tenantId}, plan: ${planId}`);
 
+        // Ensure tenant document exists (auto-create if user paid without completing onboarding)
+        const tenantRef = db.doc(`tenants/${tenantId}`);
+        const tenantDoc = await tenantRef.get();
+
+        if (!tenantDoc.exists) {
+            console.log(`[Stripe Webhook] Tenant ${tenantId} not found, auto-creating...`);
+
+            // Extract userId from tenantId (pattern: tenant_{userId})
+            const ownerUid = tenantId.startsWith('tenant_') ? tenantId.replace('tenant_', '') : userId;
+
+            // Get user info for the tenant
+            let ownerEmail = session.customer_details?.email || '';
+            let ownerName = session.customer_details?.name || '';
+
+            if (ownerUid) {
+                const userDoc = await db.doc(`users/${ownerUid}`).get();
+                if (userDoc.exists) {
+                    const userData = userDoc.data();
+                    ownerEmail = ownerEmail || userData?.email || '';
+                    ownerName = ownerName || userData?.name || userData?.displayName || '';
+                }
+            }
+
+            const now = admin.firestore.FieldValue.serverTimestamp();
+
+            // Create tenant document
+            await tenantRef.set({
+                name: ownerName ? `${ownerName}'s Workspace` : 'Mi Workspace',
+                ownerUid: ownerUid || '',
+                ownerEmail,
+                ownerName,
+                subscriptionPlan: planId,
+                subscriptionStatus: 'active',
+                createdAt: now,
+                updatedAt: now,
+                members: ownerUid ? {
+                    [ownerUid]: {
+                        role: 'owner',
+                        email: ownerEmail,
+                        name: ownerName,
+                        joinedAt: new Date().toISOString(),
+                    }
+                } : {},
+            });
+
+            console.log(`[Stripe Webhook] Auto-created tenant ${tenantId} for ${ownerEmail}`);
+
+            // Link user to tenant if we have the userId
+            if (ownerUid) {
+                const userRef = db.doc(`users/${ownerUid}`);
+                await userRef.update({
+                    tenantId,
+                    role: 'owner',
+                    updatedAt: now,
+                }).catch((err: any) => {
+                    console.error(`[Stripe Webhook] Error linking user to tenant:`, err);
+                });
+                console.log(`[Stripe Webhook] Linked user ${ownerUid} to tenant ${tenantId}`);
+            }
+        } else {
+            // Tenant exists, just update subscription plan
+            await tenantRef.update({
+                subscriptionPlan: planId,
+                subscriptionStatus: 'active',
+                updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+            });
+        }
+
         await updateTenantSubscription(tenantId, planId, {
             stripeCustomerId: session.customer as string,
             stripeSubscriptionId: session.subscription as string,
