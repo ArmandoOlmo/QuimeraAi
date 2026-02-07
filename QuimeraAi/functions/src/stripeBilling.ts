@@ -425,8 +425,8 @@ export const createSubscriptionCheckout = functions.https.onCall(
                 throw new functions.https.HttpsError('not-found', `Price for ${billingCycle} billing not found`);
             }
 
-            // Check if this plan has a trial period (7 days for Individual and Agency plans)
-            const planHasTrial = ['individual', 'agency_starter', 'agency_pro', 'agency_scale'].includes(planId);
+            // Check if this plan has a trial period (7 days for Individual plan only)
+            const planHasTrial = ['individual'].includes(planId);
             const trialDays = planHasTrial ? 7 : undefined;
 
             // Create checkout session

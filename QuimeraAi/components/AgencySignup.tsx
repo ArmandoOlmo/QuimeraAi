@@ -530,9 +530,9 @@ const AgencySignup: React.FC = () => {
                                             )}
                                         </button>
 
-                                        {/* Trial Note */}
+                                        {/* Secure payment note */}
                                         <p className="text-center text-gray-500 text-xs mt-4">
-                                            7 días de prueba gratis • Sin tarjeta requerida
+                                            Pagos seguros con Stripe • Cancela cuando quieras
                                         </p>
                                     </div>
                                 );
