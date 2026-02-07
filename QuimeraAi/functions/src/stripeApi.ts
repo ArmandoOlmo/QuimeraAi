@@ -602,7 +602,7 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
                 updatedAt: now,
                 members: ownerUid ? {
                     [ownerUid]: {
-                        role: 'owner',
+                        role: 'agency_owner',
                         email: ownerEmail,
                         name: ownerName,
                         joinedAt: new Date().toISOString(),
@@ -617,7 +617,6 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
                 const userRef = db.doc(`users/${ownerUid}`);
                 await userRef.update({
                     tenantId,
-                    role: 'owner',
                     updatedAt: now,
                 }).catch((err: any) => {
                     console.error(`[Stripe Webhook] Error linking user to tenant:`, err);
