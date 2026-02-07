@@ -96,6 +96,32 @@ const SubscriptionSettings: React.FC = () => {
         fetchSubscriptionDetails();
     }, [currentTenant?.id]);
 
+    // Handle success redirect from Stripe checkout
+    useEffect(() => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const isSuccess = urlParams.get('success') === 'true';
+        const planParam = urlParams.get('plan');
+
+        if (isSuccess) {
+            // Clean URL params
+            const newUrl = window.location.pathname;
+            window.history.replaceState({}, '', newUrl);
+
+            // Force refresh data after successful checkout
+            const refreshAfterCheckout = async () => {
+                // Wait a moment for webhook to process
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                refresh();
+
+                // Retry refresh after more time in case webhook is slow
+                setTimeout(() => refresh(), 5000);
+                setTimeout(() => refresh(), 10000);
+            };
+
+            refreshAfterCheckout();
+        }
+    }, [refresh]);
+
     // Get current plan from usage or default to free
     const currentPlanId: SubscriptionPlanId = usage?.planId || 'free';
     // Try to get from context first, otherwise fallback to hardcoded

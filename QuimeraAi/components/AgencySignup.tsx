@@ -198,7 +198,7 @@ const AgencySignup: React.FC = () => {
             const result = await createCheckoutSession({
                 planId,
                 billingCycle,
-                tenantId: user.uid, // Temporary - should be actual tenant ID
+                tenantId: `tenant_${user.uid}`, // Standard tenant ID pattern
                 successUrl: `${window.location.origin}/dashboard?subscription=success&plan=${planId}`,
                 cancelUrl: `${window.location.origin}/agency-signup?cancelled=true`,
             });
