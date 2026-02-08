@@ -1,7 +1,7 @@
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useEditor } from '../../../contexts/EditorContext';
+import { useSafeEditor } from '../../../contexts/EditorContext';
 import { useAI } from '../../../contexts/ai/AIContext';
 import { useProject } from '../../../contexts/project/ProjectContext';
 import { useUI } from '../../../contexts/core/UIContext';
@@ -37,6 +37,7 @@ const voices: { name: AiAssistantConfig['voiceName']; description: string; gende
 const AiAssistantDashboard: React.FC = () => {
     const { t } = useTranslation();
     const { aiAssistantConfig, setAiAssistantConfig, saveAiAssistantConfig } = useAI();
+    const editorContext = useSafeEditor();
     const { activeProject, projects, loadProject } = useProject();
     const { setView } = useUI();
     const { user } = useAuth();
@@ -45,6 +46,7 @@ const AiAssistantDashboard: React.FC = () => {
     const [formData, setFormData] = useState<AiAssistantConfig>(aiAssistantConfig);
     const [isSaving, setIsSaving] = useState(false);
     const [voiceGenderFilter, setVoiceGenderFilter] = useState<'all' | 'Male' | 'Female'>('all');
+    const isSavingRef = useRef(false);
 
     const tabs = useMemo(() => [
         { id: 'overview', label: t('aiAssistant.dashboard.tabs.overview'), icon: <Activity size={18} />, description: 'Resumen de rendimiento y estado' },
@@ -60,6 +62,9 @@ const AiAssistantDashboard: React.FC = () => {
 
     // Load AI config from active project when it changes
     useEffect(() => {
+        // Skip if we just saved — avoid overwriting formData with stale Firestore snapshot
+        if (isSavingRef.current) return;
+
         if (activeProject?.aiAssistantConfig) {
             // Load config from project (from Firestore)
             setFormData(activeProject.aiAssistantConfig);
@@ -81,12 +86,19 @@ const AiAssistantDashboard: React.FC = () => {
     const handleSave = async () => {
         if (!activeProject?.id) return;
         setIsSaving(true);
+        isSavingRef.current = true;
         try {
             await saveAiAssistantConfig(formData, activeProject.id);
+            // Also sync to EditorContext so ChatbotWidget picks up changes immediately
+            if (editorContext?.saveAiAssistantConfig) {
+                await editorContext.saveAiAssistantConfig(formData);
+            }
         } catch (error) {
             console.error('Error saving config:', error);
         }
         setIsSaving(false);
+        // Keep the guard for a short time to let Firestore listener settle
+        setTimeout(() => { isSavingRef.current = false; }, 2000);
     };
 
     const updateForm = (key: keyof AiAssistantConfig, value: any) => {

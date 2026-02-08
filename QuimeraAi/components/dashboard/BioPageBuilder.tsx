@@ -2196,7 +2196,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                             onClick={(e) => e.stopPropagation()}
                         >
                             <ChatCore
-                                config={activeProject.aiAssistant || {
+                                config={activeProject.aiAssistantConfig || {
                                     agentName: 'AI Assistant',
                                     tone: 'Professional',
                                     languages: 'Spanish, English',
@@ -2213,7 +2213,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                                     voiceName: 'Puck',
                                 }}
                                 project={activeProject}
-                                appearance={activeProject.aiAssistant?.appearance || {
+                                appearance={activeProject.aiAssistantConfig?.appearance || {
                                     branding: {
                                         logoType: 'none',
                                         logoSize: 'md',

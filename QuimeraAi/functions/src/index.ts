@@ -14,6 +14,9 @@ if (!admin.apps.length) {
 import { getWidgetConfig, submitWidgetLead, trackWidgetAnalytics } from './widgetApi';
 import { generateContent, streamContent, getUsageStats, generateImage } from './geminiProxy';
 import { textToSpeech, getVoices, voiceChat } from './voiceProxy';
+import { twilioVoiceWebhook } from './voice/twilioVoice';
+import { openclawProxy } from './voice/openclawProxy';
+import { outboundCall, outboundCallStatus } from './voice/outboundCall';
 import {
     createPaymentIntent,
     createCheckoutSession,
@@ -199,6 +202,10 @@ import {
     syncUserRoleClaims,
     batchSyncAllUserClaims
 } from './userRoleClaims';
+
+// Onboarding functions
+import { analyzeWebsite } from './onboarding/analyzeWebsite';
+import { autoProvisionClient, getOnboardingStatus } from './onboarding/autoProvisionClient';
 
 // Export widget API functions
 export const widget = {
@@ -395,6 +402,13 @@ export const userRoles = {
     batchSyncAll: batchSyncAllUserClaims
 };
 
+// Export Agency Onboarding functions
+export const agencyOnboarding = {
+    analyzeWebsite,
+    autoProvision: autoProvisionClient,
+    getStatus: getOnboardingStatus,
+};
+
 // Alternative flat exports for easier routing
 export {
     getWidgetConfig,
@@ -545,3 +559,11 @@ export {
     updateSubscriptionAddons
 };
 
+// Direct export for Twilio Voice Webhook (ElevenLabs Conversational AI)
+export { twilioVoiceWebhook };
+
+// HTTPS proxy for OpenClaw API (bridges ElevenLabs HTTPS requirement with HTTP VPS)
+export { openclawProxy };
+
+// Outbound call functions (Quibo initiates calls via ElevenLabs)
+export { outboundCall, outboundCallStatus };

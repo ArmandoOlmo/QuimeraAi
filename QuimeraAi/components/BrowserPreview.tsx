@@ -1,8 +1,10 @@
 
-import React, { ReactNode, forwardRef } from 'react';
+import React, { ReactNode, forwardRef, useCallback } from 'react';
 import { useUI } from '../contexts/core/UIContext';
+import { useAuth } from '../contexts/core/AuthContext';
 import { useProject } from '../contexts/project';
 import { PreviewDevice, PreviewOrientation } from '../types';
+import { ExternalLink } from 'lucide-react';
 
 interface BrowserPreviewProps {
   children: ReactNode;
@@ -25,11 +27,18 @@ const widthClasses: Record<PreviewDevice, Record<PreviewOrientation, string>> = 
 
 const BrowserPreview = forwardRef<HTMLDivElement, BrowserPreviewProps>(({ children }, ref) => {
   const { previewDevice, previewOrientation } = useUI();
+  const { user } = useAuth();
   const { activeProject } = useProject();
 
   const projectSlug = activeProject?.name
     ? activeProject.name.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-')
     : 'new-project';
+
+  const handleOpenPreview = useCallback(() => {
+    if (!user?.uid || !activeProject?.id) return;
+    const previewUrl = `${window.location.origin}/preview/${user.uid}/${activeProject.id}`;
+    window.open(previewUrl, '_blank');
+  }, [user?.uid, activeProject?.id]);
 
   return (
     <div className={`h-full mx-auto transition-all duration-300 ease-in-out ${widthClasses[previewDevice][previewOrientation]}`}>
@@ -42,9 +51,14 @@ const BrowserPreview = forwardRef<HTMLDivElement, BrowserPreviewProps>(({ childr
             <span className="w-3.5 h-3.5 bg-green-500 rounded-full"></span>
           </div>
           <div className="flex-grow flex items-center justify-center">
-            <div className="bg-editor-panel-bg text-editor-text-secondary text-sm rounded-full px-4 py-1.5 w-full max-w-md text-center truncate flex items-center justify-center cursor-default select-none border border-editor-border/50">
+            <div
+              onClick={handleOpenPreview}
+              title="Click to open preview in new tab"
+              className="bg-editor-panel-bg text-editor-text-secondary text-sm rounded-full px-4 py-1.5 w-full max-w-md text-center truncate flex items-center justify-center cursor-pointer hover:bg-editor-border/30 transition-colors border border-editor-border/50 group"
+            >
               <span className="opacity-50 mr-0.5">https://quimera.ai/</span>
               <span className="font-medium text-editor-text-primary">{projectSlug}</span>
+              <ExternalLink size={12} className="ml-2 opacity-0 group-hover:opacity-60 transition-opacity flex-shrink-0" />
             </div>
           </div>
           <div className="w-16"></div> {/* Spacer to balance the controls */}

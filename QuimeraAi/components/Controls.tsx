@@ -418,6 +418,43 @@ const AccordionItem: React.FC<AccordionItemProps> = ({
   );
 };
 
+// --- Helper: Extract video ID from YouTube/Vimeo URLs ---
+const extractVideoId = (input: string, source: string): string => {
+  if (!input) return '';
+  const trimmed = input.trim();
+
+  if (source === 'youtube') {
+    // Match various YouTube URL formats
+    const patterns = [
+      /(?:youtube\.com\/watch\?.*v=)([\w-]{11})/,           // youtube.com/watch?v=ID
+      /(?:youtu\.be\/)([\w-]{11})/,                          // youtu.be/ID
+      /(?:youtube\.com\/embed\/)([\w-]{11})/,                // youtube.com/embed/ID
+      /(?:youtube\.com\/shorts\/)([\w-]{11})/,               // youtube.com/shorts/ID
+      /(?:youtube\.com\/live\/)([\w-]{11})/,                 // youtube.com/live/ID
+      /(?:youtube\.com\/v\/)([\w-]{11})/,                    // youtube.com/v/ID
+    ];
+    for (const pattern of patterns) {
+      const match = trimmed.match(pattern);
+      if (match) return match[1];
+    }
+    // If it looks like a bare 11-char ID, return as-is
+    if (/^[\w-]{11}$/.test(trimmed)) return trimmed;
+    // Return whatever user typed (might be wrong, but don't lose their input)
+    return trimmed;
+  }
+
+  if (source === 'vimeo') {
+    // Match Vimeo URL: vimeo.com/123456789
+    const match = trimmed.match(/(?:vimeo\.com\/)([\d]+)/);
+    if (match) return match[1];
+    // Bare numeric ID
+    if (/^\d+$/.test(trimmed)) return trimmed;
+    return trimmed;
+  }
+
+  return trimmed;
+};
+
 // --- Main Component ---
 
 const Controls: React.FC = () => {
@@ -2608,7 +2645,12 @@ const Controls: React.FC = () => {
         {data.video.source === 'upload' ? (
           <Input label="Video URL" value={data.video.videoUrl} onChange={(e) => setNestedData('video.videoUrl', e.target.value)} />
         ) : (
-          <Input label="Video ID" value={data.video.videoId} onChange={(e) => setNestedData('video.videoId', e.target.value)} />
+          <Input
+            label={data.video.source === 'youtube' ? 'YouTube URL or Video ID' : 'Vimeo URL or Video ID'}
+            value={data.video.videoId}
+            onChange={(e) => setNestedData('video.videoId', extractVideoId(e.target.value, data.video.source))}
+            placeholder={data.video.source === 'youtube' ? 'https://www.youtube.com/watch?v=... or dQw4w9WgXcQ' : 'https://vimeo.com/123456789 or 123456789'}
+          />
         )}
         <div className="space-y-2">
           <ToggleControl label="Autoplay (Muted)" checked={data.video.autoplay} onChange={(v) => setNestedData('video.autoplay', v)} />
@@ -8000,7 +8042,12 @@ const Controls: React.FC = () => {
         {data.video.source === 'upload' ? (
           <Input label="Video URL" value={data.video.videoUrl} onChange={(e) => setNestedData('video.videoUrl', e.target.value)} />
         ) : (
-          <Input label="Video ID" value={data.video.videoId} onChange={(e) => setNestedData('video.videoId', e.target.value)} />
+          <Input
+            label={data.video.source === 'youtube' ? 'YouTube URL or Video ID' : 'Vimeo URL or Video ID'}
+            value={data.video.videoId}
+            onChange={(e) => setNestedData('video.videoId', extractVideoId(e.target.value, data.video.source))}
+            placeholder={data.video.source === 'youtube' ? 'https://www.youtube.com/watch?v=... or dQw4w9WgXcQ' : 'https://vimeo.com/123456789 or 123456789'}
+          />
         )}
 
         <hr className="border-editor-border/50" />
