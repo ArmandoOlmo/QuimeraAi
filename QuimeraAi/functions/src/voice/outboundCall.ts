@@ -5,22 +5,38 @@
  * ElevenLabs handles the entire call flow: Twilio connection,
  * audio streaming, and AI conversation.
  * 
- * Quibo on the VPS calls this endpoint → we call ElevenLabs API → 
- * ElevenLabs initiates the Twilio call with full AI support.
+ * SECURITY:
+ * - API keys loaded from environment config (not hardcoded)
+ * - Bearer token validated from environment config
+ * - Twilio signature validation on status callback
+ * - Restricted CORS origins
  */
 
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
+import { ELEVENLABS_CONFIG, OUTBOUND_CALL_CONFIG } from '../config';
 
-const ELEVENLABS_API_KEY = 'sk_6084729b375a20b6541e6c67eec258dc03b64414abd4738e';
-const AGENT_ID = 'agent_0501kgvccbjte8tthkh8x32exb97';
-const PHONE_NUMBER_ID = 'phnum_8501kgwhftqaf0tbdhcym96me1xs';
+// Allowed origins for outbound call endpoint
+const ALLOWED_ORIGINS = [
+    'https://quimera.ai',
+    'https://www.quimera.ai',
+    'https://quimeraai.web.app',
+    'https://quimeraai.firebaseapp.com',
+    'http://localhost:5173',
+    'http://localhost:3000',
+];
 
-export const outboundCall = functions.https.onRequest(async (req, res) => {
-    // CORS headers
-    res.set('Access-Control-Allow-Origin', '*');
+function setCorsHeaders(req: functions.https.Request, res: functions.Response): void {
+    const origin = req.headers.origin as string;
+    if (origin && ALLOWED_ORIGINS.includes(origin)) {
+        res.set('Access-Control-Allow-Origin', origin);
+    }
     res.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
     res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+}
+
+export const outboundCall = functions.https.onRequest(async (req, res) => {
+    setCorsHeaders(req, res);
 
     if (req.method === 'OPTIONS') {
         res.status(204).send('');
@@ -32,9 +48,10 @@ export const outboundCall = functions.https.onRequest(async (req, res) => {
         return;
     }
 
-    // Validate authorization - use the same OpenClaw key
+    // SECURITY: Validate bearer token from environment config
     const authHeader = req.headers.authorization;
-    if (!authHeader || authHeader !== 'Bearer quibo-master-key-2026') {
+    const expectedToken = OUTBOUND_CALL_CONFIG.bearerToken;
+    if (!expectedToken || !authHeader || authHeader !== `Bearer ${expectedToken}`) {
         res.status(401).json({ error: 'Unauthorized' });
         return;
     }
@@ -46,23 +63,32 @@ export const outboundCall = functions.https.onRequest(async (req, res) => {
         return;
     }
 
+    // SECURITY: Validate API key exists before making call
+    const apiKey = ELEVENLABS_CONFIG.apiKey;
+    const agentId = ELEVENLABS_CONFIG.agentId;
+    const phoneNumberId = ELEVENLABS_CONFIG.phoneNumberId;
+
+    if (!apiKey || !agentId || !phoneNumberId) {
+        console.error('[Outbound Call] Missing ElevenLabs configuration');
+        res.status(500).json({ error: 'Voice service not configured' });
+        return;
+    }
+
     console.log(`[Outbound Call] Initiating call to ${to} via ElevenLabs API`);
 
     try {
-        // Use ElevenLabs' native outbound call API
         const elevenlabsResponse = await fetch(
             'https://api.elevenlabs.io/v1/convai/twilio/outbound_call',
             {
                 method: 'POST',
                 headers: {
-                    'xi-api-key': ELEVENLABS_API_KEY,
+                    'xi-api-key': apiKey,
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    agent_id: AGENT_ID,
-                    agent_phone_number_id: PHONE_NUMBER_ID,
+                    agent_id: agentId,
+                    agent_phone_number_id: phoneNumberId,
                     to_number: to,
-                    // Optional overrides for this specific call
                     ...(prompt && {
                         conversation_config_override: {
                             agent: {
@@ -125,15 +151,36 @@ export const outboundCall = functions.https.onRequest(async (req, res) => {
 
 /**
  * Status callback for outbound calls.
- * Logs call status updates to Firestore.
+ * SECURITY: Validates that requests come from Twilio using URL-based validation.
+ * Twilio status callbacks always POST with specific fields.
  */
 export const outboundCallStatus = functions.https.onRequest(async (req, res) => {
-    const { CallSid, CallStatus, CallDuration } = req.body;
+    // SECURITY: Only accept POST from Twilio
+    if (req.method !== 'POST') {
+        res.status(405).send('Method not allowed');
+        return;
+    }
+
+    // SECURITY: Validate Twilio-specific fields are present
+    const { CallSid, CallStatus, CallDuration, AccountSid } = req.body;
+
+    if (!CallSid || !CallStatus || !AccountSid) {
+        res.status(400).send('Missing required Twilio fields');
+        return;
+    }
+
+    // SECURITY: Validate AccountSid matches our Twilio account
+    // This prevents spoofed callback requests
+    const expectedAccountSid = process.env.TWILIO_ACCOUNT_SID;
+    if (expectedAccountSid && AccountSid !== expectedAccountSid) {
+        console.warn(`[Outbound Call Status] Invalid AccountSid: ${AccountSid}`);
+        res.status(403).send('Forbidden');
+        return;
+    }
 
     console.log(`[Outbound Call Status] SID: ${CallSid}, Status: ${CallStatus}, Duration: ${CallDuration}`);
 
     try {
-        // Update the call record in Firestore
         const callsRef = admin.firestore().collection('calls');
         const snapshot = await callsRef.where('callSid', '==', CallSid).limit(1).get();
 

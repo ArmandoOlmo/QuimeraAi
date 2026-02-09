@@ -1,9 +1,9 @@
 import React, { useState, useMemo } from 'react';
 import { PageSection } from '../../types';
 import { useTranslation } from 'react-i18next';
-import { 
-    Layout, Image, List, Star, Users, DollarSign, 
-    Briefcase, Mail, Send, MessageCircle, PlaySquare, 
+import {
+    Layout, Image, List, Star, Users, DollarSign,
+    Briefcase, Mail, Send, MessageCircle, PlaySquare,
     MonitorPlay, Grid, MessageSquare, Type, AlignJustify,
     HelpCircle, ChevronDown, Eye, EyeOff,
     GripVertical, Plus, Search, X, MapPin, Trash2, UtensilsCrossed, Palette, Columns,
@@ -86,8 +86,8 @@ const FIXED_SECTIONS = ['header', 'footer', 'typography', 'colors', 'storeSettin
 
 // Ecommerce section identifiers - defined outside component to maintain referential stability
 const ECOMMERCE_SECTION_IDS: PageSection[] = [
-    'storeSettings', 'products', 'featuredProducts', 'categoryGrid', 'productHero', 
-    'saleCountdown', 'trustBadges', 'recentlyViewed', 'productReviews', 
+    'storeSettings', 'products', 'featuredProducts', 'categoryGrid', 'productHero',
+    'saleCountdown', 'trustBadges', 'recentlyViewed', 'productReviews',
     'collectionBanner', 'productBundle', 'announcementBar'
 ];
 
@@ -123,6 +123,8 @@ const SortableSectionItem: React.FC<SortableSectionItemProps> = ({
     deleteLabel,
     deleteConfirmMessage,
 }) => {
+    const [showConfirm, setShowConfirm] = useState(false);
+
     const {
         attributes,
         listeners,
@@ -164,20 +166,44 @@ const SortableSectionItem: React.FC<SortableSectionItemProps> = ({
                     className="flex-shrink-0 cursor-grab active:cursor-grabbing touch-none"
                     onClick={(e) => e.stopPropagation()}
                 >
-                    <GripVertical 
-                        size={14} 
+                    <GripVertical
+                        size={14}
                         className="text-editor-text-secondary hover:text-editor-text-primary"
                     />
                 </div>
             )}
             <Icon size={16} className="flex-shrink-0" />
-            
+
             <span className="flex-1 text-sm font-medium truncate">
                 {sectionLabel}
             </span>
 
+            {/* Inline delete confirmation */}
+            {showConfirm && !isFixed && (
+                <div
+                    className="flex items-center gap-1 animate-in fade-in"
+                    onClick={(e) => e.stopPropagation()}
+                >
+                    <button
+                        onClick={() => {
+                            onRemove();
+                            setShowConfirm(false);
+                        }}
+                        className="px-2 py-0.5 text-xs font-medium rounded bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-colors"
+                    >
+                        ✓
+                    </button>
+                    <button
+                        onClick={() => setShowConfirm(false)}
+                        className="px-2 py-0.5 text-xs font-medium rounded bg-editor-border/50 text-editor-text-secondary hover:bg-editor-border transition-colors"
+                    >
+                        ✕
+                    </button>
+                </div>
+            )}
+
             {/* Action buttons */}
-            {!isFixed && (
+            {!isFixed && !showConfirm && (
                 <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button
                         onClick={(e) => {
@@ -192,9 +218,7 @@ const SortableSectionItem: React.FC<SortableSectionItemProps> = ({
                     <button
                         onClick={(e) => {
                             e.stopPropagation();
-                            if (confirm(deleteConfirmMessage)) {
-                                onRemove();
-                            }
+                            setShowConfirm(true);
                         }}
                         className="flex-shrink-0 p-1.5 rounded text-editor-text-secondary hover:text-red-500 hover:bg-red-500/10 transition-colors"
                         title={deleteLabel}
@@ -210,7 +234,7 @@ const SortableSectionItem: React.FC<SortableSectionItemProps> = ({
 // Drag Overlay Item (shown while dragging)
 const DragOverlayItem: React.FC<{ section: PageSection; sectionLabel: string }> = ({ section, sectionLabel }) => {
     const Icon = sectionIcons[section] || Layout;
-    
+
     return (
         <div className="flex items-center gap-2 px-3 py-2 bg-editor-panel-bg border border-editor-accent rounded-md shadow-xl">
             <GripVertical size={14} className="text-editor-accent" />
@@ -303,7 +327,7 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
         ...(['header', 'footer'].filter(s => componentOrder.includes(s as PageSection)) as PageSection[]),
         ...(componentOrder.includes('storeSettings') ? ['storeSettings' as PageSection] : [])
     ], [componentOrder]);
-    
+
     const contentSections = useMemo(() => {
         const seen = new Set<PageSection>();
         return componentOrder.filter(s => {
@@ -324,7 +348,7 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
                 componentStatus[s];
         });
     }, [componentOrder, componentStatus]);
-    
+
     const integrationSections = useMemo(() => {
         const seen = new Set<PageSection>();
         return componentOrder.filter(s => {
@@ -346,7 +370,7 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
     }, [componentOrder, searchTerm, sectionLabels]);
 
     // All draggable sections combined for the DnD context (deduplicated)
-    const allDraggableSections = useMemo(() => 
+    const allDraggableSections = useMemo(() =>
         Array.from(new Set([...contentSections, ...ecommerceSections, ...integrationSections])),
         [contentSections, ecommerceSections, integrationSections]
     );
@@ -372,7 +396,7 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
 
     const renderSection = (section: PageSection, isDraggable = true) => {
         const isFixed = FIXED_SECTIONS.includes(section);
-        
+
         return (
             <SortableSectionItem
                 key={section}
@@ -400,7 +424,7 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
         isDraggable = true
     ) => {
         if (sections.length === 0) return null;
-        
+
         const isExpanded = expandedGroups[groupKey];
 
         return (
@@ -420,8 +444,8 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
                     {title}
                     <span className="text-editor-accent">({sections.length})</span>
                 </button>
-                
-                <div 
+
+                <div
                     className={`
                         overflow-hidden transition-all duration-300 ease-in-out
                         ${isExpanded ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'}
@@ -529,13 +553,13 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
                             </>
                         )}
                     </SortableContext>
-                    
+
                     {/* Drag Overlay - Shows item being dragged */}
                     <DragOverlay>
                         {activeId ? (
-                            <DragOverlayItem 
-                                section={activeId} 
-                                sectionLabel={sectionLabels[activeId]} 
+                            <DragOverlayItem
+                                section={activeId}
+                                sectionLabel={sectionLabels[activeId]}
                             />
                         ) : null}
                     </DragOverlay>

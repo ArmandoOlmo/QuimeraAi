@@ -5,22 +5,45 @@
  * ElevenLabs Custom LLM requires HTTPS, but the VPS only has HTTP.
  * This function proxies requests from ElevenLabs → Firebase (HTTPS) → VPS (HTTP).
  * 
- * ElevenLabs sends OpenAI-compatible chat/completions requests.
- * We forward them to the OpenClaw instance and stream the response back.
+ * SECURITY:
+ * - Requires Authorization header (forwarded from ElevenLabs or caller)
+ * - CORS restricted to known origins
  */
 
 import * as functions from 'firebase-functions';
 
 const OPENCLAW_BASE_URL = 'http://34.56.154.52:18789';
 
+// Allowed origins — ElevenLabs doesn't send an origin header (server-to-server),
+// so we only restrict browser-based access
+const ALLOWED_ORIGINS = [
+    'https://quimera.ai',
+    'https://www.quimera.ai',
+    'https://quimeraai.web.app',
+    'http://localhost:5173',
+    'http://localhost:3000',
+];
+
 export const openclawProxy = functions.https.onRequest(async (req, res) => {
-    // Allow CORS
-    res.set('Access-Control-Allow-Origin', '*');
+    // CORS — only allow known browser origins
+    const origin = req.headers.origin as string;
+    if (origin && ALLOWED_ORIGINS.includes(origin)) {
+        res.set('Access-Control-Allow-Origin', origin);
+    }
     res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
     res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
     if (req.method === 'OPTIONS') {
         res.status(204).send('');
+        return;
+    }
+
+    // SECURITY: Require Authorization header
+    // ElevenLabs always sends one (OpenAI-compatible); reject any unauthenticated request
+    if (!req.headers.authorization) {
+        res.status(401).json({
+            error: { message: 'Authorization header required', type: 'auth_error' }
+        });
         return;
     }
 

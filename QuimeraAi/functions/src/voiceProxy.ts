@@ -36,18 +36,54 @@ const ALLOWED_ORIGINS = [
  */
 function setCorsHeaders(req: functions.https.Request, res: functions.Response): boolean {
     const origin = req.headers.origin || '';
-    const isAllowed = ALLOWED_ORIGINS.includes(origin) || origin.includes('quimera');
-    
+    // SECURITY: Strict origin check — no broad pattern matching
+    const isAllowed = ALLOWED_ORIGINS.includes(origin);
+
     if (isAllowed) {
         res.set('Access-Control-Allow-Origin', origin);
     }
-    
+
     res.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
     res.set('Access-Control-Allow-Headers', 'Content-Type');
     res.set('Access-Control-Max-Age', '3600');
-    
+
     return isAllowed;
 }
+
+// ============================================
+// SECURITY: Rate Limiting (per IP, in-memory)
+// ============================================
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
+const RATE_LIMIT = 10; // requests per window
+const RATE_WINDOW_MS = 60 * 1000; // 1 minute
+
+function checkRateLimit(req: functions.https.Request): boolean {
+    const ip = req.ip || req.headers['x-forwarded-for'] as string || 'unknown';
+    const now = Date.now();
+    const entry = rateLimitMap.get(ip);
+
+    if (!entry || now > entry.resetAt) {
+        rateLimitMap.set(ip, { count: 1, resetAt: now + RATE_WINDOW_MS });
+        return true;
+    }
+
+    if (entry.count >= RATE_LIMIT) {
+        return false;
+    }
+
+    entry.count++;
+    return true;
+}
+
+// Clean up stale rate limit entries periodically
+setInterval(() => {
+    const now = Date.now();
+    for (const [key, value] of rateLimitMap) {
+        if (now > value.resetAt) {
+            rateLimitMap.delete(key);
+        }
+    }
+}, 5 * 60 * 1000); // Every 5 minutes
 
 // Voice configurations for different personas
 const VOICE_CONFIGS: Record<string, protos.google.cloud.texttospeech.v1.IVoiceSelectionParams> = {
@@ -86,9 +122,15 @@ export const textToSpeech = functions.https.onRequest(async (req, res) => {
     }
 
     const isAllowed = setCorsHeaders(req, res);
-    
+
     if (!isAllowed) {
         res.status(403).json({ error: 'Origin not allowed' });
+        return;
+    }
+
+    // SECURITY: Rate limit
+    if (!checkRateLimit(req)) {
+        res.status(429).json({ error: 'Rate limit exceeded. Try again in a minute.' });
         return;
     }
 
@@ -130,7 +172,7 @@ export const textToSpeech = functions.https.onRequest(async (req, res) => {
 
         // Return audio as base64
         const audioBase64 = Buffer.from(response.audioContent as Uint8Array).toString('base64');
-        
+
         res.status(200).json({
             audio: audioBase64,
             mimeType: 'audio/mp3',
@@ -139,9 +181,9 @@ export const textToSpeech = functions.https.onRequest(async (req, res) => {
 
     } catch (error: any) {
         console.error('[Voice Proxy] TTS Error:', error);
-        res.status(500).json({ 
-            error: 'Text-to-speech failed', 
-            details: error.message 
+        res.status(500).json({
+            error: 'Text-to-speech failed',
+            details: error.message
         });
     }
 });
@@ -162,7 +204,7 @@ export const getVoices = functions.https.onRequest(async (req, res) => {
 
     try {
         const [response] = await ttsClient.listVoices({ languageCode: 'es' });
-        
+
         const voices = response.voices?.map(voice => ({
             name: voice.name,
             languageCode: voice.languageCodes?.[0],
@@ -190,9 +232,15 @@ export const voiceChat = functions.https.onRequest(async (req, res) => {
     }
 
     const isAllowed = setCorsHeaders(req, res);
-    
+
     if (!isAllowed) {
         res.status(403).json({ error: 'Origin not allowed' });
+        return;
+    }
+
+    // SECURITY: Rate limit
+    if (!checkRateLimit(req)) {
+        res.status(429).json({ error: 'Rate limit exceeded. Try again in a minute.' });
         return;
     }
 
@@ -202,9 +250,9 @@ export const voiceChat = functions.https.onRequest(async (req, res) => {
     }
 
     try {
-        const { 
-            userMessage, 
-            conversationHistory = [], 
+        const {
+            userMessage,
+            conversationHistory = [],
             systemPrompt = '',
             voiceName = 'Quibo',
             projectId = 'quimera-chat-landing'
@@ -217,10 +265,10 @@ export const voiceChat = functions.https.onRequest(async (req, res) => {
 
         // Import Gemini functions dynamically to avoid circular deps
         const { GoogleGenAI } = await import('@google/genai');
-        
+
         // Get API key from centralized config
         const apiKey = GEMINI_CONFIG.apiKey;
-        
+
         if (!apiKey) {
             res.status(500).json({ error: 'API key not configured' });
             return;
@@ -236,7 +284,7 @@ export const voiceChat = functions.https.onRequest(async (req, res) => {
 
         // Generate AI response
         const model = genAI.models.generateContent;
-        const fullPrompt = systemPrompt 
+        const fullPrompt = systemPrompt
             ? `${systemPrompt}\n\nHistorial:\n${history.map((h: any) => `${h.role}: ${h.parts[0].text}`).join('\n')}\n\nUsuario: ${userMessage}\n\nAsistente:`
             : userMessage;
 
@@ -249,7 +297,7 @@ export const voiceChat = functions.https.onRequest(async (req, res) => {
 
         // Generate audio for the response
         const voiceConfig = VOICE_CONFIGS[voiceName] || VOICE_CONFIGS['default'];
-        
+
         const [audioResponse] = await ttsClient.synthesizeSpeech({
             input: { text: responseText.slice(0, 5000) },
             voice: voiceConfig,
@@ -261,7 +309,7 @@ export const voiceChat = functions.https.onRequest(async (req, res) => {
             },
         });
 
-        const audioBase64 = audioResponse.audioContent 
+        const audioBase64 = audioResponse.audioContent
             ? Buffer.from(audioResponse.audioContent as Uint8Array).toString('base64')
             : null;
 
@@ -274,9 +322,9 @@ export const voiceChat = functions.https.onRequest(async (req, res) => {
 
     } catch (error: any) {
         console.error('[Voice Proxy] Voice chat error:', error);
-        res.status(500).json({ 
-            error: 'Voice chat failed', 
-            details: error.message 
+        res.status(500).json({
+            error: 'Voice chat failed',
+            details: error.message
         });
     }
 });

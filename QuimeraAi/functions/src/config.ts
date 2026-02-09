@@ -115,6 +115,38 @@ export const META_CONFIG = {
 };
 
 // =============================================================================
+// ELEVENLABS (Voice AI - Outbound Calls)
+// =============================================================================
+export const ELEVENLABS_CONFIG = {
+    get apiKey(): string {
+        const key = process.env.ELEVENLABS_API_KEY;
+        if (!key) {
+            console.error('[Config] ELEVENLABS_API_KEY not configured');
+        }
+        return key || '';
+    },
+    get agentId(): string {
+        return process.env.ELEVENLABS_AGENT_ID || '';
+    },
+    get phoneNumberId(): string {
+        return process.env.ELEVENLABS_PHONE_NUMBER_ID || '';
+    },
+};
+
+// =============================================================================
+// OUTBOUND CALL AUTH
+// =============================================================================
+export const OUTBOUND_CALL_CONFIG = {
+    get bearerToken(): string {
+        const token = process.env.OUTBOUND_CALL_BEARER_TOKEN;
+        if (!token) {
+            console.error('[Config] OUTBOUND_CALL_BEARER_TOKEN not configured');
+        }
+        return token || '';
+    },
+};
+
+// =============================================================================
 // APP CONFIG
 // =============================================================================
 export const APP_CONFIG = {

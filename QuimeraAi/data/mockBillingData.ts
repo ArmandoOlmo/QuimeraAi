@@ -1,4 +1,5 @@
 import { BillingData } from '../types';
+import { auth } from '../firebase';
 
 // Cloud Function URL for billing metrics
 const BILLING_API_URL = 'https://us-central1-quimeraai.cloudfunctions.net/getBillingMetrics';
@@ -43,10 +44,13 @@ const MOCK_DATA: BillingData = {
  */
 export const fetchBillingData = async (): Promise<BillingData> => {
   try {
+    // SECURITY: Include Firebase ID token for owner-only auth
+    const token = await auth.currentUser?.getIdToken();
     const response = await fetch(BILLING_API_URL, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
+        ...(token && { 'Authorization': `Bearer ${token}` }),
       },
     });
 
@@ -56,7 +60,7 @@ export const fetchBillingData = async (): Promise<BillingData> => {
     }
 
     const data = await response.json();
-    
+
     // Merge with default service modules if not provided
     return {
       ...data,
@@ -74,10 +78,13 @@ export const fetchBillingData = async (): Promise<BillingData> => {
  */
 export const savePlan = async (plan: BillingData['plans'][0]): Promise<{ success: boolean; productId?: string; error?: string }> => {
   try {
+    // SECURITY: Include Firebase ID token for owner-only auth
+    const token = await auth.currentUser?.getIdToken();
     const response = await fetch('https://us-central1-quimeraai.cloudfunctions.net/createOrUpdatePlan', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        ...(token && { 'Authorization': `Bearer ${token}` }),
       },
       body: JSON.stringify({ plan }),
     });
@@ -101,10 +108,13 @@ export const savePlan = async (plan: BillingData['plans'][0]): Promise<{ success
  */
 export const archivePlanApi = async (productId: string): Promise<{ success: boolean; error?: string }> => {
   try {
+    // SECURITY: Include Firebase ID token for owner-only auth
+    const token = await auth.currentUser?.getIdToken();
     const response = await fetch('https://us-central1-quimeraai.cloudfunctions.net/archivePlan', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        ...(token && { 'Authorization': `Bearer ${token}` }),
       },
       body: JSON.stringify({ productId }),
     });

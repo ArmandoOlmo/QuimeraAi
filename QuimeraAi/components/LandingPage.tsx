@@ -657,8 +657,8 @@ const LandingPageContent: React.FC = () => {
       'saleCountdown', 'trustBadges', 'recentlyViewed', 'productReviews',
       'collectionBanner', 'productBundle', 'announcementBar', 'storeSettings'
     ];
-    
-    return ecommerceComponents.some(component => 
+
+    return ecommerceComponents.some(component =>
       componentStatus[component] && effectiveSectionVisibility[component]
     );
   }, [componentStatus, effectiveSectionVisibility]);

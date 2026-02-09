@@ -16,6 +16,7 @@ import {
     orderBy,
     where,
     serverTimestamp,
+    auth,
 } from '../firebase';
 import {
     SubscriptionPlan,
@@ -81,6 +82,22 @@ let cacheTimestamp: number = 0;
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
 /**
+ * SECURITY: Get Firebase Auth token for authenticated Stripe API calls
+ */
+async function getAuthHeaders(): Promise<Record<string, string>> {
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    try {
+        const token = await auth.currentUser?.getIdToken();
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+    } catch (e) {
+        console.warn('[plansService] Could not get auth token:', e);
+    }
+    return headers;
+}
+
+/**
  * Clear the plans cache
  */
 export function clearPlansCache(): void {
@@ -109,11 +126,11 @@ export async function getAllPlans(forceRefresh = false): Promise<Record<string, 
 
         // Start with hardcoded plans as base (ensures new plans from code are always included)
         const plans: Record<string, StoredPlan> = {};
-        
+
         // Add all hardcoded plans first
         for (const [planId, plan] of Object.entries(SUBSCRIPTION_PLANS)) {
-            plans[planId] = { 
-                ...plan, 
+            plans[planId] = {
+                ...plan,
                 id: planId as SubscriptionPlanId,
                 // Mark as not in Firestore yet
                 _fromCode: true,
@@ -124,8 +141,8 @@ export async function getAllPlans(forceRefresh = false): Promise<Record<string, 
         if (!plansSnapshot.empty) {
             plansSnapshot.docs.forEach((doc) => {
                 const data = doc.data() as StoredPlan;
-                plans[doc.id] = { 
-                    ...data, 
+                plans[doc.id] = {
+                    ...data,
                     id: doc.id as SubscriptionPlanId,
                     _fromCode: false, // This plan exists in Firestore
                 };
@@ -228,9 +245,10 @@ async function syncPlanToStripe(plan: Partial<StoredPlan>): Promise<{
 
         console.log('[syncPlanToStripe] Syncing plan to Stripe:', plan.id);
 
+        const headers = await getAuthHeaders();
         const response = await fetch(CREATE_UPDATE_PLAN_URL, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers,
             body: JSON.stringify({ plan: stripePlan }),
         });
 
@@ -356,9 +374,10 @@ export async function archivePlan(planId: string, userId?: string, syncToStripe 
             const plan = planDoc.data() as StoredPlan;
             if (plan.stripeProductId) {
                 try {
+                    const headers = await getAuthHeaders();
                     const response = await fetch(ARCHIVE_PLAN_URL, {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
+                        headers,
                         body: JSON.stringify({ productId: plan.stripeProductId }),
                     });
 
@@ -748,15 +767,16 @@ export async function migrateToNewPlanStructure(userId?: string): Promise<{
                 if (planDoc.exists()) {
                     const planData = planDoc.data();
                     console.log(`[migrate] Plan ${planId} exists, isArchived: ${planData.isArchived}`);
-                    
+
                     // Only archive if not already archived
                     if (!planData.isArchived) {
                         // Archive in Stripe first if has product ID
                         if (planData.stripeProductId) {
                             try {
+                                const headers = await getAuthHeaders();
                                 const response = await fetch(ARCHIVE_PLAN_URL, {
                                     method: 'POST',
-                                    headers: { 'Content-Type': 'application/json' },
+                                    headers,
                                     body: JSON.stringify({ productId: planData.stripeProductId }),
                                 });
                                 if (!response.ok) {
@@ -912,7 +932,7 @@ export async function migrateToNewPlanStructure(userId?: string): Promise<{
 export async function isMigrationNeeded(): Promise<boolean> {
     try {
         const plans = await getAllPlans(true);
-        
+
         // Check if new plans exist IN FIRESTORE (not just from code) and are active
         const hasNewPlansInFirestore = ACTIVE_PLANS.every(planId => {
             const plan = plans[planId];
@@ -929,7 +949,7 @@ export async function isMigrationNeeded(): Promise<boolean> {
 
         // Migration needed if new plans aren't in Firestore OR legacy plans aren't archived
         const migrationNeeded = !hasNewPlansInFirestore || !legacyArchived;
-        
+
         console.log('[isMigrationNeeded] Check result:', {
             hasNewPlansInFirestore,
             legacyArchived,

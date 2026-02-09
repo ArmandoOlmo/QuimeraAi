@@ -377,13 +377,9 @@ const AccordionItem: React.FC<AccordionItemProps> = ({
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                const { t } = useTranslation();
-                if (confirm(t('editor.removeConfirm', { title }))) {
-                  onRemove();
-                }
+                onRemove();
               }}
               className="p-1 text-editor-text-secondary hover:text-red-400 transition-colors"
-              title={useTranslation().t('editor.removeFromPage')}
             >
               <Trash2 size={14} />
             </button>
@@ -470,15 +466,23 @@ const Controls: React.FC = () => {
     saveProject,
     // Page management
     pages, activePage, setActivePage, addPage, updatePage, deletePage, duplicatePage,
-    // Note: sectionVisibility comes from ProjectContext but we need to sync with EditorContext 
-    sectionVisibility: projectSectionVisibility
+    sectionVisibility: projectSectionVisibility,
+    setSectionVisibility: setProjectSectionVisibility,
   } = useProject();
 
-  // Use EditorContext's sectionVisibility for real-time preview sync
-  // LandingPage.tsx reads from EditorContext when in editor mode
+  // EditorContext for dual-sync
   const editorContext = useEditor();
-  const sectionVisibility = editorContext.sectionVisibility;
-  const setSectionVisibility = editorContext.setSectionVisibility;
+  const setEditorSectionVisibility = editorContext.setSectionVisibility;
+  const setEditorComponentOrder = editorContext.setComponentOrder;
+
+  // LandingPage may read from either ProjectContext or EditorContext depending on isEditorMode.
+  // To guarantee the preview always reflects changes, we update BOTH contexts.
+  const sectionVisibility = projectSectionVisibility;
+  const setSectionVisibility = (updater: React.SetStateAction<Record<PageSection, boolean>>) => {
+    setProjectSectionVisibility(updater);
+    setEditorSectionVisibility(updater);
+  };
+
   const { uploadImageAndGetURL } = useFiles();
   const { menus } = useCMS();
 
@@ -805,7 +809,9 @@ const Controls: React.FC = () => {
     newOrder.splice(finalTargetIdx, 0, movedItem);
 
     // Always keep footer at the end if it exists in current setup
-    setComponentOrder([...newOrder, 'footer' as PageSection] as PageSection[]);
+    const finalOrder = [...newOrder, 'footer' as PageSection] as PageSection[];
+    setComponentOrder(finalOrder);
+    setEditorComponentOrder(finalOrder);
     setDraggedIndex(null);
   };
 
@@ -4792,9 +4798,11 @@ const Controls: React.FC = () => {
     // Update active page sections if we have an active page
     if (activePage) {
       updatePage(activePage.id, { sections: newOrder });
-    } else {
-      setComponentOrder(newOrder as PageSection[]);
     }
+    // Always update both ProjectContext and EditorContext componentOrder
+    // LandingPage reads from EditorContext in editor mode
+    setComponentOrder(newOrder as PageSection[]);
+    setEditorComponentOrder(newOrder as PageSection[]);
 
     // Apply global default styles if available (merging on top of existing data to preserve content but update style)
     if (componentStyles && componentStyles[section]) {
@@ -4846,9 +4854,10 @@ const Controls: React.FC = () => {
     // Update active page sections if we have an active page
     if (activePage) {
       updatePage(activePage.id, { sections: newOrder });
-    } else {
-      setComponentOrder(newOrder);
     }
+    // Always update both contexts for immediate preview sync
+    setComponentOrder(newOrder);
+    setEditorComponentOrder(newOrder);
 
     // Hide it
     setSectionVisibility(prev => ({
@@ -8203,12 +8212,11 @@ const Controls: React.FC = () => {
             onSectionSelect={(section) => onSectionSelect(section as any)}
             onToggleVisibility={toggleVisibility}
             onReorder={(newOrder) => {
-              // Update the active page's sections
               if (activePage) {
                 updatePage(activePage.id, { sections: newOrder });
-              } else {
-                setComponentOrder(newOrder);
               }
+              setComponentOrder(newOrder);
+              setEditorComponentOrder(newOrder);
             }}
             onAddComponent={handleAddComponent}
             onRemoveComponent={handleRemoveComponent}
@@ -8245,9 +8253,9 @@ const Controls: React.FC = () => {
             onReorder={(newOrder) => {
               if (activePage) {
                 updatePage(activePage.id, { sections: newOrder });
-              } else {
-                setComponentOrder(newOrder);
               }
+              setComponentOrder(newOrder);
+              setEditorComponentOrder(newOrder);
             }}
             onAddComponent={handleAddComponent}
             onRemoveComponent={handleRemoveComponent}
@@ -8403,9 +8411,9 @@ const Controls: React.FC = () => {
             onReorder={(newOrder) => {
               if (activePage) {
                 updatePage(activePage.id, { sections: newOrder });
-              } else {
-                setComponentOrder(newOrder);
               }
+              setComponentOrder(newOrder);
+              setEditorComponentOrder(newOrder);
             }}
             onAddComponent={handleAddComponent}
             onRemoveComponent={handleRemoveComponent}

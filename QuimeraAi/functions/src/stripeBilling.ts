@@ -1,11 +1,15 @@
 /**
  * Stripe Billing Cloud Functions
  * Provides real billing metrics from Stripe for the Super Admin dashboard
+ * 
+ * SECURITY: All admin endpoints require Firebase Auth (owner only)
  */
 
 import * as functions from 'firebase-functions';
+import * as admin from 'firebase-admin';
 import Stripe from 'stripe';
 import { STRIPE_CONFIG } from './config';
+import { isOwner } from './constants';
 
 // Initialize Stripe with centralized config
 const getStripe = () => {
@@ -18,12 +22,47 @@ const getStripe = () => {
     });
 };
 
-// CORS headers
-const corsHeaders = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-};
+// SECURITY: Restricted CORS origins (no wildcard)
+const ALLOWED_ORIGINS = [
+    'https://quimera.ai',
+    'https://www.quimera.ai',
+    'https://quimeraai.web.app',
+    'https://quimeraai.firebaseapp.com',
+    'http://localhost:5173',
+    'http://localhost:3000',
+];
+
+function setCorsHeaders(req: functions.https.Request, res: functions.Response): void {
+    const origin = req.headers.origin as string;
+    if (origin && ALLOWED_ORIGINS.includes(origin)) {
+        res.set('Access-Control-Allow-Origin', origin);
+    }
+    res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+}
+
+/**
+ * SECURITY: Verify that the request comes from an authenticated owner.
+ * Extracts and validates Firebase ID token from Authorization header.
+ */
+async function verifyOwnerAuth(req: functions.https.Request): Promise<{ authorized: boolean; error?: string }> {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return { authorized: false, error: 'Missing or invalid Authorization header' };
+    }
+
+    const idToken = authHeader.split('Bearer ')[1];
+    try {
+        const decodedToken = await admin.auth().verifyIdToken(idToken);
+        // Only allow owner
+        if (!isOwner(decodedToken.email)) {
+            return { authorized: false, error: 'Insufficient permissions' };
+        }
+        return { authorized: true };
+    } catch (error) {
+        return { authorized: false, error: 'Invalid or expired token' };
+    }
+}
 
 interface BillingMetrics {
     mrr: number;
@@ -75,7 +114,7 @@ const PLAN_COLORS = ['#6b7280', '#4f46e5', '#10b981', '#8b5cf6', '#f59e0b', '#ef
  */
 export const getBillingMetrics = functions.https.onRequest(async (req, res) => {
     // Handle CORS
-    res.set(corsHeaders);
+    setCorsHeaders(req, res);
     if (req.method === 'OPTIONS') {
         res.status(204).send('');
         return;
@@ -83,6 +122,13 @@ export const getBillingMetrics = functions.https.onRequest(async (req, res) => {
 
     if (req.method !== 'GET') {
         res.status(405).json({ error: 'Method not allowed' });
+        return;
+    }
+
+    // SECURITY: Require owner authentication
+    const auth = await verifyOwnerAuth(req);
+    if (!auth.authorized) {
+        res.status(403).json({ error: auth.error });
         return;
     }
 
@@ -258,7 +304,7 @@ function buildPlansFromStripe(products: Stripe.Product[], prices: Stripe.Price[]
  * Create or update a plan in Stripe
  */
 export const createOrUpdatePlan = functions.https.onRequest(async (req, res) => {
-    res.set(corsHeaders);
+    setCorsHeaders(req, res);
     if (req.method === 'OPTIONS') {
         res.status(204).send('');
         return;
@@ -266,6 +312,13 @@ export const createOrUpdatePlan = functions.https.onRequest(async (req, res) => 
 
     if (req.method !== 'POST') {
         res.status(405).json({ error: 'Method not allowed' });
+        return;
+    }
+
+    // SECURITY: Require owner authentication
+    const auth = await verifyOwnerAuth(req);
+    if (!auth.authorized) {
+        res.status(403).json({ error: auth.error });
         return;
     }
 
@@ -965,7 +1018,7 @@ async function getPlanLimits(planId: string): Promise<{ maxAiCredits: number }> 
  * Archive (deactivate) a plan in Stripe
  */
 export const archivePlan = functions.https.onRequest(async (req, res) => {
-    res.set(corsHeaders);
+    setCorsHeaders(req, res);
     if (req.method === 'OPTIONS') {
         res.status(204).send('');
         return;
@@ -973,6 +1026,13 @@ export const archivePlan = functions.https.onRequest(async (req, res) => {
 
     if (req.method !== 'POST') {
         res.status(405).json({ error: 'Method not allowed' });
+        return;
+    }
+
+    // SECURITY: Require owner authentication
+    const auth = await verifyOwnerAuth(req);
+    if (!auth.authorized) {
+        res.status(403).json({ error: auth.error });
         return;
     }
 

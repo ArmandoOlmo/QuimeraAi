@@ -55,16 +55,39 @@ const ALLOWED_ORIGIN_PATTERNS = [
 
 /**
  * SECURITY: Validate and set CORS headers
+ * For a website builder platform, we need to support user's custom domains,
+ * so we allow all origins but rely on projectId validation + optional auth.
  */
 function setCorsHeaders(req: functions.https.Request, res: functions.Response): boolean {
-    // For a website builder platform, we need to support user's custom domains.
-    // We allow all origins, but rely on projectId/API key validation for security.
     res.set('Access-Control-Allow-Origin', '*');
     res.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
     res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
     res.set('Access-Control-Max-Age', '3600');
 
     return true;
+}
+
+/**
+ * SECURITY: Optional Firebase Auth verification.
+ * If Authorization header with Firebase ID token is present, verify it and
+ * return the authenticated UID. This prevents userId spoofing from dashboard.
+ * Public chatbot requests (no auth header) will use the body userId + rate limiting.
+ */
+async function verifyOptionalAuth(req: functions.https.Request): Promise<string | null> {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return null; // No auth — public chatbot request
+    }
+
+    try {
+        const idToken = authHeader.split('Bearer ')[1];
+        const decodedToken = await admin.auth().verifyIdToken(idToken);
+        return decodedToken.uid;
+    } catch (error) {
+        // Invalid token — don't block, but don't trust userId either
+        console.warn('[gemini-proxy] Invalid Firebase token presented, ignoring');
+        return null;
+    }
 }
 
 /**
@@ -603,10 +626,14 @@ export const generateContent = functions.https.onRequest(async (req, res) => {
     }
 
     try {
+        // SECURITY: If a Firebase token is provided, use the verified UID
+        const verifiedUid = await verifyOptionalAuth(req);
+
         // SECURITY: Sanitize and validate inputs
         const projectId = sanitizeString(req.body.projectId, 100);
         const prompt = sanitizeString(req.body.prompt, 50000); // Max 50k chars
-        const userId = sanitizeString(req.body.userId, 128);
+        // Use verified UID when available, fall back to body userId for public chatbot
+        const userId = verifiedUid || sanitizeString(req.body.userId, 128);
         const model = sanitizeString(req.body.model, 50) || 'gemini-2.5-flash';
         const config = req.body.config || {};
 
@@ -811,10 +838,14 @@ export const streamContent = functions.https.onRequest(async (req, res) => {
     }
 
     try {
+        // SECURITY: If a Firebase token is provided, use the verified UID
+        const verifiedUid = await verifyOptionalAuth(req);
+
         // SECURITY: Sanitize inputs
         const projectId = sanitizeString(req.body.projectId, 100);
         const prompt = sanitizeString(req.body.prompt, 50000);
-        const userId = sanitizeString(req.body.userId, 128);
+        // Use verified UID when available, fall back to body userId for public chatbot
+        const userId = verifiedUid || sanitizeString(req.body.userId, 128);
         const model = sanitizeString(req.body.model, 50) || 'gemini-2.5-flash';
         const config = req.body.config || {};
 
