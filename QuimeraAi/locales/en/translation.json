@@ -1284,6 +1284,7 @@
     "uploadFailed": "Failed to upload images",
     "partialUploadFailed": "{{count}} uploaded, {{failed}} failed",
     "useAsReference": "Use as Reference",
+    "useThisImage": "Use this image",
     "controls": {
       "cornerGradient": "Corner Gradient",
       "startPosition": "Start Position",

@@ -7,9 +7,10 @@ interface ImageGeneratorModalProps {
     onClose: () => void;
     destination: 'user' | 'global';
     onImageGenerated?: (imageUrl: string) => void;
+    onUseImage?: (imageUrl: string) => void;
 }
 
-const ImageGeneratorModal: React.FC<ImageGeneratorModalProps> = ({ isOpen, onClose, destination, onImageGenerated }) => {
+const ImageGeneratorModal: React.FC<ImageGeneratorModalProps> = ({ isOpen, onClose, destination, onImageGenerated, onUseImage }) => {
     return (
         <Modal
             isOpen={isOpen}
@@ -22,6 +23,7 @@ const ImageGeneratorModal: React.FC<ImageGeneratorModalProps> = ({ isOpen, onClo
                 onClose={onClose}
                 className="h-[85vh] sm:h-[85vh]"
                 onImageGenerated={onImageGenerated}
+                onUseImage={onUseImage}
             />
         </Modal>
     );

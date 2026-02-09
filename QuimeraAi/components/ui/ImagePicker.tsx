@@ -388,6 +388,11 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
                                 <ImageGeneratorPanel
                                     destination={destination}
                                     className="h-full"
+                                    onUseImage={(url) => {
+                                        onChange(url);
+                                        handleClose();
+                                        success(t('dashboard.imagePicker.imageSelected'));
+                                    }}
                                 // No onClose passed here because we don't want the X button in the panel header
                                 />
                             )}

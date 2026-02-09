@@ -1287,6 +1287,7 @@
     "uploadFailed": "Error al subir imágenes",
     "partialUploadFailed": "{{count}} subidas, {{failed}} fallidas",
     "useAsReference": "Usar como Referencia",
+    "useThisImage": "Usar esta imagen",
     "controls": {
       "cornerGradient": "Degradado Esquina",
       "startPosition": "Posición de Inicio",

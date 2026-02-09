@@ -16,9 +16,10 @@ interface ImageGeneratorPanelProps {
     onCollapse?: () => void;
     hidePreview?: boolean;
     onImageGenerated?: (imageUrl: string) => void;
+    onUseImage?: (imageUrl: string) => void;
 }
 
-const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, className = '', onClose, onCollapse, hidePreview = false, onImageGenerated }) => {
+const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, className = '', onClose, onCollapse, hidePreview = false, onImageGenerated, onUseImage }) => {
     const { generateImage, enhancePrompt } = useAI();
     const { uploadGlobalFile, uploadFile, hasActiveProject } = useFiles();
     const { t } = useTranslation();
@@ -991,6 +992,17 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
                                 )}
                             </div>
                             <div className="flex gap-2">
+                                {onUseImage && (
+                                    <button
+                                        onClick={() => {
+                                            onUseImage(savedImageUrl || generatedImage);
+                                        }}
+                                        className="flex items-center gap-2 px-5 py-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg text-xs font-bold hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all"
+                                    >
+                                        <Check size={14} />
+                                        {t('editor.useThisImage', { defaultValue: 'Use this image' })}
+                                    </button>
+                                )}
                                 <button
                                     onClick={() => {
                                         if (referenceImages.length >= 14) return;
@@ -1177,6 +1189,18 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
 
                                     {/* Actions */}
                                     <div className="flex flex-col gap-2">
+                                        {onUseImage && (
+                                            <button
+                                                onClick={() => {
+                                                    onUseImage(savedImageUrl || generatedImage);
+                                                    setShowImageDetail(false);
+                                                }}
+                                                className="flex items-center justify-center gap-2 w-full py-2.5 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl text-sm font-bold hover:shadow-lg transition-all"
+                                            >
+                                                <Check size={16} />
+                                                {t('editor.useThisImage', { defaultValue: 'Use this image' })}
+                                            </button>
+                                        )}
                                         <a
                                             href={savedImageUrl || generatedImage}
                                             download={`quimera-${Date.now()}.png`}
