@@ -204,13 +204,13 @@ const SECTION_ITEM_TOOLS: FunctionDeclaration[] = [
 const TOOLS: FunctionDeclaration[] = [
     {
         name: 'change_view',
-        description: 'Navigate to a different section. Views: dashboard, websites, editor, cms, assets, navigation, superadmin, ai-assistant, leads, domains, seo, finance, templates, appointments, ecommerce, email.',
+        description: 'Navigate to a different section. Views: dashboard, websites, editor, cms, assets, navigation, superadmin, ai-assistant, leads, domains, seo, finance, templates, appointments, ecommerce, email, biopage, agency, settings.',
         parameters: {
             type: Type.OBJECT,
             properties: {
                 viewName: {
                     type: Type.STRING,
-                    enum: ["dashboard", "websites", "editor", "cms", "assets", "navigation", "superadmin", "ai-assistant", "leads", "domains", "seo", "finance", "templates", "appointments", "ecommerce", "email"]
+                    enum: ["dashboard", "websites", "editor", "cms", "assets", "navigation", "superadmin", "ai-assistant", "leads", "domains", "seo", "finance", "templates", "appointments", "ecommerce", "email", "biopage", "agency", "settings"]
                 }
             },
             required: ['viewName']
@@ -414,7 +414,7 @@ const TOOLS: FunctionDeclaration[] = [
             properties: {
                 section: {
                     type: Type.STRING,
-                    enum: ['features', 'testimonials', 'pricing', 'faq', 'portfolio', 'services', 'team', 'slideshow', 'howItWorks'],
+                    enum: ['features', 'testimonials', 'pricing', 'faq', 'portfolio', 'services', 'team', 'slideshow', 'howItWorks', 'menu'],
                     description: 'Section containing items to manage'
                 },
                 action: {
@@ -1357,7 +1357,7 @@ const GlobalAiAssistant: React.FC = () => {
                 }
 
                 // Views that require an active project
-                const viewsRequiringProject = ['email', 'ecommerce', 'finance', 'cms', 'seo', 'editor', 'navigation'];
+                const viewsRequiringProject = ['email', 'ecommerce', 'finance', 'cms', 'seo', 'editor', 'navigation', 'biopage'];
 
                 // If navigating to a view that requires a project and none is active, load one
                 if (viewsRequiringProject.includes(newView) && !activeProjectRef.current) {
@@ -1392,6 +1392,10 @@ const GlobalAiAssistant: React.FC = () => {
                     templates: ROUTES.TEMPLATES,
                     assets: ROUTES.ASSETS,
                     superadmin: ROUTES.SUPERADMIN,
+                    editor: ROUTES.EDITOR,
+                    biopage: ROUTES.BIOPAGE,
+                    agency: ROUTES.AGENCY,
+                    settings: ROUTES.SETTINGS,
                 };
                 const route = viewToRoute[newView];
                 if (route) {
@@ -2685,6 +2689,36 @@ const GlobalAiAssistant: React.FC = () => {
                 console.log('[InferTool] Priority match: dashboard view');
                 return { name: 'change_view', args: { viewName: 'dashboard' } };
             }
+            // Editor
+            if (norm.includes('editor')) {
+                console.log('[InferTool] Priority match: editor view');
+                return { name: 'change_view', args: { viewName: 'editor' } };
+            }
+            // Leads / CRM
+            if (norm.includes('lead') || norm.includes('crm') || norm.includes('prospecto')) {
+                console.log('[InferTool] Priority match: leads view');
+                return { name: 'change_view', args: { viewName: 'leads' } };
+            }
+            // Assets
+            if (norm.includes('assets') || norm.includes('recurso') || norm.includes('generador de imagen')) {
+                console.log('[InferTool] Priority match: assets view');
+                return { name: 'change_view', args: { viewName: 'assets' } };
+            }
+            // Bio Page
+            if (norm.includes('biopage') || norm.includes('bio page') || norm.includes('link in bio') || norm.includes('enlace en bio')) {
+                console.log('[InferTool] Priority match: biopage view');
+                return { name: 'change_view', args: { viewName: 'biopage' } };
+            }
+            // Agency
+            if (norm.includes('agencia') || norm.includes('agency')) {
+                console.log('[InferTool] Priority match: agency view');
+                return { name: 'change_view', args: { viewName: 'agency' } };
+            }
+            // Settings
+            if (norm.includes('ajustes') || norm.includes('configuracion del workspace') || norm.includes('settings')) {
+                console.log('[InferTool] Priority match: settings view');
+                return { name: 'change_view', args: { viewName: 'settings' } };
+            }
 
             // PROJECT LOADING: "abre proyecto X", "carga proyecto X", "usa proyecto X"
             const projectMatch = raw.match(/(?:proyecto|project|sitio|website)\s+["']?([^"']+)["']?/i);
@@ -2789,6 +2823,33 @@ const GlobalAiAssistant: React.FC = () => {
             templates: 'templates',
             sitios: 'websites',
             websites: 'websites',
+            // Editor
+            editor: 'editor',
+            // Leads / CRM
+            leads: 'leads',
+            prospectos: 'leads',
+            crm: 'leads',
+            // Assets
+            assets: 'assets',
+            recursos: 'assets',
+            imagenes: 'assets',
+            // Navigation
+            navegacion: 'navigation',
+            navigation: 'navigation',
+            menus: 'navigation',
+            // AI Assistant config
+            asistente: 'ai-assistant',
+            // Bio Page
+            biopage: 'biopage',
+            bio: 'biopage',
+            linkinbio: 'biopage',
+            // Agency
+            agencia: 'agency',
+            agency: 'agency',
+            // Settings
+            ajustes: 'settings',
+            configuracion: 'settings',
+            settings: 'settings',
         };
 
         // Check ALL words after navigation prefix for app view match
