@@ -743,7 +743,10 @@ export const generateContent = functions.https.onRequest(async (req, res) => {
             });
         }
 
-        const requestBody = {
+        // TOOLS: Get optional tools array for function calling
+        const tools: any[] | undefined = req.body.tools;
+
+        const requestBody: Record<string, any> = {
             contents: [{
                 parts
             }],
@@ -760,6 +763,12 @@ export const generateContent = functions.https.onRequest(async (req, res) => {
                 { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_ONLY_HIGH' }
             ]
         };
+
+        // Add tools for function calling if provided (max 64 declarations)
+        if (Array.isArray(tools) && tools.length > 0) {
+            requestBody.tools = tools.slice(0, 64);
+            console.log(`[gemini-generate] Function calling enabled with ${requestBody.tools.length} tool declaration(s)`);
+        }
 
         const geminiResponse = await fetch(geminiUrl, {
             method: 'POST',

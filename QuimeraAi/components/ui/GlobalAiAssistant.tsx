@@ -1396,12 +1396,24 @@ const GlobalAiAssistant: React.FC = () => {
                     agency: ROUTES.AGENCY,
                     settings: ROUTES.SETTINGS,
                 };
-                const route = viewToRoute[newView];
-                if (route) {
-                    navigateRef.current(route);
+
+                // Editor requires dynamic projectId in its route
+                if (newView === 'editor') {
+                    const pid = activeProjectRef.current?.id;
+                    if (pid) {
+                        navigateRef.current(`/editor/${pid}`);
+                    } else {
+                        const result = { error: 'No project loaded. Open a project first before navigating to the editor.' };
+                        console.log(`[Tool Result] ${name}`, result);
+                        return result;
+                    }
+                } else {
+                    const route = viewToRoute[newView];
+                    if (route) {
+                        navigateRef.current(route);
+                    }
                 }
-                // Editor requires projectId param — use direct view set instead of raw route
-                // The view content is loaded by the project auto-load logic above
+
                 setViewRef.current(newView);
                 const projectInfo = activeProjectRef.current ? ` (Project: ${activeProjectRef.current.name})` : '';
                 const result = { result: `Navigated to ${newView}.${projectInfo}` };
@@ -3092,6 +3104,9 @@ Usuario: ${userMsg}`;
                 };
                 console.log(`[Global Assistant] Using model: ${chatModel}, temp: ${proxyConfig.temperature}, maxTokens: ${proxyConfig.maxOutputTokens}`);
 
+                // Prepare TOOLS for the REST API (wrap FunctionDeclarations)
+                const restTools = [{ functionDeclarations: TOOLS }];
+
                 console.time('[Global Assistant] LLM Response');
                 let response;
 
@@ -3102,7 +3117,8 @@ Usuario: ${userMsg}`;
                         [{ mimeType: "image/jpeg", data: screenCapture }],
                         chatModel,
                         proxyConfig,
-                        user?.uid
+                        user?.uid,
+                        restTools
                     );
                 } else {
                     response = await generateContentViaProxy(
@@ -3110,39 +3126,62 @@ Usuario: ${userMsg}`;
                         fullPrompt,
                         chatModel,
                         proxyConfig,
-                        user?.uid
+                        user?.uid,
+                        restTools
                     );
                 }
                 console.timeEnd('[Global Assistant] LLM Response');
 
-                const responseText = extractTextFromResponse(response).trim();
-                console.log('[Global Assistant] Response:', responseText?.substring(0, 200));
+                // ============================================================
+                // STEP 3: Check for native function call in Gemini response
+                // ============================================================
+                const candidates = response?.response?.candidates || response?.candidates;
+                const parts = candidates?.[0]?.content?.parts || [];
+                const functionCallPart = parts.find((p: any) => p.functionCall);
 
-                // ============================================================
-                // STEP 3: Check if LLM response contains a tool call
-                // ============================================================
-                if (responseText) {
-                    const extractedTool = tryExtractToolCall(responseText);
-                    if (extractedTool) {
-                        console.log('[Global Assistant] Extracted tool_call from LLM response:', extractedTool);
-                        try {
-                            const { result, error } = await executeTool(extractedTool.name, extractedTool.args, 'chat');
-                            if (error) {
-                                setMessages(prev => [...prev, { role: 'model', text: `⚠️ ${error}` }]);
-                            } else {
-                                const resultText = typeof result === 'string' ? result : (result?.result || JSON.stringify(result));
-                                setMessages(prev => [...prev, { role: 'model', text: `✅ ${resultText}` }]);
-                            }
-                        } catch (toolErr: any) {
-                            console.error('[Global Assistant] LLM tool execution error:', toolErr);
-                            setMessages(prev => [...prev, { role: 'model', text: `⚠️ Error: ${toolErr?.message || 'Unknown error'}` }]);
+                if (functionCallPart?.functionCall) {
+                    const { name: toolName, args: toolArgs } = functionCallPart.functionCall;
+                    console.log('[Global Assistant] Native function call:', toolName, toolArgs);
+                    try {
+                        const { result, error } = await executeTool(toolName, toolArgs || {}, 'chat');
+                        if (error) {
+                            setMessages(prev => [...prev, { role: 'model', text: `⚠️ ${error}` }]);
+                        } else {
+                            const resultText = typeof result === 'string' ? result : (result?.result || JSON.stringify(result));
+                            setMessages(prev => [...prev, { role: 'model', text: `✅ ${resultText}` }]);
                         }
-                    } else {
-                        // Normal text response — display as-is
-                        setMessages(prev => [...prev, { role: 'model', text: responseText }]);
+                    } catch (toolErr: any) {
+                        console.error('[Global Assistant] Function call execution error:', toolErr);
+                        setMessages(prev => [...prev, { role: 'model', text: `⚠️ Error: ${toolErr?.message || 'Unknown error'}` }]);
                     }
                 } else {
-                    setMessages(prev => [...prev, { role: 'model', text: "¿En qué puedo ayudarte?" }]);
+                    // No native function call — extract text and check for embedded JSON tool calls
+                    const responseText = extractTextFromResponse(response).trim();
+                    console.log('[Global Assistant] Response:', responseText?.substring(0, 200));
+
+                    if (responseText) {
+                        const extractedTool = tryExtractToolCall(responseText);
+                        if (extractedTool) {
+                            console.log('[Global Assistant] Extracted tool_call from LLM text:', extractedTool);
+                            try {
+                                const { result, error } = await executeTool(extractedTool.name, extractedTool.args, 'chat');
+                                if (error) {
+                                    setMessages(prev => [...prev, { role: 'model', text: `⚠️ ${error}` }]);
+                                } else {
+                                    const resultText = typeof result === 'string' ? result : (result?.result || JSON.stringify(result));
+                                    setMessages(prev => [...prev, { role: 'model', text: `✅ ${resultText}` }]);
+                                }
+                            } catch (toolErr: any) {
+                                console.error('[Global Assistant] Text tool execution error:', toolErr);
+                                setMessages(prev => [...prev, { role: 'model', text: `⚠️ Error: ${toolErr?.message || 'Unknown error'}` }]);
+                            }
+                        } else {
+                            // Normal text response — display as-is
+                            setMessages(prev => [...prev, { role: 'model', text: responseText }]);
+                        }
+                    } else {
+                        setMessages(prev => [...prev, { role: 'model', text: "¿En qué puedo ayudarte?" }]);
+                    }
                 }
 
             } catch (e: any) {

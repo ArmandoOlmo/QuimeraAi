@@ -83,24 +83,28 @@ export async function generateContentViaProxy(
     prompt: string,
     model: string = 'gemini-2.5-flash',
     config: GeminiProxyConfig = {},
-    userId?: string
+    userId?: string,
+    tools?: any[]
 ): Promise<GeminiProxyResponse> {
     // Apply Gemini 3 optimizations (temperature = 1.0)
     const optimizedConfig = applyGemini3Optimizations(model, config);
 
     try {
+        const body: Record<string, any> = {
+            projectId,
+            prompt,
+            userId,
+            model,
+            config: optimizedConfig
+        };
+        if (tools && tools.length > 0) body.tools = tools;
+
         const response = await fetch(`${PROXY_BASE_URL}-generate`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({
-                projectId,
-                prompt,
-                userId,
-                model,
-                config: optimizedConfig
-            })
+            body: JSON.stringify(body)
         });
 
         // Check for 503 capacity error and try fallback
@@ -152,7 +156,8 @@ export async function generateMultimodalContentViaProxy(
     images: ImageInput[],
     model: string = 'gemini-2.5-flash',
     config: GeminiProxyConfig = {},
-    userId?: string
+    userId?: string,
+    tools?: any[]
 ): Promise<GeminiProxyResponse> {
     // Apply Gemini 3 optimizations (temperature = 1.0)
     const optimizedConfig = applyGemini3Optimizations(model, config);
@@ -163,19 +168,22 @@ export async function generateMultimodalContentViaProxy(
             throw new Error('Maximum 10 images allowed per request');
         }
 
+        const body: Record<string, any> = {
+            projectId,
+            prompt,
+            images,  // Send images array to proxy
+            userId,
+            model,
+            config: optimizedConfig
+        };
+        if (tools && tools.length > 0) body.tools = tools;
+
         const response = await fetch(`${PROXY_BASE_URL}-generate`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({
-                projectId,
-                prompt,
-                images,  // Send images array to proxy
-                userId,
-                model,
-                config: optimizedConfig
-            })
+            body: JSON.stringify(body)
         });
 
         // Check for 503 capacity error and try fallback
