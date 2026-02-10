@@ -703,182 +703,182 @@ const Header: React.FC<HeaderData & {
 
     return (
       <>
-      <header
-        className={`${positionClass} top-0 z-40 transition-all duration-500 ease-in-out ${style.includes('transparent') || style === 'sticky-transparent' ? 'w-full left-0 right-0' : ''
-          }`}
-        style={{ height: shouldNotTakeSpace ? 0 : 'auto' }}
-      >
-        {/* === SCROLL PROGRESS BAR === */}
-        <div
-          className="absolute bottom-0 left-0 h-[2px] z-50 transition-all duration-150"
-          style={{
-            width: `${scrollProgress}%`,
-            background: `linear-gradient(90deg, ${colors?.accent}, ${colors?.accent})`
-          }}
-        />
-
-        <div
-          className={`transition-all duration-500 ease-out ${containerClasses} ${glassEffect && !style.includes('transparent') && !style.includes('glass') ? glassClasses : ''
-            } ${!style.startsWith('floating') && !style.includes('transparent') ? shadowClasses : ''}`}
-          style={{
-            ...backgroundStyle,
-            height: style.startsWith('floating') ? 'auto' : computedHeight,
-            minHeight: style.startsWith('floating') ? 'auto' : computedMinHeight,
-            padding: style.startsWith('floating')
-              ? (style === 'floating-pill' ? '8px 32px' : '12px 24px')
-              : `0 ${isScrolled ? '1.5rem' : '2rem'}`
-          }}
+        <header
+          className={`${positionClass} top-0 z-40 transition-all duration-500 ease-in-out ${style.includes('transparent') || style === 'sticky-transparent' ? 'w-full left-0 right-0' : ''
+            }`}
+          style={{ height: shouldNotTakeSpace ? 0 : 'auto' }}
         >
-          <div className={`container mx-auto h-full flex items-center justify-between relative ${style.startsWith('floating') ? '' : 'px-0'
-            }`}>
-
-            {/* Desktop Layouts */}
-            {renderLayout()}
-
-            {/* Mobile Actions - Only visible on mobile and tablet */}
-            <div className="nav:hidden flex items-center gap-0 -ml-2.5 -mr-2.5">
-              {/* Cart Button (mobile) */}
-              {showCart && (
-                <button
-                  onClick={onCartClick}
-                  className="relative flex items-center justify-center w-9 h-9 rounded-full hover:bg-white/10 active:bg-white/20 transition-all touch-manipulation"
-                  style={{ color: finalTextColor }}
-                  aria-label={`Carrito (${cartItemCount} productos)`}
-                >
-                  <ShoppingCart size={20} />
-                  {cartItemCount > 0 && (
-                    <span
-                      className="absolute -top-0.5 -right-0.5 w-4 h-4 flex items-center justify-center rounded-full text-white text-[10px] font-bold shadow-lg"
-                      style={{ backgroundColor: '#ef4444' }}
-                    >
-                      {cartItemCount > 99 ? '99+' : cartItemCount}
-                    </span>
-                  )}
-                </button>
-              )}
-              {/* Menu Button */}
-              <button
-                onClick={() => setIsMenuOpen(true)}
-                className="flex items-center justify-center w-9 h-9 rounded-full hover:bg-white/10 active:bg-white/20 transition-all touch-manipulation"
-                style={{ color: finalTextColor }}
-                aria-label="Abrir menú"
-              >
-                <Menu className="w-5 h-5" />
-              </button>
-            </div>
-
-          </div>
-        </div>
-
-      </header>
-
-      {/* ===== MOBILE MENU - Rendered via portal outside header stacking context ===== */}
-      {/* Portal fixes iOS Safari bug where position:fixed inside position:sticky */}
-      {/* doesn't receive touch events correctly */}
-      {typeof document !== 'undefined' && createPortal(
-        <>
-          {/* Overlay */}
-          {isMenuOpen && (
-            <div
-              className="fixed inset-0 bg-black/50 z-[9990] nav:hidden"
-              onClick={() => setIsMenuOpen(false)}
-            />
-          )}
-
-          {/* Drawer */}
+          {/* === SCROLL PROGRESS BAR === */}
           <div
-            ref={drawerRef}
-            className={`
-            fixed top-0 right-0 bottom-0 w-[80vw] max-w-[320px] z-[9991]
+            className="absolute bottom-0 left-0 h-[2px] z-50 transition-all duration-150"
+            style={{
+              width: `${scrollProgress}%`,
+              background: `linear-gradient(90deg, ${colors?.accent}, ${colors?.accent})`
+            }}
+          />
+
+          <div
+            className={`transition-all duration-500 ease-out ${containerClasses} ${glassEffect && !style.includes('transparent') && !style.includes('glass') ? glassClasses : ''
+              } ${!style.startsWith('floating') && !style.includes('transparent') ? shadowClasses : ''}`}
+            style={{
+              ...backgroundStyle,
+              height: style.startsWith('floating') ? 'auto' : computedHeight,
+              minHeight: style.startsWith('floating') ? 'auto' : computedMinHeight,
+              padding: style.startsWith('floating')
+                ? (style === 'floating-pill' ? '8px 32px' : '12px 24px')
+                : `0 ${isScrolled ? '1.5rem' : '2rem'}`
+            }}
+          >
+            <div className={`container mx-auto h-full flex items-center justify-between relative ${style.startsWith('floating') ? '' : 'px-0'
+              }`}>
+
+              {/* Desktop Layouts */}
+              {renderLayout()}
+
+              {/* Mobile Actions - Only visible on mobile and tablet */}
+              <div className="nav:hidden flex items-center gap-0 -ml-2.5 -mr-2.5">
+                {/* Cart Button (mobile) */}
+                {showCart && (
+                  <button
+                    onClick={onCartClick}
+                    className="relative flex items-center justify-center w-9 h-9 rounded-full hover:bg-white/10 active:bg-white/20 transition-all touch-manipulation"
+                    style={{ color: finalTextColor }}
+                    aria-label={`Carrito (${cartItemCount} productos)`}
+                  >
+                    <ShoppingCart size={20} />
+                    {cartItemCount > 0 && (
+                      <span
+                        className="absolute -top-0.5 -right-0.5 w-4 h-4 flex items-center justify-center rounded-full text-white text-[10px] font-bold shadow-lg"
+                        style={{ backgroundColor: '#ef4444' }}
+                      >
+                        {cartItemCount > 99 ? '99+' : cartItemCount}
+                      </span>
+                    )}
+                  </button>
+                )}
+                {/* Menu Button */}
+                <button
+                  onClick={() => setIsMenuOpen(true)}
+                  className="flex items-center justify-center w-9 h-9 rounded-full hover:bg-white/10 active:bg-white/20 transition-all touch-manipulation"
+                  style={{ color: finalTextColor }}
+                  aria-label="Abrir menú"
+                >
+                  <Menu className="w-5 h-5" />
+                </button>
+              </div>
+
+            </div>
+          </div>
+
+        </header>
+
+        {/* ===== MOBILE MENU - Rendered via portal outside header stacking context ===== */}
+        {/* Portal fixes iOS Safari bug where position:fixed inside position:sticky */}
+        {/* doesn't receive touch events correctly */}
+        {typeof document !== 'undefined' && createPortal(
+          <>
+            {/* Overlay */}
+            {isMenuOpen && (
+              <div
+                className="fixed inset-0 bg-black/50 z-[10000] nav:hidden"
+                onClick={() => setIsMenuOpen(false)}
+              />
+            )}
+
+            {/* Drawer */}
+            <div
+              ref={drawerRef}
+              className={`
+            fixed top-0 right-0 bottom-0 w-[80vw] max-w-[320px] z-[10001]
             transform transition-transform duration-300 ease-out nav:hidden
             ${isMenuOpen ? 'translate-x-0' : 'translate-x-full'}
           `}
-            style={{ backgroundColor: colors?.background }}
-          >
-            <div className="flex flex-col h-full p-5">
-              {/* Close button */}
-              <div className="flex justify-end mb-6">
-                <button
-                  onClick={() => setIsMenuOpen(false)}
-                  className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/10 transition-colors touch-manipulation"
-                  style={{ color: colors?.text }}
-                  aria-label="Cerrar menú"
-                >
-                  <X size={24} />
-                </button>
-              </div>
-
-              {/* Mobile Search */}
-              {showSearch && (
-                <div className="mb-6">
-                  <GlobalSearch
-                    storeId={storeId}
-                    onProductClick={(productId) => {
-                      handleProductClick(productId);
-                      setIsMenuOpen(false);
-                    }}
-                    onContentClick={(href) => {
-                      handleContentClick(href);
-                      setIsMenuOpen(false);
-                    }}
-                    placeholder={searchPlaceholder}
-                    primaryColor={colors?.accent}
-                    textColor={colors?.text}
-                    sections={searchableSections}
-                  />
-                </div>
-              )}
-
-              {/* Navigation Links */}
-              <nav className="flex-1">
-                <ul className="space-y-1">
-                  {allLinks.map((link) => (
-                    <li key={link.text}>
-                      <a
-                        href={link.href || '#'}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          if (onNavigate && link.href) {
-                            onNavigate(link.href);
-                          }
-                          setIsMenuOpen(false);
-                        }}
-                        className="block py-3 px-4 text-lg font-medium rounded-lg hover:bg-white/10 transition-colors touch-manipulation"
-                        style={{ color: colors?.text }}
-                      >
-                        {link.text}
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </nav>
-
-              {/* Footer Actions */}
-              <div className="pt-4 border-t border-white/10 space-y-3">
-                {actualShowLogin && (
-                  <a
-                    href={loginUrl || '#'}
-                    onClick={(e) => {
-                      if (onNavigate && loginUrl) {
-                        e.preventDefault();
-                        onNavigate(loginUrl);
-                      }
-                      setIsMenuOpen(false);
-                    }}
-                    className="block w-full text-center py-3 font-bold rounded-lg hover:bg-white/10 transition-colors touch-manipulation"
+              style={{ backgroundColor: colors?.background }}
+            >
+              <div className="flex flex-col h-full p-5">
+                {/* Close button */}
+                <div className="flex justify-end mb-6">
+                  <button
+                    onClick={() => setIsMenuOpen(false)}
+                    className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/10 transition-colors touch-manipulation"
                     style={{ color: colors?.text }}
+                    aria-label="Cerrar menú"
                   >
-                    {loginText}
-                  </a>
+                    <X size={24} />
+                  </button>
+                </div>
+
+                {/* Mobile Search */}
+                {showSearch && (
+                  <div className="mb-6">
+                    <GlobalSearch
+                      storeId={storeId}
+                      onProductClick={(productId) => {
+                        handleProductClick(productId);
+                        setIsMenuOpen(false);
+                      }}
+                      onContentClick={(href) => {
+                        handleContentClick(href);
+                        setIsMenuOpen(false);
+                      }}
+                      placeholder={searchPlaceholder}
+                      primaryColor={colors?.accent}
+                      textColor={colors?.text}
+                      sections={searchableSections}
+                    />
+                  </div>
                 )}
-                {actualShowCta && <CtaButton fullWidth />}
+
+                {/* Navigation Links */}
+                <nav className="flex-1">
+                  <ul className="space-y-1">
+                    {allLinks.map((link) => (
+                      <li key={link.text}>
+                        <a
+                          href={link.href || '#'}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            if (onNavigate && link.href) {
+                              onNavigate(link.href);
+                            }
+                            setIsMenuOpen(false);
+                          }}
+                          className="block py-3 px-4 text-lg font-medium rounded-lg hover:bg-white/10 transition-colors touch-manipulation"
+                          style={{ color: colors?.text }}
+                        >
+                          {link.text}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </nav>
+
+                {/* Footer Actions */}
+                <div className="pt-4 border-t border-white/10 space-y-3">
+                  {actualShowLogin && (
+                    <a
+                      href={loginUrl || '#'}
+                      onClick={(e) => {
+                        if (onNavigate && loginUrl) {
+                          e.preventDefault();
+                          onNavigate(loginUrl);
+                        }
+                        setIsMenuOpen(false);
+                      }}
+                      className="block w-full text-center py-3 font-bold rounded-lg hover:bg-white/10 transition-colors touch-manipulation"
+                      style={{ color: colors?.text }}
+                    >
+                      {loginText}
+                    </a>
+                  )}
+                  {actualShowCta && <CtaButton fullWidth />}
+                </div>
               </div>
             </div>
-          </div>
-        </>,
-        document.body
-      )}
-    </>
+          </>,
+          document.body
+        )}
+      </>
     );
   };
 
