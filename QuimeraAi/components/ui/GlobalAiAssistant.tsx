@@ -1392,7 +1392,6 @@ const GlobalAiAssistant: React.FC = () => {
                     templates: ROUTES.TEMPLATES,
                     assets: ROUTES.ASSETS,
                     superadmin: ROUTES.SUPERADMIN,
-                    editor: ROUTES.EDITOR,
                     biopage: ROUTES.BIOPAGE,
                     agency: ROUTES.AGENCY,
                     settings: ROUTES.SETTINGS,
@@ -1401,6 +1400,8 @@ const GlobalAiAssistant: React.FC = () => {
                 if (route) {
                     navigateRef.current(route);
                 }
+                // Editor requires projectId param — use direct view set instead of raw route
+                // The view content is loaded by the project auto-load logic above
                 setViewRef.current(newView);
                 const projectInfo = activeProjectRef.current ? ` (Project: ${activeProjectRef.current.name})` : '';
                 const result = { result: `Navigated to ${newView}.${projectInfo}` };
