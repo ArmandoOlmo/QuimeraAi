@@ -128,6 +128,7 @@ const ALLOWED_MODELS = [
     'gemini-2.0-flash-lite',
     'gemini-2.0-flash-exp',
     // Gemini 3.0 preview models (experimental)
+    'gemini-3-flash-preview',
     'gemini-3-pro-preview',
     'gemini-3-pro-image-preview',
     // Legacy models (for backwards compatibility)
@@ -378,6 +379,7 @@ const MODEL_TOKEN_MULTIPLIERS: Record<string, number> = {
     'gemini-2.0-flash': 1,
     'gemini-2.0-flash-lite': 1,
     'gemini-2.0-flash-exp': 1,
+    'gemini-3-flash-preview': 1,
     'gemini-1.5-flash': 1,
     // Gemini Pro models: 3x multiplier
     'gemini-2.5-pro': 3,

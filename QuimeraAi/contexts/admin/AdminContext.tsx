@@ -146,6 +146,7 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     // Global Assistant Config
     const [globalAssistantConfig, setGlobalAssistantConfig] = useState<GlobalAssistantConfig>({
         isEnabled: true,
+        model: 'gemini-2.5-flash',
         enableLiveVoice: true,
         voiceName: 'Puck',
         greeting: '👋 ¡Hola! Soy tu Asistente Quimera',

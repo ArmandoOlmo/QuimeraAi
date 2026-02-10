@@ -88,13 +88,13 @@ const PromptEditorModal: React.FC<PromptEditorModalProps> = ({ isOpen, onClose, 
         <Modal isOpen={isOpen} onClose={onClose}>
             <div className="p-6 border-b border-editor-border flex justify-between items-center">
                 <h2 className="text-lg font-semibold text-white">{promptToEdit ? 'Edit Prompt' : 'Create New Prompt'}</h2>
-                <button onClick={onClose} className="p-1 rounded-full hover:bg-editor-border"><X/></button>
+                <button onClick={onClose} className="p-1 rounded-full hover:bg-editor-border"><X /></button>
             </div>
-            
+
             <form onSubmit={handleSubmit}>
                 <div className="p-6 md:p-8 overflow-y-auto space-y-4">
                     {error && <p className="bg-red-500/10 text-red-400 text-sm p-3 rounded-md">{error}</p>}
-                    
+
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                             <label htmlFor="prompt-name" className="block text-sm font-medium text-editor-text-secondary mb-1">Prompt Name (Unique ID)</label>
@@ -112,11 +112,11 @@ const PromptEditorModal: React.FC<PromptEditorModalProps> = ({ isOpen, onClose, 
                         </div>
                     </div>
 
-                     <div>
+                    <div>
                         <label htmlFor="prompt-description" className="block text-sm font-medium text-editor-text-secondary mb-1">Description</label>
-                        <textarea id="prompt-description" name="description" value={formData.description} onChange={handleChange} required rows={2} className="w-full bg-editor-bg text-white p-2 rounded-md border border-editor-border focus:ring-2 focus:ring-editor-accent focus:outline-none" placeholder="Explain what this prompt does and where it is used."/>
+                        <textarea id="prompt-description" name="description" value={formData.description} onChange={handleChange} required rows={2} className="w-full bg-editor-bg text-white p-2 rounded-md border border-editor-border focus:ring-2 focus:ring-editor-accent focus:outline-none" placeholder="Explain what this prompt does and where it is used." />
                     </div>
-                     <div>
+                    <div>
                         <label htmlFor="prompt-template" className="block text-sm font-medium text-editor-text-secondary mb-1">Template</label>
                         <p className="text-xs text-editor-text-secondary/70 mb-2">{'Use placeholders like `{{businessName}}` or `{{context}}` which will be replaced dynamically.'}</p>
                         <textarea id="prompt-template" name="template" value={formData.template} onChange={handleChange} required rows={8} className="w-full bg-editor-bg text-white p-2 rounded-md border border-editor-border font-mono text-sm focus:ring-2 focus:ring-editor-accent focus:outline-none" />
@@ -126,14 +126,14 @@ const PromptEditorModal: React.FC<PromptEditorModalProps> = ({ isOpen, onClose, 
                             <label htmlFor="prompt-model" className="block text-sm font-medium text-editor-text-secondary mb-1">Model</label>
                             <select id="prompt-model" name="model" value={formData.model} onChange={handleChange} className="w-full bg-editor-bg text-white p-2 rounded-md border border-editor-border focus:ring-2 focus:ring-editor-accent focus:outline-none">
                                 <option value="gemini-3-pro-preview">Gemini 3 Pro (Recommended)</option>
-                                <option value="gemini-3.0-pro-image-001">Quimera Vision Pro</option>
+                                <option value="gemini-3-flash-preview">Gemini 3 Flash</option>
+                                <option value="gemini-3-pro-image-preview">Quimera Vision Pro</option>
+                                <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
+                                <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
+                                <option value="gemini-2.5-flash-image">Gemini 2.5 Flash Image</option>
                                 <option value="imagen-4.0-generate-001">Imagen 4.0 Standard</option>
                                 <option value="imagen-4.0-ultra-generate-001">Imagen 4.0 Ultra</option>
                                 <option value="imagen-4.0-fast-generate-001">Imagen 4.0 Fast</option>
-                                <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
-                                <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
-                                <option value="imagen-4.0-generate-001">Imagen 4</option>
-                                <option value="gemini-2.5-flash-image">Gemini 2.5 Flash Image</option>
                                 <option value="veo-3.1-fast-generate-preview">Veo Fast (Video)</option>
                             </select>
                         </div>

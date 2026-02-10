@@ -179,6 +179,7 @@ export interface ScopePermission {
 
 export interface GlobalAssistantConfig {
     isEnabled: boolean;
+    model: string;
     systemInstruction: string;
     enabledTemplates?: string[];
     customInstructions?: string;

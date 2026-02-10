@@ -74,6 +74,7 @@ const GlobalAssistantSettings: React.FC<GlobalAssistantSettingsProps> = ({ onBac
         // Ensure defaults for new fields if missing from DB
         setFormData({
             ...globalAssistantConfig,
+            model: globalAssistantConfig.model || 'gemini-2.5-flash',
             permissions: globalAssistantConfig.permissions || {},
             temperature: globalAssistantConfig.temperature ?? 1.0,
             maxTokens: globalAssistantConfig.maxTokens ?? 2048,
@@ -315,6 +316,21 @@ const GlobalAssistantSettings: React.FC<GlobalAssistantSettingsProps> = ({ onBac
                                         <h3 className="font-bold text-lg border-b border-editor-border pb-2 flex items-center">
                                             <Sliders className="mr-2 text-editor-accent" size={20} /> {t('superadmin.globalAssistant.parameters.title', 'Model Parameters')}
                                         </h3>
+
+                                        {/* Model Selection */}
+                                        <div>
+                                            <label className="block text-sm font-bold text-editor-text-primary mb-2">{t('superadmin.globalAssistant.parameters.model', 'AI Model')}</label>
+                                            <select
+                                                value={formData.model || 'gemini-2.5-flash'}
+                                                onChange={(e) => updateForm('model', e.target.value)}
+                                                className="w-full bg-editor-bg border border-editor-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-editor-accent outline-none text-editor-text-primary"
+                                            >
+                                                <option value="gemini-2.5-flash">Gemini 2.5 Flash — {t('superadmin.globalAssistant.parameters.recommended', 'Recommended')}</option>
+                                                <option value="gemini-3-flash-preview">Gemini 3 Flash (Preview) — {t('superadmin.globalAssistant.parameters.experimental', 'Experimental')}</option>
+                                                <option value="gemini-2.5-pro">Gemini 2.5 Pro — {t('superadmin.globalAssistant.parameters.highCost', 'Higher Cost')}</option>
+                                            </select>
+                                            <p className="text-xs text-editor-text-secondary mt-1">{t('superadmin.globalAssistant.parameters.modelDescription', 'The model used for chat responses. Flash is fastest and most cost-effective.')}</p>
+                                        </div>
 
                                         <div>
                                             <div className="flex justify-between mb-2">
