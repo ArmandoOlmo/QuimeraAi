@@ -4455,7 +4455,10 @@
     "send": "Enviar",
     "startVoice": "Iniciar Voz",
     "stopVoice": "Detener Voz",
-    "poweredBy": "Impulsado por Quimera AI"
+    "poweredBy": "Impulsado por Quimera AI",
+    "listening": "Escuchando...",
+    "voicePrompt": "Habla con naturalidad. Estoy escuchando en",
+    "endCall": "Finalizar Llamada"
   },
   "onboardingWizard": {
     "onboardingWizard": {

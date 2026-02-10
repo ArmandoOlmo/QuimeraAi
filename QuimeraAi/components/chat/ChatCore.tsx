@@ -386,7 +386,7 @@ const ChatCore: React.FC<ChatCoreProps> = ({
     // Voice State
     const [isLiveActive, setIsLiveActive] = useState(false);
     const [isConnecting, setIsConnecting] = useState(false);
-    const [visualizerLevels, setVisualizerLevels] = useState([1, 1, 1, 1]);
+    const [visualizerLevels, setVisualizerLevels] = useState(new Array(20).fill(4));
 
     // Refs
     const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -653,17 +653,21 @@ ${suggestAvailableSlots()}
     // Visualizer effect for live voice
     useEffect(() => {
         if (isLiveActive) {
+            let frame = 0;
             visualizerIntervalRef.current = window.setInterval(() => {
-                setVisualizerLevels([
-                    Math.random() * 20 + 10,
-                    Math.random() * 40 + 10,
-                    Math.random() * 30 + 10,
-                    Math.random() * 20 + 10,
-                ]);
-            }, 100);
+                frame++;
+                const newLevels = Array.from({ length: 20 }, (_, i) => {
+                    // Create a wave pattern using sine
+                    const wave = Math.sin(frame * 0.2 + i * 0.3) * 15 + 20;
+                    // Add some randomness
+                    const noise = Math.random() * 15;
+                    return Math.max(10, wave + noise);
+                });
+                setVisualizerLevels(newLevels);
+            }, 80);
         } else {
             if (visualizerIntervalRef.current) clearInterval(visualizerIntervalRef.current);
-            setVisualizerLevels([4, 4, 4, 4]);
+            setVisualizerLevels(new Array(20).fill(4));
         }
         return () => {
             if (visualizerIntervalRef.current) clearInterval(visualizerIntervalRef.current);
@@ -1733,6 +1737,7 @@ ${suggestAvailableSlots()}
     // =============================================================================
     // RENDER
     // =============================================================================
+    console.log('[ChatCore Debug] config.enableLiveVoice:', config.enableLiveVoice, 'isLiveActive:', isLiveActive, 'showPreChatForm:', showPreChatForm);
 
     return (
         <div className={`flex flex-col h-full ${className} `}>
@@ -1946,38 +1951,62 @@ ${suggestAvailableSlots()}
                     </div>
                 )}
 
-                {/* Live Voice Mode Overlay */}
+                {/* Live Voice Mode Overlay - Modern Redesign */}
                 {isLiveActive ? (
-                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-b from-gray-900 to-black z-10 text-white animate-fade-in-up">
-                        <div className="w-32 h-32 rounded-full bg-red-500/10 flex items-center justify-center mb-8 relative">
-                            <div className="absolute inset-0 rounded-full border border-red-500/30 animate-ping opacity-20"></div>
-                            <div className="w-20 h-20 rounded-full bg-red-500/20 flex items-center justify-center backdrop-blur-sm">
-                                <Mic size={32} className="text-red-500" />
+                    <div className="absolute inset-0 flex flex-col items-center justify-between bg-gradient-to-b from-gray-900 via-gray-900 to-black z-[30] text-white animate-fade-in py-10">
+                        {/* Premium Orbital Animation - Top Group */}
+                        <div className="relative w-40 h-40 flex items-center justify-center mt-4">
+                            {/* Orbital Rings */}
+                            <div className="absolute inset-0 rounded-full border border-red-500/20 animate-[ping_3s_linear_infinite] scale-100 opacity-0"></div>
+                            <div className="absolute inset-4 rounded-full border border-red-500/30 animate-[ping_2s_linear_infinite] scale-100 opacity-0"></div>
+                            <div className="absolute inset-8 rounded-full border-2 border-red-500/40 animate-[pulse_2s_ease-in-out_infinite] opacity-30"></div>
+
+                            {/* Glassmorphism Mic Container */}
+                            <div className="w-20 h-20 rounded-full bg-red-600/10 backdrop-blur-md flex items-center justify-center border border-red-500/30 shadow-[0_0_30px_rgba(239,68,68,0.2)] relative z-10">
+                                <div className="absolute inset-0 rounded-full bg-red-500/20 animate-pulse"></div>
+                                <Mic size={32} className="text-red-500 relative z-10 drop-shadow-[0_0_8px_rgba(239,68,68,0.6)]" />
                             </div>
                         </div>
 
-                        {/* Audio Waveform Visualizer */}
-                        <div className="flex items-center gap-1 h-12 mb-6">
-                            {visualizerLevels.map((height, i) => (
-                                <div
-                                    key={i}
-                                    className="w-1.5 bg-white rounded-full transition-all duration-100"
-                                    style={{ height: `${height} px`, opacity: 0.6 + (height / 50) }}
-                                />
-                            ))}
+                        {/* Middle Group: Visualizer + Status */}
+                        <div className="flex flex-col items-center w-full px-6">
+                            {/* Audio Waveform Visualizer (20 bars) */}
+                            <div className="flex items-end justify-center gap-[4px] h-12 mb-6 w-full">
+                                {visualizerLevels.map((height, i) => (
+                                    <div
+                                        key={i}
+                                        className="w-[3px] rounded-full transition-all duration-150"
+                                        style={{
+                                            height: `${height}px`,
+                                            opacity: 0.4 + (height / 60),
+                                            backgroundColor: appearance.colors?.accentColor || '#ef4444',
+                                            boxShadow: `0 0 10px ${(appearance.colors?.accentColor || '#ef4444')}44`
+                                        }}
+                                    />
+                                ))}
+                            </div>
+
+                            <div className="text-center">
+                                <h3 className="text-lg font-bold mb-1.5 tracking-tight text-white/95">
+                                    {t('chatbotWidget.listening')}
+                                </h3>
+                                <p className="text-xs text-gray-400 max-w-[220px] leading-relaxed mx-auto font-light">
+                                    {t('chatbotWidget.voicePrompt')} <span className="text-red-400 font-medium">{config.languages || 'Spanish, English'}</span>.
+                                </p>
+                            </div>
                         </div>
 
-                        <p className="text-lg font-medium mb-2">Listening...</p>
-                        <p className="text-xs text-gray-500 max-w-[200px] text-center mb-8">
-                            Speak naturally. I'm listening in {config.languages || 'your language'}.
-                        </p>
-
-                        <button
-                            onClick={stopLiveSession}
-                            className="px-6 py-3 bg-red-600 hover:bg-red-700 rounded-full text-sm font-bold text-white transition-colors shadow-lg flex items-center"
-                        >
-                            <PhoneOff size={18} className="mr-2" /> End Call
-                        </button>
+                        {/* Bottom Group: End Call Button */}
+                        <div className="pb-4">
+                            <button
+                                onClick={stopLiveSession}
+                                className="group relative px-8 py-3 bg-red-600 hover:bg-red-700 rounded-full text-xs font-bold text-white transition-all hover:scale-105 active:scale-95 shadow-[0_10px_20px_rgba(220,38,38,0.3)] flex items-center overflow-hidden"
+                            >
+                                <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
+                                <PhoneOff size={16} className="mr-2 relative z-10" />
+                                <span className="relative z-10">{t('chatbotWidget.endCall')}</span>
+                            </button>
+                        </div>
                     </div>
                 ) : (
                     /* Text Chat History */

@@ -56,17 +56,21 @@ http://34.46.59.182:18789/?token=quibo-master-key-2026
 
 | Property | Value |
 |----------|-------|
-| **Provider** | Anthropic Claude |
-| **API Key** | `sk-ant-api03-LNB...oi3-g-u5yIGAAA` |
-| **Current Model** | `anthropic/claude-opus-4-5` ✅ |
+| **Provider** | Google Gemini |
+| **Current Model** | `google/gemini-3-flash-preview` ✅ |
+| **Fallback 1** | `google/gemini-2.5-flash` |
+| **Fallback 2** | `openrouter/anthropic/claude-3.5-sonnet` |
 | **Status** | 🟢 Configured and Working |
 
-### ✅ Configuration Status
-The Anthropic Claude API is now properly configured and the gateway is successfully using `claude-opus-4-5` for AI responses. The API credentials are stored in `~/.openclaw/agents/main/agent/auth-profiles.json`.
+### ✅ Configuration Status (Updated 2026-02-08)
+The gateway is using `google/gemini-3-flash-preview` as the primary model, with Gemini 2.5 Flash and Claude 3.5 Sonnet as fallbacks.
+
+**Previous Issue (2026-02-08):** Gateway was crashing because `gateway.auth.token` was removed from the config. The token was restored and the model changed from `nvidia/moonshotai/kimi-k2.5` to `google/gemini-3-flash-preview`.
 
 **Configured Models:**
-- ✅ **Anthropic Claude** (Active): `anthropic/claude-opus-4-5`
-- 📝 **Google Gemini** (Available): API key configured but not active due to OpenClaw v2026.1.30 schema limitations
+- ✅ **Google Gemini 3 Flash** (Active): `google/gemini-3-flash-preview`
+- 📝 **Google Gemini 2.5 Flash** (Fallback): `google/gemini-2.5-flash`
+- 📝 **Anthropic Claude 3.5 Sonnet** (Fallback via OpenRouter)
 
 
 ---

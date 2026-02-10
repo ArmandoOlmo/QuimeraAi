@@ -4156,7 +4156,10 @@
     "send": "Send",
     "startVoice": "Start Voice Session",
     "stopVoice": "Stop Voice Session",
-    "poweredBy": "Powered by Quimera AI"
+    "poweredBy": "Powered by Quimera AI",
+    "listening": "Listening...",
+    "voicePrompt": "Speak naturally. I'm listening in",
+    "endCall": "End Call"
   },
   "navigationDashboard": {
     "title": "Navigation",

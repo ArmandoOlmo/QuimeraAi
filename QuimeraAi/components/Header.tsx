@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { HeaderData, NavLink, BorderRadiusSize, NavbarLayout, NavLinkHoverStyle } from '../types';
 import { useSafeEditor } from '../contexts/EditorContext';
 import { Menu, X, ArrowRight, ShoppingCart } from 'lucide-react';
@@ -701,6 +702,7 @@ const Header: React.FC<HeaderData & {
     );
 
     return (
+      <>
       <header
         className={`${positionClass} top-0 z-40 transition-all duration-500 ease-in-out ${style.includes('transparent') || style === 'sticky-transparent' ? 'w-full left-0 right-0' : ''
           }`}
@@ -768,100 +770,115 @@ const Header: React.FC<HeaderData & {
           </div>
         </div>
 
-        {/* ===== MOBILE MENU (also for tablets < 1080px) ===== */}
-        {/* Overlay */}
-        {isMenuOpen && (
+      </header>
+
+      {/* ===== MOBILE MENU - Rendered via portal outside header stacking context ===== */}
+      {/* Portal fixes iOS Safari bug where position:fixed inside position:sticky */}
+      {/* doesn't receive touch events correctly */}
+      {typeof document !== 'undefined' && createPortal(
+        <>
+          {/* Overlay */}
+          {isMenuOpen && (
+            <div
+              className="fixed inset-0 bg-black/50 z-[9990] nav:hidden"
+              onClick={() => setIsMenuOpen(false)}
+            />
+          )}
+
+          {/* Drawer */}
           <div
-            className="fixed inset-0 bg-black/50 z-[100] nav:hidden"
-            onClick={() => setIsMenuOpen(false)}
-          />
-        )}
-
-        {/* Drawer */}
-        <div
-          ref={drawerRef}
-          className={`
-          fixed top-0 right-0 bottom-0 w-[80vw] max-w-[320px] z-[101] 
-          transform transition-transform duration-300 ease-out nav:hidden
-          ${isMenuOpen ? 'translate-x-0' : 'translate-x-full'}
-        `}
-          style={{ backgroundColor: colors?.background }}
-        >
-          <div className="flex flex-col h-full p-5">
-            {/* Close button */}
-            <div className="flex justify-end mb-6">
-              <button
-                onClick={() => setIsMenuOpen(false)}
-                className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/10 transition-colors"
-                style={{ color: colors?.text }}
-                aria-label="Cerrar menú"
-              >
-                <X size={24} />
-              </button>
-            </div>
-
-            {/* Mobile Search */}
-            {showSearch && (
-              <div className="mb-6">
-                <GlobalSearch
-                  storeId={storeId}
-                  onProductClick={(productId) => {
-                    handleProductClick(productId);
-                    setIsMenuOpen(false);
-                  }}
-                  onContentClick={(href) => {
-                    handleContentClick(href);
-                    setIsMenuOpen(false);
-                  }}
-                  placeholder={searchPlaceholder}
-                  primaryColor={colors?.accent}
-                  textColor={colors?.text}
-                  sections={searchableSections}
-                />
-              </div>
-            )}
-
-            {/* Navigation Links */}
-            <nav className="flex-1">
-              <ul className="space-y-1">
-                {allLinks.map((link) => (
-                  <li key={link.text}>
-                    <a
-                      href={link.href}
-                      onClick={(e) => {
-                        if (onNavigate) {
-                          e.preventDefault();
-                          onNavigate(link.href);
-                        }
-                        setIsMenuOpen(false);
-                      }}
-                      className="block py-3 px-4 text-lg font-medium rounded-lg hover:bg-white/10 transition-colors"
-                      style={{ color: colors?.text }}
-                    >
-                      {link.text}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </nav>
-
-            {/* Footer Actions */}
-            <div className="pt-4 border-t border-white/10 space-y-3">
-              {actualShowLogin && (
-                <a
-                  href={loginUrl || '#'}
+            ref={drawerRef}
+            className={`
+            fixed top-0 right-0 bottom-0 w-[80vw] max-w-[320px] z-[9991]
+            transform transition-transform duration-300 ease-out nav:hidden
+            ${isMenuOpen ? 'translate-x-0' : 'translate-x-full'}
+          `}
+            style={{ backgroundColor: colors?.background }}
+          >
+            <div className="flex flex-col h-full p-5">
+              {/* Close button */}
+              <div className="flex justify-end mb-6">
+                <button
                   onClick={() => setIsMenuOpen(false)}
-                  className="block w-full text-center py-3 font-bold rounded-lg hover:bg-white/10 transition-colors"
+                  className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/10 transition-colors touch-manipulation"
                   style={{ color: colors?.text }}
+                  aria-label="Cerrar menú"
                 >
-                  {loginText}
-                </a>
+                  <X size={24} />
+                </button>
+              </div>
+
+              {/* Mobile Search */}
+              {showSearch && (
+                <div className="mb-6">
+                  <GlobalSearch
+                    storeId={storeId}
+                    onProductClick={(productId) => {
+                      handleProductClick(productId);
+                      setIsMenuOpen(false);
+                    }}
+                    onContentClick={(href) => {
+                      handleContentClick(href);
+                      setIsMenuOpen(false);
+                    }}
+                    placeholder={searchPlaceholder}
+                    primaryColor={colors?.accent}
+                    textColor={colors?.text}
+                    sections={searchableSections}
+                  />
+                </div>
               )}
-              {actualShowCta && <CtaButton fullWidth />}
+
+              {/* Navigation Links */}
+              <nav className="flex-1">
+                <ul className="space-y-1">
+                  {allLinks.map((link) => (
+                    <li key={link.text}>
+                      <a
+                        href={link.href || '#'}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          if (onNavigate && link.href) {
+                            onNavigate(link.href);
+                          }
+                          setIsMenuOpen(false);
+                        }}
+                        className="block py-3 px-4 text-lg font-medium rounded-lg hover:bg-white/10 transition-colors touch-manipulation"
+                        style={{ color: colors?.text }}
+                      >
+                        {link.text}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </nav>
+
+              {/* Footer Actions */}
+              <div className="pt-4 border-t border-white/10 space-y-3">
+                {actualShowLogin && (
+                  <a
+                    href={loginUrl || '#'}
+                    onClick={(e) => {
+                      if (onNavigate && loginUrl) {
+                        e.preventDefault();
+                        onNavigate(loginUrl);
+                      }
+                      setIsMenuOpen(false);
+                    }}
+                    className="block w-full text-center py-3 font-bold rounded-lg hover:bg-white/10 transition-colors touch-manipulation"
+                    style={{ color: colors?.text }}
+                  >
+                    {loginText}
+                  </a>
+                )}
+                {actualShowCta && <CtaButton fullWidth />}
+              </div>
             </div>
           </div>
-        </div>
-      </header>
+        </>,
+        document.body
+      )}
+    </>
     );
   };
 

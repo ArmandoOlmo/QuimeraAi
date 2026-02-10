@@ -442,14 +442,14 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
 
     // Extract numeric height values for proper max-height constraint (reduced by 30%)
     const heightMap: Record<string, number> = {
-        sm: 350,
-        md: 420,
-        lg: 490,
-        xl: 560
+        sm: 440,
+        md: 530,
+        lg: 610,
+        xl: 700
     };
-    const configuredHeight = heightMap[appearance.behavior.height as keyof typeof heightMap] || 420;
-    // Cap at 56% of viewport height or configured height, whichever is smaller (reduced 30%)
-    const maxHeightValue = Math.min(configuredHeight, typeof window !== 'undefined' ? window.innerHeight * 0.56 : configuredHeight);
+    const configuredHeight = heightMap[appearance.behavior.height as keyof typeof heightMap] || 530;
+    // Cap at 70% of viewport height or configured height, whichever is smaller
+    const maxHeightValue = Math.min(configuredHeight, typeof window !== 'undefined' ? window.innerHeight * 0.70 : configuredHeight);
 
     // Widget content - use absolute positioning in editor to stay within preview
     const widgetContent = (
@@ -475,7 +475,7 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
                 {isOpen && activeProject && (
                     <ChatCore
                         config={aiAssistantConfig}
-                        project={activeProject}
+                        project={activeProject as any}
                         appearance={appearance}
                         onLeadCapture={handleLeadCapture}
                         onUpdateLeadTranscript={handleUpdateLeadTranscript}
@@ -488,7 +488,7 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
                         currentPageContext={{
                             section: currentSection,
                             pageData: data,
-                            visibleSections: componentOrder?.filter(sec => sectionVisibility?.[sec] !== false) || []
+                            visibleSections: (componentOrder as any)?.filter((sec: any) => sectionVisibility?.[sec] !== false) || []
                         }}
                     />
                 )}

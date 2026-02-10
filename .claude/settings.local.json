@@ -34,7 +34,8 @@
       "Bash(types/reports.ts)",
       "Bash(EOF)",
       "Bash(test:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "mcp__ide__getDiagnostics"
     ]
   }
 }

@@ -652,6 +652,12 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
   const handleLinkNavigation = useCallback(async (href: string) => {
     console.log('[PublicWebsitePreview] handleLinkNavigation called with:', href);
 
+    // Guard against undefined/null href
+    if (!href) {
+      console.warn('[PublicWebsitePreview] handleLinkNavigation called with empty href');
+      return;
+    }
+
     // Don't reset views immediately - wait until we know where we're going
     // This prevents flashing the home page while fetching data
 
@@ -669,6 +675,16 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
     if (href.startsWith('/#') || (href.startsWith('#') && !href.startsWith('#article:') && !href.startsWith('#store'))) {
       const id = href.replace('/#', '').replace('#', '');
       console.log('[PublicWebsitePreview] Scrolling to anchor:', id);
+
+      // Must clear active views so home sections are rendered before scrolling
+      const needsViewReset = activePost !== null || activePage !== null || storeView.type !== 'none';
+      if (needsViewReset) {
+        setActivePost(null);
+        setStoreView({ type: 'none' });
+        setActivePage(null);
+      }
+
+      // Wait for menu close transition (300ms) + DOM re-render before scrolling
       setTimeout(() => {
         const element = document.getElementById(id);
         console.log('[PublicWebsitePreview] Element found:', !!element, element?.id);
@@ -677,7 +693,7 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
         } else {
           console.warn('[PublicWebsitePreview] Element not found for id:', id);
         }
-      }, 100);
+      }, needsViewReset ? 350 : 100);
       return;
     }
 
@@ -830,7 +846,7 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
     } else {
       console.warn('[PublicWebsitePreview] No page or element found for href:', href);
     }
-  }, [cmsPosts, project]);
+  }, [cmsPosts, project, activePost, activePage, storeView]);
 
   // Inject font CSS variables
   useEffect(() => {
