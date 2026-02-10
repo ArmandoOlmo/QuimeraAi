@@ -3028,11 +3028,33 @@ const GlobalAiAssistant: React.FC = () => {
         if (!isLiveActive) {
             setIsThinking(true);
             try {
-                // ============================================================
-                // SIMPLIFIED: Fast vision-only assistant - no tool execution
-                // Focus: Help user understand what they're seeing, answer questions
-                // ============================================================
                 console.log('[Global Assistant] Processing message:', userMsg);
+
+                // ============================================================
+                // STEP 1: Fast-path tool inference from user text
+                // ============================================================
+                const inferredTool = inferToolCallFromUserText(userMsg);
+                if (inferredTool) {
+                    console.log('[Global Assistant] Fast-path tool inferred:', inferredTool);
+                    try {
+                        const { result, error } = await executeTool(inferredTool.name, inferredTool.args, 'chat');
+                        if (error) {
+                            setMessages(prev => [...prev, { role: 'model', text: `⚠️ ${error}` }]);
+                        } else {
+                            const resultText = typeof result === 'string' ? result : (result?.result || JSON.stringify(result));
+                            setMessages(prev => [...prev, { role: 'model', text: `✅ ${resultText}` }]);
+                        }
+                    } catch (toolErr: any) {
+                        console.error('[Global Assistant] Tool execution error:', toolErr);
+                        setMessages(prev => [...prev, { role: 'model', text: `⚠️ Error al ejecutar la acción: ${toolErr?.message || 'Unknown error'}` }]);
+                    }
+                    setIsThinking(false);
+                    return;
+                }
+
+                // ============================================================
+                // STEP 2: Send to LLM with vision for conversational responses
+                // ============================================================
 
                 // Build conversation history for context
                 const historyText = messages
@@ -3096,8 +3118,29 @@ Usuario: ${userMsg}`;
                 const responseText = extractTextFromResponse(response).trim();
                 console.log('[Global Assistant] Response:', responseText?.substring(0, 200));
 
+                // ============================================================
+                // STEP 3: Check if LLM response contains a tool call
+                // ============================================================
                 if (responseText) {
-                    setMessages(prev => [...prev, { role: 'model', text: responseText }]);
+                    const extractedTool = tryExtractToolCall(responseText);
+                    if (extractedTool) {
+                        console.log('[Global Assistant] Extracted tool_call from LLM response:', extractedTool);
+                        try {
+                            const { result, error } = await executeTool(extractedTool.name, extractedTool.args, 'chat');
+                            if (error) {
+                                setMessages(prev => [...prev, { role: 'model', text: `⚠️ ${error}` }]);
+                            } else {
+                                const resultText = typeof result === 'string' ? result : (result?.result || JSON.stringify(result));
+                                setMessages(prev => [...prev, { role: 'model', text: `✅ ${resultText}` }]);
+                            }
+                        } catch (toolErr: any) {
+                            console.error('[Global Assistant] LLM tool execution error:', toolErr);
+                            setMessages(prev => [...prev, { role: 'model', text: `⚠️ Error: ${toolErr?.message || 'Unknown error'}` }]);
+                        }
+                    } else {
+                        // Normal text response — display as-is
+                        setMessages(prev => [...prev, { role: 'model', text: responseText }]);
+                    }
                 } else {
                     setMessages(prev => [...prev, { role: 'model', text: "¿En qué puedo ayudarte?" }]);
                 }
