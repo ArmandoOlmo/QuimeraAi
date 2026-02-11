@@ -27,6 +27,7 @@ interface CRMContextType {
     leads: Lead[];
     isLoadingLeads: boolean;
     addLead: (lead: Omit<Lead, 'id' | 'createdAt' | 'projectId'>) => Promise<string | undefined>;
+    addLeadsBulk: (leads: Omit<Lead, 'id' | 'createdAt' | 'projectId'>[]) => Promise<string[]>;
     updateLeadStatus: (leadId: string, status: LeadStatus) => Promise<void>;
     updateLead: (leadId: string, data: Partial<Lead>) => Promise<void>;
     deleteLead: (leadId: string) => Promise<void>;
@@ -242,6 +243,43 @@ export const CRMProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         }
     };
 
+    // Bulk Lead Import
+    const addLeadsBulk = async (leadsData: Omit<Lead, 'id' | 'createdAt' | 'projectId'>[]): Promise<string[]> => {
+        if (!user || !activeProjectId) {
+            console.error("[CRMContext] Cannot bulk add leads: No user or active project");
+            return [];
+        }
+
+        console.log(`[CRMContext] 📦 addLeadsBulk called with ${leadsData.length} leads`);
+        const createdIds: string[] = [];
+
+        try {
+            const leadsPath = `users/${user.uid}/projects/${activeProjectId}/leads`;
+            const BATCH_SIZE = 10;
+
+            for (let i = 0; i < leadsData.length; i += BATCH_SIZE) {
+                const batch = leadsData.slice(i, i + BATCH_SIZE);
+                const promises = batch.map(leadData =>
+                    addDoc(collection(db, leadsPath), {
+                        ...leadData,
+                        projectId: activeProjectId,
+                        createdAt: serverTimestamp(),
+                        updatedAt: serverTimestamp(),
+                    })
+                );
+                const refs = await Promise.all(promises);
+                refs.forEach(ref => createdIds.push(ref.id));
+                console.log(`[CRMContext] ✅ Batch ${Math.floor(i / BATCH_SIZE) + 1} complete (${createdIds.length}/${leadsData.length})`);
+            }
+
+            console.log(`[CRMContext] ✅ Bulk import complete: ${createdIds.length} leads created`);
+            return createdIds;
+        } catch (error) {
+            console.error("[CRMContext] Error in bulk lead import:", error);
+            throw error;
+        }
+    };
+
     const updateLeadStatus = async (leadId: string, status: LeadStatus) => {
         if (!user || !activeProjectId) return;
 
@@ -433,6 +471,7 @@ export const CRMProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         leads,
         isLoadingLeads,
         addLead,
+        addLeadsBulk,
         updateLeadStatus,
         updateLead,
         deleteLead,

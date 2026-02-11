@@ -184,7 +184,7 @@ export interface Lead {
 
     // CRM Fields
     status: LeadStatus;
-    source: 'chatbot' | 'chatbot-widget' | 'contact-form' | 'form' | 'manual' | 'referral' | 'linkedin' | 'cold_call' | 'voice-call' | 'quimera-chat';
+    source: 'chatbot' | 'chatbot-widget' | 'contact-form' | 'form' | 'manual' | 'referral' | 'linkedin' | 'cold_call' | 'voice-call' | 'quimera-chat' | 'import-csv' | 'import-excel';
     value?: number;
     probability?: number;
     expectedCloseDate?: { seconds: number; nanoseconds: number };

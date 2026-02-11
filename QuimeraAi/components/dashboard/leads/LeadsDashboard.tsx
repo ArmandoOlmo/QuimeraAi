@@ -14,7 +14,7 @@ import {
     DollarSign, CheckCircle2, XCircle, Clock,
     ArrowUpRight, Calendar, Trash2, MoveRight,
     Building2, Palette, Sparkles, Loader2, ThumbsUp,
-    Smile, Table, List, Columns, Download, Edit, MapPin,
+    Smile, Table, List, Columns, Download, Upload, Edit, MapPin,
     Globe, Briefcase, Linkedin, BookOpen, X, Save, Send, Users
 } from 'lucide-react';
 import { Lead, LeadStatus } from '../../../types';
@@ -28,6 +28,7 @@ import LeadsListView from './LeadsListView';
 import CustomFieldsManager, { CustomFieldDefinition } from './CustomFieldsManager';
 import LeadsLibrary from './LeadsLibrary';
 import AddLeadModal from './AddLeadModal';
+import ImportLeadsModal from './ImportLeadsModal';
 import AddToAudienceModal from '../email/AddToAudienceModal';
 import { logApiCall } from '../../../services/apiLoggingService';
 
@@ -336,6 +337,7 @@ const LeadsDashboard: React.FC = () => {
     const [draggedLeadId, setDraggedLeadId] = useState<string | null>(null);
     const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+    const [isImportModalOpen, setIsImportModalOpen] = useState(false);
     const [activeTab, setActiveTab] = useState<'pipeline' | 'library'>('pipeline');
 
     // View Mode
@@ -999,6 +1001,13 @@ const LeadsDashboard: React.FC = () => {
                                         title={t('leads.dashboard.exportCsv')}
                                     >
                                         <Download className="w-4 h-4" />
+                                    </button>
+                                    <button
+                                        onClick={() => setIsImportModalOpen(true)}
+                                        className="hidden sm:flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-md transition-all text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40"
+                                        title={t('leads.import.title', 'Importar Leads')}
+                                    >
+                                        <Upload className="w-4 h-4" />
                                     </button>
                                     <button
                                         onClick={() => setIsAddModalOpen(true)}
@@ -2250,6 +2259,12 @@ const LeadsDashboard: React.FC = () => {
                         contactType="leads"
                     />
                 )}
+
+                {/* Import Leads Modal */}
+                <ImportLeadsModal
+                    isOpen={isImportModalOpen}
+                    onClose={() => setIsImportModalOpen(false)}
+                />
             </div>
         </div>
     );
