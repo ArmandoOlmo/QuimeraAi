@@ -2,9 +2,9 @@
 
 ## ✅ Deployment Status
 
-**Fecha**: 2026-02-01
+**Fecha**: 2026-02-11
 **Estado**: ✅ RUNNING
-**Versión OpenClaw**: 2026.1.30
+**Versión OpenClaw**: 2026.2.9
 
 ---
 
@@ -16,7 +16,7 @@
 | **Project** | `openclaw-quibo-01` |
 | **Zone** | `us-central1-a` |
 | **Machine Type** | `e2-medium` (2 vCPUs, 4GB RAM) |
-| **External IP** | `34.46.59.182` |
+| **External IP** | `34.56.154.52` |
 | **Boot Disk** | 20GB SSD |
 | **OS** | Ubuntu 22.04 LTS |
 | **Status** | 🟢 RUNNING |
@@ -36,7 +36,7 @@
 
 ### Access URL
 ```
-http://34.46.59.182:18789
+http://34.56.154.52:18789
 ```
 
 ### Authentication
@@ -47,7 +47,7 @@ quibo-master-key-2026
 
 O accede directamente con:
 ```
-http://34.46.59.182:18789/?token=quibo-master-key-2026
+http://34.56.154.52:18789/?token=quibo-master-key-2026
 ```
 
 ---
@@ -157,7 +157,7 @@ sudo systemctl start openclaw-gateway
 ### What Was Installed:
 1. ✅ VM `quibo` created in `openclaw-quibo-01` project
 2. ✅ Node.js 22.22.0 installed
-3. ✅ OpenClaw 2026.1.30 installed globally
+3. ✅ OpenClaw 2026.2.9 installed globally
 4. ✅ Firewall rule `allow-openclaw-quibo` created for port 18789
 5. ✅ Systemd service configured for auto-start
 6. ✅ Gemini API credentials configured
@@ -177,7 +177,7 @@ sudo systemctl start openclaw-gateway
 El gateway está usando el modelo Anthropic por defecto. Para cambiar a Gemini:
 
 **Opción A: Via Dashboard**
-1. Accede a http://34.46.59.182:18789/?token=quibo-master-key-2026
+1. Accede a http://34.56.154.52:18789/?token=quibo-master-key-2026
 2. Settings > Config > Agents > Defaults
 3. Usa el botón "Raw" para editar el JSON
 4. Busca `"model": {}` y reemplázalo con:
@@ -243,20 +243,20 @@ cat ~/.openclaw/openclaw.json | grep -A5 telegram
 ### No puedo acceder al dashboard
 1. Verifica que el firewall permita el puerto 18789
 2. Verifica que uses el token correcto: `quibo-master-key-2026`
-3. Accede via: http://34.46.59.182:18789/?token=quibo-master-key-2026
+3. Accede via: http://34.56.154.52:18789/?token=quibo-master-key-2026
 
 ---
 
 ## 📞 Support & Resources
 
 - **OpenClaw Docs**: https://docs.openclaw.ai
-- **Dashboard**: http://34.46.59.182:18789
+- **Dashboard**: http://34.56.154.52:18789
 - **Telegram Bot**: @Quibo_Quimera_bot
 - **Project**: openclaw-quibo-01
 - **Zone**: us-central1-a
 
 ---
 
-**Deployment Date**: 2026-02-01
+**Deployment Date**: 2026-02-11 (updated)
 **Deployed By**: Antigravity AI Assistant
 **Status**: ✅ Production Ready
