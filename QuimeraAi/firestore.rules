@@ -452,6 +452,19 @@ service cloud.firestore {
       allow update, delete: if request.auth != null && isSuperAdminOrOwner();
     }
 
+    // ============================================
+    // PROJECT BACKUPS
+    // Only readable by the project owner or superadmin
+    // Only writable by admin SDK (Cloud Functions)
+    // ============================================
+    match /projectBackups/{backupId} {
+      allow read: if request.auth != null && (
+        resource.data.ownerId == request.auth.uid ||
+        isSuperAdminOrOwner()
+      );
+      allow write: if false; // Only admin SDK can write
+    }
+
     // Default deny
     match /{document=**} {
       allow read, write: if request.auth != null && isSuperAdminOrOwner();

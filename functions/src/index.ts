@@ -66,5 +66,14 @@ export {
 // ============================================================================
 export { tenantsApi } from './api/v1/tenants';
 
+// ============================================================================
+// PROJECT BACKUP FUNCTIONS
+// ============================================================================
+export {
+    backupAllProjects,
+    restoreProjectFromBackup,
+    cleanupOldBackups,
+} from './backups/projectBackups';
+
 // Export other functions can be added here as they are created
 // e.g., permission templates, etc.

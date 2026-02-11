@@ -703,9 +703,9 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
                             isAiWorking={isAiWorking}
                         />
 
-                        <div className="flex-1 overflow-y-auto p-8 flex justify-center bg-background/50">
-                            {/* Dynamic width container matching Landing Page Editor style */}
-                            <div className={`bg-background shadow-sm border border-border/50 rounded-xl overflow-hidden transition-all duration-300 ${previewWidth} ${isPreviewVisible ? 'opacity-100' : 'opacity-0 hidden'} min-h-[800px]`}>
+                        <div className="flex-1 overflow-y-auto flex justify-center bg-background/50">
+                            {/* Dynamic width container - borderless for seamless editing */}
+                            <div className={`bg-background w-full transition-all duration-300 ${previewWidth} ${isPreviewVisible ? 'opacity-100' : 'opacity-0 hidden'}`}>
                                 <EditorContent editor={editor} />
                                 <EditorBubbleMenu
                                     editor={editor}

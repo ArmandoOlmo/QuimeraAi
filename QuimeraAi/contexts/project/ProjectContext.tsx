@@ -150,6 +150,12 @@ interface ProjectContextType {
     updateProjectThumbnail: (projectId: string, file: File) => Promise<void>;
     updateProjectFavicon: (projectId: string, file: File) => Promise<void>;
 
+    // Trash & Backup Recovery
+    deletedProjects: Project[];
+    restoreFromTrash: (projectId: string) => Promise<void>;
+    permanentlyDelete: (projectId: string) => Promise<void>;
+    restoreFromBackup: (backupId: string) => Promise<void>;
+
     // Template Management
     isEditingTemplate: boolean;
     exitTemplateEditor: () => void;
@@ -178,6 +184,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
 
     // Project State
     const [projects, setProjects] = useState<Project[]>([]);
+    const [deletedProjects, setDeletedProjects] = useState<Project[]>([]);
     const [isLoadingProjects, setIsLoadingProjects] = useState(true);
 
     // Initialize activeProjectId from localStorage if available
@@ -331,15 +338,27 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
                 index === self.findIndex(p => p.id === project.id)
             );
 
+            // Separate active projects from soft-deleted (trash) projects
+            const activeProjects = uniqueProjects.filter(p => !(p as any).deletedAt);
+            const trashedProjects = uniqueProjects.filter(p => !!(p as any).deletedAt);
+
             // Sort by lastUpdated
-            uniqueProjects.sort((a, b) => {
+            activeProjects.sort((a, b) => {
                 const dateA = new Date(a.lastUpdated || 0).getTime();
                 const dateB = new Date(b.lastUpdated || 0).getTime();
                 return dateB - dateA;
             });
 
+            // Sort trashed by deletedAt (most recent first)
+            trashedProjects.sort((a, b) => {
+                const dateA = new Date((a as any).deletedAt || 0).getTime();
+                const dateB = new Date((b as any).deletedAt || 0).getTime();
+                return dateB - dateA;
+            });
+
             const { templates: firestoreTemplates } = await loadGlobalTemplates();
-            setProjects([...firestoreTemplates, ...uniqueProjects]);
+            setProjects([...firestoreTemplates, ...activeProjects]);
+            setDeletedProjects(trashedProjects);
         } catch (error) {
             console.error("Error loading projects:", error);
             try {
@@ -862,7 +881,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         return docRef.id;
     };
 
-    // Delete project
+    // Delete project (soft-delete: marks with deletedAt instead of removing)
     const deleteProject = async (projectId: string) => {
         if (!user) return;
 
@@ -872,13 +891,21 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         const isTemplate = project.status === 'Template';
 
         if (isTemplate) {
+            // Templates use the existing soft-delete via isDeleted flag
             const templateRef = doc(db, 'templates', projectId);
             await updateDoc(templateRef, { isDeleted: true });
             deletedTemplateIdsRef.current.add(projectId);
             localStorage.setItem('deletedTemplateIds', JSON.stringify([...deletedTemplateIdsRef.current]));
         } else {
+            // Soft-delete: set deletedAt timestamp instead of deleting
             const pathSegments = getProjectsCollectionPath(user.uid, currentTenantId);
-            await deleteDoc(doc(db, ...pathSegments, projectId));
+            const projectRef = doc(db, ...pathSegments, projectId);
+            await updateDoc(projectRef, {
+                deletedAt: new Date().toISOString(),
+                deletedBy: user.uid,
+            });
+            // Move to deleted projects list
+            setDeletedProjects(prev => [{ ...project, deletedAt: new Date().toISOString(), deletedBy: user.uid } as any, ...prev]);
         }
 
         setProjects(prev => prev.filter(p => p.id !== projectId));
@@ -886,6 +913,61 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         if (activeProjectId === projectId) {
             setActiveProjectId(null);
             setData(null);
+        }
+    };
+
+    // Restore project from trash (removes deletedAt/deletedBy)
+    const restoreFromTrash = async (projectId: string) => {
+        if (!user) return;
+
+        const project = deletedProjects.find(p => p.id === projectId);
+        if (!project) return;
+
+        const pathSegments = getProjectsCollectionPath(user.uid, currentTenantId);
+        const projectRef = doc(db, ...pathSegments, projectId);
+
+        // Remove the soft-delete fields
+        const { deletedAt, deletedBy, ...cleanProject } = project as any;
+        await updateDoc(projectRef, {
+            deletedAt: null,
+            deletedBy: null,
+        });
+
+        // Move back to active projects
+        setDeletedProjects(prev => prev.filter(p => p.id !== projectId));
+        setProjects(prev => [{ ...project } as Project, ...prev]);
+    };
+
+    // Permanently delete a project (hard delete from Firestore)
+    const permanentlyDelete = async (projectId: string) => {
+        if (!user) return;
+
+        const project = deletedProjects.find(p => p.id === projectId);
+        if (!project) return;
+
+        const pathSegments = getProjectsCollectionPath(user.uid, currentTenantId);
+        await deleteDoc(doc(db, ...pathSegments, projectId));
+
+        setDeletedProjects(prev => prev.filter(p => p.id !== projectId));
+    };
+
+    // Restore project from an automatic backup (calls Cloud Function)
+    const restoreFromBackup = async (backupId: string) => {
+        try {
+            const { getFunctions, httpsCallable } = await import('firebase/functions');
+            const functions = getFunctions();
+            const restoreFn = httpsCallable(functions, 'restoreProjectFromBackup');
+            const result = await restoreFn({ backupId }) as any;
+
+            if (result.data?.success) {
+                // Refresh projects to pick up the restored project
+                await refreshProjects();
+            } else {
+                throw new Error(result.data?.message || 'Restore failed');
+            }
+        } catch (error) {
+            console.error('[ProjectContext] Error restoring from backup:', error);
+            throw error;
         }
     };
 
@@ -1352,6 +1434,12 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         deleteProject,
         createProjectFromTemplate,
         exportProjectAsHtml,
+
+        // Trash & Backup Recovery
+        deletedProjects,
+        restoreFromTrash,
+        permanentlyDelete,
+        restoreFromBackup,
         updateProjectThumbnail,
         updateProjectFavicon,
 
