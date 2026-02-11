@@ -67,6 +67,11 @@ const ChatCustomizationSettings: React.FC = () => {
     const projectGlobalColors = activeProject?.theme?.globalColors;
     const projectPreset = projectGlobalColors ? buildProjectPreset(projectGlobalColors) : null;
 
+    // Build palette colors array for ColorControl popover
+    const projectPaletteColors = projectGlobalColors
+        ? Object.values(projectGlobalColors).filter((c): c is string => typeof c === 'string' && c.startsWith('#'))
+        : undefined;
+
     const applyProjectPreset = () => {
         if (!projectPreset) return;
         const newConfig: ChatAppearanceConfig = {
@@ -290,6 +295,7 @@ const ChatCustomizationSettings: React.FC = () => {
                                 label={label}
                                 value={(config.colors as any)?.[key] || '#000000'}
                                 onChange={(val) => updateColor(key, val)}
+                                paletteColors={projectPaletteColors}
                             />
                         ))}
                     </div>
