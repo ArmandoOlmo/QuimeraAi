@@ -6607,5 +6607,20 @@
     "templatesDesc": "Plantillas de sitio web",
     "finance": "Finanzas",
     "financeDesc": "Herramientas financieras"
+  },
+  "trash": {
+    "title": "Papelera",
+    "subtitle": "Los proyectos en la papelera se eliminan automáticamente después de 30 días",
+    "autoDeleteWarning": "Los proyectos en la papelera se eliminarán permanentemente después de 30 días. Restáuralos antes para conservarlos.",
+    "restore": "Restaurar",
+    "permanentDelete": "Eliminar definitivamente",
+    "permanentDeleteTitle": "¿Eliminar permanentemente?",
+    "permanentDeleteMessage": "Esta acción no se puede deshacer. El proyecto y todos sus datos se eliminarán permanentemente.",
+    "deletedAgo": "Eliminado {{time}}",
+    "daysLeft": "{{count}} días restantes",
+    "emptyTrash": "La papelera está vacía",
+    "movedToTrash": "Proyecto movido a la papelera",
+    "restoredFromTrash": "Proyecto restaurado exitosamente",
+    "permanentlyDeleted": "Proyecto eliminado permanentemente"
   }
 }

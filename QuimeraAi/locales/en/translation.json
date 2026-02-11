@@ -5921,5 +5921,20 @@
     "templatesDesc": "Website templates",
     "finance": "Finance",
     "financeDesc": "Financial tools"
+  },
+  "trash": {
+    "title": "Trash",
+    "subtitle": "Projects moved to trash are automatically deleted after 30 days",
+    "autoDeleteWarning": "Projects in trash will be permanently deleted after 30 days. Restore them before that to keep them.",
+    "restore": "Restore",
+    "permanentDelete": "Delete forever",
+    "permanentDeleteTitle": "Delete Permanently?",
+    "permanentDeleteMessage": "This action cannot be undone. The project and all its data will be permanently removed.",
+    "deletedAgo": "Deleted {{time}}",
+    "daysLeft": "{{count}} days left",
+    "emptyTrash": "Trash is empty",
+    "movedToTrash": "Project moved to trash",
+    "restoredFromTrash": "Project restored successfully",
+    "permanentlyDeleted": "Project permanently deleted"
   }
 }
