@@ -1,4 +1,58 @@
 import { ChatAppearanceConfig } from '../types';
+import { GlobalColors } from '../types/ui';
+
+/**
+ * Build a chat theme preset from the project's global color palette.
+ * This lets users apply their onboarding / project colors to the chat widget.
+ */
+export const buildProjectPreset = (globalColors: GlobalColors): Partial<ChatAppearanceConfig> => {
+    const primary = globalColors.primary || '#4F46E5';
+    const secondary = globalColors.secondary || '#6366F1';
+    const accent = globalColors.accent || '#8B5CF6';
+    const bg = globalColors.background || '#FFFFFF';
+    const surface = globalColors.surface || '#F9FAFB';
+    const text = globalColors.text || '#111827';
+    const border = globalColors.border || '#E5E7EB';
+    const heading = globalColors.heading || text;
+
+    return {
+        colors: {
+            primaryColor: primary,
+            secondaryColor: secondary,
+            accentColor: accent,
+            userBubbleColor: primary,
+            userTextColor: '#FFFFFF',
+            botBubbleColor: surface,
+            botTextColor: text,
+            backgroundColor: bg,
+            inputBackground: surface,
+            inputBorder: border,
+            inputText: text,
+            headerBackground: primary,
+            headerText: '#FFFFFF',
+        },
+        branding: {
+            logoType: 'emoji',
+            logoEmoji: '🎨',
+            logoSize: 'md',
+            botAvatarEmoji: '✨',
+            showBotAvatar: true,
+            showUserAvatar: true,
+            userAvatarStyle: 'initials',
+        },
+        button: {
+            buttonStyle: 'circle',
+            buttonSize: 'lg',
+            buttonIcon: 'custom-emoji',
+            customEmoji: '💬',
+            showButtonText: false,
+            pulseEffect: true,
+            shadowSize: 'xl',
+            showTooltip: true,
+            tooltipText: 'Chat with us!',
+        },
+    };
+};
 
 // Default configuration
 export const getDefaultAppearanceConfig = (): ChatAppearanceConfig => ({
@@ -100,7 +154,7 @@ export const THEME_PRESETS: Record<string, Partial<ChatAppearanceConfig>> = {
             tooltipText: 'Professional Support'
         }
     },
-    
+
     friendly: {
         colors: {
             primaryColor: '#F59E0B',
@@ -146,7 +200,7 @@ export const THEME_PRESETS: Record<string, Partial<ChatAppearanceConfig>> = {
             showTypingIndicator: true
         }
     },
-    
+
     modern: {
         colors: {
             primaryColor: '#0EA5E9',
@@ -184,7 +238,7 @@ export const THEME_PRESETS: Record<string, Partial<ChatAppearanceConfig>> = {
             tooltipText: 'Quick Support'
         }
     },
-    
+
     dark: {
         colors: {
             primaryColor: '#8B5CF6',
@@ -223,7 +277,7 @@ export const THEME_PRESETS: Record<string, Partial<ChatAppearanceConfig>> = {
         },
         theme: 'dark'
     },
-    
+
     colorful: {
         colors: {
             primaryColor: '#EC4899',
@@ -261,7 +315,7 @@ export const THEME_PRESETS: Record<string, Partial<ChatAppearanceConfig>> = {
             tooltipText: 'Creative Support'
         }
     },
-    
+
     minimal: {
         colors: {
             primaryColor: '#000000',

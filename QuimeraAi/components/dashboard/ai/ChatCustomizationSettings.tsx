@@ -8,7 +8,7 @@ import {
     ChevronDown, X, Upload, Trash2
 } from 'lucide-react';
 import { ChatAppearanceConfig } from '../../../types';
-import { getDefaultAppearanceConfig, THEME_PRESETS, applyThemePreset } from '../../../utils/chatThemes';
+import { getDefaultAppearanceConfig, THEME_PRESETS, applyThemePreset, buildProjectPreset } from '../../../utils/chatThemes';
 import ChatbotWidget from '../../ChatbotWidget';
 import EcommerceImagePicker from '../ecommerce/components/EcommerceImagePicker';
 import { useToast } from '../../../contexts/ToastContext';
@@ -58,6 +58,31 @@ const ChatCustomizationSettings: React.FC = () => {
 
     const applyPreset = (presetName: keyof typeof THEME_PRESETS) => {
         const newConfig = applyThemePreset(config, presetName);
+        setConfig(newConfig);
+        saveConfig(newConfig);
+    };
+
+    // Build project-colors preset from the active project's theme
+    const projectGlobalColors = activeProject?.theme?.globalColors;
+    const projectPreset = projectGlobalColors ? buildProjectPreset(projectGlobalColors) : null;
+
+    const applyProjectPreset = () => {
+        if (!projectPreset) return;
+        const newConfig: ChatAppearanceConfig = {
+            ...config,
+            colors: { ...config.colors, ...projectPreset.colors },
+            branding: { ...config.branding, ...projectPreset.branding },
+            button: { ...config.button, ...projectPreset.button },
+        };
+        setConfig(newConfig);
+        saveConfig(newConfig);
+    };
+
+    const updateColor = (key: string, value: string) => {
+        const newConfig = {
+            ...config,
+            colors: { ...config.colors, [key]: value }
+        };
         setConfig(newConfig);
         saveConfig(newConfig);
     };
@@ -204,7 +229,22 @@ const ChatCustomizationSettings: React.FC = () => {
                         <Zap className="text-primary" size={20} />
                         Quick Theme Presets
                     </h3>
-                    <div className="grid grid-cols-6 gap-3">
+                    <div className="grid grid-cols-7 gap-3">
+                        {/* Project Colors preset (highlighted) */}
+                        {projectPreset && (
+                            <button
+                                onClick={applyProjectPreset}
+                                className="group flex flex-col items-center p-2 rounded-xl hover:bg-primary/10 transition-all ring-2 ring-primary/30 bg-primary/5"
+                            >
+                                <div
+                                    className="w-12 h-12 rounded-full mb-2 border-2 border-primary group-hover:scale-110 transition-transform shadow-md"
+                                    style={{
+                                        background: `linear-gradient(135deg, ${projectGlobalColors?.primary || '#4F46E5'} 60%, ${projectGlobalColors?.secondary || '#6366F1'} 100%)`
+                                    }}
+                                />
+                                <span className="text-xs font-bold text-primary">🎨 Project</span>
+                            </button>
+                        )}
                         {Object.keys(THEME_PRESETS).map((presetName) => (
                             <button
                                 key={presetName}
@@ -368,6 +408,41 @@ const ChatCustomizationSettings: React.FC = () => {
                                     <div className="w-11 h-6 bg-secondary rounded-full peer peer-checked:bg-primary peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all shadow-inner"></div>
                                 </label>
                             </div>
+                        </div>
+                    </AccordionSection>
+
+                    {/* Colors */}
+                    <AccordionSection title="Colors" icon={Palette} section="colors">
+                        <div className="space-y-5">
+                            {[
+                                { key: 'primaryColor', label: 'Primary Color' },
+                                { key: 'secondaryColor', label: 'Secondary Color' },
+                                { key: 'headerBackground', label: 'Header Background' },
+                                { key: 'headerText', label: 'Header Text' },
+                                { key: 'userBubbleColor', label: 'User Bubble' },
+                                { key: 'userTextColor', label: 'User Text' },
+                                { key: 'botBubbleColor', label: 'Bot Bubble' },
+                                { key: 'botTextColor', label: 'Bot Text' },
+                                { key: 'backgroundColor', label: 'Background' },
+                                { key: 'inputBackground', label: 'Input Background' },
+                                { key: 'inputBorder', label: 'Input Border' },
+                                { key: 'inputText', label: 'Input Text' },
+                            ].map(({ key, label }) => (
+                                <div key={key} className="flex items-center justify-between gap-4">
+                                    <label className="text-sm font-medium text-foreground">{label}</label>
+                                    <div className="flex items-center gap-2">
+                                        <input
+                                            type="color"
+                                            value={(config.colors as any)?.[key] || '#000000'}
+                                            onChange={(e) => updateColor(key, e.target.value)}
+                                            className="w-10 h-10 rounded-lg border border-border cursor-pointer bg-transparent p-0.5"
+                                        />
+                                        <span className="text-xs text-muted-foreground font-mono w-20 text-right">
+                                            {(config.colors as any)?.[key] || '#000000'}
+                                        </span>
+                                    </div>
+                                </div>
+                            ))}
                         </div>
                     </AccordionSection>
 
