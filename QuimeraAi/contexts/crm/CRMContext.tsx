@@ -259,14 +259,19 @@ export const CRMProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
             for (let i = 0; i < leadsData.length; i += BATCH_SIZE) {
                 const batch = leadsData.slice(i, i + BATCH_SIZE);
-                const promises = batch.map(leadData =>
-                    addDoc(collection(db, leadsPath), {
-                        ...leadData,
+                const promises = batch.map(leadData => {
+                    // Firestore rejects undefined values — strip them
+                    const sanitized: Record<string, any> = {};
+                    Object.entries(leadData).forEach(([key, val]) => {
+                        if (val !== undefined) sanitized[key] = val;
+                    });
+                    return addDoc(collection(db, leadsPath), {
+                        ...sanitized,
                         projectId: activeProjectId,
                         createdAt: serverTimestamp(),
                         updatedAt: serverTimestamp(),
-                    })
-                );
+                    });
+                });
                 const refs = await Promise.all(promises);
                 refs.forEach(ref => createdIds.push(ref.id));
                 console.log(`[CRMContext] ✅ Batch ${Math.floor(i / BATCH_SIZE) + 1} complete (${createdIds.length}/${leadsData.length})`);
