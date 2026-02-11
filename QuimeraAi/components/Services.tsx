@@ -4,7 +4,7 @@ import { getAnimationClass, getAnimationDelay } from '../utils/animations';
 import { useDesignTokens } from '../hooks/useDesignTokens';
 import { hexToRgba, toHex } from '../utils/colorUtils';
 import CornerGradient from './ui/CornerGradient';
-import { 
+import {
     // Base icons
     Code, Paintbrush2, Megaphone, BarChart, Scissors, Camera, ArrowRight,
     // Development & Technology
@@ -34,19 +34,19 @@ import {
 } from 'lucide-react';
 
 const paddingYClasses: Record<PaddingSize, string> = {
-  none: 'py-0',
-  sm: 'py-10 md:py-16',
-  md: 'py-16 md:py-24',
-  lg: 'py-20 md:py-32',
-  xl: 'py-24 md:py-40',
+    none: 'py-0',
+    sm: 'py-10 md:py-16',
+    md: 'py-16 md:py-24',
+    lg: 'py-20 md:py-32',
+    xl: 'py-24 md:py-40',
 };
 
 const paddingXClasses: Record<PaddingSize, string> = {
-  none: 'px-0',
-  sm: 'px-4',
-  md: 'px-6',
-  lg: 'px-8',
-  xl: 'px-12',
+    none: 'px-0',
+    sm: 'px-4',
+    md: 'px-6',
+    lg: 'px-8',
+    xl: 'px-12',
 };
 
 const titleSizeClasses: Record<FontSize, string> = {
@@ -64,13 +64,13 @@ const descriptionSizeClasses: Record<FontSize, string> = {
 };
 
 const borderRadiusClasses: Record<BorderRadiusSize, string> = {
-  none: 'rounded-none',
-  sm: 'rounded-sm',
-  md: 'rounded-md',
-  lg: 'rounded-lg',
-  xl: 'rounded-xl',
-  '2xl': 'rounded-2xl',
-  full: 'rounded-[2rem]',
+    none: 'rounded-none',
+    sm: 'rounded-sm',
+    md: 'rounded-md',
+    lg: 'rounded-lg',
+    xl: 'rounded-xl',
+    '2xl': 'rounded-2xl',
+    full: 'rounded-[2rem]',
 };
 
 const serviceIcons: Record<ServiceIcon, React.ReactNode> = {
@@ -191,36 +191,36 @@ const serviceIcons: Record<ServiceIcon, React.ReactNode> = {
 };
 
 interface ServiceCardProps {
-  icon: React.ReactNode;
-  title: string;
-  description: string;
-  accentColor: string;
-  headingColor: string;
-  textColor: string;
-  borderRadius: BorderRadiusSize;
-  borderColor: string;
-  cardBackground: string;
-  variant: 'cards' | 'grid' | 'minimal';
-  index: number;
-  animationType?: AnimationType;
-  enableAnimation?: boolean;
-  delay?: string;
+    icon: React.ReactNode;
+    title: string;
+    description: string;
+    accentColor: string;
+    headingColor: string;
+    textColor: string;
+    borderRadius: BorderRadiusSize;
+    borderColor: string;
+    cardBackground: string;
+    variant: 'cards' | 'grid' | 'minimal';
+    index: number;
+    animationType?: AnimationType;
+    enableAnimation?: boolean;
+    delay?: string;
 }
 
-const ServiceCard: React.FC<ServiceCardProps> = ({ 
-  icon, 
-  title, 
-  description, 
-  accentColor, 
-  headingColor,
-  textColor, 
-  borderRadius, 
-  borderColor, 
-  cardBackground,
-  variant,
-  animationType = 'fade-in-up',
-  enableAnimation = true,
-  delay = '0s'
+const ServiceCard: React.FC<ServiceCardProps> = ({
+    icon,
+    title,
+    description,
+    accentColor,
+    headingColor,
+    textColor,
+    borderRadius,
+    borderColor,
+    cardBackground,
+    variant,
+    animationType = 'fade-in-up',
+    enableAnimation = true,
+    delay = '0s'
 }) => {
     const radiusClass = borderRadiusClasses[borderRadius];
     const animationClass = getAnimationClass(animationType, enableAnimation);
@@ -228,15 +228,15 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
     // VARIANT 1: CLASSIC CARDS
     if (variant === 'cards') {
         return (
-            <div 
+            <div
                 className={`p-8 text-center border border-transparent hover:border-opacity-50 transition-all duration-300 group ${radiusClass} ${animationClass} relative overflow-hidden`}
                 style={{ backgroundColor: cardBackground, borderColor: borderColor, animationDelay: delay }}
             >
                 <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                
+
                 <div className="relative z-10 flex justify-center mb-6">
-                    <div 
-                        className="p-4 inline-flex rounded-2xl transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-3" 
+                    <div
+                        className="p-4 inline-flex rounded-2xl transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-3"
                         style={{ backgroundColor: hexToRgba(accentColor, 0.125), color: accentColor }}
                     >
                         {icon}
@@ -253,20 +253,20 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
     // VARIANT 2: MODERN GRID (Bento Style)
     if (variant === 'grid') {
         return (
-            <div 
+            <div
                 className={`h-full p-8 flex flex-col items-start text-left transition-all duration-300 group hover:-translate-y-1 ${radiusClass} ${animationClass}`}
-                style={{ 
-                    backgroundColor: cardBackground, 
+                style={{
+                    backgroundColor: cardBackground,
                     borderLeft: `4px solid ${accentColor}`,
                     animationDelay: delay
                 }}
             >
-                <div className="mb-6 p-3 rounded-lg bg-white/5 text-white group-hover:bg-[var(--accent)] group-hover:text-white transition-colors duration-300" style={{'--accent': accentColor} as any}>
-                     {React.cloneElement(icon as React.ReactElement<any>, { size: 24 })}
+                <div className="mb-6 p-3 rounded-lg bg-white/5 text-white group-hover:bg-[var(--accent)] group-hover:text-white transition-colors duration-300" style={{ '--accent': accentColor } as any}>
+                    {React.cloneElement(icon as React.ReactElement<any>, { size: 24 })}
                 </div>
                 <h3 className="text-xl font-bold mb-3 font-header" style={{ color: headingColor, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>{title}</h3>
                 <p className="font-body text-sm opacity-70 mb-6 flex-grow" style={{ color: textColor }}>{description}</p>
-                
+
                 <div className="mt-auto pt-4 flex items-center text-sm font-bold uppercase tracking-wider opacity-0 group-hover:opacity-100 transition-all transform translate-x-[-10px] group-hover:translate-x-0" style={{ color: accentColor }}>
                     Learn more <ArrowRight size={16} className="ml-2" />
                 </div>
@@ -301,68 +301,68 @@ interface ServicesProps extends ServicesData {
     cornerGradient?: CornerGradientConfig;
 }
 
-const Services: React.FC<ServicesProps> = ({ 
-    title, 
-    description, 
-    items = [], 
-    paddingY, 
-    paddingX, 
-    colors, 
-    borderRadius, 
-    titleFontSize = 'md', 
+const Services: React.FC<ServicesProps> = ({
+    title,
+    description,
+    items = [],
+    paddingY,
+    paddingX,
+    colors,
+    borderRadius,
+    titleFontSize = 'md',
     descriptionFontSize = 'md',
     servicesVariant = 'cards', // Default
     animationType = 'fade-in-up',
     enableCardAnimation = true,
     cornerGradient
 }) => {
-  // Get design tokens for primary color - use as fallback with 75% opacity
-  const { colors: tokenColors } = useDesignTokens();
-  const sectionBackground = colors?.background || hexToRgba(tokenColors.primary, 0.75);
-  
-  return (
-    <section id="services" className="w-full relative overflow-hidden" style={{ backgroundColor: sectionBackground }}>
-      <CornerGradient config={cornerGradient} />
-      <div className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]} relative z-10`}>
-        <div className={`max-w-3xl mx-auto mb-16 ${servicesVariant === 'minimal' ? 'text-left md:text-center' : 'text-center'}`}>
-            {servicesVariant === 'grid' && (
-                <span className="inline-block py-1 px-3 rounded-full text-xs font-bold uppercase tracking-widest mb-4" style={{ backgroundColor: hexToRgba(colors?.accent, 0.125), color: colors?.accent }}>
-                    Our Services
-                </span>
-            )}
-            <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold text-site-heading mb-6 font-header`} style={{ color: colors?.heading, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>{title}</h2>
-            <p className={`${descriptionSizeClasses[descriptionFontSize]} font-body max-w-2xl mx-auto`} style={{ color: colors?.description || colors?.text }}>
-                {description}
-            </p>
-        </div>
-        
-        <div className={`
+    // Get design tokens for primary color - use as fallback with 75% opacity
+    const { colors: tokenColors } = useDesignTokens();
+    const sectionBackground = colors?.background || hexToRgba(tokenColors.primary, 0.75);
+
+    return (
+        <section id="services" className="w-full relative overflow-hidden" style={{ backgroundColor: sectionBackground }}>
+            <CornerGradient config={cornerGradient} />
+            <div className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]} relative z-10`}>
+                <div className={`max-w-3xl mx-auto mb-16 ${servicesVariant === 'minimal' ? 'text-left md:text-center' : 'text-center'}`}>
+                    {servicesVariant === 'grid' && (
+                        <span className="inline-block py-1 px-3 rounded-full text-xs font-bold uppercase tracking-widest mb-4" style={{ backgroundColor: hexToRgba(colors?.accent, 0.125), color: colors?.accent }}>
+                            Our Services
+                        </span>
+                    )}
+                    <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold text-site-heading mb-6 font-header`} style={{ color: colors?.heading, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>{title}</h2>
+                    <p className={`${descriptionSizeClasses[descriptionFontSize]} font-body max-w-2xl mx-auto`} style={{ color: colors?.description || colors?.text }}>
+                        {description}
+                    </p>
+                </div>
+
+                <div className={`
             grid gap-8
             ${servicesVariant === 'minimal' ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-x-12 gap-y-8' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'}
         `}>
-            {items.map((service, index) => (
-                <ServiceCard 
-                    key={index}
-                    index={index}
-                    icon={serviceIcons[service.icon]}
-                    title={service.title}
-                    description={service.description}
-                    accentColor={colors?.accent}
-                    headingColor={(colors as any)?.cardHeading || '#ffffff'}
-                    textColor={(colors as any)?.cardText || colors?.text || '#94a3b8'}
-                    borderRadius={borderRadius}
-                    borderColor={colors?.borderColor}
-                    cardBackground={colors?.cardBackground || 'rgba(255,255,255,0.05)'}
-                    variant={servicesVariant}
-                    animationType={animationType}
-                    enableAnimation={enableCardAnimation}
-                    delay={getAnimationDelay(index)}
-                />
-            ))}
-        </div>
-      </div>
-    </section>
-  );
+                    {items.map((service, index) => (
+                        <ServiceCard
+                            key={index}
+                            index={index}
+                            icon={serviceIcons[service.icon] || serviceIcons['sparkles'] || <Sparkles size={32} />}
+                            title={service.title}
+                            description={service.description}
+                            accentColor={colors?.accent}
+                            headingColor={(colors as any)?.cardHeading || '#ffffff'}
+                            textColor={(colors as any)?.cardText || colors?.text || '#94a3b8'}
+                            borderRadius={borderRadius}
+                            borderColor={colors?.borderColor}
+                            cardBackground={colors?.cardBackground || 'rgba(255,255,255,0.05)'}
+                            variant={servicesVariant}
+                            animationType={animationType}
+                            enableAnimation={enableCardAnimation}
+                            delay={getAnimationDelay(index)}
+                        />
+                    ))}
+                </div>
+            </div>
+        </section>
+    );
 };
 
 export default Services;
