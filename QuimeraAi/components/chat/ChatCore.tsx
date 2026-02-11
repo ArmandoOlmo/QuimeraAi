@@ -14,6 +14,7 @@ import { logApiCall } from '../../services/apiLoggingService';
 import { useEcommerceChat } from './hooks/useEcommerceChat';
 import { useWebChatConversation } from './hooks/useWebChatConversation';
 import { getGlobalChatbotPrompts, getDefaultPrompts, applyPromptTemplate } from '../../utils/globalChatbotPrompts';
+import { elevenlabsTTS } from '../../utils/voiceProxyClient';
 import type { GlobalChatbotPrompts } from '../../types';
 
 // =============================================================================
@@ -411,6 +412,9 @@ const ChatCore: React.FC<ChatCoreProps> = ({
     // Voice Transcription Refs
     const voiceTranscriptRef = useRef<{ role: 'user' | 'model'; text: string }[]>([]);
     const currentModelResponseRef = useRef<string>('');
+
+    // ElevenLabs TTS audio ref
+    const elevenLabsAudioRef = useRef<HTMLAudioElement | null>(null);
 
     // Lead tracking ref
     const capturedLeadIdRef = useRef<string | null>(null);
@@ -1390,6 +1394,37 @@ ${suggestAvailableSlots()}
 
             // Save bot response to conversation for Inbox
             await saveConversationMessage({ role: 'model', text: cleanedResponse });
+
+            // ElevenLabs TTS auto-play: convert bot text response to audio
+            if (config.voiceProvider === 'elevenlabs' && config.enableElevenLabsTTS && config.elevenlabsVoiceId) {
+                try {
+                    // Strip markdown for cleaner TTS output
+                    const ttsText = cleanedResponse
+                        .replace(/[*_~`#>\-\[\]()!]/g, '')
+                        .replace(/\n{2,}/g, '. ')
+                        .replace(/\n/g, ' ')
+                        .trim();
+
+                    if (ttsText.length > 0) {
+                        console.log('[ChatCore] 🔊 ElevenLabs TTS: converting response to audio...');
+                        const ttsResult = await elevenlabsTTS(ttsText, config.elevenlabsVoiceId);
+
+                        // Stop any previous TTS audio
+                        if (elevenLabsAudioRef.current) {
+                            elevenLabsAudioRef.current.pause();
+                            elevenLabsAudioRef.current = null;
+                        }
+
+                        const audio = new Audio(`data:${ttsResult.mimeType};base64,${ttsResult.audio}`);
+                        elevenLabsAudioRef.current = audio;
+                        audio.play().catch(err => {
+                            console.warn('[ChatCore] 🔇 TTS autoplay blocked:', err.message);
+                        });
+                    }
+                } catch (ttsError: any) {
+                    console.warn('[ChatCore] ⚠️ ElevenLabs TTS failed:', ttsError.message);
+                }
+            }
 
             // If appointment was created, mark lead as captured
             if (appointmentCreated && !leadCaptured) {
