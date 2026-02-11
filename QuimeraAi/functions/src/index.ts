@@ -18,6 +18,13 @@ import { twilioVoiceWebhook } from './voice/twilioVoice';
 import { openclawProxy } from './voice/openclawProxy';
 import { outboundCall, outboundCallStatus } from './voice/outboundCall';
 import {
+    elevenlabsTTS,
+    elevenlabsListVoices,
+    elevenlabsCloneVoice,
+    elevenlabsDeleteVoice,
+    elevenlabsVoicePreview,
+} from './voice/elevenlabsVoiceService';
+import {
     createPaymentIntent,
     createCheckoutSession,
     stripeWebhook,
@@ -578,3 +585,19 @@ export { openclawProxy };
 
 // Outbound call functions (Quibo initiates calls via ElevenLabs)
 export { outboundCall, outboundCallStatus };
+
+// ElevenLabs Voice Service (TTS, voice cloning, voice management)
+export const elevenlabs = {
+    tts: elevenlabsTTS,
+    listVoices: elevenlabsListVoices,
+    cloneVoice: elevenlabsCloneVoice,
+    deleteVoice: elevenlabsDeleteVoice,
+    preview: elevenlabsVoicePreview,
+};
+export {
+    elevenlabsTTS,
+    elevenlabsListVoices,
+    elevenlabsCloneVoice,
+    elevenlabsDeleteVoice,
+    elevenlabsVoicePreview,
+};

@@ -96,10 +96,10 @@ export function playBase64Audio(base64Audio: string, mimeType: string = 'audio/m
         try {
             const audioData = `data:${mimeType};base64,${base64Audio}`;
             const audio = new Audio(audioData);
-            
+
             audio.onended = () => resolve();
             audio.onerror = (e) => reject(new Error('Audio playback failed'));
-            
+
             audio.play().catch(reject);
         } catch (error) {
             reject(error);
@@ -118,7 +118,7 @@ export function createAudioPlayer(base64Audio: string, mimeType: string = 'audio
 } {
     const audioData = `data:${mimeType};base64,${base64Audio}`;
     const audio = new Audio(audioData);
-    
+
     return {
         audio,
         play: () => audio.play(),
@@ -135,4 +135,147 @@ export function createAudioPlayer(base64Audio: string, mimeType: string = 'audio
  */
 export function isAudioPlaying(audio: HTMLAudioElement): boolean {
     return !audio.paused && !audio.ended && audio.currentTime > 0;
+}
+
+// =============================================================================
+// ELEVENLABS VOICE CLIENT
+// =============================================================================
+
+export interface ElevenLabsVoice {
+    voice_id: string;
+    name: string;
+    category: 'premade' | 'cloned' | 'generated';
+    description: string;
+    labels: Record<string, string>;
+    preview_url: string | null;
+    fine_tuning?: any;
+}
+
+export interface ElevenLabsTTSResponse {
+    audio: string; // base64 encoded MP3
+    mimeType: string;
+    voiceId: string;
+}
+
+export interface CloneVoiceResult {
+    voice_id: string;
+    name: string;
+    success: boolean;
+}
+
+/**
+ * ElevenLabs Text-to-Speech
+ */
+export async function elevenlabsTTS(
+    text: string,
+    voiceId: string,
+    options: { modelId?: string; stability?: number; similarity?: number } = {}
+): Promise<ElevenLabsTTSResponse> {
+    const response = await fetch(`${VOICE_PROXY_BASE_URL}/elevenlabs-tts`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            text,
+            voiceId,
+            modelId: options.modelId || 'eleven_multilingual_v2',
+            stability: options.stability ?? 0.5,
+            similarity: options.similarity ?? 0.75,
+        }),
+    });
+
+    if (!response.ok) {
+        const error = await response.json().catch(() => ({ error: 'Unknown error' }));
+        throw new Error(error.error || 'ElevenLabs TTS failed');
+    }
+
+    return response.json();
+}
+
+/**
+ * List all ElevenLabs voices (prebuilt + cloned)
+ */
+export async function listElevenLabsVoices(): Promise<ElevenLabsVoice[]> {
+    const response = await fetch(`${VOICE_PROXY_BASE_URL}/elevenlabs-listVoices`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+    });
+
+    if (!response.ok) {
+        throw new Error('Failed to list ElevenLabs voices');
+    }
+
+    const data = await response.json();
+    return data.voices || [];
+}
+
+/**
+ * Clone a voice using an audio file (Instant Voice Cloning)
+ */
+export async function cloneVoice(
+    name: string,
+    audioBase64: string,
+    projectId: string,
+    options: {
+        description?: string;
+        audioFileName?: string;
+        audioMimeType?: string;
+        userId?: string;
+        labels?: Record<string, string>;
+    } = {}
+): Promise<CloneVoiceResult> {
+    const response = await fetch(`${VOICE_PROXY_BASE_URL}/elevenlabs-cloneVoice`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            name,
+            audioBase64,
+            projectId,
+            description: options.description || '',
+            audioFileName: options.audioFileName || 'voice_sample.mp3',
+            audioMimeType: options.audioMimeType || 'audio/mpeg',
+            userId: options.userId || '',
+            labels: options.labels ? JSON.stringify(options.labels) : undefined,
+        }),
+    });
+
+    if (!response.ok) {
+        const error = await response.json().catch(() => ({ error: 'Unknown error' }));
+        throw new Error(error.error || 'Voice cloning failed');
+    }
+
+    return response.json();
+}
+
+/**
+ * Delete a cloned voice
+ */
+export async function deleteClonedVoice(voiceId: string, projectId?: string): Promise<void> {
+    const response = await fetch(`${VOICE_PROXY_BASE_URL}/elevenlabs-deleteVoice`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ voiceId, projectId }),
+    });
+
+    if (!response.ok) {
+        const error = await response.json().catch(() => ({ error: 'Unknown error' }));
+        throw new Error(error.error || 'Failed to delete voice');
+    }
+}
+
+/**
+ * Generate a preview of a voice
+ */
+export async function previewVoice(voiceId: string, text?: string): Promise<ElevenLabsTTSResponse> {
+    const response = await fetch(`${VOICE_PROXY_BASE_URL}/elevenlabs-preview`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ voiceId, text }),
+    });
+
+    if (!response.ok) {
+        const error = await response.json().catch(() => ({ error: 'Unknown error' }));
+        throw new Error(error.error || 'Voice preview failed');
+    }
+
+    return response.json();
 }

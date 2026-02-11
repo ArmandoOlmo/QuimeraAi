@@ -23,6 +23,7 @@ import KnowledgeLinksManager from './KnowledgeLinksManager';
 import LeadCaptureSettings from './LeadCaptureSettings';
 import ChatCustomizationSettings from './ChatCustomizationSettings';
 import SocialChannelsSettings from './SocialChannelsSettings';
+import VoiceSettings from './VoiceSettings';
 import SocialChatInbox from './SocialChatInbox';
 import { useProjectChatStats, ProjectChatStats } from '../../chat/hooks/useProjectChatStats';
 
@@ -874,70 +875,9 @@ const AiAssistantDashboard: React.FC = () => {
                 );
 
             case 'voice':
-                const filteredVoices = voiceGenderFilter === 'all'
-                    ? voices
-                    : voices.filter(v => v.gender === voiceGenderFilter);
-
                 return (
-                    <div className="space-y-6 animate-fade-in-up">
-                        <div className="bg-card border border-border p-6 rounded-xl flex items-center justify-between">
-                            <div>
-                                <h3 className="font-bold text-lg flex items-center"><Mic className="mr-2 text-primary" /> {t('aiAssistant.dashboard.enableLiveVoice')}</h3>
-                                <p className="text-sm text-muted-foreground">{t('aiAssistant.dashboard.enableLiveVoiceDesc')}</p>
-                            </div>
-                            <button
-                                onClick={() => updateForm('enableLiveVoice', !formData.enableLiveVoice)}
-                                className={`shrink-0 relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${formData.enableLiveVoice ? 'bg-primary' : 'bg-secondary'}`}
-                            >
-                                <span className={`shrink-0 inline-block h-4 w-4 transform rounded-full bg-white transition ${formData.enableLiveVoice ? 'translate-x-6' : 'translate-x-1'}`} />
-                            </button>
-                        </div>
-
-                        <div className="bg-card border border-border p-6 rounded-xl">
-                            <div className="flex items-center justify-between mb-4">
-                                <label className="block text-sm font-bold text-foreground flex items-center"><Radio className="mr-2 text-primary" /> {t('aiAssistant.dashboard.selectVoice')}</label>
-
-                                {/* Gender Filter */}
-                                <div className="flex gap-1 bg-secondary/30 p-1 rounded-lg">
-                                    {(['all', 'Male', 'Female'] as const).map((filter) => (
-                                        <button
-                                            key={filter}
-                                            onClick={() => setVoiceGenderFilter(filter)}
-                                            className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${voiceGenderFilter === filter
-                                                ? 'bg-primary text-primary-foreground shadow-sm'
-                                                : 'text-muted-foreground hover:text-foreground hover:bg-secondary/50'
-                                                }`}
-                                        >
-                                            {filter === 'all' ? 'Todos' : filter === 'Male' ? '♂ Masculino' : '♀ Femenino'}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                {filteredVoices.map(v => (
-                                    <button
-                                        key={v.name}
-                                        onClick={() => updateForm('voiceName', v.name)}
-                                        className={`p-4 rounded-xl border text-left transition-all hover:shadow-md flex items-center ${formData.voiceName === v.name ? 'border-primary bg-primary/5 ring-1 ring-primary' : 'border-border bg-secondary/10 hover:border-primary/50'}`}
-                                    >
-                                        <div className={`w-10 h-10 rounded-full flex items-center justify-center mr-4 ${formData.voiceName === v.name ? 'bg-primary text-white' : 'bg-secondary text-muted-foreground'}`}>
-                                            {v.gender === 'Male' ? '♂' : '♀'}
-                                        </div>
-                                        <div>
-                                            <h4 className="font-bold text-foreground">{v.name}</h4>
-                                            <p className="text-xs text-muted-foreground">{v.description}</p>
-                                        </div>
-                                    </button>
-                                ))}
-                            </div>
-
-                            {filteredVoices.length === 0 && (
-                                <div className="text-center py-8 text-muted-foreground">
-                                    <p className="text-sm">No hay voces disponibles con este filtro</p>
-                                </div>
-                            )}
-                        </div>
+                    <div className="animate-fade-in-up">
+                        <VoiceSettings formData={formData} updateForm={updateForm} />
                     </div>
                 );
 

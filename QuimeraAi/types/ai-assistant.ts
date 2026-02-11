@@ -190,10 +190,36 @@ export interface AiAssistantConfig {
     appearance?: ChatAppearanceConfig;
     enableLiveVoice: boolean;
     voiceName: 'Puck' | 'Charon' | 'Kore' | 'Fenrir' | 'Zephyr';
+    // ElevenLabs Voice Configuration
+    /** Voice provider: 'gemini' uses prebuilt Gemini voices, 'elevenlabs' uses ElevenLabs TTS */
+    voiceProvider?: 'gemini' | 'elevenlabs';
+    /** ElevenLabs voice ID (for TTS and cloned voices) */
+    elevenlabsVoiceId?: string;
+    /** ElevenLabs voice display name */
+    elevenlabsVoiceName?: string;
+    /** Whether to auto-play ElevenLabs TTS for bot text responses */
+    enableElevenLabsTTS?: boolean;
     // CMS articles included as chatbot knowledge sources
     cmsArticleIds?: string[];
     // Social media channel integrations
     socialChannels?: SocialChannelsConfig;
+}
+
+/**
+ * Cloned voice metadata stored in Firestore at projects/{projectId}/voices/{voiceId}
+ */
+export interface ClonedVoice {
+    /** ElevenLabs voice_id */
+    id: string;
+    name: string;
+    description?: string;
+    projectId: string;
+    tenantId?: string;
+    createdAt: { seconds: number; nanoseconds: number };
+    createdBy: string;
+    sampleCount: number;
+    labels?: Record<string, string>;
+    provider: 'elevenlabs';
 }
 
 // =============================================================================
