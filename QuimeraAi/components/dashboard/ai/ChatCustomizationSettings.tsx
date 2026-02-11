@@ -11,6 +11,7 @@ import { ChatAppearanceConfig } from '../../../types';
 import { getDefaultAppearanceConfig, THEME_PRESETS, applyThemePreset, buildProjectPreset } from '../../../utils/chatThemes';
 import ChatbotWidget from '../../ChatbotWidget';
 import EcommerceImagePicker from '../ecommerce/components/EcommerceImagePicker';
+import ColorControl from '../../ui/ColorControl';
 import { useToast } from '../../../contexts/ToastContext';
 
 // Emoji picker simple
@@ -269,7 +270,7 @@ const ChatCustomizationSettings: React.FC = () => {
                         <Palette className="text-primary" size={20} />
                         Color Palette
                     </h3>
-                    <div className="grid grid-cols-2 gap-x-8 gap-y-4">
+                    <div className="grid grid-cols-2 gap-x-6 gap-y-1">
                         {[
                             { key: 'primaryColor', label: 'Primary' },
                             { key: 'secondaryColor', label: 'Secondary' },
@@ -284,20 +285,12 @@ const ChatCustomizationSettings: React.FC = () => {
                             { key: 'inputBorder', label: 'Input Border' },
                             { key: 'inputText', label: 'Input Text' },
                         ].map(({ key, label }) => (
-                            <div key={key} className="flex items-center justify-between gap-3">
-                                <label className="text-sm font-medium text-foreground whitespace-nowrap">{label}</label>
-                                <div className="flex items-center gap-2">
-                                    <input
-                                        type="color"
-                                        value={(config.colors as any)?.[key] || '#000000'}
-                                        onChange={(e) => updateColor(key, e.target.value)}
-                                        className="w-9 h-9 rounded-lg border border-border cursor-pointer bg-transparent p-0.5"
-                                    />
-                                    <span className="text-xs text-muted-foreground font-mono w-[4.5rem] text-right">
-                                        {(config.colors as any)?.[key] || '#000000'}
-                                    </span>
-                                </div>
-                            </div>
+                            <ColorControl
+                                key={key}
+                                label={label}
+                                value={(config.colors as any)?.[key] || '#000000'}
+                                onChange={(val) => updateColor(key, val)}
+                            />
                         ))}
                     </div>
                 </div>
