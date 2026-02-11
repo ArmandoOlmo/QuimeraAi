@@ -640,17 +640,21 @@ export const TenantProvider: React.FC<{ children: ReactNode }> = ({ children }) 
             }
         }
 
-        // Log agency activity
-        await addDoc(collection(db, 'agencyActivity'), {
-            agencyTenantId: currentTenant.id,
-            type: 'client_created',
-            clientTenantId: subClientId,
-            clientName: data.name,
-            description: `Se creó el nuevo cliente: ${data.name}`,
-            timestamp: serverTimestamp(),
-            createdBy: user?.uid,
-            createdByName: userDocument?.name || user?.displayName || '',
-        });
+        // Log agency activity (non-blocking - may fail if Firestore rules restrict)
+        try {
+            await addDoc(collection(db, 'agencyActivity'), {
+                agencyTenantId: currentTenant.id,
+                type: 'client_created',
+                clientTenantId: subClientId,
+                clientName: data.name,
+                description: `Se creó el nuevo cliente: ${data.name}`,
+                timestamp: serverTimestamp(),
+                createdBy: user?.uid,
+                createdByName: userDocument?.name || user?.displayName || '',
+            });
+        } catch (activityErr) {
+            console.warn('Could not log agency activity (non-critical):', activityErr);
+        }
 
         // Update parent tenant's sub-client count
         await updateDoc(doc(db, 'tenants', currentTenant.id), {

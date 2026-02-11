@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAI } from '../../../contexts/ai';
 import { useProject } from '../../../contexts/project';
-import { Shield, Save, Sparkles, Power, FileText, LogOut, Users, Lock, Sliders, MessageSquare, Gift } from 'lucide-react';
+import { Shield, Save, Sparkles, Power, FileText, LogOut, Users, Lock, Sliders, MessageSquare, Gift, Clock, Tag } from 'lucide-react';
 import { LeadCaptureConfig } from '../../../types';
 
 const LeadCaptureSettings: React.FC = () => {
@@ -17,7 +17,10 @@ const LeadCaptureSettings: React.FC = () => {
         exitIntentEnabled: true,
         exitIntentOffer: '🎁 ¡Espera! Déjame tu email y te envío información exclusiva + 20% de descuento',
         intentKeywords: [],
-        progressiveProfilingEnabled: true
+        progressiveProfilingEnabled: true,
+        businessHoursStart: 9,
+        businessHoursEnd: 18,
+        businessDays: [1, 2, 3, 4, 5, 6]
     };
 
     const [config, setConfig] = useState<LeadCaptureConfig>(
@@ -253,6 +256,113 @@ const LeadCaptureSettings: React.FC = () => {
                         </p>
                     </div>
                 )}
+            </div>
+
+            {/* Intent Keywords */}
+            <div className="bg-card border border-border rounded-xl p-6 space-y-4">
+                <div className="flex items-center gap-3 mb-2">
+                    <div className="p-2 bg-primary/20 rounded-lg">
+                        <Tag size={20} className="text-primary" />
+                    </div>
+                    <div>
+                        <h3 className="font-semibold text-foreground">Intent Keywords</h3>
+                        <p className="text-xs text-muted-foreground">Custom keywords that trigger lead capture when detected in conversation</p>
+                    </div>
+                </div>
+                <div>
+                    <textarea
+                        value={(config.intentKeywords || []).join(', ')}
+                        onChange={(e) => setConfig({
+                            ...config,
+                            intentKeywords: e.target.value
+                                .split(',')
+                                .map(k => k.trim())
+                                .filter(k => k.length > 0)
+                        })}
+                        disabled={!config.enabled}
+                        rows={3}
+                        className="w-full px-4 py-3 bg-background border border-border rounded-lg focus:ring-2 focus:ring-ring focus:border-transparent text-foreground disabled:opacity-50"
+                        placeholder="precio, comprar, cotización, buy, pricing, schedule..."
+                    />
+                    <p className="text-xs text-muted-foreground mt-2">
+                        Comma-separated keywords. Leave empty to use built-in defaults (precio, buy, quote, schedule, etc.)
+                    </p>
+                </div>
+            </div>
+
+            {/* Business Hours */}
+            <div className="bg-card border border-border rounded-xl p-6 space-y-4">
+                <div className="flex items-center gap-3 mb-2">
+                    <div className="p-2 bg-primary/20 rounded-lg">
+                        <Clock size={20} className="text-primary" />
+                    </div>
+                    <div>
+                        <h3 className="font-semibold text-foreground">Business Hours</h3>
+                        <p className="text-xs text-muted-foreground">Set your business hours for appointment scheduling suggestions</p>
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                    <div>
+                        <label className="text-sm font-medium text-foreground mb-1 block">Opening Time</label>
+                        <select
+                            value={config.businessHoursStart ?? 9}
+                            onChange={(e) => setConfig({ ...config, businessHoursStart: parseInt(e.target.value) })}
+                            disabled={!config.enabled}
+                            className="w-full px-3 py-2 bg-background border border-border rounded-lg text-foreground disabled:opacity-50"
+                        >
+                            {Array.from({ length: 24 }, (_, i) => (
+                                <option key={i} value={i}>
+                                    {i === 0 ? '12:00 AM' : i < 12 ? `${i}:00 AM` : i === 12 ? '12:00 PM' : `${i - 12}:00 PM`}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+                    <div>
+                        <label className="text-sm font-medium text-foreground mb-1 block">Closing Time</label>
+                        <select
+                            value={config.businessHoursEnd ?? 18}
+                            onChange={(e) => setConfig({ ...config, businessHoursEnd: parseInt(e.target.value) })}
+                            disabled={!config.enabled}
+                            className="w-full px-3 py-2 bg-background border border-border rounded-lg text-foreground disabled:opacity-50"
+                        >
+                            {Array.from({ length: 24 }, (_, i) => (
+                                <option key={i} value={i}>
+                                    {i === 0 ? '12:00 AM' : i < 12 ? `${i}:00 AM` : i === 12 ? '12:00 PM' : `${i - 12}:00 PM`}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label className="text-sm font-medium text-foreground mb-2 block">Business Days</label>
+                    <div className="flex flex-wrap gap-2">
+                        {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day, index) => {
+                            const activeDays = config.businessDays ?? [1, 2, 3, 4, 5, 6];
+                            const isActive = activeDays.includes(index);
+                            return (
+                                <button
+                                    key={day}
+                                    type="button"
+                                    disabled={!config.enabled}
+                                    onClick={() => {
+                                        const updated = isActive
+                                            ? activeDays.filter(d => d !== index)
+                                            : [...activeDays, index].sort();
+                                        setConfig({ ...config, businessDays: updated });
+                                    }}
+                                    className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 ${isActive
+                                            ? 'bg-primary text-primary-foreground'
+                                            : 'bg-secondary text-muted-foreground hover:bg-secondary/80'
+                                        }`}
+                                >
+                                    {day}
+                                </button>
+                            );
+                        })}
+                    </div>
+                </div>
             </div>
 
             {/* Info Box */}

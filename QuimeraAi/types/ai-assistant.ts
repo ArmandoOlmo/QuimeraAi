@@ -28,8 +28,15 @@ export interface LeadCaptureConfig {
     requireEmailForAdvancedInfo: boolean;
     exitIntentEnabled: boolean;
     exitIntentOffer?: string;
+    /** Custom intent keywords for lead detection. If empty, defaults are used. */
     intentKeywords: string[];
     progressiveProfilingEnabled: boolean;
+    /** Business hours start (0-23). Default: 9 */
+    businessHoursStart?: number;
+    /** Business hours end (0-23). Default: 18 */
+    businessHoursEnd?: number;
+    /** Business days (0=Sun, 1=Mon, ... 6=Sat). Default: [1,2,3,4,5,6] (Mon-Sat) */
+    businessDays?: number[];
 }
 
 // =============================================================================

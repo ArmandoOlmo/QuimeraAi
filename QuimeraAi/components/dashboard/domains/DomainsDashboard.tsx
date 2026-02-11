@@ -1447,7 +1447,7 @@ const DomainsDashboard: React.FC = () => {
                                     className="w-full bg-secondary/30 border border-border rounded-lg py-3 px-4 focus:ring-2 focus:ring-primary/50 outline-none transition-all font-medium disabled:opacity-50"
                                 >
                                     <option value="">{t('domainsDashboard.selectProject', 'Selecciona un proyecto...')}</option>
-                                    {projects.map(project => (
+                                    {projects.filter(p => p.status !== 'Template').map(project => (
                                         <option key={project.id} value={project.id}>
                                             {project.name}
                                         </option>

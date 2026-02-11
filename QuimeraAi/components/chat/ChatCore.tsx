@@ -136,15 +136,20 @@ function floatTo16BitPCM(float32Array: Float32Array): ArrayBuffer {
 // =============================================================================
 
 const detectLeadIntent = (message: string): boolean => {
-    const intentKeywords = [
+    const defaultKeywords = [
         'precio', 'costo', 'cotización', 'comprar', 'contratar', 'disponibilidad',
         'agendar', 'reunión', 'demostración', 'demo', 'presentación',
         'price', 'buy', 'quote', 'schedule', 'demo', 'meeting', 'purchase',
         'order', 'pricing', 'cost', 'how much', 'cuanto cuesta', 'quiero comprar'
     ];
 
-    return intentKeywords.some(keyword =>
-        message.toLowerCase().includes(keyword)
+    // Use configurable keywords from leadConfig if provided, otherwise fall back to defaults
+    const keywords = leadConfig.intentKeywords?.length > 0
+        ? leadConfig.intentKeywords
+        : defaultKeywords;
+
+    return keywords.some(keyword =>
+        message.toLowerCase().includes(keyword.toLowerCase())
     );
 };
 
@@ -467,43 +472,60 @@ const ChatCore: React.FC<ChatCoreProps> = ({
             return `- ${startDay} ${startDate} de ${startMonth}: ${startTime} - ${endTime} (${apt.title})`;
         }).join('\n');
 
-        // Generate available time suggestions (business hours: 9 AM - 6 PM, Mon-Sat)
+        // Generate available time suggestions using configurable business hours
+        const businessHoursStart = leadConfig.businessHoursStart ?? 9;
+        const businessHoursEnd = leadConfig.businessHoursEnd ?? 18;
+        const businessDays = leadConfig.businessDays ?? [1, 2, 3, 4, 5, 6]; // Default: Mon-Sat
+
+        const dayNames = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+        const activeDayNames = businessDays.map(d => dayNames[d]).join(', ');
+        const closedDayNames = [0, 1, 2, 3, 4, 5, 6]
+            .filter(d => !businessDays.includes(d))
+            .map(d => dayNames[d]).join(', ');
+
+        const formatHour = (h: number) => {
+            const ampm = h >= 12 ? 'PM' : 'AM';
+            const hour12 = h > 12 ? h - 12 : (h === 0 ? 12 : h);
+            return `${hour12}:00 ${ampm}`;
+        };
+
         const suggestAvailableSlots = () => {
             const suggestions: string[] = [];
-            const businessHours = { start: 9, end: 18 }; // 9 AM to 6 PM
 
             for (let dayOffset = 1; dayOffset <= 7 && suggestions.length < 5; dayOffset++) {
                 const checkDate = new Date(now);
                 checkDate.setDate(now.getDate() + dayOffset);
 
-                // Skip Sundays (day 0)
-                if (checkDate.getDay() === 0) continue;
+                // Skip non-business days
+                if (!businessDays.includes(checkDate.getDay())) continue;
 
                 const dayName = daysOfWeek[checkDate.getDay()];
                 const dateNum = checkDate.getDate();
                 const monthName = monthsOfYear[checkDate.getMonth()];
 
-                // Check morning slot (10 AM)
+                // Check morning slot (1 hour after opening)
+                const morningHour = businessHoursStart + 1;
                 const morningSlot = new Date(checkDate);
-                morningSlot.setHours(10, 0, 0, 0);
+                morningSlot.setHours(morningHour, 0, 0, 0);
                 const morningBusy = upcomingAppointments.some(apt =>
                     apt.startDate.getTime() <= morningSlot.getTime() &&
                     apt.endDate.getTime() > morningSlot.getTime()
                 );
 
-                // Check afternoon slot (3 PM)
+                // Check afternoon slot (midpoint of business hours)
+                const afternoonHour = Math.floor((businessHoursStart + businessHoursEnd) / 2) + 1;
                 const afternoonSlot = new Date(checkDate);
-                afternoonSlot.setHours(15, 0, 0, 0);
+                afternoonSlot.setHours(afternoonHour, 0, 0, 0);
                 const afternoonBusy = upcomingAppointments.some(apt =>
                     apt.startDate.getTime() <= afternoonSlot.getTime() &&
                     apt.endDate.getTime() > afternoonSlot.getTime()
                 );
 
                 if (!morningBusy) {
-                    suggestions.push(`${dayName} ${dateNum} de ${monthName} a las 10:00 AM`);
+                    suggestions.push(`${dayName} ${dateNum} de ${monthName} a las ${formatHour(morningHour)}`);
                 }
                 if (!afternoonBusy && suggestions.length < 5) {
-                    suggestions.push(`${dayName} ${dateNum} de ${monthName} a las 3:00 PM`);
+                    suggestions.push(`${dayName} ${dateNum} de ${monthName} a las ${formatHour(afternoonHour)}`);
                 }
             }
 
@@ -519,7 +541,7 @@ const ChatCore: React.FC<ChatCoreProps> = ({
             Zona horaria: ${Intl.DateTimeFormat().resolvedOptions().timeZone}
             
             === AGENDA Y DISPONIBILIDAD ===
-            Horario de atención: Lunes a Sábado, 9:00 AM - 6:00 PM
+            Horario de atención: ${activeDayNames}, ${formatHour(businessHoursStart)} - ${formatHour(businessHoursEnd)}
             
             ${upcomingAppointments.length > 0 ? `HORARIOS OCUPADOS (próximos 14 días):
 ${busySlots}` : 'No hay citas programadas en los próximos días.'}
@@ -531,7 +553,7 @@ ${suggestAvailableSlots()}
             - Revisa los horarios ocupados antes de ofrecer una cita
             - Sugiere los horarios disponibles al cliente
             - Si el cliente pide un horario ocupado, ofrece alternativas cercanas
-            - Horario de atención: Lunes a Sábado, 9 AM - 6 PM (cerrado domingos)
+            - Horario de atención: ${activeDayNames}, ${formatHour(businessHoursStart)} - ${formatHour(businessHoursEnd)}${closedDayNames ? ` (cerrado ${closedDayNames})` : ''}
         `;
 
         const businessContext = `

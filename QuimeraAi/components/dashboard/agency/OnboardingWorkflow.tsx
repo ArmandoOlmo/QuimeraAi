@@ -136,7 +136,7 @@ export function OnboardingWorkflow({
 
       const autoProvisionClient = httpsCallable(
         functions,
-        'autoProvisionClient'
+        'agencyOnboarding-autoProvision'
       );
 
       const result = await autoProvisionClient({

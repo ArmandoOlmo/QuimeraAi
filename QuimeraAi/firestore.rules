@@ -402,6 +402,23 @@ service cloud.firestore {
     }
 
     // ============================================
+    // PUBLIC BIO PAGES - PUBLIC ACCESS
+    // Public read for bio link pages (accessible without authentication)
+    // Write only by the bio page owner or superadmin
+    // ============================================
+    match /publicBioPages/{bioPageId} {
+      allow read: if true;
+      allow create: if request.auth != null && (
+        isSuperAdminOrOwner() ||
+        request.resource.data.ownerId == request.auth.uid
+      );
+      allow update, delete: if request.auth != null && (
+        isSuperAdminOrOwner() ||
+        resource.data.ownerId == request.auth.uid
+      );
+    }
+
+    // ============================================
     // CUSTOM DOMAINS - SECURED
     // Public read for domain resolution
     // Write only by domain owner or superadmin
@@ -423,6 +440,16 @@ service cloud.firestore {
     match /domainOrders/{orderId} {
       allow read: if request.auth != null;
       allow write: if false;
+    }
+
+    // ============================================
+    // AGENCY ACTIVITY FEED
+    // Agency owners/admins can read and create activity entries
+    // ============================================
+    match /agencyActivity/{activityId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null;
+      allow update, delete: if request.auth != null && isSuperAdminOrOwner();
     }
 
     // Default deny

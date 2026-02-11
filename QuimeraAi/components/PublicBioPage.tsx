@@ -4,11 +4,12 @@
  * Route: /bio/:username
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { ExternalLink, Loader2, Link2, MessageCircle, X, Send } from 'lucide-react';
-import { db, collection, query, where, getDocs } from '../firebase';
+import { db, doc, getDoc, addDoc, collection, serverTimestamp } from '../firebase';
 import type { BioLink, BioProfile, BioTheme } from '../contexts/bioPage';
 import type { AiAssistantConfig } from '../types/ai-assistant';
+import type { Lead } from '../types';
 import ChatCore from './chat/ChatCore';
 
 interface PublicBioPageData {
@@ -19,6 +20,7 @@ interface PublicBioPageData {
     links: BioLink[];
     isPublished: boolean;
     projectId?: string;
+    ownerId?: string;
     aiAssistant?: AiAssistantConfig;
 }
 
@@ -44,19 +46,17 @@ const PublicBioPage: React.FC<PublicBioPageProps> = ({ username }) => {
             }
 
             try {
-                // Query the publicBioPages collection by username
-                const publicBioRef = collection(db, 'publicBioPages');
-                const q = query(publicBioRef, where('username', '==', bioUsername));
-                const snapshot = await getDocs(q);
+                // Direct document lookup by username (document ID = lowercase username)
+                const bioDocRef = doc(db, 'publicBioPages', bioUsername.toLowerCase());
+                const bioDocSnap = await getDoc(bioDocRef);
 
-                if (snapshot.empty) {
+                if (!bioDocSnap.exists()) {
                     setError('Bio page not found');
                     setIsLoading(false);
                     return;
                 }
 
-                const doc = snapshot.docs[0];
-                const data = doc.data() as Omit<PublicBioPageData, 'id'>;
+                const data = bioDocSnap.data() as Omit<PublicBioPageData, 'id'>;
 
                 if (!data.isPublished) {
                     setError('This bio page is not published');
@@ -64,7 +64,7 @@ const PublicBioPage: React.FC<PublicBioPageProps> = ({ username }) => {
                     return;
                 }
 
-                setBioPageData({ ...data, id: doc.id });
+                setBioPageData({ ...data, id: bioDocSnap.id });
             } catch (err) {
                 console.error('Error fetching bio page:', err);
                 setError('Failed to load bio page');
@@ -75,6 +75,34 @@ const PublicBioPage: React.FC<PublicBioPageProps> = ({ username }) => {
 
         fetchBioPage();
     }, [bioUsername]);
+
+    // Lead capture handler for public bio page chatbot
+    const handleLeadCapture = useCallback(async (leadData: Partial<Lead>): Promise<string | undefined> => {
+        if (!bioPageData?.projectId) {
+            console.warn('[PublicBioPage] Cannot capture lead: no projectId');
+            return undefined;
+        }
+
+        try {
+            // Write leads to publicLeads collection (accessible without auth)
+            // The project owner can read these via their dashboard
+            const publicLeadsCol = collection(db, 'publicLeads');
+            const docRef = await addDoc(publicLeadsCol, {
+                ...leadData,
+                projectId: bioPageData.projectId,
+                ownerId: bioPageData.ownerId || null,
+                source: 'bio_page',
+                bioUsername: bioPageData.username,
+                createdAt: serverTimestamp(),
+            });
+
+            console.log('[PublicBioPage] Lead captured:', docRef.id);
+            return docRef.id;
+        } catch (error) {
+            console.error('[PublicBioPage] Error capturing lead:', error);
+            return undefined;
+        }
+    }, [bioPageData]);
 
     // Track link click
     const handleLinkClick = (link: BioLink) => {
@@ -475,6 +503,7 @@ const PublicBioPage: React.FC<PublicBioPageProps> = ({ username }) => {
                                 onClose={() => setIsChatbotOpen(false)}
                                 autoOpen={true}
                                 isEmbedded={true}
+                                onLeadCapture={handleLeadCapture}
                                 className="h-full flex-1"
                             />
                         ) : (

@@ -372,6 +372,10 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
                 if (storedProject && !data) {
                     // Project exists and we don't have data loaded - restore it
                     console.log('[ProjectContext] Restoring project from localStorage:', storedProject.name);
+
+                    // Guard against auto-save during restoration
+                    isInitialLoadRef.current = true;
+
                     setData(storedProject.data);
                     setTheme(storedProject.theme);
                     setBrandIdentity(storedProject.brandIdentity || initialData.brandIdentity);
@@ -403,6 +407,11 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
                             console.error('[ProjectContext] Error migrating legacy project:', error);
                         }
                     }
+
+                    // Allow auto-save after state has settled
+                    setTimeout(() => {
+                        isInitialLoadRef.current = false;
+                    }, 1500);
                 } else if (!storedProject) {
                     // Stored project no longer exists - clear it
                     console.log('[ProjectContext] Stored project no longer exists, clearing');
@@ -471,6 +480,14 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
 
         console.log('[ProjectContext] Loading project:', project.name);
 
+        // CRITICAL: Set initial load guard BEFORE any state updates to prevent
+        // auto-save from firing during the project switch and overwriting the
+        // wrong project's data. This prevents a race condition where React
+        // processes state changes (setData, setActiveProjectId) during an async
+        // gap (await import) and the auto-save effect fires before this guard
+        // was previously set.
+        isInitialLoadRef.current = true;
+
         setActiveProjectId(projectId);
         setData(project.data);
         setTheme(project.theme);
@@ -502,10 +519,11 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         const isTemplate = project.status === 'Template';
         setIsEditingTemplate(isTemplate && fromAdmin);
 
-        isInitialLoadRef.current = true;
+        // Reset initial load guard after state has settled (give React time
+        // to process the batched updates before allowing auto-save again)
         setTimeout(() => {
             isInitialLoadRef.current = false;
-        }, 1000);
+        }, 1500);
 
         if (navigateToEditor) {
             router.navigate(`/editor/${projectId}`);
@@ -775,6 +793,13 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         }
 
         autoSaveTimerRef.current = setTimeout(() => {
+            // SAFETY NET: Double-check isInitialLoadRef inside the callback.
+            // This prevents saving during a project switch if the effect body
+            // check passed but loadProject set the guard before the timer fired.
+            if (isInitialLoadRef.current) {
+                console.log('[ProjectContext] Auto-save skipped: project is loading');
+                return;
+            }
             saveProject().catch(console.error);
         }, 2000);
 

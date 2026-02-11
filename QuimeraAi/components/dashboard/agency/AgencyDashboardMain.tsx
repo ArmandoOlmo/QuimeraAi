@@ -6,10 +6,10 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Building2, Menu, CreditCard, FileText, UserPlus, Package, LayoutDashboard, BarChart3, Globe, Layers, PenTool, Navigation } from 'lucide-react';
+import { getFunctions, httpsCallable } from 'firebase/functions';
 import { useRouter } from '../../../hooks/useRouter';
 import { ROUTES } from '../../../routes/config';
 import { useAgency } from '../../../contexts/agency/AgencyContext';
-import { useTenant } from '../../../contexts/tenant/TenantContext';
 import DashboardSidebar from '../DashboardSidebar';
 import { AgencyOverview } from './AgencyOverview';
 import { AgencyAnalytics } from './AgencyAnalytics';
@@ -21,6 +21,7 @@ import { AddonsManager } from './AddonsManager';
 import { AgencyPlanManager } from './plans';
 import AgencyContentDashboard from './AgencyContentDashboard';
 import AgencyNavigationManagement from './AgencyNavigationManagement';
+import { toast } from 'react-hot-toast';
 
 type AgencyTab = 'overview' | 'analytics' | 'landing' | 'billing' | 'reports' | 'new-client' | 'addons' | 'plans' | 'cms' | 'navigation';
 
@@ -28,7 +29,7 @@ const AgencyDashboardMain: React.FC = () => {
     const { t } = useTranslation();
     const { path, navigate } = useRouter();
     const { subClients, loadingClients } = useAgency();
-    const { createSubClient } = useTenant();
+    const functions = getFunctions();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
     // Determine active tab from URL
@@ -284,29 +285,41 @@ const AgencyDashboardMain: React.FC = () => {
                                             <ClientIntakeForm
                                                 onSubmit={async (data) => {
                                                     try {
-                                                        console.log('Creating client:', data);
+                                                        console.log('Creating client via Cloud Function:', data);
 
-                                                        await createSubClient(
-                                                            {
-                                                                name: data.businessName,
-                                                                type: 'agency_client',
-                                                                branding: {
-                                                                    primaryColor: data.primaryColor,
-                                                                    secondaryColor: data.secondaryColor,
-                                                                    companyName: data.businessName,
-                                                                }
-                                                            },
-                                                            data.initialUsers.map(u => ({
-                                                                email: u.email,
-                                                                name: u.name,
-                                                                role: (u.role === 'client_admin' || u.role === 'client_user') ? 'client' : u.role
-                                                            })) as { email: string, name: string, role: string }[] as any // Simple fix for type mismatch in this specific context
+                                                        const provisionClient = httpsCallable(
+                                                            functions,
+                                                            'agencyOnboarding-autoProvision'
                                                         );
 
+                                                        const result = await provisionClient({
+                                                            businessName: data.businessName,
+                                                            industry: data.industry,
+                                                            contactEmail: data.contactEmail,
+                                                            contactPhone: data.contactPhone,
+                                                            projectTemplate: data.projectTemplate,
+                                                            enabledFeatures: data.enabledFeatures,
+                                                            initialUsers: data.initialUsers,
+                                                            primaryColor: data.primaryColor,
+                                                            secondaryColor: data.secondaryColor,
+                                                            monthlyPrice: data.setupBilling ? data.monthlyPrice : undefined,
+                                                        });
+
+                                                        const response = result.data as any;
+
+                                                        if (response.success) {
+                                                            toast.success(
+                                                                `Cliente "${data.businessName}" creado exitosamente. ${response.invitesSent} invitaciones enviadas.`
+                                                            );
+                                                        }
+
                                                         handleTabChange('overview');
-                                                    } catch (error) {
+                                                    } catch (error: any) {
                                                         console.error('Error creating client:', error);
-                                                        throw error; // Re-throw to be caught by the form's error handler
+                                                        toast.error(
+                                                            error.message || 'Error al crear el cliente'
+                                                        );
+                                                        throw error;
                                                     }
                                                 }}
                                                 onCancel={() => handleTabChange('overview')}
