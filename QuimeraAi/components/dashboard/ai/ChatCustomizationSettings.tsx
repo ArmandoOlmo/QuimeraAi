@@ -269,40 +269,36 @@ const ChatCustomizationSettings: React.FC = () => {
                     </div>
                 </div>
 
-                {/* Individual Color Palette — always visible below presets */}
-                <div className="bg-card/50 border border-border/30 rounded-2xl p-6 shadow-sm">
-                    <h3 className="font-bold text-foreground mb-5 flex items-center gap-2">
-                        <Palette className="text-primary" size={20} />
-                        Color Palette
-                    </h3>
-                    <div className="grid grid-cols-2 gap-x-6 gap-y-1">
-                        {[
-                            { key: 'primaryColor', label: 'Primary' },
-                            { key: 'secondaryColor', label: 'Secondary' },
-                            { key: 'headerBackground', label: 'Header Background' },
-                            { key: 'headerText', label: 'Header Text' },
-                            { key: 'userBubbleColor', label: 'User Bubble' },
-                            { key: 'userTextColor', label: 'User Text' },
-                            { key: 'botBubbleColor', label: 'Bot Bubble' },
-                            { key: 'botTextColor', label: 'Bot Text' },
-                            { key: 'backgroundColor', label: 'Background' },
-                            { key: 'inputBackground', label: 'Input Background' },
-                            { key: 'inputBorder', label: 'Input Border' },
-                            { key: 'inputText', label: 'Input Text' },
-                        ].map(({ key, label }) => (
-                            <ColorControl
-                                key={key}
-                                label={label}
-                                value={(config.colors as any)?.[key] || '#000000'}
-                                onChange={(val) => updateColor(key, val)}
-                                paletteColors={projectPaletteColors}
-                            />
-                        ))}
-                    </div>
-                </div>
-
                 {/* Main Settings Container - Clean & Light */}
                 <div className="bg-card/50 border border-border/30 rounded-2xl px-8 py-2 space-y-0 shadow-sm">
+                    {/* Color Palette */}
+                    <AccordionSection title="Color Palette" icon={Palette} section="colors">
+                        <div className="grid grid-cols-2 gap-x-6 gap-y-1">
+                            {[
+                                { key: 'primaryColor', label: 'Primary' },
+                                { key: 'secondaryColor', label: 'Secondary' },
+                                { key: 'headerBackground', label: 'Header Background' },
+                                { key: 'headerText', label: 'Header Text' },
+                                { key: 'userBubbleColor', label: 'User Bubble' },
+                                { key: 'userTextColor', label: 'User Text' },
+                                { key: 'botBubbleColor', label: 'Bot Bubble' },
+                                { key: 'botTextColor', label: 'Bot Text' },
+                                { key: 'backgroundColor', label: 'Background' },
+                                { key: 'inputBackground', label: 'Input Background' },
+                                { key: 'inputBorder', label: 'Input Border' },
+                                { key: 'inputText', label: 'Input Text' },
+                            ].map(({ key, label }) => (
+                                <ColorControl
+                                    key={key}
+                                    label={label}
+                                    value={(config.colors as any)?.[key] || '#000000'}
+                                    onChange={(val) => updateColor(key, val)}
+                                    paletteColors={projectPaletteColors}
+                                />
+                            ))}
+                        </div>
+                    </AccordionSection>
+
                     {/* Branding & Logo */}
                     <AccordionSection title="Branding & Logo" icon={ImageIcon} section="branding">
                         <div className="space-y-5">
