@@ -7,7 +7,7 @@ import { useSafeProject } from '../contexts/project/ProjectContext';
 import { Lead, AiAssistantConfig } from '../types';
 import { getDefaultAppearanceConfig, getSizeClasses, getButtonSizeClasses, getShadowClasses, getButtonStyleClasses } from '../utils/chatThemes';
 import ChatCore, { ChatAppointmentData, AppointmentSlot } from './chat/ChatCore';
-import { db, collection, addDoc, getDocs, query, where, orderBy } from '../firebase';
+import { db, collection, addDoc, getDocs, getDoc, doc, query, where, orderBy } from '../firebase';
 import { useSafeAuth } from '../contexts/core/AuthContext';
 import { useRouter } from '../hooks/useRouter';
 
@@ -158,6 +158,7 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
     const messagesRef = useRef<any[]>([]);
     const [currentSection, setCurrentSection] = useState<string>('hero');
     const [appointments, setAppointments] = useState<AppointmentSlot[]>([]);
+    const [cmsArticles, setCmsArticles] = useState<{ id: string; title: string; content: string }[]>([]);
 
     // Detect if we're in the editor (editor view showing the preview)
     // We use both the context view and the URL route to be robust
@@ -166,6 +167,40 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
 
     // Don't render if not active and not in preview
     if (!aiAssistantConfig.isActive && !isPreview) return null;
+
+    // Load CMS articles for chatbot knowledge
+    useEffect(() => {
+        const loadCmsArticles = async () => {
+            const articleIds = aiAssistantConfig.cmsArticleIds;
+            if (!articleIds || articleIds.length === 0 || !activeProject?.id) {
+                setCmsArticles([]);
+                return;
+            }
+            try {
+                const articles: { id: string; title: string; content: string }[] = [];
+                // Fetch from publicStores (works for both owner and public visitors)
+                for (const articleId of articleIds.slice(0, 20)) { // Cap at 20 articles
+                    const postRef = doc(db, 'publicStores', activeProject.id, 'posts', articleId);
+                    const postSnap = await getDoc(postRef);
+                    if (postSnap.exists()) {
+                        const postData = postSnap.data();
+                        articles.push({
+                            id: articleId,
+                            title: postData.title || 'Untitled',
+                            content: postData.content || postData.excerpt || ''
+                        });
+                    }
+                }
+                setCmsArticles(articles);
+                if (articles.length > 0) {
+                    console.log(`[ChatbotWidget] ✅ Loaded ${articles.length} CMS articles for chatbot knowledge`);
+                }
+            } catch (error) {
+                console.warn('[ChatbotWidget] Failed to load CMS articles:', error);
+            }
+        };
+        loadCmsArticles();
+    }, [aiAssistantConfig.cmsArticleIds, activeProject?.id]);
 
     // Load appointments when chat opens
     useEffect(() => {
@@ -490,6 +525,7 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
                             pageData: data,
                             visibleSections: (componentOrder as any)?.filter((sec: any) => sectionVisibility?.[sec] !== false) || []
                         }}
+                        cmsArticles={cmsArticles}
                     />
                 )}
                 {isOpen && !activeProject && (

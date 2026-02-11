@@ -229,6 +229,29 @@ export const CMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
                         publishedAt: now // Update published timestamp
                     }, { merge: true });
                     console.log('[CMSContext] ✅ Synced published post to public store');
+
+                    // --- AUTO-ENROLL IN CHATBOT KNOWLEDGE ---
+                    // When a new published post is created, auto-add it to aiAssistantConfig.cmsArticleIds
+                    if (!id || id.length === 0) {
+                        try {
+                            const pathSegments = getProjectsCollectionPath(user.uid, currentTenantId);
+                            const projectRef = doc(db, ...pathSegments, activeProject.id);
+                            const projectSnap = await getDoc(projectRef);
+                            if (projectSnap.exists()) {
+                                const projectData = projectSnap.data();
+                                const existingIds: string[] = projectData?.aiAssistantConfig?.cmsArticleIds || [];
+                                if (!existingIds.includes(savedPostId)) {
+                                    const updatedIds = [...existingIds, savedPostId];
+                                    await updateDoc(projectRef, {
+                                        'aiAssistantConfig.cmsArticleIds': updatedIds
+                                    });
+                                    console.log('[CMSContext] ✅ Auto-enrolled new published article in chatbot knowledge:', savedPostId);
+                                }
+                            }
+                        } catch (enrollError) {
+                            console.warn('[CMSContext] Failed to auto-enroll article in chatbot knowledge:', enrollError);
+                        }
+                    }
                 } else {
                     // If it's a draft, ensure it's removed from publicStores (unpublish)
                     console.log('[CMSContext] Removing draft post from public store:', savedPostId);

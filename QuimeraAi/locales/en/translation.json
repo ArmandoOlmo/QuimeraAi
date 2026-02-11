@@ -1975,7 +1975,88 @@
         "productsServices": "List your key products, prices, and features...",
         "policiesContact": "Return policy, opening hours, address, phone..."
       }
+    },
+    "knowledgeLinks": {
+      "title": "Knowledge Links",
+      "urlPlaceholder": "Paste a website or YouTube URL...",
+      "addLink": "Add",
+      "invalidUrl": "Please enter a valid URL (e.g. https://example.com)",
+      "duplicateUrl": "This URL has already been added",
+      "hint": "Add website or YouTube URLs. Content will be extracted and used as knowledge for your chatbot.",
+      "addedLinks": "Added Links",
+      "ready": "ready",
+      "extracted": "extracted",
+      "extracting": "Extracting content...",
+      "extractionFailed": "Failed to extract content",
+      "retry": "Retry",
+      "noLinks": "No links added yet",
+      "noLinksDesc": "Add website or YouTube URLs to expand your chatbot's knowledge base"
     }
+  },
+  "chatCustomization": {
+    "title": "Chat Customization",
+    "autoSaveNote": "Changes are saved automatically as you customize",
+    "livePreview": "Live Preview Active",
+    "quickThemePresets": "Quick Theme Presets",
+    "projectPreset": "Project",
+    "colorPalette": "Color Palette",
+    "colors": {
+      "primary": "Primary",
+      "secondary": "Secondary",
+      "headerBackground": "Header Background",
+      "headerText": "Header Text",
+      "userBubble": "User Bubble",
+      "userText": "User Text",
+      "botBubble": "Bot Bubble",
+      "botText": "Bot Text",
+      "background": "Background",
+      "inputBackground": "Input Background",
+      "inputBorder": "Input Border",
+      "inputText": "Input Text"
+    },
+    "brandingAndLogo": "Branding & Logo",
+    "logoType": "Logo Type",
+    "logoTypes": {
+      "none": "None",
+      "emoji": "Emoji",
+      "image": "Image"
+    },
+    "logoEmoji": "Logo Emoji",
+    "logoImage": "Logo Image",
+    "chatLogoAlt": "Chat Logo",
+    "removeLogo": "Remove logo",
+    "changeImage": "Change Image",
+    "selectImage": "Select Image",
+    "selectFromLibrary": "Select from library or upload new",
+    "botAvatarEmoji": "Bot Avatar Emoji",
+    "showBotAvatar": "Show Bot Avatar",
+    "positionAndBehavior": "Position & Behavior",
+    "position": "Position",
+    "positions": {
+      "bottomRight": "Bottom Right",
+      "bottomLeft": "Bottom Left",
+      "topRight": "Top Right",
+      "topLeft": "Top Left"
+    },
+    "size": "Size",
+    "autoOpenChat": "Auto-open chat",
+    "autoOpenDelay": "Auto-open delay: {{seconds}}s",
+    "customMessages": "Custom Messages",
+    "welcomeMessage": "Welcome Message",
+    "inputPlaceholder": "Input Placeholder",
+    "quickReplies": "Quick Replies",
+    "addQuickReplyPlaceholder": "Add quick reply...",
+    "add": "Add",
+    "chatButton": "Chat Button",
+    "buttonStyle": "Button Style",
+    "buttonStyles": {
+      "circle": "Circle",
+      "rounded": "Rounded",
+      "square": "Square"
+    },
+    "buttonSize": "Button Size",
+    "pulseEffect": "Pulse Effect",
+    "tooltipText": "Tooltip Text"
   },
   "landingChatbot": {
     "title": "Landing Page Chatbot",

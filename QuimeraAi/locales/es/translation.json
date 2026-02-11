@@ -1978,7 +1978,88 @@
         "productsServices": "Lista tus productos clave, precios y características...",
         "policiesContact": "Política de devoluciones, horario, dirección, teléfono..."
       }
+    },
+    "knowledgeLinks": {
+      "title": "Enlaces de Conocimiento",
+      "urlPlaceholder": "Pega una URL de sitio web o YouTube...",
+      "addLink": "Agregar",
+      "invalidUrl": "Ingresa una URL válida (ej. https://ejemplo.com)",
+      "duplicateUrl": "Esta URL ya ha sido agregada",
+      "hint": "Agrega URLs de sitios web o YouTube. El contenido será extraído y usado como conocimiento para tu chatbot.",
+      "addedLinks": "Enlaces Agregados",
+      "ready": "listo",
+      "extracted": "extraído",
+      "extracting": "Extrayendo contenido...",
+      "extractionFailed": "Error al extraer contenido",
+      "retry": "Reintentar",
+      "noLinks": "No hay enlaces agregados",
+      "noLinksDesc": "Agrega URLs de sitios web o YouTube para ampliar la base de conocimiento de tu chatbot"
     }
+  },
+  "chatCustomization": {
+    "title": "Personalización del Chat",
+    "autoSaveNote": "Los cambios se guardan automáticamente al personalizar",
+    "livePreview": "Vista Previa Activa",
+    "quickThemePresets": "Temas Rápidos",
+    "projectPreset": "Proyecto",
+    "colorPalette": "Paleta de Colores",
+    "colors": {
+      "primary": "Primario",
+      "secondary": "Secundario",
+      "headerBackground": "Fondo del Encabezado",
+      "headerText": "Texto del Encabezado",
+      "userBubble": "Burbuja del Usuario",
+      "userText": "Texto del Usuario",
+      "botBubble": "Burbuja del Bot",
+      "botText": "Texto del Bot",
+      "background": "Fondo",
+      "inputBackground": "Fondo de Entrada",
+      "inputBorder": "Borde de Entrada",
+      "inputText": "Texto de Entrada"
+    },
+    "brandingAndLogo": "Marca y Logo",
+    "logoType": "Tipo de Logo",
+    "logoTypes": {
+      "none": "Ninguno",
+      "emoji": "Emoji",
+      "image": "Imagen"
+    },
+    "logoEmoji": "Emoji del Logo",
+    "logoImage": "Imagen del Logo",
+    "chatLogoAlt": "Logo del Chat",
+    "removeLogo": "Eliminar logo",
+    "changeImage": "Cambiar Imagen",
+    "selectImage": "Seleccionar Imagen",
+    "selectFromLibrary": "Seleccionar de la librería o subir nueva",
+    "botAvatarEmoji": "Emoji del Avatar del Bot",
+    "showBotAvatar": "Mostrar Avatar del Bot",
+    "positionAndBehavior": "Posición y Comportamiento",
+    "position": "Posición",
+    "positions": {
+      "bottomRight": "Abajo Derecha",
+      "bottomLeft": "Abajo Izquierda",
+      "topRight": "Arriba Derecha",
+      "topLeft": "Arriba Izquierda"
+    },
+    "size": "Tamaño",
+    "autoOpenChat": "Abrir chat automáticamente",
+    "autoOpenDelay": "Retraso de apertura: {{seconds}}s",
+    "customMessages": "Mensajes Personalizados",
+    "welcomeMessage": "Mensaje de Bienvenida",
+    "inputPlaceholder": "Placeholder de Entrada",
+    "quickReplies": "Respuestas Rápidas",
+    "addQuickReplyPlaceholder": "Agregar respuesta rápida...",
+    "add": "Agregar",
+    "chatButton": "Botón del Chat",
+    "buttonStyle": "Estilo del Botón",
+    "buttonStyles": {
+      "circle": "Círculo",
+      "rounded": "Redondeado",
+      "square": "Cuadrado"
+    },
+    "buttonSize": "Tamaño del Botón",
+    "pulseEffect": "Efecto de Pulso",
+    "tooltipText": "Texto del Tooltip"
   },
   "landingChatbot": {
     "title": "Chatbot de Landing Page",

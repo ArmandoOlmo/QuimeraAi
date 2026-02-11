@@ -207,6 +207,9 @@ import {
 import { analyzeWebsite } from './onboarding/analyzeWebsite';
 import { autoProvisionClient, getOnboardingStatus } from './onboarding/autoProvisionClient';
 
+// Knowledge content extraction
+import { extractContent } from './extractContent';
+
 // Export widget API functions
 export const widget = {
     getConfig: getWidgetConfig,
@@ -409,6 +412,11 @@ export const agencyOnboarding = {
     getStatus: getOnboardingStatus,
 };
 
+// Export Knowledge content extraction
+export const knowledge = {
+    extractContent,
+};
+
 // Alternative flat exports for easier routing
 export {
     getWidgetConfig,
@@ -558,6 +566,9 @@ export {
     checkAddonsEligibility,
     updateSubscriptionAddons
 };
+
+// Knowledge content extraction exports
+export { extractContent };
 
 // Direct export for Twilio Voice Webhook (ElevenLabs Conversational AI)
 export { twilioVoiceWebhook };

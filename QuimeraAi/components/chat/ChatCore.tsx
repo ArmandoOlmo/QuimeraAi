@@ -64,6 +64,7 @@ export interface ChatCoreProps {
     autoOpen?: boolean;
     isEmbedded?: boolean;
     currentPageContext?: PageContext;
+    cmsArticles?: { id: string; title: string; content: string }[];
 }
 
 interface Message {
@@ -315,7 +316,8 @@ const ChatCore: React.FC<ChatCoreProps> = ({
     onClose,
     autoOpen = false,
     isEmbedded = false,
-    currentPageContext
+    currentPageContext,
+    cmsArticles
 }) => {
     const authContext = useSafeAuth();
     const user = authContext?.user ?? null;
@@ -584,7 +586,24 @@ ${suggestAvailableSlots()}
             `).join('\n\n')}
             ` : ''}
             
+            ${config.knowledgeLinks && config.knowledgeLinks.filter(l => l.status === 'ready').length > 0 ? `
+            KNOWLEDGE BASE FROM LINKS (extracted from websites and YouTube):
+            ${config.knowledgeLinks.filter(l => l.status === 'ready').map((link, idx) => `
+            [${link.type === 'youtube' ? 'YouTube' : 'Website'} ${idx + 1}: ${link.title}]
+            Source: ${link.url}
+            ${link.content.slice(0, 4000)}${link.content.length > 4000 ? '...(content truncated)' : ''}
+            `).join('\n\n')}
+            ` : ''}
+            
             ${config.specialInstructions ? `SPECIAL INSTRUCTIONS:\n${config.specialInstructions}` : ''}
+            
+            ${cmsArticles && cmsArticles.length > 0 ? `
+            CMS ARTICLES KNOWLEDGE BASE (from blog/content management):
+            ${cmsArticles.map((article, idx) => `
+            [Article ${idx + 1}: ${article.title}]
+            ${article.content.slice(0, 3000)}${article.content.length > 3000 ? '...(content truncated)' : ''}
+            `).join('\n\n')}
+            ` : ''}
         `;
 
         const brandName = project?.brandIdentity?.name || project?.name || 'our business';

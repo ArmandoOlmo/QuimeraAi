@@ -61,6 +61,7 @@ const defaultAiAssistantConfig: AiAssistantConfig = {
     specialInstructions: '',
     faqs: [],
     knowledgeDocuments: [],
+    knowledgeLinks: [],
     widgetColor: '#4f46e5',
     isActive: true,
     leadCaptureEnabled: true,

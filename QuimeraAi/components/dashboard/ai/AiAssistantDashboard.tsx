@@ -6,18 +6,20 @@ import { useAI } from '../../../contexts/ai/AIContext';
 import { useProject } from '../../../contexts/project/ProjectContext';
 import { useUI } from '../../../contexts/core/UIContext';
 import { useAuth } from '../../../contexts/core/AuthContext';
+import { useCMS } from '../../../contexts/cms/CMSContext';
 import DashboardSidebar from '../DashboardSidebar';
 import {
     Menu, Bot, MessageSquare, Settings, Sliders, FileText,
     Save, Sparkles, User, Building2, Globe, Book, Activity, LayoutGrid, ChevronRight, Clock,
     Mic, Radio, BookOpen, ArrowLeft, Package, Shield, Phone, Facebook, Instagram, Inbox,
     TrendingUp, TrendingDown, Users, Zap, BarChart3, MessageCircle, RefreshCw, Search,
-    ArrowUpRight, Loader2
+    ArrowUpRight, Loader2, Newspaper, CheckSquare, Square, Link2 as Link2Icon
 } from 'lucide-react';
 import ChatSimulator from './ChatSimulator';
 import { AiAssistantConfig } from '../../../types';
 import FAQManager from './FAQManager';
 import KnowledgeDocumentUploader from './KnowledgeDocumentUploader';
+import KnowledgeLinksManager from './KnowledgeLinksManager';
 import LeadCaptureSettings from './LeadCaptureSettings';
 import ChatCustomizationSettings from './ChatCustomizationSettings';
 import SocialChannelsSettings from './SocialChannelsSettings';
@@ -41,6 +43,7 @@ const AiAssistantDashboard: React.FC = () => {
     const { activeProject, projects, loadProject } = useProject();
     const { setView } = useUI();
     const { user } = useAuth();
+    const { cmsPosts, loadCMSPosts } = useCMS();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [activeTab, setActiveTab] = useState<Tab>('overview');
     const [formData, setFormData] = useState<AiAssistantConfig>(aiAssistantConfig);
@@ -567,15 +570,15 @@ const AiAssistantDashboard: React.FC = () => {
                                     className="flex items-center justify-between p-4 bg-secondary/10 hover:bg-secondary/20 rounded-xl border border-border/50 hover:border-primary/30 transition-all text-left group"
                                 >
                                     <div className="flex items-center gap-3">
-                                        <div className={`p-2 rounded-lg ${(formData.faqs?.length > 0 || formData.knowledgeDocuments?.length > 0) ? 'bg-green-500/10 text-green-500' : 'bg-amber-500/10 text-amber-500'}`}>
+                                        <div className={`p-2 rounded-lg ${(formData.faqs?.length > 0 || formData.knowledgeDocuments?.length > 0 || formData.knowledgeLinks?.length > 0 || (formData.cmsArticleIds?.length || 0) > 0) ? 'bg-green-500/10 text-green-500' : 'bg-amber-500/10 text-amber-500'}`}>
                                             <BookOpen size={20} />
                                         </div>
                                         <div>
                                             <span className="font-semibold text-sm block group-hover:text-primary transition-colors">Base de Conocimiento</span>
-                                            <span className="text-xs text-muted-foreground">{formData.faqs?.length || 0} FAQs, {formData.knowledgeDocuments?.length || 0} docs</span>
+                                            <span className="text-xs text-muted-foreground">{formData.faqs?.length || 0} FAQs, {formData.knowledgeDocuments?.length || 0} docs, {formData.knowledgeLinks?.length || 0} links, {formData.cmsArticleIds?.length || 0} artículos CMS</span>
                                         </div>
                                     </div>
-                                    <div className={`w-2 h-2 rounded-full ${(formData.faqs?.length > 0 || formData.knowledgeDocuments?.length > 0) ? 'bg-green-500' : 'bg-amber-500'}`} />
+                                    <div className={`w-2 h-2 rounded-full ${(formData.faqs?.length > 0 || formData.knowledgeDocuments?.length > 0 || formData.knowledgeLinks?.length > 0 || (formData.cmsArticleIds?.length || 0) > 0) ? 'bg-green-500' : 'bg-amber-500'}`} />
                                 </button>
 
                                 {/* Lead Capture */}
@@ -699,6 +702,106 @@ const AiAssistantDashboard: React.FC = () => {
                                 documents={formData.knowledgeDocuments || []}
                                 onDocumentsChange={(docs) => updateForm('knowledgeDocuments', docs)}
                             />
+                        </div>
+
+                        {/* Knowledge Links Section */}
+                        <div className="pt-6 border-t border-border">
+                            <div className="flex items-center gap-2 mb-4">
+                                <Link2Icon size={20} className="text-primary" />
+                                <h3 className="text-sm font-bold text-foreground uppercase tracking-wider">
+                                    {t('aiAssistant.knowledgeLinks.title')}
+                                </h3>
+                                {(formData.knowledgeLinks?.length || 0) > 0 && (
+                                    <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full font-medium">
+                                        {formData.knowledgeLinks?.filter(l => l.status === 'ready').length || 0} {t('aiAssistant.knowledgeLinks.ready')}
+                                    </span>
+                                )}
+                            </div>
+                            <KnowledgeLinksManager
+                                links={formData.knowledgeLinks || []}
+                                onLinksChange={(links) => updateForm('knowledgeLinks', links)}
+                                projectId={activeProject?.id}
+                            />
+                        </div>
+
+                        {/* CMS Articles Section */}
+                        <div className="pt-6 border-t border-border">
+                            <div className="flex items-center justify-between mb-4">
+                                <div className="flex items-center gap-2">
+                                    <Newspaper size={20} className="text-primary" />
+                                    <h3 className="text-sm font-bold text-foreground uppercase tracking-wider">
+                                        Artículos del CMS
+                                    </h3>
+                                    {formData.cmsArticleIds && formData.cmsArticleIds.length > 0 && (
+                                        <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full font-medium">
+                                            {formData.cmsArticleIds.length} seleccionado{formData.cmsArticleIds.length !== 1 ? 's' : ''}
+                                        </span>
+                                    )}
+                                </div>
+                                {cmsPosts.length > 0 && (
+                                    <button
+                                        onClick={() => {
+                                            const publishedIds = cmsPosts.filter(p => p.status === 'published').map(p => p.id);
+                                            updateForm('cmsArticleIds', publishedIds);
+                                        }}
+                                        className="text-xs text-primary hover:text-primary/80 font-medium transition-colors"
+                                    >
+                                        Seleccionar todos los publicados
+                                    </button>
+                                )}
+                            </div>
+                            <p className="text-sm text-muted-foreground mb-4">
+                                Selecciona los artículos del blog que el chatbot podrá consultar para responder preguntas.
+                            </p>
+                            {cmsPosts.length === 0 ? (
+                                <div className="text-center py-8 bg-secondary/10 rounded-xl border border-dashed border-border">
+                                    <Newspaper className="w-10 h-10 mx-auto text-muted-foreground/40 mb-3" />
+                                    <p className="text-sm text-muted-foreground">No hay artículos en el CMS de este proyecto.</p>
+                                    <p className="text-xs text-muted-foreground mt-1">Crea artículos en el CMS y aparecerán aquí automáticamente.</p>
+                                </div>
+                            ) : (
+                                <div className="space-y-2 max-h-[320px] overflow-y-auto pr-1">
+                                    {cmsPosts.map(post => {
+                                        const isSelected = formData.cmsArticleIds?.includes(post.id) ?? false;
+                                        return (
+                                            <button
+                                                key={post.id}
+                                                onClick={() => {
+                                                    const current = formData.cmsArticleIds || [];
+                                                    const updated = isSelected
+                                                        ? current.filter(id => id !== post.id)
+                                                        : [...current, post.id];
+                                                    updateForm('cmsArticleIds', updated);
+                                                }}
+                                                className={`w-full flex items-start gap-3 p-3 rounded-xl border text-left transition-all ${isSelected
+                                                    ? 'bg-primary/5 border-primary/30 hover:bg-primary/10'
+                                                    : 'bg-card border-border/50 hover:border-primary/20 hover:bg-secondary/20'
+                                                    }`}
+                                            >
+                                                {isSelected ? (
+                                                    <CheckSquare size={18} className="text-primary mt-0.5 shrink-0" />
+                                                ) : (
+                                                    <Square size={18} className="text-muted-foreground mt-0.5 shrink-0" />
+                                                )}
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="font-medium text-sm text-foreground truncate">{post.title}</span>
+                                                        <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium shrink-0 ${post.status === 'published'
+                                                            ? 'bg-green-500/10 text-green-500'
+                                                            : 'bg-amber-500/10 text-amber-500'
+                                                            }`}>
+                                                            {post.status === 'published' ? 'Publicado' : 'Borrador'}
+                                                        </span>
+                                                    </div>
+                                                    {post.excerpt && (
+                                                        <p className="text-xs text-muted-foreground mt-1 line-clamp-1">{post.excerpt}</p>
+                                                    )}
+                                                </div>
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            )}
                         </div>
                     </div>
                 );

@@ -21,6 +21,23 @@ export interface KnowledgeDocument {
     size: number;
 }
 
+export interface KnowledgeLink {
+    id: string;
+    url: string;
+    title: string;
+    content: string;
+    type: 'website' | 'youtube';
+    status: 'pending' | 'extracting' | 'ready' | 'error';
+    extractedAt?: { seconds: number; nanoseconds: number };
+    error?: string;
+    /** Content length in characters */
+    contentLength?: number;
+    /** YouTube video duration if applicable */
+    videoDuration?: string;
+    /** Thumbnail URL for YouTube videos */
+    thumbnailUrl?: string;
+}
+
 export interface LeadCaptureConfig {
     enabled: boolean;
     preChatForm: boolean;
@@ -165,6 +182,7 @@ export interface AiAssistantConfig {
     specialInstructions: string;
     faqs: FAQItem[];
     knowledgeDocuments: KnowledgeDocument[];
+    knowledgeLinks: KnowledgeLink[];
     widgetColor: string;
     isActive: boolean;
     leadCaptureEnabled: boolean;
@@ -172,6 +190,8 @@ export interface AiAssistantConfig {
     appearance?: ChatAppearanceConfig;
     enableLiveVoice: boolean;
     voiceName: 'Puck' | 'Charon' | 'Kore' | 'Fenrir' | 'Zephyr';
+    // CMS articles included as chatbot knowledge sources
+    cmsArticleIds?: string[];
     // Social media channel integrations
     socialChannels?: SocialChannelsConfig;
 }
