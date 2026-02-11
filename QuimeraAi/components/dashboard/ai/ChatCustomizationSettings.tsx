@@ -263,6 +263,45 @@ const ChatCustomizationSettings: React.FC = () => {
                     </div>
                 </div>
 
+                {/* Individual Color Palette — always visible below presets */}
+                <div className="bg-card/50 border border-border/30 rounded-2xl p-6 shadow-sm">
+                    <h3 className="font-bold text-foreground mb-5 flex items-center gap-2">
+                        <Palette className="text-primary" size={20} />
+                        Color Palette
+                    </h3>
+                    <div className="grid grid-cols-2 gap-x-8 gap-y-4">
+                        {[
+                            { key: 'primaryColor', label: 'Primary' },
+                            { key: 'secondaryColor', label: 'Secondary' },
+                            { key: 'headerBackground', label: 'Header Background' },
+                            { key: 'headerText', label: 'Header Text' },
+                            { key: 'userBubbleColor', label: 'User Bubble' },
+                            { key: 'userTextColor', label: 'User Text' },
+                            { key: 'botBubbleColor', label: 'Bot Bubble' },
+                            { key: 'botTextColor', label: 'Bot Text' },
+                            { key: 'backgroundColor', label: 'Background' },
+                            { key: 'inputBackground', label: 'Input Background' },
+                            { key: 'inputBorder', label: 'Input Border' },
+                            { key: 'inputText', label: 'Input Text' },
+                        ].map(({ key, label }) => (
+                            <div key={key} className="flex items-center justify-between gap-3">
+                                <label className="text-sm font-medium text-foreground whitespace-nowrap">{label}</label>
+                                <div className="flex items-center gap-2">
+                                    <input
+                                        type="color"
+                                        value={(config.colors as any)?.[key] || '#000000'}
+                                        onChange={(e) => updateColor(key, e.target.value)}
+                                        className="w-9 h-9 rounded-lg border border-border cursor-pointer bg-transparent p-0.5"
+                                    />
+                                    <span className="text-xs text-muted-foreground font-mono w-[4.5rem] text-right">
+                                        {(config.colors as any)?.[key] || '#000000'}
+                                    </span>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
                 {/* Main Settings Container - Clean & Light */}
                 <div className="bg-card/50 border border-border/30 rounded-2xl px-8 py-2 space-y-0 shadow-sm">
                     {/* Branding & Logo */}
@@ -411,40 +450,6 @@ const ChatCustomizationSettings: React.FC = () => {
                         </div>
                     </AccordionSection>
 
-                    {/* Colors */}
-                    <AccordionSection title="Colors" icon={Palette} section="colors">
-                        <div className="space-y-5">
-                            {[
-                                { key: 'primaryColor', label: 'Primary Color' },
-                                { key: 'secondaryColor', label: 'Secondary Color' },
-                                { key: 'headerBackground', label: 'Header Background' },
-                                { key: 'headerText', label: 'Header Text' },
-                                { key: 'userBubbleColor', label: 'User Bubble' },
-                                { key: 'userTextColor', label: 'User Text' },
-                                { key: 'botBubbleColor', label: 'Bot Bubble' },
-                                { key: 'botTextColor', label: 'Bot Text' },
-                                { key: 'backgroundColor', label: 'Background' },
-                                { key: 'inputBackground', label: 'Input Background' },
-                                { key: 'inputBorder', label: 'Input Border' },
-                                { key: 'inputText', label: 'Input Text' },
-                            ].map(({ key, label }) => (
-                                <div key={key} className="flex items-center justify-between gap-4">
-                                    <label className="text-sm font-medium text-foreground">{label}</label>
-                                    <div className="flex items-center gap-2">
-                                        <input
-                                            type="color"
-                                            value={(config.colors as any)?.[key] || '#000000'}
-                                            onChange={(e) => updateColor(key, e.target.value)}
-                                            className="w-10 h-10 rounded-lg border border-border cursor-pointer bg-transparent p-0.5"
-                                        />
-                                        <span className="text-xs text-muted-foreground font-mono w-20 text-right">
-                                            {(config.colors as any)?.[key] || '#000000'}
-                                        </span>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </AccordionSection>
 
                     {/* Behavior */}
                     <AccordionSection title="Position & Behavior" icon={SettingsIcon} section="behavior">
