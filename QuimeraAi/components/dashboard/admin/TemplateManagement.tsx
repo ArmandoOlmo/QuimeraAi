@@ -27,7 +27,8 @@ import {
     Building2,
     Settings2,
     ShoppingCart,
-    Loader2
+    Loader2,
+    Dumbbell
 } from 'lucide-react';
 import { Project } from '../../../types';
 import ThumbnailEditor from '../../ui/ThumbnailEditor';
@@ -35,6 +36,7 @@ import TemplateEditorModal from './TemplateEditorModal';
 import { INDUSTRIES, INDUSTRY_CATEGORIES } from '../../../data/industries';
 import { db, doc, setDoc } from '../../../firebase';
 import { migrateTemplatesWithEcommerce } from '../../../scripts/migrateTemplatesEcommerce';
+import { seedGymBrutalistTemplate } from '../../../scripts/seedGymTemplate';
 
 interface TemplateManagementProps {
     onBack: () => void;
@@ -176,16 +178,16 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
         try {
             const results = await migrateTemplatesWithEcommerce();
             showSuccess(
-                t('superadmin.templateManagement.migrateEcommerceSuccess', 
-                  `Migración completada: ${results.updated} templates actualizados, ${results.skipped} omitidos`)
+                t('superadmin.templateManagement.migrateEcommerceSuccess',
+                    `Migración completada: ${results.updated} templates actualizados, ${results.skipped} omitidos`)
             );
             // Refresh templates to show updated data
             await refreshProjects();
         } catch (error: any) {
             console.error('Migration error:', error);
             showError(
-                t('superadmin.templateManagement.migrateEcommerceError', 
-                  `Error en la migración: ${error.message}`)
+                t('superadmin.templateManagement.migrateEcommerceError',
+                    `Error en la migración: ${error.message}`)
             );
         } finally {
             setIsMigrating(false);
@@ -362,10 +364,33 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                                 <ShoppingCart className="w-5 h-5 sm:w-4 sm:h-4" />
                             )}
                             <span className="hidden lg:inline ml-1.5">
-                                {isMigrating 
-                                    ? t('superadmin.templateManagement.migrating', 'Migrating...') 
+                                {isMigrating
+                                    ? t('superadmin.templateManagement.migrating', 'Migrating...')
                                     : t('superadmin.templateManagement.migrateEcommerce', 'Ecommerce')}
                             </span>
+                        </button>
+
+                        {/* Seed Gym Template Button */}
+                        <button
+                            onClick={async () => {
+                                if (!window.confirm('Seed the "Dark Brutalist Gym" template? This will add it to the templates list.')) return;
+                                try {
+                                    const result = await seedGymBrutalistTemplate();
+                                    if (result.success) {
+                                        showSuccess(result.message);
+                                        refreshProjects();
+                                    } else {
+                                        showError(result.message);
+                                    }
+                                } catch (err: any) {
+                                    showError(`Error: ${err.message}`);
+                                }
+                            }}
+                            className="flex items-center justify-center h-10 w-10 sm:h-9 sm:w-auto sm:px-3 rounded-lg text-sm font-medium transition-all text-orange-500 hover:bg-orange-500/10"
+                            title="Seed Dark Brutalist Gym template"
+                        >
+                            <Dumbbell className="w-5 h-5 sm:w-4 sm:h-4" />
+                            <span className="hidden lg:inline ml-1.5">Gym Template</span>
                         </button>
 
                         {/* Filter Toggle */}
@@ -749,7 +774,7 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                                                     />
                                                 ) : null}
                                                 {/* Placeholder for list view */}
-                                                <div 
+                                                <div
                                                     className={`w-20 h-14 sm:w-24 sm:h-16 rounded-lg bg-gradient-to-br from-editor-accent/20 via-editor-panel-bg to-editor-bg flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity ${template.thumbnailUrl ? 'hidden' : ''}`}
                                                     onClick={() => setPreviewTemplate(template)}
                                                 >
