@@ -225,9 +225,9 @@ const ChatCustomizationSettings: React.FC = () => {
             <div className="space-y-6">
 
                 {/* Theme Presets - Cleaner UI */}
-                <div className="bg-gradient-to-br from-primary/5 to-primary/10 border border-primary/10 rounded-2xl p-6">
-                    <h3 className="font-bold text-foreground mb-5 flex items-center gap-2">
-                        <Zap className="text-primary" size={20} />
+                <div className="bg-gradient-to-br from-primary/5 to-primary/10 border border-primary/10 rounded-2xl p-4">
+                    <h3 className="font-bold text-foreground mb-3 flex items-center gap-2">
+                        <Zap className="text-primary" size={18} />
                         Quick Theme Presets
                     </h3>
                     <div className="grid grid-cols-7 gap-3">
@@ -243,7 +243,7 @@ const ChatCustomizationSettings: React.FC = () => {
                                         background: `linear-gradient(135deg, ${projectGlobalColors?.primary || '#4F46E5'} 60%, ${projectGlobalColors?.secondary || '#6366F1'} 100%)`
                                     }}
                                 />
-                                <span className="text-xs font-bold text-primary">🎨 Project</span>
+                                <span className="text-xs font-bold text-primary">Project</span>
                             </button>
                         )}
                         {Object.keys(THEME_PRESETS).map((presetName) => (
