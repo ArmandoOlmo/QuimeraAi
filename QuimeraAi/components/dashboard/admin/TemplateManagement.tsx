@@ -28,7 +28,8 @@ import {
     Settings2,
     ShoppingCart,
     Loader2,
-    Dumbbell
+    Dumbbell,
+    Wine
 } from 'lucide-react';
 import { Project } from '../../../types';
 import ThumbnailEditor from '../../ui/ThumbnailEditor';
@@ -37,6 +38,7 @@ import { INDUSTRIES, INDUSTRY_CATEGORIES } from '../../../data/industries';
 import { db, doc, setDoc } from '../../../firebase';
 import { migrateTemplatesWithEcommerce } from '../../../scripts/migrateTemplatesEcommerce';
 import { seedGymBrutalistTemplate } from '../../../scripts/seedGymTemplate';
+import { seedEliteLuxuryTemplate } from '../../../scripts/seedEliteTemplate';
 
 interface TemplateManagementProps {
     onBack: () => void;
@@ -393,7 +395,28 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                             <span className="hidden lg:inline ml-1.5">Gym Template</span>
                         </button>
 
-                        {/* Filter Toggle */}
+                        {/* Seed Elite Luxury Template Button */}
+                        <button
+                            onClick={async () => {
+                                if (!window.confirm('Seed the "L\'Élite Landing Page de Lujo" template? This will add it to the templates list.')) return;
+                                try {
+                                    const result = await seedEliteLuxuryTemplate();
+                                    if (result.success) {
+                                        showSuccess(result.message);
+                                        refreshProjects();
+                                    } else {
+                                        showError(result.message);
+                                    }
+                                } catch (err: any) {
+                                    showError(`Error: ${err.message}`);
+                                }
+                            }}
+                            className="flex items-center justify-center h-10 w-10 sm:h-9 sm:w-auto sm:px-3 rounded-lg text-sm font-medium transition-all text-amber-500 hover:bg-amber-500/10"
+                            title="Seed L'Élite Luxury Restaurant template"
+                        >
+                            <Wine className="w-5 h-5 sm:w-4 sm:h-4" />
+                            <span className="hidden lg:inline ml-1.5">Elite Template</span>
+                        </button>
                         <button
                             onClick={() => setShowFilters(!showFilters)}
                             className={`flex items-center justify-center h-10 w-10 sm:h-9 sm:w-auto sm:px-3 rounded-lg text-sm font-medium transition-all ${showFilters ? 'text-editor-accent bg-editor-accent/10' : 'text-editor-text-secondary hover:text-editor-text-primary'}`}

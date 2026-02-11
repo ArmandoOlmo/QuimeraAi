@@ -746,7 +746,7 @@ export const gymBrandIdentity: BrandIdentity = {
     name: 'Iron Temple',
     industry: 'fitness-gym',
     targetAudience: 'Serious athletes, powerlifters, bodybuilders, and fitness enthusiasts seeking structured training programs',
-    toneOfVoice: 'Intense, direct, no-nonsense, brutalist',
+    toneOfVoice: 'Professional',
     coreValues: 'Discipline, Science, Intensity, Results',
     language: 'English',
 };
