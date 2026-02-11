@@ -1495,13 +1495,19 @@ ${suggestAvailableSlots()}
             inputAudioContextRef.current = inputCtx;
             nextStartTimeRef.current = outputCtx.currentTime;
 
+            // Determine if we should use ElevenLabs TTS for voice output
+            const useElevenLabsVoice = config.voiceProvider === 'elevenlabs' && config.elevenlabsVoiceId;
+
             const sessionPromise = ai.live.connect({
                 model: 'gemini-2.5-flash-native-audio-preview-09-2025',
                 config: {
-                    responseModalities: [Modality.AUDIO],
-                    speechConfig: {
-                        voiceConfig: { prebuiltVoiceConfig: { voiceName: config.voiceName || 'Zephyr' } }
-                    },
+                    // ElevenLabs: use TEXT responses + ElevenLabs TTS. Gemini: use native AUDIO.
+                    responseModalities: useElevenLabsVoice ? [Modality.TEXT] : [Modality.AUDIO],
+                    ...(useElevenLabsVoice ? {} : {
+                        speechConfig: {
+                            voiceConfig: { prebuiltVoiceConfig: { voiceName: config.voiceName || 'Zephyr' } }
+                        },
+                    }),
                     systemInstruction: buildSystemInstruction(),
                     // Enable transcription for both user input and model output
                     inputAudioTranscription: {},
@@ -1546,6 +1552,11 @@ ${suggestAvailableSlots()}
                             activeSourcesRef.current.forEach(source => { try { source.stop(); } catch (e) { } });
                             activeSourcesRef.current = [];
                             if (audioContextRef.current) nextStartTimeRef.current = audioContextRef.current.currentTime;
+                            // Stop any ElevenLabs TTS playback on interruption
+                            if (elevenLabsAudioRef.current) {
+                                elevenLabsAudioRef.current.pause();
+                                elevenLabsAudioRef.current = null;
+                            }
                             return;
                         }
 
@@ -1565,7 +1576,7 @@ ${suggestAvailableSlots()}
                             }
                         }
 
-                        // Also check for text in modelTurn parts (fallback)
+                        // Also check for text in modelTurn parts (fallback + ElevenLabs text output)
                         const modelParts = message.serverContent?.modelTurn?.parts;
                         if (modelParts) {
                             for (const part of modelParts) {
@@ -1577,24 +1588,55 @@ ${suggestAvailableSlots()}
 
                         // Check if turn is complete to save accumulated model response
                         if (msg.serverContent?.turnComplete && currentModelResponseRef.current.trim()) {
-                            voiceTranscriptRef.current.push({ role: 'model', text: currentModelResponseRef.current.trim() });
+                            const fullResponse = currentModelResponseRef.current.trim();
+                            voiceTranscriptRef.current.push({ role: 'model', text: fullResponse });
+
+                            // ElevenLabs TTS: convert the text response to audio and play it
+                            if (useElevenLabsVoice && config.elevenlabsVoiceId) {
+                                try {
+                                    console.log('[ChatCore] 🔊 ElevenLabs Live TTS: converting response to audio...');
+                                    const ttsText = fullResponse
+                                        .replace(/[*_~`#>\-\[\]()!]/g, '')
+                                        .replace(/\n{2,}/g, '. ')
+                                        .replace(/\n/g, ' ')
+                                        .trim();
+                                    if (ttsText.length > 0) {
+                                        const ttsResult = await elevenlabsTTS(ttsText, config.elevenlabsVoiceId);
+                                        // Stop any previous TTS audio
+                                        if (elevenLabsAudioRef.current) {
+                                            elevenLabsAudioRef.current.pause();
+                                            elevenLabsAudioRef.current = null;
+                                        }
+                                        const audio = new Audio(`data:${ttsResult.mimeType};base64,${ttsResult.audio}`);
+                                        elevenLabsAudioRef.current = audio;
+                                        audio.play().catch(err => {
+                                            console.warn('[ChatCore] 🔇 ElevenLabs TTS autoplay blocked:', err.message);
+                                        });
+                                    }
+                                } catch (ttsError: any) {
+                                    console.warn('[ChatCore] ⚠️ ElevenLabs Live TTS failed:', ttsError.message);
+                                }
+                            }
+
                             currentModelResponseRef.current = '';
                         }
 
-                        // Handle Audio Output
-                        const audioData = modelParts?.[0]?.inlineData?.data;
-                        if (audioData && audioContextRef.current) {
-                            const ctx = audioContextRef.current;
-                            const bytes = base64ToBytes(audioData);
-                            const buffer = await decodeAudioData(bytes, ctx, 24000, 1);
-                            const source = ctx.createBufferSource();
-                            source.buffer = buffer;
-                            source.connect(ctx.destination);
-                            const startTime = Math.max(nextStartTimeRef.current, ctx.currentTime);
-                            source.start(startTime);
-                            nextStartTimeRef.current = startTime + buffer.duration;
-                            activeSourcesRef.current.push(source);
-                            source.onended = () => { activeSourcesRef.current = activeSourcesRef.current.filter(s => s !== source); };
+                        // Handle Audio Output (only for Gemini native audio, not ElevenLabs)
+                        if (!useElevenLabsVoice) {
+                            const audioData = modelParts?.[0]?.inlineData?.data;
+                            if (audioData && audioContextRef.current) {
+                                const ctx = audioContextRef.current;
+                                const bytes = base64ToBytes(audioData);
+                                const buffer = await decodeAudioData(bytes, ctx, 24000, 1);
+                                const source = ctx.createBufferSource();
+                                source.buffer = buffer;
+                                source.connect(ctx.destination);
+                                const startTime = Math.max(nextStartTimeRef.current, ctx.currentTime);
+                                source.start(startTime);
+                                nextStartTimeRef.current = startTime + buffer.duration;
+                                activeSourcesRef.current.push(source);
+                                source.onended = () => { activeSourcesRef.current = activeSourcesRef.current.filter(s => s !== source); };
+                            }
                         }
                     },
                     onclose: () => stopLiveSession(),
