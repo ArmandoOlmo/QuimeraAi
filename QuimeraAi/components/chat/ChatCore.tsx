@@ -1496,18 +1496,18 @@ ${suggestAvailableSlots()}
             nextStartTimeRef.current = outputCtx.currentTime;
 
             // Determine if we should use ElevenLabs TTS for voice output
+            // We still use Gemini's native audio model (required), but mute its output
+            // and use the outputAudioTranscription for ElevenLabs TTS instead
             const useElevenLabsVoice = config.voiceProvider === 'elevenlabs' && config.elevenlabsVoiceId;
 
             const sessionPromise = ai.live.connect({
                 model: 'gemini-2.5-flash-native-audio-preview-09-2025',
                 config: {
-                    // ElevenLabs: use TEXT responses + ElevenLabs TTS. Gemini: use native AUDIO.
-                    responseModalities: useElevenLabsVoice ? [Modality.TEXT] : [Modality.AUDIO],
-                    ...(useElevenLabsVoice ? {} : {
-                        speechConfig: {
-                            voiceConfig: { prebuiltVoiceConfig: { voiceName: config.voiceName || 'Zephyr' } }
-                        },
-                    }),
+                    // Always use AUDIO - the native audio model requires it
+                    responseModalities: [Modality.AUDIO],
+                    speechConfig: {
+                        voiceConfig: { prebuiltVoiceConfig: { voiceName: config.voiceName || 'Zephyr' } }
+                    },
                     systemInstruction: buildSystemInstruction(),
                     // Enable transcription for both user input and model output
                     inputAudioTranscription: {},
@@ -1573,6 +1573,10 @@ ${suggestAvailableSlots()}
                             const modelText = msg.serverContent.outputTranscript;
                             if (modelText && modelText.trim()) {
                                 voiceTranscriptRef.current.push({ role: 'model', text: modelText.trim() });
+                                // When using ElevenLabs, accumulate transcript for TTS
+                                if (useElevenLabsVoice) {
+                                    currentModelResponseRef.current += modelText;
+                                }
                             }
                         }
 
