@@ -171,7 +171,7 @@ export async function elevenlabsTTS(
     voiceId: string,
     options: { modelId?: string; stability?: number; similarity?: number } = {}
 ): Promise<ElevenLabsTTSResponse> {
-    const response = await fetch(`${VOICE_PROXY_BASE_URL}/elevenlabs-tts`, {
+    const response = await fetch(`${VOICE_PROXY_BASE_URL}/elevenlabsTTS`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -195,7 +195,7 @@ export async function elevenlabsTTS(
  * List all ElevenLabs voices (prebuilt + cloned)
  */
 export async function listElevenLabsVoices(): Promise<ElevenLabsVoice[]> {
-    const response = await fetch(`${VOICE_PROXY_BASE_URL}/elevenlabs-listVoices`, {
+    const response = await fetch(`${VOICE_PROXY_BASE_URL}/elevenlabsListVoices`, {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
     });
@@ -223,7 +223,7 @@ export async function cloneVoice(
         labels?: Record<string, string>;
     } = {}
 ): Promise<CloneVoiceResult> {
-    const response = await fetch(`${VOICE_PROXY_BASE_URL}/elevenlabs-cloneVoice`, {
+    const response = await fetch(`${VOICE_PROXY_BASE_URL}/elevenlabsCloneVoice`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -250,7 +250,7 @@ export async function cloneVoice(
  * Delete a cloned voice
  */
 export async function deleteClonedVoice(voiceId: string, projectId?: string): Promise<void> {
-    const response = await fetch(`${VOICE_PROXY_BASE_URL}/elevenlabs-deleteVoice`, {
+    const response = await fetch(`${VOICE_PROXY_BASE_URL}/elevenlabsDeleteVoice`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ voiceId, projectId }),
@@ -266,7 +266,7 @@ export async function deleteClonedVoice(voiceId: string, projectId?: string): Pr
  * Generate a preview of a voice
  */
 export async function previewVoice(voiceId: string, text?: string): Promise<ElevenLabsTTSResponse> {
-    const response = await fetch(`${VOICE_PROXY_BASE_URL}/elevenlabs-preview`, {
+    const response = await fetch(`${VOICE_PROXY_BASE_URL}/elevenlabsVoicePreview`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ voiceId, text }),
