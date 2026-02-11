@@ -10,6 +10,10 @@ interface LeadsTableViewProps {
     selectedLeadIds: string[];
     onToggleSelect: (leadId: string) => void;
     onToggleSelectAll: () => void;
+    totalFilteredCount: number;
+    allFilteredSelected: boolean;
+    onSelectAllFiltered: () => void;
+    onClearSelection: () => void;
 }
 
 type SortField = 'name' | 'email' | 'company' | 'value' | 'status' | 'aiScore' | 'createdAt';
@@ -30,7 +34,11 @@ const LeadsTableView: React.FC<LeadsTableViewProps> = ({
     onDelete,
     selectedLeadIds,
     onToggleSelect,
-    onToggleSelectAll
+    onToggleSelectAll,
+    totalFilteredCount,
+    allFilteredSelected,
+    onSelectAllFiltered,
+    onClearSelection
 }) => {
     const { t } = useTranslation();
     const [sortField, setSortField] = useState<SortField>('createdAt');
@@ -109,8 +117,41 @@ const LeadsTableView: React.FC<LeadsTableViewProps> = ({
     const allPageLeadsSelected = paginatedLeads.length > 0 &&
         paginatedLeads.every(lead => selectedLeadIds.includes(lead.id));
 
+    const showSelectAllBanner = allPageLeadsSelected && selectedLeadIds.length > 0 && totalFilteredCount > paginatedLeads.length;
+
     return (
         <div className="bg-card border border-border rounded-xl overflow-hidden">
+            {/* Select All Filtered Banner */}
+            {showSelectAllBanner && (
+                <div className="flex items-center justify-center gap-2 px-4 py-2.5 bg-primary/10 border-b border-primary/20 text-sm">
+                    {allFilteredSelected ? (
+                        <>
+                            <span className="text-primary font-medium">
+                                {t('leads.selectAllBanner.allSelected', { count: totalFilteredCount })}
+                            </span>
+                            <button
+                                onClick={onClearSelection}
+                                className="text-primary font-bold hover:underline"
+                            >
+                                {t('leads.selectAllBanner.clearSelection')}
+                            </button>
+                        </>
+                    ) : (
+                        <>
+                            <span className="text-foreground">
+                                {t('leads.selectAllBanner.pageSelected', { count: paginatedLeads.length })}
+                            </span>
+                            <button
+                                onClick={onSelectAllFiltered}
+                                className="text-primary font-bold hover:underline"
+                            >
+                                {t('leads.selectAllBanner.selectAll', { count: totalFilteredCount })}
+                            </button>
+                        </>
+                    )}
+                </div>
+            )}
+
             {/* Mobile Card View */}
             <div className="sm:hidden">
                 {/* Mobile Header with Select All */}
@@ -185,7 +226,7 @@ const LeadsTableView: React.FC<LeadsTableViewProps> = ({
                                             {lead.aiScore !== undefined && (
                                                 <div className="flex items-center gap-1">
                                                     <div className={`w-1.5 h-1.5 rounded-full ${lead.aiScore > 75 ? 'bg-green-500' :
-                                                            lead.aiScore > 40 ? 'bg-yellow-500' : 'bg-red-500'
+                                                        lead.aiScore > 40 ? 'bg-yellow-500' : 'bg-red-500'
                                                         }`} />
                                                     <span className="text-xs font-medium">{lead.aiScore}</span>
                                                 </div>

@@ -16,7 +16,7 @@ import {
     X, Upload, FileSpreadsheet, ArrowRight, ArrowLeft, Check,
     Loader2, AlertTriangle, Users, ChevronDown, Search,
     FileText, CheckCircle, Download, Plus, Table, Eye,
-    Zap, UploadCloud, Columns
+    Zap, UploadCloud, Columns, Tag
 } from 'lucide-react';
 import Modal from '../../ui/Modal';
 import { Lead } from '../../../types';
@@ -413,13 +413,16 @@ const PreviewStep: React.FC<{
     onToggleCreateAudience: () => void;
     audiences: any[];
     audiencesLoading: boolean;
+    importTag: string;
+    onImportTagChange: (tag: string) => void;
     t: any;
 }> = ({
     parsedLeads, fileType, fileName,
     selectedAudienceId, onAudienceChange,
     newAudienceName, onNewAudienceNameChange,
     createNewAudience, onToggleCreateAudience,
-    audiences, audiencesLoading, t
+    audiences, audiencesLoading,
+    importTag, onImportTagChange, t
 }) => {
         const [audienceSearch, setAudienceSearch] = useState('');
 
@@ -478,6 +481,24 @@ const PreviewStep: React.FC<{
                             </tbody>
                         </table>
                     </div>
+                </div>
+
+                {/* Import Tag */}
+                <div className="border border-border rounded-xl p-4 bg-muted/20">
+                    <h4 className="text-sm font-semibold text-foreground flex items-center gap-2 mb-2">
+                        <Tag size={14} className="text-primary" />
+                        {t('leads.import.tagSection', 'Etiqueta de Importación')}
+                    </h4>
+                    <p className="text-xs text-muted-foreground mb-2">
+                        {t('leads.import.tagDescription', 'Esta etiqueta se asignará a todos los leads importados para identificarlos fácilmente.')}
+                    </p>
+                    <input
+                        type="text"
+                        value={importTag}
+                        onChange={(e) => onImportTagChange(e.target.value)}
+                        placeholder={t('leads.import.tagPlaceholder', 'Ej: Evento Miami 2026')}
+                        className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm outline-none focus:border-primary transition-colors"
+                    />
                 </div>
 
                 {/* Audience Assignment */}
@@ -616,6 +637,10 @@ const ImportLeadsModal: React.FC<ImportLeadsModalProps> = ({ isOpen, onClose }) 
     const [importProgress, setImportProgress] = useState(0);
     const [importResult, setImportResult] = useState<{ success: number; errors: number } | null>(null);
 
+    // Import tag
+    const today = new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
+    const [importTag, setImportTag] = useState(`Importación ${today}`);
+
     // Parsed leads based on current mapping
     const parsedLeads = useMemo(() => {
         if (rawRows.length === 0 || mapping.length === 0) return [];
@@ -636,6 +661,7 @@ const ImportLeadsModal: React.FC<ImportLeadsModalProps> = ({ isOpen, onClose }) 
         setIsImporting(false);
         setImportProgress(0);
         setImportResult(null);
+        setImportTag(`Importación ${new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' })}`);
     }, []);
 
     // Handle file loaded from step 1
@@ -702,7 +728,7 @@ const ImportLeadsModal: React.FC<ImportLeadsModalProps> = ({ isOpen, onClose }) 
                 linkedIn: lead.linkedIn,
                 value: lead.value || 0,
                 notes: lead.notes || '',
-                tags: [...(lead.tags || []), `import-${new Date().toISOString().split('T')[0]}`],
+                tags: [...(lead.tags || []), ...(importTag.trim() ? [importTag.trim()] : [])],
                 source: source as Lead['source'],
                 status: 'new' as Lead['status'],
             }));
@@ -912,6 +938,8 @@ const ImportLeadsModal: React.FC<ImportLeadsModalProps> = ({ isOpen, onClose }) 
                                     onToggleCreateAudience={() => setCreateNewAudience(!createNewAudience)}
                                     audiences={audiences}
                                     audiencesLoading={audiencesLoading}
+                                    importTag={importTag}
+                                    onImportTagChange={setImportTag}
                                     t={t}
                                 />
                             )}

@@ -2573,7 +2573,16 @@
       "done": "Listo",
       "errorTitle": "Error en la Importación",
       "errorMessage": "Hubo un problema al importar los leads. Por favor intenta de nuevo.",
-      "tryAgain": "Intentar de Nuevo"
+      "tryAgain": "Intentar de Nuevo",
+      "tagSection": "Etiqueta de Importación",
+      "tagDescription": "Esta etiqueta se asignará a todos los leads importados para identificarlos fácilmente.",
+      "tagPlaceholder": "Ej: Evento Miami 2026"
+    },
+    "selectAllBanner": {
+      "pageSelected": "{{count}} leads de esta página seleccionados.",
+      "selectAll": "Seleccionar los {{count}} leads filtrados",
+      "allSelected": "Los {{count}} leads filtrados están seleccionados.",
+      "clearSelection": "Limpiar selección"
     }
   },
   "domains": {

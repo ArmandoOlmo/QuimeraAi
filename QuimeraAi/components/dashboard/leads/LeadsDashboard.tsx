@@ -1323,6 +1323,10 @@ const LeadsDashboard: React.FC = () => {
                                     selectedLeadIds={selectedLeadIds}
                                     onToggleSelect={handleToggleSelect}
                                     onToggleSelectAll={handleToggleSelectAll}
+                                    totalFilteredCount={filteredLeads.length}
+                                    allFilteredSelected={selectedLeadIds.length === filteredLeads.length && filteredLeads.length > 0}
+                                    onSelectAllFiltered={handleToggleSelectAll}
+                                    onClearSelection={() => setSelectedLeadIds([])}
                                 />
                             )}
 
