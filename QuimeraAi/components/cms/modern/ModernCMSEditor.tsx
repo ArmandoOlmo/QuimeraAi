@@ -524,52 +524,10 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
                         </span>
                     </div>
 
-                    {/* Center - Device Preview Toggle (compact style) */}
-                    <div className="hidden md:flex flex-1 justify-center">
-                        <div className="flex items-center gap-0.5 bg-secondary/60 rounded-md p-0.5">
-                            <button
-                                onClick={() => setPreviewDevice('desktop')}
-                                className={`p-1.5 rounded transition-colors ${previewDevice === 'desktop' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}
-                                title="Desktop"
-                            >
-                                <Monitor size={16} />
-                            </button>
-                            <button
-                                onClick={() => setPreviewDevice('tablet')}
-                                className={`p-1.5 rounded transition-colors ${previewDevice === 'tablet' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}
-                                title="Tablet"
-                            >
-                                <Tablet size={16} />
-                            </button>
-                            <button
-                                onClick={() => setPreviewDevice('mobile')}
-                                className={`p-1.5 rounded transition-colors ${previewDevice === 'mobile' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}
-                                title="Mobile"
-                            >
-                                <Smartphone size={16} />
-                            </button>
-                        </div>
-                    </div>
+
 
                     {/* Right Section - Icons + Guardar + Volver */}
                     <div className="flex items-center gap-2 ml-auto">
-                        {/* Refresh preview */}
-                        <button
-                            onClick={() => setPreviewKey(prev => prev + 1)}
-                            className="h-8 w-8 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-                            title={t('landingEditor.refreshPreview', 'Refrescar vista previa')}
-                        >
-                            <RefreshCw size={16} />
-                        </button>
-
-                        {/* Toggle preview visibility */}
-                        <button
-                            onClick={() => setIsPreviewVisible(!isPreviewVisible)}
-                            className="h-8 w-8 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-                            title={isPreviewVisible ? 'Ocultar vista previa' : 'Mostrar vista previa'}
-                        >
-                            {isPreviewVisible ? <EyeOff size={16} /> : <Eye size={16} />}
-                        </button>
 
                         {/* Save button - Yellow/Primary style */}
                         <button
@@ -703,9 +661,9 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
                             isAiWorking={isAiWorking}
                         />
 
-                        <div className="flex-1 overflow-y-auto flex justify-center bg-background/50">
-                            {/* Dynamic width container - borderless for seamless editing */}
-                            <div className={`bg-background w-full transition-all duration-300 ${previewWidth} ${isPreviewVisible ? 'opacity-100' : 'opacity-0 hidden'}`}>
+                        <div className="flex-1 overflow-y-auto bg-background">
+                            {/* Content container - full width, no border */}
+                            <div className="w-full">
                                 <EditorContent editor={editor} />
                                 <EditorBubbleMenu
                                     editor={editor}
