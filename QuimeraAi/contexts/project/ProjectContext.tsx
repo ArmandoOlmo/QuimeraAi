@@ -983,7 +983,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
 
         // Check project limit (-1 means unlimited, owner has no limits)
         const isOwner = userDocument?.role === 'owner';
-        if (loadingAuth) return; // Wait for auth to be sure
+        // Note: loadingAuth guard removed - by the time a user is on the dashboard, auth is loaded
         if (!isOwner && maxProjects !== -1 && currentProjectCount >= maxProjects) {
             // Show upgrade modal if available
             if (upgradeContext) {
@@ -1018,7 +1018,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
 
             const createdProject = { ...newProject, id: docRef.id } as Project;
             setProjects(prev => [createdProject, ...prev]);
-            loadProject(docRef.id, false, true);
+            loadProject(docRef.id, false, true, createdProject);
         } catch (error: any) {
             console.error("Error creating project from template:", error);
             if (error.code === 'permission-denied') {
