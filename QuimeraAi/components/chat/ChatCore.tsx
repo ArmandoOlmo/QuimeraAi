@@ -135,7 +135,7 @@ function floatTo16BitPCM(float32Array: Float32Array): ArrayBuffer {
 // LEAD DETECTION & SCORING
 // =============================================================================
 
-const detectLeadIntent = (message: string): boolean => {
+const detectLeadIntent = (message: string, configKeywords?: string[]): boolean => {
     const defaultKeywords = [
         'precio', 'costo', 'cotización', 'comprar', 'contratar', 'disponibilidad',
         'agendar', 'reunión', 'demostración', 'demo', 'presentación',
@@ -143,9 +143,9 @@ const detectLeadIntent = (message: string): boolean => {
         'order', 'pricing', 'cost', 'how much', 'cuanto cuesta', 'quiero comprar'
     ];
 
-    // Use configurable keywords from leadConfig if provided, otherwise fall back to defaults
-    const keywords = leadConfig.intentKeywords?.length > 0
-        ? leadConfig.intentKeywords
+    // Use configurable keywords if provided, otherwise fall back to defaults
+    const keywords = configKeywords && configKeywords.length > 0
+        ? configKeywords
         : defaultKeywords;
 
     return keywords.some(keyword =>
@@ -820,7 +820,7 @@ ${suggestAvailableSlots()}
                 transcriptLength: conversationText.length,
                 transcriptPreview: conversationText.substring(0, 300)
             });
-            const hasHighIntent = messages.some(m => m.role === 'user' && detectLeadIntent(m.text));
+            const hasHighIntent = messages.some(m => m.role === 'user' && detectLeadIntent(m.text, leadConfig.intentKeywords));
             const leadScore = calculateLeadScore({ email: quickLeadEmail }, messages, hasHighIntent);
 
             // Analyze customer intent using LLM
@@ -1253,7 +1253,7 @@ ${suggestAvailableSlots()}
         }
 
         // Detect high intent and trigger lead capture
-        if (leadConfig.enabled && !leadCaptured && detectLeadIntent(userMessage)) {
+        if (leadConfig.enabled && !leadCaptured && detectLeadIntent(userMessage, leadConfig.intentKeywords)) {
             setMessages(prev => [...prev, {
                 role: 'model',
                 text: t('chatbotWidget.askEmailHighIntent')
