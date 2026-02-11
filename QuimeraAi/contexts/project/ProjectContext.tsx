@@ -583,7 +583,8 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
 
             // Assets (only include if exists)
             ...(project.faviconUrl && { faviconUrl: project.faviconUrl }),
-            ...(project.thumbnailUrl && { thumbnailUrl: project.thumbnailUrl }),
+            // Auto-sync hero image as project thumbnail for easy identification in dashboard
+            thumbnailUrl: data?.hero?.imageUrl || data?.hero?.backgroundImage || project.thumbnailUrl || null,
 
             // A/B Testing (only include if exists)
             ...(project.abTests && { abTests: project.abTests }),
