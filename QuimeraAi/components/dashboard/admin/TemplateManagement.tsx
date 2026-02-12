@@ -32,6 +32,7 @@ import {
 } from 'lucide-react';
 import { Project } from '../../../types';
 import ThumbnailEditor from '../../ui/ThumbnailEditor';
+import ConfirmationModal from '../../ui/ConfirmationModal';
 import TemplateEditorModal from './TemplateEditorModal';
 import { INDUSTRIES, INDUSTRY_CATEGORIES } from '../../../data/industries';
 import { db, doc, setDoc } from '../../../firebase';
@@ -53,6 +54,9 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isMigrating, setIsMigrating] = useState(false);
     const [isSeedingDigitalEdge, setIsSeedingDigitalEdge] = useState(false);
+    const [deleteConfirmTemplate, setDeleteConfirmTemplate] = useState<{ id: string; name: string } | null>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
+    const [showMigrateConfirm, setShowMigrateConfirm] = useState(false);
 
     // Search and Filter States
     const [searchTerm, setSearchTerm] = useState('');
@@ -170,10 +174,25 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
     };
 
     // Migrate templates with ecommerce components
-    const handleMigrateEcommerce = async () => {
-        if (!window.confirm(t('superadmin.templateManagement.migrateEcommerceConfirm', '¿Migrar todos los templates para agregar componentes de ecommerce con los colores del template?'))) {
-            return;
+    // Handle delete template via internal modal
+    const handleDeleteTemplate = async () => {
+        if (!deleteConfirmTemplate) return;
+        setIsDeleting(true);
+        try {
+            await deleteProject(deleteConfirmTemplate.id);
+            // If deleting from preview, close preview
+            if (previewTemplate?.id === deleteConfirmTemplate.id) {
+                setPreviewTemplate(null);
+            }
+        } catch (err: any) {
+            showError(err.message || t('superadmin.templateManagement.deleteError', 'You do not have permission to delete templates'));
+        } finally {
+            setIsDeleting(false);
+            setDeleteConfirmTemplate(null);
         }
+    };
+
+    const handleMigrateEcommerce = async () => {
 
         setIsMigrating(true);
         try {
@@ -372,7 +391,7 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
 
                         {/* Migrate Ecommerce Button */}
                         <button
-                            onClick={handleMigrateEcommerce}
+                            onClick={() => setShowMigrateConfirm(true)}
                             disabled={isMigrating}
                             className="flex items-center justify-center h-10 w-10 sm:h-9 sm:w-auto sm:px-3 rounded-lg text-sm font-medium transition-all text-green-500 hover:bg-green-500/10 disabled:opacity-50 disabled:cursor-not-allowed"
                             title={t('superadmin.templateManagement.migrateEcommerce', 'Add ecommerce components to all templates')}
@@ -741,11 +760,7 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                                                 <button
                                                     onClick={(e) => {
                                                         e.stopPropagation();
-                                                        if (window.confirm(t('superadmin.templateManagement.deleteConfirmation', { name: template.name }))) {
-                                                            deleteProject(template.id).catch(err => {
-                                                                showError(err.message || t('superadmin.templateManagement.deleteError', 'You do not have permission to delete templates'));
-                                                            });
-                                                        }
+                                                        setDeleteConfirmTemplate({ id: template.id, name: template.name });
                                                     }}
                                                     className="p-3 sm:p-2.5 bg-white/90 text-red-500 rounded-full active:scale-95 sm:hover:scale-110 transition-transform shadow-2xl"
                                                     title={t('superadmin.templateManagement.delete', 'Delete')}
@@ -867,11 +882,7 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                                             {canDeleteTemplates() && (
                                                 <button
                                                     onClick={() => {
-                                                        if (window.confirm(`Delete "${template.name}"?`)) {
-                                                            deleteProject(template.id).catch(err => {
-                                                                showError(err.message || t('superadmin.templateManagement.deleteError', 'You do not have permission to delete templates'));
-                                                            });
-                                                        }
+                                                        setDeleteConfirmTemplate({ id: template.id, name: template.name });
                                                     }}
                                                     className="p-2.5 sm:p-2 text-editor-text-secondary rounded-lg sm:rounded-md hover:bg-red-500/10 hover:text-red-400 transition-colors flex-shrink-0"
                                                     title="Delete"
@@ -1157,13 +1168,7 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                                 {canDeleteTemplates() && (
                                     <button
                                         onClick={() => {
-                                            if (window.confirm(t('superadmin.templateManagement.deleteConfirmation', { name: previewTemplate.name }))) {
-                                                deleteProject(previewTemplate.id)
-                                                    .then(() => setPreviewTemplate(null))
-                                                    .catch(err => {
-                                                        showError(err.message || t('superadmin.templateManagement.deleteError', 'You do not have permission to delete templates'));
-                                                    });
-                                            }
+                                            setDeleteConfirmTemplate({ id: previewTemplate.id, name: previewTemplate.name });
                                         }}
                                         className="col-span-2 sm:col-span-1 flex items-center justify-center gap-2 px-4 py-3 sm:py-2 bg-red-500/10 text-red-500 rounded-xl sm:rounded-lg hover:bg-red-500/20 transition-colors text-sm font-medium"
                                     >
@@ -1177,6 +1182,33 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                 </div>
             )}
 
+            {/* Delete Confirmation Modal */}
+            <ConfirmationModal
+                isOpen={!!deleteConfirmTemplate}
+                onConfirm={handleDeleteTemplate}
+                onCancel={() => setDeleteConfirmTemplate(null)}
+                title={t('superadmin.templateManagement.deleteConfirmTitle', '¿Eliminar template?')}
+                message={t('superadmin.templateManagement.deleteConfirmMessage', { name: deleteConfirmTemplate?.name, defaultValue: `¿Estás seguro de eliminar "${deleteConfirmTemplate?.name}"? Esta acción no se puede deshacer.` })}
+                variant="danger"
+                isLoading={isDeleting}
+                confirmText={t('common.delete', 'Eliminar')}
+                cancelText={t('common.cancel', 'Cancelar')}
+            />
+
+            {/* Migrate Ecommerce Confirmation Modal */}
+            <ConfirmationModal
+                isOpen={showMigrateConfirm}
+                onConfirm={() => {
+                    setShowMigrateConfirm(false);
+                    handleMigrateEcommerce();
+                }}
+                onCancel={() => setShowMigrateConfirm(false)}
+                title={t('superadmin.templateManagement.migrateEcommerceTitle', '¿Migrar templates?')}
+                message={t('superadmin.templateManagement.migrateEcommerceConfirm', '¿Migrar todos los templates para agregar componentes de ecommerce con los colores del template?')}
+                variant="warning"
+                confirmText={t('common.confirm', 'Confirmar')}
+                cancelText={t('common.cancel', 'Cancelar')}
+            />
         </div>
     );
 };
