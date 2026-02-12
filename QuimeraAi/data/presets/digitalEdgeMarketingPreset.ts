@@ -1,8 +1,8 @@
 /**
  * Digital Edge — Agencia de Marketing Digital Template Preset
  * 
- * Light-mode marketing agency landing page with blue accent (#3c83f6).
- * Inspired by the Stitch template "Landing Page Agencia Marketing Digital".
+ * DARK MODE marketing agency landing page with blue accent (#3c83f6).
+ * Imported from the Stitch template "Landing Page Agencia Marketing Digital".
  * 
  * Uses seeder at scripts/seedDigitalEdgeTemplate.ts.
  */
@@ -10,21 +10,22 @@
 import { PageData, ThemeData, PageSection, BrandIdentity, NavLink } from '../../types';
 
 // =============================================================================
-// COLORS — Marketing Agency Light Palette
+// COLORS — Marketing Agency Dark Palette
 // =============================================================================
 const COLORS = {
-    bg: '#ffffff',
-    bgAlt: '#f8fafc',
-    surface: '#f1f5f9',
-    surfaceAlt: '#e2e8f0',
+    bg: '#0b1120',
+    bgAlt: '#111827',
+    surface: '#1e293b',
+    surfaceAlt: '#334155',
     accent: '#3c83f6',
-    accentHover: '#2563eb',
-    text: '#64748b',
-    textMuted: '#94a3b8',
-    heading: '#1e293b',
-    border: '#e2e8f0',
+    accentHover: '#60a5fa',
+    text: '#94a3b8',
+    textMuted: '#64748b',
+    heading: '#f1f5f9',
+    border: '#1e293b',
     white: '#ffffff',
-    black: '#0f172a',
+    black: '#030712',
+    cardBg: '#0f172a',
 };
 
 // =============================================================================
@@ -35,10 +36,10 @@ export const digitalEdgePageData: PageData = {
         style: 'sticky-solid',
         layout: 'minimal',
         isSticky: true,
-        glassEffect: false,
+        glassEffect: true,
         height: 70,
         logoType: 'text',
-        logoText: 'Digital Edge',
+        logoText: 'DIGITAL EDGE',
         logoImageUrl: '',
         logoWidth: 160,
         links: [
@@ -55,7 +56,7 @@ export const digitalEdgePageData: PageData = {
         loginUrl: '#',
         colors: {
             background: COLORS.bg,
-            text: COLORS.heading,
+            text: COLORS.text,
             accent: COLORS.accent,
         },
         buttonBorderRadius: 'lg',
@@ -71,7 +72,7 @@ export const digitalEdgePageData: PageData = {
         secondaryCta: 'Ver Proyectos',
         imageUrl: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&q=80&w=2670',
         imageStyle: 'default',
-        imageDropShadow: false,
+        imageDropShadow: true,
         imageBorderRadius: 'lg',
         imageBorderSize: 'none',
         imageBorderColor: COLORS.border,
@@ -86,14 +87,14 @@ export const digitalEdgePageData: PageData = {
         sectionBorderColor: COLORS.border,
         colors: {
             primary: COLORS.accent,
-            secondary: COLORS.surfaceAlt,
+            secondary: COLORS.surface,
             background: COLORS.bg,
             text: COLORS.text,
             heading: COLORS.heading,
             buttonBackground: COLORS.accent,
             buttonText: COLORS.white,
             secondaryButtonBackground: 'transparent',
-            secondaryButtonText: COLORS.accent,
+            secondaryButtonText: COLORS.text,
         },
         secondaryButtonStyle: 'outline',
         secondaryButtonOpacity: 100,
@@ -162,13 +163,13 @@ export const digitalEdgePageData: PageData = {
         enableCardAnimation: true,
         borderRadius: 'lg',
         colors: {
-            background: COLORS.bgAlt,
+            background: COLORS.bg,
             accent: COLORS.accent,
             borderColor: COLORS.border,
             text: COLORS.text,
             heading: COLORS.heading,
             description: COLORS.text,
-            cardBackground: COLORS.bg,
+            cardBackground: COLORS.cardBg,
         },
     },
     testimonials: {
@@ -208,7 +209,7 @@ export const digitalEdgePageData: PageData = {
             borderColor: COLORS.border,
             text: COLORS.text,
             heading: COLORS.heading,
-            cardBackground: COLORS.bg,
+            cardBackground: COLORS.cardBg,
         },
     },
     slideshow: {
@@ -239,10 +240,10 @@ export const digitalEdgePageData: PageData = {
         colors: {
             background: COLORS.bg,
             heading: COLORS.heading,
-            arrowBackground: 'rgba(0, 0, 0, 0.5)',
+            arrowBackground: 'rgba(255, 255, 255, 0.15)',
             arrowText: COLORS.white,
             dotActive: COLORS.accent,
-            dotInactive: 'rgba(0, 0, 0, 0.2)',
+            dotInactive: 'rgba(255, 255, 255, 0.2)',
             captionBackground: 'rgba(0, 0, 0, 0.6)',
             captionText: COLORS.white,
         },
@@ -307,7 +308,7 @@ export const digitalEdgePageData: PageData = {
             },
         ],
         colors: {
-            background: COLORS.bgAlt,
+            background: COLORS.bg,
             accent: COLORS.accent,
             borderColor: COLORS.border,
             text: COLORS.text,
@@ -315,7 +316,7 @@ export const digitalEdgePageData: PageData = {
             buttonBackground: COLORS.accent,
             buttonText: COLORS.white,
             checkmarkColor: COLORS.accent,
-            cardBackground: COLORS.bg,
+            cardBackground: COLORS.cardBg,
             gradientStart: COLORS.accent,
             gradientEnd: '#60a5fa',
         },
@@ -342,13 +343,13 @@ export const digitalEdgePageData: PageData = {
             },
             {
                 question: '¿Cómo miden los resultados?',
-                answer: 'Absolutamente. Creemos en la transparencia total. Recibirás un dashboard en tiempo real y un informe ejecutivo mensual con los hitos alcanzados y los próximos pasos.',
+                answer: 'Creemos en la transparencia total. Recibirás un dashboard en tiempo real y un informe ejecutivo mensual con los hitos alcanzados y los próximos pasos.',
             },
         ],
         colors: {
-            background: COLORS.bg,
+            background: COLORS.bgAlt,
             accent: COLORS.accent,
-            borderColor: COLORS.border,
+            borderColor: COLORS.surface,
             text: COLORS.text,
             heading: COLORS.heading,
         },
@@ -369,17 +370,17 @@ export const digitalEdgePageData: PageData = {
         titleFontSize: 'md',
         descriptionFontSize: 'md',
         colors: {
-            background: COLORS.bgAlt,
+            background: COLORS.bg,
             accent: COLORS.accent,
             borderColor: COLORS.border,
             text: COLORS.text,
             heading: COLORS.heading,
             buttonBackground: COLORS.accent,
             buttonText: COLORS.white,
-            cardBackground: COLORS.bg,
-            inputBackground: COLORS.bgAlt,
+            cardBackground: COLORS.cardBg,
+            inputBackground: COLORS.surface,
             inputText: COLORS.heading,
-            inputBorder: COLORS.border,
+            inputBorder: COLORS.surfaceAlt,
             gradientStart: COLORS.accent,
             gradientEnd: '#60a5fa',
         },
@@ -392,17 +393,17 @@ export const digitalEdgePageData: PageData = {
         paddingY: 'lg',
         paddingX: 'md',
         colors: {
-            background: COLORS.bg,
+            background: COLORS.bgAlt,
             accent: COLORS.accent,
             borderColor: COLORS.border,
             text: COLORS.text,
             heading: COLORS.heading,
             buttonBackground: COLORS.accent,
             buttonText: COLORS.white,
-            cardBackground: `${COLORS.accent}10`,
-            inputBackground: COLORS.bgAlt,
+            cardBackground: COLORS.surface,
+            inputBackground: COLORS.surface,
             inputText: COLORS.heading,
-            inputBorder: COLORS.border,
+            inputBorder: COLORS.surfaceAlt,
         },
     },
     cta: {
@@ -414,7 +415,7 @@ export const digitalEdgePageData: PageData = {
         titleFontSize: 'lg',
         descriptionFontSize: 'md',
         colors: {
-            background: COLORS.bg,
+            background: COLORS.accent,
             gradientStart: COLORS.accent,
             gradientEnd: '#60a5fa',
             text: COLORS.white,
@@ -448,7 +449,7 @@ export const digitalEdgePageData: PageData = {
         animationType: 'fade-in-up',
         enableCardAnimation: true,
         colors: {
-            background: COLORS.bg,
+            background: COLORS.bgAlt,
             accent: COLORS.accent,
             borderColor: COLORS.border,
             text: COLORS.text,
@@ -481,7 +482,7 @@ export const digitalEdgePageData: PageData = {
         animationType: 'fade-in-up',
         enableCardAnimation: true,
         colors: {
-            background: COLORS.bgAlt,
+            background: COLORS.bg,
             accent: COLORS.accent,
             borderColor: COLORS.border,
             text: COLORS.text,
@@ -567,7 +568,7 @@ export const digitalEdgePageData: PageData = {
         colors: {
             primary: COLORS.accent,
             text: COLORS.white,
-            background: COLORS.bg,
+            background: COLORS.cardBg,
         },
     },
     map: {
@@ -587,7 +588,7 @@ export const digitalEdgePageData: PageData = {
             text: COLORS.text,
             heading: COLORS.heading,
             accent: COLORS.accent,
-            cardBackground: COLORS.bgAlt,
+            cardBackground: COLORS.cardBg,
         },
         titleFontSize: 'md',
         descriptionFontSize: 'md',
@@ -631,7 +632,7 @@ export const digitalEdgePageData: PageData = {
             borderColor: COLORS.border,
             text: COLORS.text,
             heading: COLORS.heading,
-            cardBackground: COLORS.bg,
+            cardBackground: COLORS.cardBg,
             priceColor: COLORS.accent,
         },
         titleFontSize: 'md',
@@ -642,7 +643,7 @@ export const digitalEdgePageData: PageData = {
         enableCardAnimation: true,
     },
     footer: {
-        title: 'Digital Edge',
+        title: 'DIGITAL EDGE',
         description: 'Agencia de marketing digital enfocada en resultados, tecnología y crecimiento escalable para la era moderna.',
         linkColumns: [
             {
@@ -679,10 +680,10 @@ export const digitalEdgePageData: PageData = {
         copyrightText: '© {YEAR} Digital Edge. Todos los derechos reservados.',
         colors: {
             background: COLORS.black,
-            border: COLORS.border,
+            border: COLORS.surface,
             text: COLORS.textMuted,
             linkHover: COLORS.accent,
-            heading: COLORS.white,
+            heading: COLORS.heading,
         },
     },
     banner: {
@@ -799,9 +800,9 @@ export const digitalEdgeMarketingPreset = {
     componentOrder: digitalEdgeComponentOrder,
     sectionVisibility: digitalEdgeSectionVisibility,
     status: 'Template' as const,
-    description: 'Landing page moderna para agencia de marketing digital con modo claro, acento azul (#3c83f6) y tipografía Inter. Incluye hero, servicios 360°, portfolio, equipo, planes de precios, testimonios, FAQ y formulario de contacto.',
+    description: 'Landing page dark mode para agencia de marketing digital con fondo navy (#0b1120), acento azul (#3c83f6) y tipografía Inter. Incluye hero, servicios 360°, portfolio, equipo, planes de precios, testimonios, FAQ y formulario de contacto.',
     category: 'marketing',
-    tags: ['marketing', 'agencia', 'digital', 'light', 'blue', 'seo', 'social-media', 'profesional'],
+    tags: ['marketing', 'agencia', 'digital', 'dark', 'blue', 'seo', 'social-media', 'profesional'],
     industries: ['marketing-advertising'],
     thumbnailUrl: '',
 };
