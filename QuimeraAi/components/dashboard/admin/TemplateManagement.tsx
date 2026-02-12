@@ -28,8 +28,7 @@ import {
     Settings2,
     ShoppingCart,
     Loader2,
-    Dumbbell,
-    Wine
+    Megaphone
 } from 'lucide-react';
 import { Project } from '../../../types';
 import ThumbnailEditor from '../../ui/ThumbnailEditor';
@@ -37,8 +36,7 @@ import TemplateEditorModal from './TemplateEditorModal';
 import { INDUSTRIES, INDUSTRY_CATEGORIES } from '../../../data/industries';
 import { db, doc, setDoc } from '../../../firebase';
 import { migrateTemplatesWithEcommerce } from '../../../scripts/migrateTemplatesEcommerce';
-import { seedGymBrutalistTemplate } from '../../../scripts/seedGymTemplate';
-import { seedEliteLuxuryTemplate } from '../../../scripts/seedEliteTemplate';
+import { seedDigitalEdgeTemplate } from '../../../scripts/seedDigitalEdgeTemplate';
 
 interface TemplateManagementProps {
     onBack: () => void;
@@ -54,6 +52,7 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
     const { projects, loadProject, createNewTemplate, deleteProject, archiveTemplate, duplicateTemplate, updateTemplateInState, refreshProjects } = useProject();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isMigrating, setIsMigrating] = useState(false);
+    const [isSeedingDigitalEdge, setIsSeedingDigitalEdge] = useState(false);
 
     // Search and Filter States
     const [searchTerm, setSearchTerm] = useState('');
@@ -193,6 +192,24 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
             );
         } finally {
             setIsMigrating(false);
+        }
+    };
+
+    // Seed Digital Edge Marketing template (TEMPORARY — remove after seed)
+    const handleSeedDigitalEdge = async () => {
+        setIsSeedingDigitalEdge(true);
+        try {
+            const result = await seedDigitalEdgeTemplate();
+            if (result.success) {
+                showSuccess(result.message);
+                await refreshProjects();
+            } else {
+                showError(result.message);
+            }
+        } catch (error: any) {
+            showError(`Error: ${error.message}`);
+        } finally {
+            setIsSeedingDigitalEdge(false);
         }
     };
 
@@ -372,51 +389,23 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                             </span>
                         </button>
 
-                        {/* Seed Gym Template Button */}
+                        {/* TEMPORARY: Seed Digital Edge Marketing template */}
                         <button
-                            onClick={async () => {
-                                if (!window.confirm('Seed the "Dark Brutalist Gym" template? This will add it to the templates list.')) return;
-                                try {
-                                    const result = await seedGymBrutalistTemplate();
-                                    if (result.success) {
-                                        showSuccess(result.message);
-                                        refreshProjects();
-                                    } else {
-                                        showError(result.message);
-                                    }
-                                } catch (err: any) {
-                                    showError(`Error: ${err.message}`);
-                                }
-                            }}
-                            className="flex items-center justify-center h-10 w-10 sm:h-9 sm:w-auto sm:px-3 rounded-lg text-sm font-medium transition-all text-orange-500 hover:bg-orange-500/10"
-                            title="Seed Dark Brutalist Gym template"
+                            onClick={handleSeedDigitalEdge}
+                            disabled={isSeedingDigitalEdge}
+                            className="flex items-center justify-center h-10 w-10 sm:h-9 sm:w-auto sm:px-3 rounded-lg text-sm font-medium transition-all text-blue-500 hover:bg-blue-500/10 disabled:opacity-50 disabled:cursor-not-allowed"
+                            title="Seed Digital Edge Marketing template"
                         >
-                            <Dumbbell className="w-5 h-5 sm:w-4 sm:h-4" />
-                            <span className="hidden lg:inline ml-1.5">Gym Template</span>
+                            {isSeedingDigitalEdge ? (
+                                <Loader2 className="w-5 h-5 sm:w-4 sm:h-4 animate-spin" />
+                            ) : (
+                                <Megaphone className="w-5 h-5 sm:w-4 sm:h-4" />
+                            )}
+                            <span className="hidden lg:inline ml-1.5">
+                                {isSeedingDigitalEdge ? 'Seeding...' : 'Digital Edge'}
+                            </span>
                         </button>
 
-                        {/* Seed Elite Luxury Template Button */}
-                        <button
-                            onClick={async () => {
-                                if (!window.confirm('Seed the "L\'Élite Landing Page de Lujo" template? This will add it to the templates list.')) return;
-                                try {
-                                    const result = await seedEliteLuxuryTemplate();
-                                    if (result.success) {
-                                        showSuccess(result.message);
-                                        refreshProjects();
-                                    } else {
-                                        showError(result.message);
-                                    }
-                                } catch (err: any) {
-                                    showError(`Error: ${err.message}`);
-                                }
-                            }}
-                            className="flex items-center justify-center h-10 w-10 sm:h-9 sm:w-auto sm:px-3 rounded-lg text-sm font-medium transition-all text-amber-500 hover:bg-amber-500/10"
-                            title="Seed L'Élite Luxury Restaurant template"
-                        >
-                            <Wine className="w-5 h-5 sm:w-4 sm:h-4" />
-                            <span className="hidden lg:inline ml-1.5">Elite Template</span>
-                        </button>
                         <button
                             onClick={() => setShowFilters(!showFilters)}
                             className={`flex items-center justify-center h-10 w-10 sm:h-9 sm:w-auto sm:px-3 rounded-lg text-sm font-medium transition-all ${showFilters ? 'text-editor-accent bg-editor-accent/10' : 'text-editor-text-secondary hover:text-editor-text-primary'}`}
