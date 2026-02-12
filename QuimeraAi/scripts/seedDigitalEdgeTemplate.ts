@@ -3,30 +3,32 @@
  * 
  * Inserts the Digital Edge marketing agency preset as a template in Firestore.
  * Can be triggered from the Super Admin panel.
+ * 
+ * If a template with the same name already exists, it will be REPLACED.
  */
 
-import { db, collection, getDocs, addDoc } from '../firebase';
+import { db, collection, getDocs, addDoc, deleteDoc, doc } from '../firebase';
 import { digitalEdgeMarketingPreset } from '../data/presets/digitalEdgeMarketingPreset';
 
 /**
  * Seed the Digital Edge marketing template into Firestore.
- * Checks for duplicates before inserting.
+ * If a template with the same name already exists, it deletes it first and re-creates it.
  */
 export async function seedDigitalEdgeTemplate(): Promise<{ success: boolean; message: string; templateId?: string }> {
     console.log('📣 Seeding Digital Edge marketing template...');
 
     try {
-        // Check for existing template with the same name
         const templatesCol = collection(db, 'templates');
         const snapshot = await getDocs(templatesCol);
 
-        const existing = snapshot.docs.find(doc => doc.data().name === digitalEdgeMarketingPreset.name);
-        if (existing) {
-            console.log('⚠️ Template already exists:', existing.id);
-            return {
-                success: false,
-                message: `Template "${digitalEdgeMarketingPreset.name}" already exists (ID: ${existing.id}). Delete it first if you want to re-seed.`,
-            };
+        // Delete any existing template(s) with the same name
+        const existingDocs = snapshot.docs.filter(d => d.data().name === digitalEdgeMarketingPreset.name);
+        if (existingDocs.length > 0) {
+            console.log(`🗑️ Found ${existingDocs.length} existing template(s) with name "${digitalEdgeMarketingPreset.name}", deleting...`);
+            for (const existingDoc of existingDocs) {
+                await deleteDoc(doc(db, 'templates', existingDoc.id));
+                console.log(`  ✅ Deleted: ${existingDoc.id}`);
+            }
         }
 
         // Insert the template
