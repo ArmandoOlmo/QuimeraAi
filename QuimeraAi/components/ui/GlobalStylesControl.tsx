@@ -159,6 +159,8 @@ export const generateComponentColorMappings = (colors: GlobalColors): Record<str
             borderColor: colors?.border,
             text: colors?.text,
             heading: colors?.heading,
+            description: colors?.text,
+            subtitleColor: colors?.textMuted,
             cardBackground: colors?.primary,
         },
         cta: {
@@ -678,8 +680,8 @@ const GlobalStylesControl: React.FC<GlobalStylesControlProps> = ({ mode = 'both'
                     <button
                         onClick={() => setActiveTab('colors')}
                         className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-md text-sm font-medium transition-all ${activeTab === 'colors'
-                                ? 'bg-editor-accent text-editor-bg shadow-sm'
-                                : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-panel-bg/50'
+                            ? 'bg-editor-accent text-editor-bg shadow-sm'
+                            : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-panel-bg/50'
                             }`}
                     >
                         <Palette size={16} />
@@ -688,8 +690,8 @@ const GlobalStylesControl: React.FC<GlobalStylesControlProps> = ({ mode = 'both'
                     <button
                         onClick={() => setActiveTab('typography')}
                         className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-md text-sm font-medium transition-all ${activeTab === 'typography'
-                                ? 'bg-editor-accent text-editor-bg shadow-sm'
-                                : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-panel-bg/50'
+                            ? 'bg-editor-accent text-editor-bg shadow-sm'
+                            : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-panel-bg/50'
                             }`}
                     >
                         <Type size={16} />
@@ -771,8 +773,8 @@ const GlobalStylesControl: React.FC<GlobalStylesControlProps> = ({ mode = 'both'
                                     onClick={() => handlePaletteSelect(palette)}
                                     disabled={isApplying}
                                     className={`relative p-2.5 rounded-lg border transition-all text-left group ${selectedPaletteId === palette.id
-                                            ? 'border-editor-accent ring-1 ring-editor-accent bg-editor-accent/10'
-                                            : 'border-editor-border hover:border-editor-accent/50 bg-editor-bg hover:bg-editor-panel-bg/50'
+                                        ? 'border-editor-accent ring-1 ring-editor-accent bg-editor-accent/10'
+                                        : 'border-editor-border hover:border-editor-accent/50 bg-editor-bg hover:bg-editor-panel-bg/50'
                                         } ${isApplying ? 'opacity-60 cursor-wait' : 'cursor-pointer'}`}
                                 >
                                     {/* Selection indicator */}

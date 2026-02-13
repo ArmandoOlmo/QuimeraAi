@@ -224,7 +224,7 @@ export interface TestimonialsData {
     items: TestimonialItem[];
     paddingY: PaddingSize;
     paddingX: PaddingSize;
-    colors: { background: string; accent: string; borderColor: string; text: string; heading: string; description?: string; cardBackground?: string; };
+    colors: { background: string; accent: string; borderColor: string; text: string; heading: string; description?: string; subtitleColor?: string; cardBackground?: string; };
     titleFontSize?: FontSize;
     descriptionFontSize?: FontSize;
     borderRadius?: BorderRadiusSize;

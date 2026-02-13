@@ -273,6 +273,7 @@ const Testimonials: React.FC<TestimonialsProps> = ({
     text: colors?.text,
     heading: colors?.heading || primaryColor,
     description: colors?.description || colors?.text,
+    subtitleColor: colors?.subtitleColor || colors?.description || colors?.text,
     cardBackground: colors?.cardBackground || primaryColor,
   };
 
@@ -289,7 +290,7 @@ const Testimonials: React.FC<TestimonialsProps> = ({
       // Card-level colors
       cardHeading: actualColors.heading || '#ffffff',
       cardText: actualColors.text || '#94a3b8',
-      cardDescription: actualColors.description || actualColors.text || '#94a3b8',
+      cardDescription: actualColors.subtitleColor || actualColors.description || actualColors.text || '#94a3b8',
     };
   }, [actualColors]);
 

@@ -116,6 +116,7 @@ export const componentStyles: ComponentStyles = {
       text: '#ffffff',
       heading: '#ffffff',
       description: '#94a3b8',
+      subtitleColor: '#94a3b8',
       cardBackground: '#4f46e5',
     },
   },
@@ -132,13 +133,13 @@ export const componentStyles: ComponentStyles = {
       size: 50,
     },
     colors: {
-        gradientStart: '#4f46e5',
-        gradientEnd: '#10b981',
-        text: 'rgba(255, 255, 255, 0.8)',
-        heading: '#FFFFFF',
-        description: 'rgba(255, 255, 255, 0.8)',
-        buttonBackground: '#ffffff',
-        buttonText: '#4f46e5',
+      gradientStart: '#4f46e5',
+      gradientEnd: '#10b981',
+      text: 'rgba(255, 255, 255, 0.8)',
+      heading: '#FFFFFF',
+      description: 'rgba(255, 255, 255, 0.8)',
+      buttonBackground: '#ffffff',
+      buttonText: '#4f46e5',
     },
   },
   services: {
@@ -384,11 +385,11 @@ export const componentStyles: ComponentStyles = {
       size: 50,
     },
     colors: {
-        background: '#0f172a',
-        accent: '#4f46e5',
-        text: '#94a3b8',
-        heading: '#F9FAFB',
-        description: '#94a3b8',
+      background: '#0f172a',
+      accent: '#4f46e5',
+      text: '#94a3b8',
+      heading: '#F9FAFB',
+      description: '#94a3b8',
     },
   },
   footer: {
@@ -546,7 +547,7 @@ export const componentStyles: ComponentStyles = {
       buttonText: '#ffffff',
     },
   },
-  
+
   // ==========================================================================
   // STORE SETTINGS
   // ==========================================================================
@@ -606,7 +607,7 @@ export const componentStyles: ComponentStyles = {
       badgeText: '#ffffff',
     },
   },
-  
+
   categoryGrid: {
     variant: 'cards',
     title: 'Categorías',
@@ -641,7 +642,7 @@ export const componentStyles: ComponentStyles = {
       overlayEnd: 'rgba(0, 0, 0, 0.7)',
     },
   },
-  
+
   productHero: {
     variant: 'featured',
     layout: 'split',
@@ -690,7 +691,7 @@ export const componentStyles: ComponentStyles = {
       addToCartText: '#ffffff',
     },
   },
-  
+
   saleCountdown: {
     variant: 'banner',
     title: '¡Oferta especial!',
@@ -731,7 +732,7 @@ export const componentStyles: ComponentStyles = {
       buttonText: '#ffffff',
     },
   },
-  
+
   trustBadges: {
     variant: 'horizontal',
     title: 'Por qué elegirnos',
@@ -755,7 +756,7 @@ export const componentStyles: ComponentStyles = {
       borderColor: '#334155',
     },
   },
-  
+
   recentlyViewed: {
     variant: 'carousel',
     title: 'Vistos recientemente',
@@ -789,7 +790,7 @@ export const componentStyles: ComponentStyles = {
       cardText: '#94a3b8',
     },
   },
-  
+
   productReviews: {
     variant: 'cards',
     title: 'Opiniones de clientes',
@@ -825,7 +826,7 @@ export const componentStyles: ComponentStyles = {
       verifiedBadgeColor: '#10b981',
     },
   },
-  
+
   collectionBanner: {
     variant: 'hero',
     title: 'Nueva Colección',
@@ -860,7 +861,7 @@ export const componentStyles: ComponentStyles = {
       buttonText: '#ffffff',
     },
   },
-  
+
   productBundle: {
     variant: 'horizontal',
     title: 'Pack especial',
@@ -902,7 +903,7 @@ export const componentStyles: ComponentStyles = {
       badgeText: '#ffffff',
     },
   },
-  
+
   announcementBar: {
     variant: 'static',
     messages: [
