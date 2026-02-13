@@ -224,7 +224,7 @@ const EcommerceImagePicker: React.FC<EcommerceImagePickerProps> = ({
                         accept="image/*"
                         multiple={multiple}
                         onChange={handleFileUpload}
-                        className="hidden"
+                        style={{ position: 'absolute', width: 0, height: 0, overflow: 'hidden', opacity: 0 }}
                     />
                     <button
                         onClick={() => fileInputRef.current?.click()}
@@ -328,17 +328,13 @@ const EcommerceImagePicker: React.FC<EcommerceImagePickerProps> = ({
                                     ? t('ecommerce.noProjectImages', 'No hay imágenes en tus proyectos')
                                     : t('ecommerce.noGlobalImages', 'No hay imágenes en la biblioteca global')}
                             </p>
-                            <label className="mt-4 cursor-pointer text-primary hover:underline flex items-center gap-2">
+                            <button
+                                onClick={() => fileInputRef.current?.click()}
+                                className="mt-4 cursor-pointer text-primary hover:underline flex items-center gap-2"
+                            >
                                 <Plus size={16} />
                                 {t('ecommerce.uploadFirst', 'Subir tu primera imagen')}
-                                <input
-                                    type="file"
-                                    accept="image/*"
-                                    multiple={multiple}
-                                    onChange={handleFileUpload}
-                                    className="hidden"
-                                />
-                            </label>
+                            </button>
                         </div>
                     )}
                 </div>
