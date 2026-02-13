@@ -172,8 +172,8 @@ const EcommerceImagePicker: React.FC<EcommerceImagePickerProps> = ({
                             <button
                                 onClick={() => setLibrarySource('project')}
                                 className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors flex items-center gap-2 ${librarySource === 'project'
-                                        ? 'bg-primary text-primary-foreground'
-                                        : 'text-muted-foreground hover:text-foreground'
+                                    ? 'bg-primary text-primary-foreground'
+                                    : 'text-muted-foreground hover:text-foreground'
                                     }`}
                             >
                                 <FolderOpen size={14} />
@@ -182,8 +182,8 @@ const EcommerceImagePicker: React.FC<EcommerceImagePickerProps> = ({
                             <button
                                 onClick={() => setLibrarySource('global')}
                                 className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors flex items-center gap-2 ${librarySource === 'global'
-                                        ? 'bg-primary text-primary-foreground'
-                                        : 'text-muted-foreground hover:text-foreground'
+                                    ? 'bg-primary text-primary-foreground'
+                                    : 'text-muted-foreground hover:text-foreground'
                                     }`}
                             >
                                 <Globe size={14} />
@@ -218,23 +218,26 @@ const EcommerceImagePicker: React.FC<EcommerceImagePickerProps> = ({
                         )}
                     </div>
 
-                    <label className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg cursor-pointer hover:bg-primary/90 transition-colors">
+                    <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*"
+                        multiple={multiple}
+                        onChange={handleFileUpload}
+                        className="hidden"
+                    />
+                    <button
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={isUploading}
+                        className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg cursor-pointer hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
                         {isUploading ? (
                             <Loader2 size={16} className="animate-spin" />
                         ) : (
                             <Upload size={16} />
                         )}
                         <span className="text-sm font-medium">{t('ecommerce.upload', 'Subir')}</span>
-                        <input
-                            ref={fileInputRef}
-                            type="file"
-                            accept="image/*"
-                            multiple={multiple}
-                            onChange={handleFileUpload}
-                            className="hidden"
-                            disabled={isUploading}
-                        />
-                    </label>
+                    </button>
                 </div>
 
                 {/* Image Grid */}
@@ -275,8 +278,8 @@ const EcommerceImagePicker: React.FC<EcommerceImagePickerProps> = ({
                                                         key={file.id}
                                                         onClick={() => handleSelectImage(file.downloadURL)}
                                                         className={`aspect-square rounded-lg overflow-hidden border-2 cursor-pointer group relative transition-all ${isSelected
-                                                                ? 'border-primary ring-2 ring-primary/50'
-                                                                : 'border-transparent hover:border-muted-foreground'
+                                                            ? 'border-primary ring-2 ring-primary/50'
+                                                            : 'border-transparent hover:border-muted-foreground'
                                                             }`}
                                                     >
                                                         <img
