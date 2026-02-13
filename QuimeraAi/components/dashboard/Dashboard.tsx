@@ -16,25 +16,66 @@ import StatCard from './StatCard';
 import FileHistory from './FileHistory';
 import FilterChip from './FilterChip';
 import EmptyState from './EmptyState';
-import UpgradeBanner from './UpgradeBanner';
 import NewsUpdates from './NewsUpdates';
 import DashboardHelpGuide from './DashboardHelpGuide';
-import { Plus, Menu, Search, LayoutGrid, Globe, Images, List, ArrowUpDown, CheckCircle, FileEdit, X, Loader2, Sparkles, MousePointerClick, Palette, Rocket, LayoutTemplate, BookOpen, ArrowLeft } from 'lucide-react';
+import { Plus, Menu, Search, LayoutGrid, Globe, Images, List, ArrowUpDown, CheckCircle, FileEdit, X, Loader2, Sparkles, MousePointerClick, Palette, Rocket, LayoutTemplate, BookOpen, ArrowLeft, Crown, ChevronUp, ChevronDown } from 'lucide-react';
 import { trackSearchPerformed, trackFilterApplied, trackSortChanged, trackViewModeChanged, trackDashboardView } from '../../utils/analytics';
 import { useInfiniteScroll, paginateArray, hasMoreItems } from '../../hooks/useInfiniteScroll';
+import { usePlans } from '../../contexts/PlansContext';
+import { useSafeUpgrade } from '../../contexts/UpgradeContext';
+import { useCreditsUsage } from '../../hooks/useCreditsUsage';
+import { SUBSCRIPTION_PLANS } from '../../types/subscription';
 
 const Dashboard: React.FC = () => {
     const { t } = useTranslation();
-    const { user, userDocument } = useAuth();
+    const { user, userDocument, canAccessSuperAdmin } = useAuth();
     const { view, setIsOnboardingOpen } = useUI();
     const { projects, isLoadingProjects, addNewProject } = useProject();
     const { domains } = useDomains();
     const { cmsPosts } = useCMS();
     const { navigate } = useRouter();
+    const { plansArray, getPlan } = usePlans();
+    const upgradeContext = useSafeUpgrade();
+    const { usage } = useCreditsUsage();
 
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [showMobileSearch, setShowMobileSearch] = useState(false);
+
+    // Upgrade button minimized state (persisted in localStorage)
+    const [upgradeMinimized, setUpgradeMinimized] = useState(() => {
+        const saved = localStorage.getItem('quimera_upgrade_minimized');
+        return saved === 'true';
+    });
+
+    const toggleUpgradeMinimized = () => {
+        setUpgradeMinimized(prev => {
+            const next = !prev;
+            localStorage.setItem('quimera_upgrade_minimized', String(next));
+            return next;
+        });
+    };
+
+    // Determine next plan for upgrade button
+    const currentPlanId = usage?.planId || 'free';
+    const currentPlan = getPlan(currentPlanId) || SUBSCRIPTION_PLANS[currentPlanId] || SUBSCRIPTION_PLANS.free;
+    const nextPlan = useMemo(() => {
+        const currentIndex = plansArray.findIndex(p => p.id === currentPlanId);
+        if (currentIndex !== -1 && currentIndex < plansArray.length - 1) {
+            return plansArray[currentIndex + 1];
+        } else if (currentIndex === -1) {
+            return plansArray.find(p => p.price.monthly > currentPlan.price.monthly) || null;
+        }
+        return null;
+    }, [plansArray, currentPlanId, currentPlan]);
+
+    const handleUpgradeClick = () => {
+        if (upgradeContext) {
+            upgradeContext.openUpgradeModal('generic');
+        }
+    };
+
+    const showUpgradeButton = !canAccessSuperAdmin && nextPlan && currentPlanId !== 'enterprise';
 
     // Instructions banner visibility (persisted in localStorage)
     const [showInstructions, setShowInstructions] = useState(() => {
@@ -340,20 +381,66 @@ const Dashboard: React.FC = () => {
                                             </span>
                                         </h1>
 
-                                        {/* New Project CTA - Opens Onboarding */}
-                                        <button
-                                            onClick={() => setIsOnboardingOpen(true)}
-                                            className="group relative flex items-center gap-3 px-6 py-4 bg-gradient-to-r from-yellow-400 via-orange-500 to-yellow-400 bg-[length:200%_100%] text-white font-bold rounded-2xl shadow-lg shadow-yellow-500/25 hover:shadow-yellow-500/40 transition-all duration-500 hover:scale-105 hover:bg-right"
-                                            aria-label={t('dashboard.newProject')}
-                                        >
-                                            <div className="flex items-center justify-center w-10 h-10 bg-white/30 rounded-xl backdrop-blur-sm group-hover:bg-white/40 transition-colors">
-                                                <Plus className="w-6 h-6" aria-hidden="true" />
-                                            </div>
-                                            <div className="flex flex-col items-start text-left">
-                                                <span className="text-lg leading-tight">{t('dashboard.newProject')}</span>
-                                                <span className="text-xs opacity-80 font-medium text-left">{t('dashboard.startBuilding')}</span>
-                                            </div>
-                                        </button>
+                                        {/* Right-side CTA buttons */}
+                                        <div className="flex flex-col gap-3 flex-shrink-0">
+                                            {/* New Project CTA - Opens Onboarding */}
+                                            <button
+                                                onClick={() => setIsOnboardingOpen(true)}
+                                                className="group relative flex items-center gap-3 px-6 py-4 bg-gradient-to-r from-yellow-400 via-orange-500 to-yellow-400 bg-[length:200%_100%] text-white font-bold rounded-2xl shadow-lg shadow-yellow-500/25 hover:shadow-yellow-500/40 transition-all duration-500 hover:scale-105 hover:bg-right"
+                                                aria-label={t('dashboard.newProject')}
+                                            >
+                                                <div className="flex items-center justify-center w-10 h-10 bg-white/30 rounded-xl backdrop-blur-sm group-hover:bg-white/40 transition-colors">
+                                                    <Plus className="w-6 h-6" aria-hidden="true" />
+                                                </div>
+                                                <div className="flex flex-col items-start text-left">
+                                                    <span className="text-lg leading-tight">{t('dashboard.newProject')}</span>
+                                                    <span className="text-xs opacity-80 font-medium text-left">{t('dashboard.startBuilding')}</span>
+                                                </div>
+                                            </button>
+
+                                            {/* Upgrade Plan CTA - Minimizable */}
+                                            {showUpgradeButton && (
+                                                upgradeMinimized ? (
+                                                    /* Minimized pill */
+                                                    <button
+                                                        onClick={toggleUpgradeMinimized}
+                                                        className="group relative flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600/80 via-primary/60 to-purple-600/80 bg-[length:200%_100%] text-white/90 font-semibold rounded-2xl border border-purple-400/20 hover:border-purple-400/40 shadow-md shadow-purple-500/15 hover:shadow-purple-500/30 transition-all duration-500 hover:scale-105 hover:bg-right"
+                                                        aria-label={t('dashboard.upgradeNow')}
+                                                    >
+                                                        <Crown className="w-4 h-4" aria-hidden="true" />
+                                                        <span className="text-sm">{t('dashboard.upgradeNow')}</span>
+                                                        <ChevronDown className="w-3.5 h-3.5 opacity-60" aria-hidden="true" />
+                                                    </button>
+                                                ) : (
+                                                    /* Expanded upgrade button */
+                                                    <div className="relative">
+                                                        <button
+                                                            onClick={handleUpgradeClick}
+                                                            className="group relative flex items-center gap-3 px-6 py-4 w-full bg-gradient-to-r from-purple-600 via-primary to-purple-600 bg-[length:200%_100%] text-white font-bold rounded-2xl shadow-lg shadow-purple-500/25 hover:shadow-purple-500/40 transition-all duration-500 hover:scale-105 hover:bg-right"
+                                                            aria-label={t('dashboard.upgradeNow')}
+                                                        >
+                                                            <div className="flex items-center justify-center w-10 h-10 bg-white/20 rounded-xl backdrop-blur-sm group-hover:bg-white/30 transition-colors">
+                                                                <Crown className="w-6 h-6" aria-hidden="true" />
+                                                            </div>
+                                                            <div className="flex flex-col items-start text-left">
+                                                                <span className="text-lg leading-tight">{nextPlan.name}</span>
+                                                                <span className="text-xs opacity-80 font-medium text-left">
+                                                                    ${nextPlan.price.monthly}/{t('dashboard.perMonth')} · {t('dashboard.upgradeNow')}
+                                                                </span>
+                                                            </div>
+                                                        </button>
+                                                        {/* Minimize toggle */}
+                                                        <button
+                                                            onClick={(e) => { e.stopPropagation(); toggleUpgradeMinimized(); }}
+                                                            className="absolute -top-1.5 -right-1.5 w-6 h-6 flex items-center justify-center bg-secondary/90 border border-border rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors shadow-sm z-10"
+                                                            aria-label="Minimize"
+                                                        >
+                                                            <ChevronUp className="w-3.5 h-3.5" />
+                                                        </button>
+                                                    </div>
+                                                )
+                                            )}
+                                        </div>
                                     </div>
 
                                     <p className="text-lg text-muted-foreground max-w-3xl mb-8 leading-relaxed">
@@ -402,14 +489,7 @@ const Dashboard: React.FC = () => {
                             </div>
                         )}
 
-                        {/* Upgrade Banner - Show on Dashboard */}
-                        {
-                            isDashboard && (
-                                <section className="w-full">
-                                    <UpgradeBanner />
-                                </section>
-                            )
-                        }
+
 
                         {/* Statistics Section - Only on Websites view */}
                         {
