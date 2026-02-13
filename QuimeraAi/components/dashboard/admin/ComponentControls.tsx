@@ -1012,7 +1012,7 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                     {<ColorControl label="Card Background" value={s.colors?.cardBackground || '#1f2937'} onChange={v => handleColorChange('cardBackground', v)} />}
-                    {<ColorControl label="Subtitle Color" value={s.colors?.subtitleColor || s.colors?.description || '#94a3b8'} onChange={v => handleColorChange('subtitleColor', v)} />}
+                    {<ColorControl label="Card Title Color" value={s.colors?.subtitleColor || s.colors?.description || '#94a3b8'} onChange={v => handleColorChange('subtitleColor', v)} />}
                 </div>
             </div>
         );
