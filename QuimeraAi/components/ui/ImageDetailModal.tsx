@@ -6,6 +6,7 @@ import { FileRecord } from '../../types';
 import { X, FileText, HardDrive, Calendar, Sparkles, Trash2, Download } from 'lucide-react';
 import { formatBytes, formatFileDate } from '../../utils/fileHelpers';
 import Modal from './Modal';
+import ConfirmationModal from './ConfirmationModal';
 
 interface ImageDetailModalProps {
     file: FileRecord;
@@ -18,6 +19,8 @@ const ImageDetailModal: React.FC<ImageDetailModalProps> = ({ file, isOpen, onClo
     const { deleteFile, updateFileNotes, generateFileSummary } = useFiles();
     const { success, error: showError } = useToast();
     const [notes, setNotes] = useState(file.notes || '');
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
     const notesTimeoutRef = useRef<number | null>(null);
 
     const handleNotesChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -32,15 +35,21 @@ const ImageDetailModal: React.FC<ImageDetailModalProps> = ({ file, isOpen, onClo
         }, 1000);
     };
 
-    const handleDelete = async () => {
-        if (window.confirm(t('dashboard.assets.actions.deleteConfirm'))) {
-            try {
-                await deleteFile(file.id, file.storagePath);
-                success(t('dashboard.assets.actions.deleted'));
-                onClose();
-            } catch (err) {
-                showError('Failed to delete file');
-            }
+    const handleDelete = () => {
+        setShowDeleteConfirm(true);
+    };
+
+    const confirmDelete = async () => {
+        setIsDeleting(true);
+        try {
+            await deleteFile(file.id, file.storagePath);
+            success(t('dashboard.assets.actions.deleted'));
+            setShowDeleteConfirm(false);
+            onClose();
+        } catch (err) {
+            showError('Failed to delete file');
+        } finally {
+            setIsDeleting(false);
         }
     };
 
@@ -174,6 +183,17 @@ const ImageDetailModal: React.FC<ImageDetailModalProps> = ({ file, isOpen, onClo
                     </div>
                 </div>
             </div>
+
+            {/* Delete Confirmation Modal */}
+            <ConfirmationModal
+                isOpen={showDeleteConfirm}
+                onConfirm={confirmDelete}
+                onCancel={() => setShowDeleteConfirm(false)}
+                title={t('dashboard.assets.actions.deleteConfirm', '¿Eliminar este archivo?')}
+                message={t('dashboard.assets.actions.deleteConfirmMessage', 'Esta acción no se puede deshacer. El archivo será eliminado permanentemente.')}
+                variant="danger"
+                isLoading={isDeleting}
+            />
         </Modal>
     );
 };
