@@ -45,17 +45,17 @@ const paddingXClasses: Record<PaddingSize, string> = {
 };
 
 const titleSizeClasses: Record<FontSize, string> = {
-    sm: 'text-2xl md:text-3xl',
-    md: 'text-3xl md:text-4xl',
-    lg: 'text-4xl md:text-5xl',
-    xl: 'text-5xl md:text-7xl',
+  sm: 'text-2xl md:text-3xl',
+  md: 'text-3xl md:text-4xl',
+  lg: 'text-4xl md:text-5xl',
+  xl: 'text-5xl md:text-7xl',
 };
 
 const descriptionSizeClasses: Record<FontSize, string> = {
-    sm: 'text-sm',
-    md: 'text-base',
-    lg: 'text-lg',
-    xl: 'text-xl',
+  sm: 'text-sm',
+  md: 'text-base',
+  lg: 'text-lg',
+  xl: 'text-xl',
 };
 
 const borderRadiusClasses: Record<BorderRadiusSize, string> = {
@@ -82,19 +82,19 @@ const getShadowClass = (shadow?: string): string => {
   return shadowClasses[shadow] || shadowClasses['lg'];
 };
 
-const TestimonialCard: React.FC<TestimonialCardProps> = ({ 
-  quote, 
-  name, 
-  title, 
-  delay = '0s', 
+const TestimonialCard: React.FC<TestimonialCardProps> = ({
+  quote,
+  name,
+  title,
+  delay = '0s',
   // Colors
-  accentColor, 
-  textColor, 
+  accentColor,
+  textColor,
   descriptionColor,
   borderColor,
   cardBackground,
   // Style
-  borderRadius, 
+  borderRadius,
   borderStyle,
   cardShadow,
   cardPadding,
@@ -105,7 +105,7 @@ const TestimonialCard: React.FC<TestimonialCardProps> = ({
 }) => {
   const animationClass = getAnimationClass(animationType, enableAnimation);
   const getBorderClass = () => {
-    switch(borderStyle) {
+    switch (borderStyle) {
       case 'none':
         return 'border-0';
       case 'solid':
@@ -120,32 +120,33 @@ const TestimonialCard: React.FC<TestimonialCardProps> = ({
   };
 
   const getVariantClasses = () => {
-    switch(variant) {
+    switch (variant) {
       case 'minimal-cards':
-        return 'border border-white/20 hover:border-white/40 transition-all duration-300 hover:-translate-y-1';
+        return 'border border-white/20 card-hover-lift card-shine-sweep card-border-glow';
       case 'glassmorphism':
-        return 'backdrop-blur-xl border border-white/20 hover:border-white/30 transition-all duration-300';
+        return 'backdrop-blur-xl border border-white/20 card-hover-lift card-shine-sweep';
       case 'gradient-glow':
-        return 'relative overflow-hidden before:absolute before:inset-0 before:bg-gradient-to-br before:from-white/10 before:to-white/5 before:opacity-0 hover:before:opacity-100 before:transition-opacity before:duration-300';
+        return 'relative overflow-hidden card-hover-glow card-shine-sweep before:absolute before:inset-0 before:bg-gradient-to-br before:from-white/10 before:to-white/5 before:opacity-0 hover:before:opacity-100 before:transition-opacity before:duration-300';
       case 'neon-border':
-        return 'relative border-2 hover:scale-[1.02] transition-all duration-500 animate-[pulse_3s_ease-in-out_infinite]';
+        return 'relative border-2 card-hover-tilt card-shine-sweep transition-all duration-500 animate-[pulse_3s_ease-in-out_infinite]';
       case 'floating-cards':
-        return 'border border-white/20 hover:-translate-y-2 hover:rotate-1 transition-all duration-500';
+        return 'border border-white/20 card-hover-lift card-shine-sweep';
       case 'gradient-shift':
-        return 'relative border-0 overflow-hidden transition-all duration-500 hover:scale-[1.03]';
+        return 'relative border-0 overflow-hidden card-hover-tilt card-shine-sweep transition-all duration-500 hover:scale-[1.03]';
       case 'classic':
       default:
-        return '';
+        return 'card-hover-lift card-shine-sweep card-border-glow';
     }
   };
 
   const getCardStyle = () => {
     const baseStyle: React.CSSProperties = {
       animationDelay: delay,
-      padding: `${cardPadding}px`
-    };
+      padding: `${cardPadding}px`,
+      '--card-accent': `${accentColor}66`,
+    } as React.CSSProperties;
 
-    switch(variant) {
+    switch (variant) {
       case 'minimal-cards':
         return {
           ...baseStyle,
@@ -198,14 +199,14 @@ const TestimonialCard: React.FC<TestimonialCardProps> = ({
 
   // Get border classes - apply user borderStyle for classic, variant styles for others
   const finalBorderClass = variant === 'classic' ? getBorderClass() : getVariantClasses();
-  
+
   return (
-    <div 
-      className={`flex flex-col justify-between ${animationClass} ${borderRadiusClasses[borderRadius]} ${getShadowClass(cardShadow)} ${finalBorderClass}`} 
+    <div
+      className={`group flex flex-col justify-between ${animationClass} ${borderRadiusClasses[borderRadius]} ${getShadowClass(cardShadow)} ${finalBorderClass}`}
       style={getCardStyle()}
     >
       {variant === 'gradient-shift' && (
-        <div 
+        <div
           className="absolute inset-0 opacity-50 -z-10"
           style={{
             background: `linear-gradient(45deg, ${cardBackground}55, transparent, ${cardBackground}44)`,
@@ -215,13 +216,15 @@ const TestimonialCard: React.FC<TestimonialCardProps> = ({
           }}
         />
       )}
-      <blockquote className={`mb-6 italic font-body ${needsZIndex ? 'relative z-10' : ''}`} style={{ color: textColor }}>
-        "{quote}"
+      <blockquote className={`mb-6 italic font-body transition-transform duration-300 group-hover:translate-x-1 ${needsZIndex ? 'relative z-10' : ''}`} style={{ color: textColor }}>
+        <span className="inline-block transition-all duration-300 group-hover:scale-110 group-hover:opacity-80" style={{ color: accentColor }}>&ldquo;</span>
+        {quote}
+        <span className="inline-block transition-all duration-300 group-hover:scale-110 group-hover:opacity-80" style={{ color: accentColor }}>&rdquo;</span>
       </blockquote>
       <div className={`flex items-center ${needsZIndex ? 'relative z-10' : ''}`}>
         <div>
-          <p className="font-bold font-body" style={{ color: textColor }}>{name}</p>
-          <p className="text-sm font-body" style={{ color: descriptionColor }}>{title}</p>
+          <p className="font-bold font-body transition-colors duration-300 group-hover:text-[var(--hover-accent)]" style={{ color: textColor, '--hover-accent': accentColor } as React.CSSProperties}>{name}</p>
+          <p className="text-sm font-body transition-opacity duration-300 group-hover:opacity-100" style={{ color: descriptionColor, opacity: 0.8 }}>{title}</p>
         </div>
       </div>
     </div>
@@ -229,27 +232,27 @@ const TestimonialCard: React.FC<TestimonialCardProps> = ({
 };
 
 interface TestimonialsProps extends TestimonialsData {
-    borderRadius?: BorderRadiusSize;
-    cardShadow?: string;
-    borderStyle?: string;
-    cardPadding?: number;
-    animationType?: AnimationType;
-    enableCardAnimation?: boolean;
-    cornerGradient?: CornerGradientConfig;
+  borderRadius?: BorderRadiusSize;
+  cardShadow?: string;
+  borderStyle?: string;
+  cardPadding?: number;
+  animationType?: AnimationType;
+  enableCardAnimation?: boolean;
+  cornerGradient?: CornerGradientConfig;
 }
 
-const Testimonials: React.FC<TestimonialsProps> = ({ 
-  title, 
-  description, 
-  items = [], 
-  paddingY, 
-  paddingX, 
-  colors, 
-  borderRadius = 'xl', 
+const Testimonials: React.FC<TestimonialsProps> = ({
+  title,
+  description,
+  items = [],
+  paddingY,
+  paddingX,
+  colors,
+  borderRadius = 'xl',
   cardShadow = 'lg',
   borderStyle = 'solid',
   cardPadding = 32,
-  titleFontSize = 'md', 
+  titleFontSize = 'md',
   descriptionFontSize = 'md',
   testimonialsVariant = 'classic',
   animationType = 'fade-in-up',
@@ -258,10 +261,10 @@ const Testimonials: React.FC<TestimonialsProps> = ({
 }) => {
   // Get design tokens with fallback to component colors
   const { getColor } = useDesignTokens();
-  
+
   // Get primary color for title and cards
   const primaryColor = getColor('primary.main', '#4f46e5');
-  
+
   // Merge component colors with Design Tokens - component colors take priority
   const actualColors = {
     background: colors?.background,
@@ -272,10 +275,10 @@ const Testimonials: React.FC<TestimonialsProps> = ({
     description: colors?.description || colors?.text,
     cardBackground: colors?.cardBackground || primaryColor,
   };
-  
+
   // Use component cardBackground color (falls back to primary if not set)
   const cardBackground = actualColors.cardBackground;
-  
+
   // Use user-selected colors directly - respect their choices
   const safeColors = useMemo(() => {
     return {
@@ -289,7 +292,7 @@ const Testimonials: React.FC<TestimonialsProps> = ({
       cardDescription: actualColors.description || actualColors.text || '#94a3b8',
     };
   }, [actualColors]);
-  
+
   return (
     <section id="testimonials" className="w-full relative overflow-hidden" style={{ backgroundColor: actualColors.background }}>
       <CornerGradient config={cornerGradient} />
@@ -302,27 +305,27 @@ const Testimonials: React.FC<TestimonialsProps> = ({
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {items.map((testimonial, index) => (
-            <TestimonialCard 
-                key={index}
-                quote={testimonial.quote}
-                name={testimonial.name}
-                title={testimonial.title}
-                delay={getAnimationDelay(index)}
-                // Colors
-                accentColor={actualColors.accent}
-                textColor={safeColors.cardText}
-                descriptionColor={safeColors.cardDescription}
-                borderColor={actualColors.borderColor}
-                cardBackground={cardBackground}
-                // Style
-                borderRadius={borderRadius}
-                borderStyle={borderStyle}
-                cardShadow={cardShadow}
-                cardPadding={cardPadding}
-                variant={testimonialsVariant}
-                // Animations
-                animationType={animationType}
-                enableAnimation={enableCardAnimation}
+            <TestimonialCard
+              key={index}
+              quote={testimonial.quote}
+              name={testimonial.name}
+              title={testimonial.title}
+              delay={getAnimationDelay(index)}
+              // Colors
+              accentColor={actualColors.accent}
+              textColor={safeColors.cardText}
+              descriptionColor={safeColors.cardDescription}
+              borderColor={actualColors.borderColor}
+              cardBackground={cardBackground}
+              // Style
+              borderRadius={borderRadius}
+              borderStyle={borderStyle}
+              cardShadow={cardShadow}
+              cardPadding={cardPadding}
+              variant={testimonialsVariant}
+              // Animations
+              animationType={animationType}
+              enableAnimation={enableCardAnimation}
             />
           ))}
         </div>

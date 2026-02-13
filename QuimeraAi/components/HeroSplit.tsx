@@ -95,7 +95,7 @@ const HeroSplit: React.FC<HeroSplitProps> = ({
     const ImageComponent = () => {
         if (isPendingImage(imageUrl)) {
             return (
-                <ImagePlaceholder 
+                <ImagePlaceholder
                     aspectRatio="16:9"
                     showGenerateButton={false}
                     className="w-full h-full object-cover"
@@ -104,25 +104,25 @@ const HeroSplit: React.FC<HeroSplitProps> = ({
         }
 
         return (
-            <img 
+            <img
                 src={imageUrl}
-                alt="Hero Image" 
+                alt="Hero Image"
                 className="w-full h-full object-cover"
             />
         );
     };
 
     return (
-        <section 
+        <section
             className="relative w-full overflow-hidden"
             style={{ maxHeight: `${maxHeight}px`, height: `${maxHeight}px` }}
         >
             {/* Container for both sides */}
             <div className="relative w-full h-full flex">
                 {/* Text Side */}
-                <div 
+                <div
                     className={`absolute inset-0 flex items-center ${imagePosition === 'right' ? 'justify-start' : 'justify-end'}`}
-                    style={{ 
+                    style={{
                         backgroundColor: actualColors.textBackground,
                         clipPath: getClipPath(false),
                         zIndex: 1,
@@ -130,12 +130,12 @@ const HeroSplit: React.FC<HeroSplitProps> = ({
                 >
                     {/* Corner Gradient overlay on text side */}
                     <CornerGradient config={cornerGradient} />
-                    <div 
+                    <div
                         className={`relative z-10 w-full md:w-1/2 px-8 md:px-16 py-12 ${imagePosition === 'right' ? 'pr-24 md:pr-32' : 'pl-24 md:pl-32'}`}
                     >
-                        <h1 
-                            className={`${headlineSizeClasses[headlineFontSize]} font-extrabold leading-tight mb-4 font-header`}
-                            style={{ 
+                        <h1
+                            className={`${headlineSizeClasses[headlineFontSize]} font-extrabold leading-tight mb-4 font-header split-headline`}
+                            style={{
                                 color: actualColors.heading,
                                 textTransform: 'var(--headings-transform, none)' as any,
                                 letterSpacing: 'var(--headings-spacing, normal)'
@@ -143,13 +143,13 @@ const HeroSplit: React.FC<HeroSplitProps> = ({
                         >
                             {safeHeadline}
                         </h1>
-                        <p 
-                            className={`${subheadlineSizeClasses[subheadlineFontSize]} mb-8 font-body max-w-md`}
+                        <p
+                            className={`${subheadlineSizeClasses[subheadlineFontSize]} mb-8 font-body max-w-md split-sub`}
                             style={{ color: actualColors.text }}
                         >
                             {subheadline}
                         </p>
-                        <a 
+                        <a
                             href={buttonUrl}
                             onClick={(e) => {
                                 if (onNavigate && buttonUrl && !buttonUrl.startsWith('http://') && !buttonUrl.startsWith('https://')) {
@@ -157,23 +157,25 @@ const HeroSplit: React.FC<HeroSplitProps> = ({
                                     onNavigate(buttonUrl);
                                 }
                             }}
-                            className={`inline-block font-bold py-3 px-8 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg font-button ${borderRadiusClasses[buttonBorderRadius || borderRadius]}`}
-                            style={{ 
+                            className={`split-cta group relative overflow-hidden inline-block font-bold py-3 px-8 transition-all duration-300 hover:-translate-y-1 hover:scale-105 hover:shadow-lg active:scale-95 font-button ${borderRadiusClasses[buttonBorderRadius || borderRadius]}`}
+                            style={{
                                 backgroundColor: actualColors.buttonBackground,
                                 color: actualColors.buttonText,
                                 textTransform: 'var(--buttons-transform, none)' as any,
                                 letterSpacing: 'var(--buttons-spacing, normal)'
                             }}
                         >
-                            {buttonText}
+                            <span className="relative z-10">{buttonText}</span>
+                            {/* Shine sweep overlay */}
+                            <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-12" />
                         </a>
                     </div>
                 </div>
 
                 {/* Image Side */}
-                <div 
-                    className={`absolute inset-0 ${imagePosition === 'right' ? 'left-auto' : 'right-auto'}`}
-                    style={{ 
+                <div
+                    className={`absolute inset-0 split-image-panel ${imagePosition === 'right' ? 'left-auto' : 'right-auto'}`}
+                    style={{
                         backgroundColor: actualColors.imageBackground,
                         clipPath: getClipPath(true),
                         zIndex: 2,
@@ -182,11 +184,49 @@ const HeroSplit: React.FC<HeroSplitProps> = ({
                         marginRight: imagePosition === 'left' ? 'auto' : '0',
                     }}
                 >
-                    <div className="w-full h-full">
+                    <div className="w-full h-full overflow-hidden">
                         <ImageComponent />
                     </div>
                 </div>
             </div>
+
+            {/* Entrance & Interaction Animations */}
+            <style>{`
+                @keyframes split-fade-up {
+                    from { opacity: 0; transform: translateY(25px); }
+                    to { opacity: 1; transform: translateY(0); }
+                }
+                @keyframes split-slide-in {
+                    from { opacity: 0; transform: translateX(${imagePosition === 'right' ? '-' : ''}30px); }
+                    to { opacity: 1; transform: translateX(0); }
+                }
+                @keyframes split-image-reveal {
+                    from { opacity: 0; transform: scale(1.08); }
+                    to { opacity: 1; transform: scale(1); }
+                }
+                .split-headline {
+                    animation: split-fade-up 0.7s ease-out 0.3s forwards;
+                    opacity: 0;
+                }
+                .split-sub {
+                    animation: split-fade-up 0.7s ease-out 0.45s forwards;
+                    opacity: 0;
+                }
+                .split-cta {
+                    animation: split-fade-up 0.7s ease-out 0.6s forwards;
+                    opacity: 0;
+                }
+                .split-image-panel {
+                    animation: split-image-reveal 1.2s ease-out 0.2s forwards;
+                    opacity: 0;
+                }
+                .split-image-panel img {
+                    transition: transform 0.6s ease;
+                }
+                .split-image-panel:hover img {
+                    transform: scale(1.05);
+                }
+            `}</style>
         </section>
     );
 };

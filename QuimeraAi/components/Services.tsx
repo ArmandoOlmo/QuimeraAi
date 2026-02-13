@@ -229,23 +229,23 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
     if (variant === 'cards') {
         return (
             <div
-                className={`p-8 text-center border border-transparent hover:border-opacity-50 transition-all duration-300 group ${radiusClass} ${animationClass} relative overflow-hidden`}
-                style={{ backgroundColor: cardBackground, borderColor: borderColor, animationDelay: delay }}
+                className={`p-8 text-center border border-transparent hover:border-opacity-50 group ${radiusClass} ${animationClass} relative overflow-hidden card-hover-lift card-shine-sweep card-border-glow`}
+                style={{ backgroundColor: cardBackground, borderColor: borderColor, animationDelay: delay, '--card-accent': `${accentColor}66` } as React.CSSProperties}
             >
                 <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
                 <div className="relative z-10 flex justify-center mb-6">
                     <div
-                        className="p-4 inline-flex rounded-2xl transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-3"
+                        className="p-4 inline-flex rounded-2xl card-icon-bounce"
                         style={{ backgroundColor: hexToRgba(accentColor, 0.125), color: accentColor }}
                     >
                         {icon}
                     </div>
                 </div>
-                <h3 className="relative z-10 text-2xl font-bold mb-3 font-header group-hover:text-[var(--accent)] transition-colors" style={{ color: headingColor, '--accent': accentColor, textTransform: 'var(--headings-transform, none)', letterSpacing: 'var(--headings-spacing, normal)' } as any}>
+                <h3 className="relative z-10 text-2xl font-bold mb-3 font-header group-hover:text-[var(--accent)] transition-colors duration-300" style={{ color: headingColor, '--accent': accentColor, textTransform: 'var(--headings-transform, none)', letterSpacing: 'var(--headings-spacing, normal)' } as any}>
                     {title}
                 </h3>
-                <p className="relative z-10 font-body opacity-80 leading-relaxed" style={{ color: textColor }}>{description}</p>
+                <p className="relative z-10 font-body opacity-80 leading-relaxed transition-opacity duration-300 group-hover:opacity-100" style={{ color: textColor }}>{description}</p>
             </div>
         );
     }
@@ -254,21 +254,22 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
     if (variant === 'grid') {
         return (
             <div
-                className={`h-full p-8 flex flex-col items-start text-left transition-all duration-300 group hover:-translate-y-1 ${radiusClass} ${animationClass}`}
+                className={`h-full p-8 flex flex-col items-start text-left group card-hover-lift card-shine-sweep ${radiusClass} ${animationClass}`}
                 style={{
                     backgroundColor: cardBackground,
                     borderLeft: `4px solid ${accentColor}`,
-                    animationDelay: delay
-                }}
+                    animationDelay: delay,
+                    '--card-accent': `${accentColor}66`,
+                } as React.CSSProperties}
             >
-                <div className="mb-6 p-3 rounded-lg bg-white/5 text-white group-hover:bg-[var(--accent)] group-hover:text-white transition-colors duration-300" style={{ '--accent': accentColor } as any}>
+                <div className="mb-6 p-3 rounded-lg bg-white/5 text-white card-icon-bounce group-hover:bg-[var(--accent)] group-hover:text-white transition-colors duration-300" style={{ '--accent': accentColor } as any}>
                     {React.cloneElement(icon as React.ReactElement<any>, { size: 24 })}
                 </div>
-                <h3 className="text-xl font-bold mb-3 font-header" style={{ color: headingColor, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>{title}</h3>
-                <p className="font-body text-sm opacity-70 mb-6 flex-grow" style={{ color: textColor }}>{description}</p>
+                <h3 className="text-xl font-bold mb-3 font-header transition-colors duration-300 group-hover:text-[var(--accent)]" style={{ color: headingColor, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)', '--accent': accentColor } as any}>{title}</h3>
+                <p className="font-body text-sm opacity-70 mb-6 flex-grow transition-opacity duration-300 group-hover:opacity-100" style={{ color: textColor }}>{description}</p>
 
-                <div className="mt-auto pt-4 flex items-center text-sm font-bold uppercase tracking-wider opacity-0 group-hover:opacity-100 transition-all transform translate-x-[-10px] group-hover:translate-x-0" style={{ color: accentColor }}>
-                    Learn more <ArrowRight size={16} className="ml-2" />
+                <div className="mt-auto pt-4 flex items-center text-sm font-bold uppercase tracking-wider opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-x-[-10px] group-hover:translate-x-0" style={{ color: accentColor }}>
+                    Learn more <ArrowRight size={16} className="ml-2 transition-transform duration-300 group-hover:translate-x-1" />
                 </div>
             </div>
         );
@@ -277,17 +278,17 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
     // VARIANT 3: MINIMAL LIST
     if (variant === 'minimal') {
         return (
-            <div className={`flex gap-6 p-6 transition-all duration-300 ${radiusClass} ${animationClass}`} style={{ backgroundColor: cardBackground, animationDelay: delay }}>
+            <div className={`group flex gap-6 p-6 card-hover-tilt card-shine-sweep ${radiusClass} ${animationClass}`} style={{ backgroundColor: cardBackground, animationDelay: delay, '--card-accent': `${accentColor}66` } as React.CSSProperties}>
                 <div className="flex-shrink-0 mt-1">
-                    <div className="w-12 h-12 flex items-center justify-center rounded-full" style={{ backgroundColor: hexToRgba(accentColor, 0.08), color: accentColor }}>
+                    <div className="w-12 h-12 flex items-center justify-center rounded-full card-icon-bounce" style={{ backgroundColor: hexToRgba(accentColor, 0.08), color: accentColor }}>
                         {React.cloneElement(icon as React.ReactElement<any>, { size: 20 })}
                     </div>
                 </div>
                 <div>
-                    <h3 className="text-xl font-bold mb-2 font-header flex items-center gap-2" style={{ color: headingColor, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>
+                    <h3 className="text-xl font-bold mb-2 font-header flex items-center gap-2 transition-colors duration-300 group-hover:text-[var(--accent)]" style={{ color: headingColor, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)', '--accent': accentColor } as any}>
                         {title}
                     </h3>
-                    <p className="font-body leading-relaxed opacity-80" style={{ color: textColor }}>{description}</p>
+                    <p className="font-body leading-relaxed opacity-80 transition-opacity duration-300 group-hover:opacity-100" style={{ color: textColor }}>{description}</p>
                 </div>
             </div>
         );

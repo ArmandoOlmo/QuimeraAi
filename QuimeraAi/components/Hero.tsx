@@ -250,19 +250,27 @@ const Hero: React.FC<HeroProps> = ({
       className={`relative container mx-auto flex flex-col items-center ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]} ${imagePosition === 'left' ? 'md:flex-row-reverse' : 'md:flex-row'} ${sectionBorderClass}`}
       style={{ backgroundColor: actualColors.background, borderColor: sectionBorderColor, minHeight: heroHeight ? `${heroHeight}vh` : undefined }}
     >
-      <div className="absolute top-0 left-0 -translate-x-1/4 -translate-y-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl -z-10"></div>
-      <div className="absolute bottom-0 right-0 translate-x-1/4 translate-y-1/4 w-96 h-96 bg-secondary/10 rounded-full blur-3xl -z-10"></div>
+      {/* Decorative orbs with drift animation */}
+      <div className="absolute top-0 left-0 -translate-x-1/4 -translate-y-1/4 w-96 h-96 rounded-full blur-3xl -z-10 classic-orb-1"
+        style={{ background: `radial-gradient(circle, ${actualColors.primary}18 0%, transparent 70%)` }}
+      />
+      <div className="absolute bottom-0 right-0 translate-x-1/4 translate-y-1/4 w-96 h-96 rounded-full blur-3xl -z-10 classic-orb-2"
+        style={{ background: `radial-gradient(circle, ${actualColors.secondary}15 0%, transparent 70%)` }}
+      />
 
-      <div className={`md:w-1/2 animate-fade-in-up text-center ${imagePosition === 'left' ? 'md:text-right' : 'md:text-left'}`}>
+      <div className={`md:w-1/2 text-center ${imagePosition === 'left' ? 'md:text-right' : 'md:text-left'}`}>
         {/* Badge/Kicker */}
         {showBadge && badgeText && (
-          <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full mb-4 border backdrop-blur-sm ${imagePosition === 'left' ? 'md:mr-0 md:ml-auto' : ''}`}
+          <div className={`classic-badge inline-flex items-center gap-2 px-4 py-2 rounded-full mb-4 border backdrop-blur-sm transition-all duration-300 hover:bg-white/10 cursor-default ${imagePosition === 'left' ? 'md:mr-0 md:ml-auto' : ''}`}
             style={{
               backgroundColor: badgeBackgroundColor || `${actualColors.primary}15`,
               borderColor: badgeColor ? `${badgeColor}30` : `${actualColors.primary}30`
             }}>
-            <span className="text-sm font-semibold animate-pulse flex items-center" style={{ color: badgeColor || actualColors.primary }}>
-              {renderBadgeIcon(badgeIcon)}
+            <span className="relative flex items-center">
+              <span className="absolute inline-flex h-full w-full rounded-full opacity-60 classic-ping" style={{ backgroundColor: badgeColor || actualColors.primary }} />
+              <span className="relative text-sm font-semibold flex items-center" style={{ color: badgeColor || actualColors.primary }}>
+                {renderBadgeIcon(badgeIcon)}
+              </span>
             </span>
             <span className="text-sm font-semibold" style={{ color: badgeColor || actualColors.primary }}>
               {badgeText}
@@ -271,7 +279,7 @@ const Hero: React.FC<HeroProps> = ({
         )}
 
         <h1
-          className={`${headlineSizeClasses[headlineFontSize]} font-extrabold text-site-heading leading-tight mb-6 font-header`}
+          className={`${headlineSizeClasses[headlineFontSize]} font-extrabold text-site-heading leading-tight mb-6 font-header classic-headline`}
           style={{
             color: actualColors.heading,
             textTransform: 'var(--headings-transform, none)' as any,
@@ -280,12 +288,12 @@ const Hero: React.FC<HeroProps> = ({
           dangerouslySetInnerHTML={{ __html: styledHeadline }}
         />
         <p
-          className={`${subheadlineSizeClasses[subheadlineFontSize]} mb-8 max-w-xl mx-auto md:mx-0 font-body`}
+          className={`${subheadlineSizeClasses[subheadlineFontSize]} mb-8 max-w-xl mx-auto md:mx-0 font-body classic-sub`}
           style={{ color: actualColors.text }}
         >
           {subheadline}
         </p>
-        <div className={`flex flex-wrap justify-center gap-4 ${imagePosition === 'left' ? 'md:justify-end' : 'md:justify-start'}`}>
+        <div className={`classic-ctas flex flex-wrap justify-center gap-4 ${imagePosition === 'left' ? 'md:justify-end' : 'md:justify-start'}`}>
           <a
             href={primaryCtaLink || '/#cta'}
             onClick={(e) => {
@@ -301,10 +309,11 @@ const Hero: React.FC<HeroProps> = ({
               textTransform: 'var(--buttons-transform, none)' as any,
               letterSpacing: 'var(--buttons-spacing, normal)'
             }}
-            className={`relative overflow-hidden group text-white font-bold py-3 px-8 hover:-translate-y-1 active:translate-y-0 transition-all duration-300 font-button ${borderRadiusClasses[borderRadius]}`}
+            className={`relative overflow-hidden group text-white font-bold py-3 px-8 hover:-translate-y-1 hover:scale-105 active:translate-y-0 active:scale-95 transition-all duration-300 font-button ${borderRadiusClasses[borderRadius]}`}
           >
             <span className="relative z-10">{primaryCta}</span>
-            <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
+            {/* Shine sweep overlay */}
+            <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-12" />
           </a>
           <a
             href={secondaryCtaLink || '/#features'}
@@ -315,7 +324,7 @@ const Hero: React.FC<HeroProps> = ({
                 onNavigate(href);
               }
             }}
-            className={`relative overflow-hidden group font-bold py-3 px-8 hover:-translate-y-1 active:translate-y-0 transition-all duration-300 font-button ${borderRadiusClasses[borderRadius]} ${secondaryButtonStyle === 'outline'
+            className={`relative overflow-hidden group font-bold py-3 px-8 hover:-translate-y-1 hover:scale-105 active:translate-y-0 active:scale-95 transition-all duration-300 font-button ${borderRadiusClasses[borderRadius]} ${secondaryButtonStyle === 'outline'
               ? 'border-2 bg-transparent'
               : secondaryButtonStyle === 'ghost'
                 ? 'bg-transparent hover:bg-white/10'
@@ -333,14 +342,14 @@ const Hero: React.FC<HeroProps> = ({
           >
             <span className="relative z-10">{secondaryCta}</span>
             {secondaryButtonStyle === 'solid' && (
-              <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
+              <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-12" />
             )}
           </a>
         </div>
 
       </div>
-      <div className={`md:w-1/2 mt-12 md:mt-0 flex justify-center ${justificationClasses[imageJustification]} animate-fade-in-up`} style={{ animationDelay: '0.2s' }}>
-        <div className="relative animate-hero-float" style={imageContainerStyle}>
+      <div className={`classic-image md:w-1/2 mt-12 md:mt-0 flex justify-center ${justificationClasses[imageJustification]}`}>
+        <div className="relative classic-image-float transition-transform duration-500 hover:scale-[1.03] hover:-translate-y-1" style={imageContainerStyle}>
           <div className={imageStyle === 'polaroid' || imageAspectRatio === 'auto' ? '' : aspectRatioClasses[imageAspectRatio]}>
             {imageStyle === 'polaroid' ? (
               <div className="img-style-polaroid">
@@ -352,6 +361,65 @@ const Hero: React.FC<HeroProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Entrance & Interaction Animations */}
+      <style>{`
+        @keyframes classic-fade-up {
+          from { opacity: 0; transform: translateY(25px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes classic-slide-in {
+          from { opacity: 0; transform: translateX(${imagePosition === 'left' ? '-' : ''}40px) scale(0.95); }
+          to { opacity: 1; transform: translateX(0) scale(1); }
+        }
+        @keyframes classic-float {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-12px); }
+        }
+        @keyframes classic-orb-drift-1 {
+          0%, 100% { opacity: 0.5; transform: translate(-25%, -25%) scale(1); }
+          50% { opacity: 0.8; transform: translate(-20%, -30%) scale(1.1); }
+        }
+        @keyframes classic-orb-drift-2 {
+          0%, 100% { opacity: 0.4; transform: translate(25%, 25%) scale(1); }
+          50% { opacity: 0.7; transform: translate(20%, 20%) scale(1.08); }
+        }
+        @keyframes classic-ping-anim {
+          75%, 100% { transform: scale(2); opacity: 0; }
+        }
+        .classic-badge {
+          animation: classic-fade-up 0.6s ease-out 0.2s forwards;
+          opacity: 0;
+        }
+        .classic-headline {
+          animation: classic-fade-up 0.7s ease-out 0.35s forwards;
+          opacity: 0;
+        }
+        .classic-sub {
+          animation: classic-fade-up 0.7s ease-out 0.5s forwards;
+          opacity: 0;
+        }
+        .classic-ctas {
+          animation: classic-fade-up 0.7s ease-out 0.65s forwards;
+          opacity: 0;
+        }
+        .classic-image {
+          animation: classic-slide-in 0.9s ease-out 0.3s forwards;
+          opacity: 0;
+        }
+        .classic-image-float {
+          animation: classic-float 6s ease-in-out 1.5s infinite;
+        }
+        .classic-orb-1 {
+          animation: classic-orb-drift-1 10s ease-in-out infinite;
+        }
+        .classic-orb-2 {
+          animation: classic-orb-drift-2 12s ease-in-out 1s infinite;
+        }
+        .classic-ping {
+          animation: classic-ping-anim 2s cubic-bezier(0,0,0.2,1) infinite;
+        }
+      `}</style>
     </section>
   );
 };
