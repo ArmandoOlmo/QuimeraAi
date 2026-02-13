@@ -43,7 +43,7 @@ const EcommerceImagePicker: React.FC<EcommerceImagePickerProps> = ({
     const { files, globalFiles, fetchGlobalFiles, uploadFile } = useFiles();
     const { projects, activeProjectId } = useProject();
     const { success, error: showError } = useToast();
-    
+
     const [librarySource, setLibrarySource] = useState<'project' | 'global'>('project');
     const [searchQuery, setSearchQuery] = useState('');
     const [isUploading, setIsUploading] = useState(false);
@@ -60,15 +60,15 @@ const EcommerceImagePicker: React.FC<EcommerceImagePickerProps> = ({
     const sourceFiles = librarySource === 'project' ? files : globalFiles;
     const imageFiles = useMemo(() => {
         let result = sourceFiles.filter(f => f.type?.startsWith('image/'));
-        
+
         if (searchQuery) {
             const query = searchQuery.toLowerCase();
-            result = result.filter(f => 
+            result = result.filter(f =>
                 f.name.toLowerCase().includes(query) ||
                 f.notes?.toLowerCase().includes(query)
             );
         }
-        
+
         return result;
     }, [sourceFiles, searchQuery]);
 
@@ -79,7 +79,7 @@ const EcommerceImagePicker: React.FC<EcommerceImagePickerProps> = ({
         }
 
         const grouped: { [key: string]: FileRecord[] } = {};
-        
+
         // Put active project first
         if (activeProjectId) {
             grouped[activeProjectId] = [];
@@ -117,18 +117,25 @@ const EcommerceImagePicker: React.FC<EcommerceImagePickerProps> = ({
 
         setIsUploading(true);
         try {
+            let uploadedCount = 0;
             for (const file of Array.from(uploadedFiles)) {
                 if (onUpload) {
                     onUpload(file);
+                    uploadedCount++;
                 } else {
                     // Upload to project library and select
                     const url = await uploadFile(file);
                     if (url) {
                         onSelect(url);
+                        uploadedCount++;
+                    } else {
+                        showError(t('ecommerce.uploadError', 'Error al subir la imagen. Verifica que tengas un proyecto activo.'));
                     }
                 }
             }
-            success(t('ecommerce.imageUploaded', 'Imagen subida correctamente'));
+            if (uploadedCount > 0) {
+                success(t('ecommerce.imageUploaded', 'Imagen subida correctamente'));
+            }
         } catch (err) {
             console.error('Error uploading image:', err);
             showError(t('ecommerce.uploadError', 'Error al subir la imagen'));
@@ -159,34 +166,32 @@ const EcommerceImagePicker: React.FC<EcommerceImagePickerProps> = ({
                         <h2 className="text-lg font-bold text-foreground">
                             {t('ecommerce.selectImage', 'Seleccionar Imagen')}
                         </h2>
-                        
+
                         {/* Library Tabs */}
                         <div className="flex bg-muted/50 p-1 rounded-lg">
                             <button
                                 onClick={() => setLibrarySource('project')}
-                                className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors flex items-center gap-2 ${
-                                    librarySource === 'project'
+                                className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors flex items-center gap-2 ${librarySource === 'project'
                                         ? 'bg-primary text-primary-foreground'
                                         : 'text-muted-foreground hover:text-foreground'
-                                }`}
+                                    }`}
                             >
                                 <FolderOpen size={14} />
                                 {t('ecommerce.myImages', 'Mis Imágenes')}
                             </button>
                             <button
                                 onClick={() => setLibrarySource('global')}
-                                className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors flex items-center gap-2 ${
-                                    librarySource === 'global'
+                                className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors flex items-center gap-2 ${librarySource === 'global'
                                         ? 'bg-primary text-primary-foreground'
                                         : 'text-muted-foreground hover:text-foreground'
-                                }`}
+                                    }`}
                             >
                                 <Globe size={14} />
                                 {t('ecommerce.globalLibrary', 'Biblioteca Global')}
                             </button>
                         </div>
                     </div>
-                    
+
                     <button
                         onClick={onClose}
                         className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
@@ -212,7 +217,7 @@ const EcommerceImagePicker: React.FC<EcommerceImagePickerProps> = ({
                             </button>
                         )}
                     </div>
-                    
+
                     <label className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg cursor-pointer hover:bg-primary/90 transition-colors">
                         {isUploading ? (
                             <Loader2 size={16} className="animate-spin" />
@@ -238,7 +243,7 @@ const EcommerceImagePicker: React.FC<EcommerceImagePickerProps> = ({
                         <div className="space-y-6">
                             {Object.entries(imagesByProject).map(([projectId, projectImages]) => {
                                 if (projectImages.length === 0) return null;
-                                
+
                                 return (
                                     <div key={projectId} className="space-y-3">
                                         {/* Project Header (only show for project library) */}
@@ -248,8 +253,8 @@ const EcommerceImagePicker: React.FC<EcommerceImagePickerProps> = ({
                                                     {projectNames[projectId] || t('ecommerce.unknownProject', 'Proyecto desconocido')}
                                                 </h3>
                                                 <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-md">
-                                                    {projectImages.length} {projectImages.length === 1 
-                                                        ? t('ecommerce.image', 'imagen') 
+                                                    {projectImages.length} {projectImages.length === 1
+                                                        ? t('ecommerce.image', 'imagen')
                                                         : t('ecommerce.images', 'imágenes')}
                                                 </span>
                                                 {projectId === activeProjectId && (
@@ -259,21 +264,20 @@ const EcommerceImagePicker: React.FC<EcommerceImagePickerProps> = ({
                                                 )}
                                             </div>
                                         )}
-                                        
+
                                         {/* Images Grid */}
                                         <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-3">
                                             {projectImages.map(file => {
                                                 const isSelected = currentImages.includes(file.downloadURL);
-                                                
+
                                                 return (
                                                     <div
                                                         key={file.id}
                                                         onClick={() => handleSelectImage(file.downloadURL)}
-                                                        className={`aspect-square rounded-lg overflow-hidden border-2 cursor-pointer group relative transition-all ${
-                                                            isSelected
+                                                        className={`aspect-square rounded-lg overflow-hidden border-2 cursor-pointer group relative transition-all ${isSelected
                                                                 ? 'border-primary ring-2 ring-primary/50'
                                                                 : 'border-transparent hover:border-muted-foreground'
-                                                        }`}
+                                                            }`}
                                                     >
                                                         <img
                                                             src={file.downloadURL}
