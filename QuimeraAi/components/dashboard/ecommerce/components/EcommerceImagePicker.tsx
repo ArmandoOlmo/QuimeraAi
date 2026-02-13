@@ -4,7 +4,7 @@
  * Permite seleccionar de: biblioteca del proyecto, biblioteca global, o subir nuevas
  */
 
-import React, { useState, useMemo, useEffect, useRef } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
     X,
@@ -47,7 +47,18 @@ const EcommerceImagePicker: React.FC<EcommerceImagePickerProps> = ({
     const [librarySource, setLibrarySource] = useState<'project' | 'global'>('project');
     const [searchQuery, setSearchQuery] = useState('');
     const [isUploading, setIsUploading] = useState(false);
-    const fileInputRef = useRef<HTMLInputElement>(null);
+
+    // Trigger file upload by creating a temporary input element
+    // This is the most reliable cross-browser approach for modals
+    const triggerFileUpload = () => {
+        if (isUploading) return;
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+        if (multiple) input.multiple = true;
+        input.onchange = (e) => handleFileUpload(e as unknown as React.ChangeEvent<HTMLInputElement>);
+        input.click();
+    };
 
     // Fetch global files when switching to global library
     useEffect(() => {
@@ -141,9 +152,6 @@ const EcommerceImagePicker: React.FC<EcommerceImagePickerProps> = ({
             showError(t('ecommerce.uploadError', 'Error al subir la imagen'));
         } finally {
             setIsUploading(false);
-            if (fileInputRef.current) {
-                fileInputRef.current.value = '';
-            }
         }
     };
 
@@ -218,16 +226,8 @@ const EcommerceImagePicker: React.FC<EcommerceImagePickerProps> = ({
                         )}
                     </div>
 
-                    <input
-                        ref={fileInputRef}
-                        type="file"
-                        accept="image/*"
-                        multiple={multiple}
-                        onChange={handleFileUpload}
-                        style={{ position: 'absolute', width: 0, height: 0, overflow: 'hidden', opacity: 0 }}
-                    />
                     <button
-                        onClick={() => fileInputRef.current?.click()}
+                        onClick={triggerFileUpload}
                         disabled={isUploading}
                         className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg cursor-pointer hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
@@ -329,7 +329,7 @@ const EcommerceImagePicker: React.FC<EcommerceImagePickerProps> = ({
                                     : t('ecommerce.noGlobalImages', 'No hay imágenes en la biblioteca global')}
                             </p>
                             <button
-                                onClick={() => fileInputRef.current?.click()}
+                                onClick={triggerFileUpload}
                                 className="mt-4 cursor-pointer text-primary hover:underline flex items-center gap-2"
                             >
                                 <Plus size={16} />
