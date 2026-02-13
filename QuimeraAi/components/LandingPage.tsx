@@ -5,6 +5,14 @@ import Hero from './Hero';
 import HeroModern from './HeroModern';
 import HeroGradient from './HeroGradient';
 import HeroFitness from './HeroFitness';
+import HeroEditorial from './HeroEditorial';
+import HeroCinematic from './HeroCinematic';
+import HeroMinimal from './HeroMinimal';
+import HeroBold from './HeroBold';
+import HeroOverlap from './HeroOverlap';
+import HeroVerticalSplit from './HeroVerticalSplit';
+import HeroGlass from './HeroGlass';
+import HeroStacked from './HeroStacked';
 import HeroSplit from './HeroSplit';
 import Features from './Features';
 import Testimonials from './Testimonials';
@@ -514,13 +522,19 @@ const LandingPageContent: React.FC = () => {
 
     switch (customComp.baseComponent) {
       case 'hero':
-        return mergedData.heroVariant === 'modern'
-          ? <HeroModern {...mergedData} borderRadius={mergedData.buttonBorderRadius || buttonBorderRadius} />
-          : mergedData.heroVariant === 'gradient'
-            ? <HeroGradient {...mergedData} borderRadius={mergedData.buttonBorderRadius || buttonBorderRadius} />
-            : mergedData.heroVariant === 'fitness'
-              ? <HeroFitness {...mergedData} borderRadius={mergedData.buttonBorderRadius || buttonBorderRadius} />
-              : <Hero {...mergedData} borderRadius={mergedData.buttonBorderRadius || buttonBorderRadius} />;
+        const hbr = mergedData.buttonBorderRadius || buttonBorderRadius;
+        if (mergedData.heroVariant === 'modern') return <HeroModern {...mergedData} borderRadius={hbr} />;
+        if (mergedData.heroVariant === 'gradient') return <HeroGradient {...mergedData} borderRadius={hbr} />;
+        if (mergedData.heroVariant === 'fitness') return <HeroFitness {...mergedData} borderRadius={hbr} />;
+        if (mergedData.heroVariant === 'editorial') return <HeroEditorial {...mergedData} borderRadius={hbr} />;
+        if (mergedData.heroVariant === 'cinematic') return <HeroCinematic {...mergedData} borderRadius={hbr} />;
+        if (mergedData.heroVariant === 'minimal') return <HeroMinimal {...mergedData} borderRadius={hbr} />;
+        if (mergedData.heroVariant === 'bold') return <HeroBold {...mergedData} borderRadius={hbr} />;
+        if (mergedData.heroVariant === 'overlap') return <HeroOverlap {...mergedData} borderRadius={hbr} />;
+        if (mergedData.heroVariant === 'verticalSplit') return <HeroVerticalSplit {...mergedData} borderRadius={hbr} />;
+        if (mergedData.heroVariant === 'glass') return <HeroGlass {...mergedData} borderRadius={hbr} />;
+        if (mergedData.heroVariant === 'stacked') return <HeroStacked {...mergedData} borderRadius={hbr} />;
+        return <Hero {...mergedData} borderRadius={hbr} />;
       case 'features':
         return <Features {...mergedData} borderRadius={mergedData.borderRadius || borderRadius} />;
       case 'testimonials':
@@ -704,13 +718,22 @@ const LandingPageContent: React.FC = () => {
 
   const componentsMap: Record<PageSection, React.ReactNode> = {
     hero: (
-      mergedHeroData.heroVariant === 'modern'
-        ? <HeroModern {...mergedHeroData} borderRadius={mergedHeroData.buttonBorderRadius || theme.buttonBorderRadius} onNavigate={handleLinkNavigation} />
-        : mergedHeroData.heroVariant === 'gradient'
-          ? <HeroGradient {...mergedHeroData} borderRadius={mergedHeroData.buttonBorderRadius || theme.buttonBorderRadius} onNavigate={handleLinkNavigation} />
-          : mergedHeroData.heroVariant === 'fitness'
-            ? <HeroFitness {...mergedHeroData} borderRadius={mergedHeroData.buttonBorderRadius || theme.buttonBorderRadius} onNavigate={handleLinkNavigation} />
-            : <Hero {...mergedHeroData} borderRadius={mergedHeroData.buttonBorderRadius || theme.buttonBorderRadius} onNavigate={handleLinkNavigation} />
+      (() => {
+        const hbr = mergedHeroData.buttonBorderRadius || theme.buttonBorderRadius;
+        const nav = handleLinkNavigation;
+        if (mergedHeroData.heroVariant === 'modern') return <HeroModern {...mergedHeroData} borderRadius={hbr} onNavigate={nav} />;
+        if (mergedHeroData.heroVariant === 'gradient') return <HeroGradient {...mergedHeroData} borderRadius={hbr} onNavigate={nav} />;
+        if (mergedHeroData.heroVariant === 'fitness') return <HeroFitness {...mergedHeroData} borderRadius={hbr} onNavigate={nav} />;
+        if (mergedHeroData.heroVariant === 'editorial') return <HeroEditorial {...mergedHeroData} borderRadius={hbr} onNavigate={nav} />;
+        if (mergedHeroData.heroVariant === 'cinematic') return <HeroCinematic {...mergedHeroData} borderRadius={hbr} onNavigate={nav} />;
+        if (mergedHeroData.heroVariant === 'minimal') return <HeroMinimal {...mergedHeroData} borderRadius={hbr} onNavigate={nav} />;
+        if (mergedHeroData.heroVariant === 'bold') return <HeroBold {...mergedHeroData} borderRadius={hbr} onNavigate={nav} />;
+        if (mergedHeroData.heroVariant === 'overlap') return <HeroOverlap {...mergedHeroData} borderRadius={hbr} onNavigate={nav} />;
+        if (mergedHeroData.heroVariant === 'verticalSplit') return <HeroVerticalSplit {...mergedHeroData} borderRadius={hbr} onNavigate={nav} />;
+        if (mergedHeroData.heroVariant === 'glass') return <HeroGlass {...mergedHeroData} borderRadius={hbr} onNavigate={nav} />;
+        if (mergedHeroData.heroVariant === 'stacked') return <HeroStacked {...mergedHeroData} borderRadius={hbr} onNavigate={nav} />;
+        return <Hero {...mergedHeroData} borderRadius={hbr} onNavigate={nav} />;
+      })()
     ),
     heroSplit: <HeroSplit {...mergedHeroSplitData} borderRadius={mergedHeroSplitData?.buttonBorderRadius || theme.buttonBorderRadius} onNavigate={handleLinkNavigation} />,
     features: <Features {...mergedFeaturesData} borderRadius={mergedFeaturesData.borderRadius || theme.cardBorderRadius} />,

@@ -11,6 +11,14 @@ import Hero from '../../Hero';
 import HeroModern from '../../HeroModern';
 import HeroGradient from '../../HeroGradient';
 import HeroFitness from '../../HeroFitness';
+import HeroEditorial from '../../HeroEditorial';
+import HeroCinematic from '../../HeroCinematic';
+import HeroMinimal from '../../HeroMinimal';
+import HeroBold from '../../HeroBold';
+import HeroOverlap from '../../HeroOverlap';
+import HeroVerticalSplit from '../../HeroVerticalSplit';
+import HeroGlass from '../../HeroGlass';
+import HeroStacked from '../../HeroStacked';
 import Features from '../../Features';
 import Testimonials from '../../Testimonials';
 import CTASection from '../../CTASection';
@@ -37,18 +45,18 @@ interface ComponentPreviewProps {
 }
 
 const widthClasses: Record<PreviewDevice, Record<PreviewOrientation, string>> = {
-  desktop: {
-    portrait: 'w-full',
-    landscape: 'w-full',
-  },
-  tablet: {
-    portrait: 'w-full max-w-3xl',
-    landscape: 'w-full max-w-4xl',
-  },
-  mobile: {
-    portrait: 'w-full max-w-sm',
-    landscape: 'w-full max-w-md',
-  },
+    desktop: {
+        portrait: 'w-full',
+        landscape: 'w-full',
+    },
+    tablet: {
+        portrait: 'w-full max-w-3xl',
+        landscape: 'w-full max-w-4xl',
+    },
+    mobile: {
+        portrait: 'w-full max-w-sm',
+        landscape: 'w-full max-w-md',
+    },
 };
 
 const ComponentPreview: React.FC<ComponentPreviewProps> = ({ selectedComponentId, previewDevice, previewOrientation }) => {
@@ -56,7 +64,7 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({ selectedComponentId
     const { theme } = useProject();
     const [previewState, setPreviewState] = useState<PreviewState>('normal');
     const [renderKey, setRenderKey] = useState(0);
-    
+
     // Inject All Caps CSS variables from theme
     useEffect(() => {
         const root = document.documentElement;
@@ -67,18 +75,18 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({ selectedComponentId
         root.style.setProperty('--navlinks-transform', theme.navLinksAllCaps ? 'uppercase' : 'none');
         root.style.setProperty('--navlinks-spacing', theme.navLinksAllCaps ? '0.05em' : 'normal');
     }, [theme.headingsAllCaps, theme.buttonsAllCaps, theme.navLinksAllCaps]);
-    
+
     // Force re-render when componentStyles change
     React.useEffect(() => {
         setRenderKey(prev => prev + 1);
     }, [componentStyles, selectedComponentId]);
-    
+
     const isCustom = !Object.keys(componentStyles).includes(selectedComponentId);
-    
+
     const componentData = isCustom
         ? customComponents.find(c => c.id === selectedComponentId)
         : { baseComponent: selectedComponentId as EditableComponentID, styles: componentStyles[selectedComponentId as EditableComponentID] };
-    
+
     if (!componentData) {
         return <div className="text-editor-text-secondary p-8 text-center">Component not found.</div>;
     }
@@ -141,7 +149,7 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({ selectedComponentId
             ...(styles as any)?.colors
         };
         const derivedColors = deriveColorsFromPalette(mergedColors, baseComponent);
-        
+
         // Create merged props with derived colors
         const mergedProps = {
             ...mockContent as any,
@@ -153,19 +161,27 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({ selectedComponentId
             case 'header':
                 return <Header {...mergedProps} isPreviewMode={true} />;
             case 'hero':
-                return heroVariant === 'modern'
-                    ? <HeroModern {...mergedProps} borderRadius={(styles as any).buttonBorderRadius || theme.buttonBorderRadius} />
-                    : heroVariant === 'gradient'
-                        ? <HeroGradient {...mergedProps} borderRadius={(styles as any).buttonBorderRadius || theme.buttonBorderRadius} />
-                        : heroVariant === 'fitness'
-                            ? <HeroFitness {...mergedProps} borderRadius={(styles as any).buttonBorderRadius || theme.buttonBorderRadius} />
-                            : <Hero {...mergedProps} borderRadius={(styles as any).buttonBorderRadius || theme.buttonBorderRadius} />;
+                {
+                    const hbr = (styles as any).buttonBorderRadius || theme.buttonBorderRadius;
+                    if (heroVariant === 'modern') return <HeroModern {...mergedProps} borderRadius={hbr} />;
+                    if (heroVariant === 'gradient') return <HeroGradient {...mergedProps} borderRadius={hbr} />;
+                    if (heroVariant === 'fitness') return <HeroFitness {...mergedProps} borderRadius={hbr} />;
+                    if (heroVariant === 'editorial') return <HeroEditorial {...mergedProps} borderRadius={hbr} />;
+                    if (heroVariant === 'cinematic') return <HeroCinematic {...mergedProps} borderRadius={hbr} />;
+                    if (heroVariant === 'minimal') return <HeroMinimal {...mergedProps} borderRadius={hbr} />;
+                    if (heroVariant === 'bold') return <HeroBold {...mergedProps} borderRadius={hbr} />;
+                    if (heroVariant === 'overlap') return <HeroOverlap {...mergedProps} borderRadius={hbr} />;
+                    if (heroVariant === 'verticalSplit') return <HeroVerticalSplit {...mergedProps} borderRadius={hbr} />;
+                    if (heroVariant === 'glass') return <HeroGlass {...mergedProps} borderRadius={hbr} />;
+                    if (heroVariant === 'stacked') return <HeroStacked {...mergedProps} borderRadius={hbr} />;
+                    return <Hero {...mergedProps} borderRadius={hbr} />;
+                }
             case 'features':
                 return <Features {...mergedProps} borderRadius={(styles as any).borderRadius || theme.cardBorderRadius} />;
             case 'testimonials':
                 return <Testimonials {...mergedProps} borderRadius={(styles as any).borderRadius || theme.cardBorderRadius} cardShadow={(styles as any).cardShadow} borderStyle={(styles as any).borderStyle} cardPadding={(styles as any).cardPadding} testimonialsVariant={(styles as any).testimonialsVariant} />;
             case 'cta':
-                 return <CTASection {...mergedProps} cardBorderRadius={theme.cardBorderRadius} buttonBorderRadius={theme.buttonBorderRadius} />;
+                return <CTASection {...mergedProps} cardBorderRadius={theme.cardBorderRadius} buttonBorderRadius={theme.buttonBorderRadius} />;
             case 'services':
                 return <Services {...mergedProps} borderRadius={theme.cardBorderRadius} />;
             case 'team':
@@ -245,7 +261,7 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({ selectedComponentId
                                         { name: 'Border', color: globalColors.border || '#334155' },
                                     ].map(({ name, color }) => (
                                         <div key={name} className="text-center">
-                                            <div 
+                                            <div
                                                 className="w-16 h-16 mx-auto rounded-lg border border-editor-border shadow-md mb-2"
                                                 style={{ backgroundColor: color }}
                                             />
@@ -274,7 +290,7 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({ selectedComponentId
                     {/* State overlay */}
                     {renderStateOverlay()}
                     {/* This wrapper mimics the structure of LandingPage.tsx for font variables */}
-                    <div 
+                    <div
                         key={renderKey}
                         data-component-preview={selectedComponentId}
                         className="relative"

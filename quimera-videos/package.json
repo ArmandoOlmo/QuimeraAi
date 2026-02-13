@@ -1,0 +1,25 @@
+{
+    "name": "quimera-videos",
+    "version": "1.0.0",
+    "description": "Remotion presentation videos for Quimera.ai Web Editor",
+    "type": "module",
+    "scripts": {
+        "studio": "remotion studio",
+        "render": "remotion render",
+        "render:all": "npm run render:intro && npm run render:features && npm run render:howitworks",
+        "render:intro": "remotion render ProductIntro out/product-intro.mp4",
+        "render:features": "remotion render FeatureShowcase out/feature-showcase.mp4",
+        "render:howitworks": "remotion render HowItWorks out/how-it-works.mp4"
+    },
+    "dependencies": {
+        "@remotion/cli": "^4.0.0",
+        "react": "^19.0.0",
+        "react-dom": "^19.0.0",
+        "remotion": "^4.0.0"
+    },
+    "devDependencies": {
+        "@types/react": "^19.0.0",
+        "@types/react-dom": "^19.0.0",
+        "typescript": "^5.8.0"
+    }
+}

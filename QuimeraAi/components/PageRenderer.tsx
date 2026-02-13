@@ -20,6 +20,14 @@ import Hero from './Hero';
 import HeroModern from './HeroModern';
 import HeroGradient from './HeroGradient';
 import HeroFitness from './HeroFitness';
+import HeroEditorial from './HeroEditorial';
+import HeroCinematic from './HeroCinematic';
+import HeroMinimal from './HeroMinimal';
+import HeroBold from './HeroBold';
+import HeroOverlap from './HeroOverlap';
+import HeroVerticalSplit from './HeroVerticalSplit';
+import HeroGlass from './HeroGlass';
+import HeroStacked from './HeroStacked';
 import HeroSplit from './HeroSplit';
 import Features from './Features';
 import Testimonials from './Testimonials';
@@ -90,7 +98,7 @@ const PageRenderer: React.FC<PageRendererProps> = ({
 }) => {
     // Get component styles from project (published with the project)
     const componentStyles = project.componentStyles || {};
-    
+
     // Base data from project and page
     const baseData = useMemo((): PageData => {
         return {
@@ -98,7 +106,7 @@ const PageRenderer: React.FC<PageRendererProps> = ({
             ...page.sectionData,
         } as PageData;
     }, [project.data, page.sectionData]);
-    
+
     // Helper function to merge componentStyles (defaults) with data (user changes)
     // This replicates the logic from LandingPage.tsx for consistency
     // User changes in data take priority over componentStyles defaults
@@ -106,30 +114,30 @@ const PageRenderer: React.FC<PageRendererProps> = ({
     const mergeComponentData = useCallback((componentKey: string) => {
         const componentData = (baseData as any)[componentKey];
         const styles = (componentStyles as any)[componentKey];
-        
+
         // If neither exists, return the component data or undefined
         if (!componentData && !styles) return undefined;
         // If only styles exist (no user data), use styles as base
         if (!componentData && styles) return styles;
         // If only data exists (no default styles), return data
         if (!styles) return componentData;
-        
+
         // First merge the colors: defaults, then user/template colors
         const mergedColors = {
             ...styles.colors,           // default colors first
             ...componentData.colors,    // user/template color changes override
         };
-        
+
         // Derive any missing colors from the template palette
         // This is CRUCIAL for button colors, card backgrounds, input colors, etc.
         const derivedColors = deriveColorsFromPalette(mergedColors, componentKey);
-        
+
         // Merge cornerGradient if it exists in styles (defaults first, then user changes)
         const mergedCornerGradient = styles.cornerGradient ? {
             ...styles.cornerGradient,           // default cornerGradient values
             ...componentData.cornerGradient,    // user cornerGradient changes override
         } : componentData.cornerGradient;
-        
+
         return {
             ...styles,              // defaults first
             ...componentData,       // user changes override defaults
@@ -137,7 +145,7 @@ const PageRenderer: React.FC<PageRendererProps> = ({
             ...(mergedCornerGradient && { cornerGradient: mergedCornerGradient }),
         };
     }, [baseData, componentStyles]);
-    
+
     // Create merged data for all components
     const mergedData = useMemo((): PageData => {
         return {
@@ -175,7 +183,7 @@ const PageRenderer: React.FC<PageRendererProps> = ({
             announcementBar: mergeComponentData('announcementBar') || baseData.announcementBar,
         } as PageData;
     }, [baseData, mergeComponentData]);
-    
+
     // Provide default theme values to prevent undefined errors
     const theme = project.theme || {
         primaryColor: '#4f46e5',
@@ -200,33 +208,33 @@ const PageRenderer: React.FC<PageRendererProps> = ({
         }
     };
     const globalColors = theme.globalColors || theme;
-    
+
     // Path-based navigation handlers for SSR (real URLs, not hash)
     const handleNavigateToProduct = (slug: string) => {
         window.location.href = `/producto/${slug}`;
     };
-    
+
     const handleNavigateToCategory = (slug: string) => {
         window.location.href = `/categoria/${slug}`;
     };
-    
+
     const handleNavigateToStore = () => {
         window.location.href = '/tienda';
     };
-    
+
     const handleNavigateToCart = () => {
         window.location.href = '/carrito';
     };
-    
+
     const handleNavigateToCheckout = () => {
         window.location.href = '/checkout';
     };
-    
+
     // Build header links with priority: CMS Menu > main-menu > Pages > Manual Links
     // This matches the logic in PublicWebsitePreview.tsx for consistency
     const navigationLinks = useMemo(() => {
         const menus = project.menus || [];
-        
+
         // 1. CMS Menu by ID takes priority if configured
         if (mergedData.header?.menuId) {
             const menu = menus.find(m => m.id === mergedData.header?.menuId);
@@ -234,19 +242,19 @@ const PageRenderer: React.FC<PageRendererProps> = ({
                 return menu.items.map((i: any) => ({ text: i.text, href: i.href }));
             }
         }
-        
+
         // 2. Try main-menu from CMS menus
         const mainMenu = menus.find(m => m.id === 'main' || m.handle === 'main-menu');
         if (mainMenu && mainMenu.items?.length > 0) {
             return mainMenu.items.map((i: any) => ({ text: i.text, href: i.href }));
         }
-        
+
         // 3. Generate from pages if available (multi-page architecture)
         if (project.pages && project.pages.length > 0) {
             const navPages = project.pages
                 .filter(p => p.showInNavigation)
                 .sort((a, b) => (a.navigationOrder || 0) - (b.navigationOrder || 0));
-            
+
             if (navPages.length > 0) {
                 return navPages.map(p => ({
                     text: p.title,
@@ -254,15 +262,15 @@ const PageRenderer: React.FC<PageRendererProps> = ({
                 }));
             }
         }
-        
+
         // 4. Fall back to manual links
         return mergedData.header?.links || [];
     }, [project.pages, project.menus, mergedData.header?.links, mergedData.header?.menuId]);
-    
+
     // Render a single section
     const renderSection = (section: PageSection, index: number): React.ReactNode => {
         const key = `${section}-${index}`;
-        
+
         // Common props for sections
         const commonProps = {
             key,
@@ -270,11 +278,11 @@ const PageRenderer: React.FC<PageRendererProps> = ({
             globalColors,
             isPreviewMode: isPreview,
         };
-        
+
         // Border radius values from theme
         const cardBorderRadius = theme.cardBorderRadius || 'xl';
         const buttonBorderRadius = theme.buttonBorderRadius || 'xl';
-        
+
         switch (section) {
             case 'header':
                 return (
@@ -285,22 +293,25 @@ const PageRenderer: React.FC<PageRendererProps> = ({
                         isPreviewMode={isPreview}
                     />
                 );
-                
+
             case 'hero':
                 // Render correct hero variant based on heroVariant field
                 const heroData = mergedData.hero;
                 const heroBorderRadius = heroData?.buttonBorderRadius || buttonBorderRadius;
-                
-                if (heroData?.heroVariant === 'modern') {
-                    return <HeroModern key={key} {...heroData} borderRadius={heroBorderRadius} />;
-                } else if (heroData?.heroVariant === 'gradient') {
-                    return <HeroGradient key={key} {...heroData} borderRadius={heroBorderRadius} />;
-                } else if (heroData?.heroVariant === 'fitness') {
-                    return <HeroFitness key={key} {...heroData} borderRadius={heroBorderRadius} />;
-                } else {
-                    return <Hero key={key} {...heroData} borderRadius={heroBorderRadius} />;
-                }
-                
+
+                if (heroData?.heroVariant === 'modern') return <HeroModern key={key} {...heroData} borderRadius={heroBorderRadius} />;
+                if (heroData?.heroVariant === 'gradient') return <HeroGradient key={key} {...heroData} borderRadius={heroBorderRadius} />;
+                if (heroData?.heroVariant === 'fitness') return <HeroFitness key={key} {...heroData} borderRadius={heroBorderRadius} />;
+                if (heroData?.heroVariant === 'editorial') return <HeroEditorial key={key} {...heroData} borderRadius={heroBorderRadius} />;
+                if (heroData?.heroVariant === 'cinematic') return <HeroCinematic key={key} {...heroData} borderRadius={heroBorderRadius} />;
+                if (heroData?.heroVariant === 'minimal') return <HeroMinimal key={key} {...heroData} borderRadius={heroBorderRadius} />;
+                if (heroData?.heroVariant === 'bold') return <HeroBold key={key} {...heroData} borderRadius={heroBorderRadius} />;
+                if (heroData?.heroVariant === 'overlap') return <HeroOverlap key={key} {...heroData} borderRadius={heroBorderRadius} />;
+                if (heroData?.heroVariant === 'verticalSplit') return <HeroVerticalSplit key={key} {...heroData} borderRadius={heroBorderRadius} />;
+                if (heroData?.heroVariant === 'glass') return <HeroGlass key={key} {...heroData} borderRadius={heroBorderRadius} />;
+                if (heroData?.heroVariant === 'stacked') return <HeroStacked key={key} {...heroData} borderRadius={heroBorderRadius} />;
+                return <Hero key={key} {...heroData} borderRadius={heroBorderRadius} />;
+
             case 'heroSplit':
                 return (
                     <HeroSplit
@@ -309,7 +320,7 @@ const PageRenderer: React.FC<PageRendererProps> = ({
                         borderRadius={mergedData.heroSplit?.buttonBorderRadius || buttonBorderRadius}
                     />
                 );
-                
+
             case 'features':
                 return (
                     <Features
@@ -318,7 +329,7 @@ const PageRenderer: React.FC<PageRendererProps> = ({
                         borderRadius={mergedData.features?.borderRadius || cardBorderRadius}
                     />
                 );
-                
+
             case 'testimonials':
                 return (
                     <Testimonials
@@ -327,7 +338,7 @@ const PageRenderer: React.FC<PageRendererProps> = ({
                         borderRadius={mergedData.testimonials?.borderRadius || cardBorderRadius}
                     />
                 );
-                
+
             case 'pricing':
                 return (
                     <Pricing
@@ -337,7 +348,7 @@ const PageRenderer: React.FC<PageRendererProps> = ({
                         buttonBorderRadius={buttonBorderRadius}
                     />
                 );
-                
+
             case 'faq':
                 return (
                     <Faq
@@ -346,7 +357,7 @@ const PageRenderer: React.FC<PageRendererProps> = ({
                         borderRadius={cardBorderRadius}
                     />
                 );
-                
+
             case 'cta':
                 return (
                     <CTASection
@@ -356,7 +367,7 @@ const PageRenderer: React.FC<PageRendererProps> = ({
                         buttonBorderRadius={buttonBorderRadius}
                     />
                 );
-                
+
             case 'services':
                 return (
                     <Services
@@ -365,7 +376,7 @@ const PageRenderer: React.FC<PageRendererProps> = ({
                         borderRadius={cardBorderRadius}
                     />
                 );
-                
+
             case 'team':
                 return (
                     <Team
@@ -374,7 +385,7 @@ const PageRenderer: React.FC<PageRendererProps> = ({
                         borderRadius={cardBorderRadius}
                     />
                 );
-                
+
             case 'video':
                 return (
                     <Video
@@ -382,7 +393,7 @@ const PageRenderer: React.FC<PageRendererProps> = ({
                         {...mergedData.video}
                     />
                 );
-                
+
             case 'slideshow':
                 return (
                     <Slideshow
@@ -391,7 +402,7 @@ const PageRenderer: React.FC<PageRendererProps> = ({
                         borderRadius={cardBorderRadius}
                     />
                 );
-                
+
             case 'portfolio':
                 return (
                     <Portfolio
@@ -400,7 +411,7 @@ const PageRenderer: React.FC<PageRendererProps> = ({
                         borderRadius={cardBorderRadius}
                     />
                 );
-                
+
             case 'leads':
                 return (
                     <Leads
@@ -411,7 +422,7 @@ const PageRenderer: React.FC<PageRendererProps> = ({
                         projectId={project.id}
                     />
                 );
-                
+
             case 'newsletter':
                 return (
                     <Newsletter
@@ -419,7 +430,7 @@ const PageRenderer: React.FC<PageRendererProps> = ({
                         {...mergedData.newsletter}
                     />
                 );
-                
+
             case 'howItWorks':
                 return (
                     <HowItWorks
@@ -428,7 +439,7 @@ const PageRenderer: React.FC<PageRendererProps> = ({
                         borderRadius={cardBorderRadius}
                     />
                 );
-                
+
             case 'map':
                 return (
                     <BusinessMap
@@ -437,7 +448,7 @@ const PageRenderer: React.FC<PageRendererProps> = ({
                         borderRadius={cardBorderRadius}
                     />
                 );
-                
+
             case 'menu':
                 return (
                     <Menu
@@ -446,7 +457,7 @@ const PageRenderer: React.FC<PageRendererProps> = ({
                         borderRadius={cardBorderRadius}
                     />
                 );
-                
+
             case 'banner':
                 return (
                     <Banner
@@ -454,7 +465,7 @@ const PageRenderer: React.FC<PageRendererProps> = ({
                         {...mergedData.banner}
                     />
                 );
-                
+
             case 'footer':
                 return (
                     <Footer
@@ -462,7 +473,7 @@ const PageRenderer: React.FC<PageRendererProps> = ({
                         {...mergedData.footer}
                     />
                 );
-                
+
             // Ecommerce sections - with path-based navigation for SSR
             case 'featuredProducts':
                 return (
@@ -473,7 +484,7 @@ const PageRenderer: React.FC<PageRendererProps> = ({
                         onProductClick={handleNavigateToProduct}
                     />
                 );
-                
+
             case 'categoryGrid':
                 return (
                     <CategoryGrid
@@ -483,7 +494,7 @@ const PageRenderer: React.FC<PageRendererProps> = ({
                         onCategoryClick={handleNavigateToCategory}
                     />
                 );
-                
+
             case 'productHero':
                 return (
                     <ProductHero
@@ -493,7 +504,7 @@ const PageRenderer: React.FC<PageRendererProps> = ({
                         onProductClick={handleNavigateToProduct}
                     />
                 );
-                
+
             case 'saleCountdown':
                 return (
                     <SaleCountdown
@@ -503,7 +514,7 @@ const PageRenderer: React.FC<PageRendererProps> = ({
                         onProductClick={handleNavigateToProduct}
                     />
                 );
-                
+
             case 'trustBadges':
                 return (
                     <TrustBadges
@@ -511,7 +522,7 @@ const PageRenderer: React.FC<PageRendererProps> = ({
                         data={mergedData.trustBadges}
                     />
                 );
-                
+
             case 'recentlyViewed':
                 return (
                     <RecentlyViewed
@@ -521,7 +532,7 @@ const PageRenderer: React.FC<PageRendererProps> = ({
                         onProductClick={handleNavigateToProduct}
                     />
                 );
-                
+
             case 'productReviews':
                 return (
                     <ProductReviews
@@ -529,7 +540,7 @@ const PageRenderer: React.FC<PageRendererProps> = ({
                         data={mergedData.productReviews}
                     />
                 );
-                
+
             case 'collectionBanner':
                 return (
                     <CollectionBanner
@@ -538,7 +549,7 @@ const PageRenderer: React.FC<PageRendererProps> = ({
                         onCollectionClick={handleNavigateToCategory}
                     />
                 );
-                
+
             case 'productBundle':
                 return (
                     <ProductBundle
@@ -548,7 +559,7 @@ const PageRenderer: React.FC<PageRendererProps> = ({
                         onProductClick={handleNavigateToProduct}
                     />
                 );
-                
+
             case 'announcementBar':
                 return (
                     <AnnouncementBar
@@ -556,7 +567,7 @@ const PageRenderer: React.FC<PageRendererProps> = ({
                         data={mergedData.announcementBar}
                     />
                 );
-                
+
             // Dynamic page sections
             case 'productDetail':
             case 'ProductDetailSection':
@@ -577,7 +588,7 @@ const PageRenderer: React.FC<PageRendererProps> = ({
                         onNavigateToProduct={handleNavigateToProduct}
                     />
                 );
-                
+
             case 'categoryProducts':
             case 'CategoryProductsSection':
                 return (
@@ -601,7 +612,7 @@ const PageRenderer: React.FC<PageRendererProps> = ({
                         onProductClick={handleNavigateToProduct}
                     />
                 );
-                
+
             case 'articleContent':
             case 'ArticleContentSection':
                 return (
@@ -620,7 +631,7 @@ const PageRenderer: React.FC<PageRendererProps> = ({
                         onBack={() => window.location.href = '/blog'}
                     />
                 );
-                
+
             case 'cart':
             case 'CartSection':
                 return (
@@ -644,7 +655,7 @@ const PageRenderer: React.FC<PageRendererProps> = ({
                         onCheckout={handleNavigateToCheckout}
                     />
                 );
-                
+
             case 'checkout':
             case 'CheckoutSection':
                 return (
@@ -670,7 +681,7 @@ const PageRenderer: React.FC<PageRendererProps> = ({
                         onOrderComplete={(orderId) => window.location.href = `/pedido/${orderId}`}
                     />
                 );
-                
+
             case 'productGrid':
             case 'ProductGridSection':
                 return (
@@ -692,7 +703,7 @@ const PageRenderer: React.FC<PageRendererProps> = ({
                         onProductClick={handleNavigateToProduct}
                     />
                 );
-                
+
             // Non-renderable sections (settings, colors, typography)
             case 'colors':
             case 'typography':
@@ -700,13 +711,13 @@ const PageRenderer: React.FC<PageRendererProps> = ({
             case 'chatbot':
             case 'products': // Legacy products grid - use ProductGridSection instead
                 return null;
-                
+
             default:
                 console.warn(`[PageRenderer] Unknown section type: ${section}`);
                 return null;
         }
     };
-    
+
     // Filter and render visible sections
     // Also deduplicate sections (header/footer should only appear once)
     const seenSections = new Set<string>();
@@ -723,9 +734,9 @@ const PageRenderer: React.FC<PageRendererProps> = ({
         seenSections.add(section);
         return true;
     });
-    
+
     return (
-        <div 
+        <div
             className="min-h-screen"
             style={{ backgroundColor: theme.pageBackground || globalColors?.background }}
         >

@@ -13,6 +13,14 @@ import Hero from './Hero';
 import HeroModern from './HeroModern';
 import HeroGradient from './HeroGradient';
 import HeroFitness from './HeroFitness';
+import HeroEditorial from './HeroEditorial';
+import HeroCinematic from './HeroCinematic';
+import HeroMinimal from './HeroMinimal';
+import HeroBold from './HeroBold';
+import HeroOverlap from './HeroOverlap';
+import HeroVerticalSplit from './HeroVerticalSplit';
+import HeroGlass from './HeroGlass';
+import HeroStacked from './HeroStacked';
 import HeroSplit from './HeroSplit';
 import Features from './Features';
 import Testimonials from './Testimonials';
@@ -490,13 +498,17 @@ export function AgencyLandingPreview() {
             case 'heroModern':
             case 'heroGradient':
                 const heroData = { ...data, heroVariant: section.type === 'heroModern' ? 'modern' : section.type === 'heroGradient' ? 'gradient' : data.heroVariant };
-                if (heroData.heroVariant === 'modern') {
-                    return <HeroModern key={section.id} {...heroData} borderRadius={buttonBorderRadius} />;
-                } else if (heroData.heroVariant === 'gradient') {
-                    return <HeroGradient key={section.id} {...heroData} borderRadius={buttonBorderRadius} />;
-                } else if (heroData.heroVariant === 'fitness') {
-                    return <HeroFitness key={section.id} {...heroData} borderRadius={buttonBorderRadius} />;
-                }
+                if (heroData.heroVariant === 'modern') return <HeroModern key={section.id} {...heroData} borderRadius={buttonBorderRadius} />;
+                if (heroData.heroVariant === 'gradient') return <HeroGradient key={section.id} {...heroData} borderRadius={buttonBorderRadius} />;
+                if (heroData.heroVariant === 'fitness') return <HeroFitness key={section.id} {...heroData} borderRadius={buttonBorderRadius} />;
+                if (heroData.heroVariant === 'editorial') return <HeroEditorial key={section.id} {...heroData} borderRadius={buttonBorderRadius} />;
+                if (heroData.heroVariant === 'cinematic') return <HeroCinematic key={section.id} {...heroData} borderRadius={buttonBorderRadius} />;
+                if (heroData.heroVariant === 'minimal') return <HeroMinimal key={section.id} {...heroData} borderRadius={buttonBorderRadius} />;
+                if (heroData.heroVariant === 'bold') return <HeroBold key={section.id} {...heroData} borderRadius={buttonBorderRadius} />;
+                if (heroData.heroVariant === 'overlap') return <HeroOverlap key={section.id} {...heroData} borderRadius={buttonBorderRadius} />;
+                if (heroData.heroVariant === 'verticalSplit') return <HeroVerticalSplit key={section.id} {...heroData} borderRadius={buttonBorderRadius} />;
+                if (heroData.heroVariant === 'glass') return <HeroGlass key={section.id} {...heroData} borderRadius={buttonBorderRadius} />;
+                if (heroData.heroVariant === 'stacked') return <HeroStacked key={section.id} {...heroData} borderRadius={buttonBorderRadius} />;
                 return <Hero key={section.id} {...heroData} borderRadius={buttonBorderRadius} />;
 
             case 'heroSplit':

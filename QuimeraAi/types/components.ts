@@ -85,7 +85,7 @@ export interface HeaderData {
 // =============================================================================
 // HERO
 // =============================================================================
-export type HeroVariant = 'classic' | 'modern' | 'gradient' | 'fitness';
+export type HeroVariant = 'classic' | 'modern' | 'gradient' | 'fitness' | 'editorial' | 'cinematic' | 'minimal' | 'bold' | 'overlap' | 'verticalSplit' | 'glass' | 'stacked';
 
 export interface HeroData {
     heroVariant?: HeroVariant;
@@ -136,6 +136,8 @@ export interface HeroData {
     animationType?: AnimationType;
     // Gradient overlay opacity for Modern variant (0-100)
     gradientOpacity?: number;
+    // Hero section height in vh units (20-100, default auto)
+    heroHeight?: number;
     // CTA Button Links
     primaryCtaLink?: string;
     primaryCtaLinkType?: 'manual' | 'product' | 'collection' | 'section';

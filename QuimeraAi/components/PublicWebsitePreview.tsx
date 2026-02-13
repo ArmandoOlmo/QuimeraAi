@@ -18,6 +18,14 @@ import Hero from './Hero';
 import HeroModern from './HeroModern';
 import HeroGradient from './HeroGradient';
 import HeroFitness from './HeroFitness';
+import HeroEditorial from './HeroEditorial';
+import HeroCinematic from './HeroCinematic';
+import HeroMinimal from './HeroMinimal';
+import HeroBold from './HeroBold';
+import HeroOverlap from './HeroOverlap';
+import HeroVerticalSplit from './HeroVerticalSplit';
+import HeroGlass from './HeroGlass';
+import HeroStacked from './HeroStacked';
 import HeroSplit from './HeroSplit';
 import Features from './Features';
 import Testimonials from './Testimonials';
@@ -1352,13 +1360,21 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
 
     switch (key) {
       case 'hero':
-        return compData.heroVariant === 'modern'
-          ? <HeroModern {...compData} borderRadius={compData.buttonBorderRadius || buttonBorderRadius} />
-          : compData.heroVariant === 'gradient'
-            ? <HeroGradient {...compData} borderRadius={compData.buttonBorderRadius || buttonBorderRadius} />
-            : compData.heroVariant === 'fitness'
-              ? <HeroFitness {...compData} borderRadius={compData.buttonBorderRadius || buttonBorderRadius} />
-              : <Hero {...compData} borderRadius={compData.buttonBorderRadius || buttonBorderRadius} />;
+        {
+          const hbr = compData.buttonBorderRadius || buttonBorderRadius;
+          if (compData.heroVariant === 'modern') return <HeroModern {...compData} borderRadius={hbr} />;
+          if (compData.heroVariant === 'gradient') return <HeroGradient {...compData} borderRadius={hbr} />;
+          if (compData.heroVariant === 'fitness') return <HeroFitness {...compData} borderRadius={hbr} />;
+          if (compData.heroVariant === 'editorial') return <HeroEditorial {...compData} borderRadius={hbr} />;
+          if (compData.heroVariant === 'cinematic') return <HeroCinematic {...compData} borderRadius={hbr} />;
+          if (compData.heroVariant === 'minimal') return <HeroMinimal {...compData} borderRadius={hbr} />;
+          if (compData.heroVariant === 'bold') return <HeroBold {...compData} borderRadius={hbr} />;
+          if (compData.heroVariant === 'overlap') return <HeroOverlap {...compData} borderRadius={hbr} />;
+          if (compData.heroVariant === 'verticalSplit') return <HeroVerticalSplit {...compData} borderRadius={hbr} />;
+          if (compData.heroVariant === 'glass') return <HeroGlass {...compData} borderRadius={hbr} />;
+          if (compData.heroVariant === 'stacked') return <HeroStacked {...compData} borderRadius={hbr} />;
+          return <Hero {...compData} borderRadius={hbr} />;
+        }
       case 'heroSplit':
         return <HeroSplit {...compData} borderRadius={compData.buttonBorderRadius || buttonBorderRadius} />;
       case 'features':

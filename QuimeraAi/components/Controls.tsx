@@ -1210,7 +1210,7 @@ const Controls: React.FC = () => {
             <Layout size={14} />
             {t('editor.controls.hero.heroStyle')}
           </label>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-3 gap-2">
             <button
               onClick={() => setNestedData('hero.heroVariant', 'classic')}
               className={`px-3 py-3 rounded-md border transition-all ${currentVariant === 'classic'
@@ -1218,8 +1218,8 @@ const Controls: React.FC = () => {
                 : 'bg-editor-bg text-editor-text-primary border-editor-border hover:border-editor-accent'
                 }`}
             >
-              <div className="font-semibold text-sm">{t('controls.classic')}</div>
-              <div className="text-xs opacity-70">{t('controls.twoColumn')}</div>
+              <div className="font-semibold text-[10px]">{t('controls.classic')}</div>
+              <div className="text-[9px] opacity-70">{t('controls.twoColumn')}</div>
             </button>
             <button
               onClick={() => setNestedData('hero.heroVariant', 'modern')}
@@ -1228,8 +1228,8 @@ const Controls: React.FC = () => {
                 : 'bg-editor-bg text-editor-text-primary border-editor-border hover:border-editor-accent'
                 }`}
             >
-              <div className="font-semibold text-sm">{t('controls.modern')}</div>
-              <div className="text-xs opacity-70">{t('controls.fullScreen')}</div>
+              <div className="font-semibold text-[10px]">{t('controls.modern')}</div>
+              <div className="text-[9px] opacity-70">{t('controls.fullScreen')}</div>
             </button>
             <button
               onClick={() => setNestedData('hero.heroVariant', 'gradient')}
@@ -1238,8 +1238,8 @@ const Controls: React.FC = () => {
                 : 'bg-editor-bg text-editor-text-primary border-editor-border hover:border-editor-accent'
                 }`}
             >
-              <div className="font-semibold text-sm">{t('controls.gradient')}</div>
-              <div className="text-xs opacity-70">{t('controls.futuristic')}</div>
+              <div className="font-semibold text-[10px]">{t('controls.gradient')}</div>
+              <div className="text-[9px] opacity-70">{t('controls.futuristic')}</div>
             </button>
             <button
               onClick={() => setNestedData('hero.heroVariant', 'fitness')}
@@ -1248,19 +1248,141 @@ const Controls: React.FC = () => {
                 : 'bg-editor-bg text-editor-text-primary border-editor-border hover:border-editor-accent'
                 }`}
             >
-              <div className="font-semibold text-sm">{t('controls.fitness')}</div>
-              <div className="text-xs opacity-70">{t('controls.boldDynamic')}</div>
+              <div className="font-semibold text-[10px]">{t('controls.fitness')}</div>
+              <div className="text-[9px] opacity-70">{t('controls.boldDynamic')}</div>
+            </button>
+            {/* New Variants */}
+            <button
+              onClick={() => setNestedData('hero.heroVariant', 'editorial')}
+              className={`px-3 py-3 rounded-md border transition-all ${currentVariant === 'editorial'
+                ? 'bg-editor-accent text-editor-bg border-editor-accent shadow-lg'
+                : 'bg-editor-bg text-editor-text-primary border-editor-border hover:border-editor-accent'
+                }`}
+            >
+              <div className="font-semibold text-[10px]">{t('controls.editorial')}</div>
+              <div className="text-[9px] opacity-70">{t('controls.magazine')}</div>
+            </button>
+            <button
+              onClick={() => setNestedData('hero.heroVariant', 'cinematic')}
+              className={`px-3 py-3 rounded-md border transition-all ${currentVariant === 'cinematic'
+                ? 'bg-editor-accent text-editor-bg border-editor-accent shadow-lg'
+                : 'bg-editor-bg text-editor-text-primary border-editor-border hover:border-editor-accent'
+                }`}
+            >
+              <div className="font-semibold text-[10px]">{t('controls.cinematic')}</div>
+              <div className="text-[9px] opacity-70">{t('controls.moviePoster')}</div>
+            </button>
+            <button
+              onClick={() => setNestedData('hero.heroVariant', 'minimal')}
+              className={`px-3 py-3 rounded-md border transition-all ${currentVariant === 'minimal'
+                ? 'bg-editor-accent text-editor-bg border-editor-accent shadow-lg'
+                : 'bg-editor-bg text-editor-text-primary border-editor-border hover:border-editor-accent'
+                }`}
+            >
+              <div className="font-semibold text-[10px]">{t('controls.minimal')}</div>
+              <div className="text-[9px] opacity-70">{t('controls.clean')}</div>
+            </button>
+            <button
+              onClick={() => setNestedData('hero.heroVariant', 'bold')}
+              className={`px-3 py-3 rounded-md border transition-all ${currentVariant === 'bold'
+                ? 'bg-editor-accent text-editor-bg border-editor-accent shadow-lg'
+                : 'bg-editor-bg text-editor-text-primary border-editor-border hover:border-editor-accent'
+                }`}
+            >
+              <div className="font-semibold text-[10px]">{t('controls.bold')}</div>
+              <div className="text-[9px] opacity-70">{t('controls.oversized')}</div>
+            </button>
+            <button
+              onClick={() => setNestedData('hero.heroVariant', 'overlap')}
+              className={`px-3 py-3 rounded-md border transition-all ${currentVariant === 'overlap'
+                ? 'bg-editor-accent text-editor-bg border-editor-accent shadow-lg'
+                : 'bg-editor-bg text-editor-text-primary border-editor-border hover:border-editor-accent'
+                }`}
+            >
+              <div className="font-semibold text-[10px]">{t('controls.overlap')}</div>
+              <div className="text-[9px] opacity-70">{t('controls.floatingCard')}</div>
+            </button>
+            <button
+              onClick={() => setNestedData('hero.heroVariant', 'verticalSplit')}
+              className={`px-3 py-3 rounded-md border transition-all ${currentVariant === 'verticalSplit'
+                ? 'bg-editor-accent text-editor-bg border-editor-accent shadow-lg'
+                : 'bg-editor-bg text-editor-text-primary border-editor-border hover:border-editor-accent'
+                }`}
+            >
+              <div className="font-semibold text-[10px]">{t('controls.verticalSplit')}</div>
+              <div className="text-[9px] opacity-70">{t('controls.split5050')}</div>
+            </button>
+            <button
+              onClick={() => setNestedData('hero.heroVariant', 'glass')}
+              className={`px-3 py-3 rounded-md border transition-all ${currentVariant === 'glass'
+                ? 'bg-editor-accent text-editor-bg border-editor-accent shadow-lg'
+                : 'bg-editor-bg text-editor-text-primary border-editor-border hover:border-editor-accent'
+                }`}
+            >
+              <div className="font-semibold text-[10px]">{t('controls.glass')}</div>
+              <div className="text-[9px] opacity-70">{t('controls.frosted')}</div>
+            </button>
+            <button
+              onClick={() => setNestedData('hero.heroVariant', 'stacked')}
+              className={`px-3 py-3 rounded-md border transition-all ${currentVariant === 'stacked'
+                ? 'bg-editor-accent text-editor-bg border-editor-accent shadow-lg'
+                : 'bg-editor-bg text-editor-text-primary border-editor-border hover:border-editor-accent'
+                }`}
+            >
+              <div className="font-semibold text-[10px]">{t('controls.stacked')}</div>
+              <div className="text-[9px] opacity-70">{t('controls.imageAndText')}</div>
             </button>
           </div>
           <p className="text-xs text-editor-text-secondary mt-2">
-            {currentVariant === 'modern'
-              ? `✨ ${t('controls.fullScreenHero')}`
-              : currentVariant === 'gradient'
-                ? `🎨 ${t('controls.gradientLayout')}`
-                : currentVariant === 'fitness'
-                  ? `💪 ${t('controls.fitnessLayout')}`
-                  : `📐 ${t('controls.traditionalLayout')}`}
+            {currentVariant === 'classic' && `📐 ${t('controls.traditionalLayout')}`}
+            {currentVariant === 'modern' && `✨ ${t('controls.fullScreenHero')}`}
+            {currentVariant === 'gradient' && `🎨 ${t('controls.gradientLayout')}`}
+            {currentVariant === 'fitness' && `💪 ${t('controls.fitnessLayout')}`}
+            {currentVariant === 'editorial' && `📰 ${t('controls.editorialLayout')}`}
+            {currentVariant === 'cinematic' && `🎬 ${t('controls.cinematicLayout')}`}
+            {currentVariant === 'minimal' && `✧ ${t('controls.minimalLayout')}`}
+            {currentVariant === 'bold' && `🔤 ${t('controls.boldLayout')}`}
+            {currentVariant === 'overlap' && `📋 ${t('controls.overlapLayout')}`}
+            {currentVariant === 'verticalSplit' && `◧ ${t('controls.verticalSplitLayout')}`}
+            {currentVariant === 'glass' && `🪟 ${t('controls.glassLayout')}`}
+            {currentVariant === 'stacked' && `📚 ${t('controls.stackedLayout')}`}
           </p>
+        </div>
+
+        <hr className="border-editor-border/50" />
+
+        {/* ========== HERO HEIGHT ========== */}
+        <div>
+          <h4 className="font-bold text-editor-text-primary text-sm mb-3 flex items-center gap-2">
+            <AlignJustify size={14} />
+            {t('controls.heroHeight')}
+          </h4>
+          <div className="space-y-3 bg-editor-bg/50 p-3 rounded-lg">
+            <div>
+              <div className="flex justify-between items-center mb-1">
+                <label className="text-xs font-medium text-editor-text-secondary">{t('controls.sectionHeight')}</label>
+                <span className="text-xs text-editor-text-primary font-mono">
+                  {data.hero.heroHeight ? `${data.hero.heroHeight}vh` : t('controls.auto')}
+                </span>
+              </div>
+              <input
+                type="range" min="0" max="100" step="5"
+                value={data.hero.heroHeight ?? 0}
+                onChange={(e) => {
+                  const val = parseInt(e.target.value);
+                  setNestedData('hero.heroHeight', val === 0 ? undefined : val);
+                }}
+                className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
+              />
+              <div className="flex justify-between mt-1">
+                <span className="text-[9px] text-editor-text-secondary">{t('controls.auto')}</span>
+                <span className="text-[9px] text-editor-text-secondary">100vh</span>
+              </div>
+              <p className="text-xs text-editor-text-secondary mt-1">
+                {t('controls.heroHeightHelp')}
+              </p>
+            </div>
+          </div>
         </div>
 
         <hr className="border-editor-border/50" />
@@ -5243,7 +5365,7 @@ const Controls: React.FC = () => {
             <Layout size={14} />
             {t('controls.heroStyle')}
           </label>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-3 gap-2">
             <button
               onClick={() => setNestedData('hero.heroVariant', 'classic')}
               className={`px-3 py-3 rounded-md border transition-all ${currentVariant === 'classic'
@@ -5251,8 +5373,8 @@ const Controls: React.FC = () => {
                 : 'bg-editor-bg text-editor-text-primary border-editor-border hover:border-editor-accent'
                 }`}
             >
-              <div className="font-semibold text-sm">{t('controls.classic')}</div>
-              <div className="text-xs opacity-70">{t('controls.twoColumn')}</div>
+              <div className="font-semibold text-[10px]">{t('controls.classic')}</div>
+              <div className="text-[9px] opacity-70">{t('controls.twoColumn')}</div>
             </button>
             <button
               onClick={() => setNestedData('hero.heroVariant', 'modern')}
@@ -5261,8 +5383,8 @@ const Controls: React.FC = () => {
                 : 'bg-editor-bg text-editor-text-primary border-editor-border hover:border-editor-accent'
                 }`}
             >
-              <div className="font-semibold text-sm">{t('controls.modern')}</div>
-              <div className="text-xs opacity-70">{t('controls.fullScreen')}</div>
+              <div className="font-semibold text-[10px]">{t('controls.modern')}</div>
+              <div className="text-[9px] opacity-70">{t('controls.fullScreen')}</div>
             </button>
             <button
               onClick={() => setNestedData('hero.heroVariant', 'gradient')}
@@ -5271,8 +5393,8 @@ const Controls: React.FC = () => {
                 : 'bg-editor-bg text-editor-text-primary border-editor-border hover:border-editor-accent'
                 }`}
             >
-              <div className="font-semibold text-sm">{t('controls.gradient')}</div>
-              <div className="text-xs opacity-70">{t('controls.futuristic')}</div>
+              <div className="font-semibold text-[10px]">{t('controls.gradient')}</div>
+              <div className="text-[9px] opacity-70">{t('controls.futuristic')}</div>
             </button>
             <button
               onClick={() => setNestedData('hero.heroVariant', 'fitness')}
@@ -5281,19 +5403,137 @@ const Controls: React.FC = () => {
                 : 'bg-editor-bg text-editor-text-primary border-editor-border hover:border-editor-accent'
                 }`}
             >
-              <div className="font-semibold text-sm">{t('controls.fitness')}</div>
-              <div className="text-xs opacity-70">{t('controls.boldDynamic')}</div>
+              <div className="font-semibold text-[10px]">{t('controls.fitness')}</div>
+              <div className="text-[9px] opacity-70">{t('controls.boldDynamic')}</div>
+            </button>
+            {/* New Variants */}
+            <button
+              onClick={() => setNestedData('hero.heroVariant', 'editorial')}
+              className={`px-3 py-3 rounded-md border transition-all ${currentVariant === 'editorial'
+                ? 'bg-editor-accent text-editor-bg border-editor-accent shadow-lg'
+                : 'bg-editor-bg text-editor-text-primary border-editor-border hover:border-editor-accent'
+                }`}
+            >
+              <div className="font-semibold text-[10px]">{t('controls.editorial')}</div>
+              <div className="text-[9px] opacity-70">{t('controls.magazine')}</div>
+            </button>
+            <button
+              onClick={() => setNestedData('hero.heroVariant', 'cinematic')}
+              className={`px-3 py-3 rounded-md border transition-all ${currentVariant === 'cinematic'
+                ? 'bg-editor-accent text-editor-bg border-editor-accent shadow-lg'
+                : 'bg-editor-bg text-editor-text-primary border-editor-border hover:border-editor-accent'
+                }`}
+            >
+              <div className="font-semibold text-[10px]">{t('controls.cinematic')}</div>
+              <div className="text-[9px] opacity-70">{t('controls.moviePoster')}</div>
+            </button>
+            <button
+              onClick={() => setNestedData('hero.heroVariant', 'minimal')}
+              className={`px-3 py-3 rounded-md border transition-all ${currentVariant === 'minimal'
+                ? 'bg-editor-accent text-editor-bg border-editor-accent shadow-lg'
+                : 'bg-editor-bg text-editor-text-primary border-editor-border hover:border-editor-accent'
+                }`}
+            >
+              <div className="font-semibold text-[10px]">{t('controls.minimal')}</div>
+              <div className="text-[9px] opacity-70">{t('controls.clean')}</div>
+            </button>
+            <button
+              onClick={() => setNestedData('hero.heroVariant', 'bold')}
+              className={`px-3 py-3 rounded-md border transition-all ${currentVariant === 'bold'
+                ? 'bg-editor-accent text-editor-bg border-editor-accent shadow-lg'
+                : 'bg-editor-bg text-editor-text-primary border-editor-border hover:border-editor-accent'
+                }`}
+            >
+              <div className="font-semibold text-[10px]">{t('controls.bold')}</div>
+              <div className="text-[9px] opacity-70">{t('controls.oversized')}</div>
+            </button>
+            <button
+              onClick={() => setNestedData('hero.heroVariant', 'overlap')}
+              className={`px-3 py-3 rounded-md border transition-all ${currentVariant === 'overlap'
+                ? 'bg-editor-accent text-editor-bg border-editor-accent shadow-lg'
+                : 'bg-editor-bg text-editor-text-primary border-editor-border hover:border-editor-accent'
+                }`}
+            >
+              <div className="font-semibold text-[10px]">{t('controls.overlap')}</div>
+              <div className="text-[9px] opacity-70">{t('controls.floatingCard')}</div>
+            </button>
+            <button
+              onClick={() => setNestedData('hero.heroVariant', 'verticalSplit')}
+              className={`px-3 py-3 rounded-md border transition-all ${currentVariant === 'verticalSplit'
+                ? 'bg-editor-accent text-editor-bg border-editor-accent shadow-lg'
+                : 'bg-editor-bg text-editor-text-primary border-editor-border hover:border-editor-accent'
+                }`}
+            >
+              <div className="font-semibold text-[10px]">{t('controls.verticalSplit')}</div>
+              <div className="text-[9px] opacity-70">{t('controls.split5050')}</div>
+            </button>
+            <button
+              onClick={() => setNestedData('hero.heroVariant', 'glass')}
+              className={`px-3 py-3 rounded-md border transition-all ${currentVariant === 'glass'
+                ? 'bg-editor-accent text-editor-bg border-editor-accent shadow-lg'
+                : 'bg-editor-bg text-editor-text-primary border-editor-border hover:border-editor-accent'
+                }`}
+            >
+              <div className="font-semibold text-[10px]">{t('controls.glass')}</div>
+              <div className="text-[9px] opacity-70">{t('controls.frosted')}</div>
+            </button>
+            <button
+              onClick={() => setNestedData('hero.heroVariant', 'stacked')}
+              className={`px-3 py-3 rounded-md border transition-all ${currentVariant === 'stacked'
+                ? 'bg-editor-accent text-editor-bg border-editor-accent shadow-lg'
+                : 'bg-editor-bg text-editor-text-primary border-editor-border hover:border-editor-accent'
+                }`}
+            >
+              <div className="font-semibold text-[10px]">{t('controls.stacked')}</div>
+              <div className="text-[9px] opacity-70">{t('controls.imageAndText')}</div>
             </button>
           </div>
           <p className="text-xs text-editor-text-secondary mt-2">
-            {currentVariant === 'modern'
-              ? `✨ ${t('controls.fullScreenHero')}`
-              : currentVariant === 'gradient'
-                ? `🎨 ${t('controls.gradientLayout')}`
-                : currentVariant === 'fitness'
-                  ? `💪 ${t('controls.fitnessLayout')}`
-                  : `📐 ${t('controls.traditionalLayout')}`}
+            {currentVariant === 'classic' && `📐 ${t('controls.traditionalLayout')}`}
+            {currentVariant === 'modern' && `✨ ${t('controls.fullScreenHero')}`}
+            {currentVariant === 'gradient' && `🎨 ${t('controls.gradientLayout')}`}
+            {currentVariant === 'fitness' && `💪 ${t('controls.fitnessLayout')}`}
+            {currentVariant === 'editorial' && `📰 ${t('controls.editorialLayout')}`}
+            {currentVariant === 'cinematic' && `🎬 ${t('controls.cinematicLayout')}`}
+            {currentVariant === 'minimal' && `✧ ${t('controls.minimalLayout')}`}
+            {currentVariant === 'bold' && `🔤 ${t('controls.boldLayout')}`}
+            {currentVariant === 'overlap' && `📋 ${t('controls.overlapLayout')}`}
+            {currentVariant === 'verticalSplit' && `◧ ${t('controls.verticalSplitLayout')}`}
+            {currentVariant === 'glass' && `🪟 ${t('controls.glassLayout')}`}
+            {currentVariant === 'stacked' && `📚 ${t('controls.stackedLayout')}`}
           </p>
+        </div>
+
+        {/* ========== HERO HEIGHT ========== */}
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+            <AlignJustify size={14} />
+            {t('controls.heroHeight')}
+          </label>
+          <div className="space-y-2">
+            <div className="flex justify-between items-center mb-1">
+              <span className="text-xs font-medium text-editor-text-secondary">{t('controls.sectionHeight')}</span>
+              <span className="text-xs text-editor-text-primary font-mono">
+                {data.hero.heroHeight ? `${data.hero.heroHeight}vh` : t('controls.auto')}
+              </span>
+            </div>
+            <input
+              type="range" min="0" max="100" step="5"
+              value={data.hero.heroHeight ?? 0}
+              onChange={(e) => {
+                const val = parseInt(e.target.value);
+                setNestedData('hero.heroHeight', val === 0 ? undefined : val);
+              }}
+              className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
+            />
+            <div className="flex justify-between">
+              <span className="text-[9px] text-editor-text-secondary">{t('controls.auto')}</span>
+              <span className="text-[9px] text-editor-text-secondary">100vh</span>
+            </div>
+            <p className="text-xs text-editor-text-secondary">
+              {t('controls.heroHeightHelp')}
+            </p>
+          </div>
         </div>
 
         {/* Variant-Specific Info & Controls */}

@@ -30,26 +30,26 @@ const borderRadiusClasses: Record<BorderRadiusSize, string> = {
 };
 
 const paddingYClasses: Record<PaddingSize, string> = {
-  none: 'py-0',
-  sm: 'py-10 md:py-16',
-  md: 'py-16 md:py-24',
-  lg: 'py-20 md:py-32',
-  xl: 'py-24 md:py-40',
+    none: 'py-0',
+    sm: 'py-10 md:py-16',
+    md: 'py-16 md:py-24',
+    lg: 'py-20 md:py-32',
+    xl: 'py-24 md:py-40',
 };
 
 const paddingXClasses: Record<PaddingSize, string> = {
-  none: 'px-0',
-  sm: 'px-4',
-  md: 'px-6',
-  lg: 'px-8',
-  xl: 'px-12',
+    none: 'px-0',
+    sm: 'px-4',
+    md: 'px-6',
+    lg: 'px-8',
+    xl: 'px-12',
 };
 
 // Helper function to render badge icon (supports both emoji strings and Lucide icons)
 const renderBadgeIcon = (badgeIcon?: ServiceIcon | string) => {
     if (!badgeIcon) return '⚡';
     if (badgeIcon.length <= 2) return badgeIcon;
-    
+
     const iconMap: Record<string, any> = {
         'sparkles': LucideIcons.Sparkles, 'zap': LucideIcons.Zap, 'star': LucideIcons.Star,
         'award': LucideIcons.Award, 'trophy': LucideIcons.Trophy, 'rocket': LucideIcons.Rocket,
@@ -58,7 +58,7 @@ const renderBadgeIcon = (badgeIcon?: ServiceIcon | string) => {
         'trending-up': LucideIcons.TrendingUp, 'circle-dot': LucideIcons.CircleDot, 'hexagon': LucideIcons.Hexagon,
         'layers': LucideIcons.Layers,
     };
-    
+
     const IconComponent = iconMap[badgeIcon];
     return IconComponent ? React.createElement(IconComponent, { size: 20, className: 'inline-block' }) : badgeIcon;
 };
@@ -68,8 +68,8 @@ interface HeroProps extends HeroData {
     onNavigate?: (href: string) => void;
 }
 
-const HeroFitness: React.FC<HeroProps> = ({ 
-    headline, subheadline, primaryCta, secondaryCta, imageUrl, 
+const HeroFitness: React.FC<HeroProps> = ({
+    headline, subheadline, primaryCta, secondaryCta, imageUrl,
     colors, borderRadius,
     paddingY = 'md', paddingX = 'md',
     headlineFontSize = 'lg', subheadlineFontSize = 'lg',
@@ -77,12 +77,13 @@ const HeroFitness: React.FC<HeroProps> = ({
     badgeColor, badgeBackgroundColor,
     secondaryButtonStyle = 'outline',
     secondaryButtonOpacity = 100,
+    heroHeight,
     primaryCtaLink = '/#cta',
     secondaryCtaLink = '/#features',
     onNavigate,
 }) => {
     const { getColor } = useDesignTokens();
-    
+
     // Component colors take priority over Design Tokens
     const actualColors = {
         primary: colors?.primary || getColor('primary.main', '#4f46e5'),
@@ -103,37 +104,37 @@ const HeroFitness: React.FC<HeroProps> = ({
     );
 
     return (
-        <section 
+        <section
             className="relative w-full overflow-hidden"
-            style={{ background: actualColors.background }}
+            style={{ background: actualColors.background, minHeight: heroHeight ? `${heroHeight}vh` : undefined }}
         >
             {/* Dynamic Background with Image */}
             <div className="absolute inset-0 z-0">
-                <img 
-                    src={imageUrl} 
-                    alt="Fitness Background" 
+                <img
+                    src={imageUrl}
+                    alt="Fitness Background"
                     className="w-full h-full object-cover"
                 />
                 {/* Dark Overlay with Gradient */}
-                <div 
+                <div
                     className="absolute inset-0"
                     style={{
                         background: `linear-gradient(135deg, ${actualColors.background}ee 0%, ${actualColors.background}cc 50%, ${actualColors.background}99 100%)`
                     }}
                 ></div>
-                
+
                 {/* Diagonal Energy Lines */}
                 <div className="absolute inset-0 opacity-20">
-                    <div 
+                    <div
                         className="absolute top-0 left-1/4 w-1 h-full transform -skew-x-12 animate-pulse"
-                        style={{ 
+                        style={{
                             background: `linear-gradient(to bottom, transparent, ${actualColors.primary}, transparent)`,
                             animationDuration: '3s'
                         }}
                     ></div>
-                    <div 
+                    <div
                         className="absolute top-0 right-1/3 w-1 h-full transform -skew-x-12 animate-pulse"
-                        style={{ 
+                        style={{
                             background: `linear-gradient(to bottom, transparent, ${actualColors.secondary}, transparent)`,
                             animationDuration: '2.5s',
                             animationDelay: '0.5s'
@@ -142,9 +143,9 @@ const HeroFitness: React.FC<HeroProps> = ({
                 </div>
 
                 {/* Energy Burst Effect */}
-                <div 
+                <div
                     className="absolute top-1/4 right-0 w-[600px] h-[600px] rounded-full blur-3xl opacity-30 animate-pulse"
-                    style={{ 
+                    style={{
                         background: `radial-gradient(circle, ${actualColors.primary} 0%, transparent 70%)`,
                         animationDuration: '4s'
                     }}
@@ -153,15 +154,15 @@ const HeroFitness: React.FC<HeroProps> = ({
 
             <div className={`relative z-10 container mx-auto ${paddingXClasses[paddingX]} ${paddingYClasses[paddingY]} flex items-center`}>
                 <div className={`w-full`}>
-                    
+
                     {/* Main Content - Centered with Max Width */}
                     <div className="max-w-5xl">
-                        
+
                         {/* Badge with Icon */}
                         {showBadge && badgeText && (
-                            <div 
+                            <div
                                 className="inline-flex items-center gap-2 px-5 py-2.5 mb-6 font-black tracking-wider uppercase text-sm transform -skew-x-6 animate-fade-in-down"
-                                style={{ 
+                                style={{
                                     backgroundColor: badgeBackgroundColor || actualColors.primary,
                                     color: badgeColor || '#ffffff'
                                 }}
@@ -172,9 +173,9 @@ const HeroFitness: React.FC<HeroProps> = ({
                         )}
 
                         {/* Headline - Extra Bold */}
-                        <h1 
+                        <h1
                             className={`${headlineSizeClasses[headlineFontSize]} font-black tracking-tighter leading-[0.9] mb-6 font-header uppercase animate-fade-in-up`}
-                            style={{ 
+                            style={{
                                 color: actualColors.heading,
                                 textShadow: `4px 4px 0px ${actualColors.primary}40, 8px 8px 0px ${actualColors.background}40`
                             }}
@@ -182,15 +183,15 @@ const HeroFitness: React.FC<HeroProps> = ({
                         />
 
                         {/* Subheadline with Accent Border */}
-                        <div 
+                        <div
                             className="relative pl-6 mb-8 animate-fade-in-up"
                             style={{ animationDelay: '0.1s' }}
                         >
-                            <div 
+                            <div
                                 className="absolute left-0 top-0 bottom-0 w-1"
                                 style={{ backgroundColor: actualColors.primary }}
                             ></div>
-                            <p 
+                            <p
                                 className={`${subheadlineSizeClasses[subheadlineFontSize]} font-bold leading-relaxed max-w-2xl font-body`}
                                 style={{ color: actualColors.text }}
                             >
@@ -199,12 +200,12 @@ const HeroFitness: React.FC<HeroProps> = ({
                         </div>
 
                         {/* CTAs - Bold and Large */}
-                        <div 
+                        <div
                             className="flex flex-wrap gap-4 mb-12 animate-fade-in-up"
                             style={{ animationDelay: '0.2s' }}
                         >
-                            <a 
-                                href={primaryCtaLink || '/#cta'} 
+                            <a
+                                href={primaryCtaLink || '/#cta'}
                                 onClick={(e) => {
                                     const href = primaryCtaLink || '/#cta';
                                     if (onNavigate && !href.startsWith('http://') && !href.startsWith('https://')) {
@@ -212,24 +213,24 @@ const HeroFitness: React.FC<HeroProps> = ({
                                         onNavigate(href);
                                     }
                                 }}
-                                style={{ 
-                                    backgroundColor: actualColors.buttonBackground || actualColors.primary, 
-                                    color: actualColors.buttonText 
-                                }} 
+                                style={{
+                                    backgroundColor: actualColors.buttonBackground || actualColors.primary,
+                                    color: actualColors.buttonText
+                                }}
                                 className={`group relative overflow-hidden px-10 py-5 text-xl font-black uppercase tracking-wide transform hover:scale-105 active:scale-95 transition-all duration-300 font-button ${borderRadiusClasses[borderRadius]}`}
                             >
                                 <span className="relative z-10 flex items-center gap-2">
                                     <Zap size={24} className="group-hover:rotate-12 transition-transform" />
                                     {primaryCta}
                                 </span>
-                                <div 
+                                <div
                                     className="absolute inset-0 translate-y-full group-hover:translate-y-0 transition-transform duration-300"
                                     style={{ backgroundColor: actualColors.secondary }}
                                 ></div>
                             </a>
-                            
-                            <a 
-                                href={secondaryCtaLink || '/#features'} 
+
+                            <a
+                                href={secondaryCtaLink || '/#features'}
                                 onClick={(e) => {
                                     const href = secondaryCtaLink || '/#features';
                                     if (onNavigate && !href.startsWith('http://') && !href.startsWith('https://')) {
@@ -237,23 +238,22 @@ const HeroFitness: React.FC<HeroProps> = ({
                                         onNavigate(href);
                                     }
                                 }}
-                                className={`group relative overflow-hidden px-10 py-5 text-xl font-black uppercase tracking-wide hover:scale-105 active:scale-95 transition-all duration-300 font-button ${borderRadiusClasses[borderRadius]} ${
-                                    secondaryButtonStyle === 'outline' 
-                                        ? 'border-4 bg-transparent' 
+                                className={`group relative overflow-hidden px-10 py-5 text-xl font-black uppercase tracking-wide hover:scale-105 active:scale-95 transition-all duration-300 font-button ${borderRadiusClasses[borderRadius]} ${secondaryButtonStyle === 'outline'
+                                        ? 'border-4 bg-transparent'
                                         : secondaryButtonStyle === 'ghost'
                                             ? 'bg-transparent border-0'
                                             : 'border-0'
-                                }`}
-                                style={{ 
-                                    backgroundColor: secondaryButtonStyle === 'solid' 
+                                    }`}
+                                style={{
+                                    backgroundColor: secondaryButtonStyle === 'solid'
                                         ? hexToRgba(actualColors.secondaryButtonBackground || '#334155', secondaryButtonOpacity / 100)
                                         : 'transparent',
                                     borderColor: secondaryButtonStyle === 'outline' ? actualColors.secondaryButtonBackground : 'transparent',
-                                    color: actualColors.secondaryButtonText 
+                                    color: actualColors.secondaryButtonText
                                 }}
                             >
                                 <span className="relative z-10">{secondaryCta}</span>
-                                <div 
+                                <div
                                     className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
                                     style={{ backgroundColor: `${actualColors.secondaryButtonBackground}20` }}
                                 ></div>
@@ -264,18 +264,18 @@ const HeroFitness: React.FC<HeroProps> = ({
 
                     {/* Decorative Geometric Shapes */}
                     <div className="absolute top-20 right-20 hidden xl:block">
-                        <div 
+                        <div
                             className="w-32 h-32 transform rotate-45 opacity-20 animate-spin-very-slow"
-                            style={{ 
+                            style={{
                                 border: `4px solid ${actualColors.primary}`,
                                 borderRadius: '8px'
                             }}
                         ></div>
                     </div>
                     <div className="absolute bottom-32 left-20 hidden xl:block">
-                        <div 
+                        <div
                             className="w-24 h-24 transform rotate-12 opacity-20 animate-bounce-slow"
-                            style={{ 
+                            style={{
                                 border: `4px solid ${actualColors.secondary}`,
                                 borderRadius: '8px'
                             }}

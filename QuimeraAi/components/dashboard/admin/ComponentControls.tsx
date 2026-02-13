@@ -255,32 +255,141 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                         <Layout size={14} />
                         Hero Style
                     </label>
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-3 gap-2">
                         <button
                             onClick={() => handleStyleChange('heroVariant', 'classic')}
-                            className={`px-4 py-3 rounded-md border transition-all ${currentVariant === 'classic'
+                            className={`px-3 py-2.5 rounded-md border transition-all ${currentVariant === 'classic'
                                 ? 'bg-editor-accent text-editor-bg border-editor-accent shadow-lg'
                                 : 'bg-editor-panel-bg text-editor-text-primary border-editor-border hover:border-editor-accent'
                                 }`}
                         >
-                            <div className="font-semibold">Classic</div>
-                            <div className="text-xs opacity-70">Two Column</div>
+                            <div className="font-semibold text-sm">Classic</div>
+                            <div className="text-[10px] opacity-70">Two Column</div>
                         </button>
                         <button
                             onClick={() => handleStyleChange('heroVariant', 'modern')}
-                            className={`px-4 py-3 rounded-md border transition-all ${currentVariant === 'modern'
+                            className={`px-3 py-2.5 rounded-md border transition-all ${currentVariant === 'modern'
                                 ? 'bg-editor-accent text-editor-bg border-editor-accent shadow-lg'
                                 : 'bg-editor-panel-bg text-editor-text-primary border-editor-border hover:border-editor-accent'
                                 }`}
                         >
-                            <div className="font-semibold">Modern</div>
-                            <div className="text-xs opacity-70">Full Screen</div>
+                            <div className="font-semibold text-sm">Modern</div>
+                            <div className="text-[10px] opacity-70">Full Screen</div>
+                        </button>
+                        <button
+                            onClick={() => handleStyleChange('heroVariant', 'gradient')}
+                            className={`px-3 py-2.5 rounded-md border transition-all ${currentVariant === 'gradient'
+                                ? 'bg-editor-accent text-editor-bg border-editor-accent shadow-lg'
+                                : 'bg-editor-panel-bg text-editor-text-primary border-editor-border hover:border-editor-accent'
+                                }`}
+                        >
+                            <div className="font-semibold text-sm">Aurora</div>
+                            <div className="text-[10px] opacity-70">Animated</div>
+                        </button>
+                        <button
+                            onClick={() => handleStyleChange('heroVariant', 'fitness')}
+                            className={`px-3 py-2.5 rounded-md border transition-all ${currentVariant === 'fitness'
+                                ? 'bg-editor-accent text-editor-bg border-editor-accent shadow-lg'
+                                : 'bg-editor-panel-bg text-editor-text-primary border-editor-border hover:border-editor-accent'
+                                }`}
+                        >
+                            <div className="font-semibold text-sm">Fitness</div>
+                            <div className="text-[10px] opacity-70">Brutalist</div>
+                        </button>
+                        <button
+                            onClick={() => handleStyleChange('heroVariant', 'editorial')}
+                            className={`px-3 py-2.5 rounded-md border transition-all ${currentVariant === 'editorial'
+                                ? 'bg-editor-accent text-editor-bg border-editor-accent shadow-lg'
+                                : 'bg-editor-panel-bg text-editor-text-primary border-editor-border hover:border-editor-accent'
+                                }`}
+                        >
+                            <div className="font-semibold text-sm">Editorial</div>
+                            <div className="text-[10px] opacity-70">Magazine</div>
+                        </button>
+                        <button
+                            onClick={() => handleStyleChange('heroVariant', 'cinematic')}
+                            className={`px-3 py-2.5 rounded-md border transition-all ${currentVariant === 'cinematic'
+                                ? 'bg-editor-accent text-editor-bg border-editor-accent shadow-lg'
+                                : 'bg-editor-panel-bg text-editor-text-primary border-editor-border hover:border-editor-accent'
+                                }`}
+                        >
+                            <div className="font-semibold text-sm">Cinematic</div>
+                            <div className="text-[10px] opacity-70">Movie Poster</div>
+                        </button>
+                        <button
+                            onClick={() => handleStyleChange('heroVariant', 'minimal')}
+                            className={`px-3 py-2.5 rounded-md border transition-all ${currentVariant === 'minimal'
+                                ? 'bg-editor-accent text-editor-bg border-editor-accent shadow-lg'
+                                : 'bg-editor-panel-bg text-editor-text-primary border-editor-border hover:border-editor-accent'
+                                }`}
+                        >
+                            <div className="font-semibold text-sm">Minimal</div>
+                            <div className="text-[10px] opacity-70">Clean</div>
+                        </button>
+                        <button
+                            onClick={() => handleStyleChange('heroVariant', 'bold')}
+                            className={`px-3 py-2.5 rounded-md border transition-all ${currentVariant === 'bold'
+                                ? 'bg-editor-accent text-editor-bg border-editor-accent shadow-lg'
+                                : 'bg-editor-panel-bg text-editor-text-primary border-editor-border hover:border-editor-accent'
+                                }`}
+                        >
+                            <div className="font-semibold text-sm">Bold</div>
+                            <div className="text-[10px] opacity-70">Oversized</div>
+                        </button>
+                        <button
+                            onClick={() => handleStyleChange('heroVariant', 'overlap')}
+                            className={`px-3 py-2.5 rounded-md border transition-all ${currentVariant === 'overlap'
+                                ? 'bg-editor-accent text-editor-bg border-editor-accent shadow-lg'
+                                : 'bg-editor-panel-bg text-editor-text-primary border-editor-border hover:border-editor-accent'
+                                }`}
+                        >
+                            <div className="font-semibold text-sm">Overlap</div>
+                            <div className="text-[10px] opacity-70">Floating Card</div>
+                        </button>
+                        <button
+                            onClick={() => handleStyleChange('heroVariant', 'verticalSplit')}
+                            className={`px-3 py-2.5 rounded-md border transition-all ${currentVariant === 'verticalSplit'
+                                ? 'bg-editor-accent text-editor-bg border-editor-accent shadow-lg'
+                                : 'bg-editor-panel-bg text-editor-text-primary border-editor-border hover:border-editor-accent'
+                                }`}
+                        >
+                            <div className="font-semibold text-sm">V. Split</div>
+                            <div className="text-[10px] opacity-70">50/50</div>
+                        </button>
+                        <button
+                            onClick={() => handleStyleChange('heroVariant', 'glass')}
+                            className={`px-3 py-2.5 rounded-md border transition-all ${currentVariant === 'glass'
+                                ? 'bg-editor-accent text-editor-bg border-editor-accent shadow-lg'
+                                : 'bg-editor-panel-bg text-editor-text-primary border-editor-border hover:border-editor-accent'
+                                }`}
+                        >
+                            <div className="font-semibold text-sm">Glass</div>
+                            <div className="text-[10px] opacity-70">Frosted</div>
+                        </button>
+                        <button
+                            onClick={() => handleStyleChange('heroVariant', 'stacked')}
+                            className={`px-3 py-2.5 rounded-md border transition-all ${currentVariant === 'stacked'
+                                ? 'bg-editor-accent text-editor-bg border-editor-accent shadow-lg'
+                                : 'bg-editor-panel-bg text-editor-text-primary border-editor-border hover:border-editor-accent'
+                                }`}
+                        >
+                            <div className="font-semibold text-sm">Stacked</div>
+                            <div className="text-[10px] opacity-70">Image + Text</div>
                         </button>
                     </div>
                     <p className="text-xs text-editor-text-secondary mt-2">
-                        {currentVariant === 'modern'
-                            ? '✨ Full-screen hero with image background covering entire area'
-                            : '📐 Traditional two-column layout with side-by-side content'}
+                        {currentVariant === 'classic' && '📐 Traditional two-column layout with side-by-side content'}
+                        {currentVariant === 'modern' && '✨ Full-screen hero with image background covering entire area'}
+                        {currentVariant === 'gradient' && '🌈 Animated radial gradient background with "Aurora" effect'}
+                        {currentVariant === 'fitness' && '💪 Bold, brutalist typography and high-impact layout'}
+                        {currentVariant === 'editorial' && '📰 Magazine-style with headline anchored at bottom-left'}
+                        {currentVariant === 'cinematic' && '🎬 Movie poster feel with heavy gradient and uppercase text'}
+                        {currentVariant === 'minimal' && '✦ Ultra-clean, thin typography with maximum whitespace'}
+                        {currentVariant === 'bold' && '🔤 Oversized bold headline with color overlay'}
+                        {currentVariant === 'overlap' && '📋 Content card floating over the image boundary'}
+                        {currentVariant === 'verticalSplit' && '◧ 50/50 vertical split: text panel + image side'}
+                        {currentVariant === 'glass' && '🪟 Glassmorphism card floating over full photo'}
+                        {currentVariant === 'stacked' && '📚 Image on top, text content below on solid background'}
                     </p>
                 </div>
 
