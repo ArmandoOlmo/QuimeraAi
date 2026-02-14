@@ -2300,7 +2300,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                     <div className="flex items-center gap-1 sm:gap-4">
                         <button
                             onClick={() => setIsMobileMenuOpen(true)}
-                            className="lg:hidden h-11 w-11 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary/80 rounded-xl transition-colors"
+                            className="lg:hidden h-9 w-9 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
                         >
                             <Menu className="w-5 h-5" />
                         </button>
@@ -2328,16 +2328,15 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                                 <button
                                     onClick={async () => {
                                         if (!bioPage && activeProjectId) {
-                                            // Create bio page first if it doesn't exist
                                             const username = profile.name?.toLowerCase().replace(/\s+/g, '-') || `bio-${Date.now()}`;
                                             await createBioPage(activeProjectId, username);
                                         }
                                         await saveBioPage();
                                     }}
-                                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary text-primary-foreground font-medium hover:bg-primary/90 transition-all"
+                                    className="h-9 w-9 flex items-center justify-center text-primary hover:opacity-80 transition-opacity"
+                                    title={t('common.save', 'Save')}
                                 >
-                                    <Check size={14} />
-                                    <span>{t('common.save', 'Save')}</span>
+                                    <Check size={18} />
                                 </button>
                             </>
                         ) : bioPage ? (
@@ -2394,17 +2393,13 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                                 }
                             }}
                             disabled={!bioPage?.isPublished && !profile.name && !bioPage?.username}
-                            className={`flex items-center gap-2 h-9 px-3 rounded-lg text-sm font-medium transition-all ${bioPage?.isPublished
-                                ? 'bg-green-500/20 hover:bg-green-500/30 text-green-500'
-                                : 'bg-primary/20 hover:bg-primary/30 text-primary'
+                            className={`h-9 w-9 flex items-center justify-center transition-opacity hover:opacity-80 disabled:opacity-50 ${bioPage?.isPublished
+                                ? 'text-green-500'
+                                : 'text-primary'
                                 }`}
+                            title={bioPage?.isPublished ? t('bioPage.copyUrl', 'Copy URL') : t('bioPage.publish', 'Publish')}
                         >
-                            {bioPage?.isPublished ? <Copy size={16} /> : <Share2 size={16} />}
-                            <span className="hidden sm:inline">
-                                {bioPage?.isPublished
-                                    ? t('bioPage.copyUrl', 'Copy URL')
-                                    : t('bioPage.publish', 'Publish')}
-                            </span>
+                            {bioPage?.isPublished ? <Copy size={18} /> : <Share2 size={18} />}
                         </button>
 
                         {/* Update Published Button - shows when published and has unsaved changes */}
@@ -2421,19 +2416,19 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                                         });
                                     }
                                 }}
-                                className="flex items-center gap-2 h-9 px-3 rounded-lg text-sm font-medium transition-all bg-primary/20 hover:bg-primary/30 text-primary"
+                                className="h-9 w-9 flex items-center justify-center text-primary hover:opacity-80 transition-opacity"
+                                title={t('bioPage.update', 'Update')}
                             >
-                                <Share2 size={16} />
-                                <span className="hidden sm:inline">{t('bioPage.update', 'Update')}</span>
+                                <Share2 size={18} />
                             </button>
                         )}
 
                         <button
                             onClick={() => navigate(ROUTES.DASHBOARD)}
-                            className="flex items-center gap-2 h-9 px-3 rounded-lg text-sm font-medium bg-secondary/50 hover:bg-secondary text-muted-foreground hover:text-foreground transition-all"
+                            className="h-9 w-9 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
+                            title={t('common.back', 'Back')}
                         >
-                            <ArrowLeft size={16} />
-                            <span className="hidden sm:inline">{t('common.back', 'Back')}</span>
+                            <ArrowLeft size={18} />
                         </button>
                     </div>
                 </header>
@@ -2506,19 +2501,19 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                     {/* Config Panel */}
                     <main className="flex-1 overflow-y-auto bg-muted/5 p-6 sm:p-8 pb-32">
                         <div className="max-w-2xl mx-auto">
-                            {/* Mobile Nav */}
-                            <div className="md:hidden flex gap-2 mb-6 overflow-x-auto pb-2">
+                            {/* Mobile Nav - Grid sin scroll, todas las pestañas visibles */}
+                            <div className="md:hidden grid grid-cols-2 sm:grid-cols-3 gap-2 mb-6">
                                 {navItems.map((item) => (
                                     <button
                                         key={item.id}
                                         onClick={() => setActiveTab(item.id as ActiveTab)}
-                                        className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all ${activeTab === item.id
-                                            ? 'bg-primary text-primary-foreground'
-                                            : 'bg-card text-muted-foreground border border-border'
+                                        className={`flex items-center justify-center gap-2 px-3 py-3 rounded-xl text-sm font-medium transition-all ${activeTab === item.id
+                                            ? 'bg-primary text-primary-foreground shadow-sm'
+                                            : 'bg-card text-muted-foreground border border-border hover:bg-muted/50'
                                             }`}
                                     >
-                                        <item.icon size={16} />
-                                        {item.label}
+                                        <item.icon size={18} className="flex-shrink-0" />
+                                        <span className="truncate">{item.label}</span>
                                     </button>
                                 ))}
                             </div>

@@ -3325,8 +3325,8 @@ Usuario: ${userMsg}`;
                     )}
                 </div>
 
-                {/* Action icons */}
-                <div className="flex items-center gap-2 shrink-0">
+                {/* Action icons - botones redondos 36×36px fijos */}
+                <div className="flex items-center gap-2 shrink-0 self-center">
                     {globalAssistantConfig.enableLiveVoice && (
                         <button
                             onClick={(e) => {
@@ -3337,7 +3337,8 @@ Usuario: ${userMsg}`;
                                     startLiveSession();
                                 }
                             }}
-                            className={`shrink-0 w-9 h-9 aspect-square flex items-center justify-center rounded-full transition-all ${isLiveActive ? 'bg-red-500/20 text-red-500 hover:bg-red-500/30' : 'hover:bg-primary/10 text-muted-foreground hover:text-primary'}`}
+                            className={`shrink-0 self-center flex items-center justify-center rounded-full transition-all ${isLiveActive ? 'bg-red-500/20 text-red-500 hover:bg-red-500/30' : 'hover:bg-primary/10 text-muted-foreground hover:text-primary'}`}
+                            style={{ width: '36px', height: '36px', minWidth: '36px', minHeight: '36px', maxHeight: '36px' }}
                         >
                             {isLiveActive ? <PhoneOff size={18} /> : <Mic size={18} />}
                         </button>
@@ -3345,13 +3346,18 @@ Usuario: ${userMsg}`;
                     {/* Minimize Bar to Bubble */}
                     <button
                         onClick={(e) => { e.stopPropagation(); setIsMinimized(true); }}
-                        className="shrink-0 w-9 h-9 aspect-square flex items-center justify-center rounded-full hover:bg-primary/10 text-muted-foreground hover:text-primary transition-colors"
+                        className="shrink-0 self-center flex items-center justify-center rounded-full hover:bg-primary/10 text-muted-foreground hover:text-primary transition-colors"
+                        style={{ width: '36px', height: '36px', minWidth: '36px', minHeight: '36px', maxHeight: '36px' }}
                         title="Minimizar a burbuja"
                     >
                         <Minus size={18} />
                     </button>
                     {!isLiveActive && (
-                        <button onClick={() => setIsOpen(true)} className="shrink-0 w-9 h-9 aspect-square flex items-center justify-center rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors shadow-sm">
+                        <button
+                            onClick={() => setIsOpen(true)}
+                            className="shrink-0 self-center flex items-center justify-center rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors shadow-sm"
+                            style={{ width: '36px', height: '36px', minWidth: '36px', minHeight: '36px', maxHeight: '36px' }}
+                        >
                             <Send size={16} />
                         </button>
                     )}

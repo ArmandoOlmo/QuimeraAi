@@ -223,20 +223,21 @@ const ColorControl: React.FC<ColorControlProps> = ({ label, value, onChange, pal
     useLayoutEffect(() => {
         if (isOpen && triggerRef.current) {
             const rect = triggerRef.current.getBoundingClientRect();
-            const popoverWidth = 280; // Widen for RGB inputs
+            const popoverWidth = 256; // w-64
             const popoverHeight = 500;
             const gap = 8;
             let top = rect.bottom + gap;
             let left = rect.left;
             if (top + popoverHeight > window.innerHeight) top = rect.top - popoverHeight - gap;
             if (top < gap) top = gap;
-            if (left + popoverWidth > window.innerWidth) left = rect.right - popoverWidth;
+            if (left + popoverWidth > window.innerWidth) left = window.innerWidth - popoverWidth - gap;
             if (left < gap) left = gap;
 
             setPopoverStyle({
                 position: 'fixed',
                 top: `${top}px`,
                 left: `${left}px`,
+                width: '256px',
             });
         }
     }, [isOpen]);
@@ -324,7 +325,7 @@ const ColorControl: React.FC<ColorControlProps> = ({ label, value, onChange, pal
         <div
             ref={popoverRef}
             style={popoverStyle}
-            className="z-[9999] w-64 bg-editor-panel-bg border border-editor-border rounded-lg shadow-xl p-3"
+            className="z-[9999] bg-editor-panel-bg border border-editor-border rounded-lg shadow-xl p-3 overflow-y-auto max-h-[85vh]"
         >
             {/* Custom Saturation Area */}
             <div
@@ -453,13 +454,13 @@ const ColorControl: React.FC<ColorControlProps> = ({ label, value, onChange, pal
             {paletteColors && paletteColors.length > 0 && (
                 <div className="mb-3">
                     <Label><Palette size={12} className="inline mr-1" />Theme Palette</Label>
-                    <div className="grid grid-cols-8 gap-1">
+                    <div className="flex flex-wrap gap-1">
                         {paletteColors.map((color, i) => (
                             <button
                                 key={`palette-${i}`}
                                 onClick={() => handleColorChange(color)}
-                                className="w-6 h-6 rounded border border-editor-border hover:scale-110 transition-transform"
-                                style={{ backgroundColor: color }}
+                                className="rounded border border-editor-border hover:scale-110 transition-transform"
+                                style={{ backgroundColor: color, width: 24, height: 24, minWidth: 24, minHeight: 24, maxWidth: 24, maxHeight: 24 }}
                                 title={color}
                             />
                         ))}
@@ -473,16 +474,16 @@ const ColorControl: React.FC<ColorControlProps> = ({ label, value, onChange, pal
                     <Label><History size={12} className="inline mr-1" />Recent Palettes</Label>
                     <div className="space-y-1">
                         {recentPalettes.slice(0, 5).map((palette) => (
-                            <div key={palette.id} className="flex items-center gap-1 p-1 rounded bg-editor-border/30 hover:bg-editor-border/50 transition-colors">
-                                <span className="text-[10px] text-editor-text-secondary truncate max-w-[60px]" title={palette.name}>
+                            <div key={palette.id} className="flex items-center gap-1 p-1 rounded bg-editor-border/30 hover:bg-editor-border/50 transition-colors min-w-0">
+                                <span className="text-[10px] text-editor-text-secondary truncate max-w-[60px] shrink-0" title={palette.name}>
                                     {palette.name}:
                                 </span>
-                                <div className="flex gap-0.5 flex-1">
+                                <div className="flex gap-0.5 flex-1 min-w-0">
                                     {palette.preview.slice(0, 5).map((color, idx) => (
                                         <button
                                             key={`${palette.id}-${idx}`}
                                             onClick={() => handleColorChange(color)}
-                                            className="w-5 h-5 rounded border border-editor-border hover:scale-110 transition-transform"
+                                            className="w-5 h-5 shrink-0 rounded border border-editor-border hover:scale-110 transition-transform"
                                             style={{ backgroundColor: color }}
                                             title={`${palette.name}: ${color}`}
                                         />
@@ -497,13 +498,13 @@ const ColorControl: React.FC<ColorControlProps> = ({ label, value, onChange, pal
             {/* Preset colors */}
             <div className="mb-3">
                 <Label><Sparkles size={12} className="inline mr-1" />Presets</Label>
-                <div className="grid grid-cols-8 gap-1">
+                <div className="flex flex-wrap gap-1">
                     {PRESET_COLORS.map((color, i) => (
                         <button
                             key={`preset-${i}`}
                             onClick={() => handleColorChange(color)}
-                            className="w-6 h-6 rounded border border-editor-border hover:scale-110 transition-transform"
-                            style={{ backgroundColor: color }}
+                            className="rounded border border-editor-border hover:scale-110 transition-transform"
+                            style={{ backgroundColor: color, width: 24, height: 24, minWidth: 24, minHeight: 24, maxWidth: 24, maxHeight: 24 }}
                             title={color}
                         />
                     ))}
@@ -514,13 +515,13 @@ const ColorControl: React.FC<ColorControlProps> = ({ label, value, onChange, pal
             {recentColors.length > 0 && (
                 <div>
                     <Label><History size={12} className="inline mr-1" />Recent</Label>
-                    <div className="grid grid-cols-8 gap-1">
+                    <div className="flex flex-wrap gap-1">
                         {recentColors.map((color, i) => (
                             <button
                                 key={`recent-${i}`}
                                 onClick={() => handleColorChange(color)}
-                                className="w-6 h-6 rounded border border-editor-border hover:scale-110 transition-transform"
-                                style={{ backgroundColor: color }}
+                                className="rounded border border-editor-border hover:scale-110 transition-transform"
+                                style={{ backgroundColor: color, width: 24, height: 24, minWidth: 24, minHeight: 24, maxWidth: 24, maxHeight: 24 }}
                                 title={color}
                             />
                         ))}

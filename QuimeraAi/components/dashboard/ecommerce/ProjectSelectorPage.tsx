@@ -93,9 +93,9 @@ const ProjectSelectorPage: React.FC<ProjectSelectorPageProps> = ({
             {/* Main Content */}
             <div className="flex-1 flex flex-col min-h-screen">
                 {/* Header */}
-                <header className="h-14 px-4 sm:px-6 border-b border-border flex items-center bg-card/50 backdrop-blur-md sticky top-0 z-40">
+                <header className="h-14 w-full px-4 sm:px-6 border-b border-border flex items-center bg-card/50 backdrop-blur-md sticky top-0 z-40">
                     {/* Left: Menu & Title */}
-                    <div className="flex items-center gap-4 flex-shrink-0 min-w-[200px]">
+                    <div className="flex items-center gap-4 flex-shrink-0">
                         <button
                             onClick={() => setIsMobileMenuOpen(true)}
                             className="lg:hidden h-9 w-9 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
@@ -131,16 +131,16 @@ const ProjectSelectorPage: React.FC<ProjectSelectorPageProps> = ({
                         </div>
                     </div>
 
-                    {/* Right: Back Button */}
-                    <div className="flex items-center gap-2 flex-shrink-0 min-w-[200px] justify-end">
+                    {/* Right: Back Button - solo icono */}
+                    <div className="flex items-center justify-end flex-shrink-0 ml-auto">
                         {onBack && (
                             <button
                                 onClick={onBack}
-                                className="flex items-center justify-center gap-2 h-9 px-3 rounded-lg bg-secondary/50 border border-border/40 hover:bg-secondary text-sm font-medium transition-all text-muted-foreground hover:text-foreground"
+                                className="h-9 w-9 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
                                 aria-label={t('common.back', 'Volver')}
+                                title={t('common.back', 'Volver')}
                             >
-                                <ArrowLeft size={16} />
-                                <span className="hidden sm:inline">{t('common.back', 'Volver')}</span>
+                                <ArrowLeft size={20} />
                             </button>
                         )}
                     </div>
@@ -227,75 +227,57 @@ const ProjectSelectorPage: React.FC<ProjectSelectorPageProps> = ({
                             </div>
                         </div>
 
-                        {/* Filter Chips */}
-                        <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-6">
-                            <button
-                                onClick={() => setFilterStatus('all')}
-                                className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-all border ${
-                                    filterStatus === 'all'
-                                        ? 'bg-primary text-primary-foreground border-primary shadow-md'
-                                        : 'bg-secondary/50 border-border/40 text-muted-foreground hover:text-foreground hover:bg-secondary'
-                                }`}
-                            >
-                                {t('common.all', 'Todos')} ({userProjects.length})
-                            </button>
-                            <button
-                                onClick={() => setFilterStatus('Published')}
-                                className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-all border ${
-                                    filterStatus === 'Published'
-                                        ? 'bg-green-500 text-white border-green-500 shadow-md'
-                                        : 'bg-secondary/50 border-border/40 text-muted-foreground hover:text-foreground hover:bg-secondary'
-                                }`}
-                            >
-                                {t('dashboard.published', 'Publicados')} ({publishedCount})
-                            </button>
-                            <button
-                                onClick={() => setFilterStatus('Draft')}
-                                className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-all border ${
-                                    filterStatus === 'Draft'
-                                        ? 'bg-slate-500 text-white border-slate-500 shadow-md'
-                                        : 'bg-secondary/50 border-border/40 text-muted-foreground hover:text-foreground hover:bg-secondary'
-                                }`}
-                            >
-                                {t('dashboard.draft', 'Borradores')} ({draftCount})
-                            </button>
-
-                            <div className="flex-1" />
-
-                            {/* Sort */}
-                            <select
-                                value={sortBy}
-                                onChange={(e) => setSortBy(e.target.value as 'recent' | 'name')}
-                                className="bg-secondary/50 border border-border rounded-lg px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm text-foreground outline-none focus:border-primary cursor-pointer"
-                                aria-label={t('common.sortBy', 'Ordenar por')}
-                            >
-                                <option value="recent">{t('common.mostRecent', 'Más recientes')}</option>
-                                <option value="name">{t('common.alphabetical', 'Alfabético')}</option>
-                            </select>
-
-                            {/* View Toggle - Desktop */}
-                            <div className="hidden sm:flex items-center gap-1 bg-secondary/40 rounded-lg p-1">
+                        {/* Filter + Sort - compacto, móvil en 2 filas */}
+                        <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-2 sm:gap-2 mb-4">
+                            <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
                                 <button
-                                    onClick={() => setViewMode('grid')}
-                                    className={`p-2 rounded-md transition-all ${viewMode === 'grid' ? 'text-primary bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+                                    onClick={() => setFilterStatus('all')}
+                                    className={`text-xs font-medium transition-colors py-0.5 ${filterStatus === 'all' ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}
                                 >
-                                    <LayoutGrid size={16} />
+                                    {t('common.all', 'Todos')} ({userProjects.length})
                                 </button>
+                                <span className="text-muted-foreground/60 text-xs">·</span>
                                 <button
-                                    onClick={() => setViewMode('list')}
-                                    className={`p-2 rounded-md transition-all ${viewMode === 'list' ? 'text-primary bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+                                    onClick={() => setFilterStatus('Published')}
+                                    className={`text-xs font-medium transition-colors py-0.5 ${filterStatus === 'Published' ? 'text-green-600 dark:text-green-400' : 'text-muted-foreground hover:text-foreground'}`}
                                 >
-                                    <List size={16} />
+                                    {t('dashboard.published', 'Publicados')} ({publishedCount})
+                                </button>
+                                <span className="text-muted-foreground/60 text-xs">·</span>
+                                <button
+                                    onClick={() => setFilterStatus('Draft')}
+                                    className={`text-xs font-medium transition-colors py-0.5 ${filterStatus === 'Draft' ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+                                >
+                                    {t('dashboard.draft', 'Borradores')} ({draftCount})
                                 </button>
                             </div>
-
-                            {/* View Toggle - Mobile */}
-                            <button
-                                onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
-                                className="sm:hidden p-2 bg-secondary/50 rounded-lg text-muted-foreground hover:text-foreground transition-colors"
-                            >
-                                {viewMode === 'grid' ? <List size={16} /> : <LayoutGrid size={16} />}
-                            </button>
+                            <div className="flex items-center gap-2 sm:ml-auto shrink-0">
+                                <select
+                                    value={sortBy}
+                                    onChange={(e) => setSortBy(e.target.value as 'recent' | 'name')}
+                                    className="text-xs text-foreground bg-transparent border-none outline-none cursor-pointer text-muted-foreground hover:text-foreground focus:ring-0 py-0.5 w-auto max-w-[7.5rem] sm:max-w-[8rem] min-w-0"
+                                    aria-label={t('common.sortBy', 'Ordenar por')}
+                                >
+                                    <option value="recent">{t('common.mostRecent', 'Más recientes')}</option>
+                                    <option value="name">{t('common.alphabetical', 'Alfabético')}</option>
+                                </select>
+                                <div className="hidden sm:flex items-center gap-0.5 border-l border-border/50 pl-2">
+                                    <button
+                                        onClick={() => setViewMode('grid')}
+                                        className={`p-1.5 sm:p-2 transition-colors ${viewMode === 'grid' ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}
+                                        aria-label={t('common.gridView', 'Vista cuadrícula')}
+                                    >
+                                        <LayoutGrid size={16} />
+                                    </button>
+                                    <button
+                                        onClick={() => setViewMode('list')}
+                                        className={`p-1.5 sm:p-2 transition-colors ${viewMode === 'list' ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}
+                                        aria-label={t('common.listView', 'Vista lista')}
+                                    >
+                                        <List size={16} />
+                                    </button>
+                                </div>
+                            </div>
                         </div>
 
                         {/* Results Count */}

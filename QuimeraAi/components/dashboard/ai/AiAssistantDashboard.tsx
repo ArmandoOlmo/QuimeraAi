@@ -13,7 +13,7 @@ import {
     Save, Sparkles, User, Building2, Globe, Book, Activity, LayoutGrid, ChevronRight, Clock,
     Mic, Radio, BookOpen, ArrowLeft, Package, Shield, Phone, Facebook, Instagram, Inbox,
     TrendingUp, TrendingDown, Users, Zap, BarChart3, MessageCircle, RefreshCw, Search,
-    ArrowUpRight, Loader2, Newspaper, CheckSquare, Square, Link2 as Link2Icon
+    ArrowUpRight, Loader2, Newspaper, CheckSquare, Square, Link2 as Link2Icon, PanelTopClose, PanelTopOpen
 } from 'lucide-react';
 import ChatSimulator from './ChatSimulator';
 import { AiAssistantConfig } from '../../../types';
@@ -46,6 +46,7 @@ const AiAssistantDashboard: React.FC = () => {
     const { user } = useAuth();
     const { cmsPosts, loadCMSPosts } = useCMS();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const [isMobileNavOpen, setIsMobileNavOpen] = useState(true);
     const [activeTab, setActiveTab] = useState<Tab>('overview');
     const [formData, setFormData] = useState<AiAssistantConfig>(aiAssistantConfig);
     const [isSaving, setIsSaving] = useState(false);
@@ -646,7 +647,7 @@ const AiAssistantDashboard: React.FC = () => {
                                 {t('aiAssistant.dashboard.businessProfile')}
                             </label>
                             <textarea
-                                className="w-full bg-card border border-border rounded-xl p-4 min-h-[120px] focus:outline-none focus:ring-2 focus:ring-primary/50 resize-y text-sm leading-relaxed"
+                                className="w-full bg-card border border-border rounded-xl p-4 min-h-[300px] sm:min-h-[200px] md:min-h-[120px] focus:outline-none focus:ring-2 focus:ring-primary/50 resize-y text-sm leading-relaxed"
                                 placeholder={t('aiAssistant.dashboard.placeholders.businessProfile')}
                                 value={formData.businessProfile}
                                 onChange={(e) => updateForm('businessProfile', e.target.value)}
@@ -658,7 +659,7 @@ const AiAssistantDashboard: React.FC = () => {
                                 {t('aiAssistant.dashboard.productsServices')}
                             </label>
                             <textarea
-                                className="w-full bg-card border border-border rounded-xl p-4 min-h-[120px] focus:outline-none focus:ring-2 focus:ring-primary/50 resize-y text-sm leading-relaxed"
+                                className="w-full bg-card border border-border rounded-xl p-4 min-h-[300px] sm:min-h-[200px] md:min-h-[120px] focus:outline-none focus:ring-2 focus:ring-primary/50 resize-y text-sm leading-relaxed"
                                 placeholder={t('aiAssistant.dashboard.placeholders.productsServices')}
                                 value={formData.productsServices}
                                 onChange={(e) => updateForm('productsServices', e.target.value)}
@@ -670,7 +671,7 @@ const AiAssistantDashboard: React.FC = () => {
                                 {t('aiAssistant.dashboard.policiesContact')}
                             </label>
                             <textarea
-                                className="w-full bg-card border border-border rounded-xl p-4 min-h-[100px] focus:outline-none focus:ring-2 focus:ring-primary/50 resize-y text-sm leading-relaxed"
+                                className="w-full bg-card border border-border rounded-xl p-4 min-h-[250px] sm:min-h-[180px] md:min-h-[100px] focus:outline-none focus:ring-2 focus:ring-primary/50 resize-y text-sm leading-relaxed"
                                 placeholder={t('aiAssistant.dashboard.placeholders.policiesContact')}
                                 value={formData.policiesContact}
                                 onChange={(e) => updateForm('policiesContact', e.target.value)}
@@ -866,7 +867,9 @@ const AiAssistantDashboard: React.FC = () => {
                                 {t('aiAssistant.dashboard.systemPrompt')}
                             </label>
                             <textarea
-                                className="w-full bg-card border border-border rounded-xl p-4 min-h-[150px] focus:outline-none focus:ring-2 focus:ring-primary/50 resize-y font-mono text-xs"
+                                className="w-full bg-card border border-border rounded-xl p-4 focus:outline-none focus:ring-2 focus:ring-primary/50 resize-y font-mono text-sm sm:text-xs"
+                                style={{ minHeight: '400px' }}
+                                rows={15}
                                 value={formData.specialInstructions}
                                 onChange={(e) => updateForm('specialInstructions', e.target.value)}
                             />
@@ -961,30 +964,30 @@ const AiAssistantDashboard: React.FC = () => {
                         </div>
                     </div>
                     <div className="flex items-center gap-1">
+                        {/* Toggle mobile nav - solo visible en móvil */}
+                        <button
+                            onClick={() => setIsMobileNavOpen(prev => !prev)}
+                            className="md:hidden h-9 w-9 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
+                            aria-label={isMobileNavOpen ? 'Ocultar menú' : 'Mostrar menú'}
+                            title={isMobileNavOpen ? 'Ocultar menú' : 'Mostrar menú'}
+                        >
+                            {isMobileNavOpen ? <PanelTopClose size={18} /> : <PanelTopOpen size={18} />}
+                        </button>
                         <button
                             onClick={handleSave}
                             disabled={isSaving}
-                            className="flex items-center gap-1.5 h-9 px-2 sm:px-3 rounded-md text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40 disabled:text-green-500 disabled:hover:bg-transparent"
+                            className="flex items-center gap-1.5 h-9 px-2 sm:px-3 rounded-md text-sm font-medium transition-all text-muted-foreground hover:text-foreground hover:bg-secondary/50 disabled:text-green-500 disabled:hover:bg-transparent"
                         >
-                            {isSaving ? (
-                                <>
-                                    <Save className="w-4 h-4" />
-                                    <span className="hidden sm:inline">{t('aiAssistant.dashboard.saving')}</span>
-                                </>
-                            ) : (
-                                <>
-                                    <Save className="w-4 h-4" />
-                                    <span className="hidden sm:inline">{t('aiAssistant.dashboard.save')}</span>
-                                </>
-                            )}
+                            <Save className="w-4 h-4" />
+                            <span className="hidden sm:inline">{isSaving ? t('aiAssistant.dashboard.saving') : t('aiAssistant.dashboard.save')}</span>
                         </button>
                         <button
                             onClick={() => setView('dashboard')}
-                            className="flex items-center justify-center gap-2 h-9 w-9 sm:w-auto sm:px-3 rounded-lg sm:bg-secondary/50 sm:hover:bg-secondary text-sm font-medium transition-all text-muted-foreground hover:text-foreground"
+                            className="h-9 w-9 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
                             aria-label={t('common.back', 'Volver')}
+                            title={t('common.back', 'Volver')}
                         >
-                            <ArrowLeft size={16} />
-                            <span className="hidden sm:inline">{t('common.back', 'Volver')}</span>
+                            <ArrowLeft size={20} />
                         </button>
                     </div>
                 </header>
@@ -993,7 +996,7 @@ const AiAssistantDashboard: React.FC = () => {
 
                     {/* LEFT: Configuration Area (Scrollable) - Full width when Inbox is active */}
                     <div className={`${activeTab === 'socialInbox' ? 'lg:col-span-12' : 'lg:col-span-8 xl:col-span-6'} flex flex-col border-r border-border bg-background overflow-hidden relative z-10 shadow-lg`}>
-                        <div className="flex h-full overflow-hidden">
+                        <div className="flex flex-col md:flex-row h-full overflow-hidden">
                             {/* Desktop Sidebar (New) */}
                             <div className="hidden md:flex flex-col w-[240px] border-r border-border/50 bg-secondary/5 py-6 overflow-y-auto shrink-0">
                                 <div className="px-4 mb-2">
@@ -1021,26 +1024,33 @@ const AiAssistantDashboard: React.FC = () => {
                                 </div>
                             </div>
 
-                            {/* Mobile Horizontal Nav (Visible < md) */}
-                            <div className="md:hidden w-full absolute top-0 left-0 bg-background z-20 border-b border-border overflow-x-auto whitespace-nowrap px-4 py-3 flex gap-2 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-                                {tabs.map((tab) => (
-                                    <button
-                                        key={tab.id}
-                                        onClick={() => setActiveTab(tab.id as Tab)}
-                                        className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold border transition-colors ${activeTab === tab.id
-                                            ? 'bg-primary text-primary-foreground border-primary'
-                                            : 'bg-card text-muted-foreground border-border'
-                                            }`}
-                                    >
-                                        {tab.icon}
-                                        {tab.label}
-                                    </button>
-                                ))}
-                            </div>
+                            {/* Mobile Grid Nav (Visible < md) - colapsable desde header */}
+                            {isMobileNavOpen && (
+                                <div className="md:hidden w-full bg-background z-20 border-b border-border px-2 py-2 shrink-0">
+                                    <div className="grid grid-cols-3 gap-1">
+                                        {tabs.map((tab) => (
+                                            <button
+                                                key={tab.id}
+                                                onClick={() => {
+                                                    setActiveTab(tab.id as Tab);
+                                                    setIsMobileNavOpen(false);
+                                                }}
+                                                className={`flex flex-col items-center justify-center gap-0.5 py-2 rounded-lg text-[10px] font-medium leading-tight transition-colors ${activeTab === tab.id
+                                                    ? 'bg-primary/10 text-primary'
+                                                    : 'text-muted-foreground hover:text-foreground hover:bg-secondary/50'
+                                                    }`}
+                                            >
+                                                {tab.icon}
+                                                <span className="truncate w-full text-center px-0.5">{tab.label}</span>
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
 
                             {/* Content Area */}
-                            <div className="flex-1 overflow-y-auto custom-scrollbar relative">
-                                <div className={`min-h-full ${activeTab === 'socialInbox' ? '' : 'p-6 md:p-8 pt-16 md:pt-8 pb-24'}`}>
+                            <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar relative">
+                                <div className={`min-h-full ${activeTab === 'socialInbox' ? '' : 'p-4 sm:p-6 md:p-8 pb-24'}`}>
                                     {renderTabContent()}
                                 </div>
                             </div>

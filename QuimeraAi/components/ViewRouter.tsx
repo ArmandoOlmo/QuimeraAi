@@ -156,9 +156,9 @@ const ViewRouter: React.FC<ViewRouterProps> = ({
                             <Controls />
                         </Suspense>
 
-                        {/* Preview Area - Hidden on mobile when Controls sidebar is open */}
+                        {/* Preview Area - Hidden on mobile when Controls sidebar is open. overflow-hidden + min-h-0 so only BrowserPreview inner scrolls (avoids double scroll). */}
                         <main className={`
-                            flex-1 p-4 sm:p-8 flex justify-center overflow-auto
+                            flex-1 min-h-0 p-4 sm:p-8 flex justify-center overflow-hidden
                             ${isSidebarOpen ? 'hidden md:flex' : 'flex'}
                         `}>
                             <Suspense fallback={<ViewLoading />}>

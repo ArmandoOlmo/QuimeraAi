@@ -211,59 +211,59 @@ const ChatCustomizationSettings: React.FC = () => {
     return (
         <div className="space-y-8 pb-24">
             {/* Header */}
-            <div className="flex items-center justify-between">
-                <div>
-                    <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
-                        <Palette className="text-primary" />
-                        {t('chatCustomization.title')}
+            <div className="flex items-center justify-between gap-2">
+                <div className="min-w-0">
+                    <h2 className="text-lg sm:text-2xl font-bold text-foreground flex items-center gap-2">
+                        <Palette className="text-primary shrink-0" size={20} />
+                        <span className="truncate">{t('chatCustomization.title')}</span>
                     </h2>
-                    <p className="text-muted-foreground text-sm mt-1">
+                    <p className="text-muted-foreground text-xs sm:text-sm mt-0.5 sm:mt-1 truncate">
                         {t('chatCustomization.autoSaveNote')}
                     </p>
                 </div>
-                <div className="flex items-center gap-2 px-4 py-2 bg-green-500/10 border border-green-500/20 rounded-lg">
-                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                    <span className="text-sm font-medium text-green-600 dark:text-green-400">{t('chatCustomization.livePreview')}</span>
+                <div className="flex items-center gap-1.5 px-2 py-1 sm:px-4 sm:py-2 bg-green-500/10 border border-green-500/20 rounded-md sm:rounded-lg shrink-0">
+                    <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-green-500 rounded-full animate-pulse"></div>
+                    <span className="text-[10px] sm:text-sm font-medium text-green-600 dark:text-green-400 whitespace-nowrap">{t('chatCustomization.livePreview')}</span>
                 </div>
             </div>
 
             <div className="space-y-6">
 
                 {/* Theme Presets - Cleaner UI */}
-                <div className="bg-gradient-to-br from-primary/5 to-primary/10 border border-primary/10 rounded-2xl p-4">
-                    <h3 className="font-bold text-foreground mb-3 flex items-center gap-2">
-                        <Zap className="text-primary" size={18} />
+                <div className="bg-gradient-to-br from-primary/5 to-primary/10 border border-primary/10 rounded-xl sm:rounded-2xl p-3 sm:p-4">
+                    <h3 className="font-bold text-foreground mb-2 sm:mb-3 flex items-center gap-2 text-sm sm:text-base">
+                        <Zap className="text-primary" size={16} />
                         {t('chatCustomization.quickThemePresets')}
                     </h3>
-                    <div className="grid grid-cols-7 gap-3">
+                    <div className="grid grid-cols-4 sm:grid-cols-7 gap-1.5 sm:gap-3">
                         {/* Project Colors preset (highlighted) */}
                         {projectPreset && (
                             <button
                                 onClick={applyProjectPreset}
-                                className="group flex flex-col items-center p-2 rounded-xl hover:bg-primary/10 transition-all ring-2 ring-primary/30 bg-primary/5"
+                                className="group flex flex-col items-center p-1.5 sm:p-2 rounded-lg sm:rounded-xl hover:bg-primary/10 transition-all ring-2 ring-primary/30 bg-primary/5"
                             >
                                 <div
-                                    className="w-12 h-12 rounded-full mb-2 border-2 border-primary group-hover:scale-110 transition-transform shadow-md"
+                                    className="w-8 h-8 sm:w-12 sm:h-12 rounded-full mb-1 sm:mb-2 border-2 border-primary group-hover:scale-110 transition-transform shadow-md"
                                     style={{
                                         background: `linear-gradient(135deg, ${projectGlobalColors?.primary || '#4F46E5'} 60%, ${projectGlobalColors?.secondary || '#6366F1'} 100%)`
                                     }}
                                 />
-                                <span className="text-xs font-bold text-primary">{t('chatCustomization.projectPreset')}</span>
+                                <span className="text-[10px] sm:text-xs font-bold text-primary truncate w-full text-center">{t('chatCustomization.projectPreset')}</span>
                             </button>
                         )}
                         {Object.keys(THEME_PRESETS).map((presetName) => (
                             <button
                                 key={presetName}
                                 onClick={() => applyPreset(presetName as keyof typeof THEME_PRESETS)}
-                                className="group flex flex-col items-center p-2 rounded-xl hover:bg-secondary/30 transition-all"
+                                className="group flex flex-col items-center p-1.5 sm:p-2 rounded-lg sm:rounded-xl hover:bg-secondary/30 transition-all"
                             >
                                 <div
-                                    className="w-12 h-12 rounded-full mb-2 border-2 border-transparent group-hover:scale-110 transition-transform shadow-sm group-hover:border-primary"
+                                    className="w-8 h-8 sm:w-12 sm:h-12 rounded-full mb-1 sm:mb-2 border-2 border-transparent group-hover:scale-110 transition-transform shadow-sm group-hover:border-primary"
                                     style={{
                                         backgroundColor: THEME_PRESETS[presetName as keyof typeof THEME_PRESETS].colors?.primaryColor
                                     }}
                                 />
-                                <span className="text-xs font-medium text-muted-foreground group-hover:text-foreground capitalize">{presetName}</span>
+                                <span className="text-[10px] sm:text-xs font-medium text-muted-foreground group-hover:text-foreground capitalize truncate w-full text-center">{presetName}</span>
                             </button>
                         ))}
                     </div>

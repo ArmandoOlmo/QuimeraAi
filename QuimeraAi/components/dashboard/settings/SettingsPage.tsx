@@ -5,7 +5,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Users, Palette, ArrowLeft, Building2, CreditCard } from 'lucide-react';
+import { Users, Palette, ArrowLeft, Building2, CreditCard, Menu } from 'lucide-react';
 import { useRouter } from '../../../hooks/useRouter';
 import { ROUTES } from '../../../routes/config';
 import { useTenant, useSafeTenant } from '../../../contexts/tenant';
@@ -97,6 +97,14 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ initialTab }) => {
                 {/* Header */}
                 <header className="h-14 px-2 sm:px-6 border-b border-border flex items-center justify-between bg-background sticky top-0 z-10">
                     <div className="flex items-center gap-1 sm:gap-3">
+                        {/* Botón menú sidebar - solo en móvil */}
+                        <button
+                            onClick={() => setIsMobileMenuOpen(true)}
+                            className="lg:hidden h-9 w-9 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
+                            aria-label={t('common.openMenu', 'Abrir menú')}
+                        >
+                            <Menu className="w-5 h-5" />
+                        </button>
                         <Building2 size={20} className="text-primary" />
                         <h1 className="text-lg font-semibold text-foreground hidden sm:block">
                             {t('settings.title', 'Configuración del Workspace')}
@@ -109,11 +117,11 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ initialTab }) => {
                     </div>
                     <button
                         onClick={() => navigate(ROUTES.DASHBOARD)}
-                        className="flex items-center justify-center gap-2 h-9 w-9 sm:w-auto sm:px-3 rounded-lg sm:bg-secondary/50 sm:hover:bg-secondary text-sm font-medium transition-all text-muted-foreground hover:text-foreground"
+                        className="h-9 w-9 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
                         aria-label={t('common.goBack', 'Volver')}
+                        title={t('common.back', 'Volver')}
                     >
-                        <ArrowLeft className="w-4 h-4" />
-                        <span className="hidden sm:inline">{t('common.back', 'Volver')}</span>
+                        <ArrowLeft size={20} />
                     </button>
                 </header>
 

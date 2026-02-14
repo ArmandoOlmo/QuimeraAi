@@ -300,15 +300,17 @@ const Dashboard: React.FC = () => {
                             </button>
                         )}
 
-                        {/* Back Button - Icon only on mobile, with background on desktop */}
-                        <button
-                            onClick={() => navigate(ROUTES.DASHBOARD)}
-                            className="flex items-center justify-center gap-2 h-9 w-9 sm:w-auto sm:px-3 rounded-lg sm:bg-secondary/50 sm:hover:bg-secondary text-sm font-medium transition-all text-muted-foreground hover:text-foreground"
-                            aria-label={t('common.goBack', 'Volver')}
-                        >
-                            <ArrowLeft className="w-4 h-4" />
-                            <span className="hidden sm:inline">{t('common.back', 'Volver')}</span>
-                        </button>
+                        {/* Back Button - Only when not on main dashboard (websites/assets) */}
+                        {!isDashboard && (
+                            <button
+                                onClick={() => navigate(ROUTES.DASHBOARD)}
+                                className="flex items-center justify-center gap-2 h-9 w-9 sm:w-auto sm:px-3 rounded-lg sm:bg-secondary/50 sm:hover:bg-secondary text-sm font-medium transition-all text-muted-foreground hover:text-foreground"
+                                aria-label={t('common.goBack', 'Volver')}
+                            >
+                                <ArrowLeft className="w-4 h-4" />
+                                <span className="hidden sm:inline">{t('common.back', 'Volver')}</span>
+                            </button>
+                        )}
 
                     </div>
                 </header>

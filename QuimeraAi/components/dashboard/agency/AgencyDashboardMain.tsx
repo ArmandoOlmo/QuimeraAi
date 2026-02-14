@@ -5,7 +5,7 @@
 
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Building2, Menu, CreditCard, FileText, UserPlus, Package, LayoutDashboard, BarChart3, Globe, Layers, PenTool, Navigation } from 'lucide-react';
+import { Building2, Menu, CreditCard, FileText, UserPlus, Package, LayoutDashboard, BarChart3, Globe, Layers, PenTool, Navigation, ArrowLeft } from 'lucide-react';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import { useRouter } from '../../../hooks/useRouter';
 import { ROUTES } from '../../../routes/config';
@@ -191,12 +191,22 @@ const AgencyDashboardMain: React.FC = () => {
                         </div>
                     </div>
 
-                    {/* Right Section - Back Button - REMOVED */}
+                    {/* Right Section - Back Button (solo icono) */}
+                    <div className="flex items-center justify-end flex-shrink-0 ml-auto">
+                        <button
+                            onClick={() => navigate(ROUTES.DASHBOARD)}
+                            className="h-9 w-9 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
+                            aria-label={t('common.back', 'Volver')}
+                            title={t('common.back', 'Volver')}
+                        >
+                            <ArrowLeft size={20} />
+                        </button>
+                    </div>
                 </header>
 
-                {/* Mobile Tabs */}
-                <div className="md:hidden border-b border-border bg-background overflow-x-auto">
-                    <div className="flex gap-1 px-4 py-2 min-w-max">
+                {/* Mobile Tabs - Grid 5 columnas, 2 filas, sin scroll */}
+                <div className="md:hidden border-b border-border bg-background px-2 py-2">
+                    <div className="grid grid-cols-5 gap-1">
                         {tabs.map((tab) => {
                             const Icon = tab.icon;
                             const isActive = activeTab === tab.id;
@@ -204,16 +214,13 @@ const AgencyDashboardMain: React.FC = () => {
                                 <button
                                     key={tab.id}
                                     onClick={() => handleTabChange(tab.id)}
-                                    className={`
-                                        flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap
-                                        ${isActive
-                                            ? 'bg-primary/10 text-primary'
-                                            : 'text-muted-foreground hover:text-foreground hover:bg-secondary/50'
-                                        }
-                                    `}
+                                    className={`flex flex-col items-center justify-center gap-0.5 py-1.5 rounded-lg text-[10px] font-medium transition-colors leading-tight ${isActive
+                                        ? 'bg-primary/10 text-primary'
+                                        : 'text-muted-foreground hover:text-foreground hover:bg-secondary/50'
+                                    }`}
                                 >
-                                    <Icon size={16} />
-                                    <span>{tab.label}</span>
+                                    <Icon size={16} className="shrink-0" />
+                                    <span className="truncate w-full text-center px-0.5">{tab.label}</span>
                                 </button>
                             );
                         })}
