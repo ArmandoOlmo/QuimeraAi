@@ -53,21 +53,43 @@ const saveRecentColor = (color: string): string[] => {
     }
 };
 
-const useClickOutside = (ref: React.RefObject<HTMLElement>, handler: () => void) => {
+const useClickOutside = (
+    ref: React.RefObject<HTMLElement>,
+    handler: () => void,
+    excludeRef?: React.RefObject<HTMLElement>,
+    isActive: boolean = true
+) => {
+    const handlerRef = useRef(handler);
+    handlerRef.current = handler;
+
     useEffect(() => {
-        const listener = (event: MouseEvent | TouchEvent) => {
-            if (!ref.current || ref.current.contains(event.target as Node)) {
-                return;
-            }
-            handler();
-        };
-        document.addEventListener('mousedown', listener);
-        document.addEventListener('touchstart', listener);
+        if (!isActive) return;
+
+        let listener: ((event: MouseEvent | TouchEvent) => void) | null = null;
+
+        // Delay attaching listeners so the popover has time to mount
+        const timeoutId = setTimeout(() => {
+            listener = (event: MouseEvent | TouchEvent) => {
+                if (ref.current && ref.current.contains(event.target as Node)) {
+                    return;
+                }
+                if (excludeRef?.current && excludeRef.current.contains(event.target as Node)) {
+                    return;
+                }
+                handlerRef.current();
+            };
+            document.addEventListener('mousedown', listener);
+            document.addEventListener('touchstart', listener);
+        }, 150);
+
         return () => {
-            document.removeEventListener('mousedown', listener);
-            document.removeEventListener('touchstart', listener);
+            clearTimeout(timeoutId);
+            if (listener) {
+                document.removeEventListener('mousedown', listener);
+                document.removeEventListener('touchstart', listener);
+            }
         };
-    }, [ref, handler]);
+    }, [ref, excludeRef, isActive]);
 };
 
 // Color utility functions
@@ -218,7 +240,7 @@ const ColorControl: React.FC<ColorControlProps> = ({ label, value, onChange, pal
             setRecentColors(updated);
         }
         setIsOpen(false);
-    });
+    }, triggerRef, isOpen);
 
     useLayoutEffect(() => {
         if (isOpen && triggerRef.current) {
