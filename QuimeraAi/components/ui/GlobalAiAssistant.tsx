@@ -2404,13 +2404,24 @@ const GlobalAiAssistant: React.FC = () => {
             inputAudioContextRef.current.close();
             inputAudioContextRef.current = null;
         }
-        activeSourcesRef.current.forEach(source => source.stop());
+        activeSourcesRef.current.forEach(source => { try { source.stop(); } catch (e) { /* already stopped */ } });
         activeSourcesRef.current = [];
         if (audioContextRef.current) {
             audioContextRef.current.close();
             audioContextRef.current = null;
         }
         if (sessionRef.current) {
+            // Properly close the WebSocket session
+            try {
+                const session = sessionRef.current;
+                if (session && typeof session.then === 'function') {
+                    session.then((s: any) => { try { s.close?.(); } catch (e) { /* ignore */ } }).catch(() => { });
+                } else if (session && typeof session.close === 'function') {
+                    session.close();
+                }
+            } catch (e) {
+                console.warn('[Voice Mode] Error closing session:', e);
+            }
             sessionRef.current = null;
         }
         setIsLiveActive(false);
@@ -2449,7 +2460,7 @@ const GlobalAiAssistant: React.FC = () => {
 
             // STEP 3: Connect to WebSocket (microphone is already available)
             const sessionPromise = ai.live.connect({
-                model: 'gemini-2.5-flash-native-audio-preview-09-2025',
+                model: 'gemini-2.5-flash-native-audio-preview-12-2025',
                 config: {
                     responseModalities: [Modality.AUDIO],
                     speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: globalAssistantConfig.voiceName } } },
@@ -2486,14 +2497,27 @@ const GlobalAiAssistant: React.FC = () => {
                         const source = inputCtx.createMediaStreamSource(micStream);
                         const processor = inputCtx.createScriptProcessor(4096, 1, 1);
                         processorRef.current = processor;
+                        let audioSendCount = 0;
                         processor.onaudioprocess = (e) => {
                             if (!isConnectedRef.current) return;
+                            // Resume AudioContext if suspended (browser policy)
+                            if (inputCtx.state === 'suspended') {
+                                inputCtx.resume();
+                            }
                             const inputData = e.inputBuffer.getChannelData(0);
                             const pcm16 = floatTo16BitPCM(inputData);
                             const base64Data = bytesToBase64(new Uint8Array(pcm16));
                             sessionPromise.then(session => {
                                 if (!isConnectedRef.current) return;
-                                try { session.sendRealtimeInput({ media: { mimeType: 'audio/pcm;rate=16000', data: base64Data } }); } catch (err) { }
+                                try {
+                                    session.sendRealtimeInput({ media: { mimeType: 'audio/pcm;rate=16000', data: base64Data } });
+                                    audioSendCount++;
+                                    if (audioSendCount % 100 === 0) {
+                                        console.log(`[Voice Mode] 🎤 Audio chunks sent: ${audioSendCount}`);
+                                    }
+                                } catch (err) {
+                                    console.error('[Voice Mode] ❌ Error sending audio chunk:', err);
+                                }
                             });
                         };
                         source.connect(processor);
@@ -2504,11 +2528,6 @@ const GlobalAiAssistant: React.FC = () => {
                             if (!isConnectedRef.current) return;
                             sessionPromise.then(session => {
                                 console.log('[Voice Mode] 🤖 Triggering initial greeting...');
-                                // Debug: Inspect available session methods
-                                try {
-                                    const methods = Object.getOwnPropertyNames(Object.getPrototypeOf(session));
-                                    console.log('[Voice Mode] Session methods:', methods);
-                                } catch (e) { console.log('[Voice Mode] Could not inspect session proto'); }
 
                                 try {
                                     // Detect Language (User preference or Browser default)
@@ -2541,13 +2560,33 @@ const GlobalAiAssistant: React.FC = () => {
                         }, 2000);
                     },
                     onmessage: async (message: LiveServerMessage) => {
-                        if (message.serverContent?.interrupted) {
+                        // Debug: log all message types
+                        const sc = message.serverContent;
+                        const hasAudio = !!sc?.modelTurn?.parts?.some((p: any) => p.inlineData?.data);
+                        const hasTool = !!message.toolCall;
+                        console.log('[Voice Mode] 📩 Message:', {
+                            turnComplete: sc?.turnComplete,
+                            generationComplete: (sc as any)?.generationComplete,
+                            interrupted: sc?.interrupted,
+                            hasAudioData: hasAudio,
+                            hasToolCall: hasTool,
+                            partsCount: sc?.modelTurn?.parts?.length || 0,
+                        });
+
+                        if (sc?.interrupted) {
                             console.log('[Voice Mode] Audio interrupted');
                             activeSourcesRef.current.forEach(source => { try { source.stop(); } catch (e) { } });
                             activeSourcesRef.current = [];
                             if (audioContextRef.current) nextStartTimeRef.current = audioContextRef.current.currentTime;
                             return;
                         }
+
+                        // Resume output audio context if suspended
+                        if (audioContextRef.current?.state === 'suspended') {
+                            console.log('[Voice Mode] Resuming suspended output AudioContext');
+                            await audioContextRef.current.resume();
+                        }
+
                         if (message.toolCall) {
                             console.log('[Voice Mode] Function calls detected:', message.toolCall.functionCalls.map(fc => ({
                                 name: fc.name,
@@ -2555,30 +2594,56 @@ const GlobalAiAssistant: React.FC = () => {
                             })));
                             const functionResponses = [];
                             for (const fc of message.toolCall.functionCalls) {
-                                const { result, error } = await executeTool(fc.name, fc.args, 'voice');
-                                functionResponses.push({ id: fc.id, name: fc.name, response: { result: result || error || "Done" } });
+                                try {
+                                    const { result, error } = await executeTool(fc.name, fc.args, 'voice');
+                                    functionResponses.push({ id: fc.id, name: fc.name, response: { result: result || error || "Done" } });
+                                } catch (toolErr: any) {
+                                    console.error('[Voice Mode] Tool execution error:', fc.name, toolErr);
+                                    functionResponses.push({ id: fc.id, name: fc.name, response: { result: `Error: ${toolErr?.message || 'Unknown'}` } });
+                                }
                             }
                             console.log('[Voice Mode] Sending tool responses back to model');
                             sessionPromise.then(session => { if (isConnectedRef.current) session.sendToolResponse({ functionResponses }); });
+                            return; // Don't fall through to audio handling for tool call messages
                         }
-                        const audioData = message.serverContent?.modelTurn?.parts?.[0]?.inlineData?.data;
-                        if (audioData && audioContextRef.current) {
-                            console.log('[Voice Mode] Received audio response from model');
-                            const ctx = audioContextRef.current;
-                            const bytes = base64ToBytes(audioData);
-                            const buffer = await decodeAudioData(bytes, ctx, 24000, 1);
-                            const source = ctx.createBufferSource();
-                            source.buffer = buffer;
-                            source.connect(ctx.destination);
-                            const startTime = Math.max(nextStartTimeRef.current, ctx.currentTime);
-                            source.start(startTime);
-                            nextStartTimeRef.current = startTime + buffer.duration;
-                            activeSourcesRef.current.push(source);
-                            source.onended = () => { activeSourcesRef.current = activeSourcesRef.current.filter(s => s !== source); };
+
+                        // Handle audio data from any part (not just parts[0])
+                        const parts = sc?.modelTurn?.parts || [];
+                        for (const part of parts) {
+                            const audioData = (part as any)?.inlineData?.data;
+                            if (audioData && audioContextRef.current) {
+                                const ctx = audioContextRef.current;
+                                try {
+                                    const bytes = base64ToBytes(audioData);
+                                    const buffer = await decodeAudioData(bytes, ctx, 24000, 1);
+                                    const src = ctx.createBufferSource();
+                                    src.buffer = buffer;
+                                    src.connect(ctx.destination);
+                                    const startTime = Math.max(nextStartTimeRef.current, ctx.currentTime);
+                                    src.start(startTime);
+                                    nextStartTimeRef.current = startTime + buffer.duration;
+                                    activeSourcesRef.current.push(src);
+                                    src.onended = () => { activeSourcesRef.current = activeSourcesRef.current.filter(s => s !== src); };
+                                } catch (audioErr) {
+                                    console.error('[Voice Mode] Error playing audio chunk:', audioErr);
+                                }
+                            }
+                        }
+
+                        if (sc?.turnComplete) {
+                            console.log('[Voice Mode] ✅ Model turn complete — ready for next input');
                         }
                     },
-                    onclose: () => stopLiveSession(),
-                    onerror: () => { if (!isConnectedRef.current) return; }
+                    onclose: (e: any) => {
+                        console.log('[Voice Mode] WebSocket closed:', e?.reason || 'unknown reason');
+                        stopLiveSession();
+                    },
+                    onerror: (e: any) => {
+                        console.error('[Voice Mode] WebSocket error:', e);
+                        if (!isConnectedRef.current) return;
+                        // Stop the session on error so user can retry
+                        stopLiveSession();
+                    }
                 }
             });
             sessionRef.current = sessionPromise;

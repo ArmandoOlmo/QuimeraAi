@@ -201,6 +201,15 @@ const calculateLeadScore = (
 // CUSTOMER INTENT ANALYSIS (for Lead Capture)
 // =============================================================================
 
+/**
+ * Cleans voice transcript by removing internal thought blocks
+ */
+const cleanVoiceTranscript = (text: string): string => {
+    // Remove <thought> tags and content
+    let cleaned = text.replace(/<thought>[\s\S]*?<\/thought>/gi, '');
+    return cleaned.trim();
+};
+
 interface CustomerIntentAnalysis {
     customerInterest: string;  // What the customer wants/needs
     urgency: 'low' | 'medium' | 'high';
@@ -411,6 +420,7 @@ const ChatCore: React.FC<ChatCoreProps> = ({
     // Voice Transcription Refs
     const voiceTranscriptRef = useRef<{ role: 'user' | 'model'; text: string }[]>([]);
     const currentModelResponseRef = useRef<string>('');
+    const currentUserTranscriptRef = useRef<string>('');
 
 
     // Lead tracking ref
@@ -1517,36 +1527,32 @@ ${suggestAvailableSlots()}
                             return;
                         }
 
-                        // Capture user input transcription (from inputAudioTranscription config)
+                        // Accumulate user input transcription chunks (arrive word-by-word)
                         if (msg.serverContent?.inputTranscript) {
-                            const userText = msg.serverContent.inputTranscript;
-                            if (userText && userText.trim()) {
-                                voiceTranscriptRef.current.push({ role: 'user', text: userText.trim() });
-                            }
+                            currentUserTranscriptRef.current += msg.serverContent.inputTranscript;
                         }
 
-                        // Capture model output transcription (from outputAudioTranscription config)
+                        // Accumulate model output transcription chunks (arrive word-by-word)
                         if (msg.serverContent?.outputTranscript) {
-                            const modelText = msg.serverContent.outputTranscript;
-                            if (modelText && modelText.trim()) {
-                                voiceTranscriptRef.current.push({ role: 'model', text: modelText.trim() });
-                            }
+                            currentModelResponseRef.current += msg.serverContent.outputTranscript;
                         }
 
-                        // Also check for text in modelTurn parts (fallback)
+                        // NOTE: modelTurn.parts[].text contains internal thinking/reasoning for native audio models.
+                        // We do NOT use it for transcript — outputTranscript above captures the actual spoken words.
                         const modelParts = message.serverContent?.modelTurn?.parts;
-                        if (modelParts) {
-                            for (const part of modelParts) {
-                                if (part.text && part.text.trim()) {
-                                    currentModelResponseRef.current += part.text;
-                                }
-                            }
-                        }
 
-                        // Check if turn is complete to save accumulated model response
-                        if (msg.serverContent?.turnComplete && currentModelResponseRef.current.trim()) {
-                            voiceTranscriptRef.current.push({ role: 'model', text: currentModelResponseRef.current.trim() });
-                            currentModelResponseRef.current = '';
+                        // On turn complete, push accumulated transcripts as full messages
+                        if (msg.serverContent?.turnComplete) {
+                            // Push accumulated user transcript
+                            if (currentUserTranscriptRef.current.trim()) {
+                                voiceTranscriptRef.current.push({ role: 'user', text: currentUserTranscriptRef.current.trim() });
+                                currentUserTranscriptRef.current = '';
+                            }
+                            // Push accumulated model transcript
+                            if (currentModelResponseRef.current.trim()) {
+                                voiceTranscriptRef.current.push({ role: 'model', text: currentModelResponseRef.current.trim() });
+                                currentModelResponseRef.current = '';
+                            }
                         }
 
                         // Handle Audio Output
@@ -1615,9 +1621,9 @@ ${suggestAvailableSlots()}
 
             const voiceMessages: Message[] = voiceTranscriptRef.current.map(t => ({
                 role: t.role,
-                text: t.text,
+                text: t.role === 'model' ? cleanVoiceTranscript(t.text) : t.text,
                 isVoiceMessage: true
-            }));
+            })).filter(msg => msg.text.length > 0); // Filter out empty messages after cleaning
 
             // Add a separator message to indicate voice conversation
             setMessages(prev => [
@@ -1632,6 +1638,7 @@ ${suggestAvailableSlots()}
             // Clear transcript for next session
             voiceTranscriptRef.current = [];
             currentModelResponseRef.current = '';
+            currentUserTranscriptRef.current = '';
         } else {
             // If no transcription available, add a note
             setMessages(prev => [

@@ -18,6 +18,7 @@ import FilterChip from './FilterChip';
 import EmptyState from './EmptyState';
 import NewsUpdates from './NewsUpdates';
 import DashboardHelpGuide from './DashboardHelpGuide';
+import DashboardStatusCards from './DashboardStatusCards';
 import { Plus, Menu, Search, LayoutGrid, Globe, Images, List, ArrowUpDown, CheckCircle, FileEdit, X, Loader2, Sparkles, MousePointerClick, Palette, Rocket, LayoutTemplate, BookOpen, ArrowLeft, Crown, ChevronUp, ChevronDown } from 'lucide-react';
 import { trackSearchPerformed, trackFilterApplied, trackSortChanged, trackViewModeChanged, trackDashboardView } from '../../utils/analytics';
 import { useInfiniteScroll, paginateArray, hasMoreItems } from '../../hooks/useInfiniteScroll';
@@ -447,30 +448,8 @@ const Dashboard: React.FC = () => {
                                         {t('dashboard.heroSubtitlePart1')} <span className="text-foreground font-semibold">{allUserProjects.length} {t('dashboard.heroSubtitlePart2')}</span> {t('dashboard.heroSubtitlePart3')}
                                     </p>
 
-                                    {/* Inline Stats */}
-                                    <div className="flex items-center gap-8 mt-2">
-                                        <div className="flex items-center gap-3 group cursor-default">
-                                            <div className="p-2.5 rounded-xl bg-primary/10 text-primary group-hover:bg-primary group-hover:text-white transition-colors duration-300">
-                                                <LayoutGrid size={22} />
-                                            </div>
-                                            <div className="flex flex-col">
-                                                <span className="text-3xl font-extrabold text-foreground leading-none">{allUserProjects.length}</span>
-                                                <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider mt-1">{t('dashboard.totalProjects')}</span>
-                                            </div>
-                                        </div>
-
-                                        <div className="h-10 w-px bg-border mx-2"></div>
-
-                                        <div className="flex items-center gap-3 group cursor-default">
-                                            <div className="p-2.5 rounded-xl bg-indigo-500/10 text-indigo-400 group-hover:bg-indigo-500 group-hover:text-white transition-colors duration-300">
-                                                <Globe size={22} />
-                                            </div>
-                                            <div className="flex flex-col">
-                                                <span className="text-3xl font-extrabold text-foreground leading-none">{publishedCount}</span>
-                                                <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider mt-1">{t('dashboard.published')}</span>
-                                            </div>
-                                        </div>
-                                    </div>
+                                    {/* Status Cards */}
+                                    <DashboardStatusCards />
                                 </div>
                             </section>
                         )}

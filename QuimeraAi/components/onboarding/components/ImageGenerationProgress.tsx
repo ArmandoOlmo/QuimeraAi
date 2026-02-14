@@ -7,6 +7,7 @@ import React, { useMemo } from 'react';
 import { Image, Check, X, Loader2, Clock } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { GenerationProgress, ImageGenerationItem } from '../../../types/onboarding';
+import ProgressBar3D from '../../ui/ProgressBar3D';
 
 interface ImageGenerationProgressProps {
     progress: GenerationProgress;
@@ -19,7 +20,7 @@ const ImageGenerationProgress: React.FC<ImageGenerationProgressProps> = ({ progr
         const remaining = progress.imagesTotal - progress.imagesCompleted;
         const avgTimePerImage = 15; // seconds
         const totalSeconds = remaining * avgTimePerImage;
-        
+
         if (totalSeconds < 60) {
             return `${totalSeconds}s`;
         } else {
@@ -29,7 +30,7 @@ const ImageGenerationProgress: React.FC<ImageGenerationProgressProps> = ({ progr
         }
     }, [progress.imagesTotal, progress.imagesCompleted]);
 
-    const percentage = progress.imagesTotal > 0 
+    const percentage = progress.imagesTotal > 0
         ? Math.round((progress.imagesCompleted / progress.imagesTotal) * 100)
         : 0;
 
@@ -74,12 +75,11 @@ const ImageGenerationProgress: React.FC<ImageGenerationProgressProps> = ({ progr
                     </span>
                     <span className="text-editor-text-primary font-medium">{percentage}%</span>
                 </div>
-                <div className="w-full h-3 bg-editor-sidebar-hover rounded-full overflow-hidden">
-                    <div 
-                        className="h-full bg-gradient-to-r from-purple-500 via-pink-500 to-orange-400 rounded-full transition-all duration-500"
-                        style={{ width: `${percentage}%` }}
-                    />
-                </div>
+                <ProgressBar3D
+                    percentage={percentage}
+                    gradient={{ from: '#a855f7', to: '#fb923c' }}
+                    size="lg"
+                />
             </div>
 
             {/* Current image being generated */}
@@ -100,7 +100,7 @@ const ImageGenerationProgress: React.FC<ImageGenerationProgressProps> = ({ progr
             {/* Image list */}
             <div className="space-y-2 max-h-48 overflow-y-auto">
                 {progress.allImages.map((img, index) => (
-                    <div 
+                    <div
                         key={img.id}
                         className={`
                             flex items-center gap-3 p-2 rounded-lg transition-all
@@ -119,9 +119,9 @@ const ImageGenerationProgress: React.FC<ImageGenerationProgressProps> = ({ progr
                         </div>
                         {img.status === 'completed' && img.imageUrl && (
                             <div className="flex-shrink-0 w-8 h-8 rounded overflow-hidden">
-                                <img 
-                                    src={img.imageUrl} 
-                                    alt="" 
+                                <img
+                                    src={img.imageUrl}
+                                    alt=""
                                     className="w-full h-full object-cover"
                                 />
                             </div>

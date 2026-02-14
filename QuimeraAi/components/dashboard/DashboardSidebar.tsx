@@ -11,6 +11,7 @@ import { LogOut, LayoutDashboard, Globe, Settings, ChevronLeft, ChevronRight, Ch
 import LanguageSelector from '../ui/LanguageSelector';
 import WorkspaceSwitcher from './WorkspaceSwitcher';
 import ProjectSwitcher from './ProjectSwitcher';
+import ProgressBar3D from '../ui/ProgressBar3D';
 import { useSafeTenant } from '../../contexts/tenant';
 import { useSafeUpgrade } from '../../contexts/UpgradeContext';
 import { useCreditsUsage } from '../../hooks/useCreditsUsage';
@@ -838,15 +839,11 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
                     </span>
                   </div>
 
-                  <div className="h-2 lg:h-1.5 w-full bg-muted rounded-full overflow-hidden">
-                    <div
-                      className="h-full rounded-full shadow-[0_0_8px_rgba(251,185,43,0.5)] transition-all duration-500"
-                      style={{
-                        width: `${isOwner ? 100 : (creditsUsage?.percentage || 0)}%`,
-                        backgroundColor: isOwner ? '#a855f7' : (creditsUsage?.color || 'hsl(var(--primary))')
-                      }}
-                    />
-                  </div>
+                  <ProgressBar3D
+                    percentage={isOwner ? 100 : (creditsUsage?.percentage || 0)}
+                    color={isOwner ? '#a855f7' : (creditsUsage?.color || 'hsl(var(--primary))')}
+                    size="sm"
+                  />
 
                   <div className="mt-2 flex justify-between items-center px-1">
                     <span className="text-[10px] text-muted-foreground font-medium">{t('common.monthlyCredits')}</span>

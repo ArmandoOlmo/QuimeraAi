@@ -4,7 +4,7 @@
 <head>
   <!-- Theme initialization script - runs BEFORE any rendering to prevent flash -->
   <script>
-    (function() {
+    (function () {
       try {
         var savedTheme = localStorage.getItem('themeMode');
         var theme = savedTheme && ['light', 'dark', 'black'].includes(savedTheme) ? savedTheme : 'dark';
@@ -39,7 +39,7 @@
 
   <!-- Performance Optimization: Load only essential UI fonts. Project fonts are loaded dynamically. -->
   <link
-    href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@300;400;500;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@300;400;500;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Fira+Sans+Extra+Condensed:wght@100&display=swap"
     rel="stylesheet">
   <!-- Critical CSS to prevent FOUC before main.css loads -->
   <style>
@@ -70,7 +70,8 @@
       height: 100%;
     }
 
-    body, #root {
+    body,
+    #root {
       min-height: 100%;
     }
 

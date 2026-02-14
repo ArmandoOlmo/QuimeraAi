@@ -40,7 +40,14 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
     const { t } = useTranslation();
 
     // Use standalone config or editor context values
-    const aiAssistantConfig = standaloneConfig || editorContext?.aiAssistantConfig || { isActive: false } as AiAssistantConfig;
+    const rawConfig = standaloneConfig || editorContext?.aiAssistantConfig || { isActive: false } as AiAssistantConfig;
+
+    // Ensure enableLiveVoice defaults to true if not explicitly set to false
+    const aiAssistantConfig: AiAssistantConfig = {
+        ...rawConfig,
+        enableLiveVoice: rawConfig.enableLiveVoice !== false
+    };
+
     const addLead = editorContext?.addLead;
     const updateLead = editorContext?.updateLead;
     // Try to get activeProject from EditorContext first, then ProjectContext, then standalone

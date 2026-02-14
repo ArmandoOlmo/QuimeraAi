@@ -29,6 +29,7 @@ import {
 } from '../../types/subscription';
 import { useSafeUpgrade } from '../../contexts/UpgradeContext';
 import { useAuth } from '../../contexts/core/AuthContext';
+import ProgressBar3D from './ProgressBar3D';
 import { getCreditsUsageWithPoolDetection } from '../../services/aiCreditsService';
 
 // =============================================================================
@@ -194,7 +195,7 @@ export const AiCreditsUsage: React.FC<AiCreditsUsageProps> = ({
 
     const [usageByOperation, setUsageByOperation] = useState<Record<string, { count: number; credits: number }>>({});
     const [isRefreshing, setIsRefreshing] = useState(false);
-    
+
     // Shared pool info for agency sub-clients
     const [poolInfo, setPoolInfo] = useState<SharedPoolInfo>({
         isSharedPool: false,
@@ -278,15 +279,11 @@ export const AiCreditsUsage: React.FC<AiCreditsUsageProps> = ({
                 </div>
 
                 {/* Progress bar */}
-                <div className="h-2 bg-white/10 rounded-full overflow-hidden">
-                    <div
-                        className="h-full rounded-full transition-all duration-500"
-                        style={{
-                            width: `${Math.min(usagePercentage, 100)}%`,
-                            backgroundColor: usageColor,
-                        }}
-                    />
-                </div>
+                <ProgressBar3D
+                    percentage={Math.min(usagePercentage, 100)}
+                    color={usageColor}
+                    size="md"
+                />
 
                 {/* Warning */}
                 {isNearLimit && !hasExceededLimit && !isOwner && (
@@ -571,10 +568,11 @@ export const InlineCreditIndicator: React.FC<InlineCreditIndicatorProps> = ({
 
     return (
         <div className={`flex items-center gap-2 ${className}`}>
-            <div className="flex-1 h-1.5 bg-white/10 rounded-full overflow-hidden min-w-[60px]">
-                <div
-                    className="h-full rounded-full transition-all"
-                    style={{ width: `${percentage}%`, backgroundColor: color }}
+            <div className="flex-1 min-w-[60px]">
+                <ProgressBar3D
+                    percentage={percentage}
+                    color={color}
+                    size="sm"
                 />
             </div>
             <span className="text-xs text-white/60 whitespace-nowrap">{label}</span>
