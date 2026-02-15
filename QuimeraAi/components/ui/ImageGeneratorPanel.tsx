@@ -107,7 +107,6 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
         id: 'vision-pro',
         label: 'Quimera Vision Pro',
         value: 'gemini-3-pro-image-preview',
-        description: t('editor.quimeraUltraDesc', { defaultValue: 'Maximum quality, slower generation' }),
         icon: Eye,
         badge: 'PRO',
         color: 'from-violet-500 to-purple-600'
@@ -383,9 +382,6 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
                             <h2 className="text-base font-bold text-editor-text-primary flex items-center gap-2">
                                 {t('editor.quimeraImageGenerator', { defaultValue: 'Generador de Imágenes Quimera' })}
                             </h2>
-                            <p className="text-xs text-editor-text-secondary">
-                                {currentModel.description}
-                            </p>
                         </div>
                     </div>
                     <div className="flex items-center gap-1">
