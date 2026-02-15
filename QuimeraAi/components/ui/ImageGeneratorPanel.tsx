@@ -4,8 +4,8 @@ import { useFiles } from '../../contexts/files';
 import { useTranslation } from 'react-i18next';
 import {
     Zap, Loader2, Wand2, X, Download, Upload, Image as ImageIcon, Plus,
-    AlertTriangle, Sparkles, Brain, Users, Thermometer, Eye, Flame, Layers,
-    Rocket, ChevronDown, Check, Settings2, Palette, Camera, Sun, CheckCircle2,
+    AlertTriangle, Sparkles, Brain, Users, Thermometer, Eye,
+    ChevronDown, Settings2, Palette, Camera, Sun, CheckCircle2,
     PanelLeftClose
 } from 'lucide-react';
 
@@ -102,45 +102,16 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
         { label: t('editor.tiltShift'), value: 'Tilt-Shift Effect' }
     ];
 
-    // Quimera AI Model Controls
-    const MODELS = [
-        {
-            id: 'vision-pro',
-            label: 'Quimera Vision Pro',
-            value: 'gemini-3-pro-image-preview',
-            description: t('editor.quimeraUltraDesc', { defaultValue: 'Maximum quality, slower generation' }),
-            icon: Eye,
-            badge: 'PRO',
-            color: 'from-violet-500 to-purple-600'
-        },
-        {
-            id: 'ultra',
-            label: 'Quimera Ultra',
-            value: 'imagen-4.0-ultra-generate-001',
-            description: t('editor.quimeraVisionProDesc', { defaultValue: 'Best for text and complex scenes' }),
-            icon: Flame,
-            badge: 'ULTRA',
-            color: 'from-orange-500 to-red-500'
-        },
-        {
-            id: 'vision',
-            label: 'Quimera Vision',
-            value: 'gemini-2.5-flash',
-            description: t('editor.quimeraVisionDesc', { defaultValue: 'Balanced quality and speed' }),
-            icon: Layers,
-            badge: null,
-            color: 'from-blue-500 to-cyan-500'
-        },
-        {
-            id: 'fast',
-            label: 'Quimera Fast',
-            value: 'imagen-3.0-fast-generate-001',
-            description: t('editor.quimeraFastDesc', { defaultValue: 'Fastest generation' }),
-            icon: Rocket,
-            badge: 'FAST',
-            color: 'from-emerald-500 to-green-500'
-        },
-    ];
+    // Quimera AI Model - Vision Pro (default and only model)
+    const DEFAULT_MODEL = {
+        id: 'vision-pro',
+        label: 'Quimera Vision Pro',
+        value: 'gemini-3-pro-image-preview',
+        description: t('editor.quimeraUltraDesc', { defaultValue: 'Maximum quality, slower generation' }),
+        icon: Eye,
+        badge: 'PRO',
+        color: 'from-violet-500 to-purple-600'
+    };
 
     const THINKING_LEVELS = [
         { label: t('editor.none', { defaultValue: 'None' }), value: 'none' },
@@ -151,7 +122,7 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
 
     // State
     const [prompt, setPrompt] = useState('');
-    const [selectedModel, setSelectedModel] = useState('gemini-3-pro-image-preview');
+    const selectedModel = 'gemini-3-pro-image-preview';
     const [thinkingLevel, setThinkingLevel] = useState('high');
     const [personGeneration, setPersonGeneration] = useState('allow_adult');
     const [temperature, setTemperature] = useState(1.0);
@@ -396,8 +367,8 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
         setReferenceImages([]);
     };
 
-    const currentModel = MODELS.find(m => m.value === selectedModel) || MODELS[0];
-    const isVisionPro = selectedModel === 'gemini-3-pro-image-preview';
+    const currentModel = DEFAULT_MODEL;
+    const isVisionPro = true;
 
     return (
         <div className={`bg-editor-bg flex flex-col h-full overflow-hidden ${className}`}>
@@ -439,49 +410,6 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
                 </div>
             </div>
 
-            {/* Model Selector - Prominent Card Design */}
-            <div className="flex-shrink-0 px-5 py-4 border-b border-editor-border bg-editor-panel-bg/30">
-                <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wide mb-3">
-                    {t('editor.model', { defaultValue: 'Modelo' })}
-                </label>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                    {MODELS.map(model => {
-                        const IconComponent = model.icon;
-                        const isSelected = selectedModel === model.value;
-                        return (
-                            <button
-                                key={model.id}
-                                onClick={() => setSelectedModel(model.value)}
-                                className={`
-                                    relative p-3 rounded-xl border-2 transition-all duration-200 text-left group
-                                    ${isSelected
-                                        ? `border-transparent bg-gradient-to-br ${model.color} text-white shadow-lg scale-[1.02]`
-                                        : 'border-editor-border bg-editor-bg hover:border-editor-text-secondary hover:bg-editor-panel-bg'
-                                    }
-                                `}
-                            >
-                                <div className="flex items-start justify-between mb-1.5">
-                                    <IconComponent size={16} className={isSelected ? 'text-white' : 'text-editor-text-secondary group-hover:text-editor-accent'} />
-                                    {model.badge && (
-                                        <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${isSelected ? 'bg-white/20 text-white' : 'bg-editor-accent/10 text-editor-accent'
-                                            }`}>
-                                            {model.badge}
-                                        </span>
-                                    )}
-                                </div>
-                                <div className={`text-xs font-semibold ${isSelected ? 'text-white' : 'text-editor-text-primary'}`}>
-                                    {model.label.replace('Quimera ', '')}
-                                </div>
-                                {isSelected && (
-                                    <div className="absolute -top-1 -right-1 w-5 h-5 bg-white rounded-full flex items-center justify-center shadow-md">
-                                        <Check size={12} className="text-editor-accent" />
-                                    </div>
-                                )}
-                            </button>
-                        );
-                    })}
-                </div>
-            </div>
 
             {/* Main Content Area */}
             {/* Main Content Area */}
