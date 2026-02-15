@@ -578,5 +578,3 @@ export { openclawProxy };
 
 // Outbound call functions (Quibo initiates calls via ElevenLabs)
 export { outboundCall, outboundCallStatus };
-
-

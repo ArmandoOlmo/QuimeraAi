@@ -21,6 +21,45 @@ const COMMON_EMOJIS = [
     '📱', '💻', '🎧', '📞', '✉️', '🏆', '🎪', '🎭', '🎪', '🌙'
 ];
 
+// Extracted outside the component so React keeps a stable reference
+// and doesn't unmount/remount children on every parent re-render.
+const AccordionSectionStable: React.FC<{
+    title: string;
+    icon: React.ElementType;
+    section: string;
+    isExpanded: boolean;
+    onToggle: (section: string) => void;
+    children: React.ReactNode;
+}> = ({ title, icon: Icon, section, isExpanded, onToggle, children }) => (
+    <div className="border-b border-border/30 last:border-0">
+        <button
+            onClick={() => onToggle(section)}
+            className="w-full py-6 flex items-center justify-between hover:text-primary transition-colors group"
+        >
+            <div className="flex items-center gap-3">
+                <div className={`p-2.5 rounded-lg transition-all ${isExpanded ? 'bg-primary text-primary-foreground scale-105' : 'bg-secondary/30 text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary'}`}>
+                    <Icon size={18} />
+                </div>
+                <h3 className={`font-semibold text-base transition-colors ${isExpanded ? 'text-foreground' : 'text-muted-foreground group-hover:text-foreground'}`}>{title}</h3>
+            </div>
+            <div className={`transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}>
+                <ChevronDown size={18} className="text-muted-foreground" />
+            </div>
+        </button>
+
+        <div
+            className={`grid transition-all duration-300 ease-in-out overflow-hidden ${isExpanded ? 'grid-rows-[1fr] opacity-100 pb-7' : 'grid-rows-[0fr] opacity-0'
+                }`}
+        >
+            <div className="min-h-0">
+                <div className="pt-2 space-y-6 px-1">
+                    {children}
+                </div>
+            </div>
+        </div>
+    </div>
+);
+
 const ChatCustomizationSettings: React.FC = () => {
     const { aiAssistantConfig, saveAiAssistantConfig } = useAI();
     const { activeProject } = useProject();
@@ -93,9 +132,9 @@ const ChatCustomizationSettings: React.FC = () => {
         saveConfig(newConfig);
     };
 
-    const toggleSection = (section: string) => {
+    const toggleSection = useCallback((section: string) => {
         setExpandedSections(prev => ({ ...prev, [section]: !prev[section] }));
-    };
+    }, []);
 
     const updateBranding = (key: string, value: any) => {
         const newConfig = {
@@ -168,45 +207,6 @@ const ChatCustomizationSettings: React.FC = () => {
         saveConfig(newConfig);
     };
 
-    const AccordionSection = ({
-        title,
-        icon: Icon,
-        section,
-        children
-    }: {
-        title: string;
-        icon: React.ElementType;
-        section: string;
-        children: React.ReactNode;
-    }) => (
-        <div className="border-b border-border/30 last:border-0">
-            <button
-                onClick={() => toggleSection(section)}
-                className="w-full py-6 flex items-center justify-between hover:text-primary transition-colors group"
-            >
-                <div className="flex items-center gap-3">
-                    <div className={`p-2.5 rounded-lg transition-all ${expandedSections[section] ? 'bg-primary text-primary-foreground scale-105' : 'bg-secondary/30 text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary'}`}>
-                        <Icon size={18} />
-                    </div>
-                    <h3 className={`font-semibold text-base transition-colors ${expandedSections[section] ? 'text-foreground' : 'text-muted-foreground group-hover:text-foreground'}`}>{title}</h3>
-                </div>
-                <div className={`transition-transform duration-200 ${expandedSections[section] ? 'rotate-180' : ''}`}>
-                    <ChevronDown size={18} className="text-muted-foreground" />
-                </div>
-            </button>
-
-            <div
-                className={`grid transition-all duration-300 ease-in-out overflow-hidden ${expandedSections[section] ? 'grid-rows-[1fr] opacity-100 pb-7' : 'grid-rows-[0fr] opacity-0'
-                    }`}
-            >
-                <div className="min-h-0">
-                    <div className="pt-2 space-y-6 px-1">
-                        {children}
-                    </div>
-                </div>
-            </div>
-        </div>
-    );
 
     return (
         <div className="space-y-8 pb-24">
@@ -272,7 +272,7 @@ const ChatCustomizationSettings: React.FC = () => {
                 {/* Main Settings Container - Clean & Light */}
                 <div className="bg-card/50 border border-border/30 rounded-2xl px-8 py-2 space-y-0 shadow-sm">
                     {/* Color Palette */}
-                    <AccordionSection title={t('chatCustomization.colorPalette')} icon={Palette} section="colors">
+                    <AccordionSectionStable title={t('chatCustomization.colorPalette')} icon={Palette} section="colors" isExpanded={!!expandedSections['colors']} onToggle={toggleSection}>
                         <div className="grid grid-cols-2 gap-x-6 gap-y-1">
                             {[
                                 { key: 'primaryColor', label: t('chatCustomization.colors.primary') },
@@ -297,10 +297,10 @@ const ChatCustomizationSettings: React.FC = () => {
                                 />
                             ))}
                         </div>
-                    </AccordionSection>
+                    </AccordionSectionStable>
 
                     {/* Branding & Logo */}
-                    <AccordionSection title={t('chatCustomization.brandingAndLogo')} icon={ImageIcon} section="branding">
+                    <AccordionSectionStable title={t('chatCustomization.brandingAndLogo')} icon={ImageIcon} section="branding" isExpanded={!!expandedSections['branding']} onToggle={toggleSection}>
                         <div className="space-y-5">
                             <div>
                                 <label className="block text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">{t('chatCustomization.logoType')}</label>
@@ -443,11 +443,11 @@ const ChatCustomizationSettings: React.FC = () => {
                                 </label>
                             </div>
                         </div>
-                    </AccordionSection>
+                    </AccordionSectionStable>
 
 
                     {/* Behavior */}
-                    <AccordionSection title={t('chatCustomization.positionAndBehavior')} icon={SettingsIcon} section="behavior">
+                    <AccordionSectionStable title={t('chatCustomization.positionAndBehavior')} icon={SettingsIcon} section="behavior" isExpanded={!!expandedSections['behavior']} onToggle={toggleSection}>
                         <div className="space-y-5">
                             <div>
                                 <label className="block text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">{t('chatCustomization.position')}</label>
@@ -514,10 +514,10 @@ const ChatCustomizationSettings: React.FC = () => {
                                 </div>
                             )}
                         </div>
-                    </AccordionSection>
+                    </AccordionSectionStable>
 
                     {/* Messages */}
-                    <AccordionSection title={t('chatCustomization.customMessages')} icon={MessageSquare} section="messages">
+                    <AccordionSectionStable title={t('chatCustomization.customMessages')} icon={MessageSquare} section="messages" isExpanded={!!expandedSections['messages']} onToggle={toggleSection}>
                         <div className="space-y-5">
                             <div>
                                 <label className="block text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">{t('chatCustomization.welcomeMessage')}</label>
@@ -572,10 +572,10 @@ const ChatCustomizationSettings: React.FC = () => {
                                 </div>
                             </div>
                         </div>
-                    </AccordionSection>
+                    </AccordionSectionStable>
 
                     {/* Button */}
-                    <AccordionSection title={t('chatCustomization.chatButton')} icon={Smile} section="button">
+                    <AccordionSectionStable title={t('chatCustomization.chatButton')} icon={Smile} section="button" isExpanded={!!expandedSections['button']} onToggle={toggleSection}>
                         <div className="space-y-5">
                             <div>
                                 <label className="block text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">{t('chatCustomization.buttonStyle')}</label>
@@ -636,7 +636,7 @@ const ChatCustomizationSettings: React.FC = () => {
                                 />
                             </div>
                         </div>
-                    </AccordionSection>
+                    </AccordionSectionStable>
                 </div >
             </div >
         </div >
