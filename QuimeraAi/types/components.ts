@@ -478,6 +478,9 @@ export interface PortfolioItem {
     title: string;
     description: string;
     imageUrl: string;
+    linkUrl?: string;
+    linkType?: 'manual' | 'product' | 'collection' | 'content';
+    linkText?: string;
 }
 
 export interface PortfolioData {

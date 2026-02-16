@@ -6880,6 +6880,86 @@ const Controls: React.FC = () => {
               value={item.imageUrl}
               onChange={(url) => setNestedData(`portfolio.items.${index}.imageUrl`, url)}
             />
+
+            {/* Link Controls */}
+            <div className="mt-3 pt-3 border-t border-editor-border/50">
+              <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">Link</label>
+              <input
+                placeholder="Link Text (e.g. View Project)"
+                value={item.linkText || ''}
+                onChange={(e) => setNestedData(`portfolio.items.${index}.linkText`, e.target.value)}
+                className="w-full bg-editor-panel-bg border border-editor-border rounded px-2 py-1 text-xs text-editor-text-primary focus:outline-none focus:border-editor-accent mb-2"
+              />
+              <div className="flex bg-editor-panel-bg rounded-md border border-editor-border p-1 mb-2">
+                {[
+                  { value: 'manual', label: 'URL' },
+                  { value: 'product', label: 'Product' },
+                  { value: 'collection', label: 'Collection' },
+                  { value: 'content', label: 'Contenido' }
+                ].map((type) => (
+                  <button
+                    key={type.value}
+                    onClick={() => setNestedData(`portfolio.items.${index}.linkType`, type.value)}
+                    className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors ${(item.linkType || 'manual') === type.value
+                      ? 'bg-editor-accent text-editor-bg'
+                      : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-bg'
+                      }`}
+                  >
+                    {type.label}
+                  </button>
+                ))}
+              </div>
+              {(item.linkType === 'manual' || !item.linkType) && (
+                <>
+                  <input
+                    placeholder="https://example.com or #section"
+                    value={item.linkUrl || ''}
+                    onChange={(e) => setNestedData(`portfolio.items.${index}.linkUrl`, e.target.value)}
+                    className="w-full bg-editor-panel-bg border border-editor-border rounded px-2 py-1 text-xs text-editor-text-primary focus:outline-none focus:border-editor-accent"
+                  />
+                  <p className="text-xs text-editor-text-secondary mt-1">
+                    Use URLs for external links or # for page sections
+                  </p>
+                </>
+              )}
+              {item.linkType === 'product' && (
+                <SingleProductSelector
+                  storeId={activeProject?.id || ''}
+                  selectedProductId={item.linkUrl?.startsWith('/product/') ? item.linkUrl.split('/product/')[1] : undefined}
+                  onSelect={(id) => {
+                    if (id) {
+                      setNestedData(`portfolio.items.${index}.linkUrl`, `/product/${id}`);
+                    } else {
+                      setNestedData(`portfolio.items.${index}.linkUrl`, '');
+                    }
+                  }}
+                  label="Select Product"
+                />
+              )}
+              {item.linkType === 'collection' && (
+                <SingleCollectionSelector
+                  storeId={activeProject?.id || ''}
+                  gridCategories={data.categoryGrid?.categories || []}
+                  selectedCollectionId={(item as any).collectionId}
+                  onSelect={(id) => {
+                    setNestedData(`portfolio.items.${index}.collectionId`, id || null);
+                    if (id) {
+                      setNestedData(`portfolio.items.${index}.linkUrl`, '');
+                    }
+                  }}
+                  label="Select Collection"
+                />
+              )}
+              {item.linkType === 'content' && (
+                <SingleContentSelector
+                  selectedContentPath={item.linkUrl}
+                  onSelect={(path) => {
+                    setNestedData(`portfolio.items.${index}.linkUrl`, path || '');
+                  }}
+                  label="Seleccionar Contenido"
+                />
+              )}
+            </div>
           </div>
         ))}
         <button
