@@ -1586,7 +1586,7 @@ const Controls: React.FC = () => {
                 {t('editor.controls.hero.image')}
               </h4>
 
-              <ImagePicker label="Image URL" value={data.hero.imageUrl} onChange={(url) => setNestedData('hero.imageUrl', url)} />
+              <ImagePicker label={t('editor.controls.hero.image')} value={data.hero.imageUrl} onChange={(url) => setNestedData('hero.imageUrl', url)} />
 
               {/* Image Style */}
               <div className="mb-3">
@@ -3494,7 +3494,7 @@ const Controls: React.FC = () => {
             <Image size={14} />
             Image
           </h4>
-          <ImagePicker label="Image URL" value={data.heroSplit.imageUrl} onChange={(url) => setNestedData('heroSplit.imageUrl', url)} />
+          <ImagePicker label={t('editor.controls.hero.image')} value={data.heroSplit.imageUrl} onChange={(url) => setNestedData('heroSplit.imageUrl', url)} />
         </div>
       </div>
     );

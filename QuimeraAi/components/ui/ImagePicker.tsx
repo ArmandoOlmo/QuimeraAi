@@ -30,7 +30,7 @@ interface ImagePickerProps {
     hideUrlInput?: boolean;
 }
 
-const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, storeId, defaultOpen = false, onClose, onRemove, destination = 'user', hideUrlInput = false }) => {
+const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, storeId, defaultOpen = false, onClose, onRemove, destination = 'user', hideUrlInput = true }) => {
     const { t } = useTranslation();
     const {
         files, uploadFile,
