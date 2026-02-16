@@ -9,6 +9,7 @@ import { FileRecord } from '../../types';
 import { FileText, Upload, Trash2, Download, Sparkles, ChevronDown, Zap, X, Calendar, HardDrive, Search, Filter, ArrowUpDown, CheckSquare, Square, Wand2, Loader2, Plus, ImageIcon, AlertTriangle } from 'lucide-react';
 import DragDropZone from '../ui/DragDropZone';
 import ImageDetailModal from '../ui/ImageDetailModal';
+import ConfirmationModal from '../ui/ConfirmationModal';
 import { formatBytes, formatFileDate } from '../../utils/fileHelpers';
 import { useTranslation } from 'react-i18next';
 
@@ -66,7 +67,8 @@ const FileItem: React.FC<{
     onToggleSelect?: () => void;
     isSelectionMode?: boolean;
     onAddToReference?: (base64Data: string) => Promise<void>;
-}> = ({ file, variant, onPreview, isSelected, onToggleSelect, isSelectionMode, onAddToReference }) => {
+    onDelete?: (file: FileRecord) => void;
+}> = ({ file, variant, onPreview, isSelected, onToggleSelect, isSelectionMode, onAddToReference, onDelete }) => {
     const { t } = useTranslation();
     const isImage = file.type.startsWith('image/');
     const [isAdding, setIsAdding] = useState(false);
@@ -197,6 +199,17 @@ const FileItem: React.FC<{
                     </button>
                 )}
 
+                {/* Delete button - shown on hover when not in selection mode */}
+                {!isSelectionMode && onDelete && (
+                    <button
+                        onClick={(e) => { e.stopPropagation(); onDelete(file); }}
+                        className="absolute bottom-2 right-2 z-10 p-1.5 bg-red-500/90 hover:bg-red-600 text-white rounded-md shadow-lg transition-all transform hover:scale-110 opacity-0 group-hover:opacity-100"
+                        title={t('common.delete', 'Eliminar')}
+                    >
+                        <Trash2 size={14} />
+                    </button>
+                )}
+
                 {/* Filename overlay on hover - only for images */}
                 {isImage && !isSelectionMode && (
                     <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-3 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -242,6 +255,10 @@ const FileHistory: React.FC<FileHistoryProps> = ({ variant = 'widget' }) => {
     const [isDragging, setIsDragging] = useState(false);
 
     const [previewFile, setPreviewFile] = useState<FileRecord | null>(null);
+    const [fileToDelete, setFileToDelete] = useState<FileRecord | null>(null);
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
     const [showFilters, setShowFilters] = useState(false);
     const [selectedProjectFilter, setSelectedProjectFilter] = useState<string>('all');
 
@@ -505,11 +522,29 @@ const FileHistory: React.FC<FileHistoryProps> = ({ variant = 'widget' }) => {
         }
     };
 
+    // Single file delete handler
+    const handleSingleDelete = async () => {
+        if (!fileToDelete) return;
+        setIsDeleting(true);
+        try {
+            await deleteFile(fileToDelete.id, fileToDelete.storagePath);
+            success(`${fileToDelete.name} ${t('common.deleted', 'eliminado')}`);
+        } catch (err) {
+            showError(t('common.deleteFailed', 'Error al eliminar'));
+        } finally {
+            setIsDeleting(false);
+            setShowDeleteConfirm(false);
+            setFileToDelete(null);
+        }
+    };
+
     const handleBulkDelete = async () => {
         if (library.selectedFiles.length === 0) return;
+        setShowBulkDeleteConfirm(true);
+    };
 
-        if (!window.confirm(t('dashboard.assets.actions.bulkDeleteConfirm', { count: library.selectedFiles.length }))) return;
-
+    const confirmBulkDelete = async () => {
+        setIsDeleting(true);
         try {
             await Promise.all(
                 library.selectedFiles.map(f => deleteFile(f.id, f.storagePath))
@@ -519,6 +554,9 @@ const FileHistory: React.FC<FileHistoryProps> = ({ variant = 'widget' }) => {
             library.toggleSelectionMode();
         } catch (err) {
             showError('Failed to delete some files');
+        } finally {
+            setIsDeleting(false);
+            setShowBulkDeleteConfirm(false);
         }
     };
 
@@ -997,6 +1035,7 @@ const FileHistory: React.FC<FileHistoryProps> = ({ variant = 'widget' }) => {
                                                         onToggleSelect={() => library.toggleSelection(file.id)}
                                                         isSelectionMode={library.isSelectionMode}
                                                         onAddToReference={variant !== 'widget' ? addImageToReference : undefined}
+                                                        onDelete={(f) => { setFileToDelete(f); setShowDeleteConfirm(true); }}
                                                     />
                                                 </div>
                                             ))}
@@ -1014,6 +1053,29 @@ const FileHistory: React.FC<FileHistoryProps> = ({ variant = 'widget' }) => {
                     )}
                 </div>
             </div>
+
+            {/* Single Delete Confirmation Modal */}
+            <ConfirmationModal
+                isOpen={showDeleteConfirm}
+                onConfirm={handleSingleDelete}
+                onCancel={() => { setShowDeleteConfirm(false); setFileToDelete(null); }}
+                title={t('common.confirmDelete', '¿Estás seguro?')}
+                message={t('common.confirmDeleteMessage', 'Esta acción no se puede deshacer. El elemento será eliminado permanentemente.')}
+                variant="danger"
+                isLoading={isDeleting}
+            />
+
+            {/* Bulk Delete Confirmation Modal */}
+            <ConfirmationModal
+                isOpen={showBulkDeleteConfirm}
+                onConfirm={confirmBulkDelete}
+                onCancel={() => setShowBulkDeleteConfirm(false)}
+                title={t('common.confirmDelete', '¿Estás seguro?')}
+                message={t('common.confirmDeleteMessagePlural', { count: library.selectedFiles.length, defaultValue: `Esta acción eliminará ${library.selectedFiles.length} elemento(s) permanentemente.` })}
+                variant="danger"
+                isLoading={isDeleting}
+                count={library.selectedFiles.length}
+            />
         </section>
     );
 };

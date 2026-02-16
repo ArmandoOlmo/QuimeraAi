@@ -181,6 +181,9 @@ export interface FeatureItem {
     title: string;
     description: string;
     imageUrl: string;
+    linkUrl?: string;
+    linkType?: 'manual' | 'product' | 'collection' | 'content';
+    linkText?: string;
 }
 
 export interface FeaturesData {
