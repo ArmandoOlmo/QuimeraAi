@@ -8,11 +8,16 @@
  * SECURITY:
  * - Requires Authorization header (forwarded from ElevenLabs or caller)
  * - CORS restricted to known origins
+ * - VPS URL read from OPENCLAW_BASE_URL env var (never hardcoded)
  */
 
 import * as functions from 'firebase-functions';
 
-const OPENCLAW_BASE_URL = 'http://34.56.154.52:18789';
+// Read from environment — set in functions/.env (gitignored)
+const OPENCLAW_BASE_URL = process.env.OPENCLAW_BASE_URL;
+if (!OPENCLAW_BASE_URL) {
+    console.error('[OpenClaw Proxy] FATAL: OPENCLAW_BASE_URL environment variable is not set.');
+}
 
 // Allowed origins — ElevenLabs doesn't send an origin header (server-to-server),
 // so we only restrict browser-based access
@@ -49,7 +54,7 @@ export const openclawProxy = functions.https.onRequest(async (req, res) => {
 
     // Build the target URL: proxy to the OpenClaw VPS
     // ElevenLabs sends to: https://<our-domain>/openclawProxy/v1/chat/completions
-    // We forward to: http://34.56.154.52:18789/v1/chat/completions
+    // We forward to: <OPENCLAW_BASE_URL>/v1/chat/completions
     const targetPath = req.path || '/';
     const targetUrl = `${OPENCLAW_BASE_URL}${targetPath}`;
 

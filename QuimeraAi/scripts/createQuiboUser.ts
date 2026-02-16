@@ -2,11 +2,11 @@
  * Script to create Quibo user with super_admin role
  * 
  * Usage:
- *   npx ts-node scripts/createQuiboUser.ts
+ *   QUIBO_PASSWORD="your_secure_password" npx ts-node scripts/createQuiboUser.ts
  * 
  * This script creates a user with:
  *   - Email: quibobot@gmail.com
- *   - Password: Quibo1975$$
+ *   - Password: (read from QUIBO_PASSWORD env var)
  *   - Role: super_admin
  */
 
@@ -41,9 +41,17 @@ const auth = admin.auth();
 const db = admin.firestore();
 
 // User configuration
+// Read password from environment variable — never hardcode secrets
+const QUIBO_PASSWORD = process.env.QUIBO_PASSWORD;
+if (!QUIBO_PASSWORD) {
+    console.error('❌ ERROR: QUIBO_PASSWORD environment variable is required.');
+    console.error('Usage: QUIBO_PASSWORD="your_password" npx ts-node scripts/createQuiboUser.ts');
+    process.exit(1);
+}
+
 const QUIBO_USER = {
     email: 'quibobot@gmail.com',
-    password: 'Quibo1975$$',
+    password: QUIBO_PASSWORD,
     displayName: 'Quibo Bot',
     role: 'super-admin' as const,
 };

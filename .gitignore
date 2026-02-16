@@ -48,5 +48,8 @@ temp/
 
 # Service accounts and secrets (NEVER commit these)
 **/service-account*.json
+
+# Deployment docs with sensitive info (keep locally, never commit)
+QUIBO_DEPLOYMENT_INFO.md
 **/serviceAccount*.json
 **/*-credentials.json
