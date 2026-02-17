@@ -11,6 +11,7 @@ const LeadCaptureSettings: React.FC = () => {
 
     const defaultConfig: LeadCaptureConfig = {
         enabled: true,
+        conversationalMode: true,
         preChatForm: false,
         triggerAfterMessages: 3,
         requireEmailForAdvancedInfo: true,
@@ -131,6 +132,29 @@ const LeadCaptureSettings: React.FC = () => {
                     </div>
                     <p className="text-muted-foreground text-sm">
                         Show a form before the chat starts to capture contact info upfront
+                    </p>
+                </div>
+
+                {/* Conversational Mode */}
+                <div className="bg-card border border-border rounded-xl p-5">
+                    <div className="flex items-center justify-between mb-3">
+                        <h4 className="font-bold text-foreground flex items-center gap-2">
+                            <MessageSquare size={16} className="text-primary" />
+                            Conversational Mode
+                        </h4>
+                        <label className="relative inline-flex items-center cursor-pointer">
+                            <input
+                                type="checkbox"
+                                checked={config.conversationalMode}
+                                onChange={(e) => setConfig({ ...config, conversationalMode: e.target.checked })}
+                                disabled={!config.enabled}
+                                className="sr-only peer"
+                            />
+                            <div className="w-11 h-6 bg-secondary peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-ring rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary peer-disabled:opacity-50"></div>
+                        </label>
+                    </div>
+                    <p className="text-muted-foreground text-sm">
+                        AI extracts contact info naturally during conversation instead of showing a popup form
                     </p>
                 </div>
 
@@ -353,8 +377,8 @@ const LeadCaptureSettings: React.FC = () => {
                                         setConfig({ ...config, businessDays: updated });
                                     }}
                                     className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 ${isActive
-                                            ? 'bg-primary text-primary-foreground'
-                                            : 'bg-secondary text-muted-foreground hover:bg-secondary/80'
+                                        ? 'bg-primary text-primary-foreground'
+                                        : 'bg-secondary text-muted-foreground hover:bg-secondary/80'
                                         }`}
                                 >
                                     {day}
@@ -374,6 +398,10 @@ const LeadCaptureSettings: React.FC = () => {
                 <ul className="space-y-2 text-sm text-muted-foreground">
                     <li className="flex items-start gap-2">
                         <span className="text-primary mt-0.5">•</span>
+                        <span><strong>Conversational Mode (Recommended):</strong> AI naturally asks for name, email, and phone during the chat — no popups</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                        <span className="text-primary mt-0.5">•</span>
                         <span><strong>Pre-Chat Form:</strong> Captures info before chat starts (name, email, phone)</span>
                     </li>
                     <li className="flex items-start gap-2">
@@ -382,7 +410,7 @@ const LeadCaptureSettings: React.FC = () => {
                     </li>
                     <li className="flex items-start gap-2">
                         <span className="text-primary mt-0.5">•</span>
-                        <span><strong>Message Trigger:</strong> Requests email after N messages if not captured</span>
+                        <span><strong>Message Trigger:</strong> Requests email after N messages if not captured (disabled in conversational mode)</span>
                     </li>
                     <li className="flex items-start gap-2">
                         <span className="text-primary mt-0.5">•</span>

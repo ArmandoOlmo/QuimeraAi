@@ -41,7 +41,7 @@ const AiAssistantDashboard: React.FC = () => {
     const { t } = useTranslation();
     const { aiAssistantConfig, setAiAssistantConfig, saveAiAssistantConfig } = useAI();
     const editorContext = useSafeEditor();
-    const { activeProject, projects, loadProject } = useProject();
+    const { activeProject, projects, loadProject, updateProjectAiConfig } = useProject();
     const { setView } = useUI();
     const { user } = useAuth();
     const { cmsPosts, loadCMSPosts } = useCMS();
@@ -94,6 +94,9 @@ const AiAssistantDashboard: React.FC = () => {
         isSavingRef.current = true;
         try {
             await saveAiAssistantConfig(formData, activeProject.id);
+            // CRITICAL: Also update the in-memory projects array so the auto-save
+            // in ProjectContext doesn't overwrite fresh config with stale data
+            updateProjectAiConfig(activeProject.id, formData);
             // Also sync to EditorContext so ChatbotWidget picks up changes immediately
             if (editorContext?.saveAiAssistantConfig) {
                 await editorContext.saveAiAssistantConfig(formData);

@@ -154,6 +154,16 @@ const detectLeadIntent = (message: string, configKeywords?: string[]): boolean =
     );
 };
 
+// Extract contact info from user message text
+const extractContactFromMessage = (text: string): { email: string | null; phone: string | null } => {
+    const emailMatch = text.match(/[\w.+-]+@[\w-]+\.[\w.]+/);
+    const phoneMatch = text.match(/(?:\+?\d{1,3}[-.\s]?)?\(?\d{2,4}\)?[-.\s]?\d{3,4}[-.\s]?\d{3,4}/);
+    return {
+        email: emailMatch?.[0] || null,
+        phone: phoneMatch?.[0] || null,
+    };
+};
+
 // Detect visual intent - when user asks about what they see on screen
 const detectVisualIntent = (message: string): boolean => {
     const visualKeywords = [
@@ -362,6 +372,7 @@ const ChatCore: React.FC<ChatCoreProps> = ({
     // Get lead capture config with defaults
     const leadConfig = config.leadCaptureConfig || {
         enabled: config.leadCaptureEnabled !== false,
+        conversationalMode: true,
         preChatForm: false,
         triggerAfterMessages: 3,
         requireEmailForAdvancedInfo: true,
@@ -425,6 +436,8 @@ const ChatCore: React.FC<ChatCoreProps> = ({
 
     // Lead tracking ref
     const capturedLeadIdRef = useRef<string | null>(null);
+    // High intent detected flag (for conversational mode)
+    const highIntentDetectedRef = useRef(false);
 
     // Global chatbot prompts (from SuperAdmin configuration)
     const [globalPrompts, setGlobalPrompts] = useState<GlobalChatbotPrompts>(getDefaultPrompts());
@@ -634,6 +647,10 @@ ${suggestAvailableSlots()}
         const formattingGuidelines = globalPrompts.formattingGuidelines;
         const appointmentInstructions = globalPrompts.appointmentInstructions;
         const ecommerceInstructions = isEcommerceEnabled ? globalPrompts.ecommerceInstructions : '';
+        // Inject lead capture instructions when conversational mode is active and lead not yet captured
+        const leadCapturePrompt = (leadConfig.enabled && leadConfig.conversationalMode && !leadCaptured)
+            ? globalPrompts.leadCaptureInstructions
+            : '';
 
         const systemInstruction = `
             ${identityInstruction}
@@ -649,6 +666,7 @@ ${suggestAvailableSlots()}
             
             ${appointmentInstructions}
             ${ecommerceInstructions}
+            ${leadCapturePrompt}
             
             === VISUAL CONTEXT ===
             You can SEE the user's screen. When an image is provided:
@@ -908,6 +926,8 @@ ${suggestAvailableSlots()}
 
     const checkLeadCaptureThreshold = () => {
         if (!leadConfig.enabled || leadCaptured) return;
+        // In conversational mode, the AI handles lead capture via prompt — no modal
+        if (leadConfig.conversationalMode) return;
 
         const userMessagesCount = messages.filter(m => m.role === 'user').length;
 
@@ -1284,12 +1304,49 @@ ${suggestAvailableSlots()}
 
         // Detect high intent and trigger lead capture
         if (leadConfig.enabled && !leadCaptured && detectLeadIntent(userMessage, leadConfig.intentKeywords)) {
-            setMessages(prev => [...prev, {
-                role: 'model',
-                text: t('chatbotWidget.askEmailHighIntent')
-            }]);
-            setShowLeadCaptureModal(true);
-            return;
+            if (!leadConfig.conversationalMode) {
+                // Legacy: show modal
+                setMessages(prev => [...prev, {
+                    role: 'model',
+                    text: t('chatbotWidget.askEmailHighIntent')
+                }]);
+                setShowLeadCaptureModal(true);
+                return;
+            }
+            // Conversational mode: flag intent so AI prompt handles it naturally
+            highIntentDetectedRef.current = true;
+        }
+
+        // Auto-detect contact info from user message (conversational capture)
+        if (leadConfig.enabled && leadConfig.conversationalMode && !leadCaptured) {
+            const extracted = extractContactFromMessage(userMessage);
+            if (extracted.email) {
+                console.log('[ChatCore] 📧 Contact detected in message:', extracted);
+                const convText = newMessages.map(m => `${m.role === 'user' ? 'Usuario' : 'Asistente'}: ${m.text}`).join('\n');
+                const intentAnalysis = await analyzeCustomerIntent(newMessages, project?.name || 'chatbot', user?.uid);
+                await updateParticipantInfo({ email: extracted.email, phone: extracted.phone || undefined });
+                if (onLeadCapture) {
+                    const leadId = await onLeadCapture({
+                        email: extracted.email,
+                        phone: extracted.phone || undefined,
+                        status: 'new',
+                        message: 'Lead captured via conversation',
+                        value: 0,
+                        leadScore: intentAnalysis?.intentScore || calculateLeadScore({ email: extracted.email }, newMessages, true),
+                        conversationTranscript: convText,
+                        tags: ['chatbot', 'conversational-capture', highIntentDetectedRef.current ? 'high-intent' : 'organic'],
+                        aiAnalysis: intentAnalysis?.customerInterest || undefined,
+                        recommendedAction: intentAnalysis?.recommendedAction || undefined,
+                        aiScore: intentAnalysis?.intentScore || undefined,
+                    });
+                    if (leadId) {
+                        capturedLeadIdRef.current = leadId;
+                        await linkToLead(leadId);
+                    }
+                }
+                setLeadCaptured(true);
+                console.log('[ChatCore] ✅ Lead captured conversationally');
+            }
         }
 
         setIsLoading(true);

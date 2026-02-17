@@ -149,6 +149,8 @@ interface ProjectContextType {
     exportProjectAsHtml: () => void;
     updateProjectThumbnail: (projectId: string, file: File) => Promise<void>;
     updateProjectFavicon: (projectId: string, file: File) => Promise<void>;
+    /** Update aiAssistantConfig in‑memory only (prevents auto‑save overwrite) */
+    updateProjectAiConfig: (projectId: string, config: any) => void;
 
     // Trash & Backup Recovery
     deletedProjects: Project[];
@@ -1391,6 +1393,13 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         }
     }, [activeProject, data, componentOrder, sectionVisibility]);
 
+    // Update AI config in-memory only (prevents auto-save from overwriting fresh Firestore data)
+    const updateProjectAiConfig = useCallback((projectId: string, config: any) => {
+        setProjects(prev => prev.map(p =>
+            p.id === projectId ? { ...p, aiAssistantConfig: config } : p
+        ));
+    }, []);
+
     const value: ProjectContextType = {
         // Project State
         projects,
@@ -1450,6 +1459,9 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         archiveTemplate,
         duplicateTemplate,
         updateTemplateInState,
+
+        // In-memory AI config update (prevents auto-save overwrite)
+        updateProjectAiConfig,
 
         // Refresh
         refreshProjects,

@@ -40,6 +40,8 @@ export interface KnowledgeLink {
 
 export interface LeadCaptureConfig {
     enabled: boolean;
+    /** When true, the AI gathers contact info conversationally instead of showing a modal */
+    conversationalMode: boolean;
     preChatForm: boolean;
     triggerAfterMessages: number;
     requireEmailForAdvancedInfo: boolean;
