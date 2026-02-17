@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import {
     Zap, Loader2, Wand2, X, Download, Upload, Image as ImageIcon, Plus,
     AlertTriangle, Sparkles, Brain, Users, Thermometer, Eye,
-    ChevronDown, Settings2, Palette, Camera, Sun, CheckCircle2,
+    ChevronDown, Settings2, Palette, Camera, Sun, Check, CheckCircle2,
     PanelLeftClose
 } from 'lucide-react';
 
