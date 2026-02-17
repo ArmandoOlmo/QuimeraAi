@@ -172,6 +172,33 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
   const [activePage, setActivePage] = useState<SitePage | null>(null);
   const [loadingPost, setLoadingPost] = useState(false);
 
+  // Override overflow:hidden from index.html to allow native page scrolling
+  useEffect(() => {
+    const html = document.documentElement;
+    const body = document.body;
+    const root = document.getElementById('root');
+
+    html.style.overflow = 'auto';
+    html.style.height = 'auto';
+    body.style.overflow = 'auto';
+    body.style.height = 'auto';
+    if (root) {
+      root.style.overflow = 'visible';
+      root.style.height = 'auto';
+    }
+
+    return () => {
+      html.style.overflow = '';
+      html.style.height = '';
+      body.style.overflow = '';
+      body.style.height = '';
+      if (root) {
+        root.style.overflow = '';
+        root.style.height = '';
+      }
+    };
+  }, []);
+
   // Parse URL params from pathname: /preview/userId/projectId or /preview/projectId
   // Also supports hash: #preview/userId/projectId (legacy)
   const getIdsFromURL = () => {

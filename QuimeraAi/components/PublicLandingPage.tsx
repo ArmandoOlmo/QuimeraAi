@@ -81,6 +81,33 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
   const [isPreviewMode, setIsPreviewMode] = useState(false);
   const [previewSections, setPreviewSections] = useState<PreviewSection[]>([]);
 
+  // Override overflow:hidden from index.html to allow native page scrolling
+  useEffect(() => {
+    const html = document.documentElement;
+    const body = document.body;
+    const root = document.getElementById('root');
+
+    html.style.overflow = 'auto';
+    html.style.height = 'auto';
+    body.style.overflow = 'auto';
+    body.style.height = 'auto';
+    if (root) {
+      root.style.overflow = 'visible';
+      root.style.height = 'auto';
+    }
+
+    return () => {
+      html.style.overflow = '';
+      html.style.height = '';
+      body.style.overflow = '';
+      body.style.height = '';
+      if (root) {
+        root.style.overflow = '';
+        root.style.height = '';
+      }
+    };
+  }, []);
+
   // Listen for preview updates from the Landing Page Editor
   useEffect(() => {
     // Check if we're in preview mode (loaded in iframe with ?preview=landing)
@@ -208,14 +235,14 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
   const getPreviewData = useMemo(() => (sectionType: string) => {
     // If no sections loaded, return null (use defaults)
     if (previewSections.length === 0) return null;
-    
+
     // Find all matching sections
     const matchingSections = previewSections.filter(s =>
       s.type === sectionType ||
       s.type.startsWith(sectionType) ||
       s.id === sectionType
     );
-    
+
     // If multiple matches, prefer the one with data (fixes legacy data issue where sections might be duplicated)
     let section = matchingSections[0];
     if (matchingSections.length > 1) {
@@ -224,9 +251,9 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
         section = sectionWithData;
       }
     }
-    
+
     const result = section?.enabled !== false ? section?.data || null : null;
-    
+
     return result;
   }, [previewSections]);
 
