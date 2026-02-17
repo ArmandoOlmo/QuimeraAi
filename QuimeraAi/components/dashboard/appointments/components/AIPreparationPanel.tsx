@@ -185,7 +185,14 @@ export const AIPreparationPanel: React.FC<AIPreparationPanelProps> = ({
 
             const projectId = activeProject?.id || 'appointment-ai-prep';
             const response = await generateContentViaProxy(projectId, prompt, 'gemini-2.5-flash', {}, user?.uid);
-            const responseText = extractTextFromResponse(response);
+            let responseText = extractTextFromResponse(response);
+
+            // Strip markdown code blocks if present (Gemini often wraps JSON in ```json...```)
+            responseText = responseText.replace(/^```(?:json)?\s*\n?/i, '').replace(/\n?```\s*$/i, '').trim();
+
+            if (!responseText) {
+                throw new Error('No se recibió respuesta del modelo de IA');
+            }
 
             const data = JSON.parse(responseText);
 
@@ -285,7 +292,14 @@ export const AIPreparationPanel: React.FC<AIPreparationPanelProps> = ({
 
             const projectId = activeProject?.id || 'appointment-ai-section';
             const response = await generateContentViaProxy(projectId, prompt, 'gemini-2.5-flash', {}, user?.uid);
-            const responseText = extractTextFromResponse(response);
+            let responseText = extractTextFromResponse(response);
+
+            // Strip markdown code blocks if present (Gemini often wraps JSON in ```json...```)
+            responseText = responseText.replace(/^```(?:json)?\s*\n?/i, '').replace(/\n?```\s*$/i, '').trim();
+
+            if (!responseText) {
+                throw new Error('No se recibió respuesta del modelo de IA');
+            }
 
             const data = JSON.parse(responseText);
 
@@ -300,10 +314,10 @@ export const AIPreparationPanel: React.FC<AIPreparationPanelProps> = ({
             }
 
             onInsightsGenerated({
-                ...insights,
+                ...(insights || {}),
                 ...updates,
                 generatedAt: { seconds: Date.now() / 1000, nanoseconds: 0 },
-            });
+            } as AppointmentAiInsights);
 
         } catch (error: any) {
             handleApiError(error);

@@ -5,8 +5,8 @@
 
 import React, { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ChevronRight } from 'lucide-react';
-import { Appointment, APPOINTMENT_TYPE_CONFIGS } from '../../../../types';
+import { ChevronRight, Ban } from 'lucide-react';
+import { Appointment, BlockedDate, APPOINTMENT_TYPE_CONFIGS } from '../../../../types';
 import {
     getMonthDays,
     timestampToDate,
@@ -25,6 +25,7 @@ interface CalendarMonthViewProps {
     onAppointmentClick: (appointment: Appointment) => void;
     onDayClick: (date: Date) => void;
     weekStartsOn?: number;
+    blockedDates?: BlockedDate[];
 }
 
 // =============================================================================
@@ -86,6 +87,7 @@ export const CalendarMonthView: React.FC<CalendarMonthViewProps> = ({
     onAppointmentClick,
     onDayClick,
     weekStartsOn = 1,
+    blockedDates = [],
 }) => {
     const { t } = useTranslation();
     // Get ordered days for headers
@@ -192,6 +194,25 @@ export const CalendarMonthView: React.FC<CalendarMonthViewProps> = ({
                                                 {dayAppointments.length}
                                             </span>
                                         )}
+
+                                        {/* Blocked indicator */}
+                                        {isCurrentMonth && blockedDates.some(bd => {
+                                            const bdStart = new Date(bd.startDate.seconds * 1000);
+                                            const bdEnd = new Date(bd.endDate.seconds * 1000);
+                                            if (bd.allDay) {
+                                                bdStart.setHours(0, 0, 0, 0);
+                                                bdEnd.setHours(23, 59, 59, 999);
+                                            }
+                                            const dayStart = new Date(day);
+                                            dayStart.setHours(0, 0, 0, 0);
+                                            const dayEnd = new Date(day);
+                                            dayEnd.setHours(23, 59, 59, 999);
+                                            return bdStart <= dayEnd && bdEnd >= dayStart;
+                                        }) && (
+                                                <span className="text-[10px] text-destructive bg-destructive/10 px-1 py-0.5 rounded-full flex items-center gap-0.5">
+                                                    <Ban size={8} />
+                                                </span>
+                                            )}
                                     </div>
 
                                     {/* Appointments */}

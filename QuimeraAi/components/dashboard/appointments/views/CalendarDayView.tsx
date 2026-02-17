@@ -5,8 +5,8 @@
 
 import React, { useMemo, useRef, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Clock, Plus } from 'lucide-react';
-import { Appointment, APPOINTMENT_TYPE_CONFIGS } from '../../../../types';
+import { Clock, Plus, Ban } from 'lucide-react';
+import { Appointment, BlockedDate, APPOINTMENT_TYPE_CONFIGS } from '../../../../types';
 import { AppointmentCard } from '../components/AppointmentCard';
 import {
     timestampToDate,
@@ -28,6 +28,8 @@ interface CalendarDayViewProps {
     onSlotClick: (date: Date, hour: number) => void;
     workingHoursStart?: number;
     workingHoursEnd?: number;
+    blockedDates?: BlockedDate[];
+    onBlockClick?: (blockedDate: BlockedDate) => void;
 }
 
 // =============================================================================
@@ -48,6 +50,8 @@ export const CalendarDayView: React.FC<CalendarDayViewProps> = ({
     onSlotClick,
     workingHoursStart = 8,
     workingHoursEnd = 18,
+    blockedDates = [],
+    onBlockClick,
 }) => {
     const { t } = useTranslation();
     const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -226,19 +230,42 @@ export const CalendarDayView: React.FC<CalendarDayViewProps> = ({
                             {HOURS.map(hour => {
                                 const isWorkingHour = hour >= workingHoursStart && hour < workingHoursEnd;
 
+                                // Check if this slot is blocked
+                                const slotStart = new Date(currentDate);
+                                slotStart.setHours(hour, 0, 0, 0);
+                                const slotEnd = new Date(currentDate);
+                                slotEnd.setHours(hour, 59, 59, 999);
+
+                                const blocked = blockedDates.find(bd => {
+                                    const bdStart = new Date(bd.startDate.seconds * 1000);
+                                    const bdEnd = new Date(bd.endDate.seconds * 1000);
+                                    if (bd.allDay) {
+                                        bdStart.setHours(0, 0, 0, 0);
+                                        bdEnd.setHours(23, 59, 59, 999);
+                                    }
+                                    return bdStart <= slotEnd && bdEnd >= slotStart;
+                                });
+
                                 return (
                                     <div
                                         key={hour}
                                         onClick={() => {
-                                            const slotDate = new Date(currentDate);
-                                            slotDate.setHours(hour, 0, 0, 0);
-                                            onSlotClick(slotDate, hour);
+                                            if (blocked && onBlockClick) {
+                                                onBlockClick(blocked);
+                                            } else if (!blocked) {
+                                                const slotDate = new Date(currentDate);
+                                                slotDate.setHours(hour, 0, 0, 0);
+                                                onSlotClick(slotDate, hour);
+                                            }
                                         }}
                                         className={`
                                             border-b border-border/30
-                                            cursor-pointer group relative
+                                            group relative
                                             transition-colors duration-150
-                                            hover:bg-primary/5
+                                            ${blocked
+                                                ? 'cursor-not-allowed'
+                                                : 'cursor-pointer hover:bg-primary/5'
+                                            }
                                             ${!isWorkingHour ? 'bg-muted/10' : ''}
                                         `}
                                         style={{ height: `${HOUR_HEIGHT}px` }}
@@ -249,19 +276,36 @@ export const CalendarDayView: React.FC<CalendarDayViewProps> = ({
                                             style={{ top: `${HOUR_HEIGHT / 2}px` }}
                                         />
 
-                                        {/* Hover indicator */}
-                                        <div className="
-                                            absolute inset-2 rounded-xl
-                                            border-2 border-dashed border-primary/30
-                                            opacity-0 group-hover:opacity-100
-                                            transition-opacity
-                                            flex items-center justify-center
-                                        ">
-                                            <span className="text-sm text-primary font-medium bg-background px-3 py-1 rounded-full shadow-sm">
-                                                <Plus size={14} className="inline mr-1" />
-                                                {hour.toString().padStart(2, '0')}:00
-                                            </span>
-                                        </div>
+                                        {blocked ? (
+                                            /* Blocked overlay */
+                                            <div
+                                                className="absolute inset-0 z-[5]"
+                                                style={{
+                                                    background: 'repeating-linear-gradient(135deg, transparent, transparent 5px, rgba(239,68,68,0.06) 5px, rgba(239,68,68,0.06) 10px)',
+                                                }}
+                                            >
+                                                <div className="absolute inset-2 flex items-center justify-center">
+                                                    <span className="text-xs font-medium text-destructive/60 bg-destructive/5 px-2 py-0.5 rounded-full flex items-center gap-1">
+                                                        <Ban size={12} />
+                                                        {blocked.title}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            /* Hover indicator */
+                                            <div className="
+                                                absolute inset-2 rounded-xl
+                                                border-2 border-dashed border-primary/30
+                                                opacity-0 group-hover:opacity-100
+                                                transition-opacity
+                                                flex items-center justify-center
+                                            ">
+                                                <span className="text-sm text-primary font-medium bg-background px-3 py-1 rounded-full shadow-sm">
+                                                    <Plus size={14} className="inline mr-1" />
+                                                    {hour.toString().padStart(2, '0')}:00
+                                                </span>
+                                            </div>
+                                        )}
                                     </div>
                                 );
                             })}

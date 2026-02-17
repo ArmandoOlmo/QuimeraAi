@@ -5,7 +5,8 @@
 
 import React, { useMemo, useRef, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Appointment, APPOINTMENT_TYPE_CONFIGS } from '../../../../types';
+import { Appointment, BlockedDate, APPOINTMENT_TYPE_CONFIGS } from '../../../../types';
+import { Ban } from 'lucide-react';
 import { AppointmentCard } from '../components/AppointmentCard';
 import {
     getWeekDays,
@@ -27,6 +28,8 @@ interface CalendarWeekViewProps {
     weekStartsOn?: number;
     workingHoursStart?: number;
     workingHoursEnd?: number;
+    blockedDates?: BlockedDate[];
+    onBlockClick?: (blockedDate: BlockedDate) => void;
 }
 
 // =============================================================================
@@ -109,6 +112,8 @@ export const CalendarWeekView: React.FC<CalendarWeekViewProps> = ({
     weekStartsOn = 1,
     workingHoursStart = 0, // Fresha usually shows full day or wider range
     workingHoursEnd = 24,
+    blockedDates = [],
+    onBlockClick,
 }) => {
     const { t } = useTranslation();
     const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -249,17 +254,61 @@ export const CalendarWeekView: React.FC<CalendarWeekViewProps> = ({
                                 `}
                             >
                                 {/* Hour slots background lines */}
-                                {HOURS.map(hour => (
-                                    <div
-                                        key={hour}
-                                        onClick={() => {
-                                            const slotDate = new Date(day);
-                                            slotDate.setHours(hour, 0, 0, 0);
-                                            onSlotClick(slotDate, hour);
-                                        }}
-                                        className="h-[64px] border-b border-border/20 hover:bg-black/[0.02] cursor-pointer transition-colors"
-                                    />
-                                ))}
+                                {HOURS.map(hour => {
+                                    // Check if this slot is blocked
+                                    const slotStart = new Date(day);
+                                    slotStart.setHours(hour, 0, 0, 0);
+                                    const slotEnd = new Date(day);
+                                    slotEnd.setHours(hour, 59, 59, 999);
+
+                                    const blocked = blockedDates.find(bd => {
+                                        const bdStart = new Date(bd.startDate.seconds * 1000);
+                                        const bdEnd = new Date(bd.endDate.seconds * 1000);
+                                        if (bd.allDay) {
+                                            bdStart.setHours(0, 0, 0, 0);
+                                            bdEnd.setHours(23, 59, 59, 999);
+                                        }
+                                        return bdStart <= slotEnd && bdEnd >= slotStart;
+                                    });
+
+                                    return (
+                                        <div
+                                            key={hour}
+                                            onClick={() => {
+                                                if (blocked && onBlockClick) {
+                                                    onBlockClick(blocked);
+                                                } else if (!blocked) {
+                                                    const sd = new Date(day);
+                                                    sd.setHours(hour, 0, 0, 0);
+                                                    onSlotClick(sd, hour);
+                                                }
+                                            }}
+                                            className={`
+                                                h-[64px] border-b border-border/20 cursor-pointer transition-colors relative
+                                                ${blocked
+                                                    ? 'cursor-not-allowed'
+                                                    : 'hover:bg-black/[0.02]'
+                                                }
+                                            `}
+                                        >
+                                            {blocked && (
+                                                <div
+                                                    className="absolute inset-0 z-[5] pointer-events-none"
+                                                    style={{
+                                                        background: 'repeating-linear-gradient(135deg, transparent, transparent 4px, rgba(239,68,68,0.08) 4px, rgba(239,68,68,0.08) 8px)',
+                                                    }}
+                                                >
+                                                    <div className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity pointer-events-auto">
+                                                        <span className="text-[10px] font-medium text-destructive bg-destructive/10 px-1.5 py-0.5 rounded-full flex items-center gap-1">
+                                                            <Ban size={10} />
+                                                            {blocked.title}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    );
+                                })}
 
                                 {/* Appointments */}
                                 {dayAppointments.map(apt => (

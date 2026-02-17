@@ -605,6 +605,27 @@ export const APPOINTMENT_PRIORITY_CONFIGS: Record<AppointmentPriority, Appointme
 };
 
 // =============================================================================
+// BLOCKED DATES
+// =============================================================================
+
+export interface BlockedDate {
+    id: string;
+    title: string;              // "Vacaciones", "Día libre", etc.
+    startDate: { seconds: number; nanoseconds: number };
+    endDate: { seconds: number; nanoseconds: number };
+    allDay: boolean;            // true = día completo
+    reason?: string;            // razón opcional
+    color?: string;             // color personalizado (hex)
+    recurring?: {               // bloqueo recurrente (futuro)
+        type: 'weekly' | 'monthly';
+        daysOfWeek?: number[];
+    };
+    createdAt: { seconds: number; nanoseconds: number };
+    createdBy: string;
+    projectId?: string;
+}
+
+// =============================================================================
 // DEFAULT VALUES
 // =============================================================================
 

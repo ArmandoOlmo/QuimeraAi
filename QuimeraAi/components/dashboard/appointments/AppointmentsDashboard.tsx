@@ -45,6 +45,7 @@ import DashboardSidebar from '../DashboardSidebar';
 import ProjectSelectorPage from './ProjectSelectorPage';
 import {
     Appointment,
+    BlockedDate,
     AppointmentStatus,
     AppointmentFilters,
     APPOINTMENT_TYPE_CONFIGS,
@@ -58,6 +59,7 @@ import { AppointmentDetailDrawer } from './components/AppointmentDetailDrawer';
 import { GoogleCalendarConnect } from './components/GoogleCalendarConnect';
 import { AIPreparationPanel } from './components/AIPreparationPanel';
 import { CalendarToolbar } from './components/CalendarToolbar';
+import { BlockDateModal } from './components/BlockDateModal';
 
 // Import views
 import { CalendarWeekView } from './views/CalendarWeekView';
@@ -67,6 +69,7 @@ import { AppointmentsListView } from './views/AppointmentsListView';
 
 // Import hooks
 import { useAppointments } from './hooks/useAppointments';
+import { useBlockedDates } from './hooks/useBlockedDates';
 
 // Import Google Calendar service
 import {
@@ -142,6 +145,18 @@ const AppointmentsDashboard: React.FC = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [isGoogleConnected, setIsGoogleConnected] = useState(false);
     const [isGeneratingAiPrep, setIsGeneratingAiPrep] = useState(false);
+
+    // Blocked dates state
+    const {
+        blockedDates,
+        createBlockedDate,
+        updateBlockedDate,
+        deleteBlockedDate,
+    } = useBlockedDates();
+    const [isBlockModalOpen, setIsBlockModalOpen] = useState(false);
+    const [editingBlock, setEditingBlock] = useState<BlockedDate | null>(null);
+    const [blockModalInitialDate, setBlockModalInitialDate] = useState<Date | undefined>();
+    const [blockModalInitialHour, setBlockModalInitialHour] = useState<number | undefined>();
 
     // Handler for project selection
     const handleProjectSelect = (projectId: string) => {
@@ -636,6 +651,12 @@ const AppointmentsDashboard: React.FC = () => {
                         setCreateModalInitialHour(undefined);
                         setIsCreateModalOpen(true);
                     }}
+                    onBlockClick={() => {
+                        setEditingBlock(null);
+                        setBlockModalInitialDate(undefined);
+                        setBlockModalInitialHour(undefined);
+                        setIsBlockModalOpen(true);
+                    }}
                 />
 
                 {/* Filters Panel */}
@@ -744,6 +765,11 @@ const AppointmentsDashboard: React.FC = () => {
                                         currentDate={currentDate}
                                         onAppointmentClick={handleAppointmentClick}
                                         onSlotClick={handleSlotClick}
+                                        blockedDates={blockedDates}
+                                        onBlockClick={(bd) => {
+                                            setEditingBlock(bd);
+                                            setIsBlockModalOpen(true);
+                                        }}
                                     />
                                 )}
 
@@ -756,6 +782,7 @@ const AppointmentsDashboard: React.FC = () => {
                                             setCurrentDate(date);
                                             setViewMode('day');
                                         }}
+                                        blockedDates={blockedDates}
                                     />
                                 )}
 
@@ -765,6 +792,11 @@ const AppointmentsDashboard: React.FC = () => {
                                         currentDate={currentDate}
                                         onAppointmentClick={handleAppointmentClick}
                                         onSlotClick={handleSlotClick}
+                                        blockedDates={blockedDates}
+                                        onBlockClick={(bd) => {
+                                            setEditingBlock(bd);
+                                            setIsBlockModalOpen(true);
+                                        }}
                                     />
                                 )}
 
@@ -833,6 +865,28 @@ const AppointmentsDashboard: React.FC = () => {
                 onAddNote={handleAddNote}
                 onUpdateAiInsights={handleUpdateAiInsights}
                 isGeneratingAi={isGeneratingAiPrep}
+            />
+
+            {/* Block Date Modal */}
+            <BlockDateModal
+                isOpen={isBlockModalOpen}
+                onClose={() => {
+                    setIsBlockModalOpen(false);
+                    setEditingBlock(null);
+                    setBlockModalInitialDate(undefined);
+                    setBlockModalInitialHour(undefined);
+                }}
+                onSave={async (data) => {
+                    if (editingBlock) {
+                        await updateBlockedDate(editingBlock.id, data);
+                    } else {
+                        await createBlockedDate(data);
+                    }
+                }}
+                onDelete={deleteBlockedDate}
+                editingBlock={editingBlock}
+                initialDate={blockModalInitialDate}
+                initialHour={blockModalInitialHour}
             />
         </div>
     );

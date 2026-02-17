@@ -1,4 +1,3 @@
-import React from 'react';
 import {
     ChevronLeft,
     ChevronRight,
@@ -10,7 +9,8 @@ import {
     Settings,
     MoreHorizontal,
     RefreshCw,
-    Loader2
+    Loader2,
+    Ban
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { cn } from '@/utils';
@@ -28,6 +28,7 @@ interface CalendarToolbarProps {
     onRefresh: () => void;
     isLoading: boolean;
     onCreateClick: () => void;
+    onBlockClick?: () => void;
     className?: string;
 }
 
@@ -44,6 +45,7 @@ export const CalendarToolbar: React.FC<CalendarToolbarProps> = ({
     onRefresh,
     isLoading,
     onCreateClick,
+    onBlockClick,
     className
 }) => {
     const { t } = useTranslation();
@@ -114,6 +116,16 @@ export const CalendarToolbar: React.FC<CalendarToolbarProps> = ({
                     >
                         {isLoading ? <Loader2 size={20} className="animate-spin" /> : <RefreshCw size={20} />}
                     </button>
+
+                    {onBlockClick && (
+                        <button
+                            onClick={onBlockClick}
+                            className="flex items-center gap-1 h-8 sm:h-9 px-2 sm:px-3 rounded-md text-xs sm:text-sm font-medium transition-all bg-destructive/10 text-destructive hover:bg-destructive/20 border border-destructive/20 whitespace-nowrap"
+                        >
+                            <Ban className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                            <span className="hidden sm:inline">{t('appointments.blockedDates.block', 'Bloquear')}</span>
+                        </button>
+                    )}
 
                     <button
                         onClick={onCreateClick}

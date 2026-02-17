@@ -2386,6 +2386,33 @@
       "1hour": "1 hora antes",
       "1day": "1 día antes",
       "2days": "2 días antes"
+    },
+    "blockedDates": {
+      "title": "Bloquear Fecha",
+      "editTitle": "Editar Bloqueo",
+      "block": "Bloquear",
+      "unblock": "Desbloquear",
+      "blocked": "Bloqueado",
+      "allDay": "Todo el día",
+      "titleLabel": "Título",
+      "titlePlaceholder": "Ej: Vacaciones, Día libre...",
+      "reason": "Razón (opcional)",
+      "reasonPlaceholder": "¿Por qué se bloquea este horario?",
+      "startDate": "Fecha de inicio",
+      "endDate": "Fecha de fin",
+      "startTime": "Hora de inicio",
+      "endTime": "Hora de fin",
+      "save": "Guardar",
+      "saving": "Guardando...",
+      "delete": "Eliminar bloqueo",
+      "confirmDelete": "¿Estás seguro de que deseas eliminar este bloqueo?",
+      "confirmDeleteMessage": "La fecha volverá a estar disponible para citas.",
+      "noBlocked": "No hay fechas bloqueadas",
+      "clickToUnblock": "Click para desbloquear",
+      "created": "Bloqueo creado exitosamente",
+      "deleted": "Bloqueo eliminado",
+      "error": "Error al guardar el bloqueo",
+      "blockTime": "Bloquear horario"
     }
   },
   "leads": {

@@ -2383,6 +2383,33 @@
       "1hour": "1 hour before",
       "1day": "1 day before",
       "2days": "2 days before"
+    },
+    "blockedDates": {
+      "title": "Block Date",
+      "editTitle": "Edit Block",
+      "block": "Block",
+      "unblock": "Unblock",
+      "blocked": "Blocked",
+      "allDay": "All day",
+      "titleLabel": "Title",
+      "titlePlaceholder": "E.g.: Vacation, Day off...",
+      "reason": "Reason (optional)",
+      "reasonPlaceholder": "Why is this time blocked?",
+      "startDate": "Start date",
+      "endDate": "End date",
+      "startTime": "Start time",
+      "endTime": "End time",
+      "save": "Save",
+      "saving": "Saving...",
+      "delete": "Delete block",
+      "confirmDelete": "Are you sure you want to delete this block?",
+      "confirmDeleteMessage": "The date will become available for appointments again.",
+      "noBlocked": "No blocked dates",
+      "clickToUnblock": "Click to unblock",
+      "created": "Block created successfully",
+      "deleted": "Block deleted",
+      "error": "Error saving block",
+      "blockTime": "Block time"
     }
   },
   "leads": {
