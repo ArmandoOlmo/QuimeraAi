@@ -221,12 +221,9 @@ export const BlockDateModal: React.FC<BlockDateModalProps> = ({
                                     ${allDay ? 'bg-destructive' : 'bg-muted'}
                                 `}
                             >
-                                <span className={`
-                                    absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-sm
-                                    transition-transform duration-200
-                                    ${allDay ? 'translate-x-5.5 left-0.5' : 'left-0.5'}
-                                `}
-                                    style={{ transform: allDay ? 'translateX(22px)' : 'translateX(0)' }}
+                                <span
+                                    className="absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow-sm transition-transform duration-200"
+                                    style={{ transform: allDay ? 'translateX(20px)' : 'translateX(0)' }}
                                 />
                             </button>
                         </div>
