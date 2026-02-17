@@ -370,7 +370,7 @@ const ChatCore: React.FC<ChatCoreProps> = ({
     } = useWebChatConversation(projectIdForConversation, user?.uid);
 
     // Get lead capture config with defaults
-    const leadConfig = config.leadCaptureConfig || {
+    const rawLeadConfig = config.leadCaptureConfig || {
         enabled: config.leadCaptureEnabled !== false,
         conversationalMode: true,
         preChatForm: false,
@@ -379,7 +379,15 @@ const ChatCore: React.FC<ChatCoreProps> = ({
         exitIntentEnabled: true,
         exitIntentOffer: t('chatbotWidget.exitIntentOffer'),
         intentKeywords: [],
-        progressiveProfilingEnabled: true
+        progressiveProfilingEnabled: true,
+        businessHoursStart: 9,
+        businessHoursEnd: 18,
+        businessDays: [1, 2, 3, 4, 5, 6],
+    };
+    // Ensure conversationalMode defaults to true for existing configs that don't have it
+    const leadConfig = {
+        ...rawLeadConfig,
+        conversationalMode: rawLeadConfig.conversationalMode !== false,
     };
 
     // Chat State
@@ -924,22 +932,6 @@ ${suggestAvailableSlots()}
         }
     };
 
-    const checkLeadCaptureThreshold = () => {
-        if (!leadConfig.enabled || leadCaptured) return;
-        // In conversational mode, the AI handles lead capture via prompt — no modal
-        if (leadConfig.conversationalMode) return;
-
-        const userMessagesCount = messages.filter(m => m.role === 'user').length;
-
-        if (userMessagesCount >= leadConfig.triggerAfterMessages) {
-            setMessages(prev => [...prev, {
-                role: 'model',
-                text: t('chatbotWidget.askEmail')
-            }]);
-            setShowLeadCaptureModal(true);
-        }
-    };
-
     // =============================================================================
     // APPOINTMENT FORM HANDLER
     // =============================================================================
@@ -1302,18 +1294,8 @@ ${suggestAvailableSlots()}
             await saveConversationMessage({ role: 'user', text: userMessage });
         }
 
-        // Detect high intent and trigger lead capture
+        // Detect high intent — flag for conversational AI to handle naturally
         if (leadConfig.enabled && !leadCaptured && detectLeadIntent(userMessage, leadConfig.intentKeywords)) {
-            if (!leadConfig.conversationalMode) {
-                // Legacy: show modal
-                setMessages(prev => [...prev, {
-                    role: 'model',
-                    text: t('chatbotWidget.askEmailHighIntent')
-                }]);
-                setShowLeadCaptureModal(true);
-                return;
-            }
-            // Conversational mode: flag intent so AI prompt handles it naturally
             highIntentDetectedRef.current = true;
         }
 
@@ -1466,8 +1448,7 @@ ${suggestAvailableSlots()}
                 setLeadCaptured(true);
             }
 
-            // Check if we should trigger lead capture
-            setTimeout(() => checkLeadCaptureThreshold(), 500);
+
 
         } catch (error: any) {
             // Log failed API call
@@ -1992,72 +1973,7 @@ ${suggestAvailableSlots()}
                     </div>
                 )}
 
-                {/* Quick Lead Capture Modal - Compact */}
-                {showLeadCaptureModal && (
-                    <div className="absolute inset-0 flex items-end justify-center bg-black/40 backdrop-blur-sm z-20 p-3">
-                        <div
-                            className="w-full rounded-2xl overflow-hidden border"
-                            style={{
-                                backgroundColor: appearance.colors?.botBubbleColor,
-                                borderColor: appearance.colors?.inputBorder
-                            }}
-                        >
-                            {/* Compact Header */}
-                            <div className="px-4 pt-4 pb-2 flex items-center gap-3">
-                                <div
-                                    className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-                                    style={{ backgroundColor: appearance.colors?.primaryColor + '20' }}
-                                >
-                                    <Sparkles size={16} style={{ color: appearance.colors?.primaryColor }} />
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                    <p className="text-xs font-semibold" style={{ color: appearance.colors?.botTextColor }}>
-                                        {t('chatbotWidget.leadModalTitle', '¿Te envío más info?')}
-                                    </p>
-                                    <p className="text-[10px] opacity-60" style={{ color: appearance.colors?.botTextColor }}>
-                                        {t('chatbotWidget.leadModalSubtitle', 'Déjame tu email')}
-                                    </p>
-                                </div>
-                                <button
-                                    onClick={() => setShowLeadCaptureModal(false)}
-                                    className="p-1 rounded-full opacity-40 hover:opacity-100 transition-opacity"
-                                >
-                                    <X size={14} style={{ color: appearance.colors?.botTextColor }} />
-                                </button>
-                            </div>
 
-                            {/* Compact Form */}
-                            <form onSubmit={handleQuickLeadCapture} className="px-4 pb-4">
-                                <div className="flex gap-2">
-                                    <input
-                                        type="email"
-                                        placeholder={t('auth.emailPlaceholder')}
-                                        value={quickLeadEmail}
-                                        onChange={(e) => setQuickLeadEmail(e.target.value)}
-                                        required
-                                        className="flex-1 min-w-0 px-3 py-2 text-xs rounded-lg border transition-colors focus:outline-none"
-                                        style={{
-                                            backgroundColor: appearance.colors?.inputBackground,
-                                            borderColor: appearance.colors?.inputBorder,
-                                            color: appearance.colors?.inputText,
-                                        }}
-                                        autoFocus
-                                    />
-                                    <button
-                                        type="submit"
-                                        className="px-4 py-2 text-xs font-semibold rounded-lg transition-all hover:opacity-90 flex-shrink-0"
-                                        style={{
-                                            backgroundColor: appearance.colors?.primaryColor,
-                                            color: '#ffffff'
-                                        }}
-                                    >
-                                        <Send size={14} />
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                )}
 
                 {/* Live Voice Mode Overlay - Modern Redesign */}
                 {isLiveActive ? (
