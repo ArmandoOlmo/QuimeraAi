@@ -175,9 +175,14 @@ const AppContentCreatorAssistant: React.FC<AppContentCreatorAssistantProps> = ({
         }
 
         try {
+            // Generate the ID upfront so we can pass it to the editor
+            // This prevents duplication: without this, the editor receives id: ''
+            // and its auto-save creates a second Firestore document
+            const generatedId = `article_${Date.now()}`;
+
             // Create the article ensuring no undefined fields
             const newArticle: AppArticle = {
-                id: '',
+                id: generatedId,
                 title: generatedArticle.title || 'Untitled Article',
                 slug: generatedArticle.slug || `article-${Date.now()}`,
                 content: generatedArticle.content || '<p>Contenido generado por IA</p>',
@@ -206,10 +211,7 @@ const AppContentCreatorAssistant: React.FC<AppContentCreatorAssistantProps> = ({
 
             console.log("✅ Article saved successfully");
 
-            // Small delay to ensure the article is saved
-            await new Promise(resolve => setTimeout(resolve, 500));
-
-            // Notify parent to open the editor
+            // Notify parent to open the editor (article already has correct ID)
             onArticleCreated(newArticle);
         } catch (error) {
             console.error("❌ Error in handleConfirm:", error);

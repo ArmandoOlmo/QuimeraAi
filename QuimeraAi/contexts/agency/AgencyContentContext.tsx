@@ -179,8 +179,9 @@ export const AgencyContentProvider: React.FC<{ children: ReactNode }> = ({ child
             const sanitizedData = cleanData(commonData);
 
             if (id && id.length > 0) {
+                // Update existing (using setDoc with merge to also handle pre-generated IDs)
                 const articleRef = doc(db, articlesPath, id);
-                await updateDoc(articleRef, sanitizedData);
+                await setDoc(articleRef, sanitizedData, { merge: true });
             } else {
                 const newId = `article_${Date.now()}`;
                 const articleRef = doc(db, articlesPath, newId);

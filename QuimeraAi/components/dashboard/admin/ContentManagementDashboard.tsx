@@ -164,19 +164,8 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
         setIsAiAssistantOpen(false);
         console.log("📋 Dashboard: Article created from AI", article);
 
-        await loadArticles();
-        await new Promise(resolve => setTimeout(resolve, 300));
-
-        const createdArticle = articles.find(a => a.slug === article.slug);
-
-        if (createdArticle) {
-            console.log("✅ Found created article:", createdArticle);
-            setEditingArticle(createdArticle);
-        } else {
-            console.warn("⚠️ Could not find created article, using original");
-            setEditingArticle(article);
-        }
-
+        // Article already has the correct Firestore ID from the assistant
+        setEditingArticle(article);
         setIsEditorOpen(true);
     };
 
@@ -445,8 +434,8 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
                             <button
                                 onClick={() => setActiveTab('articles')}
                                 className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${activeTab === 'articles'
-                                        ? 'border-primary text-primary'
-                                        : 'border-transparent text-muted-foreground hover:text-foreground'
+                                    ? 'border-primary text-primary'
+                                    : 'border-transparent text-muted-foreground hover:text-foreground'
                                     }`}
                             >
                                 <FileText size={14} className="inline mr-2" />
@@ -455,8 +444,8 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
                             <button
                                 onClick={() => setActiveTab('legal')}
                                 className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${activeTab === 'legal'
-                                        ? 'border-primary text-primary'
-                                        : 'border-transparent text-muted-foreground hover:text-foreground'
+                                    ? 'border-primary text-primary'
+                                    : 'border-transparent text-muted-foreground hover:text-foreground'
                                     }`}
                             >
                                 <Shield size={14} className="inline mr-2" />
@@ -507,8 +496,8 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
                                                         </div>
                                                     </div>
                                                     <span className={`px-2 py-1 text-xs font-medium rounded-full ${isPublished
-                                                            ? 'bg-green-500/10 text-green-600'
-                                                            : 'bg-orange-500/10 text-orange-600'
+                                                        ? 'bg-green-500/10 text-green-600'
+                                                        : 'bg-orange-500/10 text-orange-600'
                                                         }`}>
                                                         {isPublished ? 'Publicado' : 'Borrador'}
                                                     </span>
@@ -816,8 +805,8 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
                                                             </td>
                                                             <td className="p-4">
                                                                 <span className={`inline-flex items-center px-2 py-1 text-xs font-medium rounded-full ${article.status === 'published'
-                                                                        ? 'bg-green-500/10 text-green-500'
-                                                                        : 'bg-yellow-500/10 text-yellow-500'
+                                                                    ? 'bg-green-500/10 text-green-500'
+                                                                    : 'bg-yellow-500/10 text-yellow-500'
                                                                     }`}>
                                                                     {article.status === 'published' ? 'Publicado' : 'Borrador'}
                                                                 </span>
@@ -894,8 +883,8 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
                                                             <div className="flex items-start justify-between gap-2 mb-1">
                                                                 <h4 className="font-semibold text-sm text-foreground line-clamp-1">{article.title}</h4>
                                                                 <span className={`flex-shrink-0 px-2 py-0.5 text-[10px] font-medium rounded-full ${article.status === 'published'
-                                                                        ? 'bg-green-500/10 text-green-500'
-                                                                        : 'bg-yellow-500/10 text-yellow-500'
+                                                                    ? 'bg-green-500/10 text-green-500'
+                                                                    : 'bg-yellow-500/10 text-yellow-500'
                                                                     }`}>
                                                                     {article.status === 'published' ? 'Publicado' : 'Borrador'}
                                                                 </span>

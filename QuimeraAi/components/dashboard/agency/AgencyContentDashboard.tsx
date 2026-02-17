@@ -171,40 +171,10 @@ const AgencyContentDashboard: React.FC<AgencyContentDashboardProps> = ({ onBack 
 
     const handleArticleCreatedFromAi = async (article: AgencyArticle) => {
         setIsAiAssistantOpen(false);
-        console.log("📋 Dashboard: Article created from AI, searching by slug:", article.slug);
+        console.log("📋 Dashboard: Article created from AI", article);
 
-        // Wait for the onSnapshot to update the articles list with the new article
-        // We poll for the article to appear in the list (max 3 seconds)
-        let foundArticle: AgencyArticle | undefined;
-        const maxAttempts = 6;
-
-        for (let attempt = 0; attempt < maxAttempts; attempt++) {
-            await new Promise(resolve => setTimeout(resolve, 500));
-            // The articles state is updated by onSnapshot, so we need to check the current state
-            foundArticle = articles.find(a => a.slug === article.slug);
-            if (foundArticle && foundArticle.id) {
-                console.log("✅ Found created article with ID:", foundArticle.id);
-                break;
-            }
-        }
-
-        if (foundArticle && foundArticle.id) {
-            setEditingArticle(foundArticle);
-        } else {
-            console.warn("⚠️ Could not find created article after waiting, article may have been created. Reloading list.");
-            // Force reload and try once more
-            await loadArticles();
-            await new Promise(resolve => setTimeout(resolve, 300));
-            const reloadedArticle = articles.find(a => a.slug === article.slug);
-            if (reloadedArticle && reloadedArticle.id) {
-                setEditingArticle(reloadedArticle);
-            } else {
-                // Article was created but not found - don't open editor to avoid duplication
-                console.error("❌ Article created but not found in list. Not opening editor to avoid duplication.");
-                return;
-            }
-        }
-
+        // Article already has the correct Firestore ID from the assistant
+        setEditingArticle(article);
         setIsEditorOpen(true);
     };
 

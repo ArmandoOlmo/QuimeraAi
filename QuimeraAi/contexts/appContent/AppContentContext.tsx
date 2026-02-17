@@ -64,15 +64,15 @@ export const AppContentProvider: React.FC<{ children: ReactNode }> = ({ children
     // Articles State
     const [articles, setArticles] = useState<AppArticle[]>([]);
     const [isLoadingArticles, setIsLoadingArticles] = useState(false);
-    
+
     // Navigation State
     const [navigation, setNavigation] = useState<AppNavigation | null>(null);
     const [isLoadingNavigation, setIsLoadingNavigation] = useState(false);
-    
+
     // Landing Config State
     const [landingConfig, setLandingConfig] = useState<AppLandingConfig | null>(null);
     const [isLoadingLandingConfig, setIsLoadingLandingConfig] = useState(false);
-    
+
     // Legal Pages State
     const [legalPages, setLegalPages] = useState<LegalPage[]>([]);
     const [isLoadingLegalPages, setIsLoadingLegalPages] = useState(false);
@@ -84,7 +84,7 @@ export const AppContentProvider: React.FC<{ children: ReactNode }> = ({ children
     // Load articles with real-time updates
     useEffect(() => {
         setIsLoadingArticles(true);
-        
+
         const q = query(
             collection(db, COLLECTIONS.ARTICLES),
             orderBy('createdAt', 'desc')
@@ -143,20 +143,21 @@ export const AppContentProvider: React.FC<{ children: ReactNode }> = ({ children
         try {
             const { id, ...data } = article;
             const now = new Date().toISOString();
-            
+
             // Calculate read time (approx 200 words per minute)
             const wordCount = article.content.replace(/<[^>]*>/g, '').split(/\s+/).length;
             const readTime = Math.max(1, Math.ceil(wordCount / 200));
 
             if (id && id.length > 0) {
-                // Update existing
+                // Update existing (using setDoc with merge to also handle pre-generated IDs)
                 const articleRef = doc(db, COLLECTIONS.ARTICLES, id);
-                await updateDoc(articleRef, { 
-                    ...data, 
+                await setDoc(articleRef, {
+                    ...data,
+                    id,
                     readTime,
                     updatedAt: now,
                     publishedAt: article.status === 'published' && !article.publishedAt ? now : article.publishedAt
-                });
+                }, { merge: true });
             } else {
                 // Create new
                 const newId = `article_${Date.now()}`;
@@ -195,9 +196,9 @@ export const AppContentProvider: React.FC<{ children: ReactNode }> = ({ children
     // Load navigation with real-time updates
     useEffect(() => {
         setIsLoadingNavigation(true);
-        
+
         const navRef = doc(db, COLLECTIONS.NAVIGATION, 'main');
-        
+
         const unsubscribe = onSnapshot(navRef, (docSnapshot) => {
             if (docSnapshot.exists()) {
                 setNavigation(docSnapshot.data() as AppNavigation);
@@ -221,7 +222,7 @@ export const AppContentProvider: React.FC<{ children: ReactNode }> = ({ children
         try {
             const navRef = doc(db, COLLECTIONS.NAVIGATION, 'main');
             const docSnapshot = await getDoc(navRef);
-            
+
             if (docSnapshot.exists()) {
                 setNavigation(docSnapshot.data() as AppNavigation);
             } else {
@@ -256,9 +257,9 @@ export const AppContentProvider: React.FC<{ children: ReactNode }> = ({ children
     // Load landing config with real-time updates
     useEffect(() => {
         setIsLoadingLandingConfig(true);
-        
+
         const configRef = doc(db, COLLECTIONS.LANDING_CONFIG, 'landing');
-        
+
         const unsubscribe = onSnapshot(configRef, (docSnapshot) => {
             if (docSnapshot.exists()) {
                 setLandingConfig(docSnapshot.data() as AppLandingConfig);
@@ -281,7 +282,7 @@ export const AppContentProvider: React.FC<{ children: ReactNode }> = ({ children
         try {
             const configRef = doc(db, COLLECTIONS.LANDING_CONFIG, 'landing');
             const docSnapshot = await getDoc(configRef);
-            
+
             if (docSnapshot.exists()) {
                 setLandingConfig(docSnapshot.data() as AppLandingConfig);
             } else {
@@ -316,7 +317,7 @@ export const AppContentProvider: React.FC<{ children: ReactNode }> = ({ children
     // Load legal pages with real-time updates
     useEffect(() => {
         setIsLoadingLegalPages(true);
-        
+
         const q = query(
             collection(db, COLLECTIONS.LEGAL_PAGES),
             orderBy('type', 'asc')
@@ -327,7 +328,7 @@ export const AppContentProvider: React.FC<{ children: ReactNode }> = ({ children
                 id: docSnapshot.id,
                 ...docSnapshot.data()
             })) as LegalPage[];
-            
+
             // If no pages exist, use defaults
             if (pagesData.length === 0) {
                 setLegalPages([DEFAULT_PRIVACY_POLICY, DEFAULT_DATA_DELETION, DEFAULT_TERMS_OF_SERVICE, DEFAULT_COOKIE_POLICY]);
@@ -358,7 +359,7 @@ export const AppContentProvider: React.FC<{ children: ReactNode }> = ({ children
                 id: docSnapshot.id,
                 ...docSnapshot.data()
             })) as LegalPage[];
-            
+
             if (pagesData.length === 0) {
                 setLegalPages([DEFAULT_PRIVACY_POLICY, DEFAULT_DATA_DELETION, DEFAULT_TERMS_OF_SERVICE, DEFAULT_COOKIE_POLICY]);
             } else {
@@ -375,7 +376,7 @@ export const AppContentProvider: React.FC<{ children: ReactNode }> = ({ children
     // Get legal page by type
     const getLegalPageByType = useCallback((type: LegalPageType): LegalPage | undefined => {
         const page = legalPages.find(p => p.type === type && p.status === 'published');
-        
+
         // Return defaults if not found
         if (!page) {
             if (type === 'privacy-policy') return DEFAULT_PRIVACY_POLICY;
@@ -383,7 +384,7 @@ export const AppContentProvider: React.FC<{ children: ReactNode }> = ({ children
             if (type === 'terms-of-service') return DEFAULT_TERMS_OF_SERVICE;
             if (type === 'cookie-policy') return DEFAULT_COOKIE_POLICY;
         }
-        
+
         return page;
     }, [legalPages]);
 
@@ -392,7 +393,7 @@ export const AppContentProvider: React.FC<{ children: ReactNode }> = ({ children
         try {
             const { id, ...data } = page;
             const now = new Date().toISOString();
-            
+
             // Use type as document ID for easy retrieval
             const pageRef = doc(db, COLLECTIONS.LEGAL_PAGES, page.type);
             await setDoc(pageRef, {
@@ -432,19 +433,19 @@ export const AppContentProvider: React.FC<{ children: ReactNode }> = ({ children
         getArticleBySlug,
         saveArticle,
         deleteArticle,
-        
+
         // Navigation
         navigation,
         isLoadingNavigation,
         loadNavigation,
         saveNavigation,
-        
+
         // Landing Config
         landingConfig,
         isLoadingLandingConfig,
         loadLandingConfig,
         saveLandingConfig,
-        
+
         // Legal Pages
         legalPages,
         isLoadingLegalPages,

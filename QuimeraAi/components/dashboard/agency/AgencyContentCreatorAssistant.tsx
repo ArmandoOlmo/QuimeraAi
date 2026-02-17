@@ -175,12 +175,17 @@ const AgencyContentCreatorAssistant: React.FC<AgencyContentCreatorAssistantProps
         }
 
         try {
+            // Generate the ID upfront so we can pass it to the editor
+            // This prevents duplication: without this, the editor receives id: ''
+            // and its auto-save creates a second Firestore document
+            const generatedId = `article_${Date.now()}`;
+
             // Generate a unique slug with timestamp to avoid conflicts
             const uniqueSlug = generatedArticle.slug || `article-${Date.now()}`;
 
             // Create the article ensuring no undefined fields
             const newArticle: AgencyArticle = {
-                id: '',
+                id: generatedId,
                 title: generatedArticle.title || 'Untitled Article',
                 slug: uniqueSlug,
                 content: generatedArticle.content || '<p>Contenido generado por IA</p>',
@@ -204,15 +209,13 @@ const AgencyContentCreatorAssistant: React.FC<AgencyContentCreatorAssistantProps
 
             console.log("💾 Saving article:", newArticle);
 
-            // Save the article - this creates the article in Firestore with a generated ID
+            // Save the article
             await saveArticle(newArticle);
 
             console.log("✅ Article saved successfully");
 
-            // Pass the slug so the dashboard can find the saved article
-            // Important: We pass the article with the slug so dashboard can look it up
-            // The dashboard will find it from the articles list (via onSnapshot) and get the correct ID
-            onArticleCreated({ ...newArticle, slug: uniqueSlug });
+            // Notify parent to open the editor (article already has correct ID)
+            onArticleCreated(newArticle);
         } catch (error) {
             console.error("❌ Error in handleConfirm:", error);
             alert("Error al crear el artículo. Por favor intenta de nuevo.");
