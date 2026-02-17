@@ -8,7 +8,6 @@
 
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useEditor } from '../../contexts/EditorContext';
 import { useAdmin } from '../../contexts/admin/AdminContext';
 import { useProject } from '../../contexts/project/ProjectContext';
 import { FontFamily, GlobalColors, PageData } from '../../types';

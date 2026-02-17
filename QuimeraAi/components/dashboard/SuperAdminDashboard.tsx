@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, Suspense } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useUI } from '../../contexts/core/UIContext';
 import { useAuth } from '../../contexts/core/AuthContext';
@@ -8,35 +8,48 @@ import {
     Shield, Users, LayoutTemplate, Bot, BarChart3, Puzzle,
     ArrowLeft, Menu, Image, MessageSquare, PackageSearch, Palette,
     FlaskConical, Languages, Search, FileText, FolderOpen,
-    Navigation, Star, Settings, Grid3x3, List, X, Sparkles, Zap, Newspaper, Layout
+    Navigation, Star, Settings, Grid3x3, List, X, Sparkles, Zap, Newspaper, Layout,
+    Loader2
 } from 'lucide-react';
 import DashboardSidebar from './DashboardSidebar';
 import AdminViewLayout from './admin/AdminViewLayout';
-import AdminManagement from './admin/AdminManagement';
-import TenantManagement from './admin/TenantManagement';
-import LLMPromptManagement from './admin/LLMPromptManagement';
-import UsageStatistics from './admin/UsageStatistics';
-import TemplateManagement from './admin/TemplateManagement';
-import ComponentsDashboard from './admin/ComponentsDashboard';
-import ImageLibraryManagement from './admin/ImageLibraryManagement';
-import AdminAssetLibrary from './admin/AdminAssetLibrary';
-import GlobalAssistantSettings from './admin/GlobalAssistantSettings';
-import GlobalSEOSettings from './admin/GlobalSEOSettings';
-import AnalyticsDashboard from './admin/AnalyticsDashboard';
-import DesignTokensEditor from './admin/DesignTokensEditor';
-import LanguageManagement from './admin/LanguageManagement';
-import AppInformationSettings from './admin/AppInformationSettings';
-import ContentManagementDashboard from './admin/ContentManagementDashboard';
-import LandingNavigationManagement from './admin/LandingNavigationManagement';
-import SubscriptionManagement from './admin/SubscriptionManagement';
-import LandingChatbotAdmin from './admin/LandingChatbotAdmin';
-import ChangelogManagement from './admin/ChangelogManagement';
-import GlobalTrackingPixels from './admin/GlobalTrackingPixels';
-import GlobalChatbotPromptsSettings from './admin/GlobalChatbotPromptsSettings';
-import ExecutionModeToggle from './admin/ExecutionModeToggle';
-import NewsManagement from './admin/NewsManagement';
-import LandingPageEditor from './admin/LandingPageEditor';
-import ServiceAvailabilityControl from './admin/ServiceAvailabilityControl';
+
+// Lazy-loaded admin panels — each loads on-demand (~905KB → ~30KB initial)
+const AdminManagement = React.lazy(() => import('./admin/AdminManagement'));
+const TenantManagement = React.lazy(() => import('./admin/TenantManagement'));
+const LLMPromptManagement = React.lazy(() => import('./admin/LLMPromptManagement'));
+const UsageStatistics = React.lazy(() => import('./admin/UsageStatistics'));
+const TemplateManagement = React.lazy(() => import('./admin/TemplateManagement'));
+const ComponentsDashboard = React.lazy(() => import('./admin/ComponentsDashboard'));
+const ImageLibraryManagement = React.lazy(() => import('./admin/ImageLibraryManagement'));
+const AdminAssetLibrary = React.lazy(() => import('./admin/AdminAssetLibrary'));
+const GlobalAssistantSettings = React.lazy(() => import('./admin/GlobalAssistantSettings'));
+const GlobalSEOSettings = React.lazy(() => import('./admin/GlobalSEOSettings'));
+const AnalyticsDashboard = React.lazy(() => import('./admin/AnalyticsDashboard'));
+const DesignTokensEditor = React.lazy(() => import('./admin/DesignTokensEditor'));
+const LanguageManagement = React.lazy(() => import('./admin/LanguageManagement'));
+const AppInformationSettings = React.lazy(() => import('./admin/AppInformationSettings'));
+const ContentManagementDashboard = React.lazy(() => import('./admin/ContentManagementDashboard'));
+const LandingNavigationManagement = React.lazy(() => import('./admin/LandingNavigationManagement'));
+const SubscriptionManagement = React.lazy(() => import('./admin/SubscriptionManagement'));
+const LandingChatbotAdmin = React.lazy(() => import('./admin/LandingChatbotAdmin'));
+const ChangelogManagement = React.lazy(() => import('./admin/ChangelogManagement'));
+const GlobalTrackingPixels = React.lazy(() => import('./admin/GlobalTrackingPixels'));
+const GlobalChatbotPromptsSettings = React.lazy(() => import('./admin/GlobalChatbotPromptsSettings'));
+const ExecutionModeToggle = React.lazy(() => import('./admin/ExecutionModeToggle'));
+const NewsManagement = React.lazy(() => import('./admin/NewsManagement'));
+const LandingPageEditor = React.lazy(() => import('./admin/LandingPageEditor'));
+const ServiceAvailabilityControl = React.lazy(() => import('./admin/ServiceAvailabilityControl'));
+
+// Loading skeleton for admin panels
+const AdminPanelLoader = () => (
+    <div className="flex items-center justify-center h-screen bg-editor-bg">
+        <div className="flex flex-col items-center gap-3">
+            <Loader2 className="w-8 h-8 text-editor-accent animate-spin" />
+            <span className="text-sm text-editor-text-secondary">Cargando panel...</span>
+        </div>
+    </div>
+);
 
 // Types
 type AdminFeature = {
@@ -299,31 +312,40 @@ const SuperAdminDashboard = () => {
         setAdminView(feature.id as any);
     };
 
-    // Views rendering based on adminView state
-    if (adminView === 'admins') return <AdminManagement onBack={handleBack} />;
-    if (adminView === 'tenants') return <TenantManagement onBack={handleBack} />;
-    if (adminView === 'languages') return <LanguageManagement onBack={handleBack} />;
-    if (adminView === 'prompts') return <LLMPromptManagement onBack={handleBack} />;
-    if (adminView === 'chatbot-prompts') return <GlobalChatbotPromptsSettings onBack={handleBack} />;
-    if (adminView === 'stats') return <UsageStatistics onBack={handleBack} />;
-    if (adminView === 'subscriptions') return <SubscriptionManagement onBack={handleBack} />;
-    if (adminView === 'templates') return <TemplateManagement onBack={handleBack} />;
-    if (adminView === 'components') return <ComponentsDashboard onBack={handleBack} />;
-    if (adminView === 'images') return <ImageLibraryManagement onBack={handleBack} />;
-    if (adminView === 'admin-assets') return <AdminAssetLibrary onBack={handleBack} />;
-    if (adminView === 'global-assistant') return <GlobalAssistantSettings onBack={handleBack} />;
-    if (adminView === 'global-seo') return <GlobalSEOSettings onBack={handleBack} />;
-    if (adminView === 'app-info') return <AppInformationSettings onBack={handleBack} />;
-    if (adminView === 'content') return <ContentManagementDashboard onBack={handleBack} />;
-    if (adminView === 'landing-navigation') return <LandingNavigationManagement onBack={handleBack} />;
-    if (adminView === 'landing-chatbot') return <LandingChatbotAdmin onBack={handleBack} />;
-    if (adminView === 'global-tracking-pixels') return <GlobalTrackingPixels onBack={handleBack} />;
-    if (adminView === 'execution-mode') return <ExecutionModeToggle onBack={handleBack} />;
-    if (adminView === 'news') return <NewsManagement onBack={handleBack} />;
-    if (adminView === 'landing-editor') return <LandingPageEditor onBack={handleBack} />;
-    if (adminView === 'service-availability') return <ServiceAvailabilityControl onBack={handleBack} />;
-    if (adminView === 'design-tokens') return <AdminViewLayout title={t('superadmin.designTokensTitle')} onBack={handleBack}><DesignTokensEditor /></AdminViewLayout>;
-    if (adminView === 'analytics') return <AdminViewLayout title={t('superadmin.componentAnalyticsTitle')} onBack={handleBack} noPadding><AnalyticsDashboard /></AdminViewLayout>;
+    // Views rendering based on adminView state — wrapped in Suspense for lazy loading
+    const adminPanel = (() => {
+        switch (adminView) {
+            case 'admins': return <AdminManagement onBack={handleBack} />;
+            case 'tenants': return <TenantManagement onBack={handleBack} />;
+            case 'languages': return <LanguageManagement onBack={handleBack} />;
+            case 'prompts': return <LLMPromptManagement onBack={handleBack} />;
+            case 'chatbot-prompts': return <GlobalChatbotPromptsSettings onBack={handleBack} />;
+            case 'stats': return <UsageStatistics onBack={handleBack} />;
+            case 'subscriptions': return <SubscriptionManagement onBack={handleBack} />;
+            case 'templates': return <TemplateManagement onBack={handleBack} />;
+            case 'components': return <ComponentsDashboard onBack={handleBack} />;
+            case 'images': return <ImageLibraryManagement onBack={handleBack} />;
+            case 'admin-assets': return <AdminAssetLibrary onBack={handleBack} />;
+            case 'global-assistant': return <GlobalAssistantSettings onBack={handleBack} />;
+            case 'global-seo': return <GlobalSEOSettings onBack={handleBack} />;
+            case 'app-info': return <AppInformationSettings onBack={handleBack} />;
+            case 'content': return <ContentManagementDashboard onBack={handleBack} />;
+            case 'landing-navigation': return <LandingNavigationManagement onBack={handleBack} />;
+            case 'landing-chatbot': return <LandingChatbotAdmin onBack={handleBack} />;
+            case 'global-tracking-pixels': return <GlobalTrackingPixels onBack={handleBack} />;
+            case 'execution-mode': return <ExecutionModeToggle onBack={handleBack} />;
+            case 'news': return <NewsManagement onBack={handleBack} />;
+            case 'landing-editor': return <LandingPageEditor onBack={handleBack} />;
+            case 'service-availability': return <ServiceAvailabilityControl onBack={handleBack} />;
+            case 'design-tokens': return <AdminViewLayout title={t('superadmin.designTokensTitle')} onBack={handleBack}><DesignTokensEditor /></AdminViewLayout>;
+            case 'analytics': return <AdminViewLayout title={t('superadmin.componentAnalyticsTitle')} onBack={handleBack} noPadding><AnalyticsDashboard /></AdminViewLayout>;
+            default: return null;
+        }
+    })();
+
+    if (adminPanel) {
+        return <Suspense fallback={<AdminPanelLoader />}>{adminPanel}</Suspense>;
+    }
 
     return (
         <div className="flex h-screen bg-editor-bg text-editor-text-primary">

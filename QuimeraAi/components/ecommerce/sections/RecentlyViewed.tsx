@@ -7,7 +7,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { ChevronLeft, ChevronRight, Star } from 'lucide-react';
 import { RecentlyViewedData, StorefrontProductItem } from '../../../types/components';
 import { usePublicProducts } from '../../../hooks/usePublicProducts';
-import { useSafeEditor } from '../../../contexts/EditorContext';
+import { useSafeProject } from '../../../contexts/project';
 
 interface RecentlyViewedProps {
     data: RecentlyViewedData;
@@ -22,8 +22,8 @@ const RecentlyViewed: React.FC<RecentlyViewedProps> = ({
     storeId,
     onProductClick,
 }) => {
-    const editorContext = useSafeEditor();
-    const effectiveStoreId = storeId || editorContext?.activeProjectId || '';
+    const projectContext = useSafeProject();
+    const effectiveStoreId = storeId || projectContext?.activeProjectId || '';
 
     const { products: allProducts, isLoading } = usePublicProducts(effectiveStoreId);
 

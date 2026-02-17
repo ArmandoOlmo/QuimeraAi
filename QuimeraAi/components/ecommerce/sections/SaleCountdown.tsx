@@ -7,7 +7,7 @@ import React, { useState, useEffect } from 'react';
 import { ArrowRight, Clock, Tag } from 'lucide-react';
 import { SaleCountdownData, StorefrontProductItem } from '../../../types/components';
 import { usePublicProducts } from '../../../hooks/usePublicProducts';
-import { useSafeEditor } from '../../../contexts/EditorContext';
+import { useSafeProject } from '../../../contexts/project';
 
 interface SaleCountdownProps {
     data: SaleCountdownData;
@@ -27,8 +27,8 @@ const SaleCountdown: React.FC<SaleCountdownProps> = ({
     storeId,
     onProductClick,
 }) => {
-    const editorContext = useSafeEditor();
-    const effectiveStoreId = storeId || editorContext?.activeProjectId || '';
+    const projectContext = useSafeProject();
+    const effectiveStoreId = storeId || projectContext?.activeProjectId || '';
 
     const { products: allProducts } = usePublicProducts(effectiveStoreId, {
         limitCount: data.productsToShow || 4,

@@ -13,7 +13,7 @@ import React from 'react';
 import { ArrowRight, ShoppingCart, Star, Check } from 'lucide-react';
 import { ProductHeroData } from '../../../types/components';
 import { usePublicProducts } from '../../../hooks/usePublicProducts';
-import { useSafeEditor } from '../../../contexts/EditorContext';
+import { useSafeProject } from '../../../contexts/project';
 import { useUnifiedStorefrontColors } from '../hooks/useUnifiedStorefrontColors';
 
 interface ProductHeroProps {
@@ -31,8 +31,8 @@ const ProductHero: React.FC<ProductHeroProps> = ({
     onCollectionClick,
     onAddToCart,
 }) => {
-    const editorContext = useSafeEditor();
-    const effectiveStoreId = storeId || editorContext?.activeProjectId || '';
+    const projectContext = useSafeProject();
+    const effectiveStoreId = storeId || projectContext?.activeProjectId || '';
     
     // Unified colors system
     const colors = useUnifiedStorefrontColors(effectiveStoreId, data.colors);

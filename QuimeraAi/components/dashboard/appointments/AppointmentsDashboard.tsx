@@ -36,7 +36,6 @@ import {
     Layers,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { useEditor } from '../../../contexts/EditorContext';
 import { useAuth } from '../../../contexts/core/AuthContext';
 import { useCRM } from '../../../contexts/crm/CRMContext';
 import { useAI } from '../../../contexts/ai/AIContext';

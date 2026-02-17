@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { SEOConfig } from '../types';
-import { useEditor } from '../contexts/EditorContext';
+import { useProject } from '../contexts/project';
 
 interface UseSEOOptions {
   pageTitle?: string;
@@ -10,7 +10,8 @@ interface UseSEOOptions {
 }
 
 export const useSEO = (options: UseSEOOptions = {}): SEOConfig => {
-  const { data, brandIdentity, activeProject, seoConfig } = useEditor();
+  const { data, brandIdentity, activeProject } = useProject();
+  const seoConfig = activeProject?.seoConfig || null;
 
   return useMemo(() => {
     const appName = 'Quimera.ai';
@@ -36,7 +37,7 @@ export const useSEO = (options: UseSEOOptions = {}): SEOConfig => {
       keywords: seoConfig?.keywords || ['AI', 'website builder', 'no-code'],
       author: seoConfig?.author || brandIdentity?.businessName,
       language: seoConfig?.language || 'es',
-      
+
       // Open Graph
       ogType: options.pageType || seoConfig?.ogType || 'website',
       ogTitle: seoConfig?.ogTitle || baseTitle || appName,
@@ -45,7 +46,7 @@ export const useSEO = (options: UseSEOOptions = {}): SEOConfig => {
       ogImageAlt: seoConfig?.ogImageAlt || (baseTitle ? `${appName} - ${baseTitle}` : appName),
       ogUrl: seoConfig?.canonical || (typeof window !== 'undefined' ? window.location.href : ''),
       ogSiteName: seoConfig?.ogSiteName || appName,
-      
+
       // Twitter Card
       twitterCard: seoConfig?.twitterCard || 'summary_large_image',
       twitterSite: seoConfig?.twitterSite,
@@ -54,7 +55,7 @@ export const useSEO = (options: UseSEOOptions = {}): SEOConfig => {
       twitterDescription: seoConfig?.twitterDescription || baseDescription,
       twitterImage: seoConfig?.twitterImage || baseImage,
       twitterImageAlt: seoConfig?.twitterImageAlt || (baseTitle ? `${appName} - ${baseTitle}` : appName),
-      
+
       // Schema.org
       schemaType: seoConfig?.schemaType || 'WebSite',
       schemaData: seoConfig?.schemaData || {
@@ -66,13 +67,13 @@ export const useSEO = (options: UseSEOOptions = {}): SEOConfig => {
           'query-input': 'required name=search_term_string'
         }
       },
-      
+
       // Technical SEO
       canonical: seoConfig?.canonical || (typeof window !== 'undefined' ? window.location.href : ''),
       robots: seoConfig?.robots || 'index, follow',
       googleSiteVerification: seoConfig?.googleSiteVerification,
       bingVerification: seoConfig?.bingVerification,
-      
+
       // AI Bot Optimization
       aiCrawlable: seoConfig?.aiCrawlable !== false,
       aiDescription: seoConfig?.aiDescription || `${baseDescription}. Built with Quimera.ai, an AI-powered website builder.`,

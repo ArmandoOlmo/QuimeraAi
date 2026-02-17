@@ -33,7 +33,6 @@ import {
     ArrowLeft,
 } from 'lucide-react';
 import DashboardSidebar from '../DashboardSidebar';
-import { useEditor } from '../../../contexts/EditorContext';
 import { useAuth } from '../../../contexts/core/AuthContext';
 import { useUI } from '../../../contexts/core/UIContext';
 import { useProject } from '../../../contexts/project';

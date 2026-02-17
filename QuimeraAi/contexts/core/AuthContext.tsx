@@ -49,7 +49,19 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     // Auth State Observer
     useEffect(() => {
+        // Safari safety: if onAuthStateChanged never fires (IndexedDB lock hang),
+        // force loadingAuth to false after 8 seconds
+        const timeout = setTimeout(() => {
+            setLoadingAuth((current) => {
+                if (current) {
+                    console.warn('[AuthProvider] Auth state timeout after 8s - forcing loadingAuth to false');
+                }
+                return false;
+            });
+        }, 8000);
+
         const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+            clearTimeout(timeout);
             setUser(firebaseUser);
 
             if (firebaseUser) {
@@ -106,6 +118,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         });
 
         return () => {
+            clearTimeout(timeout);
             unsubscribe();
         };
     }, []);

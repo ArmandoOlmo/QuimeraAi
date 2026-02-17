@@ -11,7 +11,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { ChevronLeft, ChevronRight, ShoppingCart, Eye, Star, ArrowRight } from 'lucide-react';
 import { FeaturedProductsData, StorefrontProductItem } from '../../../types/components';
 import { usePublicProducts } from '../../../hooks/usePublicProducts';
-import { useSafeEditor } from '../../../contexts/EditorContext';
+import { useSafeProject } from '../../../contexts/project';
 import { useUnifiedStorefrontColors } from '../hooks/useUnifiedStorefrontColors';
 
 interface FeaturedProductsProps {
@@ -27,8 +27,8 @@ const FeaturedProducts: React.FC<FeaturedProductsProps> = ({
     onProductClick,
     onAddToCart,
 }) => {
-    const editorContext = useSafeEditor();
-    const effectiveStoreId = storeId || editorContext?.activeProjectId || '';
+    const projectContext = useSafeProject();
+    const effectiveStoreId = storeId || projectContext?.activeProjectId || '';
     
     // Unified colors system - merges global theme with component-specific colors
     const colors = useUnifiedStorefrontColors(effectiveStoreId, data.colors);

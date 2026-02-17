@@ -4,7 +4,6 @@ import { useTranslation } from 'react-i18next';
 import Modal from './Modal';
 import { generateContentViaProxy, extractTextFromResponse } from '../../utils/geminiProxyClient';
 import { Sparkles, X, KeyRound, Wand2, Languages, AlignLeft, Type } from 'lucide-react';
-import { useEditor } from '../../contexts/EditorContext';
 import { useAuth } from '../../contexts/core/AuthContext';
 import { useAI } from '../../contexts/ai';
 import { useProject } from '../../contexts/project';

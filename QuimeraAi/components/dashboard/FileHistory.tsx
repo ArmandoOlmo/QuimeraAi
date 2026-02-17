@@ -1,7 +1,7 @@
 
 import React, { useRef, useState } from 'react';
 import { useFiles } from '../../contexts/files';
-import { useEditor } from '../../contexts/EditorContext';
+import { useAI } from '../../contexts/ai';
 import { useProject } from '../../contexts/project';
 import { useToast } from '../../contexts/ToastContext';
 import { useAssetLibrary } from '../../hooks/useAssetLibrary';
@@ -230,12 +230,8 @@ const FileHistory: React.FC<FileHistoryProps> = ({ variant = 'widget' }) => {
     const { t } = useTranslation();
     const { files, isFilesLoading, uploadFile, deleteFile, hasActiveProject } = useFiles();
     const { projects, activeProject } = useProject();
-    const editorContext = useEditor();
-    const { generateImage, enhancePrompt } = editorContext;
+    const { generateImage, enhancePrompt } = useAI();
     const { success, error: showError } = useToast();
-
-    // Debug: Log if generateImage is available
-    console.log('🎨 [FileHistory] Render - generateImage available:', typeof generateImage === 'function', 'variant:', variant);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const referenceFileInputRef = useRef<HTMLInputElement>(null);
 

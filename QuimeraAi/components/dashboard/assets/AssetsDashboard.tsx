@@ -8,7 +8,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useUI } from '../../../contexts/core/UIContext';
 import { useProject } from '../../../contexts/project';
-import { useEditor } from '../../../contexts/EditorContext';
 import DashboardSidebar from '../DashboardSidebar';
 import ProjectSelectorPage from './ProjectSelectorPage';
 import FileHistory from '../FileHistory';
@@ -31,9 +30,9 @@ const AssetsDashboard: React.FC = () => {
         activeProject,
         projects,
         activeProjectId,
-        isLoadingProjects
+        isLoadingProjects,
+        loadProject
     } = useProject();
-    const { loadProject } = useEditor();
 
     const [selectedProjectId, setSelectedProjectId] = useState<string | null>(activeProjectId);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);

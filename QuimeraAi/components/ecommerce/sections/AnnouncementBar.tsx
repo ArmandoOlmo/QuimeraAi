@@ -8,7 +8,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { X, Megaphone, Tag, Gift, Truck, Percent, Sparkles, Bell, Info, ChevronLeft, ChevronRight } from 'lucide-react';
 import { AnnouncementBarData, AnnouncementMessage, ServiceIcon } from '../../../types/components';
-import { useSafeEditor } from '../../../contexts/EditorContext';
+import { useSafeProject } from '../../../contexts/project';
 import { useUnifiedStorefrontColors } from '../hooks/useUnifiedStorefrontColors';
 
 interface AnnouncementBarProps {
@@ -28,8 +28,8 @@ const iconMap: Record<string, React.FC<{ size?: number; className?: string }>> =
 };
 
 const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ data, storeId }) => {
-    const editorContext = useSafeEditor();
-    const effectiveStoreId = storeId || editorContext?.activeProjectId || '';
+    const projectContext = useSafeProject();
+    const effectiveStoreId = storeId || projectContext?.activeProjectId || '';
     
     // Unified colors system
     const colors = useUnifiedStorefrontColors(effectiveStoreId, data.colors);

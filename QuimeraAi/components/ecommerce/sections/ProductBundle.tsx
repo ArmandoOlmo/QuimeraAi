@@ -7,7 +7,7 @@ import React from 'react';
 import { Plus, ShoppingCart, Tag, Package, Sparkles, Percent } from 'lucide-react';
 import { ProductBundleData, StorefrontProductItem } from '../../../types/components';
 import { usePublicProducts } from '../../../hooks/usePublicProducts';
-import { useSafeEditor } from '../../../contexts/EditorContext';
+import { useSafeProject } from '../../../contexts/project';
 
 interface ProductBundleProps {
     data: ProductBundleData;
@@ -22,9 +22,9 @@ const ProductBundle: React.FC<ProductBundleProps> = ({
     onAddToCart,
     onProductClick,
 }) => {
-    const editorContext = useSafeEditor();
-    const effectiveStoreId = storeId || editorContext?.activeProjectId || '';
-    const isEditorMode = !!editorContext;
+    const projectContext = useSafeProject();
+    const effectiveStoreId = storeId || projectContext?.activeProjectId || '';
+    const isEditorMode = !!projectContext;
 
     const { products: allProducts, isLoading } = usePublicProducts(effectiveStoreId);
 

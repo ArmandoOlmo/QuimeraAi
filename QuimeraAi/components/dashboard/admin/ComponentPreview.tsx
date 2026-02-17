@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { EditableComponentID, PreviewDevice, PreviewOrientation, AnimationConfig } from '../../../types';
-import { useEditor } from '../../../contexts/EditorContext';
 import { initialData } from '../../../data/initialData';
 import { deriveColorsFromPalette } from '../../../utils/colorUtils';
 import PreviewStatesSelector, { PreviewState } from './PreviewStatesSelector';

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { AiAssistantConfig, Project } from '../../../types';
 import { useCRM } from '../../../contexts/crm';
-import { useEditor } from '../../../contexts/EditorContext';
+import { useAuth } from '../../../contexts/core/AuthContext';
 import { getDefaultAppearanceConfig } from '../../../utils/chatThemes';
 import ChatCore, { ChatAppointmentData, AppointmentSlot } from '../../chat/ChatCore';
 import { db, collection, addDoc, getDocs, query, orderBy } from '../../../firebase';
@@ -13,7 +13,7 @@ interface ChatSimulatorProps {
 
 const ChatSimulator: React.FC<ChatSimulatorProps> = ({ config, project }) => {
     const { addLead, updateLead } = useCRM();
-    const { user } = useEditor();
+    const { user } = useAuth();
     const [appointments, setAppointments] = useState<AppointmentSlot[]>([]);
 
     // Use project.id from props (more reliable than activeProjectId)

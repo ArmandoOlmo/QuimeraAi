@@ -11,7 +11,7 @@ import {
     Lock, Headphones, Package, CheckCircle, Star, Heart
 } from 'lucide-react';
 import { TrustBadgesData, TrustBadgeIcon, TrustBadgeItem } from '../../../types/components';
-import { useSafeEditor } from '../../../contexts/EditorContext';
+import { useSafeProject } from '../../../contexts/project';
 import { useUnifiedStorefrontColors } from '../hooks/useUnifiedStorefrontColors';
 
 interface TrustBadgesProps {
@@ -35,8 +35,8 @@ const iconMap: Record<TrustBadgeIcon, React.FC<{ size?: number; className?: stri
 };
 
 const TrustBadges: React.FC<TrustBadgesProps> = ({ data, storeId }) => {
-    const editorContext = useSafeEditor();
-    const effectiveStoreId = storeId || editorContext?.activeProjectId || '';
+    const projectContext = useSafeProject();
+    const effectiveStoreId = storeId || projectContext?.activeProjectId || '';
     
     // Unified colors system
     const colors = useUnifiedStorefrontColors(effectiveStoreId, data.colors);

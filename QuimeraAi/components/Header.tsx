@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { HeaderData, NavLink, BorderRadiusSize, NavbarLayout, NavLinkHoverStyle } from '../types';
-import { useSafeEditor } from '../contexts/EditorContext';
+import { useSafeProject } from '../contexts/project';
 import { Menu, X, ArrowRight, ShoppingCart } from 'lucide-react';
 
 import { GlobalSearch } from './ecommerce/search';
@@ -195,9 +195,9 @@ const Header: React.FC<HeaderData & {
     const actualCtaText = ctaText || registerText;
     const actualIsSticky = isSticky ?? sticky;
     const actualStyle = transparent ? 'sticky-transparent' : style;
-    // Use safe versions of hooks that work outside EditorProvider (for public preview)
-    const editorContext = useSafeEditor();
-    const previewRef = containerRef || editorContext?.previewRef || null;
+    // Use safe versions of hooks that work outside ProjectProvider (for public preview)
+    const projectContext = useSafeProject();
+    const previewRef = containerRef || null;
 
 
     // Use links directly - store links are now added manually via Navigation Dashboard
@@ -430,8 +430,8 @@ const Header: React.FC<HeaderData & {
     );
 
     // Get storeId and data for global search
-    const storeId = editorContext?.activeProjectId || undefined;
-    const pageData = editorContext?.data;
+    const storeId = projectContext?.activeProjectId || undefined;
+    const pageData = projectContext?.data;
 
     // Build searchable sections from page content
     const searchableSections = useMemo(() => {

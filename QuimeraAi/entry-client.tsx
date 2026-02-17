@@ -17,14 +17,17 @@ window.onerror = function (message, source, lineno, colno, error) {
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './src/styles/main.css';
-import PublicWebsitePreview from './components/PublicWebsitePreview';
-import StorefrontApp from './components/ecommerce/StorefrontApp';
-import { StorefrontCartProvider } from './components/ecommerce/context';
 import { Project } from './types/project';
 import './i18n';
 
-// Lazy import App to avoid loading unnecessary code for custom domains
+// =============================================================================
+// LAZY IMPORTS — Only loaded when actually needed
+// Dashboard users never pay the cost of SSR/storefront modules
+// =============================================================================
 const loadApp = () => import('./App').then(m => m.default);
+const loadPublicWebsitePreview = () => import('./components/PublicWebsitePreview').then(m => m.default);
+const loadStorefrontApp = () => import('./components/ecommerce/StorefrontApp').then(m => m.default);
+const loadStorefrontCartProvider = () => import('./components/ecommerce/context').then(m => m.StorefrontCartProvider);
 
 // Get initial state from server (both naming conventions for compatibility)
 declare global {
@@ -94,36 +97,40 @@ const loadProjectFonts = (theme: any) => {
 };
 
 if (hasSSRData && initialData) {
-    // SSR data available - use PublicWebsitePreview for full navigation support (blog, store, pages)
+    // SSR data available - dynamically load PublicWebsitePreview + StorefrontCartProvider
     console.log('[entry-client] Rendering with PublicWebsitePreview (SSR mode)');
     const project = initialData.project as Project;
-
-    // Load fonts for the project theme
     loadProjectFonts(project.theme);
 
-    root.render(
-        <React.StrictMode>
-            <StorefrontCartProvider storeId={initialData.projectId!}>
-                <PublicWebsitePreview
-                    projectId={initialData.projectId}
-                />
-            </StorefrontCartProvider>
-        </React.StrictMode>
+    Promise.all([loadPublicWebsitePreview(), loadStorefrontCartProvider()]).then(
+        ([PublicWebsitePreview, StorefrontCartProvider]) => {
+            root.render(
+                <React.StrictMode>
+                    <StorefrontCartProvider storeId={initialData.projectId!}>
+                        <PublicWebsitePreview
+                            projectId={initialData.projectId}
+                        />
+                    </StorefrontCartProvider>
+                </React.StrictMode>
+            );
+        }
     );
 } else if (hasLegacyData && initialState) {
-    // Legacy storefront app (custom domain without new SSR format)
+    // Legacy storefront app - dynamically load StorefrontApp
     console.log('[entry-client] Rendering with StorefrontApp (legacy mode)');
-    // Load fonts for the project theme
     loadProjectFonts(initialState.projectData?.theme);
-    root.render(
-        <React.StrictMode>
-            <StorefrontApp
-                projectId={initialState.projectId!}
-                initialData={initialState.projectData}
-                hostname={initialState.hostname}
-            />
-        </React.StrictMode>
-    );
+
+    loadStorefrontApp().then(StorefrontApp => {
+        root.render(
+            <React.StrictMode>
+                <StorefrontApp
+                    projectId={initialState.projectId!}
+                    initialData={initialState.projectData}
+                    hostname={initialState.hostname}
+                />
+            </React.StrictMode>
+        );
+    });
 } else {
     // Regular app (dashboard, etc.) - standard client-side rendering
     console.log('[entry-client] Rendering main App (client-only)');
@@ -135,8 +142,6 @@ if (hasSSRData && initialData) {
         );
     });
 }
-
-
 
 
 

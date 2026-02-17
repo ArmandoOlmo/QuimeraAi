@@ -3,7 +3,6 @@ import React, { useState } from 'react';
 import DashboardSidebar from '../DashboardSidebar';
 import ComponentLibrary from './ComponentLibrary';
 import ComponentDesigner from './ComponentDesigner';
-import { useEditor } from '../../../contexts/EditorContext';
 import { ArrowLeft, Menu, Puzzle, Monitor, Tablet, Smartphone } from 'lucide-react';
 import { PreviewDevice, PreviewOrientation } from '../../../types';
 

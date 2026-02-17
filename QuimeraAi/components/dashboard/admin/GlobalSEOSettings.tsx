@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ArrowLeft, Save, Globe, Bot, Shield, FileText, Plus, Edit2, Trash2, Menu } from 'lucide-react';
 import DashboardSidebar from '../DashboardSidebar';
-import { useEditor } from '../../../contexts/EditorContext';
 import { doc, setDoc, getDoc } from '../../../firebase';
 import { db } from '../../../firebase';
 

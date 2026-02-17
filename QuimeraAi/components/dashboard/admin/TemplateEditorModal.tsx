@@ -4,7 +4,6 @@ import { X, Save, Building2, Sparkles, Loader2, Palette, Image as ImageIcon, Zap
 import { Project, GlobalColors } from '../../../types';
 import IndustrySelector from '../../ui/IndustrySelector';
 import Modal from '../../ui/Modal';
-import { useEditor } from '../../../contexts/EditorContext';
 import { useAuth } from '../../../contexts/core/AuthContext';
 import { useAI } from '../../../contexts/ai/AIContext';
 import { useFiles } from '../../../contexts/files/FilesContext';

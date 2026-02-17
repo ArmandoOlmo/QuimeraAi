@@ -35,7 +35,7 @@ import {
 import {
   initializeFirestore,
   persistentLocalCache,
-  persistentMultipleTabManager,
+  persistentSingleTabManager,
   collection,
   doc,
   addDoc,
@@ -89,18 +89,18 @@ export const storage = typeof window !== 'undefined' ? getStorage(app) : (null a
  * Returns null on server-side rendering
  */
 export const getStorageInstance = () => {
-    if (typeof window === 'undefined') return null;
-    if (!_storage) {
-        _storage = getStorage(app);
-    }
-    return _storage;
+  if (typeof window === 'undefined') return null;
+  if (!_storage) {
+    _storage = getStorage(app);
+  }
+  return _storage;
 };
 
 // Initialize Firestore with persistence built-in (modern approach)
 // This replaces the deprecated enableMultiTabIndexedDbPersistence
 export const db = initializeFirestore(app, {
   localCache: persistentLocalCache({
-    tabManager: persistentMultipleTabManager(),
+    tabManager: persistentSingleTabManager({ forceOwnership: true }),
     cacheSizeBytes: CACHE_SIZE_UNLIMITED
   })
 });
@@ -153,7 +153,7 @@ if (typeof window !== 'undefined') {
   const initAnalytics = () => {
     getAnalyticsInstance().catch(console.warn);
   };
-  
+
   if ('requestIdleCallback' in window) {
     window.requestIdleCallback(initAnalytics, { timeout: 5000 });
   } else {

@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import Modal from '../../ui/Modal';
-import { useEditor } from '../../../contexts/EditorContext';
 import { CustomComponent, EditableComponentID } from '../../../types';
 import { X } from 'lucide-react';
 

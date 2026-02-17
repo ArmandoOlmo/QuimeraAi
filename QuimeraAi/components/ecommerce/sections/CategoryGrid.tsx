@@ -9,7 +9,7 @@
 
 import React from 'react';
 import { CategoryGridData, CategoryItem } from '../../../types/components';
-import { useSafeEditor } from '../../../contexts/EditorContext';
+import { useSafeProject } from '../../../contexts/project';
 import { usePublicProducts } from '../../../hooks/usePublicProducts';
 import { useUnifiedStorefrontColors } from '../hooks/useUnifiedStorefrontColors';
 
@@ -24,8 +24,8 @@ const CategoryGrid: React.FC<CategoryGridProps> = ({
     storeId,
     onCategoryClick,
 }) => {
-    const editorContext = useSafeEditor();
-    const effectiveStoreId = storeId || editorContext?.activeProjectId || '';
+    const projectContext = useSafeProject();
+    const effectiveStoreId = storeId || projectContext?.activeProjectId || '';
     
     // Unified colors system - merges global theme with component-specific colors
     const colors = useUnifiedStorefrontColors(effectiveStoreId, data.colors);

@@ -27,12 +27,27 @@ export const useLightAuthState = (): LightAuthState => {
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
+        // Safari safety: if onAuthStateChanged never fires (IndexedDB lock hang),
+        // force loading to false after 8 seconds to prevent infinite loading
+        const timeout = setTimeout(() => {
+            setIsLoading((current) => {
+                if (current) {
+                    console.warn('[useLightAuthState] Auth state timeout after 8s - forcing loading to false');
+                }
+                return false;
+            });
+        }, 8000);
+
         const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+            clearTimeout(timeout);
             setUser(firebaseUser);
             setIsLoading(false);
         });
 
-        return () => unsubscribe();
+        return () => {
+            clearTimeout(timeout);
+            unsubscribe();
+        };
     }, []);
 
     return {

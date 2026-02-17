@@ -21,7 +21,6 @@ import {
     X,
     ArrowLeft,
 } from 'lucide-react';
-import { useEditor } from '../../../contexts/EditorContext';
 import { useUI } from '../../../contexts/core/UIContext';
 import { useProject } from '../../../contexts/project/ProjectContext';
 import { Project } from '../../../types/components';
