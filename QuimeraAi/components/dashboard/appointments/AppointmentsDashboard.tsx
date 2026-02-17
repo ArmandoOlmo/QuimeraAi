@@ -60,6 +60,7 @@ import { GoogleCalendarConnect } from './components/GoogleCalendarConnect';
 import { AIPreparationPanel } from './components/AIPreparationPanel';
 import { CalendarToolbar } from './components/CalendarToolbar';
 import { BlockDateModal } from './components/BlockDateModal';
+import ConfirmationModal from '../../ui/ConfirmationModal';
 
 // Import views
 import { CalendarWeekView } from './views/CalendarWeekView';
@@ -158,6 +159,11 @@ const AppointmentsDashboard: React.FC = () => {
     const [blockModalInitialDate, setBlockModalInitialDate] = useState<Date | undefined>();
     const [blockModalInitialHour, setBlockModalInitialHour] = useState<number | undefined>();
 
+    // Delete confirmation state
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [pendingDeleteAppointment, setPendingDeleteAppointment] = useState<Appointment | null>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
+
     // Handler for project selection
     const handleProjectSelect = (projectId: string) => {
         setSelectedProjectId(projectId);
@@ -254,12 +260,25 @@ const AppointmentsDashboard: React.FC = () => {
     }, [selectedAppointment, updateStatus]);
 
     const handleDeleteAppointment = useCallback(async () => {
-        if (selectedAppointment && confirm('¿Estás seguro de que deseas eliminar esta cita?')) {
-            await deleteAppointment(selectedAppointment.id);
+        if (!selectedAppointment) return;
+        setPendingDeleteAppointment(selectedAppointment);
+        setShowDeleteConfirm(true);
+    }, [selectedAppointment]);
+
+    const confirmDeleteAppointment = useCallback(async () => {
+        const apt = pendingDeleteAppointment;
+        if (!apt) return;
+        setIsDeleting(true);
+        try {
+            await deleteAppointment(apt.id);
             setIsDetailDrawerOpen(false);
             setSelectedAppointment(null);
+        } finally {
+            setIsDeleting(false);
+            setShowDeleteConfirm(false);
+            setPendingDeleteAppointment(null);
         }
-    }, [selectedAppointment, deleteAppointment, setSelectedAppointment]);
+    }, [pendingDeleteAppointment, deleteAppointment, setSelectedAppointment]);
 
     const handleGenerateAiPrep = useCallback(async () => {
         if (!selectedAppointment) return;
@@ -809,9 +828,8 @@ const AppointmentsDashboard: React.FC = () => {
                                             setIsDetailDrawerOpen(true);
                                         }}
                                         onAppointmentDelete={async (apt) => {
-                                            if (confirm('¿Eliminar esta cita?')) {
-                                                await deleteAppointment(apt.id);
-                                            }
+                                            setPendingDeleteAppointment(apt);
+                                            setShowDeleteConfirm(true);
                                         }}
                                         searchQuery={searchQuery}
                                     />
@@ -887,6 +905,20 @@ const AppointmentsDashboard: React.FC = () => {
                 editingBlock={editingBlock}
                 initialDate={blockModalInitialDate}
                 initialHour={blockModalInitialHour}
+            />
+
+            {/* Delete Appointment Confirmation */}
+            <ConfirmationModal
+                isOpen={showDeleteConfirm}
+                onConfirm={confirmDeleteAppointment}
+                onCancel={() => {
+                    setShowDeleteConfirm(false);
+                    setPendingDeleteAppointment(null);
+                }}
+                title={t('appointments.deleteConfirmTitle', '¿Eliminar cita?')}
+                message={t('appointments.deleteConfirmMessage', '¿Estás seguro de que deseas eliminar esta cita? Esta acción no se puede deshacer.')}
+                variant="danger"
+                isLoading={isDeleting}
             />
         </div>
     );

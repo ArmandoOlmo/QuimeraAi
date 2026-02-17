@@ -5,6 +5,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import ConfirmationModal from '../../../ui/ConfirmationModal';
 import {
     Calendar,
     Check,
@@ -71,6 +72,8 @@ export const GoogleCalendarConnect: React.FC<GoogleCalendarConnectProps> = ({
     const [isSyncing, setIsSyncing] = useState(false);
     const [showSettings, setShowSettings] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [showDisconnectConfirm, setShowDisconnectConfirm] = useState(false);
+    const { t } = useTranslation();
 
     const handleConnect = async () => {
         setIsLoading(true);
@@ -85,9 +88,8 @@ export const GoogleCalendarConnect: React.FC<GoogleCalendarConnectProps> = ({
     };
 
     const handleDisconnect = async () => {
-        if (!confirm('¿Estás seguro de que deseas desconectar Google Calendar?')) return;
-
         setIsLoading(true);
+        setShowDisconnectConfirm(false);
         try {
             await onDisconnect();
         } catch (err: any) {
@@ -191,159 +193,172 @@ export const GoogleCalendarConnect: React.FC<GoogleCalendarConnectProps> = ({
 
     // Connected state
     return (
-        <div className={`rounded-2xl border border-border overflow-hidden ${className}`}>
-            {/* Header */}
-            <div className="p-4 bg-secondary/30 border-b border-border flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-white shadow-sm flex items-center justify-center">
-                        <GoogleCalendarIcon className="w-6 h-6" />
-                    </div>
-                    <div>
-                        <div className="flex items-center gap-2">
-                            <h3 className="font-semibold text-foreground">Google Calendar</h3>
-                            <span className={`
+        <>
+            <div className={`rounded-2xl border border-border overflow-hidden ${className}`}>
+                {/* Header */}
+                <div className="p-4 bg-secondary/30 border-b border-border flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-white shadow-sm flex items-center justify-center">
+                            <GoogleCalendarIcon className="w-6 h-6" />
+                        </div>
+                        <div>
+                            <div className="flex items-center gap-2">
+                                <h3 className="font-semibold text-foreground">Google Calendar</h3>
+                                <span className={`
                                 flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium
                                 ${statusInfo.bg} ${statusInfo.color}
                             `}>
-                                <StatusIcon size={12} />
-                                {statusInfo.label}
-                            </span>
+                                    <StatusIcon size={12} />
+                                    {statusInfo.label}
+                                </span>
+                            </div>
+                            {config?.calendarName && (
+                                <p className="text-xs text-muted-foreground">{config.calendarName}</p>
+                            )}
                         </div>
-                        {config?.calendarName && (
-                            <p className="text-xs text-muted-foreground">{config.calendarName}</p>
-                        )}
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={handleSync}
+                            disabled={isSyncing}
+                            className="p-2 text-muted-foreground hover:text-foreground hover:bg-secondary rounded-lg transition-colors disabled:opacity-50"
+                            title="Sincronizar ahora"
+                        >
+                            {isSyncing ? (
+                                <Loader2 size={18} className="animate-spin" />
+                            ) : (
+                                <RefreshCw size={18} />
+                            )}
+                        </button>
+
+                        <button
+                            onClick={() => setShowSettings(!showSettings)}
+                            className={`
+                            p-2 rounded-lg transition-colors
+                            ${showSettings
+                                    ? 'bg-secondary text-foreground'
+                                    : 'text-muted-foreground hover:text-foreground hover:bg-secondary'
+                                }
+                        `}
+                        >
+                            <Settings size={18} />
+                        </button>
                     </div>
                 </div>
 
-                <div className="flex items-center gap-2">
-                    <button
-                        onClick={handleSync}
-                        disabled={isSyncing}
-                        className="p-2 text-muted-foreground hover:text-foreground hover:bg-secondary rounded-lg transition-colors disabled:opacity-50"
-                        title="Sincronizar ahora"
-                    >
-                        {isSyncing ? (
-                            <Loader2 size={18} className="animate-spin" />
-                        ) : (
-                            <RefreshCw size={18} />
-                        )}
-                    </button>
-
-                    <button
-                        onClick={() => setShowSettings(!showSettings)}
-                        className={`
-                            p-2 rounded-lg transition-colors
-                            ${showSettings
-                                ? 'bg-secondary text-foreground'
-                                : 'text-muted-foreground hover:text-foreground hover:bg-secondary'
-                            }
-                        `}
-                    >
-                        <Settings size={18} />
-                    </button>
-                </div>
-            </div>
-
-            {/* Settings panel */}
-            {showSettings && (
-                <div className="p-4 border-b border-border bg-secondary/10 animate-fade-in">
-                    <div className="space-y-4">
-                        {/* Sync toggle */}
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="font-medium text-foreground text-sm">Sincronización automática</p>
-                                <p className="text-xs text-muted-foreground">
-                                    Mantén tus citas sincronizadas automáticamente
-                                </p>
-                            </div>
-                            <label className="relative inline-flex items-center cursor-pointer">
-                                <input
-                                    type="checkbox"
-                                    checked={config?.syncEnabled ?? true}
-                                    onChange={() => { }}
-                                    className="sr-only peer"
-                                />
-                                <div className="w-11 h-6 bg-muted rounded-full peer peer-checked:bg-primary transition-colors">
-                                    <div className={`
+                {/* Settings panel */}
+                {showSettings && (
+                    <div className="p-4 border-b border-border bg-secondary/10 animate-fade-in">
+                        <div className="space-y-4">
+                            {/* Sync toggle */}
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="font-medium text-foreground text-sm">Sincronización automática</p>
+                                    <p className="text-xs text-muted-foreground">
+                                        Mantén tus citas sincronizadas automáticamente
+                                    </p>
+                                </div>
+                                <label className="relative inline-flex items-center cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        checked={config?.syncEnabled ?? true}
+                                        onChange={() => { }}
+                                        className="sr-only peer"
+                                    />
+                                    <div className="w-11 h-6 bg-muted rounded-full peer peer-checked:bg-primary transition-colors">
+                                        <div className={`
                                         absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow
                                         transition-transform duration-200
                                         ${config?.syncEnabled !== false ? 'translate-x-5' : ''}
                                     `} />
-                                </div>
-                            </label>
-                        </div>
+                                    </div>
+                                </label>
+                            </div>
 
-                        {/* Calendar selector */}
-                        <div>
-                            <label className="block text-sm font-medium text-foreground mb-2">
-                                Calendario
-                            </label>
-                            <select
-                                value={config?.calendarId || 'primary'}
-                                onChange={() => { }}
-                                className="w-full h-10 bg-secondary/50 border border-border rounded-lg px-3 text-sm outline-none focus:ring-2 focus:ring-primary/50"
+                            {/* Calendar selector */}
+                            <div>
+                                <label className="block text-sm font-medium text-foreground mb-2">
+                                    Calendario
+                                </label>
+                                <select
+                                    value={config?.calendarId || 'primary'}
+                                    onChange={() => { }}
+                                    className="w-full h-10 bg-secondary/50 border border-border rounded-lg px-3 text-sm outline-none focus:ring-2 focus:ring-primary/50"
+                                >
+                                    <option value="primary">Calendario principal</option>
+                                </select>
+                            </div>
+
+                            {/* Disconnect button */}
+                            <button
+                                onClick={() => setShowDisconnectConfirm(true)}
+                                disabled={isLoading}
+                                className="w-full py-2 px-4 text-red-500 hover:bg-red-500/10 rounded-lg font-medium text-sm flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
                             >
-                                <option value="primary">Calendario principal</option>
-                            </select>
+                                {isLoading ? (
+                                    <Loader2 size={16} className="animate-spin" />
+                                ) : (
+                                    <Unlink size={16} />
+                                )}
+                                Desconectar
+                            </button>
                         </div>
-
-                        {/* Disconnect button */}
-                        <button
-                            onClick={handleDisconnect}
-                            disabled={isLoading}
-                            className="w-full py-2 px-4 text-red-500 hover:bg-red-500/10 rounded-lg font-medium text-sm flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
-                        >
-                            {isLoading ? (
-                                <Loader2 size={16} className="animate-spin" />
-                            ) : (
-                                <Unlink size={16} />
-                            )}
-                            Desconectar
-                        </button>
-                    </div>
-                </div>
-            )}
-
-            {/* Status info */}
-            <div className="p-4">
-                {error && (
-                    <div className="mb-3 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
-                        <p className="text-sm text-red-500 flex items-center gap-2">
-                            <AlertCircle size={14} />
-                            {error}
-                        </p>
                     </div>
                 )}
 
-                <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Última sincronización:</span>
-                    <span className="text-foreground">
-                        {lastSyncTime
-                            ? lastSyncTime.toLocaleString('es-ES', {
-                                day: 'numeric',
-                                month: 'short',
-                                hour: '2-digit',
-                                minute: '2-digit'
-                            })
-                            : 'Nunca'
-                        }
-                    </span>
-                </div>
+                {/* Status info */}
+                <div className="p-4">
+                    {error && (
+                        <div className="mb-3 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+                            <p className="text-sm text-red-500 flex items-center gap-2">
+                                <AlertCircle size={14} />
+                                {error}
+                            </p>
+                        </div>
+                    )}
 
-                <a
-                    href="https://calendar.google.com"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="mt-3 flex items-center justify-center gap-2 text-sm text-primary hover:underline"
-                >
-                    Abrir Google Calendar
-                    <ExternalLink size={14} />
-                </a>
+                    <div className="flex items-center justify-between text-sm">
+                        <span className="text-muted-foreground">Última sincronización:</span>
+                        <span className="text-foreground">
+                            {lastSyncTime
+                                ? lastSyncTime.toLocaleString('es-ES', {
+                                    day: 'numeric',
+                                    month: 'short',
+                                    hour: '2-digit',
+                                    minute: '2-digit'
+                                })
+                                : 'Nunca'
+                            }
+                        </span>
+                    </div>
+
+                    <a
+                        href="https://calendar.google.com"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-3 flex items-center justify-center gap-2 text-sm text-primary hover:underline"
+                    >
+                        Abrir Google Calendar
+                        <ExternalLink size={14} />
+                    </a>
+                </div>
             </div>
-        </div>
+
+            <ConfirmationModal
+                isOpen={showDisconnectConfirm}
+                onConfirm={handleDisconnect}
+                onCancel={() => setShowDisconnectConfirm(false)}
+                title={t('appointments.disconnectGoogle', '¿Desconectar Google Calendar?')}
+                message={t('appointments.disconnectGoogleMessage', '¿Estás seguro de que deseas desconectar Google Calendar? Tus citas existentes no se eliminarán.')}
+                variant="danger"
+                isLoading={isLoading}
+            />
+        </>
     );
 };
 
 export default GoogleCalendarConnect;
+
 
 
