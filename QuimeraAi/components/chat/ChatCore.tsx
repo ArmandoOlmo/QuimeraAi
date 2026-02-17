@@ -398,11 +398,9 @@ const ChatCore: React.FC<ChatCoreProps> = ({
 
     // Lead Capture State
     const [showPreChatForm, setShowPreChatForm] = useState(false);
-    const [showLeadCaptureModal, setShowLeadCaptureModal] = useState(false);
     const [leadCaptured, setLeadCaptured] = useState(false);
     const [exitIntentShown, setExitIntentShown] = useState(false);
     const [preChatData, setPreChatData] = useState<PreChatFormData>({ name: '', email: '', phone: '' });
-    const [quickLeadEmail, setQuickLeadEmail] = useState('');
 
     // Appointment Form State
     const [showAppointmentForm, setShowAppointmentForm] = useState(false);
@@ -864,73 +862,6 @@ ${suggestAvailableSlots()}
         }
     };
 
-    const handleQuickLeadCapture = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!quickLeadEmail) return;
-
-        try {
-            const conversationText = messages.map(m => `${m.role === 'user' ? 'Usuario' : 'Asistente'}: ${m.text}`).join('\n');
-
-            console.log('[ChatCore] 📝 handleQuickLeadCapture - Transcript generated:', {
-                messageCount: messages.length,
-                transcriptLength: conversationText.length,
-                transcriptPreview: conversationText.substring(0, 300)
-            });
-            const hasHighIntent = messages.some(m => m.role === 'user' && detectLeadIntent(m.text, leadConfig.intentKeywords));
-            const leadScore = calculateLeadScore({ email: quickLeadEmail }, messages, hasHighIntent);
-
-            // Analyze customer intent using LLM
-            const intentAnalysis = await analyzeCustomerIntent(
-                messages,
-                project?.name || 'chatbot',
-                user?.uid
-            );
-
-            // Update participant info in conversation for Inbox
-            await updateParticipantInfo({
-                name: quickLeadEmail.split('@')[0],
-                email: quickLeadEmail,
-            });
-
-            if (onLeadCapture) {
-                const leadId = await onLeadCapture({
-                    name: quickLeadEmail.split('@')[0],
-                    email: quickLeadEmail,
-                    status: 'new',
-                    message: t('chatbotWidget.leadSourceConversation'),
-                    value: 0,
-                    leadScore: intentAnalysis?.intentScore || leadScore,
-                    conversationTranscript: conversationText,
-                    tags: ['chatbot', 'mid-conversation', hasHighIntent ? 'high-intent' : 'low-intent'],
-                    notes: t('chatbotWidget.leadNotesConversation', { count: messages.filter(m => m.role === 'user').length }),
-                    // Include AI-analyzed customer intent
-                    aiAnalysis: intentAnalysis?.customerInterest || undefined,
-                    recommendedAction: intentAnalysis?.recommendedAction || undefined,
-                    aiScore: intentAnalysis?.intentScore || undefined,
-                });
-                if (leadId) {
-                    capturedLeadIdRef.current = leadId;
-                    // Link conversation to lead for Inbox
-                    await linkToLead(leadId);
-                }
-            }
-
-            setLeadCaptured(true);
-            setShowLeadCaptureModal(false);
-            setQuickLeadEmail('');
-
-            const thankYouMsg = t('chatbotWidget.contactSoon');
-            setMessages(prev => [...prev, {
-                role: 'model',
-                text: thankYouMsg
-            }]);
-
-            // Save message to conversation for Inbox
-            await saveConversationMessage({ role: 'model', text: thankYouMsg });
-        } catch (error) {
-            console.error('Error capturing lead:', error);
-        }
-    };
 
     // =============================================================================
     // APPOINTMENT FORM HANDLER
