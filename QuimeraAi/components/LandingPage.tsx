@@ -899,6 +899,20 @@ const LandingPageContent: React.FC = () => {
             body, .bg-site-base { background-color: ${pageBackgroundColor}; }
         `}</style>
 
+      {/* Announcement Bar - Above Header position */}
+      {mergedAnnouncementBarData?.position === 'above-header' && componentStatus['announcementBar' as PageSection] && effectiveSectionVisibility['announcementBar' as PageSection] && (
+        <div
+          id="announcementBar-above"
+          className={`w-full cursor-pointer transition-all duration-200 ${activeSection === 'announcementBar' ? 'ring-2 ring-primary ring-offset-2 ring-offset-transparent z-10 relative' : 'hover:ring-2 hover:ring-primary/30 hover:ring-offset-2 hover:ring-offset-transparent'}`}
+          onClick={(e) => {
+            e.stopPropagation();
+            onSectionSelect('announcementBar' as PageSection);
+          }}
+        >
+          {componentsMap['announcementBar' as PageSection]}
+        </div>
+      )}
+
       {/* Header is always visible - forceSolid when in store view (no hero behind) */}
       <Header
         {...mergedHeaderData}
@@ -1209,7 +1223,9 @@ const LandingPageContent: React.FC = () => {
                   effectiveSectionVisibility[key as PageSection] &&
                   key !== 'footer' &&
                   key !== 'chatbot' &&
-                  key !== 'header'; // Header is rendered separately
+                  key !== 'header' && // Header is rendered separately
+                  // AnnouncementBar is rendered separately when positioned above header
+                  !(key === 'announcementBar' && mergedAnnouncementBarData?.position === 'above-header');
 
                 // Para componentes de ecommerce, verificar también visibleIn
                 if (isEcommerce) {

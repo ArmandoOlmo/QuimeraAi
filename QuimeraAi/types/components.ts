@@ -1395,7 +1395,8 @@ export interface ProductBundleData {
 // ECOMMERCE - ANNOUNCEMENT BAR
 // =============================================================================
 export type AnnouncementBarVariant = 'static' | 'scrolling' | 'rotating';
-export type AnnouncementLinkType = 'manual' | 'product' | 'collection';
+export type AnnouncementLinkType = 'manual' | 'product' | 'collection' | 'phone' | 'email';
+export type AnnouncementBarPosition = 'above-header' | 'in-content';
 
 export interface AnnouncementMessage {
     text: string;
@@ -1409,6 +1410,8 @@ export interface AnnouncementBarData {
     messages: AnnouncementMessage[];
     /** Dónde mostrar este componente: 'landing', 'store', o 'both' (default) */
     visibleIn?: ComponentVisibilityContext;
+    /** Posición: 'above-header' renders before the Header, 'in-content' (default) renders in normal section flow */
+    position?: AnnouncementBarPosition;
     // Display
     showIcon?: boolean;
     icon?: ServiceIcon;

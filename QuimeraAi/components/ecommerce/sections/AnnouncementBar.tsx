@@ -6,7 +6,7 @@
  */
 
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Megaphone, Tag, Gift, Truck, Percent, Sparkles, Bell, Info, ChevronLeft, ChevronRight } from 'lucide-react';
+import { X, Megaphone, Tag, Gift, Truck, Percent, Sparkles, Bell, Info, ChevronLeft, ChevronRight, Phone, Mail } from 'lucide-react';
 import { AnnouncementBarData, AnnouncementMessage, ServiceIcon } from '../../../types/components';
 import { useSafeProject } from '../../../contexts/project';
 import { useUnifiedStorefrontColors } from '../hooks/useUnifiedStorefrontColors';
@@ -25,12 +25,14 @@ const iconMap: Record<string, React.FC<{ size?: number; className?: string }>> =
     'sparkles': Sparkles,
     'bell': Bell,
     'info': Info,
+    'phone': Phone,
+    'mail': Mail,
 };
 
 const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ data, storeId }) => {
     const projectContext = useSafeProject();
     const effectiveStoreId = storeId || projectContext?.activeProjectId || '';
-    
+
     // Unified colors system
     const colors = useUnifiedStorefrontColors(effectiveStoreId, data.colors);
     const [isVisible, setIsVisible] = useState(true);
@@ -80,13 +82,23 @@ const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ data, storeId }) => {
     const iconColor = data.colors?.iconColor || textColor;
     const borderColor = data.colors?.borderColor;
 
+    // Build href based on linkType
+    const getMessageHref = (message: AnnouncementMessage): string => {
+        if (!message.link) return '';
+        switch (message.linkType) {
+            case 'phone': return `tel:${message.link.replace(/\s/g, '')}`;
+            case 'email': return `mailto:${message.link}`;
+            default: return message.link;
+        }
+    };
+
     // Message content renderer
     const renderMessage = (message: AnnouncementMessage, index: number) => (
         <span key={index} className="inline-flex items-center gap-2">
             <span>{message.text}</span>
             {message.link && message.linkText && (
                 <a
-                    href={message.link}
+                    href={getMessageHref(message)}
                     className="font-semibold underline underline-offset-2 hover:no-underline transition-all"
                     style={{ color: linkColor }}
                 >
@@ -168,7 +180,7 @@ const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ data, storeId }) => {
                                 <span>{msg.text}</span>
                                 {msg.link && msg.linkText && (
                                     <a
-                                        href={msg.link}
+                                        href={getMessageHref(msg)}
                                         className="font-semibold underline underline-offset-2 hover:no-underline"
                                         style={{ color: linkColor }}
                                     >
@@ -266,9 +278,8 @@ const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ data, storeId }) => {
                                 <button
                                     key={i}
                                     onClick={() => setCurrentIndex(i)}
-                                    className={`w-1.5 h-1.5 rounded-full transition-all ${
-                                        i === currentIndex ? 'w-3 opacity-100' : 'opacity-50'
-                                    }`}
+                                    className={`w-1.5 h-1.5 rounded-full transition-all ${i === currentIndex ? 'w-3 opacity-100' : 'opacity-50'
+                                        }`}
                                     style={{ backgroundColor: textColor }}
                                     aria-label={`Ir a mensaje ${i + 1}`}
                                 />

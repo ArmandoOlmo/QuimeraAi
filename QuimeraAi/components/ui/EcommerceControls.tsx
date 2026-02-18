@@ -1715,6 +1715,8 @@ export const useAnnouncementBarControls = ({ data, setNestedData, storeId = '' }
         { value: 'sparkles', label: 'Sparkles' },
         { value: 'bell', label: 'Bell' },
         { value: 'info', label: 'Info' },
+        { value: 'phone', label: 'Phone' },
+        { value: 'mail', label: 'Email' },
     ];
 
     // Handle message updates
@@ -1738,6 +1740,17 @@ export const useAnnouncementBarControls = ({ data, setNestedData, storeId = '' }
 
     const contentTab = (
         <div className="space-y-4">
+            {/* Position */}
+            <SelectControl
+                label={t('editor.controls.ecommerce.position', 'Position')}
+                value={d.position || 'in-content'}
+                options={[
+                    { value: 'in-content', label: t('editor.controls.ecommerce.inContent', 'In Content (Normal)') },
+                    { value: 'above-header', label: t('editor.controls.ecommerce.aboveHeader', 'Above Header') },
+                ]}
+                onChange={(v) => setNestedData('announcementBar.position', v)}
+            />
+
             {/* Variant Selection */}
             <SelectControl
                 label={t('editor.controls.ecommerce.variant', 'Variant')}
@@ -1779,17 +1792,45 @@ export const useAnnouncementBarControls = ({ data, setNestedData, storeId = '' }
                         value={msg.text || ''}
                         onChange={(e) => updateMessage(index, 'text', e.target.value)}
                     />
+                    <SelectControl
+                        label={t('editor.controls.ecommerce.linkType', 'Link Type')}
+                        value={msg.linkType || 'manual'}
+                        options={[
+                            { value: 'manual', label: t('editor.controls.ecommerce.linkTypeUrl', 'URL') },
+                            { value: 'phone', label: t('editor.controls.ecommerce.linkTypePhone', 'Phone') },
+                            { value: 'email', label: t('editor.controls.ecommerce.linkTypeEmail', 'Email') },
+                        ]}
+                        onChange={(v) => updateMessage(index, 'linkType', v)}
+                    />
                     <Input
-                        label={t('editor.controls.ecommerce.linkUrl', 'Link URL')}
+                        label={
+                            msg.linkType === 'phone'
+                                ? t('editor.controls.ecommerce.phoneNumber', 'Phone Number')
+                                : msg.linkType === 'email'
+                                    ? t('editor.controls.ecommerce.emailAddress', 'Email Address')
+                                    : t('editor.controls.ecommerce.linkUrl', 'Link URL')
+                        }
                         value={msg.link || ''}
                         onChange={(e) => updateMessage(index, 'link', e.target.value)}
-                        placeholder="/tienda"
+                        placeholder={
+                            msg.linkType === 'phone'
+                                ? '+1 555 123 4567'
+                                : msg.linkType === 'email'
+                                    ? 'info@example.com'
+                                    : '/tienda'
+                        }
                     />
                     <Input
                         label={t('editor.controls.ecommerce.linkText', 'Link Text')}
                         value={msg.linkText || ''}
                         onChange={(e) => updateMessage(index, 'linkText', e.target.value)}
-                        placeholder="Shop now"
+                        placeholder={
+                            msg.linkType === 'phone'
+                                ? 'Call us'
+                                : msg.linkType === 'email'
+                                    ? 'Email us'
+                                    : 'Shop now'
+                        }
                     />
                 </div>
             ))}

@@ -1510,6 +1510,13 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
         body, .bg-site-base { background-color: ${pageBackgroundColor}; }
       `}</style>
 
+      {/* Announcement Bar - Above Header position */}
+      {mergedData.announcementBar?.position === 'above-header' && componentStatus?.announcementBar !== false && sectionVisibility?.announcementBar !== false && mergedData.announcementBar && (
+        <div id="announcementBar-above" className="w-full">
+          <AnnouncementBar data={mergedData.announcementBar} />
+        </div>
+      )}
+
       {/* Header - Visible on landing, hidden on store view (StorefrontLayout handles it) */}
       {!isStoreViewActive && componentStatus?.header !== false && sectionVisibility?.header !== false && mergedData.header && (
         <Header {...mergedData.header} links={headerLinks} onNavigate={handleLinkNavigation} />
@@ -1565,7 +1572,9 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
                 const isEcommerce = ecommerceComponents.includes(key as PageSection);
                 const statusVisible = componentStatus?.[key as PageSection] !== false;
                 const sectionVisible = sectionVisibility?.[key as PageSection] !== false;
-                const notExcluded = key !== 'footer' && key !== 'chatbot' && key !== 'header';
+                const notExcluded = key !== 'footer' && key !== 'chatbot' && key !== 'header' &&
+                  // AnnouncementBar is rendered separately when positioned above header
+                  !(key === 'announcementBar' && mergedData.announcementBar?.position === 'above-header');
                 const baseVisibility = statusVisible && sectionVisible && notExcluded;
 
                 // Para componentes de ecommerce, verificar también visibleIn
