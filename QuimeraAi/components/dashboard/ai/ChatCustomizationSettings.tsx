@@ -331,7 +331,7 @@ const ChatCustomizationSettings: React.FC = () => {
                                             {config.branding.logoEmoji || '💬'}
                                         </button>
                                         {showEmojiPicker === 'logo' && (
-                                            <div className="absolute top-full left-0 mt-2 bg-card border border-border rounded-xl shadow-2xl p-4 grid grid-cols-8 gap-2 z-50 max-w-sm">
+                                            <div className="mt-2 bg-card border border-border rounded-xl shadow-2xl p-4 grid grid-cols-8 gap-2 max-h-48 overflow-y-auto">
                                                 {COMMON_EMOJIS.map((emoji) => (
                                                     <button
                                                         key={emoji}
@@ -412,7 +412,7 @@ const ChatCustomizationSettings: React.FC = () => {
                                         {config.branding.botAvatarEmoji || '🤖'}
                                     </button>
                                     {showEmojiPicker === 'bot' && (
-                                        <div className="absolute top-full left-0 mt-2 bg-card border border-border rounded-xl shadow-2xl p-4 grid grid-cols-8 gap-2 z-50 max-w-sm">
+                                        <div className="mt-2 bg-card border border-border rounded-xl shadow-2xl p-4 grid grid-cols-8 gap-2 max-h-48 overflow-y-auto">
                                             {COMMON_EMOJIS.map((emoji) => (
                                                 <button
                                                     key={emoji}
