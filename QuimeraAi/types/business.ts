@@ -420,6 +420,10 @@ export interface CMSPost {
     featuredImage: string;
     status: 'draft' | 'published';
     authorId: string;
+    author?: string;         // Editable author display name
+    showAuthor?: boolean;    // Toggle author visibility on public page (default: true)
+    showDate?: boolean;      // Toggle date visibility on public page (default: true)
+    publishedAt?: string;    // Editable publication date
     seoTitle: string;
     seoDescription: string;
     createdAt: string;

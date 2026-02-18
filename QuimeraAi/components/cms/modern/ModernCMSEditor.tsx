@@ -22,7 +22,7 @@ import { CMSPost } from '../../../types';
 import {
     ArrowLeft, Save, Globe, Type, Loader2, Sparkles,
     MoreVertical, Calendar, Check, X as XIcon, Link as LinkIcon,
-    Monitor, Tablet, Smartphone, Eye, EyeOff, Layout, Menu, RefreshCw, Settings
+    Monitor, Tablet, Smartphone, Eye, EyeOff, Layout, Menu, RefreshCw, Settings, User
 } from 'lucide-react';
 
 import EditorMenuBar from './EditorMenuBar';
@@ -52,6 +52,14 @@ interface SettingsSidebarContentProps {
     setFeaturedImage: (value: string) => void;
     excerpt: string;
     setExcerpt: (value: string) => void;
+    author: string;
+    setAuthor: (value: string) => void;
+    showAuthor: boolean;
+    setShowAuthor: (value: boolean) => void;
+    showDate: boolean;
+    setShowDate: (value: boolean) => void;
+    publishedAt: string;
+    setPublishedAt: (value: string) => void;
     seoTitle: string;
     setSeoTitle: (value: string) => void;
     seoDescription: string;
@@ -62,6 +70,7 @@ interface SettingsSidebarContentProps {
 
 const SettingsSidebarContent: React.FC<SettingsSidebarContentProps> = ({
     t, slug, setSlug, featuredImage, setFeaturedImage, excerpt, setExcerpt,
+    author, setAuthor, showAuthor, setShowAuthor, showDate, setShowDate, publishedAt, setPublishedAt,
     seoTitle, setSeoTitle, seoDescription, setSeoDescription, generateSEO, isAiWorking
 }) => (
     <>
@@ -84,6 +93,63 @@ const SettingsSidebarContent: React.FC<SettingsSidebarContentProps> = ({
             <div>
                 <label className="block text-xs font-bold text-muted-foreground uppercase mb-2">{t('cms_editor.excerpt')}</label>
                 <textarea value={excerpt} onChange={(e) => setExcerpt(e.target.value)} rows={4} className="w-full bg-secondary/50 border border-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-primary outline-none resize-none text-foreground" placeholder={t('cms_editor.excerptPlaceholder')} />
+            </div>
+
+            {/* Author & Date Controls */}
+            <div className="pt-6 border-t border-border">
+                <h4 className="font-bold text-sm flex items-center mb-4"><User size={16} className="mr-2" /> Autor & Fecha</h4>
+                <div className="space-y-4">
+                    {/* Author Name */}
+                    <div>
+                        <label className="block text-xs font-bold text-muted-foreground uppercase mb-2">Autor</label>
+                        <input value={author} onChange={(e) => setAuthor(e.target.value)} className="w-full bg-secondary/50 border border-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-primary outline-none text-foreground" placeholder="Nombre del autor..." />
+                    </div>
+
+                    {/* Publication Date */}
+                    <div>
+                        <label className="block text-xs font-bold text-muted-foreground uppercase mb-2">Fecha de Publicación</label>
+                        <input
+                            type="datetime-local"
+                            value={publishedAt ? new Date(publishedAt).toISOString().slice(0, 16) : ''}
+                            onChange={(e) => setPublishedAt(e.target.value ? new Date(e.target.value).toISOString() : '')}
+                            className="w-full bg-secondary/50 border border-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-primary outline-none text-foreground"
+                        />
+                    </div>
+
+                    {/* Show Author Toggle */}
+                    <div className="flex items-center justify-between p-3 bg-secondary/30 border border-border rounded-lg">
+                        <div className="flex items-center gap-2">
+                            <User size={14} className="text-muted-foreground" />
+                            <span className="text-sm font-medium">Mostrar Autor</span>
+                        </div>
+                        <label className="relative inline-flex items-center cursor-pointer">
+                            <input
+                                type="checkbox"
+                                checked={showAuthor}
+                                onChange={(e) => setShowAuthor(e.target.checked)}
+                                className="sr-only peer"
+                            />
+                            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary"></div>
+                        </label>
+                    </div>
+
+                    {/* Show Date Toggle */}
+                    <div className="flex items-center justify-between p-3 bg-secondary/30 border border-border rounded-lg">
+                        <div className="flex items-center gap-2">
+                            <Calendar size={14} className="text-muted-foreground" />
+                            <span className="text-sm font-medium">Mostrar Fecha</span>
+                        </div>
+                        <label className="relative inline-flex items-center cursor-pointer">
+                            <input
+                                type="checkbox"
+                                checked={showDate}
+                                onChange={(e) => setShowDate(e.target.checked)}
+                                className="sr-only peer"
+                            />
+                            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary"></div>
+                        </label>
+                    </div>
+                </div>
             </div>
 
             <div className="pt-6 border-t border-border">
@@ -124,6 +190,10 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
     const [featuredImage, setFeaturedImage] = useState(post?.featuredImage || '');
     const [seoTitle, setSeoTitle] = useState(post?.seoTitle || '');
     const [seoDescription, setSeoDescription] = useState(post?.seoDescription || '');
+    const [author, setAuthor] = useState(post?.author || '');
+    const [showAuthor, setShowAuthor] = useState(post?.showAuthor !== false);
+    const [showDate, setShowDate] = useState(post?.showDate !== false);
+    const [publishedAt, setPublishedAt] = useState(post?.publishedAt || '');
 
     // Editor State
     const [isSidebarOpen, setIsSidebarOpen] = useState(true); // Right sidebar (settings)
@@ -324,6 +394,10 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
                 seoTitle,
                 seoDescription,
                 authorId: post?.authorId || '',
+                author,
+                showAuthor,
+                showDate,
+                publishedAt: publishedAt || undefined,
                 createdAt: post?.createdAt || new Date().toISOString(),
                 updatedAt: new Date().toISOString(),
             };
@@ -690,6 +764,14 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
                                 setFeaturedImage={setFeaturedImage}
                                 excerpt={excerpt}
                                 setExcerpt={setExcerpt}
+                                author={author}
+                                setAuthor={setAuthor}
+                                showAuthor={showAuthor}
+                                setShowAuthor={setShowAuthor}
+                                showDate={showDate}
+                                setShowDate={setShowDate}
+                                publishedAt={publishedAt}
+                                setPublishedAt={setPublishedAt}
                                 seoTitle={seoTitle}
                                 setSeoTitle={setSeoTitle}
                                 seoDescription={seoDescription}
@@ -719,6 +801,14 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
                             setFeaturedImage={setFeaturedImage}
                             excerpt={excerpt}
                             setExcerpt={setExcerpt}
+                            author={author}
+                            setAuthor={setAuthor}
+                            showAuthor={showAuthor}
+                            setShowAuthor={setShowAuthor}
+                            showDate={showDate}
+                            setShowDate={setShowDate}
+                            publishedAt={publishedAt}
+                            setPublishedAt={setPublishedAt}
                             seoTitle={seoTitle}
                             setSeoTitle={setSeoTitle}
                             seoDescription={seoDescription}
@@ -747,6 +837,14 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
                             setFeaturedImage={setFeaturedImage}
                             excerpt={excerpt}
                             setExcerpt={setExcerpt}
+                            author={author}
+                            setAuthor={setAuthor}
+                            showAuthor={showAuthor}
+                            setShowAuthor={setShowAuthor}
+                            showDate={showDate}
+                            setShowDate={setShowDate}
+                            publishedAt={publishedAt}
+                            setPublishedAt={setPublishedAt}
                             seoTitle={seoTitle}
                             setSeoTitle={setSeoTitle}
                             seoDescription={seoDescription}

@@ -19,6 +19,8 @@ export interface AppArticle {
   category: AppArticleCategory;
   tags: string[];
   author: string;
+  showAuthor?: boolean;    // Toggle author visibility on public page (default: true)
+  showDate?: boolean;      // Toggle date visibility on public page (default: true)
   authorImage?: string;
   readTime?: number; // minutos estimados de lectura
   views?: number;
@@ -28,7 +30,7 @@ export interface AppArticle {
   seo?: AppArticleSEO;
 }
 
-export type AppArticleCategory = 
+export type AppArticleCategory =
   | 'blog'
   | 'news'
   | 'tutorial'
@@ -251,19 +253,19 @@ export interface AppContentContextType {
   getArticleBySlug: (slug: string) => AppArticle | undefined;
   saveArticle: (article: AppArticle) => Promise<void>;
   deleteArticle: (id: string) => Promise<void>;
-  
+
   // Navigation
   navigation: AppNavigation | null;
   isLoadingNavigation: boolean;
   loadNavigation: () => Promise<void>;
   saveNavigation: (navigation: AppNavigation) => Promise<void>;
-  
+
   // Landing Config
   landingConfig: AppLandingConfig | null;
   isLoadingLandingConfig: boolean;
   loadLandingConfig: () => Promise<void>;
   saveLandingConfig: (config: AppLandingConfig) => Promise<void>;
-  
+
   // Legal Pages
   legalPages: LegalPage[];
   isLoadingLegalPages: boolean;

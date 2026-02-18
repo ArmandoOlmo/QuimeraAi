@@ -20,6 +20,8 @@ export interface AgencyArticle {
     category: AgencyArticleCategory;
     tags: string[];
     author: string;
+    showAuthor?: boolean;    // Toggle author visibility on public page (default: true)
+    showDate?: boolean;      // Toggle date visibility on public page (default: true)
     authorImage?: string;
     readTime?: number;
     views?: number;

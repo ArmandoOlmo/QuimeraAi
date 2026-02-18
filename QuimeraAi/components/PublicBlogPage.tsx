@@ -49,7 +49,7 @@ const PublicBlogPage: React.FC<PublicBlogPageProps> = ({
 }) => {
   const { t } = useTranslation();
   const appContent = useSafeAppContent();
-  
+
   const articles = appContent?.articles || [];
   const navigation = appContent?.navigation || DEFAULT_APP_NAVIGATION;
   const isLoading = appContent?.isLoadingArticles || false;
@@ -184,11 +184,10 @@ const PublicBlogPage: React.FC<PublicBlogPageProps> = ({
           <div className="flex gap-2">
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className={`px-4 py-3 rounded-xl border transition-colors flex items-center gap-2 ${
-                showFilters || categoryFilter !== 'all'
+              className={`px-4 py-3 rounded-xl border transition-colors flex items-center gap-2 ${showFilters || categoryFilter !== 'all'
                   ? 'bg-yellow-400/10 border-yellow-400/30 text-yellow-400'
                   : 'bg-white/5 border-white/10 text-gray-400 hover:text-white'
-              }`}
+                }`}
             >
               <Filter size={18} />
               <span className="hidden sm:inline">Filters</span>
@@ -202,11 +201,10 @@ const PublicBlogPage: React.FC<PublicBlogPageProps> = ({
             <div className="flex flex-wrap gap-2">
               <button
                 onClick={() => setCategoryFilter('all')}
-                className={`px-3 py-1.5 rounded-full text-sm transition-colors ${
-                  categoryFilter === 'all'
+                className={`px-3 py-1.5 rounded-full text-sm transition-colors ${categoryFilter === 'all'
                     ? 'bg-yellow-400 text-black'
                     : 'bg-white/5 text-gray-400 hover:text-white'
-                }`}
+                  }`}
               >
                 All
               </button>
@@ -214,11 +212,10 @@ const PublicBlogPage: React.FC<PublicBlogPageProps> = ({
                 <button
                   key={cat}
                   onClick={() => setCategoryFilter(cat)}
-                  className={`px-3 py-1.5 rounded-full text-sm transition-colors ${
-                    categoryFilter === cat
+                  className={`px-3 py-1.5 rounded-full text-sm transition-colors ${categoryFilter === cat
                       ? 'bg-yellow-400 text-black'
                       : 'bg-white/5 text-gray-400 hover:text-white'
-                  }`}
+                    }`}
                 >
                   {CATEGORY_LABELS[cat]}
                 </button>
@@ -255,10 +252,12 @@ const PublicBlogPage: React.FC<PublicBlogPageProps> = ({
                   <span className="px-2 py-0.5 bg-white/10 rounded-full capitalize">
                     {CATEGORY_LABELS[featuredArticle.category]}
                   </span>
-                  <span className="flex items-center gap-1">
-                    <Calendar size={12} />
-                    {new Date(featuredArticle.createdAt).toLocaleDateString()}
-                  </span>
+                  {featuredArticle.showDate !== false && (
+                    <span className="flex items-center gap-1">
+                      <Calendar size={12} />
+                      {new Date(featuredArticle.publishedAt || featuredArticle.createdAt).toLocaleDateString()}
+                    </span>
+                  )}
                   {featuredArticle.readTime && (
                     <span className="flex items-center gap-1">
                       <Clock size={12} />
@@ -272,15 +271,17 @@ const PublicBlogPage: React.FC<PublicBlogPageProps> = ({
                 <p className="text-gray-400 mb-6 line-clamp-3">
                   {featuredArticle.excerpt}
                 </p>
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center">
-                    <User size={18} className="text-gray-400" />
+                {featuredArticle.showAuthor !== false && (
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center">
+                      <User size={18} className="text-gray-400" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-white">{featuredArticle.author}</p>
+                      <p className="text-xs text-gray-500">{featuredArticle.category}</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="font-medium text-white">{featuredArticle.author}</p>
-                    <p className="text-xs text-gray-500">{featuredArticle.category}</p>
-                  </div>
-                </div>
+                )}
               </div>
             </div>
           </div>
@@ -336,10 +337,12 @@ const PublicBlogPage: React.FC<PublicBlogPageProps> = ({
                       <span className="px-2 py-0.5 bg-white/10 rounded-full capitalize">
                         {CATEGORY_LABELS[article.category]}
                       </span>
-                      <span className="flex items-center gap-1">
-                        <Calendar size={10} />
-                        {new Date(article.createdAt).toLocaleDateString()}
-                      </span>
+                      {article.showDate !== false && (
+                        <span className="flex items-center gap-1">
+                          <Calendar size={10} />
+                          {new Date(article.publishedAt || article.createdAt).toLocaleDateString()}
+                        </span>
+                      )}
                       {article.readTime && (
                         <span className="flex items-center gap-1">
                           <Clock size={10} />
@@ -353,7 +356,7 @@ const PublicBlogPage: React.FC<PublicBlogPageProps> = ({
                     <p className="text-sm text-gray-400 line-clamp-2 mb-4">
                       {article.excerpt}
                     </p>
-                    
+
                     {/* Tags */}
                     {article.tags.length > 0 && (
                       <div className="flex flex-wrap gap-1">

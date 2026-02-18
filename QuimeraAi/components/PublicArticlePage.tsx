@@ -273,34 +273,56 @@ const PublicArticlePage: React.FC<PublicArticlePageProps> = ({
 
           {/* Author & Date */}
           <div className="flex flex-wrap items-center justify-between gap-4 pb-8 border-b border-white/10">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center">
-                {article.authorImage ? (
-                  <img src={article.authorImage} alt={article.author} className="w-full h-full rounded-full object-cover" />
-                ) : (
-                  <User size={20} className="text-gray-400" />
-                )}
-              </div>
-              <div>
-                <p className="font-medium text-white">{article.author}</p>
-                <div className="flex items-center gap-3 text-sm text-gray-500">
-                  <span className="flex items-center gap-1">
-                    <Calendar size={12} />
-                    {new Date(article.publishedAt || article.createdAt).toLocaleDateString('en-US', {
-                      month: 'long',
-                      day: 'numeric',
-                      year: 'numeric'
-                    })}
-                  </span>
-                  {article.readTime && (
-                    <span className="flex items-center gap-1">
-                      <Clock size={12} />
-                      {article.readTime} min read
-                    </span>
+            {article.showAuthor !== false && (
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center">
+                  {article.authorImage ? (
+                    <img src={article.authorImage} alt={article.author} className="w-full h-full rounded-full object-cover" />
+                  ) : (
+                    <User size={20} className="text-gray-400" />
                   )}
                 </div>
+                <div>
+                  <p className="font-medium text-white">{article.author}</p>
+                  <div className="flex items-center gap-3 text-sm text-gray-500">
+                    {article.showDate !== false && (
+                      <span className="flex items-center gap-1">
+                        <Calendar size={12} />
+                        {new Date(article.publishedAt || article.createdAt).toLocaleDateString('en-US', {
+                          month: 'long',
+                          day: 'numeric',
+                          year: 'numeric'
+                        })}
+                      </span>
+                    )}
+                    {article.readTime && (
+                      <span className="flex items-center gap-1">
+                        <Clock size={12} />
+                        {article.readTime} min read
+                      </span>
+                    )}
+                  </div>
+                </div>
               </div>
-            </div>
+            )}
+            {!article.showAuthor && article.showDate !== false && (
+              <div className="flex items-center gap-3 text-sm text-gray-500">
+                <span className="flex items-center gap-1">
+                  <Calendar size={12} />
+                  {new Date(article.publishedAt || article.createdAt).toLocaleDateString('en-US', {
+                    month: 'long',
+                    day: 'numeric',
+                    year: 'numeric'
+                  })}
+                </span>
+                {article.readTime && (
+                  <span className="flex items-center gap-1">
+                    <Clock size={12} />
+                    {article.readTime} min read
+                  </span>
+                )}
+              </div>
+            )}
 
             {/* Share */}
             <div className="flex items-center gap-2">

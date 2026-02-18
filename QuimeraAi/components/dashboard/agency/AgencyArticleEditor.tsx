@@ -30,7 +30,7 @@ import { AgencyArticle, AgencyArticleCategory } from '../../../types/agencyConte
 import {
     ArrowLeft, Save, Globe, Type, Loader2, Sparkles,
     MoreVertical, Calendar, Check, X as XIcon, Link as LinkIcon,
-    Star, Tag
+    Star, Tag, User
 } from 'lucide-react';
 
 import EditorMenuBar from '../../cms/modern/EditorMenuBar';
@@ -74,6 +74,9 @@ const ModernAgencyArticleEditor: React.FC<ModernAgencyArticleEditorProps> = ({ a
     const [tags, setTags] = useState<string[]>(article?.tags || []);
     const [tagInput, setTagInput] = useState('');
     const [author, setAuthor] = useState(article?.author || 'Quimera Team');
+    const [showAuthor, setShowAuthor] = useState(article?.showAuthor !== false);
+    const [showDate, setShowDate] = useState(article?.showDate !== false);
+    const [publishedAt, setPublishedAt] = useState(article?.publishedAt || '');
 
     // SEO
     const [metaTitle, setMetaTitle] = useState(article?.seo?.metaTitle || '');
@@ -266,12 +269,14 @@ const ModernAgencyArticleEditor: React.FC<ModernAgencyArticleEditorProps> = ({ a
                 category,
                 tags,
                 author,
+                showAuthor,
+                showDate,
                 authorImage: article?.authorImage,
                 readTime,
                 views: article?.views || 0,
                 createdAt: article?.createdAt || new Date().toISOString(),
                 updatedAt: new Date().toISOString(),
-                publishedAt: status === 'published' && !article?.publishedAt ? new Date().toISOString() : article?.publishedAt,
+                publishedAt: publishedAt || (status === 'published' && !article?.publishedAt ? new Date().toISOString() : article?.publishedAt),
                 seo: {
                     metaTitle: metaTitle || title,
                     metaDescription: metaDescription || excerpt,
@@ -598,6 +603,51 @@ const ModernAgencyArticleEditor: React.FC<ModernAgencyArticleEditorProps> = ({ a
                                 <div>
                                     <label className="block text-xs font-bold text-muted-foreground uppercase mb-2">Autor</label>
                                     <input value={author} onChange={(e) => setAuthor(e.target.value)} className="w-full bg-secondary/50 border border-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-primary outline-none text-foreground" />
+                                </div>
+
+                                {/* Publication Date */}
+                                <div>
+                                    <label className="block text-xs font-bold text-muted-foreground uppercase mb-2">Fecha de Publicación</label>
+                                    <input
+                                        type="datetime-local"
+                                        value={publishedAt ? new Date(publishedAt).toISOString().slice(0, 16) : ''}
+                                        onChange={(e) => setPublishedAt(e.target.value ? new Date(e.target.value).toISOString() : '')}
+                                        className="w-full bg-secondary/50 border border-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-primary outline-none text-foreground"
+                                    />
+                                </div>
+
+                                {/* Show Author Toggle */}
+                                <div className="flex items-center justify-between p-3 bg-secondary/30 border border-border rounded-lg">
+                                    <div className="flex items-center gap-2">
+                                        <User size={14} className="text-muted-foreground" />
+                                        <span className="text-sm font-medium">Mostrar Autor</span>
+                                    </div>
+                                    <label className="relative inline-flex items-center cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            checked={showAuthor}
+                                            onChange={(e) => setShowAuthor(e.target.checked)}
+                                            className="sr-only peer"
+                                        />
+                                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary"></div>
+                                    </label>
+                                </div>
+
+                                {/* Show Date Toggle */}
+                                <div className="flex items-center justify-between p-3 bg-secondary/30 border border-border rounded-lg">
+                                    <div className="flex items-center gap-2">
+                                        <Calendar size={14} className="text-muted-foreground" />
+                                        <span className="text-sm font-medium">Mostrar Fecha</span>
+                                    </div>
+                                    <label className="relative inline-flex items-center cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            checked={showDate}
+                                            onChange={(e) => setShowDate(e.target.checked)}
+                                            className="sr-only peer"
+                                        />
+                                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary"></div>
+                                    </label>
                                 </div>
 
                                 {/* Tags */}
