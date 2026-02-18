@@ -69,7 +69,7 @@ const EditorMenuBar: React.FC<EditorMenuBarProps> = ({ editor, onImageUpload, on
     const colors = ['#000000', '#4b5563', '#9ca3af', '#ffffff', '#ef4444', '#f97316', '#f59e0b', '#84cc16', '#10b981', '#06b6d4', '#3b82f6', '#6366f1', '#8b5cf6', '#d946ef', '#f43f5e'];
 
     return (
-        <div className="border-b border-border bg-card p-2 flex gap-1 items-center sticky top-0 z-30 overflow-x-auto scrollbar-hide">
+        <div className="border-b border-border bg-card p-2 flex flex-wrap gap-1 items-center sticky top-0 z-30">
             {/* History */}
             <div className="flex shrink-0 bg-background border border-border rounded-md shadow-sm">
                 <MenuButton onClick={() => editor.chain().focus().undo().run()} disabled={!editor.can().undo()} title={t('cms_editor.toolbar.undo')}>
