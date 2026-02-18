@@ -84,7 +84,7 @@ export function AgencyProvider({ children }: AgencyProviderProps) {
         error,
         getClientMetrics,
         refreshMetrics,
-    } = useAgencyMetrics(currentTenant?.id || '');
+    } = useAgencyMetrics(isAgencyPlan ? (currentTenant?.id || '') : '');
 
     // Export client data (CSV format)
     const exportClientData = async (clientId: string): Promise<void> => {
