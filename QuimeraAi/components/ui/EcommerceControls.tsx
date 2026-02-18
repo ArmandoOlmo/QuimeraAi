@@ -1906,27 +1906,27 @@ export const useAnnouncementBarControls = ({ data, setNestedData, storeId = '' }
                 <ColorControl
                     label={t('editor.controls.ecommerce.background', 'Background')}
                     value={d.colors?.background || '#4f46e5'}
-                    onChange={(c) => setNestedData('announcementBar.colors?.background', c)}
+                    onChange={(c) => setNestedData('announcementBar.colors.background', c)}
                 />
                 <ColorControl
                     label={t('editor.controls.ecommerce.text', 'Text')}
                     value={d.colors?.text || '#ffffff'}
-                    onChange={(c) => setNestedData('announcementBar.colors?.text', c)}
+                    onChange={(c) => setNestedData('announcementBar.colors.text', c)}
                 />
                 <ColorControl
                     label={t('editor.controls.ecommerce.linkColor', 'Link Color')}
                     value={d.colors?.linkColor || '#ffffff'}
-                    onChange={(c) => setNestedData('announcementBar.colors?.linkColor', c)}
+                    onChange={(c) => setNestedData('announcementBar.colors.linkColor', c)}
                 />
                 <ColorControl
                     label={t('editor.controls.ecommerce.iconColor', 'Icon Color')}
                     value={d.colors?.iconColor || '#ffffff'}
-                    onChange={(c) => setNestedData('announcementBar.colors?.iconColor', c)}
+                    onChange={(c) => setNestedData('announcementBar.colors.iconColor', c)}
                 />
                 <ColorControl
                     label={t('editor.controls.ecommerce.borderColor', 'Border Color')}
                     value={d.colors?.borderColor || 'transparent'}
-                    onChange={(c) => setNestedData('announcementBar.colors?.borderColor', c)}
+                    onChange={(c) => setNestedData('announcementBar.colors.borderColor', c)}
                 />
             </div>
 
