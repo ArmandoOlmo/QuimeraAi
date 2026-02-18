@@ -61,100 +61,82 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
     const defaultAppearance = getDefaultAppearanceConfig();
     const baseAppearance = aiAssistantConfig.appearance || defaultAppearance;
 
-    // Get project theme colors as fallback - check multiple sources
+    // Check if the user has explicitly configured colors via AI Dashboard
+    // (the appearance object exists on the aiAssistantConfig, meaning the user
+    // went through onboarding or customized via ChatCustomizationSettings)
+    const hasAiDashboardAppearance = !!aiAssistantConfig.appearance?.colors;
+
+    // Get project theme colors as fallback (only used when AI Dashboard hasn't been configured)
     const projectTheme = standaloneProject?.theme || projectContext?.theme;
     const globalColors = projectTheme?.globalColors || {};
-
-    // Also get colors from Hero component - this is often the best source for primary color
     const heroColors = data?.hero?.colors || {};
     const heroButtonColor = heroColors.buttonBackground || heroColors.primary;
-
-    // Also check the theme for design tokens
     const themeColors = projectTheme?.colors || {};
     const themePrimaryColor = themeColors.primary || themeColors.brand;
 
-    // Default chat colors (to compare if user customized)
-    const defaultPrimaryColor = '#4F46E5'; // indigo
-    const defaultWidgetColor = '#4f46e5'; // widget default (same but lowercase)
+    // Legacy chatbot colors from web editor (lowest priority fallback)
+    const legacyChatbotColors = (data?.chatbot?.colors || {}) as Record<string, string | undefined>;
 
-    // Check if user has explicitly customized widget color
-    const widgetColor = aiAssistantConfig.widgetColor;
-    const hasCustomWidgetColor = widgetColor &&
-        widgetColor.toLowerCase() !== defaultWidgetColor &&
-        widgetColor.toLowerCase() !== '#6366f1';
+    // Default
+    const defaultPrimaryColor = '#4F46E5';
 
-    // Check if user has explicitly customized colors in AI Assistant Dashboard
-    const aiConfigPrimaryColor = aiAssistantConfig.appearance?.colors?.primaryColor;
-    const hasCustomAiColors = aiConfigPrimaryColor &&
-        aiConfigPrimaryColor.toLowerCase() !== defaultPrimaryColor.toLowerCase() &&
-        aiConfigPrimaryColor.toLowerCase() !== '#6366f1';
+    // Fallback primary color from theme/hero (used only when AI Dashboard has no colors)
+    const themeFallbackPrimary = globalColors.primary || heroButtonColor || themePrimaryColor || defaultPrimaryColor;
 
-    // Determine the best primary color to use
-    // Priority: 
-    // 1. Custom widget color (explicitly set in AI Dashboard)
-    // 2. Explicitly customized AI config colors (not defaults)
-    // 3. Global theme colors
-    // 4. Hero button color
-    // 5. Theme primary color
-    // 6. Default
-    const effectivePrimaryColor = hasCustomWidgetColor ? widgetColor!
-        : hasCustomAiColors ? aiConfigPrimaryColor!
-            : (globalColors.primary || heroButtonColor || themePrimaryColor || defaultPrimaryColor);
-
-    // Merge colors from Web Editor (data.chatbot.colors) with appearance colors
-    const chatbotColors = (data?.chatbot?.colors || {}) as Partial<{
-        primaryColor: string;
-        secondaryColor: string;
-        accentColor: string;
-        userBubbleColor: string;
-        userTextColor: string;
-        botBubbleColor: string;
-        botTextColor: string;
-        backgroundColor: string;
-        inputBackground: string;
-        inputBorder: string;
-        inputText: string;
-        headerBackground: string;
-        headerText: string;
-    }>;
-
-    // Final appearance with project colors taking precedence over defaults
-    const appearance = {
-        ...baseAppearance,
-        colors: {
-            ...baseAppearance.colors,
-            // Project colors have priority over chatbot defaults (but chatbot custom colors win)
-            primaryColor: chatbotColors.primaryColor || effectivePrimaryColor,
-            secondaryColor: chatbotColors.secondaryColor || globalColors.secondary || heroColors.secondary || baseAppearance.colors?.secondaryColor,
-            accentColor: chatbotColors.accentColor || globalColors.accent || heroColors.primary || baseAppearance.colors?.accentColor,
-            userBubbleColor: chatbotColors.userBubbleColor || effectivePrimaryColor,
-            userTextColor: chatbotColors.userTextColor || baseAppearance.colors?.userTextColor,
-            botBubbleColor: chatbotColors.botBubbleColor || globalColors.surface || baseAppearance.colors?.botBubbleColor,
-            botTextColor: chatbotColors.botTextColor || globalColors.text || baseAppearance.colors?.botTextColor,
-            backgroundColor: chatbotColors.backgroundColor || globalColors.background || heroColors.background || baseAppearance.colors?.backgroundColor,
-            inputBackground: chatbotColors.inputBackground || globalColors.surface || baseAppearance.colors?.inputBackground,
-            inputBorder: chatbotColors.inputBorder || globalColors.border || baseAppearance.colors?.inputBorder,
-            inputText: chatbotColors.inputText || globalColors.text || baseAppearance.colors?.inputText,
-            headerBackground: chatbotColors.headerBackground || effectivePrimaryColor,
-            headerText: chatbotColors.headerText || baseAppearance.colors?.headerText,
+    // Build the final appearance:
+    // Priority: AI Dashboard colors → theme fallbacks (only for missing values) → legacy → defaults
+    const appearance = hasAiDashboardAppearance
+        ? {
+            // AI Dashboard configured: use those colors as-is, theme fills gaps only
+            ...baseAppearance,
+            colors: {
+                primaryColor: baseAppearance.colors?.primaryColor || themeFallbackPrimary,
+                secondaryColor: baseAppearance.colors?.secondaryColor || globalColors.secondary || defaultPrimaryColor,
+                accentColor: baseAppearance.colors?.accentColor || globalColors.accent || defaultPrimaryColor,
+                userBubbleColor: baseAppearance.colors?.userBubbleColor || baseAppearance.colors?.primaryColor || themeFallbackPrimary,
+                userTextColor: baseAppearance.colors?.userTextColor || '#ffffff',
+                botBubbleColor: baseAppearance.colors?.botBubbleColor || '#f3f4f6',
+                botTextColor: baseAppearance.colors?.botTextColor || '#1f2937',
+                backgroundColor: baseAppearance.colors?.backgroundColor || '#ffffff',
+                inputBackground: baseAppearance.colors?.inputBackground || '#ffffff',
+                inputBorder: baseAppearance.colors?.inputBorder || '#e5e7eb',
+                inputText: baseAppearance.colors?.inputText || '#1f2937',
+                headerBackground: baseAppearance.colors?.headerBackground || baseAppearance.colors?.primaryColor || themeFallbackPrimary,
+                headerText: baseAppearance.colors?.headerText || '#ffffff',
+            }
         }
-    };
+        : {
+            // No AI Dashboard config: use theme/hero/legacy as primary sources
+            ...baseAppearance,
+            colors: {
+                ...baseAppearance.colors,
+                primaryColor: legacyChatbotColors.primaryColor || themeFallbackPrimary,
+                secondaryColor: legacyChatbotColors.secondaryColor || globalColors.secondary || baseAppearance.colors?.secondaryColor,
+                accentColor: legacyChatbotColors.accentColor || globalColors.accent || heroColors.primary || baseAppearance.colors?.accentColor,
+                userBubbleColor: legacyChatbotColors.userBubbleColor || themeFallbackPrimary,
+                userTextColor: legacyChatbotColors.userTextColor || baseAppearance.colors?.userTextColor,
+                botBubbleColor: legacyChatbotColors.botBubbleColor || globalColors.surface || baseAppearance.colors?.botBubbleColor,
+                botTextColor: legacyChatbotColors.botTextColor || globalColors.text || baseAppearance.colors?.botTextColor,
+                backgroundColor: legacyChatbotColors.backgroundColor || globalColors.background || heroColors.background || baseAppearance.colors?.backgroundColor,
+                inputBackground: legacyChatbotColors.inputBackground || globalColors.surface || baseAppearance.colors?.inputBackground,
+                inputBorder: legacyChatbotColors.inputBorder || globalColors.border || baseAppearance.colors?.inputBorder,
+                inputText: legacyChatbotColors.inputText || globalColors.text || baseAppearance.colors?.inputText,
+                headerBackground: legacyChatbotColors.headerBackground || themeFallbackPrimary,
+                headerText: legacyChatbotColors.headerText || baseAppearance.colors?.headerText,
+            }
+        };
 
     // Debug log - always log in standalone mode for debugging
     if (standaloneProject || standaloneConfig) {
         console.log('[ChatbotWidget] Color resolution:', {
-            hasCustomWidgetColor,
-            widgetColor,
-            hasCustomAiColors,
-            aiConfigPrimaryColor,
+            hasAiDashboardAppearance,
+            aiDashboardPrimary: baseAppearance.colors?.primaryColor,
             globalColorsPrimary: globalColors.primary,
             heroButtonColor,
-            heroColorsRaw: heroColors,
             themePrimaryColor,
-            effectivePrimaryColor,
+            themeFallbackPrimary,
             finalPrimaryColor: appearance.colors?.primaryColor,
             dataKeys: data ? Object.keys(data) : 'no data',
-            heroData: data?.hero ? { hasColors: !!data.hero.colors, colors: data.hero.colors } : 'no hero'
         });
     }
 
