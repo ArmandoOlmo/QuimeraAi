@@ -1421,7 +1421,7 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
       case 'cta':
         return <CTASection {...compData} cardBorderRadius={borderRadius} buttonBorderRadius={buttonBorderRadius} />;
       case 'portfolio':
-        return <Portfolio {...compData} borderRadius={borderRadius} />;
+        return <Portfolio {...compData} borderRadius={borderRadius} onNavigate={handleLinkNavigation} />;
       case 'services':
         return <Services {...compData} borderRadius={borderRadius} />;
       case 'team':

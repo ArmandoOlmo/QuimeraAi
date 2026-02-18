@@ -26,6 +26,7 @@ interface PortfolioCardProps {
   accentColor?: string;
   linkUrl?: string;
   linkText?: string;
+  onNavigate?: (href: string) => void;
 }
 
 const paddingYClasses: Record<PaddingSize, string> = {
@@ -86,6 +87,7 @@ interface PortfolioOverlayCardProps {
   textAlignment: TextAlignment;
   animationType?: AnimationType;
   enableAnimation?: boolean;
+  onNavigate?: (href: string) => void;
 }
 
 const PortfolioOverlayCard: React.FC<PortfolioOverlayCardProps> = ({
@@ -95,7 +97,8 @@ const PortfolioOverlayCard: React.FC<PortfolioOverlayCardProps> = ({
   imageHeight,
   textAlignment,
   animationType = 'fade-in-up',
-  enableAnimation = true
+  enableAnimation = true,
+  onNavigate
 }) => {
   const animationClass = getAnimationClass(animationType, enableAnimation);
   const delay = getAnimationDelay(index);
@@ -146,10 +149,11 @@ const PortfolioOverlayCard: React.FC<PortfolioOverlayCardProps> = ({
         </p>
         {item.linkUrl && (
           <a
-            href={item.linkUrl}
+            href={item.linkUrl.startsWith('http') ? item.linkUrl : undefined}
+            onClick={(!item.linkUrl.startsWith('http') && onNavigate) ? (e) => { e.preventDefault(); onNavigate(item.linkUrl!); } : undefined}
             target={item.linkUrl.startsWith('http') ? '_blank' : undefined}
             rel={item.linkUrl.startsWith('http') ? 'noopener noreferrer' : undefined}
-            className="mt-2 inline-flex items-center gap-2 text-sm font-semibold text-white/90 hover:text-white opacity-0 group-hover:opacity-100 transition-all duration-300"
+            className="mt-2 inline-flex items-center gap-2 text-sm font-semibold text-white/90 hover:text-white opacity-0 group-hover:opacity-100 transition-all duration-300 cursor-pointer"
           >
             <span>{item.linkText || 'View project'}</span>
             <ArrowRight className="w-4 h-4" />
@@ -183,7 +187,8 @@ const PortfolioCard: React.FC<PortfolioCardProps> = ({
   cardOverlayEnd = 'rgba(0,0,0,0.2)',
   accentColor,
   linkUrl,
-  linkText
+  linkText,
+  onNavigate
 }) => {
   const animationClass = getAnimationClass(animationType, enableAnimation);
   const isExternal = linkUrl?.startsWith('http');
@@ -223,10 +228,11 @@ const PortfolioCard: React.FC<PortfolioCardProps> = ({
         </p>
         {linkUrl && (
           <a
-            href={linkUrl}
+            href={isExternal ? linkUrl : undefined}
+            onClick={(!isExternal && onNavigate) ? (e) => { e.preventDefault(); onNavigate(linkUrl!); } : undefined}
             target={isExternal ? '_blank' : undefined}
             rel={isExternal ? 'noopener noreferrer' : undefined}
-            className="mt-3 inline-flex items-center gap-2 text-sm font-semibold group/link transition-colors"
+            className="mt-3 inline-flex items-center gap-2 text-sm font-semibold group/link transition-colors cursor-pointer"
             style={{ color: accentColor || cardTitleColor }}
           >
             <span>{linkText || 'View project'}</span>
@@ -244,6 +250,7 @@ const PortfolioCard: React.FC<PortfolioCardProps> = ({
 interface PortfolioProps extends PortfolioData {
   borderRadius: BorderRadiusSize;
   cornerGradient?: CornerGradientConfig;
+  onNavigate?: (href: string) => void;
 }
 
 const gridColsClasses: Record<number, string> = {
@@ -269,7 +276,8 @@ const Portfolio: React.FC<PortfolioProps> = ({
   imageHeight = 300,
   overlayTextAlignment = 'left',
   showSectionHeader = true,
-  cornerGradient
+  cornerGradient,
+  onNavigate
 }) => {
   // --- RENDERIZADO IMAGE OVERLAY ---
   if (portfolioVariant === 'image-overlay') {
@@ -323,6 +331,7 @@ const Portfolio: React.FC<PortfolioProps> = ({
               textAlignment={overlayTextAlignment}
               animationType={animationType}
               enableAnimation={enableCardAnimation}
+              onNavigate={onNavigate}
             />
           ))}
         </div>
@@ -362,6 +371,7 @@ const Portfolio: React.FC<PortfolioProps> = ({
               accentColor={colors?.accent}
               linkUrl={item.linkUrl}
               linkText={item.linkText}
+              onNavigate={onNavigate}
             />
           ))}
         </div>
