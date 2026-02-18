@@ -748,7 +748,7 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
                             isAiWorking={isAiWorking}
                         />
 
-                        <div className="flex-1 overflow-y-auto bg-background">
+                        <div className="flex-1 overflow-y-auto bg-background relative z-0">
                             {/* Content container - full width, no border */}
                             <div className="w-full">
                                 <EditorContent editor={editor} />
