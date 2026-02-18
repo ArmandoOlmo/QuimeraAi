@@ -442,9 +442,11 @@ export const EditorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
     const isInitialLoadRef = useRef(true);
     const projectsRef = useRef<Project[]>([]); // Ref to keep latest projects for auto-save
-    const aiAssistantConfigRef = useRef<AiAssistantConfig>(aiAssistantConfig); // Ref to prevent stale closure in auto-save
 
     // Project AI Assistant Config
+    // IMPORTANT: aiAssistantConfig must be declared BEFORE aiAssistantConfigRef
+    // to avoid TDZ (Temporal Dead Zone) errors in production builds where
+    // Terser minifies const declarations strictly.
     const [aiAssistantConfig, setAiAssistantConfig] = useState<AiAssistantConfig>({
         agentName: 'Quimera Bot',
         tone: 'Professional',
@@ -462,6 +464,7 @@ export const EditorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         enableLiveVoice: false,
         voiceName: 'Zephyr'
     });
+    const aiAssistantConfigRef = useRef<AiAssistantConfig>(aiAssistantConfig); // Ref to prevent stale closure in auto-save
 
     // Global Assistant Config (System Level)
     const [globalAssistantConfig, setGlobalAssistantConfig] = useState<GlobalAssistantConfig>({

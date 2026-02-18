@@ -7,7 +7,8 @@ import { SEOConfig, AdPixelConfig } from '../../types';
 import DashboardSidebar from './DashboardSidebar';
 import ProjectSelectorPage from './seo/ProjectSelectorPage';
 import ImagePicker from '../ui/ImagePicker';
-import { Globe, Search, Share2, Code, CheckCircle, Menu, Store, ChevronDown, Check, Layers, Activity, ExternalLink } from 'lucide-react';
+import SEOAiAssistant from './seo/SEOAiAssistant';
+import { Globe, Search, Share2, Code, CheckCircle, Menu, Store, ChevronDown, Check, Layers, Activity, ExternalLink, Sparkles } from 'lucide-react';
 
 type SeoTab = 'basic' | 'social' | 'advanced' | 'ai' | 'pixels';
 
@@ -32,6 +33,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(activeProjectId);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProjectSelectorOpen, setIsProjectSelectorOpen] = useState(false);
+  const [isAiAssistantOpen, setIsAiAssistantOpen] = useState(false);
   const selectableProjects = projects.filter(p => p.status !== 'Template');
 
   // Determinar qué proyecto usar
@@ -77,6 +79,10 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
     await loadProject(projectId, false, false);
   };
 
+  const handleAiResult = (seoData: Partial<SEOConfig>) => {
+    setLocalConfig(prev => prev ? { ...prev, ...seoData } : null);
+  };
+
   // Mostrar página de selección de proyecto si no hay proyecto seleccionado
   if (!effectiveProjectId || selectableProjects.length === 0) {
     return (
@@ -111,8 +117,8 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as SeoTab)}
                 className={`flex items-center gap-2 px-4 py-3 border-b-2 transition-colors ${activeTab === tab.id
-                    ? 'border-primary text-foreground'
-                    : 'border-transparent text-muted-foreground hover:text-foreground'
+                  ? 'border-primary text-foreground'
+                  : 'border-transparent text-muted-foreground hover:text-foreground'
                   }`}
               >
                 <tab.icon className="w-4 h-4" />
@@ -1317,6 +1323,15 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
 
   return (
     <div className="flex h-screen bg-background text-foreground">
+      {/* AI SEO Assistant Modal */}
+      {isAiAssistantOpen && (
+        <SEOAiAssistant
+          onClose={() => setIsAiAssistantOpen(false)}
+          onApply={handleAiResult}
+          currentConfig={localConfig}
+        />
+      )}
+
       <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
@@ -1403,13 +1418,23 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
           </div>
 
           {effectiveProject && localConfig && (
-            <button
-              onClick={handleUpdate}
-              disabled={isSaving}
-              className="h-9 px-4 bg-primary text-primary-foreground font-medium text-sm rounded-lg hover:opacity-90 transition-colors disabled:opacity-50 shadow-sm"
-            >
-              {isSaving ? t('seo.saving') : t('seo.saveChanges')}
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setIsAiAssistantOpen(true)}
+                className="flex items-center gap-1.5 h-9 px-3 rounded-lg text-sm font-bold transition-all text-primary bg-primary/10 hover:bg-primary/20 border border-primary/30"
+              >
+                <Sparkles className="w-4 h-4" />
+                <span className="hidden sm:inline">{t('seo.optimizeWithAI', 'Optimizar con IA')}</span>
+                <span className="sm:hidden">IA</span>
+              </button>
+              <button
+                onClick={handleUpdate}
+                disabled={isSaving}
+                className="h-9 px-4 bg-primary text-primary-foreground font-medium text-sm rounded-lg hover:opacity-90 transition-colors disabled:opacity-50 shadow-sm"
+              >
+                {isSaving ? t('seo.saving') : t('seo.saveChanges')}
+              </button>
+            </div>
           )}
         </header>
 
