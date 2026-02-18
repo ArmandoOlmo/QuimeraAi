@@ -42,7 +42,7 @@ const SEOAiAssistant: React.FC<SEOAiAssistantProps> = ({ onClose, onApply, curre
         let modelToUse = 'gemini-2.5-flash';
 
         try {
-            const promptTemplate = admin?.getPrompt('seo-ai-assistant');
+            const promptTemplate = admin?.getPrompt('ai-seo-assistant');
 
             let promptText = '';
 
@@ -89,16 +89,16 @@ Output ONLY valid JSON without any markdown formatting or code blocks.
 `;
             }
 
-            const response = await generateContentViaProxy('seo-ai-assistant', promptText, modelToUse, {
+            const response = await generateContentViaProxy('ai-seo-assistant', promptText, modelToUse, {
                 temperature: 0.7
             }, user?.uid);
 
             if (user) {
                 logApiCall({
                     userId: user.uid,
-                    projectId: 'seo-assistant',
+                    projectId: 'ai-seo-assistant',
                     model: modelToUse,
-                    feature: 'seo-ai-assistant',
+                    feature: 'ai-seo-assistant',
                     success: true
                 });
             }
@@ -128,9 +128,9 @@ Output ONLY valid JSON without any markdown formatting or code blocks.
             if (user) {
                 logApiCall({
                     userId: user.uid,
-                    projectId: 'seo-assistant',
+                    projectId: 'ai-seo-assistant',
                     model: modelToUse,
-                    feature: 'seo-ai-assistant',
+                    feature: 'ai-seo-assistant',
                     success: false,
                     errorMessage: error instanceof Error ? error.message : 'Unknown error'
                 });
