@@ -15,6 +15,7 @@ interface TestimonialCardProps {
   accentColor: string;
   textColor: string;
   descriptionColor: string;
+  personTitleColor: string;
   borderColor: string;
   cardBackground: string;
   // Style
@@ -91,6 +92,7 @@ const TestimonialCard: React.FC<TestimonialCardProps> = ({
   accentColor,
   textColor,
   descriptionColor,
+  personTitleColor,
   borderColor,
   cardBackground,
   // Style
@@ -224,7 +226,7 @@ const TestimonialCard: React.FC<TestimonialCardProps> = ({
       <div className={`flex items-center ${needsZIndex ? 'relative z-10' : ''}`}>
         <div>
           <p className="font-bold font-body transition-colors duration-300 group-hover:text-[var(--hover-accent)]" style={{ color: textColor, '--hover-accent': accentColor } as React.CSSProperties}>{name}</p>
-          <p className="text-sm font-body transition-opacity duration-300 group-hover:opacity-100" style={{ color: descriptionColor, opacity: 0.8 }}>{title}</p>
+          <p className="text-sm font-body transition-opacity duration-300 group-hover:opacity-100" style={{ color: personTitleColor, opacity: 0.8 }}>{title}</p>
         </div>
       </div>
     </div>
@@ -290,7 +292,8 @@ const Testimonials: React.FC<TestimonialsProps> = ({
       // Card-level colors
       cardHeading: actualColors.heading || '#ffffff',
       cardText: actualColors.text || '#94a3b8',
-      cardDescription: actualColors.subtitleColor || actualColors.description || actualColors.text || '#94a3b8',
+      cardDescription: actualColors.description || actualColors.text || '#94a3b8',
+      personTitle: actualColors.subtitleColor || '#94a3b8',
     };
   }, [actualColors]);
 
@@ -316,6 +319,7 @@ const Testimonials: React.FC<TestimonialsProps> = ({
               accentColor={actualColors.accent}
               textColor={safeColors.cardText}
               descriptionColor={safeColors.cardDescription}
+              personTitleColor={safeColors.personTitle}
               borderColor={actualColors.borderColor}
               cardBackground={cardBackground}
               // Style
