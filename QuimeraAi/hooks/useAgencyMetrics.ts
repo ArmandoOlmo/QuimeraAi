@@ -370,8 +370,11 @@ export function useAgencyMetrics(agencyTenantId: string) {
 
                 // Keep only last 50
                 setRecentActivity(activities.slice(0, 50));
-            } catch (err) {
-                console.error('Error fetching activity:', err);
+            } catch (err: any) {
+                // Suppress permission errors silently (expected for non-agency users)
+                if (err?.code !== 'permission-denied') {
+                    console.warn('Error fetching activity:', err);
+                }
             }
         };
 

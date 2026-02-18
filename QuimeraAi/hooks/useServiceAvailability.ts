@@ -112,10 +112,12 @@ export function useServiceAvailability(): UseServiceAvailabilityReturn {
         }
     }, []);
 
-    // Load audit log on mount
+    // Load audit log on mount (only for super admins who have read access)
     useEffect(() => {
-        refreshAuditLog();
-    }, [refreshAuditLog]);
+        if (userRole === 'owner' || userRole === 'superadmin' || userRole === 'Owner' || userRole === 'Superadmin' || userRole === 'SuperAdmin') {
+            refreshAuditLog();
+        }
+    }, [refreshAuditLog, userRole]);
 
     // =========================================================================
     // UPDATE SERVICE STATUS
