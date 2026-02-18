@@ -214,6 +214,9 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
     const [showContentImagePicker, setShowContentImagePicker] = useState(false);
     const [contentImageUrl, setContentImageUrl] = useState('');
 
+    // Error display (replaces native alert)
+    const [saveError, setSaveError] = useState<string | null>(null);
+
     const contentFileInputRef = useRef<HTMLInputElement>(null);
     const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -397,7 +400,7 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
                 author,
                 showAuthor,
                 showDate,
-                publishedAt: publishedAt || undefined,
+                ...(publishedAt ? { publishedAt } : {}),
                 createdAt: post?.createdAt || new Date().toISOString(),
                 updatedAt: new Date().toISOString(),
             };
@@ -409,8 +412,11 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
                 setTimeout(() => onClose(), 500);
             }
         } catch (error) {
-            console.error(error);
-            if (!isAutoSave) alert("Failed to save");
+            console.error('Error saving CMS post:', error);
+            if (!isAutoSave) {
+                setSaveError(t('cms_editor.saveFailed', 'Error al guardar. Intente de nuevo.'));
+                setTimeout(() => setSaveError(null), 5000);
+            }
         } finally {
             setIsSaving(false);
         }
@@ -637,6 +643,13 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
                         </button>
                     </div>
                 </header>
+
+                {/* Save Error Banner */}
+                {saveError && (
+                    <div className="px-4 py-2 bg-red-500/20 border-b border-red-500/30 text-red-400 text-sm text-center font-medium animate-in fade-in">
+                        {saveError}
+                    </div>
+                )}
 
                 <input
                     type="file"

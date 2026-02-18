@@ -60,6 +60,13 @@ const defaultMenus: Menu[] = [
     }
 ];
 
+// Helper to strip undefined values from an object before Firestore write
+const stripUndefined = (obj: Record<string, any>): Record<string, any> => {
+    return Object.fromEntries(
+        Object.entries(obj).filter(([_, v]) => v !== undefined)
+    );
+};
+
 // Helper to get the correct projects collection path
 const getProjectsCollectionPath = (userId: string, tenantId?: string | null): string[] => {
     const isPersonalTenant = tenantId && tenantId.startsWith(`tenant_${userId}`);
@@ -194,16 +201,16 @@ export const CMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
             if (id && id.length > 0) {
                 const postRef = doc(db, collectionPath, id);
-                await updateDoc(postRef, { ...data, updatedAt: now });
+                await updateDoc(postRef, stripUndefined({ ...data, updatedAt: now }));
             } else {
                 const postsCol = collection(db, collectionPath);
-                const docRef = await addDoc(postsCol, {
+                const docRef = await addDoc(postsCol, stripUndefined({
                     ...data,
                     authorId: user.uid,
                     projectId: activeProject.id,
                     createdAt: now,
                     updatedAt: now
-                });
+                }));
                 savedPostId = docRef.id;
             }
 
@@ -220,14 +227,14 @@ export const CMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
                     });
 
                     const publicPostRef = doc(db, 'publicStores', activeProject.id, 'posts', savedPostId);
-                    await setDoc(publicPostRef, {
+                    await setDoc(publicPostRef, stripUndefined({
                         ...data,
                         id: savedPostId,
                         authorId: post.authorId || user.uid,
                         projectId: activeProject.id,
                         updatedAt: now,
                         publishedAt: now // Update published timestamp
-                    }, { merge: true });
+                    }), { merge: true });
                     console.log('[CMSContext] ✅ Synced published post to public store');
 
                     // --- AUTO-ENROLL IN CHATBOT KNOWLEDGE ---
