@@ -10,7 +10,7 @@ import { X, Sparkles, ArrowRight, Loader2, CheckCircle, Globe, Search, Share2, B
 import { generateContentViaProxy, extractTextFromResponse } from '../../../utils/geminiProxyClient';
 import { SEOConfig } from '../../../types';
 import { useAuth } from '../../../contexts/core/AuthContext';
-import { useAdmin } from '../../../contexts/admin';
+import { useSafeAdmin } from '../../../contexts/admin';
 import { logApiCall } from '../../../services/apiLoggingService';
 
 interface SEOAiAssistantProps {
@@ -24,7 +24,7 @@ type Step = 'describe' | 'generating' | 'preview';
 const SEOAiAssistant: React.FC<SEOAiAssistantProps> = ({ onClose, onApply, currentConfig }) => {
     const { t } = useTranslation();
     const { user } = useAuth();
-    const { getPrompt } = useAdmin();
+    const admin = useSafeAdmin();
 
     const [step, setStep] = useState<Step>('describe');
     const [businessDescription, setBusinessDescription] = useState('');
@@ -42,7 +42,7 @@ const SEOAiAssistant: React.FC<SEOAiAssistantProps> = ({ onClose, onApply, curre
         let modelToUse = 'gemini-2.5-flash';
 
         try {
-            const promptTemplate = getPrompt('seo-ai-assistant');
+            const promptTemplate = admin?.getPrompt('seo-ai-assistant');
 
             let promptText = '';
 
