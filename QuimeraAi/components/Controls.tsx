@@ -4158,6 +4158,17 @@ const Controls: React.FC = () => {
 
           <hr className="border-editor-border/50" />
 
+          {/* Form Placeholders */}
+          <div className="space-y-2">
+            <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Form Placeholders</label>
+            <Input label="Name Field" value={data?.leads.namePlaceholder || ''} onChange={(e) => setNestedData('leads.namePlaceholder', e.target.value)} />
+            <Input label="Email Field" value={data?.leads.emailPlaceholder || ''} onChange={(e) => setNestedData('leads.emailPlaceholder', e.target.value)} />
+            <Input label="Company Field" value={data?.leads.companyPlaceholder || ''} onChange={(e) => setNestedData('leads.companyPlaceholder', e.target.value)} />
+            <Input label="Message Field" value={data?.leads.messagePlaceholder || ''} onChange={(e) => setNestedData('leads.messagePlaceholder', e.target.value)} />
+          </div>
+
+          <hr className="border-editor-border/50" />
+
           {/* Border Radius Controls */}
           <div className="space-y-2">
             <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">{t('editor.controls.leads.borderRadius')}</label>
