@@ -4,6 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import ConfirmationModal from '../../ui/ConfirmationModal';
 import { useTenant } from '../../../contexts/tenant/TenantContext';
 import { db } from '../../../firebase';
 import { collection, query, where, getDocs, addDoc, updateDoc, deleteDoc, doc, Timestamp } from 'firebase/firestore';
@@ -38,6 +39,7 @@ export function PermissionTemplates() {
     const [isEditing, setIsEditing] = useState(false);
     const [isCreating, setIsCreating] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [deleteTemplateId, setDeleteTemplateId] = useState<string | null>(null);
 
     useEffect(() => {
         loadCustomTemplates();
@@ -112,15 +114,17 @@ export function PermissionTemplates() {
         }
     };
 
-    const handleDeleteTemplate = async (templateId: string) => {
-        const confirmed = window.confirm(
-            '¿Estás seguro de eliminar esta plantilla? Esta acción no se puede deshacer.'
-        );
+    const handleDeleteTemplate = (templateId: string) => {
+        setDeleteTemplateId(templateId);
+    };
 
-        if (!confirmed) return;
+    const confirmDeleteTemplate = async () => {
+        if (!deleteTemplateId) return;
+        const id = deleteTemplateId;
+        setDeleteTemplateId(null);
 
         try {
-            await deleteDoc(doc(db, 'permissionTemplates', templateId));
+            await deleteDoc(doc(db, 'permissionTemplates', id));
             await loadCustomTemplates();
         } catch (err: any) {
             console.error('Error deleting template:', err);
@@ -272,11 +276,10 @@ export function PermissionTemplates() {
                                                 ...template,
                                             });
                                         }}
-                                        className={`w-full text-left p-4 rounded-lg border-2 transition-all ${
-                                            selectedTemplate?.name === template.name
+                                        className={`w-full text-left p-4 rounded-lg border-2 transition-all ${selectedTemplate?.name === template.name
                                                 ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
                                                 : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
-                                        }`}
+                                            }`}
                                     >
                                         <div className="flex items-start justify-between gap-2 mb-2">
                                             <h3 className="font-semibold text-gray-900 dark:text-white">
@@ -349,11 +352,10 @@ export function PermissionTemplates() {
                                     return (
                                         <div
                                             key={template.id}
-                                            className={`bg-white dark:bg-gray-800 rounded-lg border-2 p-4 transition-all ${
-                                                selectedTemplate?.id === template.id
+                                            className={`bg-white dark:bg-gray-800 rounded-lg border-2 p-4 transition-all ${selectedTemplate?.id === template.id
                                                     ? 'border-blue-500'
                                                     : 'border-gray-200 dark:border-gray-700'
-                                            }`}
+                                                }`}
                                         >
                                             <div className="flex items-start justify-between gap-4">
                                                 <div className="flex-1">
@@ -504,6 +506,14 @@ export function PermissionTemplates() {
                     </div>
                 </div>
             )}
+            <ConfirmationModal
+                isOpen={!!deleteTemplateId}
+                onConfirm={confirmDeleteTemplate}
+                onCancel={() => setDeleteTemplateId(null)}
+                title="¿Eliminar plantilla?"
+                message="¿Estás seguro de eliminar esta plantilla? Esta acción no se puede deshacer."
+                variant="danger"
+            />
         </div>
     );
 }

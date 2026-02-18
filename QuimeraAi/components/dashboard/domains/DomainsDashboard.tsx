@@ -62,6 +62,7 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
     const [isDeploying, setIsDeploying] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
     const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+    const [deployConfirmOpen, setDeployConfirmOpen] = useState(false);
     const [showLogs, setShowLogs] = useState(false);
     const [deployProvider] = useState<'vercel' | 'cloudflare' | 'netlify' | 'cloud_run'>('cloud_run');
     const [verificationMessage, setVerificationMessage] = useState<string | null>(null);
@@ -132,16 +133,16 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
         });
     };
 
-    const handleDeploy = async () => {
+    const handleDeploy = () => {
         if (!domain.projectId) {
             alert(t('domainsDashboard.connectProjectFirst'));
             return;
         }
+        setDeployConfirmOpen(true);
+    };
 
-        if (!window.confirm(`${t('domainsDashboard.deployTo')} ${deployProvider === 'cloud_run' ? 'Quimera Cloud (SSR)' : deployProvider}? ${t('domainsDashboard.deployConfirm')}`)) {
-            return;
-        }
-
+    const confirmDeploy = async () => {
+        setDeployConfirmOpen(false);
         setIsDeploying(true);
         const success = await deployDomain(domain.id, deployProvider);
         setIsDeploying(false);
@@ -674,6 +675,16 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
                 message={t('domainsDashboard.deleteConfirmMessage', { name: domain.name, defaultValue: `El dominio "${domain.name}" será eliminado permanentemente.` })}
                 variant="danger"
                 isLoading={isDeleting}
+            />
+
+            {/* Deploy Confirmation Modal */}
+            <ConfirmationModal
+                isOpen={deployConfirmOpen}
+                onConfirm={confirmDeploy}
+                onCancel={() => setDeployConfirmOpen(false)}
+                title={t('domainsDashboard.deployTitle', 'Desplegar Dominio')}
+                message={`${t('domainsDashboard.deployTo')} ${deployProvider === 'cloud_run' ? 'Quimera Cloud (SSR)' : deployProvider}? ${t('domainsDashboard.deployConfirm')}`}
+                variant="warning"
             />
         </div >
     );

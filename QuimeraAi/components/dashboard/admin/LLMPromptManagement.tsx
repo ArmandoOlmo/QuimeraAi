@@ -4,6 +4,7 @@ import { LLMPrompt } from '../../../types';
 import DashboardSidebar from '../DashboardSidebar';
 import PromptEditorModal from './PromptEditorModal';
 import { ArrowLeft, Menu, Bot, Plus, Edit, Trash2, RefreshCw } from 'lucide-react';
+import ConfirmationModal from '../../ui/ConfirmationModal';
 
 interface LLMPromptManagementProps {
     onBack: () => void;
@@ -36,9 +37,16 @@ const LLMPromptManagement: React.FC<LLMPromptManagementProps> = ({ onBack }) => 
         setIsModalOpen(true);
     };
 
+    const [pendingDeletePromptId, setPendingDeletePromptId] = useState<string | null>(null);
+
     const handleDelete = (promptId: string) => {
-        if (window.confirm('Are you sure you want to delete this prompt? This cannot be undone.')) {
-            deletePrompt(promptId);
+        setPendingDeletePromptId(promptId);
+    };
+
+    const confirmDeletePrompt = () => {
+        if (pendingDeletePromptId) {
+            deletePrompt(pendingDeletePromptId);
+            setPendingDeletePromptId(null);
         }
     };
 
@@ -160,7 +168,7 @@ const LLMPromptManagement: React.FC<LLMPromptManagementProps> = ({ onBack }) => 
                                 className="flex items-center gap-1.5 h-9 px-3 text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary disabled:opacity-50"
                                 title="Sync missing default prompts"
                             >
-                                <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
+                                <RefreshCw className={`w - 4 h - 4 ${isSyncing ? 'animate-spin' : ''} `} />
                                 <span className="hidden sm:inline">Sync Defaults</span>
                             </button>
                         </div>
@@ -235,6 +243,14 @@ const LLMPromptManagement: React.FC<LLMPromptManagementProps> = ({ onBack }) => 
                     </main>
                 </div>
             </div>
+            <ConfirmationModal
+                isOpen={!!pendingDeletePromptId}
+                onConfirm={confirmDeletePrompt}
+                onCancel={() => setPendingDeletePromptId(null)}
+                title="Delete Prompt?"
+                message="Are you sure you want to delete this prompt? This cannot be undone."
+                variant="danger"
+            />
         </>
     );
 };

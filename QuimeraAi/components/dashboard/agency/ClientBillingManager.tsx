@@ -4,6 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import ConfirmationModal from '../../ui/ConfirmationModal';
 import { useAgency } from '../../../contexts/agency/AgencyContext';
 import { useTenant } from '../../../contexts/tenant/TenantContext';
 import { getFunctions, httpsCallable } from 'firebase/functions';
@@ -50,7 +51,8 @@ export function ClientBillingManager() {
     const [editLimitsClient, setEditLimitsClient] = useState<string | null>(null);
     const [editLimits, setEditLimits] = useState<any>(null);
     const [processingAction, setProcessingAction] = useState<string | null>(null);
-    
+    const [cancelConfirm, setCancelConfirm] = useState<{ isOpen: boolean; clientId: string; clientName: string }>({ isOpen: false, clientId: '', clientName: '' });
+
     // Plan assignment modal state
     const [assignPlanModal, setAssignPlanModal] = useState<{
         isOpen: boolean;
@@ -81,7 +83,7 @@ export function ClientBillingManager() {
 
         setClientsBilling(billingInfo);
     };
-    
+
     const handleOpenAssignPlan = (client: ClientBillingInfo) => {
         setAssignPlanModal({
             isOpen: true,
@@ -90,7 +92,7 @@ export function ClientBillingManager() {
             currentPlanId: client.agencyPlanId || null,
         });
     };
-    
+
     const handlePlanAssigned = () => {
         // Refresh the client list - the parent component should reload
         loadClientsBilling();
@@ -183,12 +185,13 @@ export function ClientBillingManager() {
         }
     };
 
-    const handleCancelSubscription = async (clientId: string, clientName: string) => {
-        const confirmed = window.confirm(
-            `¿Estás seguro de cancelar la suscripción de ${clientName}? Esto detendrá los cobros automáticos.`
-        );
+    const handleCancelSubscription = (clientId: string, clientName: string) => {
+        setCancelConfirm({ isOpen: true, clientId, clientName });
+    };
 
-        if (!confirmed) return;
+    const confirmCancelSubscription = async () => {
+        const { clientId } = cancelConfirm;
+        setCancelConfirm({ isOpen: false, clientId: '', clientName: '' });
 
         setProcessingAction(clientId);
         setError(null);
@@ -697,6 +700,15 @@ export function ClientBillingManager() {
                     onAssigned={handlePlanAssigned}
                 />
             )}
+
+            <ConfirmationModal
+                isOpen={cancelConfirm.isOpen}
+                onConfirm={confirmCancelSubscription}
+                onCancel={() => setCancelConfirm({ isOpen: false, clientId: '', clientName: '' })}
+                title="¿Cancelar suscripción?"
+                message={`¿Estás seguro de cancelar la suscripción de ${cancelConfirm.clientName}? Esto detendrá los cobros automáticos.`}
+                variant="danger"
+            />
         </div>
     );
 }

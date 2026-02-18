@@ -4,6 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import ConfirmationModal from '../../../ui/ConfirmationModal';
 import { useTranslation } from 'react-i18next';
 import {
     Bell,
@@ -49,7 +50,7 @@ const StockAlertsView: React.FC = () => {
     const { user } = useAuth();
     const { storeId } = useEcommerceContext();
     const { products } = useProducts(user?.uid || '', storeId);
-    
+
     const [subscribers, setSubscribers] = useState<StockNotificationSubscriber[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
@@ -117,16 +118,22 @@ const StockAlertsView: React.FC = () => {
     }, {} as Record<string, { productName: string; productImage?: string; subscribers: StockNotificationSubscriber[] }>);
 
     // Delete subscriber
-    const handleDelete = async (subscriberId: string) => {
-        if (!confirm(t('ecommerce.confirmDeleteSubscriber', '¿Eliminar esta suscripción?'))) return;
+    const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
-        setProcessingId(subscriberId);
+    const handleDelete = (subscriberId: string) => {
+        setDeleteConfirmId(subscriberId);
+    };
+
+    const confirmDeleteSubscriber = async () => {
+        if (!deleteConfirmId) return;
+        setProcessingId(deleteConfirmId);
         try {
-            await deleteDoc(doc(db, 'publicStores', storeId, 'stockNotifications', subscriberId));
+            await deleteDoc(doc(db, 'publicStores', storeId, 'stockNotifications', deleteConfirmId));
         } catch (err) {
             console.error('Error deleting subscriber:', err);
         }
         setProcessingId(null);
+        setDeleteConfirmId(null);
     };
 
     // Format date
@@ -347,6 +354,15 @@ const StockAlertsView: React.FC = () => {
                     </div>
                 )}
             </div>
+            {/* Delete Subscriber Confirmation Modal */}
+            <ConfirmationModal
+                isOpen={!!deleteConfirmId}
+                onConfirm={confirmDeleteSubscriber}
+                onCancel={() => setDeleteConfirmId(null)}
+                title={t('ecommerce.deleteSubscriber', 'Eliminar Suscripción')}
+                message={t('ecommerce.confirmDeleteSubscriber', '¿Eliminar esta suscripción?')}
+                variant="danger"
+            />
         </div>
     );
 };

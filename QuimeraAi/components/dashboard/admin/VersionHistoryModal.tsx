@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, Clock, RotateCcw, GitBranch, User, Calendar, FileText, ChevronDown, ChevronUp, Check } from 'lucide-react';
 import { CustomComponent, ComponentVersion } from '../../../types';
+import ConfirmationModal from '../../ui/ConfirmationModal';
 
 interface VersionHistoryModalProps {
   isOpen: boolean;
@@ -19,24 +20,25 @@ export const VersionHistoryModal: React.FC<VersionHistoryModalProps> = ({
   const [expandedVersion, setExpandedVersion] = useState<number | null>(null);
   const [isReverting, setIsReverting] = useState(false);
   const [revertSuccess, setRevertSuccess] = useState(false);
+  const [pendingRevertVersion, setPendingRevertVersion] = useState<number | null>(null);
 
   if (!isOpen) return null;
 
   const versions = component.versions || [];
   const currentVersion = component.currentVersion || 1;
 
-  const handleRevert = async (versionNumber: number) => {
+  const handleRevert = (versionNumber: number) => {
     if (versionNumber === currentVersion) {
       alert("Ya estás en esta versión");
       return;
     }
+    setPendingRevertVersion(versionNumber);
+  };
 
-    const confirmed = window.confirm(
-      `¿Revertir a la versión ${versionNumber}? Esto creará una nueva versión con los estilos de la versión ${versionNumber}.`
-    );
-
-    if (!confirmed) return;
-
+  const confirmRevert = async () => {
+    if (pendingRevertVersion === null) return;
+    const versionNumber = pendingRevertVersion;
+    setPendingRevertVersion(null);
     setIsReverting(true);
     try {
       await onRevert(versionNumber);
@@ -55,7 +57,7 @@ export const VersionHistoryModal: React.FC<VersionHistoryModalProps> = ({
 
   const formatDate = (timestamp: any): string => {
     if (!timestamp) return 'Fecha desconocida';
-    
+
     // Handle Firestore Timestamp
     if (timestamp?.toDate) {
       return timestamp.toDate().toLocaleString('es-ES', {
@@ -66,11 +68,11 @@ export const VersionHistoryModal: React.FC<VersionHistoryModalProps> = ({
         minute: '2-digit'
       });
     }
-    
+
     // Handle ISO string or Date
     const date = new Date(timestamp);
     if (isNaN(date.getTime())) return 'Fecha inválida';
-    
+
     return date.toLocaleString('es-ES', {
       year: 'numeric',
       month: 'short',
@@ -135,15 +137,14 @@ export const VersionHistoryModal: React.FC<VersionHistoryModalProps> = ({
               {[...versions].sort((a, b) => b.version - a.version).map((version) => {
                 const isCurrentVersion = version.version === currentVersion;
                 const isExpanded = expandedVersion === version.version;
-                
+
                 return (
                   <div
                     key={version.version}
-                    className={`border rounded-xl transition-all ${
-                      isCurrentVersion
+                    className={`border rounded-xl transition-all ${isCurrentVersion
                         ? 'border-purple-300 bg-purple-50'
                         : 'border-gray-200 bg-white hover:border-gray-300'
-                    } ${isExpanded ? 'shadow-md' : 'shadow-sm'}`}
+                      } ${isExpanded ? 'shadow-md' : 'shadow-sm'}`}
                   >
                     {/* Version Header */}
                     <div className="p-4">
@@ -151,11 +152,10 @@ export const VersionHistoryModal: React.FC<VersionHistoryModalProps> = ({
                         <div className="flex items-start gap-3 flex-1">
                           {/* Version Badge */}
                           <div
-                            className={`flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center font-bold text-sm ${
-                              isCurrentVersion
+                            className={`flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center font-bold text-sm ${isCurrentVersion
                                 ? 'bg-purple-600 text-white'
                                 : 'bg-gray-100 text-gray-700'
-                            }`}
+                              }`}
                           >
                             v{version.version}
                           </div>
@@ -209,7 +209,7 @@ export const VersionHistoryModal: React.FC<VersionHistoryModalProps> = ({
                               <ChevronDown className="w-5 h-5 text-gray-500" />
                             )}
                           </button>
-                          
+
                           {!isCurrentVersion && (
                             <button
                               onClick={() => handleRevert(version.version)}
@@ -264,7 +264,7 @@ export const VersionHistoryModal: React.FC<VersionHistoryModalProps> = ({
         {/* Footer */}
         <div className="flex items-center justify-between p-6 border-t border-gray-200 bg-gray-50">
           <div className="text-sm text-gray-600">
-            <span className="font-medium">{versions.length}</span> versión{versions.length !== 1 ? 'es' : ''} 
+            <span className="font-medium">{versions.length}</span> versión{versions.length !== 1 ? 'es' : ''}
             {versions.length > 0 && (
               <>
                 {' · '}
@@ -281,6 +281,16 @@ export const VersionHistoryModal: React.FC<VersionHistoryModalProps> = ({
           </button>
         </div>
       </div>
+
+      <ConfirmationModal
+        isOpen={pendingRevertVersion !== null}
+        onConfirm={confirmRevert}
+        onCancel={() => setPendingRevertVersion(null)}
+        title="¿Revertir versión?"
+        message={pendingRevertVersion !== null ? `¿Revertir a la versión ${pendingRevertVersion}? Esto creará una nueva versión con los estilos de la versión ${pendingRevertVersion}.` : ''}
+        variant="warning"
+        confirmText="Revertir"
+      />
     </div>
   );
 };

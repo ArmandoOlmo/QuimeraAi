@@ -1,9 +1,10 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { NavigationMenu, NavigationMenuItem } from '../../../types';
 import { useCMS } from '../../../contexts/cms';
 import { useProject } from '../../../contexts/project';
 import { ArrowLeft, GripVertical, Plus, Trash2, X, Save, Loader2, ChevronRight, Search, Hash, Globe, FileText, ArrowUpLeft, Newspaper, ShoppingBag, Tag, Package } from 'lucide-react';
+import ConfirmationModal from '../../ui/ConfirmationModal';
 import DashboardSidebar from '../DashboardSidebar';
 import { Menu as MenuIcon } from 'lucide-react';
 import { useClickOutside } from '../../../hooks/useClickOutside';
@@ -46,6 +47,8 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onClose, isNew, projectId
     const [items, setItems] = useState<NavigationMenuItem[]>(Array.isArray(menu.items) ? menu.items : []);
     const [isSaving, setIsSaving] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [deleteConfirmMessage, setDeleteConfirmMessage] = useState('');
 
     // Use projectId prop if provided, otherwise fall back to activeProjectId
     const effectiveProjectId = projectId ?? activeProjectId;
@@ -125,21 +128,28 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onClose, isNew, projectId
         onClose();
     };
 
-    const handleDeleteMenu = async () => {
-        let confirmMessage = "Are you sure you want to delete this menu?";
+    const handleDeleteMenu = () => {
+        let confirmMessage = t('navigationDashboard.deleteConfirm', 'Are you sure you want to delete this menu?');
 
         if (usedInHeader || usedInFooter) {
             const locations = [];
-            if (usedInHeader) locations.push("Header");
-            if (usedInFooter) locations.push("Footer");
-            confirmMessage = `⚠️ This menu is currently being used in: ${locations.join(", ")}.\n\nDeleting it will remove these navigation links from your website.\n\nAre you sure you want to continue?`;
+            if (usedInHeader) locations.push(t('sections.header', 'Header'));
+            if (usedInFooter) locations.push(t('sections.footer', 'Footer'));
+            confirmMessage = t('navigationDashboard.deleteUsedInEditor', {
+                locations: locations.join(", "),
+                defaultValue: `This menu is currently being used in: ${locations.join(", ")}. Deleting it will remove these navigation links from your website. Are you sure you want to continue?`
+            });
         }
 
-        if (window.confirm(confirmMessage)) {
-            await deleteMenu(menu.id);
-            onClose();
-        }
+        setDeleteConfirmMessage(confirmMessage);
+        setShowDeleteConfirm(true);
     };
+
+    const handleConfirmDeleteMenu = useCallback(async () => {
+        await deleteMenu(menu.id);
+        setShowDeleteConfirm(false);
+        onClose();
+    }, [deleteMenu, menu.id, onClose]);
 
     const addMenuItem = () => {
         const newItem: NavigationMenuItem = {
@@ -719,6 +729,16 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onClose, isNew, projectId
                     </div>
                 </main>
             </div>
+
+            {/* Delete Menu Confirmation Modal */}
+            <ConfirmationModal
+                isOpen={showDeleteConfirm}
+                onConfirm={handleConfirmDeleteMenu}
+                onCancel={() => setShowDeleteConfirm(false)}
+                title={t('navigationDashboard.deleteMenuTitle', '¿Eliminar menú?')}
+                message={deleteConfirmMessage}
+                variant={(usedInHeader || usedInFooter) ? 'warning' : 'danger'}
+            />
         </div>
     );
 };

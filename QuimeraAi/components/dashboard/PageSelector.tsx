@@ -10,13 +10,13 @@
  */
 
 import React, { useState, useRef, useEffect } from 'react';
-import { 
-    FileText, 
-    Home, 
-    ShoppingBag, 
-    Tag, 
-    FileEdit, 
-    Plus, 
+import {
+    FileText,
+    Home,
+    ShoppingBag,
+    Tag,
+    FileEdit,
+    Plus,
     ChevronDown,
     Settings,
     Copy,
@@ -37,6 +37,7 @@ import {
 } from 'lucide-react';
 import { SitePage } from '../../types/project';
 import { PageTemplateId } from '../../types/onboarding';
+import ConfirmationModal from '../ui/ConfirmationModal';
 
 interface PageSelectorProps {
     /** All pages in the project */
@@ -106,6 +107,7 @@ const PageSelector: React.FC<PageSelectorProps> = ({
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [isAddMenuOpen, setIsAddMenuOpen] = useState(false);
     const [contextMenuPage, setContextMenuPage] = useState<string | null>(null);
+    const [deletePageId, setDeletePageId] = useState<string | null>(null);
     const dropdownRef = useRef<HTMLDivElement>(null);
     const addMenuRef = useRef<HTMLDivElement>(null);
 
@@ -146,9 +148,9 @@ const PageSelector: React.FC<PageSelectorProps> = ({
                     <span className="flex-1 text-left text-sm text-[var(--editor-text-primary)] truncate">
                         {activePage?.title || 'Seleccionar página'}
                     </span>
-                    <ChevronDown 
-                        size={16} 
-                        className={`text-[var(--editor-text-secondary)] transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} 
+                    <ChevronDown
+                        size={16}
+                        className={`text-[var(--editor-text-secondary)] transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`}
                     />
                 </button>
 
@@ -161,9 +163,8 @@ const PageSelector: React.FC<PageSelectorProps> = ({
                                     onSelectPage(page.id);
                                     setIsDropdownOpen(false);
                                 }}
-                                className={`w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-[var(--editor-border)] transition-colors ${
-                                    activePage?.id === page.id ? 'bg-[var(--editor-accent)]/10 text-[var(--editor-accent)]' : 'text-[var(--editor-text-primary)]'
-                                }`}
+                                className={`w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-[var(--editor-border)] transition-colors ${activePage?.id === page.id ? 'bg-[var(--editor-accent)]/10 text-[var(--editor-accent)]' : 'text-[var(--editor-text-primary)]'
+                                    }`}
                             >
                                 {getPageIcon(page)}
                                 <span className="flex-1 text-sm truncate">{page.title}</span>
@@ -174,7 +175,7 @@ const PageSelector: React.FC<PageSelectorProps> = ({
                                 )}
                             </button>
                         ))}
-                        
+
                         {/* Add page button */}
                         <div className="border-t border-[var(--editor-border)] p-2">
                             <button
@@ -193,7 +194,7 @@ const PageSelector: React.FC<PageSelectorProps> = ({
 
                 {/* Add page menu */}
                 {isAddMenuOpen && (
-                    <div 
+                    <div
                         ref={addMenuRef}
                         className="absolute top-full left-0 right-0 mt-1 bg-[var(--editor-panel-bg)] border border-[var(--editor-border)] rounded-lg shadow-lg z-50 max-h-80 overflow-y-auto"
                     >
@@ -270,15 +271,14 @@ const PageSelector: React.FC<PageSelectorProps> = ({
                 {sortedPages.map((page) => (
                     <div
                         key={page.id}
-                        className={`group flex items-center gap-2 px-4 py-3 hover:bg-[var(--editor-border)]/50 cursor-pointer transition-colors ${
-                            activePage?.id === page.id ? 'bg-[var(--editor-accent)]/10' : ''
-                        }`}
+                        className={`group flex items-center gap-2 px-4 py-3 hover:bg-[var(--editor-border)]/50 cursor-pointer transition-colors ${activePage?.id === page.id ? 'bg-[var(--editor-accent)]/10' : ''
+                            }`}
                         onClick={() => onSelectPage(page.id)}
                     >
                         {/* Drag handle (for future reordering) */}
-                        <GripVertical 
-                            size={14} 
-                            className="text-[var(--editor-text-secondary)] opacity-0 group-hover:opacity-100 cursor-grab" 
+                        <GripVertical
+                            size={14}
+                            className="text-[var(--editor-text-secondary)] opacity-0 group-hover:opacity-100 cursor-grab"
                         />
 
                         {/* Page icon */}
@@ -289,9 +289,8 @@ const PageSelector: React.FC<PageSelectorProps> = ({
                         {/* Page info */}
                         <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2">
-                                <span className={`text-sm truncate ${
-                                    activePage?.id === page.id ? 'text-[var(--editor-accent)] font-medium' : 'text-[var(--editor-text-primary)]'
-                                }`}>
+                                <span className={`text-sm truncate ${activePage?.id === page.id ? 'text-[var(--editor-accent)] font-medium' : 'text-[var(--editor-text-primary)]'
+                                    }`}>
                                     {page.title}
                                 </span>
                                 {page.isHomePage && (
@@ -347,9 +346,7 @@ const PageSelector: React.FC<PageSelectorProps> = ({
                                 <button
                                     onClick={(e) => {
                                         e.stopPropagation();
-                                        if (confirm(`¿Eliminar la página "${page.title}"?`)) {
-                                            onDeletePage(page.id);
-                                        }
+                                        setDeletePageId(page.id);
                                     }}
                                     className="p-1 text-[var(--editor-text-secondary)] hover:text-red-400 hover:bg-red-400/10 rounded transition-colors"
                                     title="Eliminar"
@@ -376,6 +373,18 @@ const PageSelector: React.FC<PageSelectorProps> = ({
                     </div>
                 )}
             </div>
+            {/* Delete Page Confirmation Modal */}
+            <ConfirmationModal
+                isOpen={!!deletePageId}
+                onConfirm={() => {
+                    if (deletePageId) onDeletePage(deletePageId);
+                    setDeletePageId(null);
+                }}
+                onCancel={() => setDeletePageId(null)}
+                title={`¿Eliminar la página "${pages.find(p => p.id === deletePageId)?.title}"?`}
+                message="Esta acción no se puede deshacer. La página será eliminada permanentemente."
+                variant="danger"
+            />
         </div>
     );
 };

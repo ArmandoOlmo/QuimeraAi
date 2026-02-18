@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useAdmin } from '../../../contexts/admin';
 import { useAuth } from '../../../contexts/core/AuthContext';
 import DashboardSidebar from '../DashboardSidebar';
+import ConfirmationModal from '../../ui/ConfirmationModal';
 import { ArrowLeft, Bot, Save, RotateCcw, Info, CheckCircle, AlertCircle } from 'lucide-react';
 
 interface GlobalChatbotPromptsSettingsProps {
@@ -221,18 +222,29 @@ const GlobalChatbotPromptsSettings: React.FC<GlobalChatbotPromptsSettingsProps> 
         }
     };
 
+    const [pendingResetField, setPendingResetField] = useState<keyof GlobalChatbotPrompts | null>(null);
+    const [showResetAllModal, setShowResetAllModal] = useState(false);
+
     const handleReset = (field: keyof GlobalChatbotPrompts) => {
-        if (window.confirm('¿Restablecer este prompt a los valores por defecto?')) {
-            setPrompts(prev => ({ ...prev, [field]: DEFAULT_PROMPTS[field as keyof typeof DEFAULT_PROMPTS] }));
+        setPendingResetField(field);
+    };
+
+    const confirmReset = () => {
+        if (pendingResetField) {
+            setPrompts(prev => ({ ...prev, [pendingResetField]: DEFAULT_PROMPTS[pendingResetField as keyof typeof DEFAULT_PROMPTS] }));
             setHasChanges(true);
         }
+        setPendingResetField(null);
     };
 
     const handleResetAll = () => {
-        if (window.confirm('¿Restablecer TODOS los prompts a los valores por defecto? Esta acción no se puede deshacer.')) {
-            setPrompts(DEFAULT_PROMPTS);
-            setHasChanges(true);
-        }
+        setShowResetAllModal(true);
+    };
+
+    const confirmResetAll = () => {
+        setPrompts(DEFAULT_PROMPTS);
+        setHasChanges(true);
+        setShowResetAllModal(false);
     };
 
     const getCurrentPromptField = (): keyof GlobalChatbotPrompts => {
@@ -419,6 +431,25 @@ const GlobalChatbotPromptsSettings: React.FC<GlobalChatbotPromptsSettingsProps> 
                     </div>
                 </main>
             </div>
+
+            <ConfirmationModal
+                isOpen={!!pendingResetField}
+                onConfirm={confirmReset}
+                onCancel={() => setPendingResetField(null)}
+                title="¿Restablecer prompt?"
+                message="¿Restablecer este prompt a los valores por defecto?"
+                variant="warning"
+                confirmText="Restablecer"
+            />
+
+            <ConfirmationModal
+                isOpen={showResetAllModal}
+                onConfirm={confirmResetAll}
+                onCancel={() => setShowResetAllModal(false)}
+                title="¿Restablecer TODOS los prompts?"
+                message="¿Restablecer TODOS los prompts a los valores por defecto? Esta acción no se puede deshacer."
+                variant="danger"
+            />
         </div>
     );
 };

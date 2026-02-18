@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import ConfirmationModal from '../../ui/ConfirmationModal';
 import { useTranslation } from 'react-i18next';
 import { useCRM } from '../../../contexts/crm';
 import {
@@ -16,6 +17,7 @@ const LeadsLibrary: React.FC = () => {
     const [selectedLeadIds, setSelectedLeadIds] = useState<string[]>([]);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [isImporting, setIsImporting] = useState(false);
+    const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 
     // New Lead Form State
     const [newLeadForm, setNewLeadForm] = useState<Partial<LibraryLead>>({
@@ -80,10 +82,13 @@ const LeadsLibrary: React.FC = () => {
         }
     };
 
-    const handleDeleteSelected = async () => {
+    const handleDeleteSelected = () => {
         if (selectedLeadIds.length === 0) return;
-        if (!window.confirm(`Are you sure you want to delete ${selectedLeadIds.length} leads from the library?`)) return;
+        setDeleteConfirmOpen(true);
+    };
 
+    const confirmDeleteSelected = async () => {
+        setDeleteConfirmOpen(false);
         try {
             await Promise.all(selectedLeadIds.map(id => deleteLibraryLead(id)));
             setSelectedLeadIds([]);
@@ -283,6 +288,16 @@ const LeadsLibrary: React.FC = () => {
                 isOpen={isAddModalOpen}
                 onClose={() => setIsAddModalOpen(false)}
                 onSubmit={handleAddSubmit}
+            />
+
+            {/* Delete Selected Confirmation Modal */}
+            <ConfirmationModal
+                isOpen={deleteConfirmOpen}
+                onConfirm={confirmDeleteSelected}
+                onCancel={() => setDeleteConfirmOpen(false)}
+                title="Eliminar Leads"
+                message={`¿Estás seguro de que deseas eliminar ${selectedLeadIds.length} lead(s) de la biblioteca?`}
+                variant="danger"
             />
         </div>
     );

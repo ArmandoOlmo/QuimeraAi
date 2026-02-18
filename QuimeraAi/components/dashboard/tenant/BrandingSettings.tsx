@@ -4,6 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import ConfirmationModal from '../../ui/ConfirmationModal';
 import { useTranslation } from 'react-i18next';
 import {
     Palette,
@@ -47,6 +48,7 @@ const BrandingSettings: React.FC<BrandingSettingsProps> = ({ className = '' }) =
     const [domainSuccess, setDomainSuccess] = useState<string | null>(null);
     const [dnsRecords, setDnsRecords] = useState<any>(null);
     const [verificationResult, setVerificationResult] = useState<any>(null);
+    const [showRemoveDomainModal, setShowRemoveDomainModal] = useState(false);
 
     // Load current branding
     useEffect(() => {
@@ -135,10 +137,13 @@ const BrandingSettings: React.FC<BrandingSettingsProps> = ({ className = '' }) =
         }
     };
 
+    const requestRemoveDomain = () => {
+        setShowRemoveDomainModal(true);
+    };
+
     const handleRemoveDomain = async () => {
         if (!currentTenant) return;
-
-        if (!confirm('¿Estás seguro de eliminar el dominio personalizado?')) return;
+        setShowRemoveDomainModal(false);
 
         setIsRemovingDomain(true);
         setDomainError(null);
@@ -403,7 +408,7 @@ const BrandingSettings: React.FC<BrandingSettingsProps> = ({ className = '' }) =
                                             </button>
                                         )}
                                         <button
-                                            onClick={handleRemoveDomain}
+                                            onClick={requestRemoveDomain}
                                             disabled={isRemovingDomain}
                                             className="flex items-center gap-1 px-3 py-1.5 text-sm text-destructive hover:bg-destructive/10 rounded-lg transition-colors"
                                         >
@@ -539,6 +544,14 @@ const BrandingSettings: React.FC<BrandingSettingsProps> = ({ className = '' }) =
                     )}
                 </div>
             </div>
+            <ConfirmationModal
+                isOpen={showRemoveDomainModal}
+                onConfirm={handleRemoveDomain}
+                onCancel={() => setShowRemoveDomainModal(false)}
+                title="¿Eliminar dominio?"
+                message="¿Estás seguro de eliminar el dominio personalizado?"
+                variant="danger"
+            />
         </div>
     );
 };

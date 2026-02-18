@@ -5,6 +5,7 @@
  */
 
 import React, { useState } from 'react';
+import ConfirmationModal from '../../../ui/ConfirmationModal';
 import { useTranslation } from 'react-i18next';
 import {
     DndContext,
@@ -123,23 +124,24 @@ const SortableBlockItem: React.FC<SortableBlockItemProps> = ({
         transition,
         isDragging,
     } = useSortable({ id: block.id });
-    
+
     const style = {
         transform: CSS.Transform.toString(transform),
         transition,
         zIndex: isDragging ? 50 : undefined,
     };
-    
+
     const Icon = blockIcons[block.type] || Type;
-    
+    const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+
     return (
         <div
             ref={setNodeRef}
             style={style}
             className={`
                 group relative flex items-center gap-2 px-3 py-2.5 cursor-pointer transition-all rounded-lg
-                ${isActive 
-                    ? 'bg-editor-accent/10 text-editor-accent border border-editor-accent/30' 
+                ${isActive
+                    ? 'bg-editor-accent/10 text-editor-accent border border-editor-accent/30'
                     : 'text-editor-text-primary hover:bg-editor-panel-bg/50 border border-transparent'
                 }
                 ${isDragging ? 'opacity-50 shadow-lg bg-editor-panel-bg' : ''}
@@ -154,20 +156,20 @@ const SortableBlockItem: React.FC<SortableBlockItemProps> = ({
                 className="flex-shrink-0 cursor-grab active:cursor-grabbing touch-none"
                 onClick={(e) => e.stopPropagation()}
             >
-                <GripVertical 
-                    size={14} 
+                <GripVertical
+                    size={14}
                     className="text-editor-text-secondary hover:text-editor-text-primary"
                 />
             </div>
-            
+
             {/* Icon */}
             <Icon size={16} className="flex-shrink-0" />
-            
+
             {/* Label */}
             <span className="flex-1 text-sm font-medium truncate">
                 {blockLabels[block.type]}
             </span>
-            
+
             {/* Action buttons */}
             <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
                 <button
@@ -193,9 +195,7 @@ const SortableBlockItem: React.FC<SortableBlockItemProps> = ({
                 <button
                     onClick={(e) => {
                         e.stopPropagation();
-                        if (confirm(t('email.confirmDeleteBlock', '¿Eliminar este bloque?'))) {
-                            onDelete();
-                        }
+                        setDeleteConfirmOpen(true);
                     }}
                     className="flex-shrink-0 p-1.5 rounded text-editor-text-secondary hover:text-red-500 hover:bg-red-500/10 transition-colors"
                     title={t('email.deleteBlock', 'Eliminar')}
@@ -203,6 +203,16 @@ const SortableBlockItem: React.FC<SortableBlockItemProps> = ({
                     <Trash2 size={14} />
                 </button>
             </div>
+
+            {/* Delete Block Confirmation Modal */}
+            <ConfirmationModal
+                isOpen={deleteConfirmOpen}
+                onConfirm={() => { setDeleteConfirmOpen(false); onDelete(); }}
+                onCancel={() => setDeleteConfirmOpen(false)}
+                title={t('email.deleteBlock', 'Eliminar Bloque')}
+                message={t('email.confirmDeleteBlock', '¿Eliminar este bloque?')}
+                variant="danger"
+            />
         </div>
     );
 };
@@ -213,7 +223,7 @@ const SortableBlockItem: React.FC<SortableBlockItemProps> = ({
 
 const DragOverlayItem: React.FC<{ block: EmailBlock }> = ({ block }) => {
     const Icon = blockIcons[block.type] || Type;
-    
+
     return (
         <div className="flex items-center gap-2 px-3 py-2.5 bg-editor-panel-bg border border-editor-accent rounded-lg shadow-xl">
             <GripVertical size={14} className="text-editor-accent" />
@@ -241,11 +251,11 @@ const EmailBlockTree: React.FC = () => {
         reorderBlocks,
         toggleBlockVisibility,
     } = useEmailEditor();
-    
+
     const [showAddMenu, setShowAddMenu] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const [activeId, setActiveId] = useState<string | null>(null);
-    
+
     // Configure sensors
     const sensors = useSensors(
         useSensor(PointerSensor, {
@@ -257,46 +267,46 @@ const EmailBlockTree: React.FC = () => {
             coordinateGetter: sortableKeyboardCoordinates,
         })
     );
-    
+
     // Filter blocks by search
     const filteredBlocks = document.blocks.filter(block => {
         if (!searchTerm) return true;
         return blockLabels[block.type].toLowerCase().includes(searchTerm.toLowerCase());
     });
-    
+
     // Filter available blocks by search
     const filteredAvailableBlocks = AVAILABLE_BLOCKS.filter(type => {
         if (!searchTerm) return true;
         return blockLabels[type].toLowerCase().includes(searchTerm.toLowerCase());
     });
-    
+
     // Drag handlers
     const handleDragStart = (event: DragStartEvent) => {
         setActiveId(event.active.id as string);
     };
-    
+
     const handleDragEnd = (event: DragEndEvent) => {
         const { active, over } = event;
         setActiveId(null);
-        
+
         if (!over || active.id === over.id) return;
-        
+
         const oldIndex = document.blocks.findIndex(b => b.id === active.id);
         const newIndex = document.blocks.findIndex(b => b.id === over.id);
-        
+
         if (oldIndex !== -1 && newIndex !== -1) {
             const newOrder = arrayMove(document.blocks, oldIndex, newIndex);
             reorderBlocks(newOrder);
         }
     };
-    
+
     const handleAddBlock = (type: EmailBlockType) => {
         addBlock(type);
         setShowAddMenu(false);
     };
-    
+
     const activeBlock = activeId ? document.blocks.find(b => b.id === activeId) : null;
-    
+
     return (
         <div className="h-full flex flex-col bg-editor-bg">
             {/* Header */}
@@ -314,7 +324,7 @@ const EmailBlockTree: React.FC = () => {
                         {showAddMenu ? <X size={16} /> : <Plus size={16} />}
                     </button>
                 </div>
-                
+
                 {/* Search */}
                 <div className="relative">
                     <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-editor-text-secondary" />
@@ -335,7 +345,7 @@ const EmailBlockTree: React.FC = () => {
                     )}
                 </div>
             </div>
-            
+
             {/* Add Block Menu */}
             {showAddMenu && (
                 <div className="p-3 border-b border-editor-border bg-editor-panel-bg/50">
@@ -363,7 +373,7 @@ const EmailBlockTree: React.FC = () => {
                     </div>
                 </div>
             )}
-            
+
             {/* Block List */}
             <div className="flex-1 overflow-y-auto p-3">
                 {document.blocks.length === 0 ? (
@@ -405,14 +415,14 @@ const EmailBlockTree: React.FC = () => {
                                 ))}
                             </div>
                         </SortableContext>
-                        
+
                         <DragOverlay>
                             {activeBlock ? <DragOverlayItem block={activeBlock} /> : null}
                         </DragOverlay>
                     </DndContext>
                 )}
             </div>
-            
+
             {/* Quick Add Footer */}
             {document.blocks.length > 0 && (
                 <div className="p-3 border-t border-editor-border">

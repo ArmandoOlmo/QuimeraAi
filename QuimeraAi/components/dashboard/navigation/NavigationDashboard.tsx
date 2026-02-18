@@ -1,11 +1,12 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import DashboardSidebar from '../DashboardSidebar';
 import { useUI } from '../../../contexts/core/UIContext';
 import { useCMS } from '../../../contexts/cms';
 import { useProject } from '../../../contexts/project';
 import { Menu as MenuIcon, Plus, ChevronRight, Trash2, LayoutGrid, Edit2, Copy, AlertCircle, Lightbulb, ArrowRight, Search, Layout, Info, Store, ChevronDown, Check, Layers, X, LayoutList, Link as LinkIcon, Globe, MousePointerClick } from 'lucide-react';
+import ConfirmationModal from '../../ui/ConfirmationModal';
 import MenuEditor from './MenuEditor';
 import { Menu } from '../../../types';
 import ProjectSelectorPage from './ProjectSelectorPage';
@@ -24,6 +25,7 @@ const NavigationDashboard: React.FC = () => {
     const [isProjectSelectorOpen, setIsProjectSelectorOpen] = useState(false);
     const [showProjectSelector, setShowProjectSelector] = useState(false);
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+    const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; message: string; isUsed: boolean } | null>(null);
 
     // Determinar qué proyecto usar
     const effectiveProjectId = selectedProjectId || activeProjectId;
@@ -94,26 +96,32 @@ const NavigationDashboard: React.FC = () => {
         await saveMenu(duplicatedMenu);
     };
 
-    const handleDelete = async (e: React.MouseEvent, id: string) => {
+    const handleDelete = (e: React.MouseEvent, id: string) => {
         e.stopPropagation();
 
         // Check if menu is in use
         const usedInHeader = data?.header?.menuId === id;
         const usedInFooter = data?.footer?.linkColumns?.some(col => col.menuId === id);
+        const isUsed = !!(usedInHeader || usedInFooter);
 
         let confirmMessage = t('navigationDashboard.deleteConfirm');
 
-        if (usedInHeader || usedInFooter) {
+        if (isUsed) {
             const locations = [];
             if (usedInHeader) locations.push(t('sections.header'));
             if (usedInFooter) locations.push(t('sections.footer'));
-            confirmMessage = t('navigationDashboard.deleteUsedConfirm', { locations: locations.join(", ") }) + `\n\n` + t('navigationDashboard.deleteUsedWarning') + `\n\n` + t('navigationDashboard.deleteUsedQuestion');
+            confirmMessage = t('navigationDashboard.deleteUsedConfirm', { locations: locations.join(", ") }) + ' ' + t('navigationDashboard.deleteUsedWarning') + ' ' + t('navigationDashboard.deleteUsedQuestion');
         }
 
-        if (window.confirm(confirmMessage)) {
-            await deleteMenu(id);
-        }
+        setDeleteConfirm({ id, message: confirmMessage, isUsed });
     };
+
+    const handleConfirmDelete = useCallback(async () => {
+        if (deleteConfirm) {
+            await deleteMenu(deleteConfirm.id);
+            setDeleteConfirm(null);
+        }
+    }, [deleteConfirm, deleteMenu]);
 
     const handleProjectSelect = (projectId: string) => {
         setSelectedProjectId(projectId);
@@ -625,6 +633,16 @@ const NavigationDashboard: React.FC = () => {
                     </div>
                 </main>
             </div>
+
+            {/* Delete Confirmation Modal */}
+            <ConfirmationModal
+                isOpen={!!deleteConfirm}
+                onConfirm={handleConfirmDelete}
+                onCancel={() => setDeleteConfirm(null)}
+                title={t('navigationDashboard.deleteMenuTitle', '¿Eliminar menú?')}
+                message={deleteConfirm?.message || t('navigationDashboard.deleteConfirm')}
+                variant={deleteConfirm?.isUsed ? 'warning' : 'danger'}
+            />
         </div>
     );
 

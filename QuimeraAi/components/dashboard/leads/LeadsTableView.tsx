@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import ConfirmationModal from '../../ui/ConfirmationModal';
 import { useTranslation } from 'react-i18next';
 import { Lead, LeadStatus } from '../../../types';
 import { ArrowUpDown, ArrowUp, ArrowDown, ChevronLeft, ChevronRight, Eye, Edit, Trash2, Bot, LayoutGrid } from 'lucide-react';
@@ -45,6 +46,7 @@ const LeadsTableView: React.FC<LeadsTableViewProps> = ({
     const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
+    const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
     const handleSort = (field: SortField) => {
         if (sortField === field) {
@@ -252,11 +254,7 @@ const LeadsTableView: React.FC<LeadsTableViewProps> = ({
                                             <Eye size={16} />
                                         </button>
                                         <button
-                                            onClick={() => {
-                                                if (window.confirm(t('leads.confirmDelete'))) {
-                                                    onDelete(lead.id);
-                                                }
-                                            }}
+                                            onClick={() => setDeleteConfirmId(lead.id)}
                                             className="p-2 hover:bg-red-500/10 rounded-lg text-red-500 transition-colors"
                                             title={t('leads.delete')}
                                         >
@@ -441,11 +439,7 @@ const LeadsTableView: React.FC<LeadsTableViewProps> = ({
                                             <Eye size={14} />
                                         </button>
                                         <button
-                                            onClick={() => {
-                                                if (window.confirm('Are you sure you want to delete this lead?')) {
-                                                    onDelete(lead.id);
-                                                }
-                                            }}
+                                            onClick={() => setDeleteConfirmId(lead.id)}
                                             className="p-1.5 hover:bg-red-500/10 rounded text-red-500 transition-colors"
                                             title="Delete"
                                         >
@@ -492,6 +486,15 @@ const LeadsTableView: React.FC<LeadsTableViewProps> = ({
                     </div>
                 </div>
             )}
+            {/* Delete Lead Confirmation Modal */}
+            <ConfirmationModal
+                isOpen={!!deleteConfirmId}
+                onConfirm={() => { if (deleteConfirmId) { onDelete(deleteConfirmId); setDeleteConfirmId(null); } }}
+                onCancel={() => setDeleteConfirmId(null)}
+                title={t('leads.deleteLead', 'Eliminar Lead')}
+                message={t('leads.confirmDelete', '¿Estás seguro de que deseas eliminar este lead?')}
+                variant="danger"
+            />
         </div>
     );
 };

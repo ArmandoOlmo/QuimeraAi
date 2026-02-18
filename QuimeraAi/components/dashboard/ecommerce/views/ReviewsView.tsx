@@ -4,6 +4,7 @@
  */
 
 import React, { useState, useMemo } from 'react';
+import ConfirmationModal from '../../../ui/ConfirmationModal';
 import { useTranslation } from 'react-i18next';
 import {
     Star,
@@ -113,17 +114,22 @@ const ReviewsView: React.FC = () => {
     };
 
     // Handle delete
-    const handleDelete = async (reviewId: string) => {
-        if (!confirm(t('ecommerce.confirmDeleteReview', '¿Estás seguro de eliminar esta reseña?'))) {
-            return;
-        }
-        setIsProcessing(reviewId);
+    const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+
+    const handleDelete = (reviewId: string) => {
+        setDeleteConfirmId(reviewId);
+    };
+
+    const confirmDeleteReview = async () => {
+        if (!deleteConfirmId) return;
+        setIsProcessing(deleteConfirmId);
         try {
-            await deleteReview(reviewId);
+            await deleteReview(deleteConfirmId);
         } catch (err) {
             console.error('Error deleting review:', err);
         }
         setIsProcessing(null);
+        setDeleteConfirmId(null);
     };
 
     // Handle response
@@ -409,7 +415,7 @@ const ReviewsView: React.FC = () => {
                                         </button>
                                     </>
                                 )}
-                                
+
                                 {review.status === 'approved' && (
                                     <button
                                         onClick={() => handleOpenResponse(review)}
@@ -498,6 +504,15 @@ const ReviewsView: React.FC = () => {
                     </div>
                 </div>
             )}
+            {/* Delete Review Confirmation Modal */}
+            <ConfirmationModal
+                isOpen={!!deleteConfirmId}
+                onConfirm={confirmDeleteReview}
+                onCancel={() => setDeleteConfirmId(null)}
+                title={t('ecommerce.deleteReview', 'Eliminar Reseña')}
+                message={t('ecommerce.confirmDeleteReview', '¿Estás seguro de eliminar esta reseña?')}
+                variant="danger"
+            />
         </div>
     );
 };

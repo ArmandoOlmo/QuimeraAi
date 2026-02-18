@@ -5,6 +5,7 @@
  */
 
 import React, { useState } from 'react';
+import ConfirmationModal from '../../../ui/ConfirmationModal';
 import { useTranslation } from 'react-i18next';
 import {
     Plus,
@@ -73,7 +74,9 @@ const CategoriesView: React.FC = () => {
         setShowForm(true);
     };
 
-    const handleDelete = async (categoryId: string) => {
+    const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+
+    const handleDelete = (categoryId: string) => {
         const productCount = getProductCount(categoryId);
         if (productCount > 0) {
             alert(
@@ -84,9 +87,13 @@ const CategoriesView: React.FC = () => {
             );
             return;
         }
+        setDeleteConfirmId(categoryId);
+    };
 
-        if (confirm(t('ecommerce.confirmDeleteCategory', '¿Estás seguro de eliminar esta categoría?'))) {
-            await deleteCategory(categoryId);
+    const confirmDeleteCategory = async () => {
+        if (deleteConfirmId) {
+            await deleteCategory(deleteConfirmId);
+            setDeleteConfirmId(null);
         }
     };
 
@@ -254,6 +261,16 @@ const CategoriesView: React.FC = () => {
                     </div>
                 </div>
             )}
+
+            {/* Delete Category Confirmation Modal */}
+            <ConfirmationModal
+                isOpen={!!deleteConfirmId}
+                onConfirm={confirmDeleteCategory}
+                onCancel={() => setDeleteConfirmId(null)}
+                title={t('ecommerce.deleteCategory', 'Eliminar Categoría')}
+                message={t('ecommerce.confirmDeleteCategory', '¿Estás seguro de eliminar esta categoría?')}
+                variant="danger"
+            />
         </div>
     );
 };

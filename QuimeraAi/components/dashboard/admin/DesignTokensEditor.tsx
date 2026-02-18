@@ -1,4 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
+import ConfirmationModal from '../../ui/ConfirmationModal';
 import { useAdmin } from '../../../contexts/admin';
 import { useProject } from '../../../contexts/project';
 import { DesignTokens, AppTokens, FontFamily, ThemeMode } from '../../../types';
@@ -12,10 +14,10 @@ const DesignTokensEditor: React.FC = () => {
   const { projects, activeProject, saveProject } = useProject();
   // Alias for compatibility
   const updateProject = saveProject;
-  
+
   // Active tab for App Tokens colors
   const [activeColorTab, setActiveColorTab] = useState<ThemeMode>('light');
-  
+
   const [localTokens, setLocalTokens] = useState<DesignTokens>(designTokens || {
     colors: {
       primary: { main: '#4f46e5', light: '#6366f1', dark: '#4338ca' },
@@ -115,16 +117,19 @@ const DesignTokensEditor: React.FC = () => {
   const [hasChanges, setHasChanges] = useState(false);
   const [hasAppTokenChanges, setHasAppTokenChanges] = useState(false);
 
+  const [showResetModal, setShowResetModal] = useState(false);
+  const [showApplyModal, setShowApplyModal] = useState(false);
+
   useEffect(() => {
     const changed = JSON.stringify(localTokens) !== JSON.stringify(designTokens);
     setHasChanges(changed);
   }, [localTokens, designTokens]);
-  
+
   useEffect(() => {
     const changed = JSON.stringify(localAppTokens) !== JSON.stringify(appTokens);
     setHasAppTokenChanges(changed);
   }, [localAppTokens, appTokens]);
-  
+
   // Sync local app tokens when context updates
   useEffect(() => {
     if (appTokens) {
@@ -155,12 +160,15 @@ const DesignTokensEditor: React.FC = () => {
   };
 
   const handleReset = () => {
-    if (window.confirm('¿Resetear todos los cambios?')) {
-      setLocalTokens(designTokens);
-      setLocalAppTokens(appTokens || defaultAppTokens);
-    }
+    setShowResetModal(true);
   };
-  
+
+  const confirmReset = () => {
+    setLocalTokens(designTokens);
+    setLocalAppTokens(appTokens || defaultAppTokens);
+    setShowResetModal(false);
+  };
+
   // App Token update helpers
   const updateAppColor = (mode: ThemeMode, key: string, value: string) => {
     setLocalAppTokens(prev => ({
@@ -174,7 +182,7 @@ const DesignTokensEditor: React.FC = () => {
       },
     }));
   };
-  
+
   const updateAppTypography = (category: 'fontFamily' | 'fontSize' | 'fontWeight' | 'lineHeight', key: string, value: any) => {
     setLocalAppTokens(prev => ({
       ...prev,
@@ -187,7 +195,7 @@ const DesignTokensEditor: React.FC = () => {
       },
     }));
   };
-  
+
   const updateAppBorder = (category: 'radius' | 'width', key: string, value: string) => {
     setLocalAppTokens(prev => ({
       ...prev,
@@ -200,7 +208,7 @@ const DesignTokensEditor: React.FC = () => {
       },
     }));
   };
-  
+
   const updateAppSpacing = (key: string, value: string) => {
     setLocalAppTokens(prev => ({
       ...prev,
@@ -210,7 +218,7 @@ const DesignTokensEditor: React.FC = () => {
       },
     }));
   };
-  
+
   const updateAppShadow = (key: string, value: string) => {
     setLocalAppTokens(prev => ({
       ...prev,
@@ -227,11 +235,12 @@ const DesignTokensEditor: React.FC = () => {
       return;
     }
 
-    if (!window.confirm(
-      `¿Aplicar Design Tokens a todos los componentes del proyecto "${activeProject.name}"?\n\nEsto actualizará los estilos de todos los componentes para usar los tokens globales.`
-    )) {
-      return;
-    }
+    setShowApplyModal(true);
+  };
+
+  const confirmApplyToAllComponents = async () => {
+    setShowApplyModal(false);
+    if (!activeProject) return;
 
     try {
       setIsSaving(true);
@@ -614,7 +623,7 @@ const DesignTokensEditor: React.FC = () => {
           {/* ============================================ */}
           {/* APP TOKENS SECTION - Dashboard/Admin Theming */}
           {/* ============================================ */}
-          
+
           <div className="mt-12 pt-8 border-t-2 border-editor-accent/30">
             <div className="mb-8">
               <h2 className="text-2xl font-bold text-editor-text-primary mb-2 flex items-center gap-3">
@@ -643,33 +652,30 @@ const DesignTokensEditor: React.FC = () => {
               <div className="flex gap-2 mb-6">
                 <button
                   onClick={() => setActiveColorTab('light')}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
-                    activeColorTab === 'light'
-                      ? 'bg-editor-accent text-white'
-                      : 'bg-editor-bg text-editor-text-secondary hover:text-editor-text-primary'
-                  }`}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${activeColorTab === 'light'
+                    ? 'bg-editor-accent text-white'
+                    : 'bg-editor-bg text-editor-text-secondary hover:text-editor-text-primary'
+                    }`}
                 >
                   <Sun size={16} />
                   Light
                 </button>
                 <button
                   onClick={() => setActiveColorTab('dark')}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
-                    activeColorTab === 'dark'
-                      ? 'bg-editor-accent text-white'
-                      : 'bg-editor-bg text-editor-text-secondary hover:text-editor-text-primary'
-                  }`}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${activeColorTab === 'dark'
+                    ? 'bg-editor-accent text-white'
+                    : 'bg-editor-bg text-editor-text-secondary hover:text-editor-text-primary'
+                    }`}
                 >
                   <Moon size={16} />
                   Dark
                 </button>
                 <button
                   onClick={() => setActiveColorTab('black')}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
-                    activeColorTab === 'black'
-                      ? 'bg-editor-accent text-white'
-                      : 'bg-editor-bg text-editor-text-secondary hover:text-editor-text-primary'
-                  }`}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${activeColorTab === 'black'
+                    ? 'bg-editor-accent text-white'
+                    : 'bg-editor-bg text-editor-text-secondary hover:text-editor-text-primary'
+                    }`}
                 >
                   <Circle size={16} fill="currentColor" />
                   Black
@@ -825,7 +831,7 @@ const DesignTokensEditor: React.FC = () => {
                     </div>
                     <div className="p-3 bg-editor-bg rounded-lg border border-editor-border" style={{ fontFamily: fontStacks[localAppTokens.typography.fontFamily.mono] }}>
                       <p className="text-editor-text-primary">const code = 'example'</p>
-                      <p className="text-editor-text-secondary text-sm">0123456789 {}[]();:</p>
+                      <p className="text-editor-text-secondary text-sm">0123456789 { }[]();:</p>
                     </div>
                   </div>
                 </div>
@@ -917,7 +923,7 @@ const DesignTokensEditor: React.FC = () => {
                     <div key={key} className="flex items-center gap-3">
                       <div className="flex-1">
                         <label className="text-sm text-editor-text-secondary capitalize">{key}</label>
-                        <div 
+                        <div
                           className="mt-2 w-full bg-editor-accent rounded"
                           style={{ height: value === '0' ? '1px' : value }}
                         />
@@ -958,7 +964,7 @@ const DesignTokensEditor: React.FC = () => {
                       className="w-24 px-2 py-1 bg-editor-bg border border-editor-border rounded text-sm font-mono text-editor-text-primary"
                     />
                     <div className="flex-1 flex items-center gap-3">
-                      <div 
+                      <div
                         className="h-6 bg-editor-accent rounded"
                         style={{ width: value }}
                       />
@@ -1002,6 +1008,26 @@ const DesignTokensEditor: React.FC = () => {
               </div>
             </div>
           </div>
+
+          <ConfirmationModal
+            isOpen={showResetModal}
+            onConfirm={confirmReset}
+            onCancel={() => setShowResetModal(false)}
+            title="¿Resetear todos los cambios?"
+            message="Se restaurarán todos los tokens a sus valores originales."
+            variant="warning"
+            confirmText="Resetear"
+          />
+
+          <ConfirmationModal
+            isOpen={showApplyModal}
+            onConfirm={confirmApplyToAllComponents}
+            onCancel={() => setShowApplyModal(false)}
+            title="¿Aplicar Design Tokens?"
+            message={`Esto actualizará los estilos de todos los componentes del proyecto para usar los tokens globales.`}
+            variant="warning"
+            confirmText="Aplicar"
+          />
         </div>
       </div>
     </div>
@@ -1009,4 +1035,3 @@ const DesignTokensEditor: React.FC = () => {
 };
 
 export default DesignTokensEditor;
-

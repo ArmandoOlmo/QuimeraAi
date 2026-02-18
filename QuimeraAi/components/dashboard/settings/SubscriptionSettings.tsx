@@ -26,6 +26,7 @@ import {
     ChevronUp,
     Info,
 } from 'lucide-react';
+import ConfirmationModal from '../../ui/ConfirmationModal';
 import { usePlans } from '../../../contexts/PlansContext';
 import { useSafeUpgrade } from '../../../contexts/UpgradeContext';
 import { useCreditsUsage } from '../../../hooks/useCreditsUsage';
@@ -73,6 +74,8 @@ const SubscriptionSettings: React.FC = () => {
     const [isCancelling, setIsCancelling] = useState(false);
     const [isReactivating, setIsReactivating] = useState(false);
     const [instructionsCollapsed, setInstructionsCollapsed] = useState(true);
+    const [cancelConfirmOpen, setCancelConfirmOpen] = useState(false);
+    const [pendingCancelImmediately, setPendingCancelImmediately] = useState(false);
 
     // Fetch subscription details on mount
     useEffect(() => {
@@ -235,14 +238,16 @@ const SubscriptionSettings: React.FC = () => {
     /**
      * Handle subscription cancellation
      */
-    const handleCancelSubscription = async (immediately: boolean = false) => {
+    const handleCancelSubscription = (immediately: boolean = false) => {
         if (!currentTenant?.id) return;
+        setPendingCancelImmediately(immediately);
+        setCancelConfirmOpen(true);
+    };
 
-        const confirmMessage = immediately
-            ? t('settings.subscription.confirmCancelImmediately', '¿Estás seguro de que deseas cancelar inmediatamente? Perderás acceso a las funciones de tu plan actual.')
-            : t('settings.subscription.confirmCancel', '¿Estás seguro de que deseas cancelar? Tu suscripción permanecerá activa hasta el final del período actual.');
-
-        if (!window.confirm(confirmMessage)) return;
+    const confirmCancelSubscription = async () => {
+        if (!currentTenant?.id) return;
+        setCancelConfirmOpen(false);
+        const immediately = pendingCancelImmediately;
 
         setIsCancelling(true);
         try {
@@ -683,6 +688,19 @@ const SubscriptionSettings: React.FC = () => {
                     </div>
                 </div>
             )}
+
+            {/* Cancel Subscription Confirmation Modal */}
+            <ConfirmationModal
+                isOpen={cancelConfirmOpen}
+                onConfirm={confirmCancelSubscription}
+                onCancel={() => setCancelConfirmOpen(false)}
+                title={t('settings.subscription.cancelTitle', 'Cancelar Suscripción')}
+                message={pendingCancelImmediately
+                    ? t('settings.subscription.confirmCancelImmediately', '¿Estás seguro de que deseas cancelar inmediatamente? Perderás acceso a las funciones de tu plan actual.')
+                    : t('settings.subscription.confirmCancel', '¿Estás seguro de que deseas cancelar? Tu suscripción permanecerá activa hasta el final del período actual.')
+                }
+                variant="danger"
+            />
         </div>
     );
 };

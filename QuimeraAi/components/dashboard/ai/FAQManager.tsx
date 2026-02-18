@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Plus, Edit2, Trash2, Save, X } from 'lucide-react';
 import { FAQItem } from '../../../types';
+import ConfirmationModal from '../../ui/ConfirmationModal';
 
 interface FAQManagerProps {
     faqs: FAQItem[];
@@ -12,6 +13,7 @@ const FAQManager: React.FC<FAQManagerProps> = ({ faqs, onFAQsChange }) => {
     const { t } = useTranslation();
     const [editingId, setEditingId] = useState<string | null>(null);
     const [isAdding, setIsAdding] = useState(false);
+    const [deleteFaqId, setDeleteFaqId] = useState<string | null>(null);
     const [formData, setFormData] = useState<{ question: string; answer: string }>({
         question: '',
         answer: ''
@@ -51,8 +53,13 @@ const FAQManager: React.FC<FAQManagerProps> = ({ faqs, onFAQsChange }) => {
     };
 
     const handleDelete = (id: string) => {
-        if (confirm(t('aiAssistant.faq.deleteConfirm'))) {
-            onFAQsChange(faqs.filter(faq => faq.id !== id));
+        setDeleteFaqId(id);
+    };
+
+    const handleConfirmDelete = () => {
+        if (deleteFaqId) {
+            onFAQsChange(faqs.filter(faq => faq.id !== deleteFaqId));
+            setDeleteFaqId(null);
         }
     };
 
@@ -174,6 +181,15 @@ const FAQManager: React.FC<FAQManagerProps> = ({ faqs, onFAQsChange }) => {
                     </p>
                 </div>
             )}
+            {/* Delete FAQ Confirmation Modal */}
+            <ConfirmationModal
+                isOpen={!!deleteFaqId}
+                onConfirm={handleConfirmDelete}
+                onCancel={() => setDeleteFaqId(null)}
+                title={t('aiAssistant.faq.deleteConfirmTitle', '¿Eliminar pregunta?')}
+                message={t('aiAssistant.faq.deleteConfirm', 'Esta acción eliminará la pregunta frecuente permanentemente.')}
+                variant="danger"
+            />
         </div>
     );
 };

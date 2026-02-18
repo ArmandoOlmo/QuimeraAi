@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import ConfirmationModal from '../../ui/ConfirmationModal';
 import { CustomComponent, ComponentVariant } from '../../../types';
 import { Plus, Edit2, Trash2, Check, X, Copy, Sparkles } from 'lucide-react';
 
@@ -11,6 +13,7 @@ export const VariantsManager: React.FC<VariantsManagerProps> = ({
   component,
   onUpdateVariants,
 }) => {
+  const { t } = useTranslation();
   const variants = component.variants || [];
   const activeVariantId = component.activeVariant || 'default';
 
@@ -18,6 +21,7 @@ export const VariantsManager: React.FC<VariantsManagerProps> = ({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [newVariantName, setNewVariantName] = useState('');
   const [newVariantDescription, setNewVariantDescription] = useState('');
+  const [pendingDeleteVariantId, setPendingDeleteVariantId] = useState<string | null>(null);
 
   const handleCreateVariant = async () => {
     if (!newVariantName.trim()) {
@@ -26,7 +30,7 @@ export const VariantsManager: React.FC<VariantsManagerProps> = ({
     }
 
     const newVariant: ComponentVariant = {
-      id: `variant-${Date.now()}`,
+      id: `variant - ${Date.now()} `,
       name: newVariantName.trim(),
       description: newVariantDescription.trim() || undefined,
       styles: { ...component.styles }, // Copy current styles
@@ -48,17 +52,21 @@ export const VariantsManager: React.FC<VariantsManagerProps> = ({
   };
 
   const handleDeleteVariant = async (variantId: string) => {
-    if (!window.confirm('Are you sure you want to delete this variant?')) return;
-    
-    const updatedVariants = variants.filter(v => v.id !== variantId);
-    const newActiveVariant = activeVariantId === variantId ? 'default' : activeVariantId;
+    setPendingDeleteVariantId(variantId);
+  };
+
+  const confirmDeleteVariant = async () => {
+    if (!pendingDeleteVariantId) return;
+    const updatedVariants = variants.filter(v => v.id !== pendingDeleteVariantId);
+    const newActiveVariant = activeVariantId === pendingDeleteVariantId ? 'default' : activeVariantId;
     await onUpdateVariants(updatedVariants, newActiveVariant);
+    setPendingDeleteVariantId(null);
   };
 
   const handleDuplicateVariant = async (variant: ComponentVariant) => {
     const duplicated: ComponentVariant = {
       ...variant,
-      id: `variant-${Date.now()}`,
+      id: `variant - ${Date.now()} `,
       name: `${variant.name} Copy`,
       createdAt: new Date().toISOString(),
     };
@@ -72,8 +80,8 @@ export const VariantsManager: React.FC<VariantsManagerProps> = ({
   const formatDate = (date?: { seconds: number; nanoseconds: number; } | string): string => {
     if (!date) return 'Unknown';
     try {
-      const dateObj = typeof date === 'string' 
-        ? new Date(date) 
+      const dateObj = typeof date === 'string'
+        ? new Date(date)
         : new Date(date.seconds * 1000);
       return dateObj.toLocaleDateString('en-US', {
         year: 'numeric',
@@ -157,9 +165,8 @@ export const VariantsManager: React.FC<VariantsManagerProps> = ({
 
       {/* Default Variant */}
       <div
-        className={`bg-editor-panel-bg border rounded-lg p-4 ${
-          activeVariantId === 'default' ? 'border-purple-600 bg-purple-600/5' : 'border-editor-border'
-        }`}
+        className={`bg - editor - panel - bg border rounded - lg p - 4 ${activeVariantId === 'default' ? 'border-purple-600 bg-purple-600/5' : 'border-editor-border'
+          } `}
       >
         <div className="flex items-start justify-between">
           <div className="flex-1">
@@ -195,9 +202,8 @@ export const VariantsManager: React.FC<VariantsManagerProps> = ({
           return (
             <div
               key={variant.id}
-              className={`bg-editor-panel-bg border rounded-lg p-4 transition-all ${
-                isActive ? 'border-purple-600 bg-purple-600/5' : 'border-editor-border'
-              }`}
+              className={`bg - editor - panel - bg border rounded - lg p - 4 transition - all ${isActive ? 'border-purple-600 bg-purple-600/5' : 'border-editor-border'
+                } `}
             >
               {isEditing ? (
                 /* Edit Mode */
@@ -317,7 +323,14 @@ export const VariantsManager: React.FC<VariantsManagerProps> = ({
         </div>
       )}
 
+      <ConfirmationModal
+        isOpen={!!pendingDeleteVariantId}
+        onConfirm={confirmDeleteVariant}
+        onCancel={() => setPendingDeleteVariantId(null)}
+        title="Delete Variant?"
+        message="Are you sure you want to delete this variant? This action cannot be undone."
+        variant="danger"
+      />
     </div>
   );
 };
-

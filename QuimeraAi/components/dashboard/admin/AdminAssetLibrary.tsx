@@ -6,6 +6,7 @@
 
 import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
+import ConfirmationModal from '../../ui/ConfirmationModal';
 import { useFiles, AdminAssetCategory, AdminAssetRecord } from '../../../contexts/files';
 import { useAI } from '../../../contexts/ai';
 import { useAppContent } from '../../../contexts/appContent';
@@ -153,15 +154,20 @@ const AssetPreviewModal: React.FC<{
         }
     };
 
-    const handleDelete = async () => {
-        if (window.confirm(t('adminAssets.deleteConfirm', 'Delete this asset?'))) {
-            try {
-                await onDelete(asset.id, asset.storagePath);
-                success(t('adminAssets.deleted', 'Asset deleted'));
-                onClose();
-            } catch (err) {
-                showError(t('adminAssets.deleteError', 'Failed to delete'));
-            }
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+
+    const handleDelete = () => {
+        setShowDeleteModal(true);
+    };
+
+    const confirmDelete = async () => {
+        setShowDeleteModal(false);
+        try {
+            await onDelete(asset.id, asset.storagePath);
+            success(t('adminAssets.deleted', 'Asset deleted'));
+            onClose();
+        } catch (err) {
+            showError(t('adminAssets.deleteError', 'Failed to delete'));
         }
     };
 
@@ -321,6 +327,15 @@ const AssetPreviewModal: React.FC<{
                     </a>
                 </div>
             </div>
+
+            <ConfirmationModal
+                isOpen={showDeleteModal}
+                onConfirm={confirmDelete}
+                onCancel={() => setShowDeleteModal(false)}
+                title={t('adminAssets.deleteTitle', '¿Eliminar asset?')}
+                message={t('adminAssets.deleteConfirm', 'Delete this asset?')}
+                variant="danger"
+            />
         </div>
     );
 };
@@ -662,10 +677,15 @@ const AdminAssetLibrary: React.FC<AdminAssetLibraryProps> = ({ onBack }) => {
         }
     };
 
-    const handleBulkDelete = async () => {
-        if (selectedIds.size === 0) return;
-        if (!window.confirm(t('adminAssets.bulkDeleteConfirm', { count: selectedIds.size }))) return;
+    const [showBulkDeleteModal, setShowBulkDeleteModal] = useState(false);
 
+    const handleBulkDelete = () => {
+        if (selectedIds.size === 0) return;
+        setShowBulkDeleteModal(true);
+    };
+
+    const confirmBulkDelete = async () => {
+        setShowBulkDeleteModal(false);
         try {
             const assetsToDelete = adminAssets.filter(a => selectedIds.has(a.id));
             await Promise.all(assetsToDelete.map(a => deleteAdminAsset(a.id, a.storagePath)));
@@ -1059,8 +1079,8 @@ const AdminAssetLibrary: React.FC<AdminAssetLibraryProps> = ({ onBack }) => {
                                 <button
                                     onClick={() => setCategoryFilter('all')}
                                     className={`flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors ${categoryFilter === 'all'
-                                            ? 'bg-primary/10 text-primary border-primary/30'
-                                            : 'bg-secondary/50 text-muted-foreground border-border hover:border-primary/30'
+                                        ? 'bg-primary/10 text-primary border-primary/30'
+                                        : 'bg-secondary/50 text-muted-foreground border-border hover:border-primary/30'
                                         }`}
                                 >
                                     <FolderOpen size={12} />
@@ -1074,8 +1094,8 @@ const AdminAssetLibrary: React.FC<AdminAssetLibraryProps> = ({ onBack }) => {
                                             key={key}
                                             onClick={() => setCategoryFilter(key as AdminAssetCategory)}
                                             className={`flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors ${categoryFilter === key
-                                                    ? config.color
-                                                    : 'bg-secondary/50 text-muted-foreground border-border hover:border-primary/30'
+                                                ? config.color
+                                                : 'bg-secondary/50 text-muted-foreground border-border hover:border-primary/30'
                                                 }`}
                                         >
                                             {config.icon}
@@ -1224,6 +1244,15 @@ const AdminAssetLibrary: React.FC<AdminAssetLibraryProps> = ({ onBack }) => {
                     </div>
                 </main>
             </div>
+
+            <ConfirmationModal
+                isOpen={showBulkDeleteModal}
+                onConfirm={confirmBulkDelete}
+                onCancel={() => setShowBulkDeleteModal(false)}
+                title={t('adminAssets.bulkDeleteTitle', '¿Eliminar assets?')}
+                message={t('adminAssets.bulkDeleteConfirm', { count: selectedIds.size })}
+                variant="danger"
+            />
         </div>
     );
 };

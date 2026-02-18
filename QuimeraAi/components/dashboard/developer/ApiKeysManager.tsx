@@ -4,6 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import ConfirmationModal from '../../ui/ConfirmationModal';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import {
   collection,
@@ -108,6 +109,7 @@ export function ApiKeysManager() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newKeyData, setNewKeyData] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [revokeConfirmId, setRevokeConfirmId] = useState<string | null>(null);
 
   const functions = getFunctions();
 
@@ -183,13 +185,14 @@ export function ApiKeysManager() {
     }
   };
 
-  const handleRevokeKey = async (keyId: string) => {
-    if (!confirm('¿Estás seguro de que deseas revocar esta API key?')) {
-      return;
-    }
+  const handleRevokeKey = (keyId: string) => {
+    setRevokeConfirmId(keyId);
+  };
 
+  const confirmRevokeKey = async () => {
+    if (!revokeConfirmId) return;
     try {
-      await updateDoc(doc(db, 'apiKeys', keyId), {
+      await updateDoc(doc(db, 'apiKeys', revokeConfirmId), {
         status: 'revoked',
         revokedAt: serverTimestamp(),
       });
@@ -198,6 +201,8 @@ export function ApiKeysManager() {
     } catch (err) {
       console.error('Error revoking key:', err);
       setError('Error al revocar la API key');
+    } finally {
+      setRevokeConfirmId(null);
     }
   };
 
@@ -342,11 +347,10 @@ export function ApiKeysManager() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span
-                      className={`px-2 py-1 text-xs font-semibold rounded ${
-                        key.status === 'active'
+                      className={`px-2 py-1 text-xs font-semibold rounded ${key.status === 'active'
                           ? 'bg-green-100 text-green-800'
                           : 'bg-red-100 text-red-800'
-                      }`}
+                        }`}
                     >
                       {key.status === 'active' ? 'Activa' : 'Revocada'}
                     </span>
@@ -402,6 +406,16 @@ export function ApiKeysManager() {
           }}
         />
       )}
+
+      {/* Revoke API Key Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={!!revokeConfirmId}
+        onConfirm={confirmRevokeKey}
+        onCancel={() => setRevokeConfirmId(null)}
+        title="Revocar API Key"
+        message="¿Estás seguro de que deseas revocar esta API key? Esta acción no se puede deshacer."
+        variant="danger"
+      />
 
       {newKeyData && (
         <NewApiKeyModal

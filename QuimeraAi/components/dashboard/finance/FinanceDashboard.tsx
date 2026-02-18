@@ -33,6 +33,7 @@ import {
     SheetDescription,
 } from "../../ui/sheet";
 import { cn } from '../../../utils/cn';
+import ConfirmationModal from '../../ui/ConfirmationModal';
 
 const COLORS = ['#4f46e5', '#06b6d4', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#ef4444'];
 
@@ -131,6 +132,7 @@ const FinanceDashboard: React.FC = () => {
     const [dateFilterPreset, setDateFilterPreset] = useState('thisMonth');
     const [searchTerm, setSearchTerm] = useState('');
     const [filterCategory, setFilterCategory] = useState<string>('all');
+    const [deleteExpenseId, setDeleteExpenseId] = useState<string | null>(null);
 
     // Estadísticas y métricas
     const totalExpenses = expenses.reduce((acc, curr) => acc + (curr.total || 0), 0);
@@ -326,14 +328,19 @@ const FinanceDashboard: React.FC = () => {
         }
     };
 
-    const handleDeleteExpense = useCallback(async (id: string) => {
+    const handleDeleteExpense = useCallback((id: string) => {
+        setDeleteExpenseId(id);
+    }, []);
+
+    const handleConfirmDeleteExpense = useCallback(async () => {
+        if (!deleteExpenseId) return;
         const userId = user?.uid;
         const projectId = activeProject?.id;
         if (!userId || !projectId) return;
-        if (!confirm(t('financeDashboard.deleteConfirm'))) return;
-        await deleteDoc(doc(db, 'users', userId, 'projects', projectId, 'finance_expenses', id));
-        if (selectedExpense?.id === id) setSelectedExpense(null);
-    }, [user?.uid, activeProject?.id, selectedExpense?.id]);
+        await deleteDoc(doc(db, 'users', userId, 'projects', projectId, 'finance_expenses', deleteExpenseId));
+        if (selectedExpense?.id === deleteExpenseId) setSelectedExpense(null);
+        setDeleteExpenseId(null);
+    }, [deleteExpenseId, user?.uid, activeProject?.id, selectedExpense?.id]);
 
     const handleUpdateExpense = useCallback(async (id: string, updates: Partial<ExpenseRecord>) => {
         const userId = user?.uid;
@@ -1373,6 +1380,16 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación ni puntu
                     )}
                 </main>
             </div >
+
+            {/* Delete Expense Confirmation Modal */}
+            <ConfirmationModal
+                isOpen={!!deleteExpenseId}
+                onConfirm={handleConfirmDeleteExpense}
+                onCancel={() => setDeleteExpenseId(null)}
+                title={t('financeDashboard.deleteExpenseTitle', '¿Eliminar gasto?')}
+                message={t('financeDashboard.deleteConfirm', 'Esta acción eliminará el gasto permanentemente.')}
+                variant="danger"
+            />
         </div >
     );
 };

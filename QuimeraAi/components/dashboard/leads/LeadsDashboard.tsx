@@ -1,5 +1,6 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
+import ConfirmationModal from '../../ui/ConfirmationModal';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import { useAuth } from '../../../contexts/core/AuthContext';
 import { useUI } from '../../../contexts/core/UIContext';
@@ -146,9 +147,7 @@ const LeadCard: React.FC<LeadCardProps> = ({ lead, onDragStart, onClick, onDelet
             <button
                 onClick={(e) => {
                     e.stopPropagation();
-                    if (window.confirm('¿Estás seguro de que deseas eliminar este lead?')) {
-                        onDelete(lead.id);
-                    }
+                    setCardDeleteId(lead.id);
                 }}
                 className="absolute top-2 right-2 z-10 p-1 sm:p-1.5 rounded-full bg-card/80 backdrop-blur-sm border border-border/50 text-muted-foreground hover:text-red-500 hover:bg-red-500/10 hover:border-red-500/30 transition-all opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
                 title="Eliminar lead"
@@ -499,11 +498,22 @@ const LeadsDashboard: React.FC = () => {
         setIsAddModalOpen(false);
     };
 
-    const handleDelete = async () => {
-        if (selectedLead && window.confirm('Are you sure you want to delete this lead?')) {
+    const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+    const [bulkDeleteConfirmOpen, setBulkDeleteConfirmOpen] = useState(false);
+    const [cardDeleteId, setCardDeleteId] = useState<string | null>(null);
+
+    const handleDelete = () => {
+        if (selectedLead) {
+            setDeleteConfirmOpen(true);
+        }
+    };
+
+    const confirmDelete = async () => {
+        if (selectedLead) {
             await deleteLead(selectedLead.id);
             setSelectedLead(null);
         }
+        setDeleteConfirmOpen(false);
     };
 
     const handleEnterEditMode = () => {
@@ -1116,12 +1126,7 @@ const LeadsDashboard: React.FC = () => {
                                             <Download size={14} />
                                         </button>
                                         <button
-                                            onClick={async () => {
-                                                if (window.confirm(`Delete ${selectedLeadIds.length} lead(s)?`)) {
-                                                    await Promise.all(selectedLeadIds.map(id => deleteLead(id)));
-                                                    setSelectedLeadIds([]);
-                                                }
-                                            }}
+                                            onClick={() => setBulkDeleteConfirmOpen(true)}
                                             className="bg-red-500 hover:bg-red-600 text-white p-1.5 rounded transition-colors"
                                         >
                                             <Trash2 size={14} />
@@ -1175,12 +1180,7 @@ const LeadsDashboard: React.FC = () => {
                                             ))}
                                         </select>
                                         <button
-                                            onClick={async () => {
-                                                if (window.confirm(`Are you sure you want to delete ${selectedLeadIds.length} lead(s)?`)) {
-                                                    await Promise.all(selectedLeadIds.map(id => deleteLead(id)));
-                                                    setSelectedLeadIds([]);
-                                                }
-                                            }}
+                                            onClick={() => setBulkDeleteConfirmOpen(true)}
                                             className="bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded text-sm font-bold flex items-center gap-2 transition-colors"
                                         >
                                             <Trash2 size={14} />
@@ -2268,6 +2268,36 @@ const LeadsDashboard: React.FC = () => {
                 <ImportLeadsModal
                     isOpen={isImportModalOpen}
                     onClose={() => setIsImportModalOpen(false)}
+                />
+
+                {/* Delete Lead Confirmation Modal */}
+                <ConfirmationModal
+                    isOpen={deleteConfirmOpen}
+                    onConfirm={confirmDelete}
+                    onCancel={() => setDeleteConfirmOpen(false)}
+                    title="Eliminar Lead"
+                    message="¿Estás seguro de que deseas eliminar este lead?"
+                    variant="danger"
+                />
+
+                {/* Bulk Delete Leads Confirmation Modal */}
+                <ConfirmationModal
+                    isOpen={bulkDeleteConfirmOpen}
+                    onConfirm={async () => { setBulkDeleteConfirmOpen(false); await Promise.all(selectedLeadIds.map(id => deleteLead(id))); setSelectedLeadIds([]); }}
+                    onCancel={() => setBulkDeleteConfirmOpen(false)}
+                    title="Eliminar Leads"
+                    message={`¿Estás seguro de que deseas eliminar ${selectedLeadIds.length} lead(s)?`}
+                    variant="danger"
+                />
+
+                {/* Card Delete Confirmation Modal */}
+                <ConfirmationModal
+                    isOpen={!!cardDeleteId}
+                    onConfirm={async () => { if (cardDeleteId) { await deleteLead(cardDeleteId); setCardDeleteId(null); } }}
+                    onCancel={() => setCardDeleteId(null)}
+                    title="Eliminar Lead"
+                    message="¿Estás seguro de que deseas eliminar este lead?"
+                    variant="danger"
                 />
             </div>
         </div>

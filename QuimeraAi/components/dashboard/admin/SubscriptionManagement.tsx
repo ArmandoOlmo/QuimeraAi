@@ -5,6 +5,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
+import ConfirmationModal from '../../ui/ConfirmationModal';
 import { useAuth } from '../../../contexts/core/AuthContext';
 import {
     ArrowLeft,
@@ -736,17 +737,34 @@ const SubscriptionManagement: React.FC<SubscriptionManagementProps> = ({ onBack 
         }
     };
 
+    // Shared confirmation modal state
+    const [confirmModal, setConfirmModal] = useState<{
+        isOpen: boolean;
+        title: string;
+        message: string;
+        variant: 'warning' | 'danger';
+        onConfirm: () => void;
+    }>({ isOpen: false, title: '', message: '', variant: 'warning', onConfirm: () => { } });
+
     const handleArchivePlan = async (planId: string) => {
-        if (!confirm('¿Estás seguro de archivar este plan? Los usuarios existentes no serán afectados.')) return;
-        const result = await archivePlan(planId, user?.uid);
-        if (result.success) {
-            await loadData();
-            if (result.stripeError) {
-                setError(`Plan archivado en Firestore pero no se pudo sincronizar con Stripe: ${result.stripeError}`);
-            }
-        } else {
-            setError(result.error || 'Error al archivar el plan');
-        }
+        setConfirmModal({
+            isOpen: true,
+            title: '¿Archivar plan?',
+            message: '¿Estás seguro de archivar este plan? Los usuarios existentes no serán afectados.',
+            variant: 'warning',
+            onConfirm: async () => {
+                setConfirmModal(prev => ({ ...prev, isOpen: false }));
+                const result = await archivePlan(planId, user?.uid);
+                if (result.success) {
+                    await loadData();
+                    if (result.stripeError) {
+                        setError(`Plan archivado en Firestore pero no se pudo sincronizar con Stripe: ${result.stripeError}`);
+                    }
+                } else {
+                    setError(result.error || 'Error al archivar el plan');
+                }
+            },
+        });
     };
 
     const handleRestorePlan = async (planId: string) => {
@@ -759,32 +777,48 @@ const SubscriptionManagement: React.FC<SubscriptionManagementProps> = ({ onBack 
     };
 
     const handleInitializePlans = async () => {
-        if (!confirm('¿Inicializar los planes en Firestore? Esto solo funciona si no hay planes existentes.')) return;
-        setIsRefreshing(true);
-        const result = await initializePlansInFirestore(user?.uid);
-        if (result.success) {
-            await loadData();
-        } else {
-            setError(result.error || 'Error al inicializar planes');
-        }
-        setIsRefreshing(false);
+        setConfirmModal({
+            isOpen: true,
+            title: '¿Inicializar planes?',
+            message: '¿Inicializar los planes en Firestore? Esto solo funciona si no hay planes existentes.',
+            variant: 'warning',
+            onConfirm: async () => {
+                setConfirmModal(prev => ({ ...prev, isOpen: false }));
+                setIsRefreshing(true);
+                const result = await initializePlansInFirestore(user?.uid);
+                if (result.success) {
+                    await loadData();
+                } else {
+                    setError(result.error || 'Error al inicializar planes');
+                }
+                setIsRefreshing(false);
+            },
+        });
     };
 
     const handleSyncPlansFromCode = async () => {
-        if (!confirm('¿Sincronizar los planes del código a Firestore? Esto actualizará los planes existentes y creará nuevos planes como "Hobby".')) return;
-        setIsRefreshing(true);
-        try {
-            const result = await syncPlansFromHardcoded(user?.uid);
-            if (result.success) {
-                await loadData();
-                alert(`Sincronización completada: ${result.plansCreated} creados, ${result.plansUpdated} actualizados`);
-            } else {
-                setError(result.error || 'Error al sincronizar planes');
-            }
-        } catch (err) {
-            setError('Error al sincronizar planes desde el código');
-        }
-        setIsRefreshing(false);
+        setConfirmModal({
+            isOpen: true,
+            title: '¿Sincronizar planes?',
+            message: '¿Sincronizar los planes del código a Firestore? Esto actualizará los planes existentes y creará nuevos planes como "Hobby".',
+            variant: 'warning',
+            onConfirm: async () => {
+                setConfirmModal(prev => ({ ...prev, isOpen: false }));
+                setIsRefreshing(true);
+                try {
+                    const result = await syncPlansFromHardcoded(user?.uid);
+                    if (result.success) {
+                        await loadData();
+                        alert(`Sincronización completada: ${result.plansCreated} creados, ${result.plansUpdated} actualizados`);
+                    } else {
+                        setError(result.error || 'Error al sincronizar planes');
+                    }
+                } catch (err) {
+                    setError('Error al sincronizar planes desde el código');
+                }
+                setIsRefreshing(false);
+            },
+        });
     };
 
     const handleMigrateToNewPlans = async () => {
@@ -799,57 +833,65 @@ Los usuarios existentes NO serán afectados, mantendrán su plan actual.
 
 ¿Continuar?`;
 
-        if (!confirm(confirmMsg)) return;
+        setConfirmModal({
+            isOpen: true,
+            title: '¿Migrar estructura de planes?',
+            message: confirmMsg,
+            variant: 'danger',
+            onConfirm: async () => {
+                setConfirmModal(prev => ({ ...prev, isOpen: false }));
 
-        setIsMigrating(true);
-        setError(null);
+                setIsMigrating(true);
+                setError(null);
 
-        try {
-            console.log('[Migration] Starting migration...');
-            const result = await migrateToNewPlanStructure(user?.uid);
-            console.log('[Migration] Result:', result);
+                try {
+                    console.log('[Migration] Starting migration...');
+                    const result = await migrateToNewPlanStructure(user?.uid);
+                    console.log('[Migration] Result:', result);
 
-            // Build detailed message
-            const details: string[] = [];
-            
-            if (result.archived.length > 0) {
-                details.push(`✅ Planes archivados: ${result.archived.join(', ')}`);
-            } else {
-                details.push(`ℹ️ No se archivaron planes (ya estaban archivados o no existían)`);
-            }
-            
-            if (result.created.length > 0) {
-                details.push(`✅ Planes creados: ${result.created.join(', ')}`);
-            }
-            
-            if (result.updated.length > 0) {
-                details.push(`✅ Planes actualizados: ${result.updated.join(', ')}`);
-            }
-            
-            if (result.created.length === 0 && result.updated.length === 0) {
-                details.push(`ℹ️ No se crearon ni actualizaron planes`);
-            }
-            
-            if (result.errors.length > 0) {
-                details.push(`\n⚠️ Errores:\n${result.errors.join('\n')}`);
-            }
+                    // Build detailed message
+                    const details: string[] = [];
 
-            await loadData();
-            
-            const statusEmoji = result.success ? '✅' : '⚠️';
-            const statusText = result.success ? 'Migración completada' : 'Migración completada con advertencias';
-            
-            alert(`${statusEmoji} ${statusText}\n\n${details.join('\n')}`);
+                    if (result.archived.length > 0) {
+                        details.push(`✅ Planes archivados: ${result.archived.join(', ')}`);
+                    } else {
+                        details.push(`ℹ️ No se archivaron planes (ya estaban archivados o no existían)`);
+                    }
 
-            if (!result.success) {
-                setError(`Algunos errores durante la migración: ${result.errors.join('; ')}`);
-            }
-        } catch (err) {
-            console.error('[Migration] Error:', err);
-            setError(`Error en la migración: ${err instanceof Error ? err.message : 'desconocido'}`);
-        }
+                    if (result.created.length > 0) {
+                        details.push(`✅ Planes creados: ${result.created.join(', ')}`);
+                    }
 
-        setIsMigrating(false);
+                    if (result.updated.length > 0) {
+                        details.push(`✅ Planes actualizados: ${result.updated.join(', ')}`);
+                    }
+
+                    if (result.created.length === 0 && result.updated.length === 0) {
+                        details.push(`ℹ️ No se crearon ni actualizaron planes`);
+                    }
+
+                    if (result.errors.length > 0) {
+                        details.push(`\n⚠️ Errores:\n${result.errors.join('\n')}`);
+                    }
+
+                    await loadData();
+
+                    const statusEmoji = result.success ? '✅' : '⚠️';
+                    const statusText = result.success ? 'Migración completada' : 'Migración completada con advertencias';
+
+                    alert(`${statusEmoji} ${statusText}\n\n${details.join('\n')}`);
+
+                    if (!result.success) {
+                        setError(`Algunos errores durante la migración: ${result.errors.join('; ')}`);
+                    }
+                } catch (err) {
+                    console.error('[Migration] Error:', err);
+                    setError(`Error en la migración: ${err instanceof Error ? err.message : 'desconocido'}`);
+                }
+
+                setIsMigrating(false);
+            },
+        });
     };
 
     // Filtrar y ordenar tenants
@@ -1271,11 +1313,10 @@ Los usuarios existentes NO serán afectados, mantendrán su plan actual.
                                         <button
                                             onClick={handleMigrateToNewPlans}
                                             disabled={isMigrating || isRefreshing}
-                                            className={`px-4 py-2 rounded-lg text-white text-sm font-medium hover:opacity-90 transition-colors flex items-center gap-2 ${
-                                                needsMigration 
-                                                    ? 'bg-gradient-to-r from-purple-500 to-indigo-500 animate-pulse' 
+                                            className={`px-4 py-2 rounded-lg text-white text-sm font-medium hover:opacity-90 transition-colors flex items-center gap-2 ${needsMigration
+                                                    ? 'bg-gradient-to-r from-purple-500 to-indigo-500 animate-pulse'
                                                     : 'bg-purple-600'
-                                            }`}
+                                                }`}
                                             title="Migrar a los nuevos planes (Individual, Agency Starter/Pro/Scale)"
                                         >
                                             {isMigrating ? (
@@ -1502,14 +1543,17 @@ Los usuarios existentes NO serán afectados, mantendrán su plan actual.
                 plan={planEditorModal.plan}
                 onSave={handleSavePlan}
             />
+
+            <ConfirmationModal
+                isOpen={confirmModal.isOpen}
+                onConfirm={confirmModal.onConfirm}
+                onCancel={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+                title={confirmModal.title}
+                message={confirmModal.message}
+                variant={confirmModal.variant}
+            />
         </>
     );
 };
 
 export default SubscriptionManagement;
-
-
-
-
-
-

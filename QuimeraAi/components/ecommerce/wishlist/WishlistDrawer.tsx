@@ -4,6 +4,7 @@
  */
 
 import React from 'react';
+import ConfirmationModal from '../../ui/ConfirmationModal';
 import {
     X,
     Heart,
@@ -41,6 +42,7 @@ const WishlistDrawer: React.FC<WishlistDrawerProps> = ({
 }) => {
     const [removingId, setRemovingId] = React.useState<string | null>(null);
     const [clearing, setClearing] = React.useState(false);
+    const [clearConfirmOpen, setClearConfirmOpen] = React.useState(false);
 
     const handleRemove = async (productId: string) => {
         setRemovingId(productId);
@@ -48,8 +50,12 @@ const WishlistDrawer: React.FC<WishlistDrawerProps> = ({
         setRemovingId(null);
     };
 
-    const handleClearAll = async () => {
-        if (!confirm('¿Estás seguro de eliminar todos los favoritos?')) return;
+    const handleClearAll = () => {
+        setClearConfirmOpen(true);
+    };
+
+    const confirmClearAll = async () => {
+        setClearConfirmOpen(false);
         setClearing(true);
         await onClearAll();
         setClearing(false);
@@ -212,6 +218,16 @@ const WishlistDrawer: React.FC<WishlistDrawerProps> = ({
                     </div>
                 )}
             </div>
+
+            {/* Clear Wishlist Confirmation Modal */}
+            <ConfirmationModal
+                isOpen={clearConfirmOpen}
+                onConfirm={confirmClearAll}
+                onCancel={() => setClearConfirmOpen(false)}
+                title="Eliminar Favoritos"
+                message="¿Estás seguro de eliminar todos los favoritos?"
+                variant="danger"
+            />
         </>
     );
 };

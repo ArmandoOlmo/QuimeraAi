@@ -6,6 +6,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import ConfirmationModal from '../../ui/ConfirmationModal';
 import { useAppContent } from '../../../contexts/appContent';
 import { useToast } from '../../../contexts/ToastContext';
 import {
@@ -62,7 +63,7 @@ const LegalPageEditor: React.FC<LegalPageEditorProps> = ({ pageType, onClose }) 
     const [isSaving, setIsSaving] = useState(false);
     const [hasChanges, setHasChanges] = useState(false);
     const [expandedSection, setExpandedSection] = useState<string | null>(null);
-    
+
     // Form state
     const [formData, setFormData] = useState<LegalPage>({
         id: pageType,
@@ -126,17 +127,24 @@ const LegalPageEditor: React.FC<LegalPageEditorProps> = ({ pageType, onClose }) 
         ));
     };
 
+    const [pendingDeleteSectionId, setPendingDeleteSectionId] = useState<string | null>(null);
+
     const deleteSection = (id: string) => {
-        if (window.confirm('¿Estás seguro de eliminar esta sección?')) {
-            updateForm('sections', formData.sections.filter(s => s.id !== id));
+        setPendingDeleteSectionId(id);
+    };
+
+    const confirmDeleteSection = () => {
+        if (pendingDeleteSectionId) {
+            updateForm('sections', formData.sections.filter(s => s.id !== pendingDeleteSectionId));
         }
+        setPendingDeleteSectionId(null);
     };
 
     const moveSection = (index: number, direction: 'up' | 'down') => {
         const newSections = [...formData.sections];
         const newIndex = direction === 'up' ? index - 1 : index + 1;
         if (newIndex < 0 || newIndex >= newSections.length) return;
-        
+
         [newSections[index], newSections[newIndex]] = [newSections[newIndex], newSections[index]];
         updateForm('sections', newSections);
     };
@@ -259,7 +267,7 @@ const LegalPageEditor: React.FC<LegalPageEditorProps> = ({ pageType, onClose }) 
                                 {formData.sections.map((section, index) => {
                                     const IconComponent = getIconComponent(section.icon);
                                     const isExpanded = expandedSection === section.id;
-                                    
+
                                     return (
                                         <div
                                             key={section.id}
@@ -374,15 +382,20 @@ const LegalPageEditor: React.FC<LegalPageEditorProps> = ({ pageType, onClose }) 
                     </div>
                 </div>
             </main>
+
+            <ConfirmationModal
+                isOpen={!!pendingDeleteSectionId}
+                onConfirm={confirmDeleteSection}
+                onCancel={() => setPendingDeleteSectionId(null)}
+                title="¿Eliminar sección?"
+                message="¿Estás seguro de eliminar esta sección? Esta acción no se puede deshacer."
+                variant="danger"
+            />
         </div>
     );
 };
 
 export default LegalPageEditor;
-
-
-
-
 
 
 

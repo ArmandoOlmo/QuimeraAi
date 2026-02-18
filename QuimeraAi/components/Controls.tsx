@@ -963,9 +963,8 @@ const Controls: React.FC = () => {
                 />
                 <button
                   onClick={() => {
-                    if (activeProject && window.confirm(t('editor.controls.header.removeFaviconConfirm', 'Remove favicon?'))) {
-                      // We would need to implement removeFavicon, for now just upload a new one
-                    }
+                    // TODO: Implement removeFavicon functionality
+                    // When implemented, use ConfirmationModal instead of window.confirm
                   }}
                   className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white rounded-full flex items-center justify-center text-xs hover:bg-red-600"
                   title="Remove favicon"

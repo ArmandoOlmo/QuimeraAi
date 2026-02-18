@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import ConfirmationModal from '../../ui/ConfirmationModal';
 import { useAuth } from '../../../contexts/core/AuthContext';
 import { useAdmin } from '../../../contexts/admin/AdminContext';
 import { Tenant, TenantStatus, TenantType, UserDocument } from '../../../types';
@@ -57,13 +58,20 @@ const TenantManagement: React.FC<TenantManagementProps> = ({ onBack }) => {
         setExpandedTenants(newExpanded);
     };
 
+    const [pendingDeleteTenantId, setPendingDeleteTenantId] = useState<string | null>(null);
+
     const handleDeleteTenant = async (tenantId: string) => {
         if (!canPerform('canDeleteTenants')) {
             alert(t('superadmin.tenant.alerts.noPermission', 'No tienes permiso para eliminar tenants.'));
             return;
         }
-        if (window.confirm(t('superadmin.tenant.alerts.deleteConfirm', '¿Estás seguro de eliminar este tenant? Esta acción no se puede deshacer.'))) {
-            await deleteTenant(tenantId);
+        setPendingDeleteTenantId(tenantId);
+    };
+
+    const confirmDeleteTenant = async () => {
+        if (pendingDeleteTenantId) {
+            await deleteTenant(pendingDeleteTenantId);
+            setPendingDeleteTenantId(null);
         }
     };
 
@@ -131,7 +139,7 @@ const TenantManagement: React.FC<TenantManagementProps> = ({ onBack }) => {
                         )}
 
                         {/* Icono de tipo */}
-                        <div className={`p-3 rounded-lg ${tenant.type === 'agency' ? 'bg-blue-500/20' : 'bg-purple-500/20'}`}>
+                        <div className={`p - 3 rounded - lg ${tenant.type === 'agency' ? 'bg-blue-500/20' : 'bg-purple-500/20'} `}>
                             {tenant.type === 'agency' ?
                                 <Building2 size={24} className="text-blue-400" /> :
                                 <User size={24} className="text-purple-400" />
@@ -142,7 +150,7 @@ const TenantManagement: React.FC<TenantManagementProps> = ({ onBack }) => {
                         <div className="flex-1">
                             <div className="flex items-center gap-2">
                                 <h3 className="font-semibold text-editor-text-primary">{tenant.name}</h3>
-                                <span className={`px-2 py-0.5 text-xs rounded-full border ${getStatusColor(tenant.status)}`}>
+                                <span className={`px - 2 py - 0.5 text - xs rounded - full border ${getStatusColor(tenant.status)} `}>
                                     {tenant.status}
                                 </span>
                             </div>
@@ -235,19 +243,19 @@ const TenantManagement: React.FC<TenantManagementProps> = ({ onBack }) => {
                                                     <p className="text-sm font-medium text-editor-text-primary">{member.name}</p>
                                                     <p className="text-xs text-editor-text-secondary">{member.email}</p>
                                                 </div>
-                                            </div>
+                                            </div >
                                             <span className="px-2 py-1 text-xs bg-editor-border text-editor-text-secondary rounded-md">
                                                 {member.tenantRole || 'member'}
                                             </span>
-                                        </div>
+                                        </div >
                                     ))
                                 ) : (
                                     <p className="text-sm text-editor-text-secondary text-center py-4">
                                         {t('superadmin.tenant.agency.noMembers', 'No hay miembros en este equipo')}
                                     </p>
                                 )}
-                            </div>
-                        </div>
+                            </div >
+                        </div >
                     )
                 }
             </div >
@@ -537,6 +545,15 @@ const TenantManagement: React.FC<TenantManagementProps> = ({ onBack }) => {
                     onSelectTenant={setSelectedTenant}
                 />
             )}
+
+            <ConfirmationModal
+                isOpen={!!pendingDeleteTenantId}
+                onConfirm={confirmDeleteTenant}
+                onCancel={() => setPendingDeleteTenantId(null)}
+                title={t('superadmin.tenant.alerts.deleteConfirm', '¿Estás seguro de eliminar este tenant?')}
+                message={t('superadmin.tenant.alerts.deleteWarning', 'Esta acción no se puede deshacer.')}
+                variant="danger"
+            />
         </div>
     );
 };

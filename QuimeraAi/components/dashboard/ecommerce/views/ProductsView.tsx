@@ -5,6 +5,7 @@
  */
 
 import React, { useState, useMemo } from 'react';
+import ConfirmationModal from '../../../ui/ConfirmationModal';
 import { useTranslation } from 'react-i18next';
 import {
     Plus,
@@ -69,9 +70,16 @@ const ProductsView: React.FC = () => {
         setShowForm(true);
     };
 
-    const handleDelete = async (productId: string) => {
-        if (confirm(t('ecommerce.confirmDeleteProduct', '¿Estás seguro de eliminar este producto?'))) {
-            await deleteProduct(productId);
+    const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+
+    const handleDelete = (productId: string) => {
+        setDeleteConfirmId(productId);
+    };
+
+    const confirmDeleteProduct = async () => {
+        if (deleteConfirmId) {
+            await deleteProduct(deleteConfirmId);
+            setDeleteConfirmId(null);
         }
     };
 
@@ -176,21 +184,19 @@ const ProductsView: React.FC = () => {
                     <div className="flex items-center gap-1 bg-muted/50 rounded-lg p-1">
                         <button
                             onClick={() => setViewMode('grid')}
-                            className={`p-2 rounded transition-colors ${
-                                viewMode === 'grid'
+                            className={`p-2 rounded transition-colors ${viewMode === 'grid'
                                     ? 'bg-primary text-primary-foreground'
                                     : 'text-muted-foreground hover:text-foreground'
-                            }`}
+                                }`}
                         >
                             <Grid size={20} />
                         </button>
                         <button
                             onClick={() => setViewMode('list')}
-                            className={`p-2 rounded transition-colors ${
-                                viewMode === 'list'
+                            className={`p-2 rounded transition-colors ${viewMode === 'list'
                                     ? 'bg-primary text-primary-foreground'
                                     : 'text-muted-foreground hover:text-foreground'
-                            }`}
+                                }`}
                         >
                             <List size={20} />
                         </button>
@@ -298,11 +304,10 @@ const ProductsView: React.FC = () => {
                                     <td className="px-4 py-3 hidden sm:table-cell">
                                         {product.trackInventory ? (
                                             <span
-                                                className={`${
-                                                    product.quantity <= (product.lowStockThreshold || 5)
+                                                className={`${product.quantity <= (product.lowStockThreshold || 5)
                                                         ? 'text-orange-400'
                                                         : 'text-muted-foreground'
-                                                }`}
+                                                    }`}
                                             >
                                                 {product.quantity}
                                             </span>
@@ -312,13 +317,12 @@ const ProductsView: React.FC = () => {
                                     </td>
                                     <td className="px-4 py-3 hidden lg:table-cell">
                                         <span
-                                            className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
-                                                product.status === 'active'
+                                            className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${product.status === 'active'
                                                     ? 'bg-green-500/20 text-green-400'
                                                     : product.status === 'draft'
-                                                    ? 'bg-yellow-500/20 text-yellow-400'
-                                                    : 'bg-muted text-muted-foreground'
-                                            }`}
+                                                        ? 'bg-yellow-500/20 text-yellow-400'
+                                                        : 'bg-muted text-muted-foreground'
+                                                }`}
                                         >
                                             {product.status}
                                         </span>
@@ -354,6 +358,15 @@ const ProductsView: React.FC = () => {
                     onSuccess={handleFormClose}
                 />
             )}
+            {/* Delete Product Confirmation Modal */}
+            <ConfirmationModal
+                isOpen={!!deleteConfirmId}
+                onConfirm={confirmDeleteProduct}
+                onCancel={() => setDeleteConfirmId(null)}
+                title={t('ecommerce.deleteProduct', 'Eliminar Producto')}
+                message={t('ecommerce.confirmDeleteProduct', '¿Estás seguro de eliminar este producto?')}
+                variant="danger"
+            />
         </div>
     );
 };

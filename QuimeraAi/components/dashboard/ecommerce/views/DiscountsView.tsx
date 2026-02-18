@@ -4,6 +4,7 @@
  */
 
 import React, { useState, useMemo } from 'react';
+import ConfirmationModal from '../../../ui/ConfirmationModal';
 import { useTranslation } from 'react-i18next';
 import {
     Plus,
@@ -46,6 +47,7 @@ const DiscountsView: React.FC = () => {
     const [editingDiscount, setEditingDiscount] = useState<Discount | null>(null);
     const [copiedCode, setCopiedCode] = useState<string | null>(null);
     const [filter, setFilter] = useState<'all' | 'active' | 'expired'>('all');
+    const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
     const [formData, setFormData] = useState({
         code: '',
@@ -117,9 +119,14 @@ const DiscountsView: React.FC = () => {
         setShowForm(true);
     };
 
-    const handleDelete = async (discountId: string) => {
-        if (confirm(t('ecommerce.confirmDeleteDiscount', '¿Estás seguro de eliminar este descuento?'))) {
-            await deleteDiscount(discountId);
+    const handleDelete = (discountId: string) => {
+        setDeleteConfirmId(discountId);
+    };
+
+    const confirmDeleteDiscount = async () => {
+        if (deleteConfirmId) {
+            await deleteDiscount(deleteConfirmId);
+            setDeleteConfirmId(null);
         }
     };
 
@@ -223,31 +230,28 @@ const DiscountsView: React.FC = () => {
             <div className="flex gap-2">
                 <button
                     onClick={() => setFilter('all')}
-                    className={`px-4 py-2 rounded-lg transition-colors ${
-                        filter === 'all'
+                    className={`px-4 py-2 rounded-lg transition-colors ${filter === 'all'
                             ? 'bg-primary text-primary-foreground'
                             : 'bg-card/50 text-muted-foreground hover:text-foreground'
-                    }`}
+                        }`}
                 >
                     {t('ecommerce.all', 'Todos')} ({discounts.length})
                 </button>
                 <button
                     onClick={() => setFilter('active')}
-                    className={`px-4 py-2 rounded-lg transition-colors ${
-                        filter === 'active'
+                    className={`px-4 py-2 rounded-lg transition-colors ${filter === 'active'
                             ? 'bg-green-600 text-white'
                             : 'bg-card/50 text-muted-foreground hover:text-foreground'
-                    }`}
+                        }`}
                 >
                     {t('ecommerce.active', 'Activos')} ({activeDiscounts.length})
                 </button>
                 <button
                     onClick={() => setFilter('expired')}
-                    className={`px-4 py-2 rounded-lg transition-colors ${
-                        filter === 'expired'
+                    className={`px-4 py-2 rounded-lg transition-colors ${filter === 'expired'
                             ? 'bg-muted text-foreground'
                             : 'bg-card/50 text-muted-foreground hover:text-foreground'
-                    }`}
+                        }`}
                 >
                     {t('ecommerce.expired', 'Expirados')} ({expiredDiscounts.length})
                 </button>
@@ -276,11 +280,10 @@ const DiscountsView: React.FC = () => {
                     {filteredDiscounts.map((discount) => (
                         <div
                             key={discount.id}
-                            className={`bg-card/50 rounded-xl border p-4 ${
-                                isExpired(discount) || isMaxUsesReached(discount) || !discount.isActive
+                            className={`bg-card/50 rounded-xl border p-4 ${isExpired(discount) || isMaxUsesReached(discount) || !discount.isActive
                                     ? 'border-border opacity-60'
                                     : 'border-border'
-                            }`}
+                                }`}
                         >
                             <div className="flex flex-col sm:flex-row sm:items-center gap-4">
                                 {/* Code */}
@@ -358,11 +361,10 @@ const DiscountsView: React.FC = () => {
                                 <div className="flex items-center gap-2">
                                     <button
                                         onClick={() => toggleDiscountStatus(discount.id)}
-                                        className={`p-2 rounded-lg transition-colors ${
-                                            discount.isActive
+                                        className={`p-2 rounded-lg transition-colors ${discount.isActive
                                                 ? 'text-green-400 hover:bg-green-500/20'
                                                 : 'text-muted-foreground hover:bg-muted'
-                                        }`}
+                                            }`}
                                     >
                                         {discount.isActive ? <CheckCircle size={18} /> : <XCircle size={18} />}
                                     </button>
@@ -546,6 +548,16 @@ const DiscountsView: React.FC = () => {
                     </div>
                 </div>
             )}
+
+            {/* Delete Discount Confirmation Modal */}
+            <ConfirmationModal
+                isOpen={!!deleteConfirmId}
+                onConfirm={confirmDeleteDiscount}
+                onCancel={() => setDeleteConfirmId(null)}
+                title={t('ecommerce.deleteDiscount', 'Eliminar Descuento')}
+                message={t('ecommerce.confirmDeleteDiscount', '¿Estás seguro de eliminar este descuento?')}
+                variant="danger"
+            />
         </div>
     );
 };

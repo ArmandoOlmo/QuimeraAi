@@ -5,6 +5,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import ConfirmationModal from '../../ui/ConfirmationModal';
 import { useAdmin } from '../../../contexts/admin';
 import { useUI } from '../../../contexts/core/UIContext';
 import DashboardSidebar from '../DashboardSidebar';
@@ -233,23 +234,28 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
         setIsSaving(false);
     };
 
-    const handleRestoreDefaults = async () => {
-        if (confirm('¿Estás seguro de restaurar todos los valores por defecto? Esto sobrescribirá tu configuración actual con los valores predeterminados (incluyendo el nombre "Quibo").')) {
-            setFormData(defaultLandingChatbotConfig);
-            setHasLocalChanges(true);
-            // Auto-save after restore
-            setIsSaving(true);
-            try {
-                await saveLandingChatbotConfig(defaultLandingChatbotConfig);
-                setHasLocalChanges(false);
-                setShowSuccess(true);
-                setTimeout(() => setShowSuccess(false), 3000);
-            } catch (error) {
-                console.error('Error saving defaults:', error);
-                alert('Error al guardar: ' + (error as Error).message);
-            }
-            setIsSaving(false);
+    const [showRestoreDefaultsModal, setShowRestoreDefaultsModal] = useState(false);
+
+    const handleRestoreDefaults = () => {
+        setShowRestoreDefaultsModal(true);
+    };
+
+    const confirmRestoreDefaults = async () => {
+        setShowRestoreDefaultsModal(false);
+        setFormData(defaultLandingChatbotConfig);
+        setHasLocalChanges(true);
+        // Auto-save after restore
+        setIsSaving(true);
+        try {
+            await saveLandingChatbotConfig(defaultLandingChatbotConfig);
+            setHasLocalChanges(false);
+            setShowSuccess(true);
+            setTimeout(() => setShowSuccess(false), 3000);
+        } catch (error) {
+            console.error('Error saving defaults:', error);
+            alert('Error al guardar: ' + (error as Error).message);
         }
+        setIsSaving(false);
     };
 
     const updateForm = <K extends keyof LandingChatbotConfig>(key: K, value: LandingChatbotConfig[K]) => {
@@ -2071,6 +2077,15 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                     </div>
                 </div>
             </div>
+            <ConfirmationModal
+                isOpen={showRestoreDefaultsModal}
+                onConfirm={confirmRestoreDefaults}
+                onCancel={() => setShowRestoreDefaultsModal(false)}
+                title="¿Restaurar valores por defecto?"
+                message='Esto sobrescribirá tu configuración actual con los valores predeterminados (incluyendo el nombre "Quibo").'
+                variant="warning"
+                confirmText="Restaurar"
+            />
         </div>
     );
 };

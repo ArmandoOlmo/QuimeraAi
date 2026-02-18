@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import ConfirmationModal from '../../ui/ConfirmationModal';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../../contexts/core/AuthContext';
 import { useAdmin } from '../../../contexts/admin';
@@ -28,6 +29,7 @@ const AdminManagement: React.FC<AdminManagementProps> = ({ onBack }) => {
     const [newAdminRole, setNewAdminRole] = useState<UserRole>('admin');
     const [errorMessage, setErrorMessage] = useState('');
     const [selectedUser, setSelectedUser] = useState<UserDocument | null>(null);
+    const [pendingDeleteUserId, setPendingDeleteUserId] = useState<string | null>(null);
 
     useEffect(() => {
         const loadData = async () => {
@@ -99,14 +101,18 @@ const AdminManagement: React.FC<AdminManagementProps> = ({ onBack }) => {
         }
     };
 
-    const handleDelete = async (userId: string) => {
-        if (window.confirm(t('superadmin.admins.deleteConfirm', '¿Estás seguro de eliminar este administrador?'))) {
-            try {
-                await deleteUserRecord(userId);
-            } catch (error: any) {
-                alert(error.message || t('superadmin.admins.deleteError', 'Error al eliminar'));
-            }
+    const handleDelete = (userId: string) => {
+        setPendingDeleteUserId(userId);
+    };
+
+    const confirmDeleteAdmin = async () => {
+        if (!pendingDeleteUserId) return;
+        try {
+            await deleteUserRecord(pendingDeleteUserId);
+        } catch (error: any) {
+            alert(error.message || t('superadmin.admins.deleteError', 'Error al eliminar'));
         }
+        setPendingDeleteUserId(null);
     };
 
     return (
@@ -374,9 +380,17 @@ const AdminManagement: React.FC<AdminManagementProps> = ({ onBack }) => {
                     </div>
                 )
             }
-        </div >
+
+            <ConfirmationModal
+                isOpen={!!pendingDeleteUserId}
+                onConfirm={confirmDeleteAdmin}
+                onCancel={() => setPendingDeleteUserId(null)}
+                title={t('superadmin.admins.deleteConfirm', '¿Estás seguro de eliminar este administrador?')}
+                message={t('superadmin.admins.deleteWarning', 'Esta acción no se puede deshacer.')}
+                variant="danger"
+            />
+        </div>
     );
 };
 
 export default AdminManagement;
-

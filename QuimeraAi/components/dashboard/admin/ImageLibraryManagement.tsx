@@ -1,6 +1,7 @@
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import ConfirmationModal from '../../ui/ConfirmationModal';
 import { useFiles } from '../../../contexts/files';
 import { useToast } from '../../../contexts/ToastContext';
 import { useAssetLibrary } from '../../../hooks/useAssetLibrary';
@@ -90,11 +91,16 @@ const ImageLibraryManagement: React.FC<ImageLibraryManagementProps> = ({ onBack 
         }
     };
 
-    const handleBulkDelete = async () => {
+    const [showBulkDeleteModal, setShowBulkDeleteModal] = useState(false);
+    const [pendingDeleteFile, setPendingDeleteFile] = useState<FileRecord | null>(null);
+
+    const handleBulkDelete = () => {
         if (library.selectedFiles.length === 0) return;
+        setShowBulkDeleteModal(true);
+    };
 
-        if (!window.confirm(t('superadmin.imageLibraryManagement.deleteConfirm', { count: library.selectedFiles.length, defaultValue: `Delete ${library.selectedFiles.length} global asset(s)? This action cannot be undone.` }))) return;
-
+    const confirmBulkDelete = async () => {
+        setShowBulkDeleteModal(false);
         try {
             await Promise.all(
                 library.selectedFiles.map(f => deleteGlobalFile(f.id, f.storagePath))
@@ -122,21 +128,24 @@ const ImageLibraryManagement: React.FC<ImageLibraryManagementProps> = ({ onBack 
         success(t('superadmin.imageLibraryManagement.downloading', { count: library.selectedFiles.length, defaultValue: `Downloading ${library.selectedFiles.length} file(s)` }));
     };
 
-    const handleSingleDelete = async (file: FileRecord) => {
+    const handleSingleDelete = (file: FileRecord) => {
         // Protect system assets from deletion
         if ((file as any).isSystemAsset) {
             showError(t('superadmin.imageLibraryManagement.cannotDeleteSystem', 'Los assets del sistema no se pueden eliminar'));
             return;
         }
+        setPendingDeleteFile(file);
+    };
 
-        if (!window.confirm(t('superadmin.imageLibraryManagement.deleteSingleConfirm', 'Delete this global asset?'))) return;
-
+    const confirmSingleDelete = async () => {
+        if (!pendingDeleteFile) return;
         try {
-            await deleteGlobalFile(file.id, file.storagePath);
+            await deleteGlobalFile(pendingDeleteFile.id, pendingDeleteFile.storagePath);
             success(t('superadmin.imageLibraryManagement.assetDeleted', 'Asset deleted successfully'));
         } catch (err) {
             showError(t('superadmin.imageLibraryManagement.assetDeletedError', 'Failed to delete asset'));
         }
+        setPendingDeleteFile(null);
     };
 
     return (
@@ -755,6 +764,24 @@ const ImageLibraryManagement: React.FC<ImageLibraryManagementProps> = ({ onBack 
                     </main>
                 </div>
             </div>
+
+            <ConfirmationModal
+                isOpen={showBulkDeleteModal}
+                onConfirm={confirmBulkDelete}
+                onCancel={() => setShowBulkDeleteModal(false)}
+                title={t('superadmin.imageLibraryManagement.deleteTitle', 'Delete Assets?')}
+                message={t('superadmin.imageLibraryManagement.deleteConfirm', { count: library.selectedFiles.length, defaultValue: `Delete ${library.selectedFiles.length} global asset(s)? This action cannot be undone.` })}
+                variant="danger"
+            />
+
+            <ConfirmationModal
+                isOpen={!!pendingDeleteFile}
+                onConfirm={confirmSingleDelete}
+                onCancel={() => setPendingDeleteFile(null)}
+                title={t('superadmin.imageLibraryManagement.deleteSingleTitle', 'Delete Asset?')}
+                message={t('superadmin.imageLibraryManagement.deleteSingleConfirm', 'Delete this global asset?')}
+                variant="danger"
+            />
         </>
     );
 };

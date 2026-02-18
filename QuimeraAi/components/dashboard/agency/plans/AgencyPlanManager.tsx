@@ -4,6 +4,7 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
+import ConfirmationModal from '../../../ui/ConfirmationModal';
 import { useTranslation } from 'react-i18next';
 import { useTenant } from '../../../../contexts/tenant/TenantContext';
 import { useAuth } from '../../../../contexts/core/AuthContext';
@@ -65,6 +66,15 @@ export function AgencyPlanManager() {
     // Action states
     const [processingPlanId, setProcessingPlanId] = useState<string | null>(null);
 
+    // Shared confirmation modal state
+    const [confirmModal, setConfirmModal] = useState<{
+        isOpen: boolean;
+        title: string;
+        message: string;
+        variant: 'warning' | 'danger';
+        onConfirm: () => void;
+    }>({ isOpen: false, title: '', message: '', variant: 'warning', onConfirm: () => { } });
+
     // Load data
     const loadData = useCallback(async () => {
         if (!currentTenant?.id) return;
@@ -107,19 +117,24 @@ export function AgencyPlanManager() {
     };
 
     const handleArchivePlan = async (plan: AgencyPlan) => {
-        if (!confirm(`¿Archivar el plan "${plan.name}"? Los clientes actuales no serán afectados.`)) {
-            return;
-        }
+        setConfirmModal({
+            isOpen: true,
+            title: '¿Archivar plan?',
+            message: `¿Archivar el plan "${plan.name}"? Los clientes actuales no serán afectados.`,
+            variant: 'warning',
+            onConfirm: async () => {
+                setConfirmModal(prev => ({ ...prev, isOpen: false }));
+                setProcessingPlanId(plan.id);
+                const result = await archiveAgencyPlan(plan.id, user?.uid);
+                setProcessingPlanId(null);
 
-        setProcessingPlanId(plan.id);
-        const result = await archiveAgencyPlan(plan.id, user?.uid);
-        setProcessingPlanId(null);
-
-        if (result.success) {
-            loadData();
-        } else {
-            setError(result.error || 'Error al archivar el plan');
-        }
+                if (result.success) {
+                    loadData();
+                } else {
+                    setError(result.error || 'Error al archivar el plan');
+                }
+            },
+        });
     };
 
     const handleRestorePlan = async (plan: AgencyPlan) => {
@@ -135,19 +150,24 @@ export function AgencyPlanManager() {
     };
 
     const handleDeletePlan = async (plan: AgencyPlan) => {
-        if (!confirm(`¿Eliminar permanentemente el plan "${plan.name}"? Esta acción no se puede deshacer.`)) {
-            return;
-        }
+        setConfirmModal({
+            isOpen: true,
+            title: '¿Eliminar plan?',
+            message: `¿Eliminar permanentemente el plan "${plan.name}"? Esta acción no se puede deshacer.`,
+            variant: 'danger',
+            onConfirm: async () => {
+                setConfirmModal(prev => ({ ...prev, isOpen: false }));
+                setProcessingPlanId(plan.id);
+                const result = await deleteAgencyPlan(plan.id);
+                setProcessingPlanId(null);
 
-        setProcessingPlanId(plan.id);
-        const result = await deleteAgencyPlan(plan.id);
-        setProcessingPlanId(null);
-
-        if (result.success) {
-            loadData();
-        } else {
-            setError(result.error || 'Error al eliminar el plan');
-        }
+                if (result.success) {
+                    loadData();
+                } else {
+                    setError(result.error || 'Error al eliminar el plan');
+                }
+            },
+        });
     };
 
     const handleEditorClose = () => {
@@ -518,6 +538,15 @@ export function AgencyPlanManager() {
                 onClose={handleEditorClose}
                 plan={editingPlan}
                 onSave={handlePlanSaved}
+            />
+
+            <ConfirmationModal
+                isOpen={confirmModal.isOpen}
+                onConfirm={confirmModal.onConfirm}
+                onCancel={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+                title={confirmModal.title}
+                message={confirmModal.message}
+                variant={confirmModal.variant}
             />
         </div>
     );
