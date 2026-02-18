@@ -26,6 +26,7 @@ import { useUI } from '../../../contexts/core/UIContext';
 import { useProject } from '../../../contexts/project';
 import { Project } from '../../../types/components';
 import DashboardSidebar from '../DashboardSidebar';
+import QuimeraLoader from '../../ui/QuimeraLoader';
 
 interface EmailProjectSelectorPageProps {
     onProjectSelect: (projectId: string) => void;
@@ -39,7 +40,7 @@ const EmailProjectSelectorPage: React.FC<EmailProjectSelectorPageProps> = ({
     const { t } = useTranslation();
     const { setIsOnboardingOpen } = useUI();
     const { projects, isLoadingProjects } = useProject();
-    
+
     // Local state
     const [searchQuery, setSearchQuery] = useState('');
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -49,7 +50,7 @@ const EmailProjectSelectorPage: React.FC<EmailProjectSelectorPageProps> = ({
 
     // Filter and sort projects
     const filteredProjects = useMemo(() => {
-        let filtered = projects.filter(p => 
+        let filtered = projects.filter(p =>
             p.status !== 'Template' &&
             p.name.toLowerCase().includes(searchQuery.toLowerCase())
         );
@@ -290,7 +291,7 @@ const EmailProjectSelectorPage: React.FC<EmailProjectSelectorPageProps> = ({
                         {isLoadingProjects ? (
                             <div className="flex items-center justify-center h-64">
                                 <div className="text-center">
-                                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4" />
+                                    <QuimeraLoader size="md" />
                                     <p className="text-muted-foreground">{t('common.loading', 'Cargando...')}</p>
                                 </div>
                             </div>
@@ -362,7 +363,7 @@ interface ProjectCardProps {
 
 const ProjectCard: React.FC<ProjectCardProps> = ({ project, onSelect, formatDate }) => {
     const { t } = useTranslation();
-    
+
     return (
         <button
             onClick={onSelect}
@@ -381,14 +382,13 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, onSelect, formatDate
                         <Layers size={40} className="text-muted-foreground/30" />
                     </div>
                 )}
-                
+
                 {/* Status Badge */}
                 <div className="absolute top-3 right-3">
-                    <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${
-                        project.status === 'Published'
+                    <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${project.status === 'Published'
                             ? 'bg-green-500/90 text-white'
                             : 'bg-slate-500/90 text-white'
-                    }`}>
+                        }`}>
                         {project.status === 'Published' ? t('dashboard.published', 'Publicado') : t('dashboard.draft', 'Borrador')}
                     </span>
                 </div>
@@ -425,7 +425,7 @@ interface ProjectListItemProps {
 
 const ProjectListItem: React.FC<ProjectListItemProps> = ({ project, onSelect, formatDate }) => {
     const { t } = useTranslation();
-    
+
     return (
         <button
             onClick={onSelect}
@@ -452,9 +452,8 @@ const ProjectListItem: React.FC<ProjectListItemProps> = ({ project, onSelect, fo
                     {project.name}
                 </h3>
                 <div className="flex items-center gap-3 sm:gap-4 text-xs text-muted-foreground mt-1">
-                    <span className={`flex items-center gap-1 ${
-                        project.status === 'Published' ? 'text-green-500' : ''
-                    }`}>
+                    <span className={`flex items-center gap-1 ${project.status === 'Published' ? 'text-green-500' : ''
+                        }`}>
                         {project.status === 'Published' ? <Globe size={12} /> : <FileEdit size={12} />}
                         <span className="hidden sm:inline">
                             {project.status === 'Published' ? t('dashboard.published', 'Publicado') : t('dashboard.draft', 'Borrador')}

@@ -5,12 +5,89 @@
  */
 
 import React, { useEffect, useState, useCallback } from 'react';
-import { ExternalLink, Loader2, Link2, MessageCircle, X, Send } from 'lucide-react';
+import {
+    ExternalLink, Loader2, Link2, MessageCircle, X, Send,
+    Instagram, Youtube, Twitter, Linkedin, Facebook, Twitch,
+    Music, Video, Play, Phone, Mail, ShoppingCart, ShoppingBag,
+    Store, FileText, Mic, Headphones, Radio, Camera, AtSign,
+    Globe, Rss, File, DollarSign, CreditCard, Star, Users,
+    Calendar, Heart,
+    type LucideIcon,
+} from 'lucide-react';
 import { db, doc, getDoc, addDoc, collection, serverTimestamp } from '../firebase';
 import type { BioLink, BioProfile, BioTheme } from '../contexts/bioPage';
 import type { AiAssistantConfig } from '../types/ai-assistant';
 import type { Lead } from '../types';
 import ChatCore from './chat/ChatCore';
+
+// Platform → Icon mapping (mirrors INTEGRATIONS in BioPageBuilder)
+const PLATFORM_ICONS: Record<string, LucideIcon> = {
+    // Social
+    instagram: Instagram,
+    tiktok: Music,
+    'tiktok-profile': Music,
+    twitter: Twitter,
+    threads: AtSign,
+    facebook: Facebook,
+    linkedin: Linkedin,
+    snapchat: Camera,
+    pinterest: Heart,
+    twitch: Twitch,
+    reddit: MessageCircle,
+    discord: MessageCircle,
+    telegram: Send,
+    // Media - Video
+    video: Video,
+    youtube: Youtube,
+    'tiktok-video': Music,
+    vimeo: Play,
+    // Media - Audio
+    music: Headphones,
+    spotify: Headphones,
+    'apple-music': Music,
+    soundcloud: Radio,
+    podcast: Mic,
+    // Media - Document
+    pdf: FileText,
+    rss: Rss,
+    file: File,
+    // Contact
+    chatbot: MessageCircle,
+    form: FileText,
+    'contact-form': Mail,
+    'email-signup': Mail,
+    'sms-signup': MessageCircle,
+    typeform: FileText,
+    laylo: Users,
+    whatsapp: MessageCircle,
+    email: Mail,
+    phone: Phone,
+    // Events
+    calendar: Calendar,
+    cameo: Video,
+    clubhouse: Mic,
+    // Commerce
+    shopify: ShoppingCart,
+    etsy: Store,
+    amazon: ShoppingBag,
+    paypal: DollarSign,
+    venmo: DollarSign,
+    stripe: CreditCard,
+    reviews: Star,
+    // Generic
+    link: Globe,
+    social: Globe,
+};
+
+const getPlatformIcon = (link: { linkType?: string; platform?: string }): LucideIcon => {
+    if (link.platform && PLATFORM_ICONS[link.platform]) {
+        return PLATFORM_ICONS[link.platform];
+    }
+    if (link.linkType && PLATFORM_ICONS[link.linkType]) {
+        return PLATFORM_ICONS[link.linkType];
+    }
+    return Globe;
+};
 
 interface PublicBioPageData {
     id: string;
@@ -385,18 +462,21 @@ const PublicBioPage: React.FC<PublicBioPageProps> = ({ username }) => {
 
                     {/* Links */}
                     <div className="space-y-3">
-                        {enabledLinks.map((link) => (
-                            <button
-                                key={link.id}
-                                onClick={() => handleLinkClick(link)}
-                                className="w-full p-4 flex items-center justify-center gap-2 font-medium transition-all hover:scale-[1.02] hover:shadow-lg active:scale-[0.98]"
-                                style={getButtonStyle()}
-                            >
-                                {link.linkType === 'chatbot' && <MessageCircle size={16} className="opacity-80" />}
-                                <span>{link.title}</span>
-                                {link.linkType !== 'chatbot' && <ExternalLink size={16} className="opacity-60" />}
-                            </button>
-                        ))}
+                        {enabledLinks.map((link) => {
+                            const PlatformIcon = getPlatformIcon(link);
+                            return (
+                                <button
+                                    key={link.id}
+                                    onClick={() => handleLinkClick(link)}
+                                    className="w-full p-4 flex items-center gap-3 font-medium transition-all hover:scale-[1.02] hover:shadow-lg active:scale-[0.98]"
+                                    style={getButtonStyle()}
+                                >
+                                    <PlatformIcon size={18} className="opacity-80 flex-shrink-0" />
+                                    <span className="flex-1 text-center">{link.title}</span>
+                                    {link.linkType !== 'chatbot' && <ExternalLink size={14} className="opacity-50 flex-shrink-0" />}
+                                </button>
+                            );
+                        })}
                     </div>
 
                     {/* Footer */}

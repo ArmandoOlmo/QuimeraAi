@@ -9,6 +9,7 @@ import { useTranslation } from 'react-i18next';
 import { useUI } from '../../contexts/core/UIContext';
 import { useOnboarding } from './hooks/useOnboarding';
 import StepIndicator from './components/StepIndicator';
+import QuimeraLoader from '../ui/QuimeraLoader';
 
 // Step Components
 import Step0WebsiteAnalyzer from './steps/Step0WebsiteAnalyzer';
@@ -136,7 +137,7 @@ const OnboardingModal: React.FC = () => {
             <div className="fixed inset-0 z-50 flex items-center justify-center">
                 <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
                 <div className="relative bg-background rounded-2xl p-8 flex items-center gap-4 border border-border">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+                    <QuimeraLoader size="sm" />
                     <span className="text-foreground">{t('common.loading', 'Loading...')}</span>
                 </div>
             </div>

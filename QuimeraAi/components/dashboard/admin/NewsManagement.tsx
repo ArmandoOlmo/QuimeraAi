@@ -41,6 +41,7 @@ import {
 } from 'lucide-react';
 import DashboardSidebar from '../DashboardSidebar';
 import NewsEditor from './NewsEditor';
+import QuimeraLoader from '@/components/ui/QuimeraLoader';
 
 interface NewsManagementProps {
     onBack: () => void;
@@ -324,11 +325,10 @@ const NewsManagement: React.FC<NewsManagementProps> = ({ onBack }) => {
                             {/* Filter Toggle */}
                             <button
                                 onClick={() => setShowFilters(!showFilters)}
-                                className={`flex items-center gap-2 px-4 py-2 border rounded-lg transition-colors ${
-                                    showFilters || hasFilters
-                                        ? 'bg-editor-accent/10 border-editor-accent text-editor-accent'
-                                        : 'bg-editor-bg border-editor-border text-editor-text-secondary hover:text-editor-text-primary'
-                                }`}
+                                className={`flex items-center gap-2 px-4 py-2 border rounded-lg transition-colors ${showFilters || hasFilters
+                                    ? 'bg-editor-accent/10 border-editor-accent text-editor-accent'
+                                    : 'bg-editor-bg border-editor-border text-editor-text-secondary hover:text-editor-text-primary'
+                                    }`}
                             >
                                 <Filter size={18} />
                                 <span>{t('admin.news.filters', 'Filtros')}</span>
@@ -439,7 +439,7 @@ const NewsManagement: React.FC<NewsManagementProps> = ({ onBack }) => {
                     {/* Loading State */}
                     {isLoading ? (
                         <div className="flex items-center justify-center py-12">
-                            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-editor-accent"></div>
+                            <QuimeraLoader size="md" />
                         </div>
                     ) : filteredNews.length === 0 ? (
                         /* Empty State */

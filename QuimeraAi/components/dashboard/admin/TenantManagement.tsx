@@ -11,6 +11,7 @@ import {
     Folder, HardDrive, Zap, DollarSign, CheckCircle, AlertCircle,
     Clock, XCircle, X
 } from 'lucide-react';
+import QuimeraLoader from '@/components/ui/QuimeraLoader';
 
 interface TenantManagementProps {
     onBack: () => void;
@@ -405,9 +406,8 @@ const TenantManagement: React.FC<TenantManagementProps> = ({ onBack }) => {
 
                     {/* Lista de tenants */}
                     {loading ? (
-                        <div className="text-center py-12">
-                            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-editor-accent mx-auto mb-4"></div>
-                            <p className="text-editor-text-secondary">Cargando tenants...</p>
+                        <div className="flex items-center justify-center py-12">
+                            <QuimeraLoader size="md" />
                         </div>
                     ) : filteredTenants.length > 0 ? (
                         <div className="space-y-3">

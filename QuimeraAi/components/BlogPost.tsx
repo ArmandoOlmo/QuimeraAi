@@ -161,10 +161,16 @@ const BlogPost: React.FC<BlogPostProps> = ({ post, theme, onBack, textColor, bac
                         <h1 className="text-4xl md:text-6xl font-extrabold text-white leading-tight mb-4 font-header">
                             {post.title}
                         </h1>
-                        <div className="flex items-center space-x-6 text-white/80 text-sm">
-                            <span className="flex items-center"><Calendar size={14} className="mr-2" /> {new Date(post.updatedAt).toLocaleDateString()}</span>
-                            <span className="flex items-center"><User size={14} className="mr-2" /> Admin</span>
-                        </div>
+                        {(post.showDate !== false || post.showAuthor !== false) && (
+                            <div className="flex items-center space-x-6 text-white/80 text-sm">
+                                {post.showDate !== false && (
+                                    <span className="flex items-center"><Calendar size={14} className="mr-2" /> {new Date(post.publishedAt || post.updatedAt).toLocaleDateString()}</span>
+                                )}
+                                {post.showAuthor !== false && (
+                                    <span className="flex items-center"><User size={14} className="mr-2" /> {post.author || 'Admin'}</span>
+                                )}
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>

@@ -22,6 +22,7 @@ import { AgencyPlanManager } from './plans';
 import AgencyContentDashboard from './AgencyContentDashboard';
 import AgencyNavigationManagement from './AgencyNavigationManagement';
 import { toast } from 'react-hot-toast';
+import QuimeraLoader from '@/components/ui/QuimeraLoader';
 
 type AgencyTab = 'overview' | 'analytics' | 'landing' | 'billing' | 'reports' | 'new-client' | 'addons' | 'plans' | 'cms' | 'navigation';
 
@@ -217,7 +218,7 @@ const AgencyDashboardMain: React.FC = () => {
                                     className={`flex flex-col items-center justify-center gap-0.5 py-1.5 rounded-lg text-[10px] font-medium transition-colors leading-tight ${isActive
                                         ? 'bg-primary/10 text-primary'
                                         : 'text-muted-foreground hover:text-foreground hover:bg-secondary/50'
-                                    }`}
+                                        }`}
                                 >
                                     <Icon size={16} className="shrink-0" />
                                     <span className="truncate w-full text-center px-0.5">{tab.label}</span>
@@ -241,12 +242,7 @@ const AgencyDashboardMain: React.FC = () => {
                         <div className="w-full h-full overflow-y-auto p-6">
                             {loadingClients ? (
                                 <div className="flex items-center justify-center h-64">
-                                    <div className="text-center">
-                                        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary mx-auto mb-4" />
-                                        <p className="text-muted-foreground text-sm">
-                                            {t('common.loading', 'Cargando...')}
-                                        </p>
-                                    </div>
+                                    <QuimeraLoader size="md" />
                                 </div>
                             ) : (
                                 <>

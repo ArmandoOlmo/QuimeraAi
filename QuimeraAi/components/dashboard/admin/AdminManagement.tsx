@@ -11,6 +11,7 @@ import {
     Eye, Trash2, AlertCircle
 } from 'lucide-react';
 import DashboardSidebar from '../DashboardSidebar';
+import QuimeraLoader from '@/components/ui/QuimeraLoader';
 
 interface AdminManagementProps {
     onBack: () => void;
@@ -213,9 +214,8 @@ const AdminManagement: React.FC<AdminManagementProps> = ({ onBack }) => {
 
                     {/* Lista de admins */}
                     {loading ? (
-                        <div className="text-center py-12">
-                            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-editor-accent mx-auto mb-4"></div>
-                            <p className="text-editor-text-secondary">{t('superadmin.admins.loading', 'Cargando administradores...')}</p>
+                        <div className="flex items-center justify-center py-12">
+                            <QuimeraLoader size="md" />
                         </div>
                     ) : (
                         <div className="space-y-3">

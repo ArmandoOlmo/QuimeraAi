@@ -11,15 +11,11 @@ import { View, UserDocument, PageData } from '../types';
 
 // Core components - imported synchronously (always needed)
 import DashboardSidebar from './dashboard/DashboardSidebar';
+import QuimeraLoader from './ui/QuimeraLoader';
 
 // Loading fallback for lazy components
 const ViewLoading = () => (
-    <div className="flex h-screen items-center justify-center bg-background">
-        <div className="flex flex-col items-center gap-4">
-            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary" />
-            <p className="text-muted-foreground text-sm">Loading...</p>
-        </div>
-    </div>
+    <QuimeraLoader fullScreen size="md" />
 );
 
 // ============================================================================

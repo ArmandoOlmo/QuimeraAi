@@ -442,6 +442,7 @@ export const EditorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
     const isInitialLoadRef = useRef(true);
     const projectsRef = useRef<Project[]>([]); // Ref to keep latest projects for auto-save
+    const aiAssistantConfigRef = useRef<AiAssistantConfig>(aiAssistantConfig); // Ref to prevent stale closure in auto-save
 
     // Project AI Assistant Config
     const [aiAssistantConfig, setAiAssistantConfig] = useState<AiAssistantConfig>({
@@ -1407,6 +1408,11 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
         projectsRef.current = projects;
     }, [projects]);
 
+    // Keep aiAssistantConfigRef in sync with latest state for auto-save
+    useEffect(() => {
+        aiAssistantConfigRef.current = aiAssistantConfig;
+    }, [aiAssistantConfig]);
+
     // Auto-save effect: saves project automatically when data changes (including templates)
     useEffect(() => {
         // Skip if missing required data
@@ -1466,7 +1472,7 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
                     sectionVisibility,
                     thumbnailUrl,
                     menus,
-                    aiAssistantConfig,
+                    aiAssistantConfig: aiAssistantConfigRef.current,
                     lastUpdated: new Date().toISOString()
                 };
 
@@ -3543,6 +3549,7 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
     };
 
     const saveAiAssistantConfig = async (config: AiAssistantConfig) => {
+        aiAssistantConfigRef.current = config; // Sync update to prevent stale closure in auto-save
         setAiAssistantConfig(config);
         if (activeProjectId && user) {
             try {

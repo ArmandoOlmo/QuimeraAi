@@ -13,6 +13,7 @@ import TeamSettings from './TeamSettings';
 import SubscriptionSettings from './SubscriptionSettings';
 import { BrandingSettings } from '../tenant';
 import DashboardSidebar from '../DashboardSidebar';
+import QuimeraLoader from '../../ui/QuimeraLoader';
 
 type SettingsTab = 'team' | 'branding' | 'subscription';
 
@@ -74,14 +75,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ initialTab }) => {
     ];
 
     if (isLoading) {
-        return (
-            <div className="flex h-screen items-center justify-center bg-background">
-                <div className="flex flex-col items-center gap-4">
-                    <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary" />
-                    <p className="text-muted-foreground text-sm">{t('common.loading', 'Cargando...')}</p>
-                </div>
-            </div>
-        );
+        return <QuimeraLoader fullScreen size="md" />;
     }
 
     return (
@@ -138,8 +132,8 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ initialTab }) => {
                                         key={tab.id}
                                         onClick={() => handleTabChange(tab.id)}
                                         className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-all ${isActive
-                                                ? 'border-primary text-primary'
-                                                : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
+                                            ? 'border-primary text-primary'
+                                            : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
                                             }`}
                                     >
                                         <Icon size={18} />

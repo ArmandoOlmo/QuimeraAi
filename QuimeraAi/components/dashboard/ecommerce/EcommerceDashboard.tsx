@@ -33,6 +33,7 @@ import {
     ArrowLeft,
 } from 'lucide-react';
 import DashboardSidebar from '../DashboardSidebar';
+import QuimeraLoader from '../../ui/QuimeraLoader';
 import { useAuth } from '../../../contexts/core/AuthContext';
 import { useUI } from '../../../contexts/core/UIContext';
 import { useProject } from '../../../contexts/project';
@@ -274,14 +275,7 @@ const EcommerceDashboard: React.FC = () => {
 
     // Loading state
     if (!userId) {
-        return (
-            <div className="min-h-screen bg-background flex items-center justify-center">
-                <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4" />
-                    <p className="text-muted-foreground">{t('common.loading', 'Cargando...')}</p>
-                </div>
-            </div>
-        );
+        return <QuimeraLoader fullScreen size="md" />;
     }
 
     // No project selected or user wants to see all projects - show full project selector page
@@ -364,16 +358,7 @@ const EcommerceDashboard: React.FC = () => {
 
     // Loading store
     if (storeLoading || ecommerceLoading) {
-        return (
-            <div className="min-h-screen bg-background flex items-center justify-center">
-                <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4" />
-                    <p className="text-muted-foreground">
-                        {t('ecommerce.initializingStore', 'Inicializando tienda...')}
-                    </p>
-                </div>
-            </div>
-        );
+        return <QuimeraLoader fullScreen size="md" text={t('ecommerce.initializingStore', 'Inicializando tienda...')} />;
     }
 
     // Error state
@@ -662,7 +647,7 @@ const OverviewView: React.FC<OverviewProps> = ({
     if (isLoading) {
         return (
             <div className="flex items-center justify-center h-64">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary" />
+                <QuimeraLoader size="md" />
             </div>
         );
     }

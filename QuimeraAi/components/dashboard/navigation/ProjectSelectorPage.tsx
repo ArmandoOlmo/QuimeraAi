@@ -25,6 +25,7 @@ import { useUI } from '../../../contexts/core/UIContext';
 import { useProject } from '../../../contexts/project/ProjectContext';
 import { Project } from '../../../types/components';
 import DashboardSidebar from '../DashboardSidebar';
+import QuimeraLoader from '../../ui/QuimeraLoader';
 
 interface ProjectSelectorPageProps {
     onProjectSelect: (projectId: string) => void;
@@ -293,7 +294,7 @@ const ProjectSelectorPage: React.FC<ProjectSelectorPageProps> = ({
                         {isLoadingProjects ? (
                             <div className="flex items-center justify-center h-64">
                                 <div className="text-center">
-                                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4" />
+                                    <QuimeraLoader size="md" />
                                     <p className="text-muted-foreground">{t('common.loading', 'Cargando...')}</p>
                                 </div>
                             </div>
@@ -388,8 +389,8 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, onSelect, formatDate
                 {/* Status Badge */}
                 <div className="absolute top-3 right-3">
                     <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${project.status === 'Published'
-                            ? 'bg-green-500/90 text-white'
-                            : 'bg-slate-500/90 text-white'
+                        ? 'bg-green-500/90 text-white'
+                        : 'bg-slate-500/90 text-white'
                         }`}>
                         {project.status === 'Published' ? t('dashboard.published', 'Publicado') : t('dashboard.draft', 'Borrador')}
                     </span>

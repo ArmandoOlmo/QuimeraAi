@@ -18,6 +18,7 @@ import {
     Calendar,
     Filter,
 } from 'lucide-react';
+import QuimeraLoader from '@/components/ui/QuimeraLoader';
 
 interface Payment {
     id: string;
@@ -252,7 +253,7 @@ export function InvoiceHistory() {
     if (loading) {
         return (
             <div className="flex items-center justify-center h-64">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                <QuimeraLoader size="md" />
             </div>
         );
     }

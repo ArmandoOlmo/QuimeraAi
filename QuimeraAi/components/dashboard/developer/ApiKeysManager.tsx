@@ -31,6 +31,7 @@ import {
   Book,
   Terminal,
 } from 'lucide-react';
+import QuimeraLoader from '@/components/ui/QuimeraLoader';
 
 // ============================================================================
 // TYPES
@@ -218,7 +219,7 @@ export function ApiKeysManager() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <QuimeraLoader size="md" />
       </div>
     );
   }
@@ -348,8 +349,8 @@ export function ApiKeysManager() {
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span
                       className={`px-2 py-1 text-xs font-semibold rounded ${key.status === 'active'
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-red-100 text-red-800'
+                        ? 'bg-green-100 text-green-800'
+                        : 'bg-red-100 text-red-800'
                         }`}
                     >
                       {key.status === 'active' ? 'Activa' : 'Revocada'}

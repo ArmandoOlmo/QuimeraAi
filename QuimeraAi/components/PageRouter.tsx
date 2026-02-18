@@ -15,6 +15,7 @@ import { PageData, ThemeData } from '../types';
 import { matchPage, getHomePage } from '../utils/pageMatching';
 import { DynamicData, PublicProduct, PublicCategory, PublicArticle } from '../utils/metaGenerator';
 import PageRenderer from './PageRenderer';
+import QuimeraLoader from './ui/QuimeraLoader';
 
 interface PageRouterProps {
     /** The project containing pages */
@@ -51,7 +52,7 @@ const PageRouter: React.FC<PageRouterProps> = ({
     // State for dynamic data
     const [dynamicData, setDynamicData] = useState<DynamicData | null>(initialDynamicData || null);
     const [isLoadingDynamic, setIsLoadingDynamic] = useState(false);
-    
+
     // Get pages from project (use legacy if no pages)
     const pages = useMemo(() => {
         if (project.pages && project.pages.length > 0) {
@@ -60,51 +61,51 @@ const PageRouter: React.FC<PageRouterProps> = ({
         // No pages - this is a legacy project
         return [];
     }, [project.pages]);
-    
+
     // Match current path to a page
     const pageMatch = useMemo((): PageMatch | null => {
         const path = serverUrl || currentPath;
         return matchPage(pages, path);
     }, [pages, currentPath, serverUrl]);
-    
+
     // Load dynamic data when page or params change
     useEffect(() => {
         if (!pageMatch || pageMatch.page.type !== 'dynamic') {
             setDynamicData(null);
             return;
         }
-        
+
         const loadDynamicData = async () => {
             setIsLoadingDynamic(true);
-            
+
             try {
                 const { page, params } = pageMatch;
                 const slug = params.slug;
-                
+
                 if (!slug) {
                     setDynamicData(null);
                     return;
                 }
-                
+
                 switch (page.dynamicSource) {
                     case 'products':
                         // Find product by slug from storefrontProducts
                         const product = storefrontProducts.find(p => p.slug === slug);
                         setDynamicData(product ? { product } : null);
                         break;
-                        
+
                     case 'categories':
                         // Find category by slug
                         const category = categories.find(c => c.slug === slug);
                         setDynamicData(category ? { category } : null);
                         break;
-                        
+
                     case 'blogPosts':
                         // Find article by slug
                         const article = blogPosts.find(a => a.slug === slug);
                         setDynamicData(article ? { article } : null);
                         break;
-                        
+
                     default:
                         setDynamicData(null);
                 }
@@ -115,16 +116,16 @@ const PageRouter: React.FC<PageRouterProps> = ({
                 setIsLoadingDynamic(false);
             }
         };
-        
+
         loadDynamicData();
     }, [pageMatch, storefrontProducts, categories, blogPosts]);
-    
+
     // If no pages defined (legacy project), return null
     // The parent component should handle legacy rendering
     if (pages.length === 0) {
         return null;
     }
-    
+
     // If no page match found, show 404 or home page
     if (!pageMatch) {
         const homePage = getHomePage(pages);
@@ -139,7 +140,7 @@ const PageRouter: React.FC<PageRouterProps> = ({
                 />
             );
         }
-        
+
         // No home page either - show error
         return (
             <div className="min-h-screen flex items-center justify-center bg-gray-100">
@@ -150,16 +151,16 @@ const PageRouter: React.FC<PageRouterProps> = ({
             </div>
         );
     }
-    
+
     // Show loading for dynamic pages
     if (isLoadingDynamic) {
         return (
             <div className="min-h-screen flex items-center justify-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+                <QuimeraLoader size="md" />
             </div>
         );
     }
-    
+
     // Dynamic page with no data found
     if (pageMatch.page.type === 'dynamic' && !dynamicData) {
         return (
@@ -175,7 +176,7 @@ const PageRouter: React.FC<PageRouterProps> = ({
             </div>
         );
     }
-    
+
     // Render the matched page
     return (
         <PageRenderer

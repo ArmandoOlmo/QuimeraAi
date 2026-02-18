@@ -18,6 +18,7 @@ import {
   Package,
 } from 'lucide-react';
 import { useTenant } from '@/contexts/tenant/TenantContext';
+import QuimeraLoader from '@/components/ui/QuimeraLoader';
 
 // ============================================================================
 // TYPES
@@ -267,7 +268,7 @@ export function AddonsManager({ onUpdate }: AddonsManagerProps) {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <QuimeraLoader size="md" />
       </div>
     );
   }
@@ -368,13 +369,12 @@ export function AddonsManager({ onUpdate }: AddonsManagerProps) {
                   Diferencia:
                 </span>
                 <span
-                  className={`text-xl font-bold ${
-                    costDifference > 0
-                      ? 'text-red-600'
-                      : costDifference < 0
+                  className={`text-xl font-bold ${costDifference > 0
+                    ? 'text-red-600'
+                    : costDifference < 0
                       ? 'text-green-600'
                       : 'text-gray-600'
-                  }`}
+                    }`}
                 >
                   {costDifference > 0 ? '+' : ''}${costDifference.toFixed(2)}/mes
                 </span>
@@ -472,23 +472,20 @@ function AddonCard({
 
   return (
     <div
-      className={`bg-white border-2 rounded-lg p-6 transition-all ${
-        addon.recommended
-          ? 'border-blue-500 shadow-md'
-          : 'border-gray-200 hover:border-gray-300'
-      }`}
+      className={`bg-white border-2 rounded-lg p-6 transition-all ${addon.recommended
+        ? 'border-blue-500 shadow-md'
+        : 'border-gray-200 hover:border-gray-300'
+        }`}
     >
       {/* Header */}
       <div className="flex items-start justify-between mb-4">
         <div
-          className={`p-3 rounded-lg ${
-            addon.recommended ? 'bg-blue-100' : 'bg-gray-100'
-          }`}
+          className={`p-3 rounded-lg ${addon.recommended ? 'bg-blue-100' : 'bg-gray-100'
+            }`}
         >
           {React.cloneElement(addon.icon as React.ReactElement, {
-            className: `h-6 w-6 ${
-              addon.recommended ? 'text-blue-600' : 'text-gray-600'
-            }`,
+            className: `h-6 w-6 ${addon.recommended ? 'text-blue-600' : 'text-gray-600'
+              }`,
           })}
         </div>
         {addon.recommended && (

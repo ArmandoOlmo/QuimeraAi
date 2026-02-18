@@ -27,6 +27,7 @@ import { useUI } from '../../../contexts/core/UIContext';
 import { useProject } from '../../../contexts/project';
 import { useEmailSettings, useEmailLogs } from '../../../hooks/useEmailSettings';
 import DashboardSidebar from '../DashboardSidebar';
+import QuimeraLoader from '../../ui/QuimeraLoader';
 import CampaignsView from './views/CampaignsView';
 import AudiencesView from './views/AudiencesView';
 import AnalyticsView from './views/AnalyticsView';
@@ -114,7 +115,7 @@ const EmailDashboard: React.FC<EmailDashboardProps> = ({ projectId: propProjectI
         return (
             <div className="min-h-screen bg-background flex items-center justify-center">
                 <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4" />
+                    <QuimeraLoader size="md" />
                     <p className="text-muted-foreground">{t('common.loading', 'Cargando...')}</p>
                 </div>
             </div>
