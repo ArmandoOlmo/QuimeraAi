@@ -326,13 +326,13 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
                 negativePrompt: negativePrompt.trim() || undefined,
             });
 
-            // generateImage() in EditorContext already saves to Storage + Firestore
-            // No need to call saveToLibrary() again — that was causing duplicates
-            setSavedToLibrary(true);
+            // Save the generated image to the project library (Firebase Storage + Firestore)
+            // useAI().generateImage only returns a base64 data URL, it does NOT persist
+            const savedUrl = await saveToLibrary(imageDataUrl, prompt);
 
-            // Call callback with the data URL
+            // Call callback with saved URL (Firebase Storage) or fallback to data URL
             if (onImageGenerated) {
-                onImageGenerated(imageDataUrl);
+                onImageGenerated(savedUrl || imageDataUrl);
             }
 
         } catch (error) {

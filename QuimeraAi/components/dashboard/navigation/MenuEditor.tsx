@@ -40,6 +40,7 @@ const SECTION_LINKS = [
 ];
 
 const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onClose, isNew, projectId }) => {
+    const { t } = useTranslation();
     const { saveMenu, deleteMenu, cmsPosts, loadCMSPosts } = useCMS();
     const { data, activeProjectId } = useProject();
     const [title, setTitle] = useState(menu.title);
@@ -49,6 +50,7 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onClose, isNew, projectId
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [deleteConfirmMessage, setDeleteConfirmMessage] = useState('');
+
 
     // Use projectId prop if provided, otherwise fall back to activeProjectId
     const effectiveProjectId = projectId ?? activeProjectId;
