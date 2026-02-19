@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useCMS } from '../../contexts/cms';
 import { useProject } from '../../contexts/project';
 import DashboardSidebar from '../dashboard/DashboardSidebar';
+import DashboardWaveRibbons from '../dashboard/DashboardWaveRibbons';
 import ConfirmationModal from '../ui/ConfirmationModal';
 import ModernCMSEditor from './modern/ModernCMSEditor';
 import ContentCreatorAssistant from './ContentCreatorAssistant';
@@ -285,6 +286,7 @@ const CMSDashboard: React.FC = () => {
             <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
 
             <div className="flex-1 flex flex-col overflow-hidden relative">
+                <DashboardWaveRibbons />
                 {/* Standardized Header */}
                 <header className="h-14 px-4 sm:px-6 border-b border-border flex items-center bg-background z-20 sticky top-0">
                     {/* Left Section */}

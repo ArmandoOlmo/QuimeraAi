@@ -8,6 +8,7 @@ import { useUI } from '../../../contexts/core/UIContext';
 import { useAuth } from '../../../contexts/core/AuthContext';
 import { useCMS } from '../../../contexts/cms/CMSContext';
 import DashboardSidebar from '../DashboardSidebar';
+import DashboardWaveRibbons from '../DashboardWaveRibbons';
 import {
     Menu, Bot, MessageSquare, Settings, Sliders, FileText,
     Save, Sparkles, User, Building2, Globe, Book, Activity, LayoutGrid, ChevronRight, Clock,
@@ -193,7 +194,8 @@ const AiAssistantDashboard: React.FC = () => {
         return (
             <div className="flex h-screen bg-background text-foreground">
                 <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
-                <div className="flex-1 flex flex-col overflow-hidden">
+                <div className="flex-1 flex flex-col overflow-hidden relative">
+                    <DashboardWaveRibbons />
                     <header className="h-14 px-2 sm:px-6 border-b border-border flex items-center justify-between bg-background z-20 shrink-0">
                         <div className="flex items-center gap-1 sm:gap-4">
                             <button onClick={() => setIsMobileMenuOpen(true)} className="lg:hidden h-9 w-9 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-border/40 rounded-full transition-colors">

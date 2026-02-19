@@ -12,6 +12,7 @@ import {
     Loader2
 } from 'lucide-react';
 import DashboardSidebar from './DashboardSidebar';
+import DashboardWaveRibbons from './DashboardWaveRibbons';
 import AdminViewLayout from './admin/AdminViewLayout';
 
 // Lazy-loaded admin panels — each loads on-demand (~905KB → ~30KB initial)
@@ -351,7 +352,8 @@ const SuperAdminDashboard = () => {
         <div className="flex h-screen bg-editor-bg text-editor-text-primary">
             <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
 
-            <div className="flex-1 flex flex-col overflow-hidden">
+            <div className="flex-1 flex flex-col overflow-hidden relative">
+                <DashboardWaveRibbons />
                 {/* Header */}
                 <header className="h-14 bg-editor-bg border-b border-editor-border flex-shrink-0 flex items-center justify-between px-4 sm:px-6 sticky top-0 z-10">
                     <div className="flex items-center gap-3">

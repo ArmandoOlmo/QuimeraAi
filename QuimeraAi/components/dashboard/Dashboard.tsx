@@ -3,6 +3,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/core/AuthContext';
 import { useUI } from '../../contexts/core/UIContext';
+import DashboardWaveRibbons from './DashboardWaveRibbons';
 import { useProject } from '../../contexts/project';
 import { useDomains } from '../../contexts/domains/DomainsContext';
 import { useCMS } from '../../contexts/cms';
@@ -231,6 +232,8 @@ const Dashboard: React.FC = () => {
             <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
 
             <div className="flex-1 flex flex-col overflow-hidden relative">
+                <DashboardWaveRibbons />
+
                 {/* Standardized Header */}
                 <header className="h-14 px-2 sm:px-6 border-b border-border flex items-center justify-between bg-background z-20 sticky top-0" role="banner">
                     {/* Left Section - Logo & Title */}

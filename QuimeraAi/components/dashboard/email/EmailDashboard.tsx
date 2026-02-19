@@ -27,6 +27,7 @@ import { useUI } from '../../../contexts/core/UIContext';
 import { useProject } from '../../../contexts/project';
 import { useEmailSettings, useEmailLogs } from '../../../hooks/useEmailSettings';
 import DashboardSidebar from '../DashboardSidebar';
+import DashboardWaveRibbons from '../DashboardWaveRibbons';
 import QuimeraLoader from '../../ui/QuimeraLoader';
 import CampaignsView from './views/CampaignsView';
 import AudiencesView from './views/AudiencesView';
@@ -172,7 +173,8 @@ const EmailDashboard: React.FC<EmailDashboardProps> = ({ projectId: propProjectI
             <div className="min-h-screen bg-background flex">
                 <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
 
-                <div className="flex-1 flex flex-col min-h-screen">
+                <div className="flex-1 flex flex-col min-h-screen relative">
+                    <DashboardWaveRibbons />
                     {/* Header - Simplified */}
                     <header className="h-14 px-4 sm:px-6 border-b border-border flex items-center justify-between bg-card/50 backdrop-blur-sm sticky top-0 z-40">
                         <div className="flex items-center gap-4">

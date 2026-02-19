@@ -8,6 +8,7 @@ import { useCRM } from '../../../contexts/crm';
 import { useAI } from '../../../contexts/ai';
 import { useProject } from '../../../contexts/project';
 import DashboardSidebar from '../DashboardSidebar';
+import DashboardWaveRibbons from '../DashboardWaveRibbons';
 import { getSourceConfig, getLeadScoreLabel } from '../../../utils/leadScoring';
 import {
     Menu, Plus, Search, Filter, MoreVertical,
@@ -897,6 +898,7 @@ const LeadsDashboard: React.FC = () => {
             <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
 
             <div className="flex-1 flex flex-col overflow-hidden relative bg-background">
+                <DashboardWaveRibbons />
                 {/* Header - Mobile optimized */}
                 <header className="h-auto min-h-[56px] px-3 sm:px-6 py-2 sm:py-0 border-b border-border bg-background z-20 shrink-0">
                     {/* Main header row */}

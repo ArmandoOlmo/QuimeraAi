@@ -473,7 +473,7 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
               style={sectionStyle}
             >
               {/* Flowing Gold Liquid 3D Background */}
-              <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+              <div className="absolute inset-0 z-0 pointer-events-none">
                 {/* Deep warm ambient glow layers */}
                 <div className="absolute inset-0" style={{
                   background: 'radial-gradient(ellipse 120% 80% at 50% 55%, rgba(160, 120, 20, 0.12) 0%, rgba(120, 80, 10, 0.06) 40%, transparent 70%)',

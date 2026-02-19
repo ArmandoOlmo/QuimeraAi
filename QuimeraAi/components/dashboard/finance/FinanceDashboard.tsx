@@ -16,6 +16,7 @@ import {
     isWithinInterval, parseISO, subDays, startOfDay, endOfDay
 } from 'date-fns';
 import DashboardSidebar from '../DashboardSidebar';
+import DashboardWaveRibbons from '../DashboardWaveRibbons';
 import { extractExpenseFromReceipt } from '../../../utils/expenseExtractor';
 import { ExpenseRecord } from '../../../types/finance';
 import { useAuth } from '../../../contexts/core/AuthContext';
@@ -533,6 +534,7 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación ni puntu
             <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
 
             <div className="flex-1 flex flex-col overflow-hidden relative bg-background">
+                <DashboardWaveRibbons />
                 {/* Header */}
                 <header className="h-14 px-2 sm:px-6 border-b border-border flex items-center justify-between bg-background z-20 shrink-0">
                     <div className="flex items-center gap-1 sm:gap-4">

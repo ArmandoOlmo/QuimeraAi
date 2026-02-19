@@ -5,6 +5,7 @@ import { useProject } from '../../contexts/project';
 import { useEditor } from '../../contexts/EditorContext';
 import { SEOConfig, AdPixelConfig } from '../../types';
 import DashboardSidebar from './DashboardSidebar';
+import DashboardWaveRibbons from './DashboardWaveRibbons';
 import ProjectSelectorPage from './seo/ProjectSelectorPage';
 import ImagePicker from '../ui/ImagePicker';
 import SEOAiAssistant from './seo/SEOAiAssistant';
@@ -1333,7 +1334,8 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
       )}
 
       <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-hidden relative">
+        <DashboardWaveRibbons />
         {/* Header */}
         <header className="h-14 px-4 sm:px-6 border-b border-border flex items-center justify-between bg-card/50 backdrop-blur-sm sticky top-0 z-40">
           <div className="flex items-center gap-4">
