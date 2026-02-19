@@ -174,7 +174,7 @@ const EmailDashboard: React.FC<EmailDashboardProps> = ({ projectId: propProjectI
                 <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
 
                 <div className="flex-1 flex flex-col min-h-screen relative">
-                    <DashboardWaveRibbons className="absolute inset-x-0 top-[14rem] h-64 z-[1] pointer-events-none overflow-hidden" />
+                    <DashboardWaveRibbons className="absolute inset-x-0 top-[14rem] h-64 z-0 pointer-events-none overflow-hidden" />
                     {/* Header - Simplified */}
                     <header className="h-14 px-4 sm:px-6 border-b border-border flex items-center justify-between bg-card/50 backdrop-blur-sm sticky top-0 z-40">
                         <div className="flex items-center gap-4">

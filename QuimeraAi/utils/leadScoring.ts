@@ -22,7 +22,7 @@ export const HIGH_INTENT_KEYWORDS = [
     'precio', 'costo', 'cotización', 'comprar', 'contratar', 'disponibilidad',
     'agendar', 'reunión', 'demostración', 'demo', 'presupuesto', 'invertir',
     'adquirir', 'necesito', 'urgente', 'inmediato', 'cuando', 'cuanto cuesta',
-    
+
     // English
     'price', 'buy', 'quote', 'purchase', 'order', 'interested', 'schedule',
     'meeting', 'demo', 'budget', 'invest', 'acquire', 'need', 'urgent',
@@ -36,15 +36,15 @@ export const detectHighIntent = (text: string): boolean => {
 
 export const calculateLeadScore = (factors: Partial<LeadScoringFactors>): number => {
     let score = 0;
-    
+
     // Contact Information (max 45 points)
     if (factors.hasEmail) score += 20;
     if (factors.hasPhone) score += 15;
     if (factors.hasName) score += 10;
-    
+
     // Company Info (max 10 points)
     if (factors.hasCompany) score += 10;
-    
+
     // Engagement (max 25 points)
     if (factors.conversationLength) {
         score += Math.min(factors.conversationLength * 2, 15);
@@ -55,12 +55,12 @@ export const calculateLeadScore = (factors: Partial<LeadScoringFactors>): number
     if (factors.messageLength && factors.messageLength > 150) {
         score += 5;
     }
-    
+
     // Intent (max 20 points)
     if (factors.hasHighIntentKeywords) {
         score += 20;
     }
-    
+
     // Source Quality Bonus (max 10 points)
     const sourceScores: Record<Lead['source'], number> = {
         'contact-form': 10,
@@ -74,18 +74,18 @@ export const calculateLeadScore = (factors: Partial<LeadScoringFactors>): number
         'voice-call': 9,
         'quimera-chat': 8
     };
-    
+
     if (factors.source) {
         score += sourceScores[factors.source] || 5;
     }
-    
+
     // Tags bonus (max 5 points)
     if (factors.tags) {
         const valuableTags = ['high-intent', 'has-company', 'repeat-visitor', 'engaged'];
         const matchingTags = factors.tags.filter(tag => valuableTags.includes(tag));
         score += Math.min(matchingTags.length * 2, 5);
     }
-    
+
     return Math.min(Math.round(score), 100);
 };
 
@@ -105,48 +105,48 @@ export const getSourceConfig = (source: Lead['source']) => {
         'voice-call': { icon: '📞', color: 'bg-green-500', label: 'Llamada' },
         'referral': { icon: '🤝', color: 'bg-indigo-500', label: 'Referido' },
         'linkedin': { icon: '💼', color: 'bg-blue-700', label: 'LinkedIn' },
-        'manual': { icon: '✍️', color: 'bg-gray-500', label: 'Manual' },
-        'cold_call': { icon: '☎️', color: 'bg-gray-600', label: 'Cold Call' },
+        'manual': { icon: '✍️', color: 'bg-violet-500', label: 'Manual' },
+        'cold_call': { icon: '☎️', color: 'bg-amber-600', label: 'Cold Call' },
         'quimera-chat': { icon: '🤖', color: 'bg-indigo-600', label: 'Quimera Chat' }
     };
-    
-    return configs[source] || { icon: '❓', color: 'bg-gray-500', label: 'Otro' };
+
+    return configs[source] || { icon: '🌐', color: 'bg-violet-500', label: 'Otro' };
 };
 
 export const recommendNextAction = (lead: Lead): string => {
     const score = lead.leadScore || lead.aiScore || 0;
     const status = lead.status;
-    
+
     if (score >= 80 && status === 'new') {
         return '🚨 ¡Contactar URGENTE! Lead de alta calidad';
     }
-    
+
     if (score >= 60 && status === 'new') {
         return '📞 Llamar en las próximas 24 horas';
     }
-    
+
     if (score >= 40 && status === 'contacted') {
         return '📧 Enviar seguimiento con información adicional';
     }
-    
+
     if (status === 'qualified') {
         return '💼 Agendar reunión de negocios';
     }
-    
+
     if (status === 'negotiation') {
         return '📄 Preparar propuesta formal';
     }
-    
+
     return '📋 Agregar a campaña de nurturing';
 };
 
 export const calculateConversionProbability = (lead: Lead): number => {
     let probability = 0;
-    
+
     // Base score contribution
     const score = lead.leadScore || lead.aiScore || 0;
     probability += (score / 100) * 40; // Max 40% from score
-    
+
     // Status contribution
     const statusProbability: Record<LeadStatus, number> = {
         'new': 10,
@@ -157,12 +157,12 @@ export const calculateConversionProbability = (lead: Lead): number => {
         'lost': 0
     };
     probability += statusProbability[lead.status] * 0.3; // Max 30% from status
-    
+
     // Engagement contribution
     if (lead.conversationTranscript && lead.conversationTranscript.length > 500) {
         probability += 10;
     }
-    
+
     // Source contribution
     const sourceBonus: Record<Lead['source'], number> = {
         'referral': 10,
@@ -177,19 +177,19 @@ export const calculateConversionProbability = (lead: Lead): number => {
         'quimera-chat': 8
     };
     probability += sourceBonus[lead.source] || 5;
-    
+
     // Time factor (leads get colder over time)
     const daysSinceCreation = (Date.now() / 1000 - lead.createdAt.seconds) / 86400;
     if (daysSinceCreation > 7 && lead.status === 'new') {
         probability -= 10;
     }
-    
+
     return Math.max(0, Math.min(100, Math.round(probability)));
 };
 
 export const enrichLeadData = (lead: Partial<Lead>): Partial<Lead> => {
     const enriched = { ...lead };
-    
+
     // Calculate score if not present
     if (!enriched.leadScore) {
         enriched.leadScore = calculateLeadScore({
@@ -198,7 +198,7 @@ export const enrichLeadData = (lead: Partial<Lead>): Partial<Lead> => {
             hasName: !!enriched.name,
             hasCompany: !!enriched.company,
             messageLength: enriched.notes?.length || 0,
-            conversationLength: enriched.conversationTranscript ? 
+            conversationLength: enriched.conversationTranscript ?
                 enriched.conversationTranscript.split('\n').length : 0,
             hasHighIntentKeywords: detectHighIntent(
                 `${enriched.notes || ''} ${enriched.conversationTranscript || ''}`
@@ -207,17 +207,17 @@ export const enrichLeadData = (lead: Partial<Lead>): Partial<Lead> => {
             tags: enriched.tags || []
         });
     }
-    
+
     // Add recommended action
     if (!enriched.recommendedAction && enriched.id) {
         enriched.recommendedAction = recommendNextAction(enriched as Lead);
     }
-    
+
     // Calculate probability
     if (!enriched.probability && enriched.id) {
         enriched.probability = calculateConversionProbability(enriched as Lead);
     }
-    
+
     return enriched;
 };
 

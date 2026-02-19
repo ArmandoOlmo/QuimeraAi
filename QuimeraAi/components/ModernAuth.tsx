@@ -181,7 +181,7 @@ const ModernAuth: React.FC<ModernAuthProps> = ({ onVerificationEmailSent, initia
                 {onNavigateToLanding && (
                     <button
                         onClick={onNavigateToLanding}
-                        className="absolute top-6 left-6 z-10 flex items-center gap-2 text-gray-400 hover:text-white transition-colors group"
+                        className="absolute top-6 left-6 z-20 flex items-center gap-2 text-gray-400 hover:text-white transition-colors group"
                     >
                         <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
                         <span className="text-sm font-medium">{t('common.back')}</span>

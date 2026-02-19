@@ -77,14 +77,15 @@ const getLeadStages = (t: any): { id: LeadStatus; label: string; color: string }
 ];
 
 const CARD_COLORS = [
-    { id: 'default', bg: 'bg-card', border: 'border-border', indicator: 'bg-slate-500' },
-    { id: 'blue', bg: 'bg-blue-500/5', border: 'border-blue-500/30', indicator: 'bg-blue-500' },
-    { id: 'green', bg: 'bg-emerald-500/5', border: 'border-emerald-500/30', indicator: 'bg-emerald-500' },
-    { id: 'purple', bg: 'bg-purple-500/5', border: 'border-purple-500/30', indicator: 'bg-purple-500' },
-    { id: 'orange', bg: 'bg-orange-500/5', border: 'border-orange-500/30', indicator: 'bg-orange-500' },
-    { id: 'pink', bg: 'bg-pink-500/5', border: 'border-pink-500/30', indicator: 'bg-pink-500' },
-    { id: 'red', bg: 'bg-red-500/5', border: 'border-red-500/30', indicator: 'bg-red-500' },
+    { id: 'default', bg: 'bg-gradient-to-r from-background via-background/60 to-transparent', border: 'border-border', indicator: 'bg-slate-500' },
+    { id: 'blue', bg: 'bg-gradient-to-r from-blue-500/40 via-blue-500/20 to-transparent', border: 'border-blue-500/30', indicator: 'bg-blue-500' },
+    { id: 'green', bg: 'bg-gradient-to-r from-emerald-500/40 via-emerald-500/20 to-transparent', border: 'border-emerald-500/30', indicator: 'bg-emerald-500' },
+    { id: 'purple', bg: 'bg-gradient-to-r from-purple-500/40 via-purple-500/20 to-transparent', border: 'border-purple-500/30', indicator: 'bg-purple-500' },
+    { id: 'orange', bg: 'bg-gradient-to-r from-orange-500/40 via-orange-500/20 to-transparent', border: 'border-orange-500/30', indicator: 'bg-orange-500' },
+    { id: 'pink', bg: 'bg-gradient-to-r from-pink-500/40 via-pink-500/20 to-transparent', border: 'border-pink-500/30', indicator: 'bg-pink-500' },
+    { id: 'red', bg: 'bg-gradient-to-r from-red-500/40 via-red-500/20 to-transparent', border: 'border-red-500/30', indicator: 'bg-red-500' },
 ];
+
 
 const EMOJI_MARKERS = [
     // Status & Priority
@@ -142,13 +143,13 @@ const LeadCard: React.FC<LeadCardProps> = ({ lead, onDragStart, onClick, onDelet
             draggable
             onDragStart={(e) => onDragStart(e, lead.id)}
             onClick={() => onClick(lead)}
-            className={`${currentTheme.bg} ${currentTheme.border} group relative p-3 sm:p-4 rounded-lg sm:rounded-xl border hover:shadow-lg transition-all cursor-grab active:cursor-grabbing mb-2 sm:mb-3`}
+            className={`${currentTheme.bg} ${currentTheme.border} group relative p-3 sm:p-4 rounded-lg sm:rounded-xl border hover:shadow-lg transition-all cursor-grab active:cursor-grabbing mb-2 sm:mb-3 shadow-sm`}
         >
             {/* Delete Button - Top Right */}
             <button
                 onClick={(e) => {
                     e.stopPropagation();
-                    setCardDeleteId(lead.id);
+                    onDelete(lead.id);
                 }}
                 className="absolute top-2 right-2 z-10 p-1 sm:p-1.5 rounded-full bg-card/80 backdrop-blur-sm border border-border/50 text-muted-foreground hover:text-red-500 hover:bg-red-500/10 hover:border-red-500/30 transition-all opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
                 title="Eliminar lead"
@@ -295,7 +296,7 @@ const LeadCard: React.FC<LeadCardProps> = ({ lead, onDragStart, onClick, onDelet
                         : 'Just now'}
                 </span>
                 {/* Mobile: Always show actions, Desktop: show on hover */}
-                <div className="flex gap-0.5 sm:gap-1 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                <div className="flex gap-0.5 sm:gap-1 transition-opacity">
                     <button
                         className="p-1 sm:p-1.5 hover:bg-background rounded-md text-muted-foreground hover:text-yellow-500 transition-colors"
                         title={t('leads.dashboard.addEmoji')}
@@ -898,9 +899,9 @@ const LeadsDashboard: React.FC = () => {
             <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
 
             <div className="flex-1 flex flex-col overflow-hidden relative bg-background">
-                <DashboardWaveRibbons className="absolute inset-x-0 top-[7rem] h-64 z-[1] pointer-events-none overflow-hidden" />
+                <DashboardWaveRibbons className="absolute inset-x-0 top-[14rem] h-64 z-0 pointer-events-none overflow-hidden" />
                 {/* Header - Mobile optimized */}
-                <header className="h-auto min-h-[56px] px-3 sm:px-6 py-2 sm:py-0 border-b border-border bg-background z-20 shrink-0">
+                <header className="h-auto min-h-[56px] px-3 sm:px-6 py-2 sm:py-0 border-b border-border bg-background sticky top-0 z-20 shrink-0">
                     {/* Main header row */}
                     <div className="flex items-center justify-between h-[52px] sm:h-14">
                         <div className="flex items-center gap-2 sm:gap-4">
@@ -1194,7 +1195,7 @@ const LeadsDashboard: React.FC = () => {
                         )}
 
                         {/* Filters Section - Mobile optimized */}
-                        <div className="px-3 sm:px-6 pt-3 sm:pt-4">
+                        <div className="px-3 sm:px-6 pt-3 sm:pt-4 relative z-[1]">
                             {/* Mobile search bar */}
                             <div className="sm:hidden mb-3">
                                 <div className="flex items-center gap-2 bg-editor-border/40 rounded-lg px-3 py-2">
@@ -1231,7 +1232,7 @@ const LeadsDashboard: React.FC = () => {
                                             return (
                                                 <div
                                                     key={stage.id}
-                                                    className="w-[85vw] min-w-[85vw] flex flex-col h-full rounded-xl bg-secondary/20 border border-border/50 snap-center"
+                                                    className="w-[85vw] min-w-[85vw] flex flex-col h-full rounded-xl bg-secondary/80 border border-border/50 snap-center"
                                                     onDragOver={handleDragOver}
                                                     onDrop={(e) => handleDrop(e, stage.id)}
                                                 >
@@ -1258,7 +1259,7 @@ const LeadsDashboard: React.FC = () => {
                                                             />
                                                         ))}
                                                         {stageLeads.length === 0 && (
-                                                            <div className="h-20 border-2 border-dashed border-border/50 rounded-lg flex items-center justify-center text-muted-foreground/50 text-[10px] font-medium italic">
+                                                            <div className="h-20 border-2 border-dashed border-border rounded-lg flex items-center justify-center text-muted-foreground text-[11px] font-medium bg-background/30">
                                                                 Drop items here
                                                             </div>
                                                         )}
@@ -1275,7 +1276,7 @@ const LeadsDashboard: React.FC = () => {
                                             return (
                                                 <div
                                                     key={stage.id}
-                                                    className="w-[280px] lg:w-[320px] flex flex-col h-full rounded-2xl bg-secondary/20 border border-border/50"
+                                                    className="w-[280px] lg:w-[320px] flex flex-col h-full rounded-2xl bg-secondary/80 border border-border/50"
                                                     onDragOver={handleDragOver}
                                                     onDrop={(e) => handleDrop(e, stage.id)}
                                                 >
@@ -1305,7 +1306,7 @@ const LeadsDashboard: React.FC = () => {
                                                             />
                                                         ))}
                                                         {stageLeads.length === 0 && (
-                                                            <div className="h-24 border-2 border-dashed border-border/50 rounded-xl flex items-center justify-center text-muted-foreground/50 text-xs font-medium italic">
+                                                            <div className="h-24 border-2 border-dashed border-border rounded-xl flex items-center justify-center text-muted-foreground text-xs font-medium bg-background/30">
                                                                 Drop items here
                                                             </div>
                                                         )}

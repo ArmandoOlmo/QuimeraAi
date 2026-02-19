@@ -535,7 +535,7 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación ni puntu
             <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
 
             <div className="flex-1 flex flex-col overflow-hidden relative bg-background">
-                <DashboardWaveRibbons className="absolute inset-x-0 top-28 h-72 z-[1] pointer-events-none overflow-hidden" />
+                <DashboardWaveRibbons className="absolute inset-x-0 top-28 h-72 z-0 pointer-events-none overflow-hidden" />
                 {/* Header */}
                 <header className="h-14 px-2 sm:px-6 border-b border-border flex items-center justify-between bg-background z-20 shrink-0">
                     <div className="flex items-center gap-1 sm:gap-4">
