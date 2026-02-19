@@ -187,20 +187,18 @@ const LeadsFilters: React.FC<LeadsFiltersProps> = ({ filters, onFiltersChange, a
 
     return (
         <div className="space-y-2">
-            {/* Mobile: compact toggle button for filters */}
+            {/* Mobile: square icon-only toggle for filters — no text, no border */}
             <div className="sm:hidden">
                 <button
                     onClick={() => setShowMobileFilters(!showMobileFilters)}
-                    className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all border ${showMobileFilters || activeFiltersCount > 0 ? 'bg-primary/10 text-primary border-primary/30' : 'text-muted-foreground border-border hover:text-foreground'}`}
+                    className={`relative h-8 w-8 flex items-center justify-center rounded-md transition-colors ${showMobileFilters || activeFiltersCount > 0 ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}
                 >
-                    <Filter size={14} />
-                    <span>{t('leads.filters.advancedFilters')}</span>
+                    <Filter size={16} />
                     {activeFiltersCount > 0 && (
-                        <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-primary/20 text-primary">
+                        <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full text-[9px] font-bold bg-primary text-primary-foreground flex items-center justify-center">
                             {activeFiltersCount}
                         </span>
                     )}
-                    <ChevronDown size={12} className={`transition-transform ${showMobileFilters ? 'rotate-180' : ''}`} />
                 </button>
             </div>
 

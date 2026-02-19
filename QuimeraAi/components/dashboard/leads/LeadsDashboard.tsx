@@ -994,10 +994,10 @@ const LeadsDashboard: React.FC = () => {
                                         )}
                                     </div>
 
-                                    {/* Mobile Search Button */}
+                                    {/* Mobile Search Button — square, no bg */}
                                     <button
                                         onClick={() => setSearchQuery(searchQuery || ' ')}
-                                        className="md:hidden h-8 w-8 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-border/40 transition-colors"
+                                        className="md:hidden h-8 w-8 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground transition-colors"
                                     >
                                         <Search className="w-4 h-4" />
                                     </button>
@@ -1024,9 +1024,9 @@ const LeadsDashboard: React.FC = () => {
                                     </button>
                                     <button
                                         onClick={() => setIsAddModalOpen(true)}
-                                        className="flex items-center gap-1 h-8 sm:h-9 px-2 sm:px-3 rounded-lg text-xs sm:text-sm font-medium transition-all bg-primary text-primary-foreground hover:opacity-90 whitespace-nowrap"
+                                        className="flex items-center justify-center gap-1 h-8 w-8 sm:w-auto sm:h-9 sm:px-3 rounded-lg text-xs sm:text-sm font-medium transition-all bg-primary text-primary-foreground hover:opacity-90 whitespace-nowrap"
                                     >
-                                        <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                                        <Plus className="w-4 h-4" />
                                         <span className="hidden sm:inline">{t('leads.dashboard.addLead')}</span>
                                     </button>
                                 </>
@@ -1052,23 +1052,23 @@ const LeadsDashboard: React.FC = () => {
                                 <span className="text-xs font-bold text-foreground">{stats.activeLeads}</span>
                             </div>
 
-                            {/* Mobile view mode selector */}
-                            <div className="sm:hidden flex items-center gap-0.5 ml-auto shrink-0">
+                            {/* Mobile view mode selector — square icon-only, no bg */}
+                            <div className="sm:hidden flex items-center gap-0 ml-auto shrink-0">
                                 <button
                                     onClick={() => setViewMode('kanban')}
-                                    className={`h-7 w-7 flex items-center justify-center rounded-md transition-colors ${viewMode === 'kanban' ? 'text-editor-accent bg-editor-accent/10' : 'text-muted-foreground hover:text-foreground'}`}
+                                    className={`h-7 w-7 flex items-center justify-center rounded-md transition-colors ${viewMode === 'kanban' ? 'text-editor-accent' : 'text-muted-foreground hover:text-foreground'}`}
                                 >
                                     <Columns className="w-3.5 h-3.5" />
                                 </button>
                                 <button
                                     onClick={() => setViewMode('table')}
-                                    className={`h-7 w-7 flex items-center justify-center rounded-md transition-colors ${viewMode === 'table' ? 'text-editor-accent bg-editor-accent/10' : 'text-muted-foreground hover:text-foreground'}`}
+                                    className={`h-7 w-7 flex items-center justify-center rounded-md transition-colors ${viewMode === 'table' ? 'text-editor-accent' : 'text-muted-foreground hover:text-foreground'}`}
                                 >
                                     <Table className="w-3.5 h-3.5" />
                                 </button>
                                 <button
                                     onClick={() => setViewMode('list')}
-                                    className={`h-7 w-7 flex items-center justify-center rounded-md transition-colors ${viewMode === 'list' ? 'text-editor-accent bg-editor-accent/10' : 'text-muted-foreground hover:text-foreground'}`}
+                                    className={`h-7 w-7 flex items-center justify-center rounded-md transition-colors ${viewMode === 'list' ? 'text-editor-accent' : 'text-muted-foreground hover:text-foreground'}`}
                                 >
                                     <List className="w-3.5 h-3.5" />
                                 </button>
