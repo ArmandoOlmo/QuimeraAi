@@ -33,7 +33,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
   const [isSaving, setIsSaving] = useState(false);
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(activeProjectId);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isProjectSelectorOpen, setIsProjectSelectorOpen] = useState(false);
+
   const [isAiAssistantOpen, setIsAiAssistantOpen] = useState(false);
   const selectableProjects = projects.filter(p => p.status !== 'Template');
 
@@ -105,7 +105,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
     return (
       <>
         {/* Tabs */}
-        <div className="bg-secondary/20 border-b border-border px-6">
+        <div className="bg-secondary/20 border-b border-border px-6 relative z-[2]">
           <div className="flex gap-4">
             {[
               { id: 'basic', label: t('seo.basicSEO'), icon: Globe },
@@ -130,13 +130,13 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-auto p-6 bg-secondary/5">
+        <div className="flex-1 overflow-auto p-6 bg-secondary/5 relative z-[2]">
           <div className="max-w-4xl mx-auto space-y-6">
 
             {/* Basic SEO Tab */}
             {activeTab === 'basic' && (
               <div className="space-y-6">
-                <div className="bg-card rounded-lg p-6 border border-border shadow-sm">
+                <div className="group relative overflow-hidden rounded-2xl border border-white/[0.08] dark:border-white/[0.06] bg-card/60 dark:bg-card/40 backdrop-blur-xl p-6 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 ease-out">
                   <h2 className="text-xl font-semibold text-foreground mb-4">
                     {t('seo.basicInformation')}
                   </h2>
@@ -265,7 +265,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
             {/* Advanced Tab */}
             {activeTab === 'advanced' && (
               <div className="space-y-6">
-                <div className="bg-card rounded-lg p-6 border border-border shadow-sm">
+                <div className="group relative overflow-hidden rounded-2xl border border-white/[0.08] dark:border-white/[0.06] bg-card/60 dark:bg-card/40 backdrop-blur-xl p-6 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 ease-out">
                   <h2 className="text-xl font-semibold text-foreground mb-4">
                     {t('seo.structuredData')}
                   </h2>
@@ -291,7 +291,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                   </div>
                 </div>
 
-                <div className="bg-card rounded-lg p-6 border border-border shadow-sm">
+                <div className="group relative overflow-hidden rounded-2xl border border-white/[0.08] dark:border-white/[0.06] bg-card/60 dark:bg-card/40 backdrop-blur-xl p-6 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 ease-out">
                   <h2 className="text-xl font-semibold text-foreground mb-4">
                     {t('seo.siteVerification')}
                   </h2>
@@ -330,19 +330,19 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
             {/* AI Optimization Tab */}
             {activeTab === 'ai' && (
               <div className="space-y-6">
-                <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4 mb-6">
+                <div className="bg-primary/20 dark:bg-primary/30 border border-primary/30 rounded-xl p-4 backdrop-blur-sm mb-6">
                   <div className="flex gap-3">
-                    <CheckCircle className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
+                    <CheckCircle className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
                     <div>
-                      <h3 className="font-medium text-blue-400 mb-1">{t('seo.aiBotOptimization')}</h3>
-                      <p className="text-sm text-muted-foreground">
+                      <h3 className="font-medium text-primary mb-1">{t('seo.aiBotOptimization')}</h3>
+                      <p className="text-sm text-foreground/80">
                         {t('seo.optimizeWebsiteForAI')}
                       </p>
                     </div>
                   </div>
                 </div>
 
-                <div className="bg-card rounded-lg p-6 border border-border shadow-sm">
+                <div className="group relative overflow-hidden rounded-2xl border border-white/[0.08] dark:border-white/[0.06] bg-card/60 dark:bg-card/40 backdrop-blur-xl p-6 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 ease-out">
                   <h2 className="text-xl font-semibold text-foreground mb-4">
                     {t('seo.aiCrawlability')}
                   </h2>
@@ -407,7 +407,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                   </div>
                 </div>
 
-                <div className="bg-card rounded-lg p-6 border border-border shadow-sm">
+                <div className="group relative overflow-hidden rounded-2xl border border-white/[0.08] dark:border-white/[0.06] bg-card/60 dark:bg-card/40 backdrop-blur-xl p-6 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 ease-out">
                   <h2 className="text-xl font-semibold text-foreground mb-4">
                     {t('seo.aiSearchEngines')}
                   </h2>
@@ -437,7 +437,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
             {activeTab === 'social' && (
               <div className="space-y-6">
                 {/* Open Graph */}
-                <div className="bg-card rounded-lg p-6 border border-border shadow-sm">
+                <div className="group relative overflow-hidden rounded-2xl border border-white/[0.08] dark:border-white/[0.06] bg-card/60 dark:bg-card/40 backdrop-blur-xl p-6 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 ease-out">
                   <h2 className="text-xl font-semibold text-foreground mb-4">
                     {t('seo.openGraph')}
                   </h2>
@@ -517,7 +517,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                 </div>
 
                 {/* Twitter Card */}
-                <div className="bg-card rounded-lg p-6 border border-border shadow-sm">
+                <div className="group relative overflow-hidden rounded-2xl border border-white/[0.08] dark:border-white/[0.06] bg-card/60 dark:bg-card/40 backdrop-blur-xl p-6 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 ease-out">
                   <h2 className="text-xl font-semibold text-foreground mb-4">
                     {t('seo.twitterCard')}
                   </h2>
@@ -573,14 +573,14 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
             {activeTab === 'pixels' && (
               <div className="space-y-6">
                 {/* Info Banner */}
-                <div className="bg-purple-500/10 border border-purple-500/30 rounded-lg p-4">
+                <div className="bg-primary/20 dark:bg-primary/30 border border-primary/30 rounded-xl p-4 backdrop-blur-sm">
                   <div className="flex gap-3">
-                    <Activity className="w-5 h-5 text-purple-400 flex-shrink-0 mt-0.5" />
+                    <Activity className="w-5 h-5 text-white flex-shrink-0 mt-0.5" />
                     <div>
-                      <h3 className="font-medium text-purple-400 mb-1">
+                      <h3 className="font-medium text-white mb-1">
                         {t('seo.trackingPixelsTitle', 'Píxeles de Publicidad')}
                       </h3>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-sm text-foreground/80">
                         {t('seo.trackingPixelsDesc', 'Configura los píxeles de tracking de las plataformas publicitarias para medir conversiones, crear audiencias y optimizar tus campañas.')}
                       </p>
                     </div>
@@ -588,7 +588,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                 </div>
 
                 {/* Facebook/Meta Pixel */}
-                <div className="bg-card rounded-lg p-6 border border-border shadow-sm">
+                <div className="group relative overflow-hidden rounded-2xl border border-white/[0.08] dark:border-white/[0.06] bg-card/60 dark:bg-card/40 backdrop-blur-xl p-6 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 ease-out">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-lg bg-[#1877F2] flex items-center justify-center">
@@ -645,7 +645,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                 </div>
 
                 {/* Google Tag Manager */}
-                <div className="bg-card rounded-lg p-6 border border-border shadow-sm">
+                <div className="group relative overflow-hidden rounded-2xl border border-white/[0.08] dark:border-white/[0.06] bg-card/60 dark:bg-card/40 backdrop-blur-xl p-6 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 ease-out">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-lg bg-[#246FDB] flex items-center justify-center">
@@ -702,7 +702,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                 </div>
 
                 {/* Google Ads */}
-                <div className="bg-card rounded-lg p-6 border border-border shadow-sm">
+                <div className="group relative overflow-hidden rounded-2xl border border-white/[0.08] dark:border-white/[0.06] bg-card/60 dark:bg-card/40 backdrop-blur-xl p-6 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 ease-out">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#4285F4] via-[#EA4335] to-[#FBBC05] flex items-center justify-center">
@@ -751,7 +751,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                 </div>
 
                 {/* Google Analytics 4 */}
-                <div className="bg-card rounded-lg p-6 border border-border shadow-sm">
+                <div className="group relative overflow-hidden rounded-2xl border border-white/[0.08] dark:border-white/[0.06] bg-card/60 dark:bg-card/40 backdrop-blur-xl p-6 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 ease-out">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-lg bg-[#F9AB00] flex items-center justify-center">
@@ -808,7 +808,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                 </div>
 
                 {/* TikTok Pixel */}
-                <div className="bg-card rounded-lg p-6 border border-border shadow-sm">
+                <div className="group relative overflow-hidden rounded-2xl border border-white/[0.08] dark:border-white/[0.06] bg-card/60 dark:bg-card/40 backdrop-blur-xl p-6 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 ease-out">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-lg bg-black flex items-center justify-center">
@@ -865,7 +865,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                 </div>
 
                 {/* Twitter/X Pixel */}
-                <div className="bg-card rounded-lg p-6 border border-border shadow-sm">
+                <div className="group relative overflow-hidden rounded-2xl border border-white/[0.08] dark:border-white/[0.06] bg-card/60 dark:bg-card/40 backdrop-blur-xl p-6 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 ease-out">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-lg bg-black flex items-center justify-center">
@@ -922,7 +922,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                 </div>
 
                 {/* LinkedIn Insight Tag */}
-                <div className="bg-card rounded-lg p-6 border border-border shadow-sm">
+                <div className="group relative overflow-hidden rounded-2xl border border-white/[0.08] dark:border-white/[0.06] bg-card/60 dark:bg-card/40 backdrop-blur-xl p-6 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 ease-out">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-lg bg-[#0A66C2] flex items-center justify-center">
@@ -979,7 +979,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                 </div>
 
                 {/* Pinterest Tag */}
-                <div className="bg-card rounded-lg p-6 border border-border shadow-sm">
+                <div className="group relative overflow-hidden rounded-2xl border border-white/[0.08] dark:border-white/[0.06] bg-card/60 dark:bg-card/40 backdrop-blur-xl p-6 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 ease-out">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-lg bg-[#E60023] flex items-center justify-center">
@@ -1036,7 +1036,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                 </div>
 
                 {/* Snapchat Pixel */}
-                <div className="bg-card rounded-lg p-6 border border-border shadow-sm">
+                <div className="group relative overflow-hidden rounded-2xl border border-white/[0.08] dark:border-white/[0.06] bg-card/60 dark:bg-card/40 backdrop-blur-xl p-6 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 ease-out">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-lg bg-[#FFFC00] flex items-center justify-center">
@@ -1093,7 +1093,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                 </div>
 
                 {/* Microsoft/Bing Ads */}
-                <div className="bg-card rounded-lg p-6 border border-border shadow-sm">
+                <div className="group relative overflow-hidden rounded-2xl border border-white/[0.08] dark:border-white/[0.06] bg-card/60 dark:bg-card/40 backdrop-blur-xl p-6 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 ease-out">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-lg bg-[#00A4EF] flex items-center justify-center">
@@ -1150,7 +1150,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                 </div>
 
                 {/* Reddit Pixel */}
-                <div className="bg-card rounded-lg p-6 border border-border shadow-sm">
+                <div className="group relative overflow-hidden rounded-2xl border border-white/[0.08] dark:border-white/[0.06] bg-card/60 dark:bg-card/40 backdrop-blur-xl p-6 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 ease-out">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-lg bg-[#FF4500] flex items-center justify-center">
@@ -1207,7 +1207,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                 </div>
 
                 {/* Custom Scripts Section */}
-                <div className="bg-card rounded-lg p-6 border border-border shadow-sm">
+                <div className="group relative overflow-hidden rounded-2xl border border-white/[0.08] dark:border-white/[0.06] bg-card/60 dark:bg-card/40 backdrop-blur-xl p-6 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 ease-out">
                   <h2 className="text-lg font-semibold text-foreground mb-2">
                     {t('seo.customScripts', 'Scripts Personalizados')}
                   </h2>
@@ -1335,7 +1335,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
 
       <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
       <div className="flex-1 flex flex-col overflow-hidden relative">
-        <DashboardWaveRibbons />
+        <DashboardWaveRibbons className="absolute inset-x-0 top-[7rem] h-64 z-[1] pointer-events-none overflow-hidden" />
         {/* Header */}
         <header className="h-14 px-4 sm:px-6 border-b border-border flex items-center justify-between bg-card/50 backdrop-blur-sm sticky top-0 z-40">
           <div className="flex items-center gap-4">
@@ -1351,71 +1351,6 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
               <h1 className="text-lg font-semibold text-foreground">
                 {t('seo.title')}
               </h1>
-            </div>
-            {/* Project Selector */}
-            <div className="relative">
-              <button
-                onClick={() => setIsProjectSelectorOpen(!isProjectSelectorOpen)}
-                className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
-              >
-                <Store size={14} />
-                <span className="max-w-[200px] truncate">
-                  {effectiveProject?.name || t('seo.selectProject', 'Seleccionar proyecto')}
-                </span>
-                <ChevronDown size={14} className={`transition-transform ${isProjectSelectorOpen ? 'rotate-180' : ''}`} />
-              </button>
-
-              {/* Dropdown */}
-              {isProjectSelectorOpen && (
-                <>
-                  <div
-                    className="fixed inset-0 z-40"
-                    onClick={() => setIsProjectSelectorOpen(false)}
-                  />
-                  <div className="absolute top-full left-0 mt-2 w-80 bg-card border border-border rounded-xl shadow-xl z-50 py-2 max-h-96 overflow-auto">
-                    <div className="px-4 py-2 border-b border-border/50 mb-2">
-                      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                        {t('seo.quickSwitch', 'Cambio rápido')}
-                      </p>
-                    </div>
-
-                    {selectableProjects.slice(0, 5).map((project) => (
-                      <button
-                        key={project.id}
-                        onClick={() => {
-                          handleProjectSelect(project.id);
-                          setIsProjectSelectorOpen(false);
-                        }}
-                        className={`w-full flex items-center gap-3 px-4 py-2.5 hover:bg-muted transition-colors ${project.id === effectiveProjectId ? 'bg-primary/10' : ''
-                          }`}
-                      >
-                        {project.thumbnailUrl ? (
-                          <img
-                            src={project.thumbnailUrl}
-                            alt={project.name}
-                            className="w-10 h-10 rounded-lg object-cover"
-                          />
-                        ) : (
-                          <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
-                            <Layers size={16} className="text-muted-foreground" />
-                          </div>
-                        )}
-                        <div className="flex-1 text-left min-w-0">
-                          <span className="text-sm font-medium text-foreground truncate block">
-                            {project.name}
-                          </span>
-                          <span className={`text-xs ${project.status === 'Published' ? 'text-green-500' : 'text-muted-foreground'}`}>
-                            {project.status === 'Published' ? t('dashboard.published', 'Publicado') : t('dashboard.draft', 'Borrador')}
-                          </span>
-                        </div>
-                        {project.id === effectiveProjectId && (
-                          <Check size={16} className="text-primary flex-shrink-0" />
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                </>
-              )}
             </div>
           </div>
 

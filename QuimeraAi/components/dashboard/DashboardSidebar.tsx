@@ -204,8 +204,8 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
   const toolsItems: NavItemData[] = [
     { id: 'ai-assistant', icon: MessageSquare, label: t('dashboard.quimeraChat'), view: 'ai-assistant', route: ROUTES.AI_ASSISTANT, requiredFeature: 'chatbotEnabled', upgradeTrigger: 'chatbot', serviceId: 'chatbot' },
     { id: 'leads', icon: Users, label: t('leads.title'), view: 'leads', route: ROUTES.LEADS, requiredFeature: 'crmEnabled', upgradeTrigger: 'generic', serviceId: 'crm' },
-    { id: 'email', icon: Mail, label: t('email.title', 'Email Marketing'), view: 'email', route: ROUTES.EMAIL, requiredFeature: 'emailMarketing', upgradeTrigger: 'generic', serviceId: 'emailMarketing' },
-    { id: 'assets', icon: Zap, label: t('editor.imageGenerator'), view: 'assets', route: ROUTES.ASSETS, serviceId: 'aiFeatures' }, // AI Features
+    { id: 'email', icon: Mail, label: t('email.title', 'Email'), view: 'email', route: ROUTES.EMAIL, requiredFeature: 'emailMarketing', upgradeTrigger: 'generic', serviceId: 'emailMarketing' },
+    { id: 'assets', icon: Zap, label: t('sidebar.images', 'Imágenes'), view: 'assets', route: ROUTES.ASSETS, serviceId: 'aiFeatures' }, // AI Features
     { id: 'finance', icon: DollarSign, label: t('editor.finance'), view: 'finance', route: ROUTES.FINANCE, serviceId: 'finance' },
     { id: 'appointments', icon: Calendar, label: t('appointments.title'), view: 'appointments', route: ROUTES.APPOINTMENTS, serviceId: 'appointments' },
   ];
@@ -214,7 +214,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
   const agencyItem: NavItemData = { id: 'agency', icon: Building2, label: t('dashboard.agencySection', 'Agencia'), view: 'agency', route: ROUTES.AGENCY };
 
   // Workspace Settings - standalone outside tools section, before Super Admin
-  const settingsItem: NavItemData = { id: 'settings', icon: Settings, label: t('settings.title', 'Configuración del Workspace'), view: 'settings', route: ROUTES.SETTINGS };
+  const settingsItem: NavItemData = { id: 'settings', icon: Settings, label: t('sidebar.workspace', 'Workspace'), view: 'settings', route: ROUTES.SETTINGS };
 
   // Agency section items (for collapsible drawer - kept for backwards compatibility)
   const agencyItems: NavItemData[] = [
@@ -404,18 +404,18 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
           disabled={item.disabled}
           className={`
             group flex items-center transition-all duration-200 relative touch-manipulation
-            min-h-[48px] lg:min-h-[44px]
-            p-3 lg:p-3 mb-1 lg:mb-2
+            min-h-[40px] lg:min-h-[36px]
+            py-2 px-3 lg:py-2 lg:px-3 mb-1 lg:mb-1
             active:scale-[0.98] lg:active:scale-100
             ${showExpanded
-              ? 'w-full rounded-xl'
+              ? 'w-full rounded-lg'
               : 'justify-center w-12 mx-auto rounded-lg'
             }
             ${isLocked
               ? 'text-muted-foreground/60 hover:bg-secondary/50'
               : isActive
                 ? (showExpanded
-                  ? 'bg-primary text-white font-bold shadow-[0_0_15px_rgba(251,185,43,0.4)]'
+                  ? 'bg-primary text-white font-bold'
                   : 'text-primary dark:text-primary'
                 )
                 : (showExpanded
@@ -736,7 +736,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
                       item={{
                         id: 'superadmin',
                         icon: Settings,
-                        label: t('dashboard.superAdmin'),
+                        label: t('sidebar.admin', 'Admin'),
                         view: 'superadmin',
                         route: ROUTES.SUPERADMIN,
                       }}

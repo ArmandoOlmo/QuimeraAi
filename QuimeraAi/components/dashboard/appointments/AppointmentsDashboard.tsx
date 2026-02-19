@@ -105,7 +105,7 @@ const AppointmentsDashboard: React.FC = () => {
 
     // Project selection state
     const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
-    const [isProjectSelectorOpen, setIsProjectSelectorOpen] = useState(false);
+
     const [showProjectSelector, setShowProjectSelector] = useState(false);
 
     // Determinar qué proyecto usar
@@ -523,7 +523,7 @@ const AppointmentsDashboard: React.FC = () => {
                     <div className="flex items-center gap-2 sm:gap-4">
                         <button
                             onClick={() => setIsMobileMenuOpen(true)}
-                            className="lg:hidden h-11 w-11 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary/80 active:bg-secondary rounded-xl transition-colors touch-manipulation"
+                            className="lg:hidden h-9 w-9 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary/80 active:bg-secondary rounded-lg transition-colors touch-manipulation"
                         >
                             <Menu className="w-5 h-5" />
                         </button>
@@ -534,84 +534,6 @@ const AppointmentsDashboard: React.FC = () => {
                             </div>
                             <div>
                                 <h1 className="text-base sm:text-lg font-bold text-foreground">Citas</h1>
-                                {/* Project Selector */}
-                                <div className="relative">
-                                    <button
-                                        onClick={() => setIsProjectSelectorOpen(!isProjectSelectorOpen)}
-                                        className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors"
-                                    >
-                                        <Store size={12} />
-                                        <span className="max-w-[150px] truncate">
-                                            {effectiveProject?.name || 'Seleccionar proyecto'}
-                                        </span>
-                                        <ChevronDown size={12} className={`transition-transform ${isProjectSelectorOpen ? 'rotate-180' : ''}`} />
-                                    </button>
-
-                                    {/* Dropdown */}
-                                    {isProjectSelectorOpen && (
-                                        <>
-                                            <div
-                                                className="fixed inset-0 z-40"
-                                                onClick={() => setIsProjectSelectorOpen(false)}
-                                            />
-                                            <div className="absolute top-full left-0 mt-2 w-72 bg-card border border-border rounded-xl shadow-xl z-50 py-2 max-h-80 overflow-auto">
-                                                {/* Header */}
-                                                <div className="px-4 py-2 border-b border-border/50 mb-2">
-                                                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                                                        Cambio rápido
-                                                    </p>
-                                                </div>
-
-                                                {/* Recent Projects */}
-                                                {projects.filter(p => p.status !== 'Template').slice(0, 5).map((project) => (
-                                                    <button
-                                                        key={project.id}
-                                                        onClick={() => {
-                                                            handleProjectSelect(project.id);
-                                                            setIsProjectSelectorOpen(false);
-                                                        }}
-                                                        className={`w-full flex items-center gap-3 px-4 py-2.5 hover:bg-muted transition-colors ${project.id === effectiveProjectId ? 'bg-primary/10' : ''
-                                                            }`}
-                                                    >
-                                                        <div className="w-8 h-6 rounded overflow-hidden bg-muted flex-shrink-0">
-                                                            {project.thumbnailUrl ? (
-                                                                <img
-                                                                    src={project.thumbnailUrl}
-                                                                    alt={project.name}
-                                                                    className="w-full h-full object-cover"
-                                                                />
-                                                            ) : (
-                                                                <div className="w-full h-full flex items-center justify-center">
-                                                                    <Layers size={12} className="text-muted-foreground/50" />
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                        <span className="flex-1 text-sm text-left truncate">
-                                                            {project.name}
-                                                        </span>
-                                                        {project.id === effectiveProjectId && (
-                                                            <CheckCircle2 size={14} className="text-primary flex-shrink-0" />
-                                                        )}
-                                                    </button>
-                                                ))}
-
-                                                {/* Ver todos */}
-                                                <div className="border-t border-border/50 mt-2 pt-2">
-                                                    <button
-                                                        onClick={() => {
-                                                            setIsProjectSelectorOpen(false);
-                                                            setShowProjectSelector(true);
-                                                        }}
-                                                        className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm text-primary hover:bg-primary/10 transition-colors"
-                                                    >
-                                                        <Grid size={14} />
-                                                        Ver todos los proyectos
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </>
-                                    )}
-                                </div>
                             </div>
                         </div>
                     </div>
@@ -637,7 +559,7 @@ const AppointmentsDashboard: React.FC = () => {
                         <button
                             onClick={() => setShowGoogleCalendar(!showGoogleCalendar)}
                             className={`
-                                hidden md:flex items-center gap-2 h-9 px-3 rounded-xl text-sm font-medium transition-colors
+                                hidden md:flex items-center gap-2 h-9 px-3 rounded-lg text-sm font-medium transition-colors
                                 ${isGoogleConnected
                                     ? 'bg-green-500/10 text-green-500 hover:bg-green-500/20'
                                     : 'bg-secondary text-muted-foreground hover:text-foreground hover:bg-secondary/80'

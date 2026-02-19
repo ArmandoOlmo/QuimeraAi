@@ -198,7 +198,7 @@ const AiAssistantDashboard: React.FC = () => {
                     <DashboardWaveRibbons />
                     <header className="h-14 px-2 sm:px-6 border-b border-border flex items-center justify-between bg-background z-20 shrink-0">
                         <div className="flex items-center gap-1 sm:gap-4">
-                            <button onClick={() => setIsMobileMenuOpen(true)} className="lg:hidden h-9 w-9 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-border/40 rounded-full transition-colors">
+                            <button onClick={() => setIsMobileMenuOpen(true)} className="lg:hidden h-9 w-9 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-border/40 rounded-lg transition-colors">
                                 <Menu className="w-4 h-4" />
                             </button>
                             <div className="flex items-center gap-1 sm:gap-2">
@@ -960,7 +960,7 @@ const AiAssistantDashboard: React.FC = () => {
                 {/* Header */}
                 <header className="h-14 px-2 sm:px-8 border-b border-border flex items-center justify-between bg-background z-20 shrink-0">
                     <div className="flex items-center gap-1 sm:gap-4">
-                        <button onClick={() => setIsMobileMenuOpen(true)} className="lg:hidden h-9 w-9 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-border/40 rounded-full transition-colors">
+                        <button onClick={() => setIsMobileMenuOpen(true)} className="lg:hidden h-9 w-9 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-border/40 rounded-lg transition-colors">
                             <Menu className="w-4 h-4" />
                         </button>
                         <div className="flex items-center gap-1 sm:gap-2">
@@ -981,7 +981,7 @@ const AiAssistantDashboard: React.FC = () => {
                         <button
                             onClick={handleSave}
                             disabled={isSaving}
-                            className="flex items-center gap-1.5 h-9 px-2 sm:px-3 rounded-md text-sm font-medium transition-all text-muted-foreground hover:text-foreground hover:bg-secondary/50 disabled:text-green-500 disabled:hover:bg-transparent"
+                            className="flex items-center gap-1.5 h-9 px-2 sm:px-3 rounded-lg text-sm font-medium transition-all text-muted-foreground hover:text-foreground hover:bg-secondary/50 disabled:text-green-500 disabled:hover:bg-transparent"
                         >
                             <Save className="w-4 h-4" />
                             <span className="hidden sm:inline">{isSaving ? t('aiAssistant.dashboard.saving') : t('aiAssistant.dashboard.save')}</span>

@@ -194,13 +194,11 @@ const ModernAuth: React.FC<ModernAuthProps> = ({ onVerificationEmailSent, initia
                 </div>
 
                 {/* Form Container */}
-                <div className="flex-1 flex items-center justify-center p-8 sm:p-12 lg:p-16">
+                <div className="flex-1 flex items-center justify-center p-8 sm:p-12 lg:p-16 relative z-10">
                     <div className="w-full max-w-md">
                         {/* Logo */}
                         <div className="flex flex-col items-center mb-12 animate-fade-in-up">
                             <div className="relative w-32 h-32 mb-6">
-                                <div className="absolute inset-0 rounded-full bg-yellow-400/20 animate-ping"></div>
-                                <div className="absolute inset-0 rounded-full bg-yellow-400/10 animate-pulse"></div>
                                 <img
                                     src={QUIMERA_LOGO}
                                     alt="Quimera AI"

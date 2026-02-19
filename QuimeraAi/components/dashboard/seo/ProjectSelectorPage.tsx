@@ -188,8 +188,9 @@ const ProjectSelectorPage: React.FC<ProjectSelectorPageProps> = ({
 
                             {/* Stats Bar */}
                             <div className="grid grid-cols-3 gap-3 sm:gap-4">
-                                <div className="bg-card/50 rounded-xl p-3 sm:p-4 border border-border hover:border-primary/30 transition-colors">
-                                    <div className="flex items-center gap-2 sm:gap-3">
+                                <div className="group relative overflow-hidden rounded-2xl border border-white/[0.08] dark:border-white/[0.06] bg-card/60 dark:bg-card/40 backdrop-blur-xl p-3 sm:p-4 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 ease-out">
+                                    <div className="absolute -top-8 -right-8 w-24 h-24 rounded-full opacity-20 dark:opacity-15 blur-2xl bg-gradient-to-br from-primary to-primary/60 group-hover:opacity-40 group-hover:scale-110 transition-all duration-500" aria-hidden="true" />
+                                    <div className="relative z-10 flex items-center gap-2 sm:gap-3">
                                         <div className="p-1.5 sm:p-2 rounded-lg bg-primary/20">
                                             <Layers className="text-primary" size={18} />
                                         </div>
@@ -199,8 +200,9 @@ const ProjectSelectorPage: React.FC<ProjectSelectorPageProps> = ({
                                         </div>
                                     </div>
                                 </div>
-                                <div className="bg-card/50 rounded-xl p-3 sm:p-4 border border-border hover:border-green-500/30 transition-colors">
-                                    <div className="flex items-center gap-2 sm:gap-3">
+                                <div className="group relative overflow-hidden rounded-2xl border border-white/[0.08] dark:border-white/[0.06] bg-card/60 dark:bg-card/40 backdrop-blur-xl p-3 sm:p-4 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-xl hover:shadow-green-500/10 transition-all duration-300 ease-out">
+                                    <div className="absolute -top-8 -right-8 w-24 h-24 rounded-full opacity-20 dark:opacity-15 blur-2xl bg-gradient-to-br from-green-500 to-emerald-400 group-hover:opacity-40 group-hover:scale-110 transition-all duration-500" aria-hidden="true" />
+                                    <div className="relative z-10 flex items-center gap-2 sm:gap-3">
                                         <div className="p-1.5 sm:p-2 rounded-lg bg-green-500/20">
                                             <Globe className="text-green-500" size={18} />
                                         </div>
@@ -210,8 +212,9 @@ const ProjectSelectorPage: React.FC<ProjectSelectorPageProps> = ({
                                         </div>
                                     </div>
                                 </div>
-                                <div className="bg-card/50 rounded-xl p-3 sm:p-4 border border-border hover:border-slate-500/30 transition-colors">
-                                    <div className="flex items-center gap-2 sm:gap-3">
+                                <div className="group relative overflow-hidden rounded-2xl border border-white/[0.08] dark:border-white/[0.06] bg-card/60 dark:bg-card/40 backdrop-blur-xl p-3 sm:p-4 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-xl hover:shadow-slate-500/10 transition-all duration-300 ease-out">
+                                    <div className="absolute -top-8 -right-8 w-24 h-24 rounded-full opacity-20 dark:opacity-15 blur-2xl bg-gradient-to-br from-slate-500 to-slate-400 group-hover:opacity-40 group-hover:scale-110 transition-all duration-500" aria-hidden="true" />
+                                    <div className="relative z-10 flex items-center gap-2 sm:gap-3">
                                         <div className="p-1.5 sm:p-2 rounded-lg bg-slate-500/20">
                                             <FileEdit className="text-slate-400" size={18} />
                                         </div>
@@ -361,8 +364,10 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, onSelect, formatDate
     return (
         <button
             onClick={onSelect}
-            className="group relative bg-card/50 hover:bg-card border border-border hover:border-primary/50 rounded-2xl overflow-hidden transition-all duration-300 text-left hover:shadow-xl hover:shadow-primary/5 hover:-translate-y-1 w-full"
+            className="group relative bg-card/60 dark:bg-card/40 backdrop-blur-xl hover:bg-card border border-white/[0.08] dark:border-white/[0.06] rounded-2xl overflow-hidden transition-all duration-300 text-left shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-xl hover:shadow-primary/10 hover:-translate-y-1 w-full"
         >
+            {/* Gradient blob decoration */}
+            <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full opacity-20 dark:opacity-15 blur-2xl bg-gradient-to-br from-primary to-primary/60 group-hover:opacity-40 dark:group-hover:opacity-30 group-hover:scale-110 transition-all duration-500 z-0" aria-hidden="true" />
             {/* Thumbnail */}
             <div className="aspect-video relative overflow-hidden bg-muted">
                 {project.thumbnailUrl ? (
@@ -380,8 +385,8 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, onSelect, formatDate
                 {/* Status Badge */}
                 <div className="absolute top-3 right-3">
                     <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${project.status === 'Published'
-                            ? 'bg-green-500/90 text-white'
-                            : 'bg-slate-500/90 text-white'
+                        ? 'bg-green-500/90 text-white'
+                        : 'bg-slate-500/90 text-white'
                         }`}>
                         {project.status === 'Published' ? t('dashboard.published', 'Publicado') : t('dashboard.draft', 'Borrador')}
                     </span>
@@ -423,8 +428,10 @@ const ProjectListItem: React.FC<ProjectListItemProps> = ({ project, onSelect, fo
     return (
         <button
             onClick={onSelect}
-            className="w-full flex items-center gap-4 p-4 bg-card/50 hover:bg-card border border-border hover:border-primary/50 rounded-xl transition-all text-left group"
+            className="w-full flex items-center gap-4 p-4 bg-card/60 dark:bg-card/40 backdrop-blur-xl hover:bg-card border border-white/[0.08] dark:border-white/[0.06] hover:border-primary/30 rounded-2xl transition-all duration-300 text-left group relative overflow-hidden shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-xl hover:shadow-primary/10"
         >
+            {/* Gradient blob decoration */}
+            <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full opacity-20 dark:opacity-15 blur-2xl bg-gradient-to-br from-primary to-primary/60 group-hover:opacity-40 dark:group-hover:opacity-30 group-hover:scale-110 transition-all duration-500" aria-hidden="true" />
             {/* Thumbnail */}
             <div className="w-16 h-12 sm:w-20 sm:h-14 rounded-lg overflow-hidden bg-muted flex-shrink-0">
                 {project.thumbnailUrl ? (

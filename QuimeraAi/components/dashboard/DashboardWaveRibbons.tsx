@@ -11,7 +11,7 @@ type ThemeMode = 'light' | 'dark' | 'black';
  * 
  * Place inside a `position: relative` container. Renders as absolute overlay.
  */
-const DashboardWaveRibbons: React.FC = () => {
+const DashboardWaveRibbons: React.FC<{ className?: string }> = ({ className }) => {
     const { themeMode } = useUI();
     const mode = themeMode as ThemeMode;
 
@@ -20,7 +20,7 @@ const DashboardWaveRibbons: React.FC = () => {
     const isGold = mode === 'black';
 
     return (
-        <div className="absolute inset-x-0 top-0 h-64 z-[15] pointer-events-none overflow-hidden">
+        <div className={className || "absolute inset-x-0 top-0 h-64 z-[15] pointer-events-none overflow-hidden"}>
             <svg
                 className="absolute"
                 style={{ width: '300%', height: '100%', left: '-100%', top: '0' }}

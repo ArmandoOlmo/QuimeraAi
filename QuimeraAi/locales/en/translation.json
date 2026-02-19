@@ -1011,7 +1011,7 @@
     "viewAll": "View All",
     "recentProjects": "Recent Projects",
     "startFromTemplate": "Start from Template",
-    "quimeraChat": "Quimera Chat",
+    "quimeraChat": "Chatbot",
     "superAdmin": "Super Admin",
     "navigation": "Navigation",
     "quickActions": "Quick Actions",
@@ -5363,7 +5363,7 @@
     }
   },
   "email": {
-    "title": "Email Marketing",
+    "title": "Email",
     "dashboard": "Email Marketing",
     "overview": "Overview",
     "campaigns": "Campaigns",

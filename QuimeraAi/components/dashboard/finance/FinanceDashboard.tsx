@@ -51,10 +51,11 @@ const CATEGORY_COLORS: Record<string, string> = {
 
 // Local Helper Components
 const StatCard = ({ title, value, icon: Icon, trend, trendColor = "text-primary" }: any) => (
-    <div className="bg-card border border-border rounded-xl p-5 hover:shadow-md transition-shadow">
-        <div className="flex justify-between items-start mb-3">
-            <div className="p-2 bg-secondary/30 rounded-lg">
-                <Icon size={20} className="text-muted-foreground" />
+    <div className="group relative overflow-hidden rounded-2xl border border-white/[0.08] dark:border-white/[0.06] bg-card/80 dark:bg-card/70 backdrop-blur-xl p-5 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 ease-out">
+        <div className="absolute -top-8 -right-8 w-24 h-24 rounded-full opacity-15 dark:opacity-10 blur-2xl bg-gradient-to-br from-primary to-primary/60 group-hover:opacity-30 group-hover:scale-110 transition-all duration-500" aria-hidden="true" />
+        <div className="relative z-10 flex justify-between items-start mb-3">
+            <div className="p-2 bg-primary/20 rounded-lg">
+                <Icon size={20} className="text-primary" />
             </div>
             {trend && (
                 <span className={`text-xs font-bold px-2 py-0.5 rounded-full bg-secondary/30 ${trendColor}`}>
@@ -62,7 +63,7 @@ const StatCard = ({ title, value, icon: Icon, trend, trendColor = "text-primary"
                 </span>
             )}
         </div>
-        <div className="space-y-1">
+        <div className="relative z-10 space-y-1">
             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{title}</p>
             <h3 className="text-2xl font-bold text-foreground">{value}</h3>
         </div>
@@ -534,7 +535,7 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación ni puntu
             <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
 
             <div className="flex-1 flex flex-col overflow-hidden relative bg-background">
-                <DashboardWaveRibbons />
+                <DashboardWaveRibbons className="absolute inset-x-0 top-28 h-72 z-[1] pointer-events-none overflow-hidden" />
                 {/* Header */}
                 <header className="h-14 px-2 sm:px-6 border-b border-border flex items-center justify-between bg-background z-20 shrink-0">
                     <div className="flex items-center gap-1 sm:gap-4">
@@ -582,7 +583,7 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación ni puntu
                     ))}
                 </div>
 
-                <main className="flex-1 overflow-y-auto p-6">
+                <main className="flex-1 overflow-y-auto p-6 relative z-10">
                     {/* OVERVIEW VIEW */}
                     {activeView === 'overview' && (
                         <div className="space-y-6 animate-in fade-in duration-500">
@@ -616,7 +617,7 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación ni puntu
                                 {/* Left / Main column */}
                                 <div className="xl:col-span-2 space-y-6">
                                     {/* Upload Area - Fresha style: Clean and direct */}
-                                    <div className="bg-card border border-border rounded-xl p-8 text-center hover:shadow-lg transition-all border-dashed border-2 hover:border-primary/50 group">
+                                    <div className="relative overflow-hidden rounded-2xl border border-white/[0.08] dark:border-white/[0.06] bg-card/80 dark:bg-card/70 backdrop-blur-xl p-8 text-center hover:shadow-lg transition-all border-dashed border-2 hover:border-primary/50 group">
                                         <input
                                             type="file"
                                             id="receipt-upload"
@@ -664,7 +665,7 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación ni puntu
 
                                     {/* Charts Section */}
                                     {expenses.length > 0 ? (
-                                        <div className="bg-card border border-border rounded-xl p-6 shadow-sm">
+                                        <div className="relative overflow-hidden rounded-2xl border border-white/[0.08] dark:border-white/[0.06] bg-card/80 dark:bg-card/70 backdrop-blur-xl p-6">
                                             <div className="flex justify-between items-center mb-6">
                                                 <h3 className="font-bold text-lg flex items-center gap-2">
                                                     <TrendingUp className="w-5 h-5 text-primary" />
@@ -735,7 +736,7 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación ni puntu
                                         </div>
                                     ) : (
                                         <div className="grid grid-cols-1 gap-6">
-                                            <div className="bg-card border border-border rounded-xl p-6 h-[380px] flex flex-col">
+                                            <div className="relative overflow-hidden rounded-2xl border border-white/[0.08] dark:border-white/[0.06] bg-card/80 dark:bg-card/70 backdrop-blur-xl p-6 h-[380px] flex flex-col">
                                                 <Skeleton className="h-6 w-48 mb-6" />
                                                 <div className="flex-1 flex items-center justify-center">
                                                     <div className="text-center space-y-4">
@@ -752,7 +753,7 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación ni puntu
                                     {/* Bottom Grid: Categories */}
                                     {expenses.length > 0 && (
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                            <div className="bg-card border border-border rounded-xl p-6 shadow-sm">
+                                            <div className="relative overflow-hidden rounded-2xl border border-white/[0.08] dark:border-white/[0.06] bg-card/80 dark:bg-card/70 backdrop-blur-xl p-6">
                                                 <h3 className="font-bold text-lg mb-6 flex items-center gap-2">
                                                     <PieChartIcon className="w-5 h-5 text-primary" />
                                                     {t('financeDashboard.byCategory')}
@@ -782,7 +783,7 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación ni puntu
                                                 </div>
                                             </div>
 
-                                            <div className="bg-card border border-border rounded-xl p-6 shadow-sm">
+                                            <div className="relative overflow-hidden rounded-2xl border border-white/[0.08] dark:border-white/[0.06] bg-card/80 dark:bg-card/70 backdrop-blur-xl p-6">
                                                 <h3 className="font-bold text-lg mb-6">{t('financeDashboard.topCategories')}</h3>
                                                 <div className="space-y-4">
                                                     {expensesByCategory.slice(0, 5).map((cat, idx) => (
@@ -817,7 +818,7 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación ni puntu
                                 {/* Right Column - Siderbar Context */}
                                 <div className="space-y-6">
                                     {/* Recent Activity Mini-Card */}
-                                    <div className="bg-card border border-border rounded-xl p-6 shadow-sm">
+                                    <div className="relative overflow-hidden rounded-2xl border border-white/[0.08] dark:border-white/[0.06] bg-card/80 dark:bg-card/70 backdrop-blur-xl p-6">
                                         <h3 className="font-bold mb-4">{t('financeDashboard.recentActivity')}</h3>
                                         <div className="space-y-4">
                                             {expenses.slice(0, 4).map(expense => (
@@ -1059,7 +1060,7 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación ni puntu
                             {/* Detail Panel */}
                             <div className="lg:col-span-1">
                                 {selectedExpense ? (
-                                    <div className="bg-card border border-border rounded-xl flex flex-col h-[calc(100vh-200px)] sticky top-6 shadow-xl shadow-black/5">
+                                    <div className="relative overflow-hidden rounded-2xl border border-white/[0.08] dark:border-white/[0.06] bg-card/80 dark:bg-card/70 backdrop-blur-xl flex flex-col h-[calc(100vh-200px)] sticky top-6 shadow-xl shadow-black/5">
                                         <div className="p-4 border-b border-border flex justify-between items-center bg-muted/30">
                                             <div className="flex items-center gap-2">
                                                 <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
@@ -1331,7 +1332,7 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación ni puntu
 
                             {/* AI Report Output */}
                             {aiReport && (
-                                <div className="bg-card border border-border rounded-xl p-6">
+                                <div className="relative overflow-hidden rounded-2xl border border-white/[0.08] dark:border-white/[0.06] bg-card/80 dark:bg-card/70 backdrop-blur-xl p-6">
                                     <div className="flex items-center justify-between mb-4">
                                         <h3 className="text-lg font-bold flex items-center gap-2">
                                             <Zap className="w-5 h-5 text-primary" />

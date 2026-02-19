@@ -64,7 +64,7 @@ const EmailDashboard: React.FC<EmailDashboardProps> = ({ projectId: propProjectI
 
     // State for selected project (similar to ecommerce)
     const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
-    const [isProjectSelectorOpen, setIsProjectSelectorOpen] = useState(false);
+
     const [showAllProjects, setShowAllProjects] = useState(false);
     const [createCampaignTrigger, setCreateCampaignTrigger] = useState(0);
     // Removed complex state: const [autoOpenDraft, setAutoOpenDraft] = useState(false);
@@ -174,7 +174,7 @@ const EmailDashboard: React.FC<EmailDashboardProps> = ({ projectId: propProjectI
                 <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
 
                 <div className="flex-1 flex flex-col min-h-screen relative">
-                    <DashboardWaveRibbons />
+                    <DashboardWaveRibbons className="absolute inset-x-0 top-[14rem] h-64 z-[1] pointer-events-none overflow-hidden" />
                     {/* Header - Simplified */}
                     <header className="h-14 px-4 sm:px-6 border-b border-border flex items-center justify-between bg-card/50 backdrop-blur-sm sticky top-0 z-40">
                         <div className="flex items-center gap-4">
@@ -189,82 +189,6 @@ const EmailDashboard: React.FC<EmailDashboardProps> = ({ projectId: propProjectI
                                 <h1 className="text-lg font-semibold text-foreground">
                                     {t('email.dashboard', 'Email Marketing')}
                                 </h1>
-                            </div>
-
-                            {/* Project Selector */}
-                            <div className="relative">
-                                <button
-                                    onClick={() => setIsProjectSelectorOpen(!isProjectSelectorOpen)}
-                                    className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
-                                >
-                                    <Layers size={14} />
-                                    <span className="max-w-[100px] sm:max-w-[200px] truncate">
-                                        {effectiveProject?.name || t('email.selectProject', 'Seleccionar proyecto')}
-                                    </span>
-                                    <ChevronDown size={14} className={`transition-transform ${isProjectSelectorOpen ? 'rotate-180' : ''}`} />
-                                </button>
-
-                                {/* Dropdown */}
-                                {isProjectSelectorOpen && (
-                                    <>
-                                        <div
-                                            className="fixed inset-0 z-40"
-                                            onClick={() => setIsProjectSelectorOpen(false)}
-                                        />
-                                        <div className="absolute top-full left-0 mt-2 w-80 bg-card border border-border rounded-xl shadow-xl z-50 py-2 max-h-96 overflow-auto">
-                                            <div className="px-4 py-2 border-b border-border/50 mb-2">
-                                                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                                                    {t('email.quickSwitch', 'Cambio rápido')}
-                                                </p>
-                                            </div>
-
-                                            {projects.filter(p => p.status !== 'Template').slice(0, 5).map((project) => (
-                                                <button
-                                                    key={project.id}
-                                                    onClick={() => handleProjectSelect(project.id)}
-                                                    className={`w-full flex items-center gap-3 px-4 py-2.5 hover:bg-muted transition-colors ${project.id === effectiveProjectId ? 'bg-primary/10' : ''
-                                                        }`}
-                                                >
-                                                    {project.thumbnailUrl ? (
-                                                        <img
-                                                            src={project.thumbnailUrl}
-                                                            alt={project.name}
-                                                            className="w-10 h-10 rounded-lg object-cover"
-                                                        />
-                                                    ) : (
-                                                        <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
-                                                            <Layers size={16} className="text-muted-foreground" />
-                                                        </div>
-                                                    )}
-                                                    <div className="flex-1 text-left min-w-0">
-                                                        <span className="text-sm font-medium text-foreground truncate block">
-                                                            {project.name}
-                                                        </span>
-                                                        <span className={`text-xs ${project.status === 'Published' ? 'text-green-500' : 'text-muted-foreground'}`}>
-                                                            {project.status === 'Published' ? t('dashboard.published', 'Publicado') : t('dashboard.draft', 'Borrador')}
-                                                        </span>
-                                                    </div>
-                                                    {project.id === effectiveProjectId && (
-                                                        <Check size={16} className="text-primary flex-shrink-0" />
-                                                    )}
-                                                </button>
-                                            ))}
-
-                                            <div className="border-t border-border/50 mt-2 pt-2 px-2">
-                                                <button
-                                                    onClick={() => {
-                                                        setShowAllProjects(true);
-                                                        setIsProjectSelectorOpen(false);
-                                                    }}
-                                                    className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-primary hover:bg-primary/10 rounded-lg transition-colors"
-                                                >
-                                                    <Layers size={16} />
-                                                    {t('email.viewAllProjects', 'Ver todos los proyectos')}
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </>
-                                )}
                             </div>
                         </div>
 
@@ -319,7 +243,7 @@ const EmailDashboard: React.FC<EmailDashboardProps> = ({ projectId: propProjectI
                     </div>
 
                     {/* Content */}
-                    <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
+                    <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 relative z-[2]">
                         {renderContent()}
                     </main>
                 </div>
@@ -383,7 +307,7 @@ const OverviewContent: React.FC<OverviewContentProps> = ({ stats, onNavigate }) 
                     return (
                         <div
                             key={index}
-                            className="bg-card/50 border border-border rounded-xl p-6"
+                            className="bg-card/80 border border-border rounded-xl p-6"
                         >
                             <div className="flex items-center justify-between">
                                 <div>
@@ -419,7 +343,7 @@ const OverviewContent: React.FC<OverviewContentProps> = ({ stats, onNavigate }) 
                 </div>
 
                 {/* Audiences Card */}
-                <div className="bg-card/50 border border-border rounded-xl p-6">
+                <div className="bg-card/80 border border-border rounded-xl p-6">
                     <h3 className="text-lg font-semibold text-foreground mb-2">
                         {t('email.manageAudiences', 'Gestionar Audiencias')}
                     </h3>

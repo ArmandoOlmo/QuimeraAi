@@ -979,7 +979,7 @@
     "viewAll": "Ver Todos",
     "recentProjects": "Proyectos Recientes",
     "startFromTemplate": "Comenzar desde Plantilla",
-    "quimeraChat": "Quimera Chat",
+    "quimeraChat": "Chatbot",
     "superAdmin": "Super Admin",
     "navigation": "Navegación",
     "quickActions": "Acciones Rápidas",
@@ -5455,7 +5455,7 @@
       }
     },
     "email": {
-      "title": "Email Marketing",
+      "title": "Email",
       "dashboard": "Email Marketing",
       "overview": "Vista General",
       "campaigns": "Campañas",

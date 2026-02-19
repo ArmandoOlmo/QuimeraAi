@@ -7,6 +7,7 @@ import { useSafeTenant } from '../../../contexts/tenant';
 import { useSafeUpgrade } from '../../../contexts/UpgradeContext';
 import { usePlanAccess } from '../../../hooks/usePlanFeatures';
 import DashboardSidebar from '../DashboardSidebar';
+import DashboardWaveRibbons from '../DashboardWaveRibbons';
 import ConfirmationModal from '../../ui/ConfirmationModal';
 import { Menu, Search, Plus, Link2, CheckCircle, AlertTriangle, Clock, Copy, Globe, ShoppingCart, ExternalLink, RefreshCw, Loader2, X, Trash2, Settings, ArrowLeft, Crown, Zap, ChevronDown, ChevronUp } from 'lucide-react';
 import Modal from '../../ui/Modal';
@@ -178,7 +179,9 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
     };
 
     return (
-        <div className="bg-card border border-border rounded-xl overflow-hidden transition-all hover:shadow-md">
+        <div className="group relative overflow-hidden rounded-2xl border border-white/[0.08] dark:border-white/[0.06] bg-card/60 dark:bg-card/40 backdrop-blur-xl shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 ease-out">
+            {/* Gradient blob decoration */}
+            <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full opacity-20 dark:opacity-15 blur-2xl bg-gradient-to-br from-primary to-primary/60 group-hover:opacity-40 dark:group-hover:opacity-30 group-hover:scale-110 transition-all duration-500" aria-hidden="true" />
             <div className="p-6">
                 <div className="flex justify-between items-start mb-4">
                     <div className="flex-1">
@@ -1260,6 +1263,7 @@ const DomainsDashboard: React.FC = () => {
             <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
 
             <div className="flex-1 flex flex-col overflow-hidden relative">
+                <DashboardWaveRibbons />
                 <header className="h-14 px-2 sm:px-6 border-b border-border flex items-center justify-between bg-background z-20 sticky top-0">
                     <div className="flex items-center gap-1 sm:gap-4">
                         <button onClick={() => setIsMobileMenuOpen(true)} className="lg:hidden h-9 w-9 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-border/40 rounded-full transition-colors">
@@ -1301,22 +1305,22 @@ const DomainsDashboard: React.FC = () => {
                     <div className="max-w-5xl mx-auto space-y-8">
 
                         {/* Collapsible Instructions */}
-                        <div className="bg-gradient-to-br from-blue-500/10 to-indigo-500/5 border border-blue-500/30 rounded-xl overflow-hidden">
+                        <div className="bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/30 rounded-xl overflow-hidden">
                             <button
                                 onClick={() => setShowInstructions(!showInstructions)}
-                                className="w-full p-4 flex items-center justify-between hover:bg-blue-500/5 transition-colors"
+                                className="w-full p-4 flex items-center justify-between hover:bg-primary/5 transition-colors"
                             >
-                                <h4 className="font-semibold text-blue-400 flex items-center gap-2 text-base">
+                                <h4 className="font-semibold text-primary flex items-center gap-2 text-base">
                                     📋 {t('domainsDashboard.guideTitle', 'Guía: Gestiona tus dominios personalizados')}
                                 </h4>
-                                {showInstructions ? <ChevronUp className="text-blue-400" size={20} /> : <ChevronDown className="text-blue-400" size={20} />}
+                                {showInstructions ? <ChevronUp className="text-primary" size={20} /> : <ChevronDown className="text-primary" size={20} />}
                             </button>
 
                             {showInstructions && (
                                 <div className="px-5 pb-5 text-sm space-y-4">
                                     <div className="space-y-4">
                                         <div className="flex items-start gap-3">
-                                            <span className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-500/20 text-blue-400 text-xs font-bold shrink-0 mt-0.5">1</span>
+                                            <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary/20 text-primary text-xs font-bold shrink-0 mt-0.5">1</span>
                                             <div>
                                                 <strong className="text-foreground block mb-1">{t('domainsDashboard.guide.step1Title', 'Opciones Disponibles')}</strong>
                                                 <ul className="list-disc list-inside space-y-1 text-muted-foreground ml-1">
@@ -1327,19 +1331,19 @@ const DomainsDashboard: React.FC = () => {
                                         </div>
 
                                         <div className="flex items-start gap-3">
-                                            <span className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-500/20 text-blue-400 text-xs font-bold shrink-0 mt-0.5">2</span>
+                                            <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary/20 text-primary text-xs font-bold shrink-0 mt-0.5">2</span>
                                             <div>
                                                 <strong className="text-foreground block mb-1">{t('domainsDashboard.guide.step2Title', 'Configuración DNS')}</strong>
                                                 <p className="text-muted-foreground mb-2">
                                                     {t('domainsDashboard.guide.step2Desc', 'Para dominios externos, necesitarás configurar los registros DNS en tu proveedor:')}
                                                 </p>
-                                                <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground bg-blue-500/5 p-2 rounded">
+                                                <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground bg-primary/5 p-2 rounded">
                                                     <div>
-                                                        <span className="font-semibold text-blue-400 block">{t('domainsDashboard.guide.aRecord', 'Registro A')}:</span>
+                                                        <span className="font-semibold text-primary block">{t('domainsDashboard.guide.aRecord', 'Registro A')}:</span>
                                                         @ → 130.211.43.242
                                                     </div>
                                                     <div>
-                                                        <span className="font-semibold text-blue-400 block">{t('domainsDashboard.guide.cnameRecord', 'Registro CNAME')}:</span>
+                                                        <span className="font-semibold text-primary block">{t('domainsDashboard.guide.cnameRecord', 'Registro CNAME')}:</span>
                                                         www → tudominio.com
                                                     </div>
                                                 </div>
@@ -1347,7 +1351,7 @@ const DomainsDashboard: React.FC = () => {
                                         </div>
 
                                         <div className="flex items-start gap-3">
-                                            <span className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-500/20 text-blue-400 text-xs font-bold shrink-0 mt-0.5">3</span>
+                                            <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary/20 text-primary text-xs font-bold shrink-0 mt-0.5">3</span>
                                             <div>
                                                 <strong className="text-foreground block mb-1">{t('domainsDashboard.guide.step3Title', 'Verificación y SSL')}</strong>
                                                 <p className="text-muted-foreground">
@@ -1357,7 +1361,7 @@ const DomainsDashboard: React.FC = () => {
                                         </div>
                                     </div>
 
-                                    <div className="pt-3 border-t border-blue-500/20">
+                                    <div className="pt-3 border-t border-primary/20">
                                         <p className="text-xs text-muted-foreground flex gap-2">
                                             <span className="shrink-0">💡</span>
                                             <span>
@@ -1370,7 +1374,8 @@ const DomainsDashboard: React.FC = () => {
                         </div>
 
                         {domains.length === 0 ? (
-                            <div className="text-center py-20 bg-card border border-dashed border-border rounded-2xl">
+                            <div className="group relative overflow-hidden text-center py-20 rounded-2xl border border-white/[0.08] dark:border-white/[0.06] bg-card/60 dark:bg-card/40 backdrop-blur-xl border-dashed shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)]">
+                                <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full opacity-20 dark:opacity-15 blur-2xl bg-gradient-to-br from-primary to-primary/60" aria-hidden="true" />
                                 <div className="w-20 h-20 bg-secondary/50 rounded-full flex items-center justify-center mx-auto mb-6">
                                     <Globe size={40} className="text-muted-foreground opacity-50" />
                                 </div>
@@ -1579,8 +1584,8 @@ const DomainsDashboard: React.FC = () => {
                     </div>
                 </Modal>
 
-            </div>
-        </div>
+            </div >
+        </div >
     );
 };
 

@@ -2,6 +2,7 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import DashboardSidebar from '../DashboardSidebar';
+import DashboardWaveRibbons from '../DashboardWaveRibbons';
 import { useUI } from '../../../contexts/core/UIContext';
 import { useCMS } from '../../../contexts/cms';
 import { useProject } from '../../../contexts/project';
@@ -162,109 +163,89 @@ const NavigationDashboard: React.FC = () => {
             <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
 
             <div className="flex-1 flex flex-col overflow-hidden relative">
+                <DashboardWaveRibbons />
+
                 {/* Standardized Header */}
-                <header className="bg-card/50 backdrop-blur-sm border-b border-border sticky top-0 z-40">
-                    <div className="px-4 sm:px-6 lg:px-8 py-4">
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-4">
-                                <button
-                                    onClick={() => setIsMobileMenuOpen(true)}
-                                    className="lg:hidden p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
-                                >
-                                    <MenuIcon size={20} />
+                <header className="h-14 px-2 sm:px-6 border-b border-border flex items-center justify-between bg-background z-20 sticky top-0" role="banner">
+                    {/* Left Section - Menu & Title */}
+                    <div className="flex items-center gap-1 sm:gap-4 flex-shrink-0">
+                        <button
+                            onClick={() => setIsMobileMenuOpen(true)}
+                            className="lg:hidden h-9 w-9 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary/80 active:bg-secondary rounded-lg transition-colors touch-manipulation"
+                            aria-label="Open navigation menu"
+                            aria-expanded={isMobileMenuOpen}
+                        >
+                            <MenuIcon className="w-5 h-5" />
+                        </button>
+                        <div className="flex items-center gap-1 sm:gap-2">
+                            <MenuIcon className="text-primary" size={24} aria-hidden="true" />
+                            <h1 className="text-xl font-bold text-foreground hidden sm:block">
+                                {t('navigationDashboard.title')}
+                            </h1>
+                        </div>
+                    </div>
+
+                    {/* Center Section - Search Bar */}
+                    <div className="flex-1 flex justify-center px-2 sm:px-4">
+                        <div className="hidden md:flex items-center gap-2 w-full max-w-xl bg-editor-border/40 rounded-lg px-3 py-2" role="search">
+                            <Search className="w-4 h-4 text-editor-text-secondary flex-shrink-0" aria-hidden="true" />
+                            <input
+                                type="search"
+                                placeholder={t('navigationDashboard.searchMenus')}
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="flex-1 bg-transparent outline-none text-sm min-w-0"
+                                aria-label={t('navigationDashboard.searchMenus')}
+                            />
+                            {searchQuery && (
+                                <button onClick={() => setSearchQuery('')} className="text-editor-text-secondary hover:text-editor-text-primary flex-shrink-0">
+                                    <X size={16} />
                                 </button>
-                                <div className="flex items-center gap-3">
-                                    <div className="p-2 rounded-lg bg-primary/20">
-                                        <MenuIcon className="text-primary" size={24} />
-                                    </div>
-                                    <div>
-                                        <h1 className="text-xl font-bold text-foreground">
-                                            {t('navigationDashboard.title')}
-                                        </h1>
-                                        {/* Project Selector */}
-                                        <div className="relative">
-                                            <button
-                                                onClick={() => setIsProjectSelectorOpen(!isProjectSelectorOpen)}
-                                                className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
-                                            >
-                                                <Store size={14} />
-                                                <span className="max-w-[200px] truncate">
-                                                    {effectiveProject?.name || t('navigationDashboard.selectProject', 'Seleccionar proyecto')}
-                                                </span>
-                                                <ChevronDown size={14} className={`transition-transform ${isProjectSelectorOpen ? 'rotate-180' : ''}`} />
-                                            </button>
+                            )}
+                        </div>
 
-                                            {/* Dropdown */}
-                                            {isProjectSelectorOpen && (
-                                                <>
-                                                    <div
-                                                        className="fixed inset-0 z-40"
-                                                        onClick={() => setIsProjectSelectorOpen(false)}
-                                                    />
-                                                    <div className="absolute top-full left-0 mt-2 w-80 bg-card border border-border rounded-xl shadow-xl z-50 py-2 max-h-96 overflow-auto">
-                                                        {/* Header */}
-                                                        <div className="px-4 py-2 border-b border-border/50 mb-2">
-                                                            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                                                                {t('navigationDashboard.quickSwitch', 'Cambio rápido')}
-                                                            </p>
-                                                        </div>
+                        {/* Mobile Search Button */}
+                        <button
+                            onClick={() => setSearchQuery(searchQuery ? '' : ' ')}
+                            className="md:hidden p-2.5 text-muted-foreground hover:text-foreground hover:bg-secondary/60 rounded-xl transition-colors"
+                            aria-label="Toggle search"
+                        >
+                            <Search size={20} />
+                        </button>
+                    </div>
 
-                                                        {/* Recent Projects */}
-                                                        {projects.filter(p => p.status !== 'Template').slice(0, 5).map((project) => (
-                                                            <button
-                                                                key={project.id}
-                                                                onClick={() => {
-                                                                    handleProjectSelect(project.id);
-                                                                    setIsProjectSelectorOpen(false);
-                                                                }}
-                                                                className={`w-full flex items-center gap-3 px-4 py-2.5 hover:bg-muted transition-colors ${project.id === effectiveProjectId ? 'bg-primary/10' : ''
-                                                                    }`}
-                                                            >
-                                                                {project.thumbnailUrl ? (
-                                                                    <img
-                                                                        src={project.thumbnailUrl}
-                                                                        alt={project.name}
-                                                                        className="w-10 h-10 rounded-lg object-cover"
-                                                                    />
-                                                                ) : (
-                                                                    <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
-                                                                        <Layers size={16} className="text-muted-foreground" />
-                                                                    </div>
-                                                                )}
-                                                                <div className="flex-1 text-left min-w-0">
-                                                                    <span className="text-sm font-medium text-foreground truncate block">
-                                                                        {project.name}
-                                                                    </span>
-                                                                    <span className={`text-xs ${project.status === 'Published' ? 'text-green-500' : 'text-muted-foreground'}`}>
-                                                                        {project.status === 'Published' ? t('dashboard.published', 'Publicado') : t('dashboard.draft', 'Borrador')}
-                                                                    </span>
-                                                                </div>
-                                                                {project.id === effectiveProjectId && (
-                                                                    <Check size={16} className="text-primary flex-shrink-0" />
-                                                                )}
-                                                            </button>
-                                                        ))}
+                    {/* Right Section - Buttons */}
+                    <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+                        {/* Create Button */}
+                        {effectiveProject && (
+                            <button
+                                onClick={handleCreateNew}
+                                className="flex items-center gap-1.5 h-9 px-3 rounded-lg text-sm font-medium transition-all text-muted-foreground hover:text-primary hover:bg-primary/10"
+                                title={t('navigationDashboard.addMenu')}
+                            >
+                                <Plus className="w-4 h-4" />
+                                <span className="hidden lg:inline">{t('navigationDashboard.addMenu')}</span>
+                            </button>
+                        )}
 
-                                                        {/* View All Button */}
-                                                        <div className="border-t border-border/50 mt-2 pt-2 px-2">
-                                                            <button
-                                                                onClick={() => {
-                                                                    setShowProjectSelector(true);
-                                                                    setIsProjectSelectorOpen(false);
-                                                                }}
-                                                                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-primary hover:bg-primary/10 rounded-lg transition-colors"
-                                                            >
-                                                                <Store size={16} />
-                                                                {t('navigationDashboard.viewAllProjects', 'Ver todos los proyectos')}
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                </>
-                                            )}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                        {/* View Toggle */}
+                        <div className="hidden sm:flex items-center gap-1 bg-secondary/40 rounded-lg p-1" role="group" aria-label="View mode">
+                            <button
+                                onClick={() => setViewMode('grid')}
+                                className={`h-8 w-8 flex items-center justify-center rounded-md transition-all ${viewMode === 'grid' ? 'text-primary bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+                                aria-label="Grid view"
+                                aria-pressed={viewMode === 'grid'}
+                            >
+                                <LayoutGrid size={15} aria-hidden="true" />
+                            </button>
+                            <button
+                                onClick={() => setViewMode('list')}
+                                className={`h-8 w-8 flex items-center justify-center rounded-md transition-all ${viewMode === 'list' ? 'text-primary bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+                                aria-label="List view"
+                                aria-pressed={viewMode === 'list'}
+                            >
+                                <LayoutList size={15} aria-hidden="true" />
+                            </button>
                         </div>
                     </div>
                 </header>
@@ -275,37 +256,46 @@ const NavigationDashboard: React.FC = () => {
                         {/* Stats Overview */}
                         {effectiveProject && (
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <div className="bg-card border border-border p-5 rounded-xl shadow-sm hover:shadow-md transition-shadow">
-                                    <div className="flex items-center gap-4">
-                                        <div className="p-3 bg-primary/10 rounded-lg text-primary">
-                                            <Globe size={24} />
+                                <div className="group relative overflow-hidden rounded-2xl border border-white/[0.08] dark:border-white/[0.06] bg-card/60 dark:bg-card/40 backdrop-blur-xl p-5 min-h-[130px] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:scale-[1.03] hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 ease-out">
+                                    <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full opacity-30 dark:opacity-20 blur-2xl bg-gradient-to-br from-primary to-primary/60 group-hover:opacity-50 dark:group-hover:opacity-35 group-hover:scale-110 transition-all duration-500" aria-hidden="true" />
+                                    <div className="absolute right-4 bottom-3 select-none pointer-events-none">
+                                        <span className="leading-[0.85] text-foreground/[0.08] dark:text-white/[0.10] group-hover:text-foreground/[0.14] dark:group-hover:text-white/[0.16] transition-colors duration-500" style={{ fontFamily: "'Fira Sans Extra Condensed', sans-serif", fontWeight: 100, fontSize: 'clamp(4rem, 6vw, 7rem)' }}>
+                                            {stats.total}
+                                        </span>
+                                    </div>
+                                    <div className="relative z-10 flex flex-col justify-between h-full">
+                                        <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary/60 shadow-lg shadow-black/10">
+                                            <Globe className="w-5 h-5 text-white" strokeWidth={2} />
                                         </div>
-                                        <div>
-                                            <p className="text-sm text-muted-foreground font-medium">{t('navigationDashboard.totalMenus', 'Total de Menús')}</p>
-                                            <h3 className="text-2xl font-bold text-foreground">{stats.total}</h3>
-                                        </div>
+                                        <p className="text-sm text-muted-foreground font-medium mt-auto">{t('navigationDashboard.totalMenus', 'Total de Menús')}</p>
                                     </div>
                                 </div>
-                                <div className="bg-card border border-border p-5 rounded-xl shadow-sm hover:shadow-md transition-shadow">
-                                    <div className="flex items-center gap-4">
-                                        <div className="p-3 bg-green-500/10 rounded-lg text-green-500">
-                                            <Check size={24} />
+                                <div className="group relative overflow-hidden rounded-2xl border border-white/[0.08] dark:border-white/[0.06] bg-card/60 dark:bg-card/40 backdrop-blur-xl p-5 min-h-[130px] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:scale-[1.03] hover:shadow-xl hover:shadow-green-500/10 transition-all duration-300 ease-out">
+                                    <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full opacity-30 dark:opacity-20 blur-2xl bg-gradient-to-br from-green-500 to-emerald-400 group-hover:opacity-50 dark:group-hover:opacity-35 group-hover:scale-110 transition-all duration-500" aria-hidden="true" />
+                                    <div className="absolute right-4 bottom-3 select-none pointer-events-none">
+                                        <span className="leading-[0.85] text-foreground/[0.08] dark:text-white/[0.10] group-hover:text-foreground/[0.14] dark:group-hover:text-white/[0.16] transition-colors duration-500" style={{ fontFamily: "'Fira Sans Extra Condensed', sans-serif", fontWeight: 100, fontSize: 'clamp(4rem, 6vw, 7rem)' }}>
+                                            {stats.active}
+                                        </span>
+                                    </div>
+                                    <div className="relative z-10 flex flex-col justify-between h-full">
+                                        <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-green-500 to-emerald-400 shadow-lg shadow-black/10">
+                                            <Check className="w-5 h-5 text-white" strokeWidth={2} />
                                         </div>
-                                        <div>
-                                            <p className="text-sm text-muted-foreground font-medium">{t('navigationDashboard.activeMenus', 'Menús Activos')}</p>
-                                            <h3 className="text-2xl font-bold text-foreground">{stats.active}</h3>
-                                        </div>
+                                        <p className="text-sm text-muted-foreground font-medium mt-auto">{t('navigationDashboard.activeMenus', 'Menús Activos')}</p>
                                     </div>
                                 </div>
-                                <div className="bg-card border border-border p-5 rounded-xl shadow-sm hover:shadow-md transition-shadow">
-                                    <div className="flex items-center gap-4">
-                                        <div className="p-3 bg-orange-500/10 rounded-lg text-orange-500">
-                                            <LinkIcon size={24} />
+                                <div className="group relative overflow-hidden rounded-2xl border border-white/[0.08] dark:border-white/[0.06] bg-card/60 dark:bg-card/40 backdrop-blur-xl p-5 min-h-[130px] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:scale-[1.03] hover:shadow-xl hover:shadow-orange-500/10 transition-all duration-300 ease-out">
+                                    <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full opacity-30 dark:opacity-20 blur-2xl bg-gradient-to-br from-orange-500 to-amber-400 group-hover:opacity-50 dark:group-hover:opacity-35 group-hover:scale-110 transition-all duration-500" aria-hidden="true" />
+                                    <div className="absolute right-4 bottom-3 select-none pointer-events-none">
+                                        <span className="leading-[0.85] text-foreground/[0.08] dark:text-white/[0.10] group-hover:text-foreground/[0.14] dark:group-hover:text-white/[0.16] transition-colors duration-500" style={{ fontFamily: "'Fira Sans Extra Condensed', sans-serif", fontWeight: 100, fontSize: 'clamp(4rem, 6vw, 7rem)' }}>
+                                            {stats.orphans}
+                                        </span>
+                                    </div>
+                                    <div className="relative z-10 flex flex-col justify-between h-full">
+                                        <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-amber-400 shadow-lg shadow-black/10">
+                                            <LinkIcon className="w-5 h-5 text-white" strokeWidth={2} />
                                         </div>
-                                        <div>
-                                            <p className="text-sm text-muted-foreground font-medium">{t('navigationDashboard.orphanMenus', 'Sin Asignar')}</p>
-                                            <h3 className="text-2xl font-bold text-foreground">{stats.orphans}</h3>
-                                        </div>
+                                        <p className="text-sm text-muted-foreground font-medium mt-auto">{t('navigationDashboard.orphanMenus', 'Sin Asignar')}</p>
                                     </div>
                                 </div>
                             </div>
@@ -313,8 +303,8 @@ const NavigationDashboard: React.FC = () => {
 
                         {/* Info Banner for Unassigned */}
                         {effectiveProject && hasUnassignedMenus && (
-                            <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-xl flex items-start gap-4 shadow-sm">
-                                <Info className="text-blue-500 flex-shrink-0 mt-0.5" size={20} />
+                            <div className="p-4 bg-primary/10 border border-primary/20 rounded-xl flex items-start gap-4 shadow-sm">
+                                <Info className="text-primary flex-shrink-0 mt-0.5" size={20} />
                                 <div className="flex-1">
                                     <h4 className="text-sm font-semibold text-foreground mb-1">
                                         {t('navigationDashboard.connectMenus')}
@@ -323,7 +313,7 @@ const NavigationDashboard: React.FC = () => {
                                         {t('navigationDashboard.connectMenusDesc')}
                                         <button
                                             onClick={() => loadProject(effectiveProjectId!, false, true)}
-                                            className="ml-1.5 text-blue-500 hover:text-blue-400 font-medium inline-flex items-center gap-1 transition-colors group"
+                                            className="ml-1.5 text-primary hover:text-primary/80 font-medium inline-flex items-center gap-1 transition-colors group"
                                         >
                                             {t('navigationDashboard.goToEditor')}
                                             <ArrowRight size={14} className="group-hover:translate-x-0.5 transition-transform" />
@@ -333,71 +323,21 @@ const NavigationDashboard: React.FC = () => {
                             </div>
                         )}
 
-                        {/* Controls Toolbar */}
-                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-card p-2 rounded-xl border border-border shadow-sm">
-                            <div className="flex items-center gap-2 w-full sm:w-auto p-1">
-                                <div className="relative flex-1 sm:flex-initial">
-                                    <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
-                                    <input
-                                        type="text"
-                                        placeholder={t('navigationDashboard.searchMenus')}
-                                        value={searchQuery}
-                                        onChange={(e) => setSearchQuery(e.target.value)}
-                                        className="pl-9 pr-4 py-2 bg-secondary/50 hover:bg-secondary border border-transparent focus:border-primary/30 rounded-lg text-sm outline-none transition-all w-full sm:w-64"
-                                    />
-                                    {searchQuery && (
-                                        <button onClick={() => setSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
-                                            <X size={14} />
-                                        </button>
-                                    )}
-                                </div>
-
-                                <div className="h-4 w-px bg-border mx-1 hidden sm:block"></div>
-
-                                <select
-                                    value={filterUsage}
-                                    onChange={(e) => setFilterUsage(e.target.value as any)}
-                                    className="px-3 py-2 text-sm bg-secondary/50 hover:bg-secondary border border-transparent focus:border-primary/30 rounded-lg outline-none cursor-pointer transition-all appearance-none"
-                                >
-                                    <option value="all">{t('navigationDashboard.allMenus')}</option>
-                                    <option value="used">{t('navigationDashboard.inUse')}</option>
-                                    <option value="unused">{t('navigationDashboard.notInUse')}</option>
-                                    <option value="empty">{t('navigationDashboard.empty')}</option>
-                                </select>
-                            </div>
-
-                            <div className="flex items-center gap-2 w-full sm:w-auto px-1">
-                                {/* Create Button */}
-                                {effectiveProject && (
-                                    <button
-                                        onClick={handleCreateNew}
-                                        className="flex-1 sm:flex-initial flex items-center justify-center gap-2 h-9 px-4 rounded-lg text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-all shadow-sm hover:shadow-md"
-                                    >
-                                        <Plus className="w-4 h-4" />
-                                        <span>{t('navigationDashboard.addMenu')}</span>
-                                    </button>
-                                )}
-
-                                <div className="h-4 w-px bg-border mx-1 hidden sm:block"></div>
-
-                                {/* View Toggle */}
-                                <div className="flex bg-secondary/50 rounded-lg p-1 border border-border/50">
-                                    <button
-                                        onClick={() => setViewMode('grid')}
-                                        className={`p-1.5 rounded-md transition-all ${viewMode === 'grid' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
-                                        title={t('navigationDashboard.gridView', 'Vista de cuadrícula')}
-                                    >
-                                        <LayoutGrid size={16} />
-                                    </button>
-                                    <button
-                                        onClick={() => setViewMode('list')}
-                                        className={`p-1.5 rounded-md transition-all ${viewMode === 'list' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
-                                        title={t('navigationDashboard.listView', 'Vista de lista')}
-                                    >
-                                        <LayoutList size={16} />
-                                    </button>
-                                </div>
-                            </div>
+                        {/* Filter Bar */}
+                        <div className="flex items-center gap-3">
+                            <select
+                                value={filterUsage}
+                                onChange={(e) => setFilterUsage(e.target.value as any)}
+                                className="px-3 py-2 text-sm bg-secondary/50 hover:bg-secondary border border-transparent focus:border-primary/30 rounded-lg outline-none cursor-pointer transition-all appearance-none"
+                            >
+                                <option value="all">{t('navigationDashboard.allMenus')}</option>
+                                <option value="used">{t('navigationDashboard.inUse')}</option>
+                                <option value="unused">{t('navigationDashboard.notInUse')}</option>
+                                <option value="empty">{t('navigationDashboard.empty')}</option>
+                            </select>
+                            <span className="text-xs text-muted-foreground">
+                                {filteredMenus.length} {filteredMenus.length === 1 ? 'menú' : 'menús'}
+                            </span>
                         </div>
 
                         {/* Content Area */}
@@ -436,8 +376,10 @@ const NavigationDashboard: React.FC = () => {
                                         <div
                                             key={menu.id}
                                             onClick={() => handleEdit(menu)}
-                                            className="group bg-card border border-border rounded-xl p-5 shadow-sm hover:shadow-lg hover:border-primary/50 transition-all cursor-pointer relative overflow-hidden"
+                                            className="group relative overflow-hidden rounded-2xl border border-white/[0.08] dark:border-white/[0.06] bg-card/60 dark:bg-card/40 backdrop-blur-xl p-5 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:scale-[1.03] hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 ease-out cursor-pointer"
                                         >
+                                            {/* Gradient blob decoration */}
+                                            <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full opacity-20 dark:opacity-15 blur-2xl bg-gradient-to-br from-primary to-primary/60 group-hover:opacity-40 dark:group-hover:opacity-30 group-hover:scale-110 transition-all duration-500" aria-hidden="true" />
                                             <div className="flex justify-between items-start mb-4">
                                                 <div>
                                                     <h3 className="font-semibold text-lg text-foreground group-hover:text-primary transition-colors">

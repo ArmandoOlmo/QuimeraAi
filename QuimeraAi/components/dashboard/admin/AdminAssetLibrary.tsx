@@ -12,6 +12,7 @@ import { useAI } from '../../../contexts/ai';
 import { useAppContent } from '../../../contexts/appContent';
 import { useToast } from '../../../contexts/ToastContext';
 import DashboardSidebar from '../DashboardSidebar';
+import DashboardWaveRibbons from '../DashboardWaveRibbons';
 import DragDropZone from '../../ui/DragDropZone';
 import Modal from '../../ui/Modal';
 import { formatBytes, formatFileDate } from '../../../utils/fileHelpers';
@@ -724,7 +725,8 @@ const AdminAssetLibrary: React.FC<AdminAssetLibraryProps> = ({ onBack }) => {
         <div className="flex h-screen bg-background text-foreground">
             <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
 
-            <div className="flex-1 flex flex-col overflow-hidden">
+            <div className="flex-1 flex flex-col overflow-hidden relative">
+                <DashboardWaveRibbons className="absolute inset-x-0 top-[7rem] h-64 z-[1] pointer-events-none overflow-hidden" />
                 {/* Header */}
                 <header className="h-14 px-2 sm:px-6 border-b border-border flex items-center bg-background z-20 sticky top-0">
                     <div className="flex items-center gap-1 sm:gap-4 flex-shrink-0">
@@ -768,482 +770,486 @@ const AdminAssetLibrary: React.FC<AdminAssetLibraryProps> = ({ onBack }) => {
                     )}
                 </Modal>
 
-                <main className="flex-1 overflow-y-auto p-6 lg:p-8">
+                <main className="flex-1 overflow-y-auto p-6 lg:p-8 relative z-[2]">
                     <div className="max-w-7xl mx-auto space-y-8">
 
-                        {/* AI IMAGE GENERATOR */}
-                        <div className="p-6 bg-primary/5 border-2 border-primary/20 rounded-2xl">
-                            <div className="flex items-center gap-3 mb-6">
-                                <div className="p-2 bg-primary rounded-lg">
-                                    <Zap className="w-6 h-6 text-primary-foreground" />
-                                </div>
-                                <div>
-                                    <h2 className="text-xl font-bold text-foreground">{t('adminAssets.generator.title', 'AI Image Generator')}</h2>
-                                    <p className="text-sm text-muted-foreground">{t('adminAssets.generator.subtitle', 'Create stunning images for your app content')}</p>
-                                </div>
-                            </div>
+                        {/* Single Card Container for Generator + Library */}
+                        <div className="bg-card/80 border border-border rounded-2xl overflow-hidden">
 
-                            <div className="space-y-4">
-                                {/* Prompt */}
-                                <div>
-                                    <div className="flex justify-between items-center mb-2">
-                                        <label className="block text-sm font-bold text-foreground">{t('adminAssets.generator.prompt', 'Describe your image')}</label>
-                                        <button
-                                            onClick={handleEnhancePrompt}
-                                            disabled={isEnhancing || !prompt}
-                                            className="flex items-center text-xs text-primary hover:text-primary/80 transition-colors disabled:opacity-50"
-                                        >
-                                            {isEnhancing ? <Loader2 size={12} className="animate-spin mr-1" /> : <Wand2 size={12} className="mr-1" />}
-                                            {t('adminAssets.generator.enhance', 'Enhance')}
-                                        </button>
+                            {/* AI IMAGE GENERATOR */}
+                            <div className="p-6 border-b border-border">
+                                <div className="flex items-center gap-3 mb-6">
+                                    <div className="p-2 bg-primary rounded-lg">
+                                        <Zap className="w-6 h-6 text-primary-foreground" />
                                     </div>
-                                    <textarea
-                                        value={prompt}
-                                        onChange={(e) => setPrompt(e.target.value)}
-                                        placeholder={t('adminAssets.generator.promptPlaceholder', 'A professional hero image for a SaaS landing page...')}
-                                        className="w-full bg-background border border-border rounded-lg p-3 text-sm text-foreground focus:ring-2 focus:ring-primary outline-none resize-none h-24"
-                                    />
+                                    <div>
+                                        <h2 className="text-xl font-bold text-foreground">{t('adminAssets.generator.title', 'AI Image Generator')}</h2>
+                                        <p className="text-sm text-muted-foreground">{t('adminAssets.generator.subtitle', 'Create stunning images for your app content')}</p>
+                                    </div>
                                 </div>
 
-                                {/* Reference Images */}
-                                <div>
-                                    <div className="flex justify-between items-center mb-2">
-                                        <label className="block text-xs font-bold text-muted-foreground uppercase">{t('adminAssets.generator.references', 'Reference Images')}</label>
-                                        <span className="text-xs text-muted-foreground">{referenceImages.length}/14</span>
-                                    </div>
-
-                                    <input
-                                        type="file"
-                                        ref={referenceFileInputRef}
-                                        accept="image/*"
-                                        multiple
-                                        onChange={handleReferenceImageUpload}
-                                        className="hidden"
-                                    />
-
-                                    <div
-                                        className={`border-2 border-dashed rounded-lg p-4 transition-all ${isDragging ? 'border-primary bg-primary/10' : 'border-border hover:border-primary hover:bg-primary/5'}`}
-                                        onDragOver={handleDragOver}
-                                        onDragLeave={handleDragLeave}
-                                        onDrop={handleDrop}
-                                    >
-                                        {referenceImages.length > 0 ? (
-                                            <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-7 gap-2 mb-2">
-                                                {referenceImages.map((img, idx) => (
-                                                    <div key={idx} className="relative aspect-square rounded-md overflow-hidden group border border-border">
-                                                        <img src={img} alt={`Ref ${idx}`} className="w-full h-full object-cover" />
-                                                        <button
-                                                            onClick={(e) => { e.stopPropagation(); handleRemoveReferenceImage(idx); }}
-                                                            className="absolute top-1 right-1 p-1 bg-red-500/90 hover:bg-red-600 rounded-full text-white opacity-0 group-hover:opacity-100 transition-opacity"
-                                                        >
-                                                            <X size={10} />
-                                                        </button>
-                                                    </div>
-                                                ))}
-                                                {referenceImages.length < 14 && (
-                                                    <button
-                                                        onClick={() => referenceFileInputRef.current?.click()}
-                                                        className="aspect-square flex flex-col items-center justify-center gap-1 border border-border rounded-md hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
-                                                    >
-                                                        <Plus size={16} />
-                                                        <span className="text-[10px]">{t('common.add', 'Add')}</span>
-                                                    </button>
-                                                )}
-                                            </div>
-                                        ) : (
+                                <div className="space-y-4">
+                                    {/* Prompt */}
+                                    <div>
+                                        <div className="flex justify-between items-center mb-2">
+                                            <label className="block text-sm font-bold text-foreground">{t('adminAssets.generator.prompt', 'Describe your image')}</label>
                                             <button
-                                                onClick={() => referenceFileInputRef.current?.click()}
-                                                className="w-full flex flex-col items-center gap-2 text-muted-foreground py-4"
+                                                onClick={handleEnhancePrompt}
+                                                disabled={isEnhancing || !prompt}
+                                                className="flex items-center text-xs text-primary hover:text-primary/80 transition-colors disabled:opacity-50"
                                             >
-                                                <Upload size={24} />
-                                                <span className="text-xs font-medium">{t('adminAssets.generator.uploadRef', 'Upload reference images')}</span>
-                                                <span className="text-xs opacity-70">{t('adminAssets.generator.dragRef', 'or drag and drop')}</span>
+                                                {isEnhancing ? <Loader2 size={12} className="animate-spin mr-1" /> : <Wand2 size={12} className="mr-1" />}
+                                                {t('adminAssets.generator.enhance', 'Enhance')}
                                             </button>
-                                        )}
-                                    </div>
-                                </div>
-
-                                {/* Quick Controls Row */}
-                                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                                    <div>
-                                        <label className="block text-xs font-bold text-muted-foreground mb-2 uppercase">{t('adminAssets.generator.category', 'Save to Category')}</label>
-                                        <select
-                                            value={selectedCategory}
-                                            onChange={(e) => setSelectedCategory(e.target.value as AdminAssetCategory)}
-                                            className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                                        >
-                                            {Object.entries(CATEGORY_CONFIG).map(([key, { label }]) => (
-                                                <option key={key} value={key}>{label}</option>
-                                            ))}
-                                        </select>
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-xs font-bold text-muted-foreground mb-2 uppercase">{t('adminAssets.generator.aspectRatio', 'Aspect Ratio')}</label>
-                                        <select
-                                            value={aspectRatio}
-                                            onChange={(e) => setAspectRatio(e.target.value)}
-                                            className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                                        >
-                                            {ASPECT_RATIOS.map(ratio => (
-                                                <option key={ratio.value} value={ratio.value}>{ratio.label}</option>
-                                            ))}
-                                        </select>
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-xs font-bold text-muted-foreground mb-2 uppercase">{t('adminAssets.generator.style', 'Style')}</label>
-                                        <select
-                                            value={style}
-                                            onChange={(e) => setStyle(e.target.value)}
-                                            className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                                        >
-                                            {STYLES.map(s => (
-                                                <option key={s} value={s}>{s}</option>
-                                            ))}
-                                        </select>
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-xs font-bold text-muted-foreground mb-2 uppercase">{t('adminAssets.generator.resolution', 'Resolution')}</label>
-                                        <select
-                                            value={resolution}
-                                            onChange={(e) => setResolution(e.target.value as '1K' | '2K' | '4K')}
-                                            className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                                        >
-                                            {RESOLUTIONS.map(res => (
-                                                <option key={res.value} value={res.value}>{res.label}</option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                </div>
-
-                                {/* 4K Warning */}
-                                {resolution === '4K' && (
-                                    <div className="p-2 bg-amber-500/10 border border-amber-500/30 rounded-lg flex items-start gap-2">
-                                        <AlertTriangle size={14} className="text-amber-500 mt-0.5 flex-shrink-0" />
-                                        <p className="text-xs text-amber-600 dark:text-amber-400">
-                                            {t('adminAssets.generator.4kWarning', '4K images are large and may slow down loading. Consider 2K for web use.')}
-                                        </p>
-                                    </div>
-                                )}
-
-                                {/* Advanced Controls Toggle */}
-                                <div className="border-t border-border/50 pt-3">
-                                    <button
-                                        onClick={() => setShowAdvanced(!showAdvanced)}
-                                        className="text-xs text-primary hover:text-primary/80 font-bold uppercase transition-colors flex items-center justify-between w-full"
-                                    >
-                                        <span>{t('adminAssets.generator.advanced', 'Advanced Controls')}</span>
-                                        <span className="text-lg">{showAdvanced ? '−' : '+'}</span>
-                                    </button>
-                                </div>
-
-                                {showAdvanced && (
-                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 animate-fade-in-up">
-                                        <div>
-                                            <label className="block text-xs font-bold text-muted-foreground mb-2 uppercase">{t('adminAssets.generator.lighting', 'Lighting')}</label>
-                                            <select
-                                                value={lighting}
-                                                onChange={(e) => setLighting(e.target.value)}
-                                                className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                                            >
-                                                {LIGHTING_OPTIONS.map(l => (
-                                                    <option key={l} value={l}>{l}</option>
-                                                ))}
-                                            </select>
                                         </div>
-
-                                        <div>
-                                            <label className="block text-xs font-bold text-muted-foreground mb-2 uppercase">{t('adminAssets.generator.camera', 'Camera Angle')}</label>
-                                            <select
-                                                value={cameraAngle}
-                                                onChange={(e) => setCameraAngle(e.target.value)}
-                                                className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                                            >
-                                                {CAMERA_ANGLES.map(c => (
-                                                    <option key={c} value={c}>{c}</option>
-                                                ))}
-                                            </select>
-                                        </div>
-
-                                        <div>
-                                            <label className="block text-xs font-bold text-muted-foreground mb-2 uppercase">{t('adminAssets.generator.color', 'Color Grading')}</label>
-                                            <select
-                                                value={colorGrading}
-                                                onChange={(e) => setColorGrading(e.target.value)}
-                                                className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                                            >
-                                                {COLOR_GRADING.map(c => (
-                                                    <option key={c} value={c}>{c}</option>
-                                                ))}
-                                            </select>
-                                        </div>
-
-                                        <div>
-                                            <label className="block text-xs font-bold text-muted-foreground mb-2 uppercase">{t('adminAssets.generator.dof', 'Depth of Field')}</label>
-                                            <select
-                                                value={depthOfField}
-                                                onChange={(e) => setDepthOfField(e.target.value)}
-                                                className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                                            >
-                                                {DEPTH_OF_FIELD.map(d => (
-                                                    <option key={d} value={d}>{d}</option>
-                                                ))}
-                                            </select>
-                                        </div>
-                                    </div>
-                                )}
-
-                                {/* Generate Button */}
-                                <button
-                                    onClick={handleGenerate}
-                                    disabled={isGenerating || !prompt}
-                                    className="w-full py-3 text-primary font-bold disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center hover:text-primary/80"
-                                >
-                                    {isGenerating ? <Loader2 className="animate-spin mr-2" /> : <Zap className="mr-2" />}
-                                    {isGenerating ? t('adminAssets.generator.generating', 'Generating...') : t('adminAssets.generator.generate', 'Generate Image')}
-                                </button>
-                            </div>
-                        </div>
-
-                        {/* ASSET LIBRARY SECTION */}
-                        <div className="border-t border-border/50 pt-6">
-                            {/* Header */}
-                            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6">
-                                <div className="flex items-center gap-3">
-                                    <h2 className="text-base font-bold text-muted-foreground uppercase tracking-wider">
-                                        {t('adminAssets.library', 'Asset Library')}
-                                    </h2>
-                                    {filteredAssets.length < adminAssets.length && (
-                                        <span className="text-xs text-muted-foreground bg-secondary px-2 py-1 rounded-md">
-                                            {filteredAssets.length} of {adminAssets.length}
-                                        </span>
-                                    )}
-                                </div>
-
-                                <div className="flex flex-wrap gap-2 w-full sm:w-auto">
-                                    {/* Search */}
-                                    <div className="flex items-center gap-2 flex-1 sm:flex-initial sm:w-48 bg-secondary/40 rounded-lg px-3 py-1.5">
-                                        <Search size={14} className="text-muted-foreground flex-shrink-0" />
-                                        <input
-                                            type="text"
-                                            value={searchQuery}
-                                            onChange={(e) => setSearchQuery(e.target.value)}
-                                            placeholder={t('adminAssets.search', 'Search...')}
-                                            className="flex-1 bg-transparent outline-none text-xs min-w-0"
+                                        <textarea
+                                            value={prompt}
+                                            onChange={(e) => setPrompt(e.target.value)}
+                                            placeholder={t('adminAssets.generator.promptPlaceholder', 'A professional hero image for a SaaS landing page...')}
+                                            className="w-full bg-background border border-border rounded-lg p-3 text-sm text-foreground focus:ring-2 focus:ring-primary outline-none resize-none h-24"
                                         />
-                                        {searchQuery && (
-                                            <button onClick={() => setSearchQuery('')} className="text-muted-foreground hover:text-foreground flex-shrink-0">
-                                                <X size={14} />
-                                            </button>
-                                        )}
                                     </div>
 
-                                    {/* Filter Toggle */}
-                                    <button
-                                        onClick={() => setShowFilters(!showFilters)}
-                                        className={`flex items-center justify-center px-3 py-1.5 text-xs font-bold transition-colors ${showFilters ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}
-                                    >
-                                        <Filter size={14} />
-                                    </button>
+                                    {/* Reference Images */}
+                                    <div>
+                                        <div className="flex justify-between items-center mb-2">
+                                            <label className="block text-xs font-bold text-muted-foreground uppercase">{t('adminAssets.generator.references', 'Reference Images')}</label>
+                                            <span className="text-xs text-muted-foreground">{referenceImages.length}/14</span>
+                                        </div>
 
-                                    {/* Selection Mode Toggle */}
-                                    <button
-                                        onClick={() => setIsSelectionMode(!isSelectionMode)}
-                                        className={`flex items-center gap-1.5 h-9 px-3 text-sm font-medium transition-all ${isSelectionMode ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}
-                                    >
-                                        <CheckSquare className="w-4 h-4" />
-                                        {isSelectionMode && selectedIds.size > 0 && (
-                                            <span>({selectedIds.size})</span>
-                                        )}
-                                    </button>
+                                        <input
+                                            type="file"
+                                            ref={referenceFileInputRef}
+                                            accept="image/*"
+                                            multiple
+                                            onChange={handleReferenceImageUpload}
+                                            className="hidden"
+                                        />
 
-                                    {/* Upload */}
-                                    <DragDropZone
-                                        onFileSelect={handleFileUpload}
-                                        accept="image/*"
-                                        maxSizeMB={10}
-                                        variant="compact"
-                                    >
-                                        <button className="flex items-center gap-1.5 h-9 px-3 rounded-md text-sm font-medium transition-all text-muted-foreground hover:text-foreground hover:bg-secondary">
-                                            <Upload className="w-4 h-4" />
-                                            {t('common.upload', 'Upload')}
-                                        </button>
-                                    </DragDropZone>
-                                </div>
-                            </div>
-
-                            {/* Category Filter Chips */}
-                            <div className="mb-4 flex flex-wrap gap-2">
-                                <button
-                                    onClick={() => setCategoryFilter('all')}
-                                    className={`flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors ${categoryFilter === 'all'
-                                        ? 'bg-primary/10 text-primary border-primary/30'
-                                        : 'bg-secondary/50 text-muted-foreground border-border hover:border-primary/30'
-                                        }`}
-                                >
-                                    <FolderOpen size={12} />
-                                    {t('common.all', 'All')} ({adminAssets.length})
-                                </button>
-                                {Object.entries(CATEGORY_CONFIG).map(([key, config]) => {
-                                    const count = categoryStats[key as AdminAssetCategory];
-                                    if (count === 0) return null;
-                                    return (
-                                        <button
-                                            key={key}
-                                            onClick={() => setCategoryFilter(key as AdminAssetCategory)}
-                                            className={`flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors ${categoryFilter === key
-                                                ? config.color
-                                                : 'bg-secondary/50 text-muted-foreground border-border hover:border-primary/30'
-                                                }`}
+                                        <div
+                                            className={`border-2 border-dashed rounded-lg p-4 transition-all ${isDragging ? 'border-primary bg-primary/10' : 'border-border hover:border-primary hover:bg-primary/5'}`}
+                                            onDragOver={handleDragOver}
+                                            onDragLeave={handleDragLeave}
+                                            onDrop={handleDrop}
                                         >
-                                            {config.icon}
-                                            {config.label} ({count})
-                                        </button>
-                                    );
-                                })}
-                            </div>
-
-                            {/* Filters Panel */}
-                            {showFilters && (
-                                <div className="mb-4 p-4 bg-secondary/50 rounded-lg border border-border animate-fade-in-up">
-                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                                        <div>
-                                            <label className="block text-xs font-bold text-muted-foreground mb-2 uppercase">{t('adminAssets.sortBy', 'Sort By')}</label>
-                                            <select
-                                                value={sortBy}
-                                                onChange={(e) => setSortBy(e.target.value as any)}
-                                                className="w-full px-3 py-1.5 text-xs bg-background border border-border rounded-lg focus:ring-1 focus:ring-primary focus:outline-none"
-                                            >
-                                                <option value="date">{t('adminAssets.date', 'Date')}</option>
-                                                <option value="name">{t('adminAssets.name', 'Name')}</option>
-                                                <option value="size">{t('adminAssets.size', 'Size')}</option>
-                                                <option value="category">{t('adminAssets.categoryLabel', 'Category')}</option>
-                                            </select>
+                                            {referenceImages.length > 0 ? (
+                                                <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-7 gap-2 mb-2">
+                                                    {referenceImages.map((img, idx) => (
+                                                        <div key={idx} className="relative aspect-square rounded-md overflow-hidden group border border-border">
+                                                            <img src={img} alt={`Ref ${idx}`} className="w-full h-full object-cover" />
+                                                            <button
+                                                                onClick={(e) => { e.stopPropagation(); handleRemoveReferenceImage(idx); }}
+                                                                className="absolute top-1 right-1 p-1 bg-red-500/90 hover:bg-red-600 rounded-full text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                                                            >
+                                                                <X size={10} />
+                                                            </button>
+                                                        </div>
+                                                    ))}
+                                                    {referenceImages.length < 14 && (
+                                                        <button
+                                                            onClick={() => referenceFileInputRef.current?.click()}
+                                                            className="aspect-square flex flex-col items-center justify-center gap-1 border border-border rounded-md hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
+                                                        >
+                                                            <Plus size={16} />
+                                                            <span className="text-[10px]">{t('common.add', 'Add')}</span>
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            ) : (
+                                                <button
+                                                    onClick={() => referenceFileInputRef.current?.click()}
+                                                    className="w-full flex flex-col items-center gap-2 text-muted-foreground py-4"
+                                                >
+                                                    <Upload size={24} />
+                                                    <span className="text-xs font-medium">{t('adminAssets.generator.uploadRef', 'Upload reference images')}</span>
+                                                    <span className="text-xs opacity-70">{t('adminAssets.generator.dragRef', 'or drag and drop')}</span>
+                                                </button>
+                                            )}
                                         </div>
+                                    </div>
 
+                                    {/* Quick Controls Row */}
+                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                                         <div>
-                                            <label className="block text-xs font-bold text-muted-foreground mb-2 uppercase">{t('adminAssets.order', 'Order')}</label>
-                                            <button
-                                                onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
-                                                className="w-full flex items-center justify-between px-3 py-1.5 text-xs bg-background border border-border rounded-lg hover:bg-secondary transition-colors"
-                                            >
-                                                <span>{sortOrder === 'asc' ? t('adminAssets.ascending', 'Ascending') : t('adminAssets.descending', 'Descending')}</span>
-                                                <ArrowUpDown size={14} />
-                                            </button>
-                                        </div>
-
-                                        <div>
-                                            <label className="block text-xs font-bold text-muted-foreground mb-2 uppercase">{t('adminAssets.uploadTo', 'Upload to')}</label>
+                                            <label className="block text-xs font-bold text-muted-foreground mb-2 uppercase">{t('adminAssets.generator.category', 'Save to Category')}</label>
                                             <select
                                                 value={selectedCategory}
                                                 onChange={(e) => setSelectedCategory(e.target.value as AdminAssetCategory)}
-                                                className="w-full px-3 py-1.5 text-xs bg-background border border-border rounded-lg focus:ring-1 focus:ring-primary focus:outline-none"
+                                                className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                                             >
                                                 {Object.entries(CATEGORY_CONFIG).map(([key, { label }]) => (
                                                     <option key={key} value={key}>{label}</option>
                                                 ))}
                                             </select>
                                         </div>
-                                    </div>
-                                </div>
-                            )}
 
-                            {/* Bulk Actions */}
-                            {isSelectionMode && selectedIds.size > 0 && (
-                                <div className="mb-4 p-3 bg-primary/10 rounded-lg border border-primary/30 flex items-center justify-between animate-fade-in-up">
-                                    <span className="text-sm font-medium">{selectedIds.size} {t('adminAssets.selected', 'selected')}</span>
-                                    <div className="flex gap-2">
-                                        <button
-                                            onClick={selectAll}
-                                            className="px-3 py-1.5 text-xs font-bold bg-primary/20 hover:bg-primary/30 rounded-lg transition-colors"
-                                        >
-                                            {t('adminAssets.selectAll', 'Select All')}
-                                        </button>
-                                        <button
-                                            onClick={handleBulkDelete}
-                                            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold bg-red-500 text-white hover:bg-red-600 rounded-lg transition-colors"
-                                        >
-                                            <Trash2 size={14} /> {t('common.delete', 'Delete')}
-                                        </button>
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Assets Grid - Grouped by Category */}
-                            <div className="max-h-[600px] overflow-y-auto custom-scrollbar pr-1">
-                                {isAdminAssetsLoading ? (
-                                    <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
-                                        <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin mb-2"></div>
-                                        <span className="text-xs">{t('common.loading', 'Loading...')}</span>
-                                    </div>
-                                ) : Object.keys(assetsByCategory).length > 0 ? (
-                                    <div className="space-y-6">
-                                        {Object.entries(assetsByCategory).map(([categoryKey, categoryAssets]) => {
-                                            if (categoryAssets.length === 0) return null;
-                                            const config = CATEGORY_CONFIG[categoryKey as AdminAssetCategory];
-
-                                            return (
-                                                <div key={categoryKey} className="space-y-3">
-                                                    {/* Category Header */}
-                                                    <div className="flex items-center gap-2 pb-2 border-b border-border/50">
-                                                        <span className={`inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full border ${config.color}`}>
-                                                            {config.icon}
-                                                            {config.label}
-                                                        </span>
-                                                        <span className="text-xs text-muted-foreground">
-                                                            {categoryAssets.length} {categoryAssets.length === 1 ? 'asset' : 'assets'}
-                                                        </span>
-                                                    </div>
-
-                                                    {/* Category Assets Grid */}
-                                                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-                                                        {categoryAssets.map(asset => (
-                                                            <div key={asset.id} className="h-full">
-                                                                <AssetItem
-                                                                    asset={asset}
-                                                                    onPreview={setPreviewAsset}
-                                                                    isSelected={selectedIds.has(asset.id)}
-                                                                    onToggleSelect={() => toggleSelection(asset.id)}
-                                                                    isSelectionMode={isSelectionMode}
-                                                                    onCopyUrl={handleCopyUrl}
-                                                                />
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                ) : (
-                                    <div className="text-center py-8 px-4 border-2 border-dashed border-border rounded-xl bg-secondary/20">
-                                        <ImageIcon size={32} className="mx-auto mb-2 text-muted-foreground opacity-50" />
-                                        <p className="text-sm font-medium text-foreground mb-1">
-                                            {searchQuery || categoryFilter !== 'all'
-                                                ? t('adminAssets.noResults', 'No assets found')
-                                                : t('adminAssets.empty', 'No assets yet')}
-                                        </p>
-                                        <p className="text-xs text-muted-foreground">
-                                            {searchQuery || categoryFilter !== 'all'
-                                                ? t('adminAssets.tryFilters', 'Try adjusting your filters')
-                                                : t('adminAssets.startUploading', 'Generate your first image above to get started')}
-                                        </p>
-                                        {(searchQuery || categoryFilter !== 'all') && (
-                                            <button
-                                                onClick={() => { setSearchQuery(''); setCategoryFilter('all'); }}
-                                                className="mt-3 text-sm text-primary hover:underline"
+                                        <div>
+                                            <label className="block text-xs font-bold text-muted-foreground mb-2 uppercase">{t('adminAssets.generator.aspectRatio', 'Aspect Ratio')}</label>
+                                            <select
+                                                value={aspectRatio}
+                                                onChange={(e) => setAspectRatio(e.target.value)}
+                                                className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                                             >
-                                                {t('adminAssets.clearFilters', 'Clear filters')}
-                                            </button>
+                                                {ASPECT_RATIOS.map(ratio => (
+                                                    <option key={ratio.value} value={ratio.value}>{ratio.label}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-xs font-bold text-muted-foreground mb-2 uppercase">{t('adminAssets.generator.style', 'Style')}</label>
+                                            <select
+                                                value={style}
+                                                onChange={(e) => setStyle(e.target.value)}
+                                                className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                                            >
+                                                {STYLES.map(s => (
+                                                    <option key={s} value={s}>{s}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-xs font-bold text-muted-foreground mb-2 uppercase">{t('adminAssets.generator.resolution', 'Resolution')}</label>
+                                            <select
+                                                value={resolution}
+                                                onChange={(e) => setResolution(e.target.value as '1K' | '2K' | '4K')}
+                                                className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                                            >
+                                                {RESOLUTIONS.map(res => (
+                                                    <option key={res.value} value={res.value}>{res.label}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    {/* 4K Warning */}
+                                    {resolution === '4K' && (
+                                        <div className="p-2 bg-amber-500/10 border border-amber-500/30 rounded-lg flex items-start gap-2">
+                                            <AlertTriangle size={14} className="text-amber-500 mt-0.5 flex-shrink-0" />
+                                            <p className="text-xs text-amber-600 dark:text-amber-400">
+                                                {t('adminAssets.generator.4kWarning', '4K images are large and may slow down loading. Consider 2K for web use.')}
+                                            </p>
+                                        </div>
+                                    )}
+
+                                    {/* Advanced Controls Toggle */}
+                                    <div className="border-t border-border/50 pt-3">
+                                        <button
+                                            onClick={() => setShowAdvanced(!showAdvanced)}
+                                            className="text-xs text-primary hover:text-primary/80 font-bold uppercase transition-colors flex items-center justify-between w-full"
+                                        >
+                                            <span>{t('adminAssets.generator.advanced', 'Advanced Controls')}</span>
+                                            <span className="text-lg">{showAdvanced ? '−' : '+'}</span>
+                                        </button>
+                                    </div>
+
+                                    {showAdvanced && (
+                                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 animate-fade-in-up">
+                                            <div>
+                                                <label className="block text-xs font-bold text-muted-foreground mb-2 uppercase">{t('adminAssets.generator.lighting', 'Lighting')}</label>
+                                                <select
+                                                    value={lighting}
+                                                    onChange={(e) => setLighting(e.target.value)}
+                                                    className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                                                >
+                                                    {LIGHTING_OPTIONS.map(l => (
+                                                        <option key={l} value={l}>{l}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+
+                                            <div>
+                                                <label className="block text-xs font-bold text-muted-foreground mb-2 uppercase">{t('adminAssets.generator.camera', 'Camera Angle')}</label>
+                                                <select
+                                                    value={cameraAngle}
+                                                    onChange={(e) => setCameraAngle(e.target.value)}
+                                                    className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                                                >
+                                                    {CAMERA_ANGLES.map(c => (
+                                                        <option key={c} value={c}>{c}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+
+                                            <div>
+                                                <label className="block text-xs font-bold text-muted-foreground mb-2 uppercase">{t('adminAssets.generator.color', 'Color Grading')}</label>
+                                                <select
+                                                    value={colorGrading}
+                                                    onChange={(e) => setColorGrading(e.target.value)}
+                                                    className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                                                >
+                                                    {COLOR_GRADING.map(c => (
+                                                        <option key={c} value={c}>{c}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+
+                                            <div>
+                                                <label className="block text-xs font-bold text-muted-foreground mb-2 uppercase">{t('adminAssets.generator.dof', 'Depth of Field')}</label>
+                                                <select
+                                                    value={depthOfField}
+                                                    onChange={(e) => setDepthOfField(e.target.value)}
+                                                    className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                                                >
+                                                    {DEPTH_OF_FIELD.map(d => (
+                                                        <option key={d} value={d}>{d}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Generate Button */}
+                                    <button
+                                        onClick={handleGenerate}
+                                        disabled={isGenerating || !prompt}
+                                        className="w-full py-3 text-primary font-bold disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center hover:text-primary/80"
+                                    >
+                                        {isGenerating ? <Loader2 className="animate-spin mr-2" /> : <Zap className="mr-2" />}
+                                        {isGenerating ? t('adminAssets.generator.generating', 'Generating...') : t('adminAssets.generator.generate', 'Generate Image')}
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* ASSET LIBRARY SECTION */}
+                            <div className="p-6">
+                                {/* Header */}
+                                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6">
+                                    <div className="flex items-center gap-3">
+                                        <h2 className="text-base font-bold text-muted-foreground uppercase tracking-wider">
+                                            {t('adminAssets.library', 'Asset Library')}
+                                        </h2>
+                                        {filteredAssets.length < adminAssets.length && (
+                                            <span className="text-xs text-muted-foreground bg-secondary px-2 py-1 rounded-md">
+                                                {filteredAssets.length} of {adminAssets.length}
+                                            </span>
                                         )}
                                     </div>
+
+                                    <div className="flex flex-wrap gap-2 w-full sm:w-auto">
+                                        {/* Search */}
+                                        <div className="flex items-center gap-2 flex-1 sm:flex-initial sm:w-48 bg-secondary/40 rounded-lg px-3 py-1.5">
+                                            <Search size={14} className="text-muted-foreground flex-shrink-0" />
+                                            <input
+                                                type="text"
+                                                value={searchQuery}
+                                                onChange={(e) => setSearchQuery(e.target.value)}
+                                                placeholder={t('adminAssets.search', 'Search...')}
+                                                className="flex-1 bg-transparent outline-none text-xs min-w-0"
+                                            />
+                                            {searchQuery && (
+                                                <button onClick={() => setSearchQuery('')} className="text-muted-foreground hover:text-foreground flex-shrink-0">
+                                                    <X size={14} />
+                                                </button>
+                                            )}
+                                        </div>
+
+                                        {/* Filter Toggle */}
+                                        <button
+                                            onClick={() => setShowFilters(!showFilters)}
+                                            className={`flex items-center justify-center px-3 py-1.5 text-xs font-bold transition-colors ${showFilters ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}
+                                        >
+                                            <Filter size={14} />
+                                        </button>
+
+                                        {/* Selection Mode Toggle */}
+                                        <button
+                                            onClick={() => setIsSelectionMode(!isSelectionMode)}
+                                            className={`flex items-center gap-1.5 h-9 px-3 text-sm font-medium transition-all ${isSelectionMode ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}
+                                        >
+                                            <CheckSquare className="w-4 h-4" />
+                                            {isSelectionMode && selectedIds.size > 0 && (
+                                                <span>({selectedIds.size})</span>
+                                            )}
+                                        </button>
+
+                                        {/* Upload */}
+                                        <DragDropZone
+                                            onFileSelect={handleFileUpload}
+                                            accept="image/*"
+                                            maxSizeMB={10}
+                                            variant="compact"
+                                        >
+                                            <button className="flex items-center gap-1.5 h-9 px-3 rounded-md text-sm font-medium transition-all text-muted-foreground hover:text-foreground hover:bg-secondary">
+                                                <Upload className="w-4 h-4" />
+                                                {t('common.upload', 'Upload')}
+                                            </button>
+                                        </DragDropZone>
+                                    </div>
+                                </div>
+
+                                {/* Category Filter Chips */}
+                                <div className="mb-4 flex flex-wrap gap-2">
+                                    <button
+                                        onClick={() => setCategoryFilter('all')}
+                                        className={`flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors ${categoryFilter === 'all'
+                                            ? 'bg-primary/10 text-primary border-primary/30'
+                                            : 'bg-secondary/50 text-muted-foreground border-border hover:border-primary/30'
+                                            }`}
+                                    >
+                                        <FolderOpen size={12} />
+                                        {t('common.all', 'All')} ({adminAssets.length})
+                                    </button>
+                                    {Object.entries(CATEGORY_CONFIG).map(([key, config]) => {
+                                        const count = categoryStats[key as AdminAssetCategory];
+                                        if (count === 0) return null;
+                                        return (
+                                            <button
+                                                key={key}
+                                                onClick={() => setCategoryFilter(key as AdminAssetCategory)}
+                                                className={`flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors ${categoryFilter === key
+                                                    ? config.color
+                                                    : 'bg-secondary/50 text-muted-foreground border-border hover:border-primary/30'
+                                                    }`}
+                                            >
+                                                {config.icon}
+                                                {config.label} ({count})
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+
+                                {/* Filters Panel */}
+                                {showFilters && (
+                                    <div className="mb-4 p-4 bg-secondary/50 rounded-lg border border-border animate-fade-in-up">
+                                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                            <div>
+                                                <label className="block text-xs font-bold text-muted-foreground mb-2 uppercase">{t('adminAssets.sortBy', 'Sort By')}</label>
+                                                <select
+                                                    value={sortBy}
+                                                    onChange={(e) => setSortBy(e.target.value as any)}
+                                                    className="w-full px-3 py-1.5 text-xs bg-background border border-border rounded-lg focus:ring-1 focus:ring-primary focus:outline-none"
+                                                >
+                                                    <option value="date">{t('adminAssets.date', 'Date')}</option>
+                                                    <option value="name">{t('adminAssets.name', 'Name')}</option>
+                                                    <option value="size">{t('adminAssets.size', 'Size')}</option>
+                                                    <option value="category">{t('adminAssets.categoryLabel', 'Category')}</option>
+                                                </select>
+                                            </div>
+
+                                            <div>
+                                                <label className="block text-xs font-bold text-muted-foreground mb-2 uppercase">{t('adminAssets.order', 'Order')}</label>
+                                                <button
+                                                    onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+                                                    className="w-full flex items-center justify-between px-3 py-1.5 text-xs bg-background border border-border rounded-lg hover:bg-secondary transition-colors"
+                                                >
+                                                    <span>{sortOrder === 'asc' ? t('adminAssets.ascending', 'Ascending') : t('adminAssets.descending', 'Descending')}</span>
+                                                    <ArrowUpDown size={14} />
+                                                </button>
+                                            </div>
+
+                                            <div>
+                                                <label className="block text-xs font-bold text-muted-foreground mb-2 uppercase">{t('adminAssets.uploadTo', 'Upload to')}</label>
+                                                <select
+                                                    value={selectedCategory}
+                                                    onChange={(e) => setSelectedCategory(e.target.value as AdminAssetCategory)}
+                                                    className="w-full px-3 py-1.5 text-xs bg-background border border-border rounded-lg focus:ring-1 focus:ring-primary focus:outline-none"
+                                                >
+                                                    {Object.entries(CATEGORY_CONFIG).map(([key, { label }]) => (
+                                                        <option key={key} value={key}>{label}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
                                 )}
+
+                                {/* Bulk Actions */}
+                                {isSelectionMode && selectedIds.size > 0 && (
+                                    <div className="mb-4 p-3 bg-primary/10 rounded-lg border border-primary/30 flex items-center justify-between animate-fade-in-up">
+                                        <span className="text-sm font-medium">{selectedIds.size} {t('adminAssets.selected', 'selected')}</span>
+                                        <div className="flex gap-2">
+                                            <button
+                                                onClick={selectAll}
+                                                className="px-3 py-1.5 text-xs font-bold bg-primary/20 hover:bg-primary/30 rounded-lg transition-colors"
+                                            >
+                                                {t('adminAssets.selectAll', 'Select All')}
+                                            </button>
+                                            <button
+                                                onClick={handleBulkDelete}
+                                                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold bg-red-500 text-white hover:bg-red-600 rounded-lg transition-colors"
+                                            >
+                                                <Trash2 size={14} /> {t('common.delete', 'Delete')}
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Assets Grid - Grouped by Category */}
+                                <div className="max-h-[600px] overflow-y-auto custom-scrollbar pr-1">
+                                    {isAdminAssetsLoading ? (
+                                        <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
+                                            <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin mb-2"></div>
+                                            <span className="text-xs">{t('common.loading', 'Loading...')}</span>
+                                        </div>
+                                    ) : Object.keys(assetsByCategory).length > 0 ? (
+                                        <div className="space-y-6">
+                                            {Object.entries(assetsByCategory).map(([categoryKey, categoryAssets]) => {
+                                                if (categoryAssets.length === 0) return null;
+                                                const config = CATEGORY_CONFIG[categoryKey as AdminAssetCategory];
+
+                                                return (
+                                                    <div key={categoryKey} className="space-y-3">
+                                                        {/* Category Header */}
+                                                        <div className="flex items-center gap-2 pb-2 border-b border-border/50">
+                                                            <span className={`inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full border ${config.color}`}>
+                                                                {config.icon}
+                                                                {config.label}
+                                                            </span>
+                                                            <span className="text-xs text-muted-foreground">
+                                                                {categoryAssets.length} {categoryAssets.length === 1 ? 'asset' : 'assets'}
+                                                            </span>
+                                                        </div>
+
+                                                        {/* Category Assets Grid */}
+                                                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+                                                            {categoryAssets.map(asset => (
+                                                                <div key={asset.id} className="h-full">
+                                                                    <AssetItem
+                                                                        asset={asset}
+                                                                        onPreview={setPreviewAsset}
+                                                                        isSelected={selectedIds.has(asset.id)}
+                                                                        onToggleSelect={() => toggleSelection(asset.id)}
+                                                                        isSelectionMode={isSelectionMode}
+                                                                        onCopyUrl={handleCopyUrl}
+                                                                    />
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    ) : (
+                                        <div className="text-center py-8 px-4 border-2 border-dashed border-border rounded-xl bg-secondary/20">
+                                            <ImageIcon size={32} className="mx-auto mb-2 text-muted-foreground opacity-50" />
+                                            <p className="text-sm font-medium text-foreground mb-1">
+                                                {searchQuery || categoryFilter !== 'all'
+                                                    ? t('adminAssets.noResults', 'No assets found')
+                                                    : t('adminAssets.empty', 'No assets yet')}
+                                            </p>
+                                            <p className="text-xs text-muted-foreground">
+                                                {searchQuery || categoryFilter !== 'all'
+                                                    ? t('adminAssets.tryFilters', 'Try adjusting your filters')
+                                                    : t('adminAssets.startUploading', 'Generate your first image above to get started')}
+                                            </p>
+                                            {(searchQuery || categoryFilter !== 'all') && (
+                                                <button
+                                                    onClick={() => { setSearchQuery(''); setCategoryFilter('all'); }}
+                                                    className="mt-3 text-sm text-primary hover:underline"
+                                                >
+                                                    {t('adminAssets.clearFilters', 'Clear filters')}
+                                                </button>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         </div>
                     </div>
                 </main>
-            </div>
+            </div >
 
             <ConfirmationModal
                 isOpen={showBulkDeleteModal}
@@ -1253,7 +1259,7 @@ const AdminAssetLibrary: React.FC<AdminAssetLibraryProps> = ({ onBack }) => {
                 message={t('adminAssets.bulkDeleteConfirm', { count: selectedIds.size })}
                 variant="danger"
             />
-        </div>
+        </div >
     );
 };
 

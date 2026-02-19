@@ -259,6 +259,30 @@ const gridColsClasses: Record<number, string> = {
   4: 'lg:grid-cols-4',
 };
 
+// Static background particles — no animation, purely decorative
+const STATIC_PARTICLES = [
+  { left: '5%', top: '8%', size: 3 },
+  { left: '12%', top: '22%', size: 2 },
+  { left: '18%', top: '65%', size: 4 },
+  { left: '24%', top: '38%', size: 2 },
+  { left: '30%', top: '82%', size: 3 },
+  { left: '37%', top: '12%', size: 2 },
+  { left: '42%', top: '55%', size: 3 },
+  { left: '48%', top: '30%', size: 2 },
+  { left: '55%', top: '72%', size: 4 },
+  { left: '60%', top: '18%', size: 2 },
+  { left: '66%', top: '48%', size: 3 },
+  { left: '72%', top: '85%', size: 2 },
+  { left: '78%', top: '25%', size: 3 },
+  { left: '83%', top: '60%', size: 2 },
+  { left: '88%', top: '10%', size: 4 },
+  { left: '92%', top: '42%', size: 2 },
+  { left: '8%', top: '90%', size: 3 },
+  { left: '50%', top: '92%', size: 2 },
+  { left: '95%', top: '75%', size: 3 },
+  { left: '15%', top: '50%', size: 2 },
+];
+
 const Portfolio: React.FC<PortfolioProps> = ({
   title,
   description,
@@ -279,6 +303,8 @@ const Portfolio: React.FC<PortfolioProps> = ({
   cornerGradient,
   onNavigate
 }) => {
+  // Derive particle color from heading color or fallback
+  const particleColor = colors?.heading || colors?.accent || 'rgba(255,255,255,0.5)';
   // --- RENDERIZADO IMAGE OVERLAY ---
   if (portfolioVariant === 'image-overlay') {
     return (
@@ -288,6 +314,13 @@ const Portfolio: React.FC<PortfolioProps> = ({
         style={{ backgroundColor: colors?.background }}
       >
         <CornerGradient config={cornerGradient} />
+        {/* Static background particles */}
+        {STATIC_PARTICLES.map((p, i) => (
+          <div key={`sp-${i}`} className="absolute rounded-full pointer-events-none" style={{
+            left: p.left, top: p.top, width: `${p.size}px`, height: `${p.size}px`,
+            backgroundColor: particleColor, opacity: 0.18, zIndex: 1,
+          }} />
+        ))}
         {/* Optional Section Header */}
         {showSectionHeader && (title || description) && (
           <div className={`container mx-auto text-center max-w-3xl ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]} pb-8`}>
@@ -343,6 +376,13 @@ const Portfolio: React.FC<PortfolioProps> = ({
   return (
     <section id="portfolio" className="w-full relative overflow-hidden" style={{ backgroundColor: colors?.background }}>
       <CornerGradient config={cornerGradient} />
+      {/* Static background particles */}
+      {STATIC_PARTICLES.map((p, i) => (
+        <div key={`sp-${i}`} className="absolute rounded-full pointer-events-none" style={{
+          left: p.left, top: p.top, width: `${p.size}px`, height: `${p.size}px`,
+          backgroundColor: particleColor, opacity: 0.18, zIndex: 1,
+        }} />
+      ))}
       <div className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]} relative z-10`}>
         <div className="text-center max-w-3xl mx-auto mb-16">
           <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold text-site-heading mb-4 font-header`} style={{ color: colors?.heading, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>{title}</h2>

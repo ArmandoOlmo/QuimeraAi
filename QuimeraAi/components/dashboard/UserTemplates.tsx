@@ -4,6 +4,7 @@ import { useProject } from '../../contexts/project';
 import { useRouter } from '../../hooks/useRouter';
 import { ROUTES } from '../../routes/config';
 import DashboardSidebar from './DashboardSidebar';
+import DashboardWaveRibbons from './DashboardWaveRibbons';
 import {
     LayoutTemplate,
     Menu,
@@ -130,7 +131,8 @@ const UserTemplates: React.FC = () => {
         <div className="flex h-screen bg-background text-foreground">
             <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
 
-            <div className="flex-1 flex flex-col overflow-hidden">
+            <div className="flex-1 flex flex-col overflow-hidden relative">
+                <DashboardWaveRibbons />
                 {/* Header */}
                 <header className="h-14 px-2 sm:px-6 border-b border-border flex items-center justify-between bg-background z-20 sticky top-0">
                     <div className="flex items-center gap-1 sm:gap-4 flex-shrink-0">
