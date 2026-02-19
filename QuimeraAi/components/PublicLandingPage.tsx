@@ -350,16 +350,22 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
   // Handle navigation item click
   const handleNavItemClick = (item: AppNavItem) => {
     if (item.type === 'anchor') {
-      // Scroll to anchor
-      const element = document.querySelector(item.href);
+      // Scroll to anchor — try both #hash and #section-hash selectors
+      const href = item.href; // e.g. "#features"
+      const anchorId = href.startsWith('#') ? href.slice(1) : href;
+      const element =
+        document.getElementById(`section-${anchorId}`) ||
+        document.getElementById(anchorId) ||
+        document.querySelector(href);
       element?.scrollIntoView({ behavior: 'smooth' });
     } else if (item.type === 'article' && item.articleSlug && onNavigateToArticle) {
       onNavigateToArticle(item.articleSlug);
     } else if (item.href === '/blog' && onNavigateToBlog) {
       onNavigateToBlog();
     } else if (item.href.startsWith('/')) {
-      // Internal link - could be handled by router
-      window.location.href = item.href;
+      // Internal link — use SPA navigation (History API) instead of full page reload
+      window.history.pushState(null, '', item.href);
+      window.dispatchEvent(new PopStateEvent('popstate'));
     } else if (item.href.startsWith('http')) {
       // External link
       window.open(item.href, item.target || '_blank');
