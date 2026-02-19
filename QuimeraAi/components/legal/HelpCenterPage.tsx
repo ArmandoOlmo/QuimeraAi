@@ -6,7 +6,7 @@
  * Conectado con el sistema de artículos de AppContent
  */
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Search,
@@ -92,6 +92,25 @@ const HelpCenterPage: React.FC = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
+  // Unlock overflow so this standalone public page can scroll
+  useEffect(() => {
+    const html = document.documentElement;
+    const body = document.body;
+    const root = document.getElementById('root');
+    html.style.overflow = 'auto';
+    html.style.height = 'auto';
+    body.style.overflow = 'auto';
+    body.style.height = 'auto';
+    if (root) { root.style.overflow = 'visible'; root.style.height = 'auto'; }
+    return () => {
+      html.style.overflow = '';
+      html.style.height = '';
+      body.style.overflow = '';
+      body.style.height = '';
+      if (root) { root.style.overflow = ''; root.style.height = ''; }
+    };
+  }, []);
+
   // Get dynamic content from AppContent context
   const appContent = useSafeAppContent();
   const navigation = appContent?.navigation || DEFAULT_APP_NAVIGATION;
@@ -100,8 +119,8 @@ const HelpCenterPage: React.FC = () => {
   const helpArticles = useMemo(() => {
     if (!appContent?.articles) return [];
     return appContent.articles.filter(
-      article => article.status === 'published' && 
-      ['help', 'guide', 'tutorial'].includes(article.category)
+      article => article.status === 'published' &&
+        ['help', 'guide', 'tutorial'].includes(article.category)
     );
   }, [appContent?.articles]);
 
@@ -118,7 +137,7 @@ const HelpCenterPage: React.FC = () => {
   const filteredByCategory = useMemo(() => {
     if (!selectedCategory) return [];
     const tags = HELP_CATEGORY_TAGS[selectedCategory] || [];
-    return helpArticles.filter(article => 
+    return helpArticles.filter(article =>
       article.tags?.some(tag => tags.includes(tag.toLowerCase()))
     );
   }, [helpArticles, selectedCategory]);
@@ -132,25 +151,29 @@ const HelpCenterPage: React.FC = () => {
       .slice(0, 6);
   }, [helpArticles]);
 
+  // SPA navigation helper
+  const navigateTo = (path: string) => {
+    window.history.pushState(null, '', path);
+    window.dispatchEvent(new PopStateEvent('popstate'));
+  };
+
   // Handle navigation item click
   const handleNavItemClick = (item: AppNavItem) => {
     setIsMobileMenuOpen(false);
     if (item.type === 'anchor') {
-      window.location.href = '/' + item.href;
+      // Go to landing page and scroll to section
+      navigateTo('/');
+    } else if (item.href === '/blog') {
+      navigateTo('/blog');
     } else if (item.href.startsWith('/')) {
-      window.location.href = item.href;
+      navigateTo(item.href);
     } else if (item.href.startsWith('http')) {
       window.open(item.href, item.target || '_blank');
     }
   };
 
-  const handleNavigateToLogin = () => {
-    window.location.href = '/login';
-  };
-
-  const handleNavigateToRegister = () => {
-    window.location.href = '/register';
-  };
+  const handleNavigateToLogin = () => navigateTo('/login');
+  const handleNavigateToRegister = () => navigateTo('/register');
 
   // Navegar a artículo
   const handleArticleClick = (article: AppArticle) => {
@@ -230,7 +253,7 @@ const HelpCenterPage: React.FC = () => {
   const filteredCategories = useMemo(() => {
     if (!searchQuery.trim()) return categories;
     const query = searchQuery.toLowerCase();
-    return categories.filter(cat => 
+    return categories.filter(cat =>
       t(cat.titleKey).toLowerCase().includes(query) ||
       t(cat.descriptionKey).toLowerCase().includes(query)
     );
@@ -264,8 +287,8 @@ const HelpCenterPage: React.FC = () => {
       className="group flex items-start gap-4 p-5 bg-white/5 hover:bg-white/10 border border-white/5 hover:border-yellow-400/20 rounded-xl transition-all text-left w-full"
     >
       {article.featuredImage ? (
-        <img 
-          src={article.featuredImage} 
+        <img
+          src={article.featuredImage}
           alt={article.title}
           className="w-16 h-16 rounded-lg object-cover flex-shrink-0"
         />
@@ -313,10 +336,10 @@ const HelpCenterPage: React.FC = () => {
           <div className="flex items-center justify-between">
             {/* Logo */}
             <a href="/" className="flex items-center gap-2 sm:gap-3">
-              <img 
-                src={navigation.header.logo?.imageUrl || QUIMERA_LOGO} 
-                alt={navigation.header.logo?.text || "Quimera.ai"} 
-                className="w-8 h-8 sm:w-10 sm:h-10" 
+              <img
+                src={navigation.header.logo?.imageUrl || QUIMERA_LOGO}
+                alt={navigation.header.logo?.text || "Quimera.ai"}
+                className="w-8 h-8 sm:w-10 sm:h-10"
               />
               <span className="text-lg sm:text-xl font-bold text-white">
                 {navigation.header.logo?.text?.split('.')[0] || 'Quimera'}
@@ -343,13 +366,13 @@ const HelpCenterPage: React.FC = () => {
             {/* CTA Buttons - Desktop */}
             <div className="hidden md:flex items-center gap-4">
               <LanguageSelector variant="minimal" />
-              <button 
+              <button
                 onClick={handleNavigateToLogin}
                 className="text-sm text-gray-300 hover:text-white transition-colors"
               >
                 {navigation.header.cta?.loginText || t('landing.login')}
               </button>
-              <button 
+              <button
                 onClick={handleNavigateToRegister}
                 className="px-5 py-2.5 bg-yellow-400 text-black font-semibold rounded-xl hover:bg-yellow-300 transition-colors"
               >
@@ -388,7 +411,7 @@ const HelpCenterPage: React.FC = () => {
                 ))}
               </nav>
               <div className="flex flex-col gap-3">
-                <button 
+                <button
                   onClick={() => {
                     setIsMobileMenuOpen(false);
                     handleNavigateToLogin();
@@ -397,7 +420,7 @@ const HelpCenterPage: React.FC = () => {
                 >
                   {navigation.header.cta?.loginText || t('landing.login')}
                 </button>
-                <button 
+                <button
                   onClick={() => {
                     setIsMobileMenuOpen(false);
                     handleNavigateToRegister();
@@ -419,7 +442,7 @@ const HelpCenterPage: React.FC = () => {
             <Sparkles className="text-yellow-400" size={16} />
             <span className="text-yellow-300 text-sm font-medium">{t('helpCenter.hero.badge')}</span>
           </div>
-          
+
           <h1 className="text-4xl md:text-6xl font-bold text-white mb-6 tracking-tight">
             {t('helpCenter.hero.title')}
           </h1>
@@ -469,35 +492,31 @@ const HelpCenterPage: React.FC = () => {
       <section className="relative px-6 pb-12">
         <div className="max-w-7xl mx-auto">
           <h2 className="text-2xl font-bold text-white mb-8">{t('helpCenter.sections.categories')}</h2>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {filteredCategories.map((category) => {
               const IconComponent = ICON_MAP[category.icon] || BookOpen;
               const articleCount = getArticleCountForCategory(category.id);
               const isSelected = selectedCategory === category.id;
-              
+
               return (
                 <button
                   key={category.id}
                   onClick={() => handleCategoryClick(category.id)}
-                  className={`group relative p-6 text-left bg-white/5 hover:bg-white/10 border rounded-2xl transition-all duration-300 ${
-                    isSelected 
-                      ? 'border-yellow-400/50 bg-yellow-400/10' 
+                  className={`group relative p-6 text-left bg-white/5 hover:bg-white/10 border rounded-2xl transition-all duration-300 ${isSelected
+                      ? 'border-yellow-400/50 bg-yellow-400/10'
                       : 'border-white/5 hover:border-yellow-400/30'
-                  }`}
+                    }`}
                 >
-                  <div className={`absolute inset-0 bg-gradient-to-br from-yellow-400/5 to-transparent rounded-2xl transition-opacity ${
-                    isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
-                  }`} />
+                  <div className={`absolute inset-0 bg-gradient-to-br from-yellow-400/5 to-transparent rounded-2xl transition-opacity ${isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+                    }`} />
                   <div className="relative">
-                    <div className={`w-12 h-12 bg-gradient-to-br from-yellow-400/20 to-amber-500/20 rounded-xl flex items-center justify-center mb-4 transition-transform ${
-                      isSelected ? 'scale-110' : 'group-hover:scale-110'
-                    }`}>
+                    <div className={`w-12 h-12 bg-gradient-to-br from-yellow-400/20 to-amber-500/20 rounded-xl flex items-center justify-center mb-4 transition-transform ${isSelected ? 'scale-110' : 'group-hover:scale-110'
+                      }`}>
                       <IconComponent className="text-yellow-400" size={24} />
                     </div>
-                    <h3 className={`text-lg font-semibold mb-2 transition-colors ${
-                      isSelected ? 'text-yellow-400' : 'text-white group-hover:text-yellow-400'
-                    }`}>
+                    <h3 className={`text-lg font-semibold mb-2 transition-colors ${isSelected ? 'text-yellow-400' : 'text-white group-hover:text-yellow-400'
+                      }`}>
                       {t(category.titleKey)}
                     </h3>
                     <p className="text-sm text-gray-400 mb-3">
@@ -508,11 +527,10 @@ const HelpCenterPage: React.FC = () => {
                       <span>{articleCount} {t('helpCenter.articles.label')}</span>
                     </div>
                   </div>
-                  <ChevronRight className={`absolute right-4 top-1/2 -translate-y-1/2 transition-all ${
-                    isSelected 
-                      ? 'text-yellow-400 translate-x-1' 
+                  <ChevronRight className={`absolute right-4 top-1/2 -translate-y-1/2 transition-all ${isSelected
+                      ? 'text-yellow-400 translate-x-1'
                       : 'text-gray-600 group-hover:text-yellow-400 group-hover:translate-x-1'
-                  }`} size={20} />
+                    }`} size={20} />
                 </button>
               );
             })}
@@ -541,7 +559,7 @@ const HelpCenterPage: React.FC = () => {
                   {t('common.clear')} <X size={14} />
                 </button>
               </div>
-              
+
               {filteredByCategory.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {filteredByCategory.map((article) => (
@@ -598,34 +616,30 @@ const HelpCenterPage: React.FC = () => {
             {filteredFaqs.map((faq, index) => (
               <div
                 key={faq.id}
-                className={`bg-white/5 border rounded-xl overflow-hidden transition-all duration-300 ${
-                  openFaqIndex === index 
-                    ? 'border-yellow-400/30 shadow-lg shadow-yellow-400/5' 
+                className={`bg-white/5 border rounded-xl overflow-hidden transition-all duration-300 ${openFaqIndex === index
+                    ? 'border-yellow-400/30 shadow-lg shadow-yellow-400/5'
                     : 'border-white/5 hover:border-white/10'
-                }`}
+                  }`}
               >
                 <button
                   onClick={() => setOpenFaqIndex(openFaqIndex === index ? null : index)}
                   className="w-full flex items-center justify-between p-5 text-left"
                 >
-                  <h3 className={`font-medium transition-colors ${
-                    openFaqIndex === index ? 'text-yellow-400' : 'text-white'
-                  }`}>
+                  <h3 className={`font-medium transition-colors ${openFaqIndex === index ? 'text-yellow-400' : 'text-white'
+                    }`}>
                     {t(faq.questionKey)}
                   </h3>
-                  <ChevronDown 
-                    className={`text-gray-400 transition-transform duration-300 ${
-                      openFaqIndex === index ? 'rotate-180 text-yellow-400' : ''
-                    }`} 
-                    size={20} 
+                  <ChevronDown
+                    className={`text-gray-400 transition-transform duration-300 ${openFaqIndex === index ? 'rotate-180 text-yellow-400' : ''
+                      }`}
+                    size={20}
                   />
                 </button>
                 <div
-                  className={`grid transition-all duration-300 ease-in-out ${
-                    openFaqIndex === index 
-                      ? 'grid-rows-[1fr] opacity-100' 
+                  className={`grid transition-all duration-300 ease-in-out ${openFaqIndex === index
+                      ? 'grid-rows-[1fr] opacity-100'
                       : 'grid-rows-[0fr] opacity-0'
-                  }`}
+                    }`}
                 >
                   <div className="overflow-hidden">
                     <p className="px-5 pb-5 text-gray-400 leading-relaxed border-t border-white/5 pt-4">
@@ -644,12 +658,12 @@ const HelpCenterPage: React.FC = () => {
         <div className="max-w-4xl mx-auto">
           <div className="relative p-8 md:p-12 bg-gradient-to-br from-yellow-400/10 to-amber-500/5 border border-yellow-400/20 rounded-3xl overflow-hidden">
             <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4wMyI+PGNpcmNsZSBjeD0iMzAiIGN5PSIzMCIgcj0iMiIvPjwvZz48L2c+PC9zdmc+')] opacity-50" />
-            
+
             <div className="relative text-center">
               <div className="inline-flex items-center justify-center w-16 h-16 bg-yellow-400 rounded-2xl mb-6 shadow-lg shadow-yellow-400/30">
                 <MessageCircle className="text-black" size={32} />
               </div>
-              
+
               <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">
                 {t('helpCenter.contact.title')}
               </h2>
