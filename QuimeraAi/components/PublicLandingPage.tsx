@@ -472,6 +472,19 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
               className={`min-h-screen flex flex-col justify-center pt-16 sm:pt-20 px-4 sm:px-6 relative overflow-hidden ${heroAlignmentClasses}`}
               style={sectionStyle}
             >
+              {/* Spline 3D Background — hidden on mobile for performance */}
+              <div className="absolute inset-0 z-0 pointer-events-none">
+                <iframe
+                  src="https://my.spline.design/3dcircularcardscopycopy-tMuyANXaSuBNw4x2vTKIQwlu-PuH/"
+                  frameBorder="0"
+                  width="100%"
+                  height="100%"
+                  style={{ border: 'none', opacity: 0.1 }}
+                  title="3D Background Animation"
+                  loading="lazy"
+                  allow="autoplay"
+                />
+              </div>
               {overlayComponent}
               <div className={`w-full max-w-7xl mx-auto relative z-10 ${heroLayout === 'split' ? 'grid grid-cols-1 lg:grid-cols-2 gap-12 items-center' : ''}`}>
                 <div className={`${heroLayout === 'centered' ? 'mx-auto max-w-4xl' : heroLayout === 'left' ? 'mr-auto max-w-4xl' : heroLayout === 'right' ? 'ml-auto max-w-4xl' : ''}`}>
