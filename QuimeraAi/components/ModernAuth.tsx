@@ -403,6 +403,130 @@ const ModernAuth: React.FC<ModernAuthProps> = ({ onVerificationEmailSent, initia
                 <div className="absolute -bottom-32 -left-32 w-96 h-96 bg-yellow-500/10 rounded-full blur-3xl"></div>
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-purple-600/20 rounded-full blur-[100px]"></div>
 
+                {/* Top Violet Wave Ribbons */}
+                <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+                    <svg
+                        className="absolute"
+                        style={{ width: '300%', height: '45%', left: '-100%', top: '0' }}
+                        viewBox="0 0 3000 500"
+                        preserveAspectRatio="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                    >
+                        <defs>
+                            <linearGradient id="violetMain" x1="0%" y1="0%" x2="100%" y2="0%">
+                                <stop offset="0%" stopColor="rgba(80,30,120,0)" />
+                                <stop offset="10%" stopColor="rgba(120,50,180,0.3)" />
+                                <stop offset="30%" stopColor="rgba(147,51,234,0.7)" />
+                                <stop offset="50%" stopColor="rgba(168,85,247,1)" />
+                                <stop offset="70%" stopColor="rgba(147,51,234,0.7)" />
+                                <stop offset="90%" stopColor="rgba(120,50,180,0.3)" />
+                                <stop offset="100%" stopColor="rgba(80,30,120,0)" />
+                            </linearGradient>
+                            <linearGradient id="violetShadow" x1="0%" y1="0%" x2="100%" y2="0%">
+                                <stop offset="0%" stopColor="rgba(40,15,60,0)" />
+                                <stop offset="20%" stopColor="rgba(60,20,100,0.4)" />
+                                <stop offset="50%" stopColor="rgba(88,28,135,0.6)" />
+                                <stop offset="80%" stopColor="rgba(60,20,100,0.4)" />
+                                <stop offset="100%" stopColor="rgba(40,15,60,0)" />
+                            </linearGradient>
+                            <linearGradient id="violetHighlight" x1="0%" y1="0%" x2="100%" y2="0%">
+                                <stop offset="0%" stopColor="rgba(200,170,255,0)" />
+                                <stop offset="25%" stopColor="rgba(216,180,254,0.2)" />
+                                <stop offset="50%" stopColor="rgba(233,213,255,0.6)" />
+                                <stop offset="75%" stopColor="rgba(216,180,254,0.2)" />
+                                <stop offset="100%" stopColor="rgba(200,170,255,0)" />
+                            </linearGradient>
+                            <filter id="violetGlow">
+                                <feGaussianBlur stdDeviation="12" result="blur" />
+                                <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+                            </filter>
+                            <filter id="violetDeep"><feGaussianBlur stdDeviation="20" /></filter>
+                            <filter id="violetSpec">
+                                <feGaussianBlur stdDeviation="4" result="blur" />
+                                <feMerge><feMergeNode in="blur" /><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+                            </filter>
+                        </defs>
+                        <path d="M-200,120 C200,-30 500,180 900,-20 C1300,-80 1600,140 2000,-40 C2400,-100 2700,120 3200,0"
+                            fill="none" stroke="url(#violetShadow)" strokeWidth="120" strokeLinecap="round"
+                            filter="url(#violetDeep)" opacity="0.6"
+                            style={{ animation: 'violetFlow1 20s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite' }} />
+                        <path d="M-200,80 C200,-50 500,150 900,-30 C1300,-100 1600,110 2000,-50 C2400,-120 2700,90 3200,-10"
+                            fill="none" stroke="url(#violetMain)" strokeWidth="80" strokeLinecap="round"
+                            filter="url(#violetGlow)"
+                            style={{ animation: 'violetFlow1 20s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite' }} />
+                        <path d="M-200,70 C200,-55 500,140 900,-35 C1300,-105 1600,100 2000,-55 C2400,-125 2700,80 3200,-15"
+                            fill="none" stroke="url(#violetHighlight)" strokeWidth="22" strokeLinecap="round"
+                            filter="url(#violetSpec)"
+                            style={{ animation: 'violetFlow1 20s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite' }} />
+                        <path d="M-200,30 C250,110 550,-40 850,60 C1150,160 1450,-30 1750,50 C2050,140 2350,-50 2650,40 C2950,120 3100,-20 3200,30"
+                            fill="none" stroke="url(#violetHighlight)" strokeWidth="10" strokeLinecap="round"
+                            filter="url(#violetSpec)" opacity="0.7"
+                            style={{ animation: 'violetFlow2 26s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite reverse' }} />
+                    </svg>
+                </div>
+
+                {/* Bottom Violet Wave Ribbons */}
+                <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+                    <svg
+                        className="absolute"
+                        style={{ width: '300%', height: '45%', left: '-100%', bottom: '0' }}
+                        viewBox="0 0 3000 500"
+                        preserveAspectRatio="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                    >
+                        <defs>
+                            <linearGradient id="violetBotMain" x1="0%" y1="0%" x2="100%" y2="0%">
+                                <stop offset="0%" stopColor="rgba(80,30,120,0)" />
+                                <stop offset="10%" stopColor="rgba(120,50,180,0.3)" />
+                                <stop offset="30%" stopColor="rgba(147,51,234,0.7)" />
+                                <stop offset="50%" stopColor="rgba(168,85,247,1)" />
+                                <stop offset="70%" stopColor="rgba(147,51,234,0.7)" />
+                                <stop offset="90%" stopColor="rgba(120,50,180,0.3)" />
+                                <stop offset="100%" stopColor="rgba(80,30,120,0)" />
+                            </linearGradient>
+                            <linearGradient id="violetBotShadow" x1="0%" y1="0%" x2="100%" y2="0%">
+                                <stop offset="0%" stopColor="rgba(40,15,60,0)" />
+                                <stop offset="20%" stopColor="rgba(60,20,100,0.4)" />
+                                <stop offset="50%" stopColor="rgba(88,28,135,0.6)" />
+                                <stop offset="80%" stopColor="rgba(60,20,100,0.4)" />
+                                <stop offset="100%" stopColor="rgba(40,15,60,0)" />
+                            </linearGradient>
+                            <linearGradient id="violetBotHighlight" x1="0%" y1="0%" x2="100%" y2="0%">
+                                <stop offset="0%" stopColor="rgba(200,170,255,0)" />
+                                <stop offset="25%" stopColor="rgba(216,180,254,0.2)" />
+                                <stop offset="50%" stopColor="rgba(233,213,255,0.6)" />
+                                <stop offset="75%" stopColor="rgba(216,180,254,0.2)" />
+                                <stop offset="100%" stopColor="rgba(200,170,255,0)" />
+                            </linearGradient>
+                            <filter id="violetBotGlow">
+                                <feGaussianBlur stdDeviation="12" result="blur" />
+                                <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+                            </filter>
+                            <filter id="violetBotDeep"><feGaussianBlur stdDeviation="20" /></filter>
+                            <filter id="violetBotSpec">
+                                <feGaussianBlur stdDeviation="4" result="blur" />
+                                <feMerge><feMergeNode in="blur" /><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+                            </filter>
+                        </defs>
+                        <path d="M-200,400 C200,530 500,350 900,520 C1300,580 1600,380 2000,540 C2400,600 2700,400 3200,520"
+                            fill="none" stroke="url(#violetBotShadow)" strokeWidth="120" strokeLinecap="round"
+                            filter="url(#violetBotDeep)" opacity="0.6"
+                            style={{ animation: 'violetFlow1 24s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite' }} />
+                        <path d="M-200,430 C200,550 500,380 900,530 C1300,600 1600,400 2000,560 C2400,620 2700,420 3200,540"
+                            fill="none" stroke="url(#violetBotMain)" strokeWidth="80" strokeLinecap="round"
+                            filter="url(#violetBotGlow)"
+                            style={{ animation: 'violetFlow1 24s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite' }} />
+                        <path d="M-200,435 C200,555 500,385 900,535 C1300,605 1600,405 2000,565 C2400,625 2700,425 3200,545"
+                            fill="none" stroke="url(#violetBotHighlight)" strokeWidth="22" strokeLinecap="round"
+                            filter="url(#violetBotSpec)"
+                            style={{ animation: 'violetFlow1 24s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite' }} />
+                        <path d="M-200,470 C250,420 550,530 850,460 C1150,400 1450,520 1750,470 C2050,410 2350,540 2650,480 C2950,420 3100,510 3200,470"
+                            fill="none" stroke="url(#violetBotHighlight)" strokeWidth="10" strokeLinecap="round"
+                            filter="url(#violetBotSpec)" opacity="0.7"
+                            style={{ animation: 'violetFlow2 28s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite reverse' }} />
+                    </svg>
+                </div>
+
                 {/* Action Button - Top Right */}
                 <div className="absolute top-6 right-6 z-20">
                     <button
@@ -468,6 +592,29 @@ const ModernAuth: React.FC<ModernAuthProps> = ({ onVerificationEmailSent, initia
                         opacity: 1;
                         transform: translateY(0);
                     }
+                }
+                @keyframes violetFlow1 {
+                    0%   { transform: translateX(0%) translateY(0px); }
+                    10%  { transform: translateX(1.5%) translateY(-8px); }
+                    20%  { transform: translateX(3%) translateY(-14px); }
+                    30%  { transform: translateX(2%) translateY(-6px); }
+                    40%  { transform: translateX(-1%) translateY(6px); }
+                    50%  { transform: translateX(-2.5%) translateY(12px); }
+                    60%  { transform: translateX(-1.5%) translateY(8px); }
+                    70%  { transform: translateX(1%) translateY(-4px); }
+                    80%  { transform: translateX(2.5%) translateY(-10px); }
+                    90%  { transform: translateX(1%) translateY(-5px); }
+                    100% { transform: translateX(0%) translateY(0px); }
+                }
+                @keyframes violetFlow2 {
+                    0%   { transform: translateX(0%) translateY(0px); }
+                    15%  { transform: translateX(-2%) translateY(10px); }
+                    30%  { transform: translateX(-3.5%) translateY(16px); }
+                    45%  { transform: translateX(-1%) translateY(5px); }
+                    55%  { transform: translateX(1.5%) translateY(-6px); }
+                    70%  { transform: translateX(3%) translateY(-12px); }
+                    85%  { transform: translateX(1.5%) translateY(-5px); }
+                    100% { transform: translateX(0%) translateY(0px); }
                 }
             `}</style>
         </div>

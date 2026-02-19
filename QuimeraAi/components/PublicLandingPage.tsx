@@ -472,19 +472,443 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
               className={`min-h-screen flex flex-col justify-center pt-16 sm:pt-20 px-4 sm:px-6 relative overflow-hidden ${heroAlignmentClasses}`}
               style={sectionStyle}
             >
-              {/* Spline 3D Background — hidden on mobile for performance */}
-              <div className="absolute inset-0 z-0 pointer-events-none">
-                <iframe
-                  src="https://my.spline.design/3dcircularcardscopycopy-tMuyANXaSuBNw4x2vTKIQwlu-PuH/"
-                  frameBorder="0"
-                  width="100%"
-                  height="100%"
-                  style={{ border: 'none', opacity: 0.3 }}
-                  title="3D Background Animation"
-                  loading="lazy"
-                  allow="autoplay"
-                />
+              {/* Flowing Gold Liquid 3D Background */}
+              <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+                {/* Deep warm ambient glow layers */}
+                <div className="absolute inset-0" style={{
+                  background: 'radial-gradient(ellipse 120% 80% at 50% 55%, rgba(160, 120, 20, 0.12) 0%, rgba(120, 80, 10, 0.06) 40%, transparent 70%)',
+                }} />
+                <div className="absolute inset-0" style={{
+                  background: 'radial-gradient(ellipse 60% 40% at 30% 50%, rgba(200, 150, 30, 0.08) 0%, transparent 60%)',
+                }} />
+                <div className="absolute inset-0" style={{
+                  background: 'radial-gradient(ellipse 60% 40% at 70% 45%, rgba(180, 130, 20, 0.08) 0%, transparent 60%)',
+                }} />
+
+                {/* Pulsing ambient glow behind ribbons */}
+                <div className="absolute" style={{
+                  width: '60%', height: '40%', left: '20%', top: '10%',
+                  background: 'radial-gradient(ellipse, rgba(218,165,32,0.1) 0%, transparent 70%)',
+                  animation: 'heroPulse 8s ease-in-out infinite',
+                }} />
+
+                {/* Floating gold particles */}
+                {[
+                  { left: '10%', top: '15%', size: 4, dur: '14s', delay: '0s' },
+                  { left: '25%', top: '25%', size: 3, dur: '18s', delay: '2s' },
+                  { left: '45%', top: '10%', size: 5, dur: '16s', delay: '4s' },
+                  { left: '60%', top: '20%', size: 3, dur: '20s', delay: '1s' },
+                  { left: '75%', top: '30%', size: 4, dur: '15s', delay: '3s' },
+                  { left: '85%', top: '12%', size: 3, dur: '17s', delay: '5s' },
+                  { left: '35%', top: '35%', size: 2, dur: '22s', delay: '6s' },
+                  { left: '55%', top: '5%', size: 3, dur: '19s', delay: '7s' },
+                ].map((p, i) => (
+                  <div key={`particle-${i}`} className="absolute rounded-full" style={{
+                    left: p.left, top: p.top, width: `${p.size}px`, height: `${p.size}px`,
+                    background: 'radial-gradient(circle, rgba(255,220,80,0.8), rgba(218,165,32,0.3))',
+                    boxShadow: '0 0 8px rgba(218,165,32,0.4)',
+                    animation: `heroParticle ${p.dur} ease-in-out ${p.delay} infinite`,
+                  }} />
+                ))}
+
+                <style>{`
+                  @keyframes heroPulse {
+                    0%, 100% { opacity: 0.3; transform: scale(1); }
+                    50% { opacity: 0.6; transform: scale(1.08); }
+                  }
+                  @keyframes heroParticle {
+                    0%   { transform: translate(0, 0) scale(1); opacity: 0.3; }
+                    20%  { transform: translate(15px, -25px) scale(1.3); opacity: 0.7; }
+                    40%  { transform: translate(-10px, -40px) scale(0.8); opacity: 0.4; }
+                    60%  { transform: translate(20px, -15px) scale(1.1); opacity: 0.6; }
+                    80%  { transform: translate(-5px, -30px) scale(0.9); opacity: 0.3; }
+                    100% { transform: translate(0, 0) scale(1); opacity: 0.3; }
+                  }
+                `}</style>
+
+                {/* Main SVG wave system — extra wide to prevent edge clipping */}
+                <svg
+                  className="absolute top-0"
+                  style={{ width: '300%', height: '100%', left: '-100%' }}
+                  viewBox="0 0 3000 1000"
+                  preserveAspectRatio="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <defs>
+                    {/* Main gold metallic gradient */}
+                    <linearGradient id="gold3d1" x1="0%" y1="0%" x2="100%" y2="0%">
+                      <stop offset="0%" stopColor="rgba(120,80,10,0)" />
+                      <stop offset="10%" stopColor="rgba(160,110,20,0.3)" />
+                      <stop offset="30%" stopColor="rgba(218,165,32,0.7)" />
+                      <stop offset="45%" stopColor="rgba(255,210,60,0.9)" />
+                      <stop offset="55%" stopColor="rgba(255,220,80,1)" />
+                      <stop offset="70%" stopColor="rgba(218,165,32,0.7)" />
+                      <stop offset="90%" stopColor="rgba(160,110,20,0.3)" />
+                      <stop offset="100%" stopColor="rgba(120,80,10,0)" />
+                    </linearGradient>
+                    {/* Shadow/depth gradient */}
+                    <linearGradient id="gold3dShadow" x1="0%" y1="0%" x2="100%" y2="0%">
+                      <stop offset="0%" stopColor="rgba(80,50,5,0)" />
+                      <stop offset="15%" stopColor="rgba(100,60,10,0.4)" />
+                      <stop offset="40%" stopColor="rgba(140,90,15,0.6)" />
+                      <stop offset="60%" stopColor="rgba(140,90,15,0.6)" />
+                      <stop offset="85%" stopColor="rgba(100,60,10,0.4)" />
+                      <stop offset="100%" stopColor="rgba(80,50,5,0)" />
+                    </linearGradient>
+                    {/* Bright specular highlight */}
+                    <linearGradient id="gold3dHighlight" x1="0%" y1="0%" x2="100%" y2="0%">
+                      <stop offset="0%" stopColor="rgba(255,230,120,0)" />
+                      <stop offset="20%" stopColor="rgba(255,240,150,0.2)" />
+                      <stop offset="45%" stopColor="rgba(255,250,200,0.6)" />
+                      <stop offset="55%" stopColor="rgba(255,250,200,0.6)" />
+                      <stop offset="80%" stopColor="rgba(255,240,150,0.2)" />
+                      <stop offset="100%" stopColor="rgba(255,230,120,0)" />
+                    </linearGradient>
+                    {/* Secondary warm ribbon */}
+                    <linearGradient id="gold3d2" x1="0%" y1="0%" x2="100%" y2="0%">
+                      <stop offset="0%" stopColor="rgba(140,90,10,0)" />
+                      <stop offset="15%" stopColor="rgba(180,120,20,0.35)" />
+                      <stop offset="40%" stopColor="rgba(210,155,35,0.6)" />
+                      <stop offset="60%" stopColor="rgba(210,155,35,0.6)" />
+                      <stop offset="85%" stopColor="rgba(180,120,20,0.35)" />
+                      <stop offset="100%" stopColor="rgba(140,90,10,0)" />
+                    </linearGradient>
+                    {/* Soft glow filter */}
+                    <filter id="softGlow3d">
+                      <feGaussianBlur stdDeviation="12" result="blur" />
+                      <feMerge>
+                        <feMergeNode in="blur" />
+                        <feMergeNode in="SourceGraphic" />
+                      </feMerge>
+                    </filter>
+                    {/* Deep shadow filter */}
+                    <filter id="deepShadow">
+                      <feGaussianBlur stdDeviation="20" />
+                    </filter>
+                    {/* Specular filter */}
+                    <filter id="specular3d">
+                      <feGaussianBlur stdDeviation="4" result="blur" />
+                      <feMerge>
+                        <feMergeNode in="blur" />
+                        <feMergeNode in="blur" />
+                        <feMergeNode in="SourceGraphic" />
+                      </feMerge>
+                    </filter>
+                  </defs>
+
+                  {/* Layer 1: Deep shadow (bottom) — gives depth */}
+                  <path
+                    d="M-200,320 C200,220 500,420 900,280 C1300,140 1600,380 2000,260 C2400,140 2700,340 3200,300"
+                    fill="none"
+                    stroke="url(#gold3dShadow)"
+                    strokeWidth="100"
+                    strokeLinecap="round"
+                    filter="url(#deepShadow)"
+                    opacity="0.5"
+                    style={{ animation: 'goldFlow1 20s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite' }}
+                  />
+
+                  {/* Layer 2: Main thick ribbon body */}
+                  <path
+                    d="M-200,300 C200,180 500,400 900,260 C1300,120 1600,360 2000,240 C2400,120 2700,320 3200,280"
+                    fill="none"
+                    stroke="url(#gold3d1)"
+                    strokeWidth="70"
+                    strokeLinecap="round"
+                    filter="url(#softGlow3d)"
+                    style={{ animation: 'goldFlow1 20s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite' }}
+                  />
+
+                  {/* Layer 3: Specular highlight on main ribbon */}
+                  <path
+                    d="M-200,295 C200,178 500,395 900,255 C1300,118 1600,355 2000,235 C2400,118 2700,315 3200,275"
+                    fill="none"
+                    stroke="url(#gold3dHighlight)"
+                    strokeWidth="20"
+                    strokeLinecap="round"
+                    filter="url(#specular3d)"
+                    style={{ animation: 'goldFlow1 20s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite' }}
+                  />
+
+                  {/* Layer 4: Secondary ribbon shadow */}
+                  <path
+                    d="M-200,370 C300,270 600,470 1000,330 C1400,190 1700,410 2100,290 C2500,170 2800,370 3200,340"
+                    fill="none"
+                    stroke="url(#gold3dShadow)"
+                    strokeWidth="65"
+                    strokeLinecap="round"
+                    filter="url(#deepShadow)"
+                    opacity="0.4"
+                    style={{ animation: 'goldFlow2 25s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite' }}
+                  />
+
+                  {/* Layer 5: Secondary ribbon */}
+                  <path
+                    d="M-200,350 C300,250 600,450 1000,310 C1400,170 1700,390 2100,270 C2500,150 2800,350 3200,320"
+                    fill="none"
+                    stroke="url(#gold3d2)"
+                    strokeWidth="50"
+                    strokeLinecap="round"
+                    filter="url(#softGlow3d)"
+                    style={{ animation: 'goldFlow2 25s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite' }}
+                  />
+
+                  {/* Layer 6: Thin accent filament — top */}
+                  <path
+                    d="M-200,260 C250,350 550,170 850,290 C1150,410 1450,200 1750,280 C2050,360 2350,190 2650,270 C2950,350 3100,220 3200,260"
+                    fill="none"
+                    stroke="url(#gold3dHighlight)"
+                    strokeWidth="8"
+                    strokeLinecap="round"
+                    filter="url(#specular3d)"
+                    opacity="0.7"
+                    style={{ animation: 'goldFlow3 30s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite' }}
+                  />
+
+                  {/* Layer 7: Thin accent filament — bottom */}
+                  <path
+                    d="M-200,330 C300,400 600,230 900,340 C1200,450 1500,240 1800,330 C2100,420 2400,250 2700,330 C2900,380 3100,290 3200,330"
+                    fill="none"
+                    stroke="url(#gold3d1)"
+                    strokeWidth="12"
+                    strokeLinecap="round"
+                    opacity="0.4"
+                    style={{ animation: 'goldFlow3 30s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite reverse' }}
+                  />
+                </svg>
+
+                {/* Warm bokeh particles for cinematic depth */}
+                <div className="absolute inset-0" style={{ opacity: 0.4 }}>
+                  <div className="absolute rounded-full" style={{
+                    width: '300px', height: '300px', left: '5%', top: '5%',
+                    background: 'radial-gradient(circle, rgba(218,165,32,0.15) 0%, transparent 70%)',
+                    filter: 'blur(40px)',
+                    animation: 'bokeh1 16s ease-in-out infinite',
+                  }} />
+                  <div className="absolute rounded-full" style={{
+                    width: '250px', height: '250px', right: '10%', top: '10%',
+                    background: 'radial-gradient(circle, rgba(255,200,50,0.12) 0%, transparent 70%)',
+                    filter: 'blur(50px)',
+                    animation: 'bokeh2 20s ease-in-out infinite',
+                  }} />
+                  <div className="absolute rounded-full" style={{
+                    width: '200px', height: '200px', left: '40%', top: '15%',
+                    background: 'radial-gradient(circle, rgba(180,130,20,0.1) 0%, transparent 70%)',
+                    filter: 'blur(35px)',
+                    animation: 'bokeh3 22s ease-in-out infinite',
+                  }} />
+                </div>
+
+                {/* CSS Keyframes — smooth cubic-bezier flow */}
+                <style>{`
+                  @keyframes goldFlow1 {
+                    0%   { transform: translateX(0%) translateY(0px); }
+                    10%  { transform: translateX(1.5%) translateY(-8px); }
+                    20%  { transform: translateX(3%) translateY(-15px); }
+                    30%  { transform: translateX(2%) translateY(-5px); }
+                    40%  { transform: translateX(-1%) translateY(10px); }
+                    50%  { transform: translateX(-2.5%) translateY(18px); }
+                    60%  { transform: translateX(-1.5%) translateY(12px); }
+                    70%  { transform: translateX(1%) translateY(-3px); }
+                    80%  { transform: translateX(2.5%) translateY(-12px); }
+                    90%  { transform: translateX(1%) translateY(-5px); }
+                    100% { transform: translateX(0%) translateY(0px); }
+                  }
+                  @keyframes goldFlow2 {
+                    0%   { transform: translateX(0%) translateY(0px); }
+                    15%  { transform: translateX(-2%) translateY(12px); }
+                    30%  { transform: translateX(-3.5%) translateY(20px); }
+                    45%  { transform: translateX(-1%) translateY(8px); }
+                    55%  { transform: translateX(1.5%) translateY(-6px); }
+                    70%  { transform: translateX(3%) translateY(-16px); }
+                    85%  { transform: translateX(1.5%) translateY(-8px); }
+                    100% { transform: translateX(0%) translateY(0px); }
+                  }
+                  @keyframes goldFlow3 {
+                    0%   { transform: translateX(0%) translateY(0px); }
+                    12%  { transform: translateX(1%) translateY(10px); }
+                    25%  { transform: translateX(2.5%) translateY(16px); }
+                    37%  { transform: translateX(1%) translateY(6px); }
+                    50%  { transform: translateX(-1.5%) translateY(-8px); }
+                    62%  { transform: translateX(-3%) translateY(-18px); }
+                    75%  { transform: translateX(-2%) translateY(-10px); }
+                    87%  { transform: translateX(-0.5%) translateY(-3px); }
+                    100% { transform: translateX(0%) translateY(0px); }
+                  }
+                  @keyframes bokeh1 {
+                    0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.4; }
+                    33% { transform: translate(30px, -20px) scale(1.1); opacity: 0.6; }
+                    66% { transform: translate(-20px, 15px) scale(0.9); opacity: 0.3; }
+                  }
+                  @keyframes bokeh2 {
+                    0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.3; }
+                    40% { transform: translate(-25px, 20px) scale(1.15); opacity: 0.5; }
+                    70% { transform: translate(15px, -10px) scale(0.95); opacity: 0.25; }
+                  }
+                  @keyframes bokeh3 {
+                    0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.35; }
+                    50% { transform: translate(20px, -25px) scale(1.2); opacity: 0.5; }
+                  }
+                `}</style>
               </div>
+
+              {/* Bottom Gold Waves — mirrored at bottom of hero */}
+              <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+                <svg
+                  className="absolute"
+                  style={{ width: '300%', height: '40%', left: '-100%', bottom: '-10%' }}
+                  viewBox="0 0 3000 500"
+                  preserveAspectRatio="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <defs>
+                    <linearGradient id="goldBot1" x1="0%" y1="0%" x2="100%" y2="0%">
+                      <stop offset="0%" stopColor="rgba(120,80,10,0)" />
+                      <stop offset="10%" stopColor="rgba(160,110,20,0.3)" />
+                      <stop offset="30%" stopColor="rgba(218,165,32,0.7)" />
+                      <stop offset="50%" stopColor="rgba(255,220,80,1)" />
+                      <stop offset="70%" stopColor="rgba(218,165,32,0.7)" />
+                      <stop offset="90%" stopColor="rgba(160,110,20,0.3)" />
+                      <stop offset="100%" stopColor="rgba(120,80,10,0)" />
+                    </linearGradient>
+                    <linearGradient id="goldBotShadow" x1="0%" y1="0%" x2="100%" y2="0%">
+                      <stop offset="0%" stopColor="rgba(80,50,5,0)" />
+                      <stop offset="20%" stopColor="rgba(100,60,10,0.4)" />
+                      <stop offset="50%" stopColor="rgba(140,90,15,0.6)" />
+                      <stop offset="80%" stopColor="rgba(100,60,10,0.4)" />
+                      <stop offset="100%" stopColor="rgba(80,50,5,0)" />
+                    </linearGradient>
+                    <linearGradient id="goldBotHighlight" x1="0%" y1="0%" x2="100%" y2="0%">
+                      <stop offset="0%" stopColor="rgba(255,230,120,0)" />
+                      <stop offset="25%" stopColor="rgba(255,240,150,0.2)" />
+                      <stop offset="50%" stopColor="rgba(255,250,200,0.6)" />
+                      <stop offset="75%" stopColor="rgba(255,240,150,0.2)" />
+                      <stop offset="100%" stopColor="rgba(255,230,120,0)" />
+                    </linearGradient>
+                    <linearGradient id="goldBot2" x1="0%" y1="0%" x2="100%" y2="0%">
+                      <stop offset="0%" stopColor="rgba(140,90,10,0)" />
+                      <stop offset="20%" stopColor="rgba(180,120,20,0.35)" />
+                      <stop offset="50%" stopColor="rgba(210,155,35,0.6)" />
+                      <stop offset="80%" stopColor="rgba(180,120,20,0.35)" />
+                      <stop offset="100%" stopColor="rgba(140,90,10,0)" />
+                    </linearGradient>
+                    <filter id="softGlowBot">
+                      <feGaussianBlur stdDeviation="12" result="blur" />
+                      <feMerge>
+                        <feMergeNode in="blur" />
+                        <feMergeNode in="SourceGraphic" />
+                      </feMerge>
+                    </filter>
+                    <filter id="deepShadowBot">
+                      <feGaussianBlur stdDeviation="20" />
+                    </filter>
+                    <filter id="specularBot">
+                      <feGaussianBlur stdDeviation="4" result="blur" />
+                      <feMerge>
+                        <feMergeNode in="blur" />
+                        <feMergeNode in="blur" />
+                        <feMergeNode in="SourceGraphic" />
+                      </feMerge>
+                    </filter>
+                  </defs>
+
+                  {/* Bottom shadow */}
+                  <path
+                    d="M-200,280 C200,380 500,180 900,320 C1300,460 1600,220 2000,340 C2400,460 2700,260 3200,300"
+                    fill="none"
+                    stroke="url(#goldBotShadow)"
+                    strokeWidth="90"
+                    strokeLinecap="round"
+                    filter="url(#deepShadowBot)"
+                    opacity="0.5"
+                    style={{ animation: 'goldFlowBot1 22s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite' }}
+                  />
+                  {/* Bottom main ribbon */}
+                  <path
+                    d="M-200,260 C200,360 500,160 900,300 C1300,440 1600,200 2000,320 C2400,440 2700,240 3200,280"
+                    fill="none"
+                    stroke="url(#goldBot1)"
+                    strokeWidth="65"
+                    strokeLinecap="round"
+                    filter="url(#softGlowBot)"
+                    style={{ animation: 'goldFlowBot1 22s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite' }}
+                  />
+                  {/* Bottom specular */}
+                  <path
+                    d="M-200,255 C200,358 500,155 900,295 C1300,438 1600,195 2000,315 C2400,438 2700,235 3200,275"
+                    fill="none"
+                    stroke="url(#goldBotHighlight)"
+                    strokeWidth="18"
+                    strokeLinecap="round"
+                    filter="url(#specularBot)"
+                    style={{ animation: 'goldFlowBot1 22s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite' }}
+                  />
+                  {/* Bottom secondary ribbon */}
+                  <path
+                    d="M-200,310 C300,410 600,210 1000,350 C1400,490 1700,250 2100,370 C2500,490 2800,290 3200,330"
+                    fill="none"
+                    stroke="url(#goldBot2)"
+                    strokeWidth="45"
+                    strokeLinecap="round"
+                    filter="url(#softGlowBot)"
+                    style={{ animation: 'goldFlowBot2 28s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite' }}
+                  />
+                  {/* Bottom filament */}
+                  <path
+                    d="M-200,240 C250,310 550,170 850,270 C1150,370 1450,190 1750,270 C2050,350 2350,180 2650,260 C2950,340 3100,230 3200,260"
+                    fill="none"
+                    stroke="url(#goldBotHighlight)"
+                    strokeWidth="8"
+                    strokeLinecap="round"
+                    filter="url(#specularBot)"
+                    opacity="0.6"
+                    style={{ animation: 'goldFlowBot2 28s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite reverse' }}
+                  />
+                </svg>
+
+                {/* Bottom bokeh */}
+                <div className="absolute inset-0" style={{ opacity: 0.3 }}>
+                  <div className="absolute rounded-full" style={{
+                    width: '280px', height: '280px', left: '15%', bottom: '5%',
+                    background: 'radial-gradient(circle, rgba(218,165,32,0.12) 0%, transparent 70%)',
+                    filter: 'blur(45px)',
+                    animation: 'bokeh1 18s ease-in-out infinite reverse',
+                  }} />
+                  <div className="absolute rounded-full" style={{
+                    width: '220px', height: '220px', right: '20%', bottom: '8%',
+                    background: 'radial-gradient(circle, rgba(255,200,50,0.1) 0%, transparent 70%)',
+                    filter: 'blur(40px)',
+                    animation: 'bokeh2 22s ease-in-out infinite reverse',
+                  }} />
+                </div>
+
+                <style>{`
+                  @keyframes goldFlowBot1 {
+                    0%   { transform: translateX(0%) translateY(0px); }
+                    10%  { transform: translateX(-1.5%) translateY(8px); }
+                    20%  { transform: translateX(-3%) translateY(12px); }
+                    30%  { transform: translateX(-2%) translateY(5px); }
+                    40%  { transform: translateX(1%) translateY(-8px); }
+                    50%  { transform: translateX(2.5%) translateY(-15px); }
+                    60%  { transform: translateX(1.5%) translateY(-10px); }
+                    70%  { transform: translateX(-1%) translateY(3px); }
+                    80%  { transform: translateX(-2.5%) translateY(10px); }
+                    90%  { transform: translateX(-1%) translateY(4px); }
+                    100% { transform: translateX(0%) translateY(0px); }
+                  }
+                  @keyframes goldFlowBot2 {
+                    0%   { transform: translateX(0%) translateY(0px); }
+                    15%  { transform: translateX(2%) translateY(-10px); }
+                    30%  { transform: translateX(3.5%) translateY(-18px); }
+                    45%  { transform: translateX(1%) translateY(-6px); }
+                    55%  { transform: translateX(-1.5%) translateY(5px); }
+                    70%  { transform: translateX(-3%) translateY(14px); }
+                    85%  { transform: translateX(-1.5%) translateY(6px); }
+                    100% { transform: translateX(0%) translateY(0px); }
+                  }
+                `}</style>
+              </div>
+
               {overlayComponent}
               <div className={`w-full max-w-7xl mx-auto relative z-10 ${heroLayout === 'split' ? 'grid grid-cols-1 lg:grid-cols-2 gap-12 items-center' : ''}`}>
                 <div className={`${heroLayout === 'centered' ? 'mx-auto max-w-4xl' : heroLayout === 'left' ? 'mr-auto max-w-4xl' : heroLayout === 'right' ? 'ml-auto max-w-4xl' : ''}`}>
@@ -891,7 +1315,7 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
             key={section.id}
             id={`section-${sectionType}`}
             data-section-id={section.id}
-            className="py-16 sm:py-20 md:py-24"
+            className="py-16 sm:py-20 md:py-24 relative overflow-hidden"
             style={{
               backgroundColor: testimonialsBackgroundColor,
               color: testimonialsTextColor,
@@ -967,6 +1391,98 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
                 ))}
               </div>
             </div>
+
+            {/* Bottom Gold Waves */}
+            <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+              <svg
+                className="absolute"
+                style={{ width: '300%', height: '40%', left: '-100%', bottom: '-10%' }}
+                viewBox="0 0 3000 500"
+                preserveAspectRatio="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <defs>
+                  <linearGradient id="goldTest1" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor="rgba(120,80,10,0)" />
+                    <stop offset="10%" stopColor="rgba(160,110,20,0.3)" />
+                    <stop offset="30%" stopColor="rgba(218,165,32,0.7)" />
+                    <stop offset="50%" stopColor="rgba(255,220,80,1)" />
+                    <stop offset="70%" stopColor="rgba(218,165,32,0.7)" />
+                    <stop offset="90%" stopColor="rgba(160,110,20,0.3)" />
+                    <stop offset="100%" stopColor="rgba(120,80,10,0)" />
+                  </linearGradient>
+                  <linearGradient id="goldTestShadow" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor="rgba(80,50,5,0)" />
+                    <stop offset="20%" stopColor="rgba(100,60,10,0.4)" />
+                    <stop offset="50%" stopColor="rgba(140,90,15,0.6)" />
+                    <stop offset="80%" stopColor="rgba(100,60,10,0.4)" />
+                    <stop offset="100%" stopColor="rgba(80,50,5,0)" />
+                  </linearGradient>
+                  <linearGradient id="goldTestHighlight" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor="rgba(255,230,120,0)" />
+                    <stop offset="25%" stopColor="rgba(255,240,150,0.2)" />
+                    <stop offset="50%" stopColor="rgba(255,250,200,0.6)" />
+                    <stop offset="75%" stopColor="rgba(255,240,150,0.2)" />
+                    <stop offset="100%" stopColor="rgba(255,230,120,0)" />
+                  </linearGradient>
+                  <filter id="softGlowTest">
+                    <feGaussianBlur stdDeviation="12" result="blur" />
+                    <feMerge>
+                      <feMergeNode in="blur" />
+                      <feMergeNode in="SourceGraphic" />
+                    </feMerge>
+                  </filter>
+                  <filter id="deepShadowTest">
+                    <feGaussianBlur stdDeviation="20" />
+                  </filter>
+                  <filter id="specularTest">
+                    <feGaussianBlur stdDeviation="4" result="blur" />
+                    <feMerge>
+                      <feMergeNode in="blur" />
+                      <feMergeNode in="blur" />
+                      <feMergeNode in="SourceGraphic" />
+                    </feMerge>
+                  </filter>
+                </defs>
+                <path
+                  d="M-200,280 C200,380 500,180 900,320 C1300,460 1600,220 2000,340 C2400,460 2700,260 3200,300"
+                  fill="none" stroke="url(#goldTestShadow)" strokeWidth="90" strokeLinecap="round"
+                  filter="url(#deepShadowTest)" opacity="0.5"
+                  style={{ animation: 'goldFlowBot1 22s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite' }}
+                />
+                <path
+                  d="M-200,260 C200,360 500,160 900,300 C1300,440 1600,200 2000,320 C2400,440 2700,240 3200,280"
+                  fill="none" stroke="url(#goldTest1)" strokeWidth="65" strokeLinecap="round"
+                  filter="url(#softGlowTest)"
+                  style={{ animation: 'goldFlowBot1 22s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite' }}
+                />
+                <path
+                  d="M-200,255 C200,358 500,155 900,295 C1300,438 1600,195 2000,315 C2400,438 2700,235 3200,275"
+                  fill="none" stroke="url(#goldTestHighlight)" strokeWidth="18" strokeLinecap="round"
+                  filter="url(#specularTest)"
+                  style={{ animation: 'goldFlowBot1 22s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite' }}
+                />
+                <path
+                  d="M-200,240 C250,310 550,170 850,270 C1150,370 1450,190 1750,270 C2050,350 2350,180 2650,260 C2950,340 3100,230 3200,260"
+                  fill="none" stroke="url(#goldTestHighlight)" strokeWidth="8" strokeLinecap="round"
+                  filter="url(#specularTest)" opacity="0.6"
+                  style={{ animation: 'goldFlowBot2 28s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite reverse' }}
+                />
+              </svg>
+              <div className="absolute inset-0" style={{ opacity: 0.3 }}>
+                <div className="absolute rounded-full" style={{
+                  width: '280px', height: '280px', left: '15%', bottom: '5%',
+                  background: 'radial-gradient(circle, rgba(218,165,32,0.12) 0%, transparent 70%)',
+                  filter: 'blur(45px)', animation: 'bokeh1 18s ease-in-out infinite reverse',
+                }} />
+                <div className="absolute rounded-full" style={{
+                  width: '220px', height: '220px', right: '20%', bottom: '8%',
+                  background: 'radial-gradient(circle, rgba(255,200,50,0.1) 0%, transparent 70%)',
+                  filter: 'blur(40px)', animation: 'bokeh2 22s ease-in-out infinite reverse',
+                }} />
+              </div>
+            </div>
+
           </section>
         );
       }
