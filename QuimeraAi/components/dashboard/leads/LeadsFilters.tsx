@@ -1,9 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { LeadStatus } from '../../../types';
-import { 
-    Filter, X, ChevronDown, DollarSign, Star, Calendar, Tag, 
-    CircleDot, Zap, RotateCcw 
+import {
+    Filter, X, ChevronDown, DollarSign, Star, Calendar, Tag,
+    CircleDot, Zap, RotateCcw
 } from 'lucide-react';
 
 export interface LeadsFiltersState {
@@ -61,10 +61,9 @@ const FilterDropdown: React.FC<{
         <div ref={ref} className="relative">
             <div onClick={onToggle}>{trigger}</div>
             {isOpen && (
-                <div 
-                    className={`absolute top-full mt-1.5 z-50 min-w-[200px] bg-popover border border-border rounded-lg shadow-xl animate-in fade-in-0 zoom-in-95 duration-150 ${
-                        align === 'right' ? 'right-0' : 'left-0'
-                    }`}
+                <div
+                    className={`absolute top-full mt-1.5 z-50 min-w-[200px] bg-popover border border-border rounded-lg shadow-xl animate-in fade-in-0 zoom-in-95 duration-150 ${align === 'right' ? 'right-0' : 'left-0'
+                        }`}
                 >
                     {children}
                 </div>
@@ -74,6 +73,7 @@ const FilterDropdown: React.FC<{
 };
 
 // Botón de filtro compacto
+// Mobile: icon-only, clean (no borders, no bg). Desktop: full label + border.
 const FilterButton: React.FC<{
     icon: React.ReactNode;
     label: string;
@@ -84,25 +84,32 @@ const FilterButton: React.FC<{
     <button
         onClick={onClick}
         className={`
-            inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium
-            transition-all duration-150 border whitespace-nowrap
-            ${isActive 
-                ? 'bg-primary text-primary-foreground border-primary shadow-sm' 
-                : 'bg-secondary/50 text-foreground border-border hover:bg-secondary hover:border-primary/30'
+            relative inline-flex items-center gap-1.5 rounded-lg text-xs font-medium
+            transition-all duration-150 whitespace-nowrap
+            /* Mobile: icon-only, no border */
+            h-8 w-8 justify-center border-0 bg-transparent
+            sm:w-auto sm:h-auto sm:justify-start sm:px-2.5 sm:py-1.5 sm:border
+            ${isActive
+                ? 'text-primary sm:bg-primary sm:text-primary-foreground sm:border-primary sm:shadow-sm'
+                : 'text-muted-foreground hover:text-foreground sm:bg-secondary/50 sm:text-foreground sm:border-border sm:hover:bg-secondary sm:hover:border-primary/30'
             }
         `}
     >
         {icon}
-        <span>{label}</span>
+        <span className="hidden sm:inline">{label}</span>
         {count !== undefined && count > 0 && (
             <span className={`
-                ml-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-bold
+                hidden sm:inline ml-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-bold
                 ${isActive ? 'bg-primary-foreground/20' : 'bg-primary/20 text-primary'}
             `}>
                 {count}
             </span>
         )}
-        <ChevronDown size={12} className="ml-0.5 opacity-60" />
+        {/* Mobile: show dot indicator when active */}
+        {isActive && count !== undefined && count > 0 && (
+            <span className="sm:hidden absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-primary" />
+        )}
+        <ChevronDown size={12} className="ml-0.5 opacity-60 hidden sm:block" />
     </button>
 );
 
@@ -113,8 +120,8 @@ const ActiveFilterChip: React.FC<{
 }> = ({ label, onRemove }) => (
     <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-primary/10 text-primary text-[11px] font-medium rounded-full">
         {label}
-        <button 
-            onClick={onRemove} 
+        <button
+            onClick={onRemove}
             className="hover:bg-primary/20 rounded-full p-0.5 transition-colors"
         >
             <X size={10} />
@@ -175,12 +182,32 @@ const LeadsFilters: React.FC<LeadsFiltersProps> = ({ filters, onFiltersChange, a
         setOpenDropdown(openDropdown === name ? null : name);
     };
 
+    // Mobile: toggle to show/hide advanced filters
+    const [showMobileFilters, setShowMobileFilters] = useState(false);
+
     return (
         <div className="space-y-2">
-            {/* Toolbar de filtros compacto */}
-            <div className="flex items-center gap-2 flex-wrap">
-                {/* Icono de filtros */}
-                <div className="flex items-center gap-1.5 text-muted-foreground pr-2 border-r border-border">
+            {/* Mobile: compact toggle button for filters */}
+            <div className="sm:hidden">
+                <button
+                    onClick={() => setShowMobileFilters(!showMobileFilters)}
+                    className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all border ${showMobileFilters || activeFiltersCount > 0 ? 'bg-primary/10 text-primary border-primary/30' : 'text-muted-foreground border-border hover:text-foreground'}`}
+                >
+                    <Filter size={14} />
+                    <span>{t('leads.filters.advancedFilters')}</span>
+                    {activeFiltersCount > 0 && (
+                        <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-primary/20 text-primary">
+                            {activeFiltersCount}
+                        </span>
+                    )}
+                    <ChevronDown size={12} className={`transition-transform ${showMobileFilters ? 'rotate-180' : ''}`} />
+                </button>
+            </div>
+
+            {/* Toolbar de filtros — always visible on desktop, collapsible on mobile */}
+            <div className={`${showMobileFilters ? 'flex' : 'hidden'} sm:flex items-center gap-1 sm:gap-2 flex-wrap`}>
+                {/* Icono de filtros — desktop only */}
+                <div className="hidden sm:flex items-center gap-1.5 text-muted-foreground pr-2 border-r border-border">
                     <Filter size={14} />
                     <span className="text-xs font-medium">{t('leads.filters.advancedFilters')}</span>
                 </div>
@@ -195,7 +222,7 @@ const LeadsFilters: React.FC<LeadsFiltersProps> = ({ filters, onFiltersChange, a
                             label={t('leads.status')}
                             count={filters.statuses.length}
                             isActive={filters.statuses.length > 0}
-                            onClick={() => {}}
+                            onClick={() => { }}
                         />
                     }
                 >
@@ -233,7 +260,7 @@ const LeadsFilters: React.FC<LeadsFiltersProps> = ({ filters, onFiltersChange, a
                             label={t('leads.source')}
                             count={filters.sources.length}
                             isActive={filters.sources.length > 0}
-                            onClick={() => {}}
+                            onClick={() => { }}
                         />
                     }
                 >
@@ -274,7 +301,7 @@ const LeadsFilters: React.FC<LeadsFiltersProps> = ({ filters, onFiltersChange, a
                             label={t('leads.filters.dealValueRange')}
                             count={filters.valueRange.min > 0 || filters.valueRange.max < 1000000 ? 1 : 0}
                             isActive={filters.valueRange.min > 0 || filters.valueRange.max < 1000000}
-                            onClick={() => {}}
+                            onClick={() => { }}
                         />
                     }
                 >
@@ -312,7 +339,7 @@ const LeadsFilters: React.FC<LeadsFiltersProps> = ({ filters, onFiltersChange, a
                             label={t('leads.filters.aiScoreRange')}
                             count={filters.scoreRange.min > 0 || filters.scoreRange.max < 100 ? 1 : 0}
                             isActive={filters.scoreRange.min > 0 || filters.scoreRange.max < 100}
-                            onClick={() => {}}
+                            onClick={() => { }}
                         />
                     }
                 >
@@ -355,7 +382,7 @@ const LeadsFilters: React.FC<LeadsFiltersProps> = ({ filters, onFiltersChange, a
                             label={t('leads.filters.createdDateRange')}
                             count={filters.dateRange.start || filters.dateRange.end ? 1 : 0}
                             isActive={!!(filters.dateRange.start || filters.dateRange.end)}
-                            onClick={() => {}}
+                            onClick={() => { }}
                         />
                     }
                 >
@@ -395,7 +422,7 @@ const LeadsFilters: React.FC<LeadsFiltersProps> = ({ filters, onFiltersChange, a
                                 label={t('leads.tags')}
                                 count={filters.tags.length}
                                 isActive={filters.tags.length > 0}
-                                onClick={() => {}}
+                                onClick={() => { }}
                             />
                         }
                     >
@@ -440,7 +467,7 @@ const LeadsFilters: React.FC<LeadsFiltersProps> = ({ filters, onFiltersChange, a
             {activeFiltersCount > 0 && (
                 <div className="flex items-center gap-1.5 flex-wrap py-1">
                     <span className="text-[10px] text-muted-foreground uppercase tracking-wide">Activos:</span>
-                    
+
                     {/* Status chips */}
                     {filters.statuses.map(status => {
                         const statusInfo = LEAD_STATUSES.find(s => s.id === status);
