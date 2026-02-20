@@ -1271,7 +1271,7 @@ const DomainsDashboard: React.FC = () => {
                         </button>
                         <div className="flex items-center gap-1 sm:gap-2">
                             <Link2 className="text-primary w-5 h-5" />
-                            <h1 className="text-lg font-semibold text-foreground hidden sm:block">{t('domainsDashboard.title')}</h1>
+                            <h1 className="text-sm sm:text-lg font-semibold text-foreground">{t('domainsDashboard.title')}</h1>
                         </div>
                     </div>
 
@@ -1301,7 +1301,7 @@ const DomainsDashboard: React.FC = () => {
                     </div>
                 </header>
 
-                <main className="flex-1 overflow-y-auto p-6 lg:p-8 scroll-smooth bg-secondary/5">
+                <main className="flex-1 overflow-y-auto p-6 lg:p-8 scroll-smooth bg-secondary/5 relative z-10">
                     <div className="max-w-5xl mx-auto space-y-8">
 
                         {/* Collapsible Instructions */}

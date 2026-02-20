@@ -297,7 +297,7 @@ const CMSDashboard: React.FC = () => {
                         </button>
                         <div className="flex items-center gap-2">
                             <PenTool className="text-primary w-5 h-5" />
-                            <h1 className="text-lg font-semibold text-foreground hidden sm:block">{t('cms.contentManager', 'Gestor de Contenido')}</h1>
+                            <h1 className="text-sm sm:text-lg font-semibold text-foreground">{t('cms.contentManager', 'Gestor de Contenido')}</h1>
                         </div>
 
                         {/* Project Selector Button */}
@@ -396,9 +396,9 @@ const CMSDashboard: React.FC = () => {
 
                         {/* Métricas - Unified responsive design */}
                         {cmsPosts.length > 0 && (
-                            <div className="grid grid-cols-3 gap-2 sm:gap-3">
+                            <div className="relative z-[1] grid grid-cols-3 gap-2 sm:gap-3">
                                 {/* Total Posts */}
-                                <div className="group relative overflow-hidden bg-gradient-to-br from-primary/5 via-primary/10 to-primary/5 border border-primary/20 rounded-xl sm:rounded-2xl p-3 sm:p-4 transition-all duration-300 hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5">
+                                <div className="group relative overflow-hidden bg-card border border-primary/20 rounded-xl sm:rounded-2xl p-3 sm:p-4 transition-all duration-300 hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5">
                                     <div className="absolute -top-4 -right-4 w-16 h-16 sm:w-20 sm:h-20 bg-primary/10 rounded-full blur-2xl group-hover:bg-primary/20 transition-colors" />
                                     <div className="relative flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
                                         <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-primary/15 flex items-center justify-center mx-auto sm:mx-0">
@@ -412,7 +412,7 @@ const CMSDashboard: React.FC = () => {
                                 </div>
 
                                 {/* Published */}
-                                <div className="group relative overflow-hidden bg-gradient-to-br from-emerald-500/5 via-emerald-500/10 to-emerald-500/5 border border-emerald-500/20 rounded-xl sm:rounded-2xl p-3 sm:p-4 transition-all duration-300 hover:border-emerald-500/40 hover:shadow-lg hover:shadow-emerald-500/5">
+                                <div className="group relative overflow-hidden bg-card border border-emerald-500/20 rounded-xl sm:rounded-2xl p-3 sm:p-4 transition-all duration-300 hover:border-emerald-500/40 hover:shadow-lg hover:shadow-emerald-500/5">
                                     <div className="absolute -top-4 -right-4 w-16 h-16 sm:w-20 sm:h-20 bg-emerald-500/10 rounded-full blur-2xl group-hover:bg-emerald-500/20 transition-colors" />
                                     <div className="relative flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
                                         <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-emerald-500/15 flex items-center justify-center mx-auto sm:mx-0">
@@ -426,7 +426,7 @@ const CMSDashboard: React.FC = () => {
                                 </div>
 
                                 {/* Drafts */}
-                                <div className="group relative overflow-hidden bg-gradient-to-br from-amber-500/5 via-amber-500/10 to-amber-500/5 border border-amber-500/20 rounded-xl sm:rounded-2xl p-3 sm:p-4 transition-all duration-300 hover:border-amber-500/40 hover:shadow-lg hover:shadow-amber-500/5">
+                                <div className="group relative overflow-hidden bg-card border border-amber-500/20 rounded-xl sm:rounded-2xl p-3 sm:p-4 transition-all duration-300 hover:border-amber-500/40 hover:shadow-lg hover:shadow-amber-500/5">
                                     <div className="absolute -top-4 -right-4 w-16 h-16 sm:w-20 sm:h-20 bg-amber-500/10 rounded-full blur-2xl group-hover:bg-amber-500/20 transition-colors" />
                                     <div className="relative flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
                                         <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-amber-500/15 flex items-center justify-center mx-auto sm:mx-0">

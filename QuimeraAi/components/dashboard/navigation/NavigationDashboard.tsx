@@ -181,7 +181,7 @@ const NavigationDashboard: React.FC = () => {
                         </button>
                         <div className="flex items-center gap-1 sm:gap-2">
                             <Compass className="text-primary" size={24} aria-hidden="true" />
-                            <h1 className="text-xl font-bold text-foreground hidden sm:block">
+                            <h1 className="text-sm sm:text-xl font-semibold sm:font-bold text-foreground">
                                 {t('navigationDashboard.title')}
                             </h1>
                         </div>
@@ -260,7 +260,7 @@ const NavigationDashboard: React.FC = () => {
                     </div>
                 </header>
 
-                <main className="flex-1 p-4 sm:p-8 overflow-y-auto bg-background/50">
+                <main className="flex-1 p-4 sm:p-8 overflow-y-auto bg-background/50 relative z-10">
                     <div className="max-w-7xl mx-auto space-y-8">
 
                         {/* Stats Overview */}

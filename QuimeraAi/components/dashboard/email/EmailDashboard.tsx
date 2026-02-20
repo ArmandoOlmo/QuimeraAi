@@ -186,8 +186,8 @@ const EmailDashboard: React.FC<EmailDashboardProps> = ({ projectId: propProjectI
                             </button>
                             <div className="flex items-center gap-2">
                                 <Mail className="text-primary w-5 h-5" />
-                                <h1 className="text-lg font-semibold text-foreground">
-                                    {t('email.dashboard', 'Email Marketing')}
+                                <h1 className="text-sm sm:text-lg font-semibold text-foreground">
+                                    Email
                                 </h1>
                             </div>
                         </div>

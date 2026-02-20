@@ -544,7 +544,7 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación ni puntu
                         </button>
                         <div className="flex items-center gap-1 sm:gap-2">
                             <DollarSign className="text-primary w-5 h-5" />
-                            <h1 className="text-lg font-semibold text-foreground hidden sm:block">{t('financeDashboard.title')}</h1>
+                            <h1 className="text-sm sm:text-lg font-semibold text-foreground">{t('financeDashboard.title')}</h1>
                         </div>
                     </div>
                     <div className="flex items-center gap-1 sm:gap-3">

@@ -203,7 +203,7 @@ const AiAssistantDashboard: React.FC = () => {
                             </button>
                             <div className="flex items-center gap-1 sm:gap-2">
                                 <Bot className="text-primary w-5 h-5" />
-                                <h1 className="text-lg font-semibold text-foreground hidden sm:block">{t('aiAssistant.dashboard.title')}</h1>
+                                <h1 className="text-sm sm:text-lg font-semibold text-foreground">Chatbot</h1>
                             </div>
                         </div>
                         <div className="flex items-center gap-1 sm:gap-2">
@@ -964,7 +964,8 @@ const AiAssistantDashboard: React.FC = () => {
                             <Menu className="w-4 h-4" />
                         </button>
                         <div className="flex items-center gap-1 sm:gap-2">
-                            <h1 className="text-lg font-semibold text-foreground hidden sm:block">{t('aiAssistant.dashboard.title')}</h1>
+                            <Bot className="text-primary w-5 h-5" />
+                            <h1 className="text-sm sm:text-lg font-semibold text-foreground">Chatbot</h1>
                             <span className="text-xs text-muted-foreground flex items-center"><span className="w-1.5 h-1.5 bg-green-500 rounded-full mr-1"></span> <span className="truncate max-w-[100px] sm:max-w-[200px]">{activeProject.name}</span></span>
                         </div>
                     </div>

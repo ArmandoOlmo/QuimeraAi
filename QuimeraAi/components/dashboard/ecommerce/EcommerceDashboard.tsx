@@ -411,7 +411,7 @@ const EcommerceDashboard: React.FC = () => {
                             </button>
                             <div className="flex items-center gap-1 sm:gap-2">
                                 <ShoppingBag className="text-primary w-5 h-5" />
-                                <h1 className="text-lg font-semibold text-foreground hidden sm:block">
+                                <h1 className="text-sm sm:text-lg font-semibold text-foreground">
                                     {t('ecommerce.dashboardTitle', 'Panel de Ventas')}
                                 </h1>
                             </div>

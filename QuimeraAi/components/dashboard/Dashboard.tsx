@@ -248,7 +248,7 @@ const Dashboard: React.FC = () => {
                         </button>
                         <div className="flex items-center gap-1 sm:gap-2">
                             <HeaderIcon className="text-primary" size={24} aria-hidden="true" />
-                            <h1 className="text-xl font-bold text-foreground hidden sm:block">{headerTitle}</h1>
+                            <h1 className="text-sm sm:text-xl font-semibold sm:font-bold text-foreground">{headerTitle}</h1>
                         </div>
                     </div>
 
