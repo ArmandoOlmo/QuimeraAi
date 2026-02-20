@@ -12,6 +12,7 @@ import {
     Loader2
 } from 'lucide-react';
 import DashboardSidebar from './DashboardSidebar';
+import MobileSearchModal from '../ui/MobileSearchModal';
 import DashboardWaveRibbons from './DashboardWaveRibbons';
 import AdminViewLayout from './admin/AdminViewLayout';
 
@@ -170,23 +171,23 @@ const CategoryChip: React.FC<{
 }> = ({ label, active, onClick, count, color = 'accent' }) => {
     const colorMap = {
         accent: active
-            ? 'bg-editor-accent/15 text-editor-accent border-editor-accent/50 shadow-sm shadow-editor-accent/10'
-            : 'bg-editor-panel-bg text-editor-text-secondary border-editor-border hover:bg-editor-accent/10 hover:text-editor-accent hover:border-editor-accent/30',
+            ? 'bg-editor-accent/30 text-editor-accent border-editor-accent/50 shadow-sm shadow-editor-accent/10 backdrop-blur-md'
+            : 'bg-editor-bg/90 text-editor-text-secondary border-editor-border backdrop-blur-md hover:bg-editor-accent/20 hover:text-editor-accent hover:border-editor-accent/30',
         emerald: active
-            ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/50 shadow-sm shadow-emerald-500/10'
-            : 'bg-editor-panel-bg text-editor-text-secondary border-editor-border hover:bg-emerald-500/10 hover:text-emerald-400 hover:border-emerald-500/30',
+            ? 'bg-emerald-500/30 text-emerald-400 border-emerald-500/50 shadow-sm shadow-emerald-500/10 backdrop-blur-md'
+            : 'bg-editor-bg/90 text-editor-text-secondary border-editor-border backdrop-blur-md hover:bg-emerald-500/20 hover:text-emerald-400 hover:border-emerald-500/30',
         amber: active
-            ? 'bg-amber-500/15 text-amber-400 border-amber-500/50 shadow-sm shadow-amber-500/10'
-            : 'bg-editor-panel-bg text-editor-text-secondary border-editor-border hover:bg-amber-500/10 hover:text-amber-400 hover:border-amber-500/30',
+            ? 'bg-amber-500/30 text-amber-400 border-amber-500/50 shadow-sm shadow-amber-500/10 backdrop-blur-md'
+            : 'bg-editor-bg/90 text-editor-text-secondary border-editor-border backdrop-blur-md hover:bg-amber-500/20 hover:text-amber-400 hover:border-amber-500/30',
         violet: active
-            ? 'bg-violet-500/15 text-violet-400 border-violet-500/50 shadow-sm shadow-violet-500/10'
-            : 'bg-editor-panel-bg text-editor-text-secondary border-editor-border hover:bg-violet-500/10 hover:text-violet-400 hover:border-violet-500/30',
+            ? 'bg-violet-500/30 text-violet-400 border-violet-500/50 shadow-sm shadow-violet-500/10 backdrop-blur-md'
+            : 'bg-editor-bg/90 text-editor-text-secondary border-editor-border backdrop-blur-md hover:bg-violet-500/20 hover:text-violet-400 hover:border-violet-500/30',
         rose: active
-            ? 'bg-rose-500/15 text-rose-400 border-rose-500/50 shadow-sm shadow-rose-500/10'
-            : 'bg-editor-panel-bg text-editor-text-secondary border-editor-border hover:bg-rose-500/10 hover:text-rose-400 hover:border-rose-500/30',
+            ? 'bg-rose-500/30 text-rose-400 border-rose-500/50 shadow-sm shadow-rose-500/10 backdrop-blur-md'
+            : 'bg-editor-bg/90 text-editor-text-secondary border-editor-border backdrop-blur-md hover:bg-rose-500/20 hover:text-rose-400 hover:border-rose-500/30',
         sky: active
-            ? 'bg-sky-500/15 text-sky-400 border-sky-500/50 shadow-sm shadow-sky-500/10'
-            : 'bg-editor-panel-bg text-editor-text-secondary border-editor-border hover:bg-sky-500/10 hover:text-sky-400 hover:border-sky-500/30',
+            ? 'bg-sky-500/30 text-sky-400 border-sky-500/50 shadow-sm shadow-sky-500/10 backdrop-blur-md'
+            : 'bg-editor-bg/90 text-editor-text-secondary border-editor-border backdrop-blur-md hover:bg-sky-500/20 hover:text-sky-400 hover:border-sky-500/30',
     };
 
     return (
@@ -221,6 +222,7 @@ const SuperAdminDashboard = () => {
     const { navigate } = useRouter();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
+    const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
     const [selectedCategory, setSelectedCategory] = useState<string>('all');
     const [viewMode, setViewMode] = useState<ViewMode>('grid');
 
@@ -367,7 +369,21 @@ const SuperAdminDashboard = () => {
                         <h1 className="text-lg font-bold text-editor-text-primary">{t('superadmin.title')}</h1>
                     </div>
 
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2 sm:gap-4">
+                        {/* Mobile Search Button */}
+                        <button
+                            onClick={() => setIsMobileSearchOpen(true)}
+                            className="md:hidden h-8 w-8 flex items-center justify-center rounded-md text-editor-text-secondary hover:text-editor-text-primary transition-colors"
+                        >
+                            <Search className="w-4 h-4" />
+                        </button>
+                        <MobileSearchModal
+                            isOpen={isMobileSearchOpen}
+                            searchQuery={searchQuery}
+                            onSearchChange={setSearchQuery}
+                            onClose={() => setIsMobileSearchOpen(false)}
+                            placeholder={t('superadmin.searchFeatures')}
+                        />
                         <button
                             onClick={handleBackToDashboard}
                             className="flex items-center text-sm font-medium text-editor-text-secondary hover:text-editor-accent transition-colors"
@@ -401,10 +417,10 @@ const SuperAdminDashboard = () => {
                     </div>
                 </header>
 
-                <main className="flex-1 overflow-y-auto">
+                <main className="flex-1 overflow-y-auto relative z-10">
                     <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
                         {/* Search */}
-                        <div className="flex items-center gap-2 bg-editor-border/40 rounded-lg px-3 py-2 mb-6">
+                        <div className="hidden md:flex items-center gap-2 bg-editor-border/40 rounded-lg px-3 py-2 mb-6">
                             <Search className="w-4 h-4 text-editor-text-secondary flex-shrink-0" />
                             <input
                                 type="text"

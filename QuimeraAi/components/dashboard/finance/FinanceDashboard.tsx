@@ -588,7 +588,7 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación ni puntu
                     {activeView === 'overview' && (
                         <div className="space-y-6 animate-in fade-in duration-500">
                             {/* Top row: Metrics */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                            <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-4">
                                 <StatCard
                                     title={t('financeDashboard.total')}
                                     value={`$${totalExpenses.toLocaleString()}`}

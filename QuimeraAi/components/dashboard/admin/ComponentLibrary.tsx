@@ -3,7 +3,9 @@ import React, { useState, useMemo } from 'react';
 import { useAdmin } from '../../../contexts/admin';
 import { useProject } from '../../../contexts/project';
 import { PageSection, CustomComponent } from '../../../types';
-import { Search, Filter, Package, BookOpen, X } from 'lucide-react';
+import { Plus, Search, Filter, Trash2, Edit2, Shield, Eye, Settings, Layout, Code, FileText, Image, LayoutGrid, AlertCircle, RefreshCw, Layers, ArrowLeft, MousePointerClick, Zap, Package, AlignCenter, X } from 'lucide-react';
+import ConfirmationModal from '../../ui/ConfirmationModal';
+import MobileSearchModal from '../../ui/MobileSearchModal';
 import ComponentDocumentationViewer from './ComponentDocumentationViewer';
 
 const Label: React.FC<{ children: React.ReactNode, htmlFor?: string }> = ({ children, htmlFor }) => (
@@ -111,34 +113,38 @@ const componentCategories: Record<PageSection, string> = {
 const ComponentLibrary: React.FC = () => {
     const { componentStatus, updateComponentStatus, customComponents } = useAdmin();
     const { projects } = useProject();
+    const [showDependenciesModal, setShowDependenciesModal] = useState(false);
+    const [selectedDepsComponent, setSelectedDepsComponent] = useState<any>(null);
+
     const [searchQuery, setSearchQuery] = useState('');
+    const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
     const [filterStatus, setFilterStatus] = useState<'all' | 'enabled' | 'disabled'>('all');
-    const [filterCategory, setFilterCategory] = useState<string>('all');
+    const [filterCategory, setCategoryFilter] = useState<string>('all');
     const [viewingDocs, setViewingDocs] = useState<CustomComponent | null>(null);
 
     const categories = ['all', 'hero', 'cta', 'form', 'content', 'navigation', 'media', 'other'];
 
     const getUsageCount = (componentKey: PageSection) => {
-        return projects.filter(p => 
-            p.componentOrder && p.componentOrder.includes(componentKey) && 
+        return projects.filter(p =>
+            p.componentOrder && p.componentOrder.includes(componentKey) &&
             p.sectionVisibility && p.sectionVisibility[componentKey]
         ).length;
     };
 
     const filteredComponents = useMemo(() => {
         const components = Object.keys(componentNames) as PageSection[];
-        
+
         return components.filter(key => {
             const name = componentNames[key].toLowerCase();
             const matchesSearch = name.includes(searchQuery.toLowerCase());
-            
-            const matchesStatus = filterStatus === 'all' || 
+
+            const matchesStatus = filterStatus === 'all' ||
                 (filterStatus === 'enabled' && componentStatus[key]) ||
                 (filterStatus === 'disabled' && !componentStatus[key]);
-            
-            const matchesCategory = filterCategory === 'all' || 
+
+            const matchesCategory = filterCategory === 'all' ||
                 componentCategories[key] === filterCategory;
-            
+
             return matchesSearch && matchesStatus && matchesCategory;
         });
     }, [searchQuery, filterStatus, filterCategory, componentStatus]);
@@ -153,8 +159,8 @@ const ComponentLibrary: React.FC = () => {
 
                 {/* Search and Filters */}
                 <div className="mb-6 space-y-4">
-                    {/* Search Bar */}
-                    <div className="flex items-center gap-2 bg-editor-border/40 rounded-lg px-3 py-2">
+                    {/* Search Bar - Desktop */}
+                    <div className="hidden sm:flex items-center gap-2 bg-editor-border/40 rounded-lg px-3 py-2 flex-1 sm:flex-initial sm:w-64">
                         <Search className="w-4 h-4 text-editor-text-secondary flex-shrink-0" />
                         <input
                             type="text"
@@ -170,6 +176,22 @@ const ComponentLibrary: React.FC = () => {
                         )}
                     </div>
 
+                    {/* Mobile Search Button */}
+                    <button
+                        onClick={() => setIsMobileSearchOpen(true)}
+                        className="sm:hidden flex items-center justify-center px-3 py-2 bg-editor-border/40 rounded-lg text-editor-text-secondary hover:text-editor-text-primary transition-colors"
+                    >
+                        <Search size={16} />
+                    </button>
+
+                    <MobileSearchModal
+                        isOpen={isMobileSearchOpen}
+                        searchQuery={searchQuery}
+                        onSearchChange={setSearchQuery}
+                        onClose={() => setIsMobileSearchOpen(false)}
+                        placeholder="Search components..."
+                    />
+
                     {/* Filters */}
                     <div className="flex flex-wrap gap-3">
                         <div className="flex items-center gap-2">
@@ -180,11 +202,10 @@ const ComponentLibrary: React.FC = () => {
                                     <button
                                         key={status}
                                         onClick={() => setFilterStatus(status as any)}
-                                        className={`px-3 py-1 text-sm font-medium transition-colors ${
-                                            filterStatus === status
+                                        className={`px-3 py-1 text-sm font-medium transition-colors ${filterStatus === status
                                                 ? 'text-editor-accent'
                                                 : 'text-editor-text-secondary hover:text-editor-text-primary'
-                                        }`}
+                                            }`}
                                     >
                                         {status.charAt(0).toUpperCase() + status.slice(1)}
                                     </button>
@@ -235,7 +256,7 @@ const ComponentLibrary: React.FC = () => {
                                         </p>
                                     </div>
                                 </div>
-                                <ToggleControl 
+                                <ToggleControl
                                     checked={componentStatus[key]}
                                     onChange={(isEnabled) => updateComponentStatus(key, isEnabled)}
                                 />
@@ -262,20 +283,20 @@ const ComponentLibrary: React.FC = () => {
                         </p>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                             {customComponents.map((component) => {
-                                const usageCount = projects.filter(p => 
+                                const usageCount = projects.filter(p =>
                                     p.componentOrder && p.componentOrder.some(id => id === component.id)
                                 ).length;
 
                                 return (
-                                    <div 
-                                        key={component.id} 
+                                    <div
+                                        key={component.id}
                                         className="bg-editor-panel-bg border border-editor-border rounded-lg overflow-hidden hover:border-editor-accent transition-colors group"
                                     >
                                         {/* Thumbnail */}
                                         <div className="w-full h-40 bg-gradient-to-br from-purple-600 to-indigo-600 relative overflow-hidden">
                                             {component.styles?.thumbnail ? (
-                                                <img 
-                                                    src={(component.styles as any).thumbnail} 
+                                                <img
+                                                    src={(component.styles as any).thumbnail}
                                                     alt={component.name}
                                                     className="w-full h-full object-cover"
                                                 />
@@ -315,7 +336,7 @@ const ComponentLibrary: React.FC = () => {
                                                     <span>{component.usageCount} total uses</span>
                                                 )}
                                             </div>
-                                            
+
                                             {/* View Docs Button */}
                                             {component.documentation && (
                                                 <button
@@ -333,7 +354,7 @@ const ComponentLibrary: React.FC = () => {
                         </div>
                     </div>
                 )}
-                
+
                 {/* Documentation Viewer Modal */}
                 {viewingDocs && viewingDocs.documentation && (
                     <ComponentDocumentationViewer

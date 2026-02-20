@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import MobileSearchModal from '../ui/MobileSearchModal';
 import { useTranslation } from 'react-i18next';
 import { useProject } from '../../contexts/project';
 import { useRouter } from '../../hooks/useRouter';
@@ -36,6 +37,7 @@ const UserTemplates: React.FC = () => {
 
     // Search and Filter States
     const [searchTerm, setSearchTerm] = useState('');
+    const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
     const [filterIndustry, setFilterIndustry] = useState<string>('all');
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
@@ -172,6 +174,20 @@ const UserTemplates: React.FC = () => {
 
                     {/* Controls */}
                     <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+                        {/* Mobile Search Button */}
+                        <button
+                            onClick={() => setIsMobileSearchOpen(true)}
+                            className="md:hidden h-8 w-8 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground transition-colors"
+                        >
+                            <Search className="w-4 h-4" />
+                        </button>
+                        <MobileSearchModal
+                            isOpen={isMobileSearchOpen}
+                            searchQuery={searchTerm}
+                            onSearchChange={setSearchTerm}
+                            onClose={() => setIsMobileSearchOpen(false)}
+                            placeholder={t('userTemplates.searchPlaceholder', 'Buscar plantillas...')}
+                        />
                         {/* Back Button */}
                         <button
                             onClick={() => navigate(ROUTES.DASHBOARD)}
@@ -184,19 +200,7 @@ const UserTemplates: React.FC = () => {
                     </div>
                 </header>
 
-                {/* Mobile Search */}
-                <div className="md:hidden px-4 py-3 border-b border-border">
-                    <div className="flex items-center gap-2 bg-secondary/50 rounded-lg px-3 py-2">
-                        <Search className="w-4 h-4 text-muted-foreground" />
-                        <input
-                            type="text"
-                            placeholder={t('userTemplates.searchPlaceholder', 'Buscar plantillas...')}
-                            className="flex-1 bg-transparent outline-none text-sm"
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                        />
-                    </div>
-                </div>
+
 
                 <main className="flex-1 overflow-y-auto p-6 lg:p-8">
                     <div className="max-w-7xl mx-auto">

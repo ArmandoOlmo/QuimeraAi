@@ -6,11 +6,12 @@ import DashboardWaveRibbons from '../DashboardWaveRibbons';
 import { useUI } from '../../../contexts/core/UIContext';
 import { useCMS } from '../../../contexts/cms';
 import { useProject } from '../../../contexts/project';
-import { Menu as MenuIcon, Plus, ChevronRight, Trash2, LayoutGrid, Edit2, Copy, AlertCircle, Lightbulb, ArrowRight, Search, Layout, Info, Store, ChevronDown, Check, Layers, X, LayoutList, Link as LinkIcon, Globe, MousePointerClick } from 'lucide-react';
+import { Menu as MenuIcon, Plus, ChevronRight, Trash2, LayoutGrid, Edit2, Copy, AlertCircle, Lightbulb, ArrowRight, Search, Layout, Info, Store, ChevronDown, Check, Layers, X, LayoutList, Link as LinkIcon, Globe, MousePointerClick, Compass } from 'lucide-react';
 import ConfirmationModal from '../../ui/ConfirmationModal';
 import MenuEditor from './MenuEditor';
 import { Menu } from '../../../types';
 import ProjectSelectorPage from './ProjectSelectorPage';
+import MobileSearchModal from '../../ui/MobileSearchModal';
 
 const NavigationDashboard: React.FC = () => {
     const { t } = useTranslation();
@@ -21,6 +22,7 @@ const NavigationDashboard: React.FC = () => {
     const [editingMenu, setEditingMenu] = useState<Menu | null>(null);
     const [isCreating, setIsCreating] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
+    const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
     const [filterUsage, setFilterUsage] = useState<'all' | 'used' | 'unused' | 'empty'>('all');
     const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
     const [isProjectSelectorOpen, setIsProjectSelectorOpen] = useState(false);
@@ -178,7 +180,7 @@ const NavigationDashboard: React.FC = () => {
                             <MenuIcon className="w-5 h-5" />
                         </button>
                         <div className="flex items-center gap-1 sm:gap-2">
-                            <MenuIcon className="text-primary" size={24} aria-hidden="true" />
+                            <Compass className="text-primary" size={24} aria-hidden="true" />
                             <h1 className="text-xl font-bold text-foreground hidden sm:block">
                                 {t('navigationDashboard.title')}
                             </h1>
@@ -206,13 +208,21 @@ const NavigationDashboard: React.FC = () => {
 
                         {/* Mobile Search Button */}
                         <button
-                            onClick={() => setSearchQuery(searchQuery ? '' : ' ')}
+                            onClick={() => setIsMobileSearchOpen(true)}
                             className="md:hidden p-2.5 text-muted-foreground hover:text-foreground hover:bg-secondary/60 rounded-xl transition-colors"
                             aria-label="Toggle search"
                         >
                             <Search size={20} />
                         </button>
                     </div>
+
+                    <MobileSearchModal
+                        isOpen={isMobileSearchOpen}
+                        searchQuery={searchQuery}
+                        onSearchChange={setSearchQuery}
+                        onClose={() => setIsMobileSearchOpen(false)}
+                        placeholder={t('navigationDashboard.searchMenus')}
+                    />
 
                     {/* Right Section - Buttons */}
                     <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">

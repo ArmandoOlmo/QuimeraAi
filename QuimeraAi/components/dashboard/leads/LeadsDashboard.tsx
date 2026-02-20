@@ -32,6 +32,7 @@ import LeadsLibrary from './LeadsLibrary';
 import AddLeadModal from './AddLeadModal';
 import ImportLeadsModal from './ImportLeadsModal';
 import AddToAudienceModal from '../email/AddToAudienceModal';
+import MobileSearchModal from '../../ui/MobileSearchModal';
 import { logApiCall } from '../../../services/apiLoggingService';
 
 import { useTranslation } from 'react-i18next';
@@ -334,11 +335,13 @@ const LeadsDashboard: React.FC = () => {
     const { hasApiKey, promptForKeySelection, handleApiError } = useAI();
     const { activeProject } = useProject();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-    const [searchQuery, setSearchQuery] = useState('');
     const [draggedLeadId, setDraggedLeadId] = useState<string | null>(null);
     const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
+    const [isLibraryOpen, setIsLibraryOpen] = useState(false);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
     const [activeTab, setActiveTab] = useState<'pipeline' | 'library'>('pipeline');
 
     // View Mode
@@ -996,11 +999,19 @@ const LeadsDashboard: React.FC = () => {
 
                                     {/* Mobile Search Button — square, no bg */}
                                     <button
-                                        onClick={() => setSearchQuery(searchQuery || ' ')}
+                                        onClick={() => setIsMobileSearchOpen(true)}
                                         className="md:hidden h-8 w-8 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground transition-colors"
                                     >
                                         <Search className="w-4 h-4" />
                                     </button>
+
+                                    <MobileSearchModal
+                                        isOpen={isMobileSearchOpen}
+                                        searchQuery={searchQuery}
+                                        onSearchChange={setSearchQuery}
+                                        onClose={() => setIsMobileSearchOpen(false)}
+                                        placeholder={t('leads.dashboard.search')}
+                                    />
 
                                     <div className="hidden sm:block">
                                         <CustomFieldsManager
@@ -1196,24 +1207,7 @@ const LeadsDashboard: React.FC = () => {
 
                         {/* Filters Section - Mobile optimized */}
                         <div className="px-3 sm:px-6 pt-3 sm:pt-4 relative z-[1]">
-                            {/* Mobile search bar */}
-                            <div className="sm:hidden mb-3">
-                                <div className="flex items-center gap-2 bg-editor-border/40 rounded-lg px-3 py-2">
-                                    <Search className="w-4 h-4 text-editor-text-secondary flex-shrink-0" />
-                                    <input
-                                        type="text"
-                                        placeholder="Search leads..."
-                                        value={searchQuery}
-                                        onChange={(e) => setSearchQuery(e.target.value)}
-                                        className="flex-1 bg-transparent outline-none text-sm min-w-0"
-                                    />
-                                    {searchQuery && (
-                                        <button onClick={() => setSearchQuery('')} className="text-editor-text-secondary hover:text-editor-text-primary flex-shrink-0">
-                                            <X size={16} />
-                                        </button>
-                                    )}
-                                </div>
-                            </div>
+                            {/* Mobile search bar removed, using MobileSearchModal instead */}
                             <LeadsFilters
                                 filters={filters}
                                 onFiltersChange={setFilters}
@@ -1222,11 +1216,11 @@ const LeadsDashboard: React.FC = () => {
                         </div>
 
                         {/* Main Content Area */}
-                        <main className="flex-1 overflow-x-auto overflow-y-hidden p-3 sm:p-6 pt-3 sm:pt-4 relative z-[2]">
+                        <main className="flex-1 overflow-x-auto overflow-y-auto sm:overflow-y-hidden p-3 sm:p-6 pt-3 sm:pt-4 relative z-[2]">
                             {viewMode === 'kanban' && (
                                 <>
                                     {/* Mobile Kanban - Horizontal scroll with snap */}
-                                    <div className="sm:hidden flex h-full gap-3 overflow-x-auto snap-x snap-mandatory pb-4 -mx-3 px-3 scrollbar-hide">
+                                    <div className="sm:hidden flex min-h-[60vh] gap-3 overflow-x-auto snap-x snap-mandatory pb-24 -mx-3 px-3 scrollbar-hide">
                                         {LEAD_STAGES.map(stage => {
                                             const stageLeads = filteredLeads.filter(l => l.status === stage.id);
                                             return (

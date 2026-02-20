@@ -105,8 +105,8 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
     return (
       <>
         {/* Tabs */}
-        <div className="bg-secondary/20 border-b border-border px-6 relative z-[2]">
-          <div className="flex gap-4">
+        <div className="bg-secondary/20 border-b border-border px-2 sm:px-6 relative z-[2]">
+          <div className="flex overflow-x-auto scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
             {[
               { id: 'basic', label: t('seo.basicSEO'), icon: Globe },
               { id: 'social', label: t('seo.socialMedia'), icon: Share2 },
@@ -117,7 +117,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as SeoTab)}
-                className={`flex items-center gap-2 px-4 py-3 border-b-2 transition-colors ${activeTab === tab.id
+                className={`flex items-center gap-1.5 px-3 sm:px-4 py-3 border-b-2 transition-colors whitespace-nowrap text-sm shrink-0 ${activeTab === tab.id
                   ? 'border-primary text-foreground'
                   : 'border-transparent text-muted-foreground hover:text-foreground'
                   }`}
@@ -1348,9 +1348,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
             </button>
             <div className="flex items-center gap-2">
               <Search className="text-primary w-5 h-5" />
-              <h1 className="text-lg font-semibold text-foreground">
-                {t('seo.title')}
-              </h1>
+              <h1 className="text-lg font-semibold text-foreground">SEO</h1>
             </div>
           </div>
 
@@ -1358,18 +1356,18 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setIsAiAssistantOpen(true)}
-                className="flex items-center gap-1.5 h-9 px-3 rounded-lg text-sm font-bold transition-all text-primary bg-primary/10 hover:bg-primary/20 border border-primary/30"
+                className="flex items-center justify-center h-9 w-9 sm:w-auto sm:px-3 rounded-lg text-sm font-bold transition-all text-primary bg-primary/10 hover:bg-primary/20 border border-primary/30"
+                title={t('seo.optimizeWithAI', 'Optimizar con IA')}
               >
                 <Sparkles className="w-4 h-4" />
-                <span className="hidden sm:inline">{t('seo.optimizeWithAI', 'Optimizar con IA')}</span>
-                <span className="sm:hidden">IA</span>
+                <span className="hidden sm:inline ml-1.5">{t('seo.optimizeWithAI', 'Optimizar con IA')}</span>
               </button>
               <button
                 onClick={handleUpdate}
                 disabled={isSaving}
                 className="h-9 px-4 bg-primary text-primary-foreground font-medium text-sm rounded-lg hover:opacity-90 transition-colors disabled:opacity-50 shadow-sm"
               >
-                {isSaving ? t('seo.saving') : t('seo.saveChanges')}
+                {isSaving ? t('seo.saving') : t('common.save', 'Guardar')}
               </button>
             </div>
           )}

@@ -755,7 +755,8 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
             {(!isCollapsed || isMobileOpen) && (
               <button
                 onClick={() => setIsFooterCollapsed(!isFooterCollapsed)}
-                className="absolute -top-3 left-1/2 -translate-x-1/2 z-10 w-6 h-6 bg-card border border-border rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-primary transition-all shadow-md"
+                className="absolute -top-3 left-1/2 -translate-x-1/2 z-10 w-6 bg-card border border-border rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-primary transition-all shadow-md"
+                style={{ height: '24px', minHeight: '24px' }}
                 aria-label={isFooterCollapsed ? t('common.expandFooter', 'Expandir') : t('common.collapseFooter', 'Colapsar')}
                 aria-expanded={!isFooterCollapsed}
               >

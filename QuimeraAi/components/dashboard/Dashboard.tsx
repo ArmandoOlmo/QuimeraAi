@@ -478,7 +478,7 @@ const Dashboard: React.FC = () => {
                         {/* Statistics Section - Only on Websites view */}
                         {
                             isWebsites && (
-                                <section className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4">
+                                <section className="relative z-[1] grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4">
                                     <div className="bg-card/50 border border-border hover:border-primary/30 rounded-xl md:rounded-2xl p-2.5 md:p-4 hover:shadow-lg transition-all">
                                         <div className="flex items-center gap-2 md:gap-3 mb-1 md:mb-2">
                                             <div className="p-1.5 md:p-2 rounded-md md:rounded-lg bg-primary/20">
@@ -525,7 +525,7 @@ const Dashboard: React.FC = () => {
                         {/* Projects Section */}
                         {
                             (isDashboard || isWebsites) && (
-                                <section>
+                                <section className="relative z-[1]">
                                     {/* Only show section header on Dashboard view, since Websites view has it in main header */}
                                     {isDashboard && (
                                         <div className="flex items-center justify-between mb-6">

@@ -487,6 +487,7 @@ const AdminAssetLibrary: React.FC<AdminAssetLibraryProps> = ({ onBack }) => {
     // Library State
     const [showFilters, setShowFilters] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
+    const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
     const [categoryFilter, setCategoryFilter] = useState<AdminAssetCategory | 'all'>('all');
     const [sortBy, setSortBy] = useState<'date' | 'name' | 'size' | 'category'>('date');
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
@@ -1028,8 +1029,8 @@ const AdminAssetLibrary: React.FC<AdminAssetLibraryProps> = ({ onBack }) => {
                                     </div>
 
                                     <div className="flex flex-wrap gap-2 w-full sm:w-auto">
-                                        {/* Search */}
-                                        <div className="flex items-center gap-2 flex-1 sm:flex-initial sm:w-48 bg-secondary/40 rounded-lg px-3 py-1.5">
+                                        {/* Search Bar - Desktop */}
+                                        <div className="hidden sm:flex items-center gap-2 flex-1 sm:flex-initial sm:w-48 bg-secondary/40 rounded-lg px-3 py-1.5">
                                             <Search size={14} className="text-muted-foreground flex-shrink-0" />
                                             <input
                                                 type="text"
@@ -1044,6 +1045,22 @@ const AdminAssetLibrary: React.FC<AdminAssetLibraryProps> = ({ onBack }) => {
                                                 </button>
                                             )}
                                         </div>
+
+                                        {/* Mobile Search Button */}
+                                        <button
+                                            onClick={() => setIsMobileSearchOpen(true)}
+                                            className="sm:hidden flex items-center justify-center px-3 py-1.5 text-xs font-bold transition-colors text-muted-foreground hover:text-foreground"
+                                        >
+                                            <Search size={14} />
+                                        </button>
+
+                                        <MobileSearchModal
+                                            isOpen={isMobileSearchOpen}
+                                            searchQuery={searchQuery}
+                                            onSearchChange={setSearchQuery}
+                                            onClose={() => setIsMobileSearchOpen(false)}
+                                            placeholder={t('adminAssets.search', 'Search...')}
+                                        />
 
                                         {/* Filter Toggle */}
                                         <button

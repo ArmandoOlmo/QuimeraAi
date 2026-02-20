@@ -6,6 +6,7 @@ import { useProject } from '../../contexts/project';
 import DashboardSidebar from '../dashboard/DashboardSidebar';
 import DashboardWaveRibbons from '../dashboard/DashboardWaveRibbons';
 import ConfirmationModal from '../ui/ConfirmationModal';
+import MobileSearchModal from '../ui/MobileSearchModal';
 import ModernCMSEditor from './modern/ModernCMSEditor';
 import ContentCreatorAssistant from './ContentCreatorAssistant';
 import CMSProjectSelectorPage from './CMSProjectSelectorPage';
@@ -335,40 +336,20 @@ const CMSDashboard: React.FC = () => {
 
                     {/* Right Section */}
                     <div className="flex items-center gap-1 sm:gap-2 ml-auto">
-                        {/* Búsqueda Móvil - Expandable */}
-                        <div className="md:hidden">
-                            {isMobileSearchOpen ? (
-                                <div className="absolute left-0 right-0 top-full bg-background border-b border-border p-3 flex items-center gap-2 animate-slide-down z-30">
-                                    <div className="flex items-center gap-2 flex-1 bg-muted/50 rounded-lg px-3 py-2">
-                                        <Search className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                                        <input
-                                            type="text"
-                                            placeholder={t('cms.searchPosts', 'Buscar posts...')}
-                                            value={searchQuery}
-                                            onChange={(e) => setSearchQuery(e.target.value)}
-                                            className="flex-1 bg-transparent outline-none text-sm min-w-0 text-foreground"
-                                            autoFocus
-                                        />
-                                    </div>
-                                    <button
-                                        onClick={() => {
-                                            setIsMobileSearchOpen(false);
-                                            setSearchQuery('');
-                                        }}
-                                        className="p-2 text-muted-foreground hover:text-foreground rounded-lg"
-                                    >
-                                        <XIcon size={18} />
-                                    </button>
-                                </div>
-                            ) : (
-                                <button
-                                    onClick={() => setIsMobileSearchOpen(true)}
-                                    className="h-8 w-8 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors"
-                                >
-                                    <Search className="w-4 h-4" />
-                                </button>
-                            )}
-                        </div>
+                        {/* Mobile Search Button */}
+                        <button
+                            onClick={() => setIsMobileSearchOpen(true)}
+                            className="md:hidden h-8 w-8 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground transition-colors"
+                        >
+                            <Search className="w-4 h-4" />
+                        </button>
+                        <MobileSearchModal
+                            isOpen={isMobileSearchOpen}
+                            searchQuery={searchQuery}
+                            onSearchChange={setSearchQuery}
+                            onClose={() => setIsMobileSearchOpen(false)}
+                            placeholder={t('cms.searchPosts', 'Buscar posts...')}
+                        />
 
                         {/* Botón Export - Desktop only */}
                         {cmsPosts.length > 0 && (
@@ -381,28 +362,27 @@ const CMSDashboard: React.FC = () => {
                             </button>
                         )}
 
-                        {/* Botón Crear con IA - Mobile compact */}
+                        {/* Botón Crear con IA - Icon only on mobile, full button on desktop */}
                         <button
                             onClick={handleAiCreate}
-                            className="flex items-center gap-1 sm:gap-1.5 h-8 sm:h-9 px-2 sm:px-3 rounded-md text-xs sm:text-sm font-bold transition-all text-primary bg-primary/10 hover:bg-primary/20 border border-primary/30"
+                            className="flex items-center gap-1.5 h-8 w-8 sm:w-auto sm:h-9 sm:px-3 justify-center rounded-md text-sm font-bold transition-all text-primary sm:bg-primary/10 sm:hover:bg-primary/20 sm:border sm:border-primary/30 hover:text-primary/80"
                         >
-                            <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                            <Sparkles className="w-4 h-4" />
                             <span className="hidden sm:inline">{t('cms.createWithAI', 'Crear con IA')}</span>
-                            <span className="sm:hidden">IA</span>
                         </button>
 
                         <button
                             onClick={handleCreateNew}
-                            className="flex items-center gap-1 sm:gap-1.5 h-8 sm:h-9 px-2 sm:px-3 rounded-md text-xs sm:text-sm font-medium transition-all bg-primary text-primary-foreground hover:opacity-90"
+                            className="flex items-center gap-1.5 h-8 w-8 sm:w-auto sm:h-9 sm:px-3 justify-center rounded-md text-sm font-medium transition-all sm:bg-primary sm:text-primary-foreground sm:hover:opacity-90 text-foreground hover:text-foreground/80"
                         >
-                            <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                            <Plus className="w-4 h-4" />
                             <span className="hidden sm:inline">{t('cms.newPost', 'Nuevo Post')}</span>
                         </button>
 
-                        {/* Botón Volver */}
+                        {/* Botón Volver - Icon only on mobile, full button on desktop */}
                         <button
                             onClick={() => navigate(ROUTES.DASHBOARD)}
-                            className="flex items-center justify-center gap-2 h-9 px-3 rounded-lg bg-secondary/50 hover:bg-secondary text-sm font-medium transition-all text-muted-foreground hover:text-foreground"
+                            className="flex items-center justify-center gap-2 h-8 w-8 sm:w-auto sm:h-9 sm:px-3 rounded-md sm:rounded-lg sm:bg-secondary/50 sm:hover:bg-secondary text-sm font-medium transition-all text-muted-foreground hover:text-foreground"
                             aria-label={t('common.back', 'Volver')}
                         >
                             <ArrowLeft className="w-4 h-4" />
@@ -411,7 +391,7 @@ const CMSDashboard: React.FC = () => {
                     </div>
                 </header>
 
-                <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 scroll-smooth">
+                <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 scroll-smooth relative z-10">
                     <div className="max-w-7xl mx-auto h-full space-y-4 sm:space-y-6">
 
                         {/* Métricas - Unified responsive design */}

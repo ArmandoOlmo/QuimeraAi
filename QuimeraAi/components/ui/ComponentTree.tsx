@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { PageSection } from '../../types';
 import { useTranslation } from 'react-i18next';
+import MobileSearchModal from './MobileSearchModal';
 import {
     Layout, Image, List, Star, Users, DollarSign,
     Briefcase, Mail, Send, MessageCircle, PlaySquare,
@@ -260,6 +261,7 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
 }) => {
     const { t } = useTranslation();
     const [searchTerm, setSearchTerm] = useState('');
+    const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
     const [showAddMenu, setShowAddMenu] = useState(false);
     const [expandedGroups, setExpandedGroups] = useState({
         structure: false,
@@ -478,8 +480,8 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
                     )}
                 </div>
 
-                {/* Search */}
-                <div className="flex items-center gap-2 bg-editor-border/40 rounded-lg px-3 py-2">
+                {/* Search Bar - Desktop */}
+                <div className="hidden sm:flex items-center gap-2 bg-editor-border/40 rounded-lg px-3 py-2">
                     <Search size={14} className="text-editor-text-secondary flex-shrink-0" />
                     <input
                         type="text"
@@ -497,6 +499,22 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
                         </button>
                     )}
                 </div>
+
+                {/* Mobile Search Button */}
+                <button
+                    onClick={() => setIsMobileSearchOpen(true)}
+                    className="sm:hidden flex items-center justify-center p-2 rounded-lg bg-editor-border/40 text-editor-text-secondary hover:text-editor-text-primary transition-colors"
+                >
+                    <Search size={14} />
+                </button>
+
+                <MobileSearchModal
+                    isOpen={isMobileSearchOpen}
+                    searchQuery={searchTerm}
+                    onSearchChange={setSearchTerm}
+                    onClose={() => setIsMobileSearchOpen(false)}
+                    placeholder={t('editor.searchSections')}
+                />
             </div>
 
             {/* Add Component Menu */}
