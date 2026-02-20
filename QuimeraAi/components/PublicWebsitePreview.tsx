@@ -11,6 +11,7 @@ import { Project, PageData, ThemeData, PageSection, CMSPost, Menu, FooterData, F
 import { deriveColorsFromPalette } from '../utils/colorUtils';
 import { AlertTriangle } from 'lucide-react';
 import AdPixelsInjector from './AdPixelsInjector';
+import QuimeraLoader from './ui/QuimeraLoader';
 
 // Import all website components
 import Header from './Header';
@@ -1093,104 +1094,9 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
   // Check if project uses multi-page architecture
   const useMultiPageArchitecture = project?.pages && project.pages.length > 0;
 
-  // Loading state - Generic spinner for public preview (no Quimera branding)
-  // Uses project colors if available from query params (passed by SSR server) or window config
+  // Loading state - Unified QuimeraLoader for consistent branding
   if (loading) {
-    // Try to get colors from multiple sources:
-    // 1. Query params (pc=primaryColor, bc=backgroundColor) - passed by SSR iframe
-    // 2. window.__DOMAIN_CONFIG__ - injected by SSR for direct access
-    // 3. Default fallback
-    let primaryColor = '#ffffff';
-    let backgroundColor = '#0f172a';
-
-    if (typeof window !== 'undefined') {
-      const urlParams = new URLSearchParams(window.location.search);
-      const queryPrimary = urlParams.get('pc');
-      const queryBackground = urlParams.get('bc');
-
-      if (queryPrimary) {
-        primaryColor = decodeURIComponent(queryPrimary);
-      }
-      if (queryBackground) {
-        backgroundColor = decodeURIComponent(queryBackground);
-      }
-
-      // Fallback to window config if no query params
-      const serverConfig = (window as any).__DOMAIN_CONFIG__;
-      if (!queryPrimary && serverConfig?.primaryColor) {
-        primaryColor = serverConfig.primaryColor;
-      }
-      if (!queryBackground && serverConfig?.backgroundColor) {
-        backgroundColor = serverConfig.backgroundColor;
-      }
-    }
-
-    const trackColor = `${primaryColor}33`; // 20% opacity
-
-    return (
-      <div
-        className="min-h-screen flex items-center justify-center"
-        style={{ background: backgroundColor }}
-      >
-        <div className="text-center">
-          {/* Modern circular loader with project colors */}
-          <div className="relative flex items-center justify-center mb-8" style={{ width: 80, height: 80 }}>
-            {/* Outer pulsing ring */}
-            <div
-              className="absolute w-20 h-20 rounded-full animate-pulse"
-              style={{ border: `3px solid ${trackColor}` }}
-            />
-
-            {/* Middle rotating ring */}
-            <div
-              className="absolute w-16 h-16 rounded-full"
-              style={{
-                border: '3px solid transparent',
-                borderTopColor: primaryColor,
-                borderRightColor: trackColor,
-                animation: 'spin 1s linear infinite'
-              }}
-            />
-
-            {/* Inner spinning loader (reverse direction) */}
-            <div
-              className="absolute w-12 h-12 rounded-full"
-              style={{
-                border: '3px solid transparent',
-                borderTopColor: primaryColor,
-                animation: 'spin 0.7s linear infinite reverse'
-              }}
-            />
-
-            {/* Center dot */}
-            <div
-              className="absolute w-3 h-3 rounded-full animate-pulse"
-              style={{ backgroundColor: primaryColor }}
-            />
-          </div>
-
-          {/* Loading text with dots animation */}
-          <div
-            className="flex items-center justify-center gap-1 text-sm"
-            style={{ color: primaryColor, opacity: 0.8 }}
-          >
-            <span>Loading</span>
-            <span className="flex gap-0.5">
-              <span className="animate-bounce" style={{ animationDelay: '0ms' }}>.</span>
-              <span className="animate-bounce" style={{ animationDelay: '150ms' }}>.</span>
-              <span className="animate-bounce" style={{ animationDelay: '300ms' }}>.</span>
-            </span>
-          </div>
-        </div>
-
-        {/* CSS for spin animation */}
-        <style>{`
-          @keyframes spin {
-            to { transform: rotate(360deg); }
-          }
-        `}</style>
-      </div>
-    );
+    return <QuimeraLoader fullScreen size="md" text="Loading..." />;
   }
 
   // Error state
@@ -1526,7 +1432,7 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
         {/* Loading Overlay for async navigation */}
         {loadingPost && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-[2px]">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary border-t-2 border-r-2 border-transparent"></div>
+            <QuimeraLoader size="md" />
           </div>
         )}
         {/* Store View */}
