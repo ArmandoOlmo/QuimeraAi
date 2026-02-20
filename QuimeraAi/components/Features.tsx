@@ -24,6 +24,7 @@ interface FeatureCardProps {
   enableAnimation?: boolean;
   linkUrl?: string;
   linkText?: string;
+  onNavigate?: (href: string) => void;
 }
 
 const paddingYClasses: Record<PaddingSize, string> = {
@@ -97,7 +98,8 @@ const FeatureCard: React.FC<FeatureCardProps> = ({
   animationType = 'fade-in-up',
   enableAnimation = true,
   linkUrl,
-  linkText
+  linkText,
+  onNavigate
 }) => {
   const animationClass = getAnimationClass(animationType, enableAnimation);
   const isExternal = linkUrl?.startsWith('http');
@@ -132,6 +134,12 @@ const FeatureCard: React.FC<FeatureCardProps> = ({
             href={linkUrl}
             target={isExternal ? '_blank' : undefined}
             rel={isExternal ? 'noopener noreferrer' : undefined}
+            onClick={(e) => {
+              if (onNavigate && linkUrl && !linkUrl.startsWith('http://') && !linkUrl.startsWith('https://')) {
+                e.preventDefault();
+                onNavigate(linkUrl);
+              }
+            }}
             className="mt-4 inline-flex items-center gap-2 text-sm font-semibold group/link transition-colors"
             style={{ color: accentColor }}
           >
@@ -145,7 +153,7 @@ const FeatureCard: React.FC<FeatureCardProps> = ({
 };
 
 // --- NUEVO: Componente para la Tarjeta Moderna (Bento Style) ---
-const ModernFeatureCard = ({ feature, index, colors, borderRadius }: { feature: any, index: number, colors: any, borderRadius: string }) => {
+const ModernFeatureCard = ({ feature, index, colors, borderRadius, onNavigate }: { feature: any, index: number, colors: any, borderRadius: string, onNavigate?: (href: string) => void }) => {
   // Patrón Bento: El 1º (0) y el 4º (3) ocupan 2 columnas
   const isWide = index === 0 || index === 3 || index === 6;
   const isExternal = feature.linkUrl?.startsWith('http');
@@ -180,6 +188,12 @@ const ModernFeatureCard = ({ feature, index, colors, borderRadius }: { feature: 
             href={feature.linkUrl}
             target={isExternal ? '_blank' : undefined}
             rel={isExternal ? 'noopener noreferrer' : undefined}
+            onClick={(e) => {
+              if (onNavigate && feature.linkUrl && !feature.linkUrl.startsWith('http://') && !feature.linkUrl.startsWith('https://')) {
+                e.preventDefault();
+                onNavigate(feature.linkUrl);
+              }
+            }}
             className="inline-flex items-center gap-2 text-sm font-semibold group/link transition-colors"
             style={{ color: colors?.accent }}
           >
@@ -269,6 +283,12 @@ const ImageOverlayCard: React.FC<ImageOverlayCardProps> = ({
             href={feature.linkUrl}
             target={feature.linkUrl.startsWith('http') ? '_blank' : undefined}
             rel={feature.linkUrl.startsWith('http') ? 'noopener noreferrer' : undefined}
+            onClick={(e) => {
+              if (onNavigate && !feature.linkUrl.startsWith('http://') && !feature.linkUrl.startsWith('https://')) {
+                e.preventDefault();
+                onNavigate(feature.linkUrl);
+              }
+            }}
             className="mt-2 inline-flex items-center gap-2 text-sm font-semibold text-white/90 hover:text-white opacity-0 group-hover:opacity-100 transition-all duration-300"
           >
             <span>{feature.linkText || 'Learn more'}</span>
@@ -288,6 +308,7 @@ const ImageOverlayCard: React.FC<ImageOverlayCardProps> = ({
 
 interface FeaturesProps extends FeaturesData {
   borderRadius: BorderRadiusSize;
+  onNavigate?: (href: string) => void;
 }
 
 const Features: React.FC<FeaturesProps> = ({
@@ -307,7 +328,8 @@ const Features: React.FC<FeaturesProps> = ({
   animationType = 'fade-in-up',
   enableCardAnimation = true,
   overlayTextAlignment = 'left',
-  showSectionHeader = true
+  showSectionHeader = true,
+  onNavigate
 }) => {
   // Get design tokens with fallback to component colors
   const { getColor } = useDesignTokens();
@@ -399,6 +421,7 @@ const Features: React.FC<FeaturesProps> = ({
               textAlignment={overlayTextAlignment}
               animationType={animationType}
               enableAnimation={enableCardAnimation}
+              onNavigate={onNavigate}
             />
           ))}
         </div>
@@ -429,6 +452,7 @@ const Features: React.FC<FeaturesProps> = ({
                   index={index}
                   colors={{ ...actualColors, heading: safeColors.cardHeading, text: safeColors.cardText }}
                   borderRadius={borderRadiusClasses[borderRadius]}
+                  onNavigate={onNavigate}
                 />
               ))}
             </div>
@@ -536,6 +560,12 @@ const Features: React.FC<FeaturesProps> = ({
                           href={feature.linkUrl}
                           target={feature.linkUrl.startsWith('http') ? '_blank' : undefined}
                           rel={feature.linkUrl.startsWith('http') ? 'noopener noreferrer' : undefined}
+                          onClick={(e) => {
+                            if (onNavigate && !feature.linkUrl.startsWith('http://') && !feature.linkUrl.startsWith('https://')) {
+                              e.preventDefault();
+                              onNavigate(feature.linkUrl);
+                            }
+                          }}
                           className="mt-4 flex items-center gap-2 opacity-0 group-hover:opacity-100 translate-x-[-10px] group-hover:translate-x-0 transition-all duration-300"
                           style={{ color: actualColors.accent }}
                         >
@@ -599,6 +629,7 @@ const Features: React.FC<FeaturesProps> = ({
               enableAnimation={enableCardAnimation}
               linkUrl={feature.linkUrl}
               linkText={feature.linkText}
+              onNavigate={onNavigate}
             />
           ))}
         </div>

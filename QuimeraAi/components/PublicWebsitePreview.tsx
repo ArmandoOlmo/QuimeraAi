@@ -1405,7 +1405,7 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
       case 'heroSplit':
         return <HeroSplit {...compData} borderRadius={compData.buttonBorderRadius || buttonBorderRadius} onNavigate={handleLinkNavigation} />;
       case 'features':
-        return <Features {...compData} borderRadius={borderRadius} />;
+        return <Features {...compData} borderRadius={borderRadius} onNavigate={handleLinkNavigation} />;
       case 'testimonials':
         return <Testimonials {...compData} borderRadius={compData.borderRadius || borderRadius} cardShadow={compData.cardShadow} borderStyle={compData.borderStyle} cardPadding={compData.cardPadding} testimonialsVariant={compData.testimonialsVariant} />;
       case 'slideshow':
@@ -1419,7 +1419,7 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
       case 'newsletter':
         return <Newsletter {...compData} cardBorderRadius={borderRadius} buttonBorderRadius={buttonBorderRadius} />;
       case 'cta':
-        return <CTASection {...compData} cardBorderRadius={borderRadius} buttonBorderRadius={buttonBorderRadius} />;
+        return <CTASection {...compData} cardBorderRadius={borderRadius} buttonBorderRadius={buttonBorderRadius} onNavigate={handleLinkNavigation} />;
       case 'portfolio':
         return <Portfolio {...compData} borderRadius={borderRadius} onNavigate={handleLinkNavigation} />;
       case 'services':

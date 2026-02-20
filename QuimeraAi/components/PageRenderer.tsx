@@ -338,6 +338,7 @@ const PageRenderer: React.FC<PageRendererProps> = ({
                         key={key}
                         {...mergedData.features}
                         borderRadius={mergedData.features?.borderRadius || cardBorderRadius}
+                        onNavigate={handleLinkNavigation}
                     />
                 );
 
@@ -376,6 +377,7 @@ const PageRenderer: React.FC<PageRendererProps> = ({
                         {...mergedData.cta}
                         cardBorderRadius={cardBorderRadius}
                         buttonBorderRadius={buttonBorderRadius}
+                        onNavigate={handleLinkNavigation}
                     />
                 );
 
