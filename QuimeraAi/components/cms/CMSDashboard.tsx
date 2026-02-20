@@ -7,6 +7,7 @@ import DashboardSidebar from '../dashboard/DashboardSidebar';
 import DashboardWaveRibbons from '../dashboard/DashboardWaveRibbons';
 import ConfirmationModal from '../ui/ConfirmationModal';
 import MobileSearchModal from '../ui/MobileSearchModal';
+import QuimeraLoader from '../ui/QuimeraLoader';
 import ModernCMSEditor from './modern/ModernCMSEditor';
 import ContentCreatorAssistant from './ContentCreatorAssistant';
 import CMSProjectSelectorPage from './CMSProjectSelectorPage';
@@ -533,7 +534,7 @@ const CMSDashboard: React.FC = () => {
 
                         {isLoading ? (
                             <div className="flex justify-center items-center h-64">
-                                <Loader2 className="animate-spin w-10 h-10 text-primary" />
+                                <QuimeraLoader size="md" />
                             </div>
                         ) : filteredAndSortedPosts.length === 0 ? (
                             <div className="text-center py-16 bg-card/30 rounded-3xl border border-dashed border-border/50">
