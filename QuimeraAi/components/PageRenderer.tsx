@@ -230,6 +230,15 @@ const PageRenderer: React.FC<PageRendererProps> = ({
         window.location.href = '/checkout';
     };
 
+    // Universal link navigation handler for Hero CTAs, Header, Footer, Portfolio
+    const handleLinkNavigation = (href: string) => {
+        if (href.startsWith('http://') || href.startsWith('https://')) {
+            window.open(href, '_blank');
+        } else {
+            window.location.href = href;
+        }
+    };
+
     // Build header links with priority: CMS Menu > main-menu > Pages > Manual Links
     // This matches the logic in PublicWebsitePreview.tsx for consistency
     const navigationLinks = useMemo(() => {
@@ -291,6 +300,7 @@ const PageRenderer: React.FC<PageRendererProps> = ({
                         {...mergedData.header}
                         links={navigationLinks}
                         isPreviewMode={isPreview}
+                        onNavigate={handleLinkNavigation}
                     />
                 );
 
@@ -299,18 +309,18 @@ const PageRenderer: React.FC<PageRendererProps> = ({
                 const heroData = mergedData.hero;
                 const heroBorderRadius = heroData?.buttonBorderRadius || buttonBorderRadius;
 
-                if (heroData?.heroVariant === 'modern') return <HeroModern key={key} {...heroData} borderRadius={heroBorderRadius} />;
-                if (heroData?.heroVariant === 'gradient') return <HeroGradient key={key} {...heroData} borderRadius={heroBorderRadius} />;
-                if (heroData?.heroVariant === 'fitness') return <HeroFitness key={key} {...heroData} borderRadius={heroBorderRadius} />;
-                if (heroData?.heroVariant === 'editorial') return <HeroEditorial key={key} {...heroData} borderRadius={heroBorderRadius} />;
-                if (heroData?.heroVariant === 'cinematic') return <HeroCinematic key={key} {...heroData} borderRadius={heroBorderRadius} />;
-                if (heroData?.heroVariant === 'minimal') return <HeroMinimal key={key} {...heroData} borderRadius={heroBorderRadius} />;
-                if (heroData?.heroVariant === 'bold') return <HeroBold key={key} {...heroData} borderRadius={heroBorderRadius} />;
-                if (heroData?.heroVariant === 'overlap') return <HeroOverlap key={key} {...heroData} borderRadius={heroBorderRadius} />;
-                if (heroData?.heroVariant === 'verticalSplit') return <HeroVerticalSplit key={key} {...heroData} borderRadius={heroBorderRadius} />;
-                if (heroData?.heroVariant === 'glass') return <HeroGlass key={key} {...heroData} borderRadius={heroBorderRadius} />;
-                if (heroData?.heroVariant === 'stacked') return <HeroStacked key={key} {...heroData} borderRadius={heroBorderRadius} />;
-                return <Hero key={key} {...heroData} borderRadius={heroBorderRadius} />;
+                if (heroData?.heroVariant === 'modern') return <HeroModern key={key} {...heroData} borderRadius={heroBorderRadius} onNavigate={handleLinkNavigation} />;
+                if (heroData?.heroVariant === 'gradient') return <HeroGradient key={key} {...heroData} borderRadius={heroBorderRadius} onNavigate={handleLinkNavigation} />;
+                if (heroData?.heroVariant === 'fitness') return <HeroFitness key={key} {...heroData} borderRadius={heroBorderRadius} onNavigate={handleLinkNavigation} />;
+                if (heroData?.heroVariant === 'editorial') return <HeroEditorial key={key} {...heroData} borderRadius={heroBorderRadius} onNavigate={handleLinkNavigation} />;
+                if (heroData?.heroVariant === 'cinematic') return <HeroCinematic key={key} {...heroData} borderRadius={heroBorderRadius} onNavigate={handleLinkNavigation} />;
+                if (heroData?.heroVariant === 'minimal') return <HeroMinimal key={key} {...heroData} borderRadius={heroBorderRadius} onNavigate={handleLinkNavigation} />;
+                if (heroData?.heroVariant === 'bold') return <HeroBold key={key} {...heroData} borderRadius={heroBorderRadius} onNavigate={handleLinkNavigation} />;
+                if (heroData?.heroVariant === 'overlap') return <HeroOverlap key={key} {...heroData} borderRadius={heroBorderRadius} onNavigate={handleLinkNavigation} />;
+                if (heroData?.heroVariant === 'verticalSplit') return <HeroVerticalSplit key={key} {...heroData} borderRadius={heroBorderRadius} onNavigate={handleLinkNavigation} />;
+                if (heroData?.heroVariant === 'glass') return <HeroGlass key={key} {...heroData} borderRadius={heroBorderRadius} onNavigate={handleLinkNavigation} />;
+                if (heroData?.heroVariant === 'stacked') return <HeroStacked key={key} {...heroData} borderRadius={heroBorderRadius} onNavigate={handleLinkNavigation} />;
+                return <Hero key={key} {...heroData} borderRadius={heroBorderRadius} onNavigate={handleLinkNavigation} />;
 
             case 'heroSplit':
                 return (
@@ -318,6 +328,7 @@ const PageRenderer: React.FC<PageRendererProps> = ({
                         key={key}
                         {...mergedData.heroSplit}
                         borderRadius={mergedData.heroSplit?.buttonBorderRadius || buttonBorderRadius}
+                        onNavigate={handleLinkNavigation}
                     />
                 );
 
@@ -409,6 +420,7 @@ const PageRenderer: React.FC<PageRendererProps> = ({
                         key={key}
                         {...mergedData.portfolio}
                         borderRadius={cardBorderRadius}
+                        onNavigate={handleLinkNavigation}
                     />
                 );
 
@@ -471,6 +483,7 @@ const PageRenderer: React.FC<PageRendererProps> = ({
                     <Footer
                         key={key}
                         {...mergedData.footer}
+                        onNavigate={handleLinkNavigation}
                     />
                 );
 

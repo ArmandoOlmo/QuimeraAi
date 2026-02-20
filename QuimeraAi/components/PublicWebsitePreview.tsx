@@ -1389,21 +1389,21 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
       case 'hero':
         {
           const hbr = compData.buttonBorderRadius || buttonBorderRadius;
-          if (compData.heroVariant === 'modern') return <HeroModern {...compData} borderRadius={hbr} />;
-          if (compData.heroVariant === 'gradient') return <HeroGradient {...compData} borderRadius={hbr} />;
-          if (compData.heroVariant === 'fitness') return <HeroFitness {...compData} borderRadius={hbr} />;
-          if (compData.heroVariant === 'editorial') return <HeroEditorial {...compData} borderRadius={hbr} />;
-          if (compData.heroVariant === 'cinematic') return <HeroCinematic {...compData} borderRadius={hbr} />;
-          if (compData.heroVariant === 'minimal') return <HeroMinimal {...compData} borderRadius={hbr} />;
-          if (compData.heroVariant === 'bold') return <HeroBold {...compData} borderRadius={hbr} />;
-          if (compData.heroVariant === 'overlap') return <HeroOverlap {...compData} borderRadius={hbr} />;
-          if (compData.heroVariant === 'verticalSplit') return <HeroVerticalSplit {...compData} borderRadius={hbr} />;
-          if (compData.heroVariant === 'glass') return <HeroGlass {...compData} borderRadius={hbr} />;
-          if (compData.heroVariant === 'stacked') return <HeroStacked {...compData} borderRadius={hbr} />;
-          return <Hero {...compData} borderRadius={hbr} />;
+          if (compData.heroVariant === 'modern') return <HeroModern {...compData} borderRadius={hbr} onNavigate={handleLinkNavigation} />;
+          if (compData.heroVariant === 'gradient') return <HeroGradient {...compData} borderRadius={hbr} onNavigate={handleLinkNavigation} />;
+          if (compData.heroVariant === 'fitness') return <HeroFitness {...compData} borderRadius={hbr} onNavigate={handleLinkNavigation} />;
+          if (compData.heroVariant === 'editorial') return <HeroEditorial {...compData} borderRadius={hbr} onNavigate={handleLinkNavigation} />;
+          if (compData.heroVariant === 'cinematic') return <HeroCinematic {...compData} borderRadius={hbr} onNavigate={handleLinkNavigation} />;
+          if (compData.heroVariant === 'minimal') return <HeroMinimal {...compData} borderRadius={hbr} onNavigate={handleLinkNavigation} />;
+          if (compData.heroVariant === 'bold') return <HeroBold {...compData} borderRadius={hbr} onNavigate={handleLinkNavigation} />;
+          if (compData.heroVariant === 'overlap') return <HeroOverlap {...compData} borderRadius={hbr} onNavigate={handleLinkNavigation} />;
+          if (compData.heroVariant === 'verticalSplit') return <HeroVerticalSplit {...compData} borderRadius={hbr} onNavigate={handleLinkNavigation} />;
+          if (compData.heroVariant === 'glass') return <HeroGlass {...compData} borderRadius={hbr} onNavigate={handleLinkNavigation} />;
+          if (compData.heroVariant === 'stacked') return <HeroStacked {...compData} borderRadius={hbr} onNavigate={handleLinkNavigation} />;
+          return <Hero {...compData} borderRadius={hbr} onNavigate={handleLinkNavigation} />;
         }
       case 'heroSplit':
-        return <HeroSplit {...compData} borderRadius={compData.buttonBorderRadius || buttonBorderRadius} />;
+        return <HeroSplit {...compData} borderRadius={compData.buttonBorderRadius || buttonBorderRadius} onNavigate={handleLinkNavigation} />;
       case 'features':
         return <Features {...compData} borderRadius={borderRadius} />;
       case 'testimonials':

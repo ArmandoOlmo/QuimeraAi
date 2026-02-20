@@ -751,6 +751,17 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
                         <div className="flex-1 overflow-y-auto bg-background relative z-0">
                             {/* Content container - full width, no border */}
                             <div className="w-full">
+                                {/* Post Title Input */}
+                                <div className="px-8 pt-8 pb-2">
+                                    <input
+                                        type="text"
+                                        value={title}
+                                        onChange={(e) => setTitle(e.target.value)}
+                                        placeholder={t('cms_editor.titlePlaceholder', 'Escribe el título del artículo...')}
+                                        className="w-full text-3xl sm:text-4xl font-bold bg-transparent border-none outline-none text-foreground placeholder:text-muted-foreground/50 leading-tight"
+                                    />
+                                    <div className="mt-3 h-px bg-border/50" />
+                                </div>
                                 <EditorContent editor={editor} />
                                 <EditorBubbleMenu
                                     editor={editor}
