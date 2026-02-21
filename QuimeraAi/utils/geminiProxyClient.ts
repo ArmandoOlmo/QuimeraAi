@@ -351,7 +351,8 @@ export interface ImageProxyResponse {
 export async function generateImageViaProxy(
     userId: string,
     prompt: string,
-    config: ImageGenerationConfig = {}
+    config: ImageGenerationConfig = {},
+    projectId?: string
 ): Promise<ImageProxyResponse> {
     try {
         // Image generation request - logging disabled for production
@@ -363,6 +364,7 @@ export async function generateImageViaProxy(
             },
             body: JSON.stringify({
                 userId,
+                projectId: projectId || `image-gen-${userId}`,
                 prompt,
                 // Model selection (defaults to Imagen 3.0 which is more stable)
                 model: config.model || 'gemini-3-pro-image-preview',

@@ -109,6 +109,7 @@ export const ROUTES = {
   AGENCY_PLANS: '/agency/plans',
   AGENCY_CMS: '/agency/cms',
   AGENCY_NAVIGATION: '/agency/navigation',
+  AGENCY_PROJECTS: '/agency/projects',
 
   // Agency Signup (Public)
   AGENCY_SIGNUP: '/agency-signup',
@@ -617,6 +618,16 @@ export const routeConfigs: RouteConfig[] = [
     view: 'agency',
     type: 'private',
     title: 'Agency Navigation',
+    requiresAuth: true,
+    requiresEmailVerified: true,
+    roles: ['owner', 'superadmin', 'agency_owner', 'agency_admin'],
+    parent: ROUTES.AGENCY,
+  },
+  {
+    path: ROUTES.AGENCY_PROJECTS,
+    view: 'agency',
+    type: 'private',
+    title: 'Agency Projects',
     requiresAuth: true,
     requiresEmailVerified: true,
     roles: ['owner', 'superadmin', 'agency_owner', 'agency_admin'],

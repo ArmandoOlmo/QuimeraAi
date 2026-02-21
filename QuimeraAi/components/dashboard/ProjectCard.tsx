@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { Project } from '../../types';
 import { useAuth } from '../../contexts/core/AuthContext';
 import { useProject } from '../../contexts/project';
-import { Pencil, Trash2, Copy, Clock, Loader2, MoreVertical, ExternalLink, Download, Image as ImageIcon } from 'lucide-react';
+import { Pencil, Trash2, Copy, Clock, Loader2, MoreVertical, ExternalLink, Download, Image as ImageIcon, Zap } from 'lucide-react';
 import { trackProjectOpened, trackProjectDeleted } from '../../utils/analytics';
 import { downloadProjectAsJSON } from '../../utils/projectExporter';
 import ThumbnailEditor from '../ui/ThumbnailEditor';
@@ -16,13 +16,17 @@ interface ProjectCardProps {
   isSelectable?: boolean;
   isSelected?: boolean;
   onSelect?: (projectId: string) => void;
+  tokenUsage?: { tokensUsed: number; creditsUsed: number };
+  maxTokens?: number;
 }
 
 const ProjectCard: React.FC<ProjectCardProps> = ({
   project,
   isSelectable = false,
   isSelected = false,
-  onSelect
+  onSelect,
+  tokenUsage,
+  maxTokens = 1
 }) => {
   const { t } = useTranslation();
   const { user, userDocument } = useAuth();
@@ -354,7 +358,29 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
               {project.name}
             </h3>
           </div>
-          <div className="flex items-center text-white/90">
+
+          {/* Credit Usage Bar - Below project name */}
+          {!isTemplate && (
+            <div className="mt-2">
+              <div className="flex items-center gap-1.5 mb-1">
+                <Zap size={12} className="text-yellow-400" aria-hidden="true" />
+                <span className="text-xs font-semibold text-white/90">
+                  {(tokenUsage?.creditsUsed || 0).toLocaleString()} créditos
+                </span>
+              </div>
+              <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden backdrop-blur-sm">
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-yellow-400 to-orange-500 transition-all duration-700 ease-out"
+                  style={{
+                    width: `${Math.min(100, maxTokens > 0 && tokenUsage ? (tokenUsage.creditsUsed / maxTokens) * 100 : 0)}%`,
+                    minWidth: tokenUsage && tokenUsage.creditsUsed > 0 ? '4%' : '0%',
+                  }}
+                />
+              </div>
+            </div>
+          )}
+
+          <div className="flex items-center text-white/90 mt-2">
             <Clock size={16} className="mr-2" aria-hidden="true" />
             <time dateTime={project.lastUpdated} className="text-sm font-medium">
               {t('common.updated')} {new Date(project.lastUpdated).toLocaleDateString(undefined, { month: 'numeric', day: 'numeric', year: 'numeric' })}

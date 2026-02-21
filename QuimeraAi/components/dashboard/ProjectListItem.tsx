@@ -4,16 +4,18 @@ import { useTranslation } from 'react-i18next';
 import { Project } from '../../types';
 import { useAuth } from '../../contexts/core/AuthContext';
 import { useProject } from '../../contexts/project';
-import { Pencil, Trash2, Copy, Clock, Loader2, MoreVertical, ExternalLink, Download, Calendar } from 'lucide-react';
+import { Pencil, Trash2, Copy, Clock, Loader2, MoreVertical, ExternalLink, Download, Calendar, Zap } from 'lucide-react';
 import { trackProjectOpened, trackProjectDeleted } from '../../utils/analytics';
 import { downloadProjectAsJSON } from '../../utils/projectExporter';
 import Modal from '../ui/Modal';
 
 interface ProjectListItemProps {
   project: Project;
+  tokenUsage?: { tokensUsed: number; creditsUsed: number };
+  maxTokens?: number;
 }
 
-const ProjectListItem: React.FC<ProjectListItemProps> = ({ project }) => {
+const ProjectListItem: React.FC<ProjectListItemProps> = ({ project, tokenUsage, maxTokens = 1 }) => {
   const { t } = useTranslation();
   const { user } = useAuth();
   const { createProjectFromTemplate, loadProject, deleteProject } = useProject();
@@ -176,6 +178,24 @@ const ProjectListItem: React.FC<ProjectListItemProps> = ({ project }) => {
           <Clock size={14} />
           <span>{t('common.updated')} {formatDate(project.lastUpdated)}</span>
         </div>
+        {/* Credit Usage Bar - List view */}
+        {project.status !== 'Template' && (
+          <div className="flex items-center gap-2 mt-1.5">
+            <Zap size={12} className="text-yellow-400 flex-shrink-0" aria-hidden="true" />
+            <div className="w-32 h-1.5 bg-muted rounded-full overflow-hidden">
+              <div
+                className="h-full rounded-full bg-gradient-to-r from-yellow-400 to-orange-500 transition-all duration-700 ease-out"
+                style={{
+                  width: `${Math.min(100, maxTokens > 0 && tokenUsage ? (tokenUsage.creditsUsed / maxTokens) * 100 : 0)}%`,
+                  minWidth: tokenUsage && tokenUsage.creditsUsed > 0 ? '4%' : '0%',
+                }}
+              />
+            </div>
+            <span className="text-xs font-medium text-muted-foreground">
+              {(tokenUsage?.creditsUsed || 0).toLocaleString()} créditos
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Actions */}

@@ -481,7 +481,7 @@ async function trackUsage(
             });
 
             // Update the usage document
-            await updateCreditsUsage(effectiveTenantId, creditsUsed, operationType || getOperationTypeFromModel(model));
+            await updateCreditsUsage(effectiveTenantId, creditsUsed, operationType || getOperationTypeFromModel(model), projectId, tokensUsed);
         }
 
     } catch (error) {
@@ -541,7 +541,9 @@ function getOperationTypeFromModel(model: string): string {
 async function updateCreditsUsage(
     tenantId: string,
     creditsUsed: number,
-    operation: string
+    operation: string,
+    projectId?: string,
+    tokensTotal?: number
 ): Promise<void> {
     const today = new Date().toISOString().split('T')[0];
     const usageRef = db.collection('aiCreditsUsage').doc(tenantId);
@@ -551,7 +553,7 @@ async function updateCreditsUsage(
 
         if (!usageDoc.exists) {
             // Initialize usage document if it doesn't exist
-            await usageRef.set({
+            const initialData: Record<string, any> = {
                 tenantId,
                 periodStart: admin.firestore.FieldValue.serverTimestamp(),
                 periodEnd: admin.firestore.FieldValue.serverTimestamp(), // Will be updated
@@ -562,7 +564,20 @@ async function updateCreditsUsage(
                 usageByOperation: { [operation]: creditsUsed },
                 dailyUsage: [{ date: today, credits: creditsUsed }],
                 lastUpdated: admin.firestore.FieldValue.serverTimestamp(),
-            });
+            };
+
+            // Track per-project usage
+            if (projectId) {
+                initialData.usageByProject = {
+                    [projectId]: {
+                        tokensUsed: tokensTotal || 0,
+                        creditsUsed,
+                        lastUsed: admin.firestore.FieldValue.serverTimestamp(),
+                    }
+                };
+            }
+
+            await usageRef.set(initialData);
             return;
         }
 
@@ -587,14 +602,27 @@ async function updateCreditsUsage(
             }
         }
 
-        await usageRef.update({
+        // Update per-project usage
+        const updateData: Record<string, any> = {
             creditsUsed: newCreditsUsed,
             creditsRemaining: newCreditsRemaining,
             creditsOverage: newCreditsOverage,
             usageByOperation,
             dailyUsage,
             lastUpdated: admin.firestore.FieldValue.serverTimestamp(),
-        });
+        };
+
+        if (projectId) {
+            const usageByProject = currentData.usageByProject || {};
+            const projectEntry = usageByProject[projectId] || { tokensUsed: 0, creditsUsed: 0 };
+            updateData[`usageByProject.${projectId}`] = {
+                tokensUsed: (projectEntry.tokensUsed || 0) + (tokensTotal || 0),
+                creditsUsed: (projectEntry.creditsUsed || 0) + creditsUsed,
+                lastUsed: admin.firestore.FieldValue.serverTimestamp(),
+            };
+        }
+
+        await usageRef.update(updateData);
 
     } catch (error) {
         console.error('Error updating credits usage:', error);
@@ -982,6 +1010,7 @@ export const generateImage = functions.https.onRequest(async (req, res) => {
     try {
         // SECURITY: Sanitize inputs
         const userId = sanitizeString(req.body.userId, 128);
+        const projectId = sanitizeString(req.body.projectId, 100);
         const prompt = sanitizeString(req.body.prompt, 10000);
         const model = sanitizeString(req.body.model, 50) || 'gemini-3-pro-image-preview';
         const aspectRatio = sanitizeString(req.body.aspectRatio, 10) || '1:1';
@@ -1152,8 +1181,8 @@ export const generateImage = functions.https.onRequest(async (req, res) => {
                 return;
             }
 
-            // Track usage asynchronously (use TOKENS_PER_CREDIT as equivalent for image generation)
-            trackUsage(`image-gen-${userId}`, userId, TOKENS_PER_CREDIT, model).catch(console.error);
+            // Track usage asynchronously with real projectId for per-project tracking
+            trackUsage(projectId || `image-gen-${userId}`, userId, TOKENS_PER_CREDIT, model).catch(console.error);
 
             // Return response
             res.set('X-RateLimit-Remaining', String(rateLimitCheck.remaining || 0));

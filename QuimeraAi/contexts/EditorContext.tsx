@@ -2090,7 +2090,7 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
         for (const [path, prompt] of Object.entries(prompts)) {
             try {
                 // Use high quality model for initial generation
-                const imageUrl = await generateImage(prompt, { aspectRatio: '16:9', style: 'Photorealistic' });
+                const imageUrl = await generateImage(prompt, { aspectRatio: '16:9', style: 'Photorealistic', projectId: project.id });
                 updateNestedData(newProjectData, path, imageUrl);
                 hasUpdates = true;
 
@@ -2183,7 +2183,8 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
 
                 const imageUrl = await generateImage(prompt, {
                     aspectRatio,
-                    style: 'Photorealistic'
+                    style: 'Photorealistic',
+                    projectId: project.id
                 });
 
                 generatedImages[path] = imageUrl;

@@ -17,9 +17,10 @@ interface ImageGeneratorPanelProps {
     hidePreview?: boolean;
     onImageGenerated?: (imageUrl: string) => void;
     onUseImage?: (imageUrl: string) => void;
+    projectId?: string;
 }
 
-const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, className = '', onClose, onCollapse, hidePreview = false, onImageGenerated, onUseImage }) => {
+const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, className = '', onClose, onCollapse, hidePreview = false, onImageGenerated, onUseImage, projectId }) => {
     const { generateImage, enhancePrompt } = useAI();
     const { uploadGlobalFile, uploadFile, hasActiveProject } = useFiles();
     const { t } = useTranslation();
@@ -309,6 +310,7 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
                 colorGrading: colorGrading !== 'None' ? colorGrading : undefined,
                 depthOfField: depthOfField !== 'None' ? depthOfField : undefined,
                 referenceImages: referenceImages.length > 0 ? referenceImages : undefined,
+                projectId,
             };
 
             console.log('✨ [ImageGeneratorPanel] Quimera options:', options);

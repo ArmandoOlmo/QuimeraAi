@@ -26,6 +26,7 @@ import { useInfiniteScroll, paginateArray, hasMoreItems } from '../../hooks/useI
 import { usePlans } from '../../contexts/PlansContext';
 import { useSafeUpgrade } from '../../contexts/UpgradeContext';
 import { useCreditsUsage } from '../../hooks/useCreditsUsage';
+import { useProjectTokenUsage } from '../../hooks/useProjectTokenUsage';
 import { SUBSCRIPTION_PLANS } from '../../types/subscription';
 
 const Dashboard: React.FC = () => {
@@ -39,6 +40,13 @@ const Dashboard: React.FC = () => {
     const { plansArray, getPlan } = usePlans();
     const upgradeContext = useSafeUpgrade();
     const { usage } = useCreditsUsage();
+    const { projectUsage } = useProjectTokenUsage();
+
+    // Compute max credits across all projects for relative bar scaling
+    const maxTokens = useMemo(() => {
+        const values = Object.values(projectUsage).map(u => u.creditsUsed);
+        return values.length > 0 ? Math.max(...values) : 1;
+    }, [projectUsage]);
 
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
@@ -655,7 +663,12 @@ const Dashboard: React.FC = () => {
                                             {viewMode === 'grid' && (
                                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                                                     {(isWebsites ? userProjects : userProjects.slice(0, 4)).map(project => (
-                                                        <ProjectCard key={project.id} project={project} />
+                                                        <ProjectCard
+                                                            key={project.id}
+                                                            project={project}
+                                                            tokenUsage={projectUsage[project.id]}
+                                                            maxTokens={maxTokens}
+                                                        />
                                                     ))}
                                                 </div>
                                             )}
@@ -664,7 +677,12 @@ const Dashboard: React.FC = () => {
                                             {viewMode === 'list' && isWebsites && (
                                                 <div className="space-y-4">
                                                     {userProjects.map(project => (
-                                                        <ProjectListItem key={project.id} project={project} />
+                                                        <ProjectListItem
+                                                            key={project.id}
+                                                            project={project}
+                                                            tokenUsage={projectUsage[project.id]}
+                                                            maxTokens={maxTokens}
+                                                        />
                                                     ))}
                                                 </div>
                                             )}

@@ -193,6 +193,7 @@ export const AIProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
         personGeneration?: string;
         temperature?: number;
         negativePrompt?: string;
+        projectId?: string;
     }): Promise<string> => {
         const startTime = Date.now();
 
@@ -234,7 +235,8 @@ export const AIProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
                         colorGrading: options?.colorGrading,
                         themeColors: options?.themeColors,
                         depthOfField: options?.depthOfField,
-                    }
+                    },
+                    options?.projectId
                 );
 
                 await logApiCall({

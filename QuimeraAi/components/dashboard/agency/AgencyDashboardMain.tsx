@@ -5,7 +5,7 @@
 
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Building2, Menu, CreditCard, FileText, UserPlus, Package, LayoutDashboard, BarChart3, Globe, Layers, PenTool, Navigation, ArrowLeft } from 'lucide-react';
+import { Building2, Menu, CreditCard, FileText, UserPlus, Package, LayoutDashboard, BarChart3, Globe, Layers, PenTool, Navigation, ArrowLeft, FolderOpen } from 'lucide-react';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import { useRouter } from '../../../hooks/useRouter';
 import { ROUTES } from '../../../routes/config';
@@ -21,10 +21,11 @@ import { AddonsManager } from './AddonsManager';
 import { AgencyPlanManager } from './plans';
 import AgencyContentDashboard from './AgencyContentDashboard';
 import AgencyNavigationManagement from './AgencyNavigationManagement';
+import { AgencyProjects } from './AgencyProjects';
 import { toast } from 'react-hot-toast';
 import QuimeraLoader from '@/components/ui/QuimeraLoader';
 
-type AgencyTab = 'overview' | 'analytics' | 'landing' | 'billing' | 'reports' | 'new-client' | 'addons' | 'plans' | 'cms' | 'navigation';
+type AgencyTab = 'overview' | 'analytics' | 'landing' | 'billing' | 'reports' | 'new-client' | 'addons' | 'plans' | 'cms' | 'navigation' | 'projects';
 
 const AgencyDashboardMain: React.FC = () => {
     const { t } = useTranslation();
@@ -44,6 +45,7 @@ const AgencyDashboardMain: React.FC = () => {
         if (path.includes('/plans')) return 'plans';
         if (path.includes('/cms')) return 'cms';
         if (path.includes('/navigation')) return 'navigation';
+        if (path.includes('/projects')) return 'projects';
         return 'overview';
     };
 
@@ -80,6 +82,9 @@ const AgencyDashboardMain: React.FC = () => {
                 break;
             case 'navigation':
                 navigate(ROUTES.AGENCY_NAVIGATION);
+                break;
+            case 'projects':
+                navigate(ROUTES.AGENCY_PROJECTS);
                 break;
         }
     };
@@ -134,6 +139,11 @@ const AgencyDashboardMain: React.FC = () => {
             id: 'reports' as AgencyTab,
             label: t('agency.reports', 'Reportes'),
             icon: FileText,
+        },
+        {
+            id: 'projects' as AgencyTab,
+            label: t('agency.projects', 'Proyectos'),
+            icon: FolderOpen,
         },
     ];
 
@@ -354,6 +364,10 @@ const AgencyDashboardMain: React.FC = () => {
 
                                     {activeTab === 'navigation' && (
                                         <AgencyNavigationManagement />
+                                    )}
+
+                                    {activeTab === 'projects' && (
+                                        <AgencyProjects />
                                     )}
                                 </>
                             )}

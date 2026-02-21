@@ -130,6 +130,7 @@ const AssetsDashboard: React.FC = () => {
                                         destination="user"
                                         className=""
                                         onCollapse={() => setIsGeneratorCollapsed(true)}
+                                        projectId={effectiveProjectId || undefined}
                                     />
                                 </div>
                             ) : (

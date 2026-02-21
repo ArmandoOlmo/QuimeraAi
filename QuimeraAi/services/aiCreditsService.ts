@@ -73,10 +73,10 @@ export async function consumeCredits(
     try {
         // Obtener el costo de la operación
         const creditsToUse = options?.customCredits ?? AI_CREDIT_COSTS[operation];
-        
+
         // Verificar si hay credits disponibles
         const checkResult = await checkCreditsAvailable(tenantId, creditsToUse);
-        
+
         if (!checkResult.hasCredits) {
             return {
                 success: false,
@@ -85,7 +85,7 @@ export async function consumeCredits(
                 error: checkResult.message || 'No hay suficientes AI credits disponibles',
             };
         }
-        
+
         // Crear la transacción
         const transaction: Omit<AiCreditTransaction, 'id'> = {
             tenantId,
@@ -100,23 +100,23 @@ export async function consumeCredits(
             timestamp: serverTimestamp() as any,
             metadata: options?.metadata,
         };
-        
+
         // Guardar la transacción
         const docRef = await addDoc(collection(db, CREDITS_COLLECTION), transaction);
-        
-        // Actualizar el uso del tenant
-        await updateUsageStats(tenantId, creditsToUse, operation);
-        
+
+        // Actualizar el uso del tenant (including per-project tracking)
+        await updateUsageStats(tenantId, creditsToUse, operation, options?.projectId);
+
         // Obtener credits restantes
         const usage = await getCreditsUsage(tenantId);
-        
+
         return {
             success: true,
             creditsUsed: creditsToUse,
             creditsRemaining: usage?.creditsRemaining ?? 0,
             transactionId: docRef.id,
         };
-        
+
     } catch (error) {
         console.error('Error consuming credits:', error);
         return {
@@ -137,7 +137,7 @@ export async function checkCreditsAvailable(
 ): Promise<CreditCheckResult> {
     try {
         const usage = await getCreditsUsage(tenantId);
-        
+
         if (!usage) {
             // Si no hay registro de uso, asumir que está en período inicial
             return {
@@ -147,20 +147,20 @@ export async function checkCreditsAvailable(
                 wouldExceedLimit: false,
             };
         }
-        
+
         const creditsAvailable = usage.creditsRemaining;
         const hasCredits = creditsAvailable >= creditsRequired;
-        
+
         if (!hasCredits) {
             // Determinar la acción sugerida
             const usagePercentage = calculateCreditsUsagePercentage(
                 usage.creditsUsed,
                 usage.creditsIncluded
             );
-            
+
             let suggestedAction: CreditCheckResult['suggestedAction'];
             let message: string;
-            
+
             if (usagePercentage >= 100) {
                 suggestedAction = 'upgrade';
                 message = `Has agotado tus ${usage.creditsIncluded} AI credits del mes. Actualiza tu plan o compra un paquete adicional.`;
@@ -168,7 +168,7 @@ export async function checkCreditsAvailable(
                 suggestedAction = 'buy_pack';
                 message = `Necesitas ${creditsRequired} credits pero solo tienes ${creditsAvailable} disponibles.`;
             }
-            
+
             return {
                 hasCredits: false,
                 creditsRequired,
@@ -178,14 +178,14 @@ export async function checkCreditsAvailable(
                 message,
             };
         }
-        
+
         return {
             hasCredits: true,
             creditsRequired,
             creditsAvailable,
             wouldExceedLimit: false,
         };
-        
+
     } catch (error) {
         console.error('Error checking credits:', error);
         // En caso de error, permitir la operación para no bloquear al usuario
@@ -221,11 +221,11 @@ export async function getCreditsUsage(tenantId: string): Promise<AiCreditsUsage 
     try {
         const usageRef = doc(db, USAGE_COLLECTION, tenantId);
         const usageDoc = await getDoc(usageRef);
-        
+
         if (!usageDoc.exists()) {
             return null;
         }
-        
+
         return usageDoc.data() as AiCreditsUsage;
     } catch (error) {
         console.error('Error getting credits usage:', error);
@@ -242,13 +242,13 @@ export async function initializeCreditsUsage(
 ): Promise<AiCreditsUsage> {
     const plan = SUBSCRIPTION_PLANS[planId];
     const now = Timestamp.now();
-    
+
     // Calcular inicio y fin del período (mensual)
     const periodStart = now;
     const periodEndDate = new Date(now.toDate());
     periodEndDate.setMonth(periodEndDate.getMonth() + 1);
     const periodEnd = Timestamp.fromDate(periodEndDate);
-    
+
     const usage: AiCreditsUsage = {
         tenantId,
         periodStart: { seconds: periodStart.seconds, nanoseconds: periodStart.nanoseconds },
@@ -261,9 +261,9 @@ export async function initializeCreditsUsage(
         dailyUsage: [],
         lastUpdated: { seconds: periodStart.seconds, nanoseconds: periodStart.nanoseconds },
     };
-    
+
     await setDoc(doc(db, USAGE_COLLECTION, tenantId), usage);
-    
+
     return usage;
 }
 
@@ -273,23 +273,24 @@ export async function initializeCreditsUsage(
 async function updateUsageStats(
     tenantId: string,
     creditsUsed: number,
-    operation: AiCreditOperation
+    operation: AiCreditOperation,
+    projectId?: string
 ): Promise<void> {
     try {
         const usageRef = doc(db, USAGE_COLLECTION, tenantId);
         const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
-        
+
         // Obtener uso actual
         const usageDoc = await getDoc(usageRef);
-        
+
         if (!usageDoc.exists()) {
             // Si no existe, inicializar con plan free por defecto
             await initializeCreditsUsage(tenantId, 'free');
             return updateUsageStats(tenantId, creditsUsed, operation);
         }
-        
+
         const currentUsage = usageDoc.data() as AiCreditsUsage;
-        
+
         // Verificar si el período ha expirado
         const now = Timestamp.now();
         if (now.seconds > currentUsage.periodEnd.seconds) {
@@ -298,15 +299,15 @@ async function updateUsageStats(
             await initializeCreditsUsage(tenantId, 'free');
             return updateUsageStats(tenantId, creditsUsed, operation);
         }
-        
+
         // Actualizar uso por operación
         const usageByOperation = { ...currentUsage.usageByOperation };
         usageByOperation[operation] = (usageByOperation[operation] || 0) + creditsUsed;
-        
+
         // Actualizar uso diario
         let dailyUsage = [...currentUsage.dailyUsage];
         const todayEntry = dailyUsage.find(d => d.date === today);
-        
+
         if (todayEntry) {
             todayEntry.credits += creditsUsed;
         } else {
@@ -316,22 +317,34 @@ async function updateUsageStats(
                 dailyUsage = dailyUsage.slice(-30);
             }
         }
-        
+
         // Calcular nuevos totales
         const newCreditsUsed = currentUsage.creditsUsed + creditsUsed;
         const newCreditsRemaining = Math.max(0, currentUsage.creditsIncluded - newCreditsUsed);
         const newCreditsOverage = Math.max(0, newCreditsUsed - currentUsage.creditsIncluded);
-        
+
         // Actualizar documento
-        await updateDoc(usageRef, {
+        const updateData: Record<string, any> = {
             creditsUsed: newCreditsUsed,
             creditsRemaining: newCreditsRemaining,
             creditsOverage: newCreditsOverage,
             usageByOperation,
             dailyUsage,
             lastUpdated: serverTimestamp(),
-        });
-        
+        };
+
+        // Track per-project credit usage
+        if (projectId) {
+            const currentUsageByProject = (currentUsage as any).usageByProject || {};
+            const projectEntry = currentUsageByProject[projectId] || { creditsUsed: 0 };
+            updateData[`usageByProject.${projectId}`] = {
+                creditsUsed: (projectEntry.creditsUsed || 0) + creditsUsed,
+                lastUsed: serverTimestamp(),
+            };
+        }
+
+        await updateDoc(usageRef, updateData);
+
     } catch (error) {
         console.error('Error updating usage stats:', error);
     }
@@ -349,20 +362,20 @@ export async function addCredits(
     try {
         const usageRef = doc(db, USAGE_COLLECTION, tenantId);
         const usageDoc = await getDoc(usageRef);
-        
+
         if (!usageDoc.exists()) {
             console.error('Usage document not found for tenant:', tenantId);
             return false;
         }
-        
+
         const currentUsage = usageDoc.data() as AiCreditsUsage;
-        
+
         await updateDoc(usageRef, {
             creditsIncluded: currentUsage.creditsIncluded + creditsToAdd,
             creditsRemaining: currentUsage.creditsRemaining + creditsToAdd,
             lastUpdated: serverTimestamp(),
         });
-        
+
         // Registrar la adición de credits
         await addDoc(collection(db, CREDITS_COLLECTION), {
             tenantId,
@@ -373,9 +386,9 @@ export async function addCredits(
             timestamp: serverTimestamp(),
             metadata: { source, ...metadata },
         });
-        
+
         return true;
-        
+
     } catch (error) {
         console.error('Error adding credits:', error);
         return false;
@@ -405,41 +418,41 @@ export async function getTransactionHistory(
             where('tenantId', '==', tenantId),
             orderBy('timestamp', 'desc')
         );
-        
+
         if (options?.operation) {
             q = query(q, where('operation', '==', options.operation));
         }
-        
+
         if (options?.projectId) {
             q = query(q, where('projectId', '==', options.projectId));
         }
-        
+
         if (options?.limit) {
             q = query(q, limit(options.limit));
         }
-        
+
         const snapshot = await getDocs(q);
         const transactions: AiCreditTransaction[] = [];
-        
+
         snapshot.forEach((doc) => {
             const data = doc.data();
-            
+
             // Filtrar por fecha si se especificó
             if (options?.startDate || options?.endDate) {
                 const timestamp = data.timestamp?.toDate?.() || new Date(data.timestamp.seconds * 1000);
-                
+
                 if (options.startDate && timestamp < options.startDate) return;
                 if (options.endDate && timestamp > options.endDate) return;
             }
-            
+
             transactions.push({
                 id: doc.id,
                 ...data,
             } as AiCreditTransaction);
         });
-        
+
         return transactions;
-        
+
     } catch (error) {
         console.error('Error getting transaction history:', error);
         return [];
@@ -456,14 +469,14 @@ export async function getUsageByOperation(
     try {
         const startDate = new Date();
         startDate.setDate(startDate.getDate() - days);
-        
+
         const transactions = await getTransactionHistory(tenantId, {
             startDate,
             limit: 1000,
         });
-        
+
         const stats: Record<string, { count: number; credits: number }> = {};
-        
+
         transactions.forEach((tx) => {
             if (!stats[tx.operation]) {
                 stats[tx.operation] = { count: 0, credits: 0 };
@@ -471,9 +484,9 @@ export async function getUsageByOperation(
             stats[tx.operation].count++;
             stats[tx.operation].credits += tx.creditsUsed;
         });
-        
+
         return stats as Record<AiCreditOperation, { count: number; credits: number }>;
-        
+
     } catch (error) {
         console.error('Error getting usage by operation:', error);
         return {} as Record<AiCreditOperation, { count: number; credits: number }>;
@@ -489,18 +502,18 @@ export async function getDailyUsage(
 ): Promise<Array<{ date: string; credits: number }>> {
     try {
         const usage = await getCreditsUsage(tenantId);
-        
+
         if (!usage?.dailyUsage) {
             return [];
         }
-        
+
         // Filtrar últimos N días
         const cutoffDate = new Date();
         cutoffDate.setDate(cutoffDate.getDate() - days);
         const cutoffString = cutoffDate.toISOString().split('T')[0];
-        
+
         return usage.dailyUsage.filter(d => d.date >= cutoffString);
-        
+
     } catch (error) {
         console.error('Error getting daily usage:', error);
         return [];
@@ -522,31 +535,31 @@ export async function handlePlanChange(
     try {
         const oldPlan = SUBSCRIPTION_PLANS[oldPlanId];
         const newPlan = SUBSCRIPTION_PLANS[newPlanId];
-        
+
         const usageRef = doc(db, USAGE_COLLECTION, tenantId);
         const usageDoc = await getDoc(usageRef);
-        
+
         if (!usageDoc.exists()) {
             // Inicializar con el nuevo plan
             await initializeCreditsUsage(tenantId, newPlanId);
             return;
         }
-        
+
         const currentUsage = usageDoc.data() as AiCreditsUsage;
-        
+
         // Calcular la diferencia de credits
         const creditsDifference = newPlan.limits.maxAiCredits - oldPlan.limits.maxAiCredits;
-        
+
         // Actualizar los credits incluidos y restantes
         const newCreditsIncluded = newPlan.limits.maxAiCredits;
         const newCreditsRemaining = Math.max(0, currentUsage.creditsRemaining + creditsDifference);
-        
+
         await updateDoc(usageRef, {
             creditsIncluded: newCreditsIncluded,
             creditsRemaining: newCreditsRemaining,
             lastUpdated: serverTimestamp(),
         });
-        
+
         // Registrar el cambio de plan
         await addDoc(collection(db, CREDITS_COLLECTION), {
             tenantId,
@@ -557,7 +570,7 @@ export async function handlePlanChange(
             timestamp: serverTimestamp(),
             metadata: { oldPlanId, newPlanId, creditsDifference },
         });
-        
+
     } catch (error) {
         console.error('Error handling plan change:', error);
     }
@@ -572,7 +585,7 @@ export async function resetCreditsForNewPeriod(
 ): Promise<void> {
     try {
         await initializeCreditsUsage(tenantId, planId);
-        
+
         // Registrar el reset
         await addDoc(collection(db, CREDITS_COLLECTION), {
             tenantId,
@@ -583,7 +596,7 @@ export async function resetCreditsForNewPeriod(
             timestamp: serverTimestamp(),
             metadata: { planId },
         });
-        
+
     } catch (error) {
         console.error('Error resetting credits:', error);
     }
@@ -612,7 +625,7 @@ function getOperationDescription(operation: AiCreditOperation): string {
         email_generation: 'Generación de email con IA',
         translation: 'Traducción con IA',
     };
-    
+
     return descriptions[operation] || operation;
 }
 
@@ -817,7 +830,7 @@ async function updateSubClientUsageInPool(
         if (!usageDoc.exists()) return;
 
         const currentUsage = usageDoc.data() as AiCreditsUsage;
-        
+
         // Obtener nombre del sub-cliente
         const subClientDoc = await getDoc(doc(db, 'tenants', subClientTenantId));
         const subClientName = subClientDoc.exists() ? subClientDoc.data()?.name : 'Unknown';
