@@ -1,6 +1,7 @@
 /**
  * useProjectTokenUsage Hook
  * Reads per-project token/credit usage from aiCreditsUsage/{tenantId}.usageByProject
+ * Falls back to userId when no tenant context is available (matching backend behavior)
  * Returns a map of projectId -> { tokensUsed, creditsUsed }
  */
 
@@ -26,16 +27,18 @@ export function useProjectTokenUsage(): UseProjectTokenUsageReturn {
     const [projectUsage, setProjectUsage] = useState<Record<string, ProjectUsageData>>({});
     const [isLoading, setIsLoading] = useState(true);
 
+    // Use tenantId if available, otherwise fallback to userId (matches backend getTenantIdForUser)
     const tenantId = tenantContext?.currentTenant?.id;
+    const effectiveId = tenantId || user?.uid;
 
     useEffect(() => {
-        if (!tenantId || !user) {
+        if (!effectiveId || !user) {
             setProjectUsage({});
             setIsLoading(false);
             return;
         }
 
-        const usageRef = doc(db, 'aiCreditsUsage', tenantId);
+        const usageRef = doc(db, 'aiCreditsUsage', effectiveId);
         const unsubscribe = onSnapshot(
             usageRef,
             (docSnapshot) => {
@@ -67,9 +70,10 @@ export function useProjectTokenUsage(): UseProjectTokenUsageReturn {
         );
 
         return () => unsubscribe();
-    }, [tenantId, user]);
+    }, [effectiveId, user]);
 
     return { projectUsage, isLoading };
 }
 
 export default useProjectTokenUsage;
+
