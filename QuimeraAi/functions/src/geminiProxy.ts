@@ -453,34 +453,35 @@ async function trackUsage(
         const effectiveTenantId = tenantId || await getTenantIdForUser(userId);
 
         if (effectiveTenantId) {
-            // SECURITY: Skip credit consumption for the OWNER
+            // Check if owner/superadmin (they have unlimited credits but we still track usage)
+            let isOwnerUser = false;
             if (userId && isOwner(userId)) {
-                console.log(`[trackUsage] Bypassing credit consumption for owner: ${userId}`);
-                return;
+                isOwnerUser = true;
+            } else {
+                const userDoc = await db.collection('users').doc(userId).get();
+                const userRole = userDoc.exists ? userDoc.data()?.role : null;
+                if (userRole === 'owner' || userRole === 'superadmin') {
+                    isOwnerUser = true;
+                }
             }
 
-            const userDoc = await db.collection('users').doc(userId).get();
-            const userRole = userDoc.exists ? userDoc.data()?.role : null;
-            if (userRole === 'owner' || userRole === 'superadmin') {
-                console.log(`[trackUsage] Bypassing credit consumption for owner/superadmin: ${userId}`);
-                return;
+            if (!isOwnerUser) {
+                // Record the credit transaction with token details (only for non-owners)
+                await db.collection('aiCreditsTransactions').add({
+                    tenantId: effectiveTenantId,
+                    userId,
+                    projectId,
+                    operation: operationType || getOperationTypeFromModel(model),
+                    creditsUsed,
+                    model,
+                    tokensTotal: tokensUsed,
+                    tokensInput: Math.floor(tokensUsed * 0.3),  // Estimate (API doesn't split input/output)
+                    tokensOutput: Math.floor(tokensUsed * 0.7), // Estimate
+                    timestamp: admin.firestore.FieldValue.serverTimestamp(),
+                });
             }
 
-            // Record the credit transaction with token details
-            await db.collection('aiCreditsTransactions').add({
-                tenantId: effectiveTenantId,
-                userId,
-                projectId,
-                operation: operationType || getOperationTypeFromModel(model),
-                creditsUsed,
-                model,
-                tokensTotal: tokensUsed,
-                tokensInput: Math.floor(tokensUsed * 0.3),  // Estimate (API doesn't split input/output)
-                tokensOutput: Math.floor(tokensUsed * 0.7), // Estimate
-                timestamp: admin.firestore.FieldValue.serverTimestamp(),
-            });
-
-            // Update the usage document
+            // Always update usage tracking (even for owners) so dashboard shows usage
             await updateCreditsUsage(effectiveTenantId, creditsUsed, operationType || getOperationTypeFromModel(model), projectId, tokensUsed);
         }
 
