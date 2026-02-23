@@ -8,14 +8,15 @@
 
 import React, { lazy, Suspense } from 'react';
 import { View, UserDocument, PageData } from '../types';
+import { useSafeTenant } from '../contexts/tenant/TenantContext';
 
 // Core components - imported synchronously (always needed)
 import DashboardSidebar from './dashboard/DashboardSidebar';
 import QuimeraLoader from './ui/QuimeraLoader';
 
-// Loading fallback for lazy components
-const ViewLoading = () => (
-    <QuimeraLoader fullScreen size="md" />
+// Loading fallback for lazy components — uses tenant branding when available
+const ViewLoading = ({ logoUrl }: { logoUrl?: string }) => (
+    <QuimeraLoader fullScreen size="md" logoUrl={logoUrl} />
 );
 
 // ============================================================================
@@ -103,11 +104,13 @@ const ViewRouter: React.FC<ViewRouterProps> = ({
     previewRef,
 }) => {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
+    const tenantContext = useSafeTenant();
+    const agencyLogoUrl = tenantContext?.currentTenant?.branding?.logoUrl;
 
     // SuperAdmin View
     if (view === 'superadmin' && hasAdminAccess(userDocument?.role)) {
         return (
-            <Suspense fallback={<ViewLoading />}>
+            <Suspense fallback={<ViewLoading logoUrl={agencyLogoUrl} />}>
                 <SuperAdminDashboard />
             </Suspense>
         );
@@ -117,7 +120,7 @@ const ViewRouter: React.FC<ViewRouterProps> = ({
     const ViewComponent = VIEW_COMPONENTS[view];
     if (ViewComponent) {
         return (
-            <Suspense fallback={<ViewLoading />}>
+            <Suspense fallback={<ViewLoading logoUrl={agencyLogoUrl} />}>
                 <ViewComponent />
             </Suspense>
         );
@@ -127,7 +130,7 @@ const ViewRouter: React.FC<ViewRouterProps> = ({
     if (view === 'editor') {
         // If we're in editor mode but data isn't ready yet, show loading
         if (!activeProjectId || !data) {
-            return <ViewLoading />;
+            return <ViewLoading logoUrl={agencyLogoUrl} />;
         }
 
         // Editor View (data is loaded)
@@ -142,13 +145,13 @@ const ViewRouter: React.FC<ViewRouterProps> = ({
 
                 {/* Main Editor Content */}
                 <div className="flex flex-col flex-1 min-w-0">
-                    <Suspense fallback={<ViewLoading />}>
+                    <Suspense fallback={<ViewLoading logoUrl={agencyLogoUrl} />}>
                         <SimpleEditorHeader onOpenMobileMenu={() => setIsMobileMenuOpen(true)} />
                     </Suspense>
 
                     <div className="flex flex-1 overflow-hidden relative">
                         {/* Controls/Editor Sidebar - Siempre visible en desktop, toggle en mobile */}
-                        <Suspense fallback={<ViewLoading />}>
+                        <Suspense fallback={<ViewLoading logoUrl={agencyLogoUrl} />}>
                             <Controls />
                         </Suspense>
 
@@ -157,7 +160,7 @@ const ViewRouter: React.FC<ViewRouterProps> = ({
                             flex-1 min-h-0 p-4 sm:p-8 flex justify-center overflow-hidden
                             ${isSidebarOpen ? 'hidden md:flex' : 'flex'}
                         `}>
-                            <Suspense fallback={<ViewLoading />}>
+                            <Suspense fallback={<ViewLoading logoUrl={agencyLogoUrl} />}>
                                 <BrowserPreview ref={previewRef}>
                                     <LandingPage />
                                 </BrowserPreview>
@@ -171,7 +174,7 @@ const ViewRouter: React.FC<ViewRouterProps> = ({
 
     // Dashboard Views (websites, dashboard, or no project selected)
     return (
-        <Suspense fallback={<ViewLoading />}>
+        <Suspense fallback={<ViewLoading logoUrl={agencyLogoUrl} />}>
             <Dashboard />
         </Suspense>
     );
