@@ -1390,12 +1390,11 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
   const isStoreViewActive = storeView.type !== 'none';
 
   return (
-    <Suspense fallback={null}>
-      <div
-        className="min-h-screen text-slate-200 overflow-x-hidden transition-colors duration-500"
-        style={{ backgroundColor: pageBackgroundColor }}
-      >
-        <style>{`
+    <div
+      className="min-h-screen text-slate-200 overflow-x-hidden transition-colors duration-500"
+      style={{ backgroundColor: pageBackgroundColor }}
+    >
+      <style>{`
         :root {
           --site-base-bg: ${pageBackgroundColor};
           --site-surface-bg: ${theme?.globalColors?.surface || pageBackgroundColor};
@@ -1403,195 +1402,196 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
         body, .bg-site-base { background-color: ${pageBackgroundColor}; }
       `}</style>
 
-        {/* Announcement Bar - Above Header position */}
-        {mergedData.announcementBar?.position === 'above-header' && componentStatus?.announcementBar !== false && sectionVisibility?.announcementBar !== false && mergedData.announcementBar && (
-          <div id="announcementBar-above" className="w-full">
-            <AnnouncementBar data={mergedData.announcementBar} />
+      {/* Announcement Bar - Above Header position */}
+      {mergedData.announcementBar?.position === 'above-header' && componentStatus?.announcementBar !== false && sectionVisibility?.announcementBar !== false && mergedData.announcementBar && (
+        <div id="announcementBar-above" className="w-full">
+          <AnnouncementBar data={mergedData.announcementBar} />
+        </div>
+      )}
+
+      {/* Header - Visible on landing, hidden on store view (StorefrontLayout handles it) */}
+      {!isStoreViewActive && componentStatus?.header !== false && sectionVisibility?.header !== false && mergedData.header && (
+        <Header {...mergedData.header} links={headerLinks} onNavigate={handleLinkNavigation} />
+      )}
+
+      <main className="min-h-screen bg-site-base relative">
+        {/* Loading Overlay for async navigation */}
+        {loadingPost && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-[2px]">
+            <Loader2 className="w-8 h-8 text-white/60 animate-spin" />
           </div>
         )}
-
-        {/* Header - Visible on landing, hidden on store view (StorefrontLayout handles it) */}
-        {!isStoreViewActive && componentStatus?.header !== false && sectionVisibility?.header !== false && mergedData.header && (
-          <Header {...mergedData.header} links={headerLinks} onNavigate={handleLinkNavigation} />
-        )}
-
-        <main className="min-h-screen bg-site-base relative">
-          {/* Loading Overlay for async navigation */}
-          {loadingPost && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-[2px]">
-              <Loader2 className="w-8 h-8 text-white/60 animate-spin" />
-            </div>
-          )}
-          {/* Store View */}
-          {isStoreViewActive && storeProjectId ? (
-            <StoreViewWrapper
-              projectId={storeProjectId}
-              storeView={storeView}
-              initialData={{
-                ...project, // Pass all project fields including componentOrder, sectionVisibility, etc.
-                header: mergedData.header, // Context-aware header
-                theme: theme, // Context-aware theme
-              }}
-            />
-          ) : activePost ? (
-            /* Article View */
-            <BlogPost
-              post={activePost}
-              theme={theme}
-              onBack={handleBackToHome}
-              backgroundColor={pageBackgroundColor}
-              textColor={data?.hero?.colors?.text || '#ffffff'}
-              accentColor={data?.hero?.colors?.primary || '#4f46e5'}
-            />
-          ) : activePage ? (
-            /* Multi-Page View - Render specific page using PageRenderer */
-            <PageRenderer
-              page={activePage}
-              project={project}
-              isPreview={true}
-            />
-          ) : (
-            /* Home View - Sections */
-            <>
-              {componentOrder
-                ?.filter(key => {
-                  // Lista de componentes de ecommerce que deben verificar visibilidad
-                  const ecommerceComponents: PageSection[] = [
-                    'featuredProducts', 'categoryGrid', 'productHero', 'saleCountdown',
-                    'trustBadges', 'recentlyViewed', 'productReviews', 'collectionBanner',
-                    'productBundle', 'announcementBar'
-                  ];
-
-                  const isEcommerce = ecommerceComponents.includes(key as PageSection);
-                  const statusVisible = componentStatus?.[key as PageSection] !== false;
-                  const sectionVisible = sectionVisibility?.[key as PageSection] !== false;
-                  const notExcluded = key !== 'footer' && key !== 'chatbot' && key !== 'header' &&
-                    // AnnouncementBar is rendered separately when positioned above header
-                    !(key === 'announcementBar' && mergedData.announcementBar?.position === 'above-header');
-                  const baseVisibility = statusVisible && sectionVisible && notExcluded;
-
-                  // Para componentes de ecommerce, verificar también visibleIn
-                  if (isEcommerce) {
-                    const visibleInLanding = isEcommerceComponentVisibleInLanding(key as PageSection);
-                    const finalVisibility = baseVisibility && visibleInLanding;
-                    console.log(`[PublicWebsitePreview] Ecommerce component "${key}": status=${statusVisible}, section=${sectionVisible}, visibleIn=${visibleInLanding}, final=${finalVisibility}`);
-                    return finalVisibility;
-                  }
-
-                  return baseVisibility;
-                })
-                .map(key => (
-                  <div id={key} key={key} className="w-full">
-                    {renderComponent(key as PageSection)}
-                  </div>
-                ))}
-            </>
-          )}
-        </main>
-
-        {/* Footer - Always visible */}
-        {componentStatus?.footer !== false && sectionVisibility?.footer !== false && (
-          <div id="footer" className="w-full">
-            <Footer {...resolvedFooterData} onNavigate={handleLinkNavigation} />
-          </div>
-        )}
-
-        {/* Chatbot Widget (if enabled in project) */}
-        {(project.aiAssistantConfig?.isActive || (project.data?.chatbot?.isActive)) && (
-          <ChatbotWidget
-            hidePoweredBy={hasWhiteLabelBranding}
-            standaloneConfig={project.aiAssistantConfig || {
-              // Fallback for legacy chatbot configuration
-              isActive: true,
-              agentName: 'Assistant',
-              tone: 'Professional',
-              languages: 'Spanish',
-              businessProfile: '',
-              productsServices: '',
-              policiesContact: '',
-              specialInstructions: '',
-              faqs: [],
-              knowledgeDocuments: [],
-              widgetColor: project.data?.chatbot?.colors?.primary || '#4f46e5',
-              leadCaptureEnabled: true,
-              enableLiveVoice: false,
-              voiceName: 'Zephyr',
-              appearance: {
-                branding: {
-                  logoType: 'none',
-                  logoSize: 'md',
-                  showBotAvatar: true,
-                  showUserAvatar: false,
-                  userAvatarStyle: 'initials'
-                },
-                colors: {
-                  primaryColor: project.data?.chatbot?.colors?.primary || '#4f46e5',
-                  secondaryColor: '#ffffff',
-                  accentColor: project.data?.chatbot?.colors?.primary || '#4f46e5',
-                  userBubbleColor: project.data?.chatbot?.colors?.primary || '#4f46e5',
-                  userTextColor: '#ffffff',
-                  botBubbleColor: '#f1f5f9',
-                  botTextColor: '#0f172a',
-                  backgroundColor: project.data?.chatbot?.colors?.background || '#ffffff',
-                  inputBackground: '#f8fafc',
-                  inputBorder: '#e2e8f0',
-                  inputText: '#0f172a',
-                  headerBackground: project.data?.chatbot?.colors?.primary || '#4f46e5',
-                  headerText: '#ffffff'
-                },
-                behavior: {
-                  position: project.data?.chatbot?.position || 'bottom-right',
-                  offsetX: 20,
-                  offsetY: 20,
-                  width: 'md',
-                  height: 'md',
-                  autoOpen: false,
-                  autoOpenDelay: 5,
-                  openOnScroll: 0,
-                  openOnTime: 0,
-                  fullScreenOnMobile: true
-                },
-                messages: {
-                  welcomeMessage: project.data?.chatbot?.welcomeMessage || '¡Hola! ¿En qué puedo ayudarte hoy?',
-                  welcomeMessageEnabled: true,
-                  welcomeDelay: 1,
-                  inputPlaceholder: project.data?.chatbot?.placeholderText || 'Escribe tu mensaje...',
-                  quickReplies: [],
-                  showTypingIndicator: true
-                },
-                button: {
-                  buttonStyle: 'circle',
-                  buttonSize: 'lg',
-                  buttonIcon: 'chat',
-                  showButtonText: false,
-                  pulseEffect: true,
-                  shadowSize: 'lg',
-                  showTooltip: false,
-                  tooltipText: 'Chat'
-                },
-                theme: 'light'
-              }
-            }}
-            standaloneProject={{
-              id: project.id || storeProjectId || '',
-              userId: project.userId, // Important for ChatCore to know the project owner
-              name: project.name || '',
-              data: project.data,
-              theme: project.theme,
-              componentOrder: project.componentOrder,
-              sectionVisibility: project.sectionVisibility,
+        {/* Store View */}
+        {isStoreViewActive && storeProjectId ? (
+          <StoreViewWrapper
+            projectId={storeProjectId}
+            storeView={storeView}
+            initialData={{
+              ...project, // Pass all project fields including componentOrder, sectionVisibility, etc.
+              header: mergedData.header, // Context-aware header
+              theme: theme, // Context-aware theme
             }}
           />
+        ) : activePost ? (
+          /* Article View */
+          <BlogPost
+            post={activePost}
+            theme={theme}
+            onBack={handleBackToHome}
+            backgroundColor={pageBackgroundColor}
+            textColor={data?.hero?.colors?.text || '#ffffff'}
+            accentColor={data?.hero?.colors?.primary || '#4f46e5'}
+          />
+        ) : activePage ? (
+          /* Multi-Page View - Render specific page using PageRenderer */
+          <PageRenderer
+            page={activePage}
+            project={project}
+            isPreview={true}
+          />
+        ) : (
+          /* Home View - Sections */
+          <>
+            {componentOrder
+              ?.filter(key => {
+                // Lista de componentes de ecommerce que deben verificar visibilidad
+                const ecommerceComponents: PageSection[] = [
+                  'featuredProducts', 'categoryGrid', 'productHero', 'saleCountdown',
+                  'trustBadges', 'recentlyViewed', 'productReviews', 'collectionBanner',
+                  'productBundle', 'announcementBar'
+                ];
+
+                const isEcommerce = ecommerceComponents.includes(key as PageSection);
+                const statusVisible = componentStatus?.[key as PageSection] !== false;
+                const sectionVisible = sectionVisibility?.[key as PageSection] !== false;
+                const notExcluded = key !== 'footer' && key !== 'chatbot' && key !== 'header' &&
+                  // AnnouncementBar is rendered separately when positioned above header
+                  !(key === 'announcementBar' && mergedData.announcementBar?.position === 'above-header');
+                const baseVisibility = statusVisible && sectionVisible && notExcluded;
+
+                // Para componentes de ecommerce, verificar también visibleIn
+                if (isEcommerce) {
+                  const visibleInLanding = isEcommerceComponentVisibleInLanding(key as PageSection);
+                  const finalVisibility = baseVisibility && visibleInLanding;
+                  console.log(`[PublicWebsitePreview] Ecommerce component "${key}": status=${statusVisible}, section=${sectionVisible}, visibleIn=${visibleInLanding}, final=${finalVisibility}`);
+                  return finalVisibility;
+                }
+
+                return baseVisibility;
+              })
+              .map(key => (
+                <div id={key} key={key} className="w-full">
+                  <Suspense fallback={null}>
+                    {renderComponent(key as PageSection)}
+                  </Suspense>
+                </div>
+              ))}
+          </>
         )}
+      </main>
 
-        {/* Ad Tracking Pixels (if configured in SEO settings) */}
-        {project.seoConfig?.adPixels && (
-          <AdPixelsInjector config={project.seoConfig.adPixels} />
-        )}
+      {/* Footer - Always visible */}
+      {componentStatus?.footer !== false && sectionVisibility?.footer !== false && (
+        <div id="footer" className="w-full">
+          <Footer {...resolvedFooterData} onNavigate={handleLinkNavigation} />
+        </div>
+      )}
+
+      {/* Chatbot Widget (if enabled in project) */}
+      {(project.aiAssistantConfig?.isActive || (project.data?.chatbot?.isActive)) && (
+        <ChatbotWidget
+          hidePoweredBy={hasWhiteLabelBranding}
+          standaloneConfig={project.aiAssistantConfig || {
+            // Fallback for legacy chatbot configuration
+            isActive: true,
+            agentName: 'Assistant',
+            tone: 'Professional',
+            languages: 'Spanish',
+            businessProfile: '',
+            productsServices: '',
+            policiesContact: '',
+            specialInstructions: '',
+            faqs: [],
+            knowledgeDocuments: [],
+            widgetColor: project.data?.chatbot?.colors?.primary || '#4f46e5',
+            leadCaptureEnabled: true,
+            enableLiveVoice: false,
+            voiceName: 'Zephyr',
+            appearance: {
+              branding: {
+                logoType: 'none',
+                logoSize: 'md',
+                showBotAvatar: true,
+                showUserAvatar: false,
+                userAvatarStyle: 'initials'
+              },
+              colors: {
+                primaryColor: project.data?.chatbot?.colors?.primary || '#4f46e5',
+                secondaryColor: '#ffffff',
+                accentColor: project.data?.chatbot?.colors?.primary || '#4f46e5',
+                userBubbleColor: project.data?.chatbot?.colors?.primary || '#4f46e5',
+                userTextColor: '#ffffff',
+                botBubbleColor: '#f1f5f9',
+                botTextColor: '#0f172a',
+                backgroundColor: project.data?.chatbot?.colors?.background || '#ffffff',
+                inputBackground: '#f8fafc',
+                inputBorder: '#e2e8f0',
+                inputText: '#0f172a',
+                headerBackground: project.data?.chatbot?.colors?.primary || '#4f46e5',
+                headerText: '#ffffff'
+              },
+              behavior: {
+                position: project.data?.chatbot?.position || 'bottom-right',
+                offsetX: 20,
+                offsetY: 20,
+                width: 'md',
+                height: 'md',
+                autoOpen: false,
+                autoOpenDelay: 5,
+                openOnScroll: 0,
+                openOnTime: 0,
+                fullScreenOnMobile: true
+              },
+              messages: {
+                welcomeMessage: project.data?.chatbot?.welcomeMessage || '¡Hola! ¿En qué puedo ayudarte hoy?',
+                welcomeMessageEnabled: true,
+                welcomeDelay: 1,
+                inputPlaceholder: project.data?.chatbot?.placeholderText || 'Escribe tu mensaje...',
+                quickReplies: [],
+                showTypingIndicator: true
+              },
+              button: {
+                buttonStyle: 'circle',
+                buttonSize: 'lg',
+                buttonIcon: 'chat',
+                showButtonText: false,
+                pulseEffect: true,
+                shadowSize: 'lg',
+                showTooltip: false,
+                tooltipText: 'Chat'
+              },
+              theme: 'light'
+            }
+          }}
+          standaloneProject={{
+            id: project.id || storeProjectId || '',
+            userId: project.userId, // Important for ChatCore to know the project owner
+            name: project.name || '',
+            data: project.data,
+            theme: project.theme,
+            componentOrder: project.componentOrder,
+            sectionVisibility: project.sectionVisibility,
+          }}
+        />
+      )}
+
+      {/* Ad Tracking Pixels (if configured in SEO settings) */}
+      {project.seoConfig?.adPixels && (
+        <AdPixelsInjector config={project.seoConfig.adPixels} />
+      )}
 
 
-      </div>
-    </Suspense>
+    </div>
   );
 };
 
