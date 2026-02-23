@@ -350,183 +350,96 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
           // The SSR data might be stale if a post was just published
         }
 
-        // PRIORITY 1: Try publicStores first (public access, contains published data with SEO)
-        // This is now also used to refresh SSR data
-        try {
-          const publicStoreRef = doc(db, 'publicStores', projectId);
-          const publicStoreSnap = await getDoc(publicStoreRef);
+        // ========== NON-SSR / REFRESH PATH ==========
+        // Fetch project doc and CMS posts in PARALLEL to minimize load time
 
-          if (publicStoreSnap.exists()) {
-            const rawData = publicStoreSnap.data();
+        // STEP 1: Try publicStores (fast, public path) — project + posts in parallel
+        if (!projectData) {
+          try {
+            const publicStoreRef = doc(db, 'publicStores', projectId);
+            const publicPostsCol = collection(db, 'publicStores', projectId, 'posts');
+            const publicPostsQuery = query(publicPostsCol, orderBy('publishedAt', 'desc'));
 
-            // If we already have project data from SSR, just update specific fields if needed
-            // But for CMS posts, we need to query the subcollection specifically
-            if (!projectData) {
+            // Fire both in parallel
+            const [publicStoreSnap, publicPostsSnap] = await Promise.all([
+              getDoc(publicStoreRef),
+              getDocs(publicPostsQuery),
+            ]);
+
+            if (publicStoreSnap.exists()) {
+              const rawData = publicStoreSnap.data();
               projectData = { id: publicStoreSnap.id, ...rawData } as Project;
-              console.log('[PublicWebsitePreview] ✅ Loaded from publicStores', {
-                hasSeoConfig: !!rawData.seoConfig,
-                seoTitle: rawData.seoConfig?.title,
-                seoDescription: rawData.seoConfig?.description?.substring(0, 50),
-                projectName: rawData.name
-              });
             }
-          }
-        } catch (publicErr) {
-          console.log('[PublicWebsitePreview] Could not load from publicStores:', publicErr);
-        }
-
-        // ALWAYS fetch fresh CMS posts from publicStores to ensure "Instant Publish" works
-        // This overrides/merges with SSR posts
-        if (projectId) {
-          try {
-            console.log('[PublicWebsitePreview] 🔄 Checking for fresh CMS posts from publicStores...');
-            const publicPostsCol = collection(db, 'publicStores', projectId, 'posts');
-            // Get all published posts
-            const publicPostsQuery = query(publicPostsCol, orderBy('publishedAt', 'desc'));
-            const publicPostsSnap = await getDocs(publicPostsQuery);
-
-            if (!publicPostsSnap.empty) {
-              const freshPosts = publicPostsSnap.docs.map(d => ({ id: d.id, ...d.data() } as CMSPost));
-              console.log('[PublicWebsitePreview] ✅ Loaded fresh CMS posts from publicStores:', freshPosts.length);
-
-              // Update state with fresh posts
-              setCmsPosts(freshPosts);
-            } else {
-              // Only log if we didn't have SSR posts either
-              if (!cmsPosts.length) {
-                console.log('[PublicWebsitePreview] ℹ️ No CMS posts found in publicStores');
-              }
-            }
-          } catch (e) {
-            console.error('[PublicWebsitePreview] Error fetching specific posts from publicStores:', e);
-          }
-        }
-
-        // Return here only if we successfully loaded project data (either from SSR or publicStores)
-        if (projectData) {
-          setProject(projectData);
-          setLoading(false);
-          return;
-        }
-        try {
-          const publicStoreRef = doc(db, 'publicStores', projectId);
-          const publicStoreSnap = await getDoc(publicStoreRef);
-
-          if (publicStoreSnap.exists()) {
-            const rawData = publicStoreSnap.data();
-            projectData = { id: publicStoreSnap.id, ...rawData } as Project;
-            console.log('[PublicWebsitePreview] ✅ Loaded from publicStores', {
-              hasSeoConfig: !!rawData.seoConfig,
-              seoTitle: rawData.seoConfig?.title,
-              seoDescription: rawData.seoConfig?.description?.substring(0, 50),
-              projectName: rawData.name
-            });
-          }
-        } catch (publicErr) {
-          console.log('[PublicWebsitePreview] Could not load from publicStores:', publicErr);
-        }
-
-        // PRIORITY 2: Try user's projects collection (requires userId and auth)
-        if (!projectData && userId) {
-          try {
-            const projectRef = doc(db, 'users', userId, 'projects', projectId);
-            const projectSnap = await getDoc(projectRef);
-
-            if (projectSnap.exists()) {
-              const rawData = projectSnap.data();
-              projectData = { id: projectSnap.id, ...rawData } as Project;
-              console.log('[PublicWebsitePreview] ✅ Loaded from user collection', {
-                hasSeoConfig: !!rawData.seoConfig,
-                seoTitle: rawData.seoConfig?.title,
-                projectName: rawData.name
-              });
-            }
-          } catch (userProjectErr) {
-            console.log('[PublicWebsitePreview] Could not load from user collection (may require auth):', userProjectErr);
-          }
-        }
-
-        // PRIORITY 3: Try templates as last resort
-        if (!projectData) {
-          try {
-            const templateRef = doc(db, 'templates', projectId);
-            const templateSnap = await getDoc(templateRef);
-
-            if (templateSnap.exists()) {
-              const rawData = templateSnap.data();
-              projectData = { id: templateSnap.id, ...rawData } as Project;
-              console.log('[PublicWebsitePreview] ✅ Loaded from templates', {
-                hasSeoConfig: !!rawData.seoConfig,
-                projectName: rawData.name
-              });
-            }
-          } catch (templateErr) {
-            console.log('[PublicWebsitePreview] Could not load from templates:', templateErr);
-          }
-        }
-
-        // Log if no data found
-        if (!projectData) {
-          console.error('[PublicWebsitePreview] ❌ Project not found in any collection:', { userId, projectId });
-        }
-
-        if (projectData) {
-          setProject(projectData);
-
-          // Check tenant branding for White Label (fire-and-forget, non-blocking)
-          const ownerUserId = projectData.userId || userId;
-          if (ownerUserId) {
-            (async () => {
-              try {
-                const tenantRef = doc(db, 'tenants', `tenant_${ownerUserId}`);
-                const tenantSnap = await getDoc(tenantRef);
-                if (tenantSnap.exists()) {
-                  const tenantData = tenantSnap.data();
-                  const hasBranding = !!(tenantData?.branding?.companyName || tenantData?.branding?.logoUrl);
-                  setHasWhiteLabelBranding(hasBranding);
-                }
-              } catch (e) {
-                // Silently ignore — branding stays visible
-              }
-            })();
-          }
-
-          // Load CMS posts for this project
-          // First try publicStores (published), then fall back to user draft if userId available
-          try {
-            // Try publicStores first (published site)
-            const publicPostsCol = collection(db, 'publicStores', projectId, 'posts');
-            const publicPostsQuery = query(publicPostsCol, orderBy('publishedAt', 'desc'));
-            const publicPostsSnap = await getDocs(publicPostsQuery);
 
             if (!publicPostsSnap.empty) {
               const posts = publicPostsSnap.docs.map(d => ({ id: d.id, ...d.data() } as CMSPost));
               setCmsPosts(posts);
-              console.log('[PublicWebsitePreview] ✅ Loaded CMS posts from publicStores:', posts.length);
-            } else if (userId) {
-              // Fall back to user draft posts (for preview mode) - only if userId is available
-              console.log('[PublicWebsitePreview] No posts in publicStores, trying user draft...');
+            }
+          } catch (publicErr) {
+            console.log('[PublicWebsitePreview] Could not load from publicStores:', publicErr);
+          }
+        }
+
+        // STEP 2: If no project yet, try user's projects (requires userId)
+        if (!projectData && userId) {
+          try {
+            const projectRef = doc(db, 'users', userId, 'projects', projectId);
+            const projectSnap = await getDoc(projectRef);
+            if (projectSnap.exists()) {
+              projectData = { id: projectSnap.id, ...projectSnap.data() } as Project;
+            }
+          } catch (e) {
+            // Silently ignore
+          }
+        }
+
+        // STEP 3: Try templates as last resort
+        if (!projectData) {
+          try {
+            const templateRef = doc(db, 'templates', projectId);
+            const templateSnap = await getDoc(templateRef);
+            if (templateSnap.exists()) {
+              projectData = { id: templateSnap.id, ...templateSnap.data() } as Project;
+            }
+          } catch (e) {
+            // Silently ignore
+          }
+        }
+
+        if (projectData) {
+          setProject(projectData);
+
+          // Fire-and-forget: tenant branding check (non-blocking)
+          const ownerUserId = projectData.userId || userId;
+          if (ownerUserId) {
+            getDoc(doc(db, 'tenants', `tenant_${ownerUserId}`)).then(snap => {
+              if (snap.exists()) {
+                const d = snap.data();
+                if (d?.branding?.companyName || d?.branding?.logoUrl) {
+                  setHasWhiteLabelBranding(true);
+                }
+              }
+            }).catch(() => { });
+          }
+
+          // If no CMS posts loaded yet (project was in user collection / templates), try draft
+          if (cmsPosts.length === 0 && userId) {
+            try {
               const draftPostsCol = collection(db, 'users', userId, 'projects', projectId, 'posts');
               const draftPostsQuery = query(draftPostsCol, orderBy('publishedAt', 'desc'));
               const draftPostsSnap = await getDocs(draftPostsQuery);
-              const posts = draftPostsSnap.docs.map(d => ({ id: d.id, ...d.data() } as CMSPost));
-              setCmsPosts(posts);
-              console.log('[PublicWebsitePreview] ✅ Loaded CMS posts from user draft:', posts.length);
-            } else {
-              console.log('[PublicWebsitePreview] No posts in publicStores and no userId for draft fallback');
-              setCmsPosts([]);
+              if (!draftPostsSnap.empty) {
+                setCmsPosts(draftPostsSnap.docs.map(d => ({ id: d.id, ...d.data() } as CMSPost)));
+              }
+            } catch (e) {
+              // Silently ignore
             }
-          } catch (e) {
-            console.log('[PublicWebsitePreview] No CMS posts found or error loading:', e);
           }
 
-          // Load menus from project data (menus are stored inside the project document, not as a subcollection)
-          // This works for both publicStores and user project documents
+          // Load menus from project data
           if (projectData.menus && Array.isArray(projectData.menus)) {
-            console.log('[PublicWebsitePreview] ✅ Loaded menus from project data:', projectData.menus.length);
             setMenus(projectData.menus);
           } else {
-            console.log('[PublicWebsitePreview] No menus found in project data');
             setMenus([]);
           }
         } else {
