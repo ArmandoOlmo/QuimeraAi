@@ -18,6 +18,8 @@ import LandingChatbotWidget from './components/LandingChatbotWidget';
 import { useCustomDomain, DomainNotConfiguredPage, DomainLoadingPage } from './hooks/useCustomDomain';
 import AdPixelsInjector from './components/AdPixelsInjector';
 import { lazyWithRetry } from './utils/lazyWithRetry';
+// Side-effect import: triggers Firestore prefetch for /preview/ routes IMMEDIATELY
+import './utils/previewPrefetch';
 
 // Lazy-loaded components for code-splitting with retry logic
 // Using lazyWithRetry to handle chunk loading failures after deployments

@@ -11,6 +11,7 @@ import { Project, PageData, ThemeData, PageSection, CMSPost, Menu, FooterData, F
 import { deriveColorsFromPalette } from '../utils/colorUtils';
 import { AlertTriangle, Loader2 } from 'lucide-react';
 import AdPixelsInjector from './AdPixelsInjector';
+import { getPreviewPrefetch } from '../utils/previewPrefetch';
 
 // Core components — needed immediately for first paint
 import Header from './Header';
@@ -201,36 +202,19 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
     };
   }, []);
 
-  // Fetch tenant branding early so the loading screen can show the agency logo
+  // Consume prefetched tenant branding (already started before React mounted)
   useEffect(() => {
-    const fetchBranding = async () => {
-      // Parse userId from URL immediately
-      let userId = propUserId || null;
-      if (!userId) {
-        const pathname = window.location.pathname;
-        if (pathname.startsWith('/preview/')) {
-          const parts = pathname.replace('/preview/', '').split('/').filter(Boolean);
-          if (parts.length >= 2) userId = parts[0];
+    const prefetch = getPreviewPrefetch();
+    if (prefetch) {
+      prefetch.then(data => {
+        if (data.tenantBranding) {
+          if (data.tenantBranding.logoUrl) setBrandingLogoUrl(data.tenantBranding.logoUrl);
+          if (data.tenantBranding.companyName) setBrandingCompanyName(data.tenantBranding.companyName);
+          setHasWhiteLabelBranding(true);
         }
-      }
-      if (!userId) return;
-
-      try {
-        const tenantRef = doc(db, 'tenants', `tenant_${userId}`);
-        const tenantSnap = await getDoc(tenantRef);
-        if (tenantSnap.exists()) {
-          const tenantData = tenantSnap.data();
-          if (tenantData?.branding?.logoUrl) setBrandingLogoUrl(tenantData.branding.logoUrl);
-          if (tenantData?.branding?.companyName) setBrandingCompanyName(tenantData.branding.companyName);
-          const hasBranding = !!(tenantData?.branding?.companyName || tenantData?.branding?.logoUrl);
-          setHasWhiteLabelBranding(hasBranding);
-        }
-      } catch (e) {
-        // Silently ignore — branding defaults to generic
-      }
-    };
-    fetchBranding();
-  }, [propUserId]);
+      });
+    }
+  }, []);
 
   // Parse URL params from pathname: /preview/userId/projectId or /preview/projectId
   // Also supports hash: #preview/userId/projectId (legacy)
@@ -288,6 +272,25 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
 
       try {
         let projectData: Project | null = null;
+
+        // PRIORITY -1: Check for prefetched data (started before React mounted)
+        const prefetch = getPreviewPrefetch();
+        if (prefetch) {
+          const prefetched = await prefetch;
+          if (prefetched.project) {
+            projectData = prefetched.project as Project;
+            if (prefetched.posts.length > 0) setCmsPosts(prefetched.posts as CMSPost[]);
+            if (prefetched.menus.length > 0) setMenus(prefetched.menus as Menu[]);
+            if (prefetched.tenantBranding) {
+              setHasWhiteLabelBranding(true);
+            }
+            // Set project immediately, skip all other fetch paths
+            setProject(projectData);
+            setLoading(false);
+            window.scrollTo(0, 0);
+            return;
+          }
+        }
 
         // PRIORITY 0: Check for SSR-injected data (fastest path - no Firestore call needed)
         // This is set by the SSR server for custom domains
