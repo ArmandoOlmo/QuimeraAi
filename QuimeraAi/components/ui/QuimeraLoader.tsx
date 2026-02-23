@@ -31,14 +31,15 @@ const QuimeraLoader: React.FC<QuimeraLoaderProps> = ({
 }) => {
     const s = sizeMap[size];
     const tenantContext = useSafeTenant();
-    // null = context not available yet (still loading providers)
-    // object = context loaded → check for branding
-    const contextReady = tenantContext !== null;
+
+    // isLoadingTenant = true means Firestore is still fetching tenant data
+    // We must wait until loading is done to know which logo to show
+    const isLoading = tenantContext?.isLoadingTenant ?? true;
     const branding = tenantContext?.currentTenant?.branding;
     const agencyLogo = branding?.logoUrl;
 
-    // If context isn't ready yet, show a generic spinner (no logo at all)
-    const showLogo = contextReady;
+    // While loading: show generic spinner. After loaded: show the correct logo.
+    const showLogo = !isLoading;
     const logoUrl = agencyLogo || QUIMERA_LOGO;
 
     const loader = (
