@@ -1503,7 +1503,7 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
         {/* Loading Overlay for async navigation */}
         {loadingPost && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-[2px]">
-            <QuimeraLoader size="md" />
+            <Loader2 className="w-8 h-8 text-white/60 animate-spin" />
           </div>
         )}
         {/* Store View */}
