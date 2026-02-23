@@ -168,6 +168,8 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
   const [cmsPosts, setCmsPosts] = useState<CMSPost[]>([]);
   const [menus, setMenus] = useState<Menu[]>([]);
   const [hasWhiteLabelBranding, setHasWhiteLabelBranding] = useState(false);
+  const [brandingLogoUrl, setBrandingLogoUrl] = useState<string | null>(null);
+  const [brandingCompanyName, setBrandingCompanyName] = useState<string | null>(null);
   const [activePost, setActivePost] = useState<CMSPost | null>(null);
   const [storeView, setStoreView] = useState<StoreViewState>({ type: 'none' });
   const [activePage, setActivePage] = useState<SitePage | null>(null);
@@ -199,6 +201,37 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
       }
     };
   }, []);
+
+  // Fetch tenant branding early so the loading screen can show the agency logo
+  useEffect(() => {
+    const fetchBranding = async () => {
+      // Parse userId from URL immediately
+      let userId = propUserId || null;
+      if (!userId) {
+        const pathname = window.location.pathname;
+        if (pathname.startsWith('/preview/')) {
+          const parts = pathname.replace('/preview/', '').split('/').filter(Boolean);
+          if (parts.length >= 2) userId = parts[0];
+        }
+      }
+      if (!userId) return;
+
+      try {
+        const tenantRef = doc(db, 'tenants', `tenant_${userId}`);
+        const tenantSnap = await getDoc(tenantRef);
+        if (tenantSnap.exists()) {
+          const tenantData = tenantSnap.data();
+          if (tenantData?.branding?.logoUrl) setBrandingLogoUrl(tenantData.branding.logoUrl);
+          if (tenantData?.branding?.companyName) setBrandingCompanyName(tenantData.branding.companyName);
+          const hasBranding = !!(tenantData?.branding?.companyName || tenantData?.branding?.logoUrl);
+          setHasWhiteLabelBranding(hasBranding);
+        }
+      } catch (e) {
+        // Silently ignore — branding defaults to generic
+      }
+    };
+    fetchBranding();
+  }, [propUserId]);
 
   // Parse URL params from pathname: /preview/userId/projectId or /preview/projectId
   // Also supports hash: #preview/userId/projectId (legacy)
@@ -1113,12 +1146,24 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
   // Check if project uses multi-page architecture
   const useMultiPageArchitecture = project?.pages && project.pages.length > 0;
 
-  // Loading state - simple brandless spinner (no tenant context on preview route)
+  // Loading state — show agency branding if available, otherwise generic spinner
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center gap-4">
-        <Loader2 className="w-10 h-10 text-white/60 animate-spin" />
-        <p className="text-white/40 text-sm">Loading...</p>
+        {brandingLogoUrl ? (
+          <div className="relative flex items-center justify-center">
+            <div className="absolute w-24 h-24 rounded-full animate-ping" style={{ animationDuration: '2s', backgroundColor: 'rgba(255,255,255,0.1)' }} />
+            <div className="absolute w-20 h-20 rounded-full animate-ping" style={{ animationDuration: '1.5s', animationDelay: '0.2s', backgroundColor: 'rgba(255,255,255,0.15)' }} />
+            <div className="relative z-10 w-16 h-16 rounded-full bg-slate-800 shadow-2xl flex items-center justify-center border border-white/10">
+              <img src={brandingLogoUrl} alt="Loading..." className="w-12 h-12 object-contain animate-pulse rounded-full" style={{ animationDuration: '1.5s' }} />
+            </div>
+          </div>
+        ) : (
+          <Loader2 className="w-10 h-10 text-white/60 animate-spin" />
+        )}
+        <p className="text-white/40 text-sm">
+          {brandingCompanyName ? `Cargando ${brandingCompanyName}...` : 'Loading...'}
+        </p>
       </div>
     );
   }
