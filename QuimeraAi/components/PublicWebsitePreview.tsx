@@ -9,9 +9,8 @@ import React, { useState, useEffect, useCallback, lazy, Suspense } from 'react';
 import { db, doc, getDoc, collection, getDocs, query, orderBy, where, limit } from '../firebase';
 import { Project, PageData, ThemeData, PageSection, CMSPost, Menu, FooterData, FontFamily, SEOConfig, SitePage } from '../types';
 import { deriveColorsFromPalette } from '../utils/colorUtils';
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, Loader2 } from 'lucide-react';
 import AdPixelsInjector from './AdPixelsInjector';
-import QuimeraLoader from './ui/QuimeraLoader';
 
 // Import all website components
 import Header from './Header';
@@ -504,6 +503,7 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
         console.error('[PublicWebsitePreview] Error loading project:', err);
         setError('Failed to load project. Make sure the URL is correct.');
       } finally {
+        window.scrollTo(0, 0);
         setLoading(false);
       }
     };
@@ -1113,9 +1113,14 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
   // Check if project uses multi-page architecture
   const useMultiPageArchitecture = project?.pages && project.pages.length > 0;
 
-  // Loading state - Unified QuimeraLoader for consistent branding
+  // Loading state - simple brandless spinner (no tenant context on preview route)
   if (loading) {
-    return <QuimeraLoader fullScreen size="md" text="Loading..." />;
+    return (
+      <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center gap-4">
+        <Loader2 className="w-10 h-10 text-white/60 animate-spin" />
+        <p className="text-white/40 text-sm">Loading...</p>
+      </div>
+    );
   }
 
   // Error state

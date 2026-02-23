@@ -29,14 +29,10 @@ const PublicWebsitePreview = lazyWithRetry(() => import('./components/PublicWebs
 const StorefrontApp = lazyWithRetry(() => import('./components/ecommerce/StorefrontApp'));
 const PublicBioPage = lazyWithRetry(() => import('./components/PublicBioPage'));
 
-// Minimal loading fallback for lazy components
+// Minimal loading fallback for lazy components — brandless spinner (no Quimera logo)
 const MinimalLoader = () => (
   <div className="flex items-center justify-center min-h-screen bg-background">
-    <img
-      src="https://firebasestorage.googleapis.com/v0/b/quimeraai.firebasestorage.app/o/quimera%2Fquimeralogo.png?alt=media&token=82368c1c-0f63-42b7-831f-72780006f032"
-      alt="Loading..."
-      className="w-12 h-12 object-contain animate-pulse"
-    />
+    <div className="w-10 h-10 border-2 border-white/20 border-t-white/60 rounded-full animate-spin" />
   </div>
 );
 

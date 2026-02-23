@@ -10,8 +10,6 @@ import React from 'react';
 import { Sparkles } from 'lucide-react';
 import { useSafeTenant } from '../../contexts/tenant/TenantContext';
 
-const QUIMERA_LOGO = "https://firebasestorage.googleapis.com/v0/b/quimeraai.firebasestorage.app/o/quimera%2Fquimeralogo.png?alt=media&token=82368c1c-0f63-42b7-831f-72780006f032";
-
 interface QuimeraLoaderProps {
     /** Size of the loader */
     size?: 'sm' | 'md' | 'lg';
@@ -61,19 +59,8 @@ const QuimeraLoader: React.FC<QuimeraLoaderProps> = ({
         if (branding?.companyName) {
             return <Sparkles className={`${s.iconSize} text-white animate-pulse`} style={{ animationDuration: '1.5s' }} />;
         }
-        return (
-            <img
-                src={QUIMERA_LOGO}
-                alt="Loading..."
-                className={`${s.logo} object-contain animate-pulse`}
-                style={{ animationDuration: '1.5s' }}
-                width={s.logoSize}
-                height={s.logoSize}
-                loading="eager"
-                decoding="sync"
-                fetchPriority="high"
-            />
-        );
+        // Generic fallback — no Quimera branding
+        return <Sparkles className={`${s.iconSize} text-yellow-400 animate-pulse`} style={{ animationDuration: '1.5s' }} />;
     };
 
     // Circle styling
