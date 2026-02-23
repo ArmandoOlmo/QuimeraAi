@@ -72,6 +72,27 @@ const TextArea = ({ label, className, ...props }: React.TextareaHTMLAttributes<H
   </div>
 );
 
+const Select = ({ label, options, value, onChange, className, ...props }: React.SelectHTMLAttributes<HTMLSelectElement> & { label?: string, options: { value: string, label: string }[], value: string, onChange: (value: string) => void }) => (
+  <div className={`mb-3 ${className || ''}`}>
+    {label && <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{label}</label>}
+    <div className="relative">
+      <select
+        {...props}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="w-full bg-editor-panel-bg border border-editor-border rounded-md px-3 py-2 text-sm text-editor-text-primary focus:outline-none focus:ring-1 focus:ring-editor-accent appearance-none transition-all pr-8"
+      >
+        {options.map((opt) => (
+          <option key={opt.value} value={opt.value}>
+            {opt.label}
+          </option>
+        ))}
+      </select>
+      <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-editor-text-secondary pointer-events-none" size={14} />
+    </div>
+  </div>
+);
+
 const ToggleControl = ({ label, checked, onChange }: { label?: string, checked: boolean, onChange: (checked: boolean) => void }) => (
   <div className={`flex items-center ${label ? 'justify-between mb-3' : ''}`}>
     {label && <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{label}</label>}
@@ -1209,143 +1230,28 @@ const Controls: React.FC = () => {
             <Layout size={14} />
             {t('editor.controls.hero.heroStyle')}
           </label>
-          <div className="grid grid-cols-3 gap-2">
-            <button
-              onClick={() => setNestedData('hero.heroVariant', 'classic')}
-              className={`px-3 py-3 rounded-md border transition-all ${currentVariant === 'classic'
-                ? 'bg-editor-accent text-editor-bg border-editor-accent shadow-lg'
-                : 'bg-editor-bg text-editor-text-primary border-editor-border hover:border-editor-accent'
-                }`}
-            >
-              <div className="font-semibold text-[10px]">{t('controls.classic')}</div>
-              <div className="text-[9px] opacity-70">{t('controls.twoColumn')}</div>
-            </button>
-            <button
-              onClick={() => setNestedData('hero.heroVariant', 'modern')}
-              className={`px-3 py-3 rounded-md border transition-all ${currentVariant === 'modern'
-                ? 'bg-editor-accent text-editor-bg border-editor-accent shadow-lg'
-                : 'bg-editor-bg text-editor-text-primary border-editor-border hover:border-editor-accent'
-                }`}
-            >
-              <div className="font-semibold text-[10px]">{t('controls.modern')}</div>
-              <div className="text-[9px] opacity-70">{t('controls.fullScreen')}</div>
-            </button>
-            <button
-              onClick={() => setNestedData('hero.heroVariant', 'gradient')}
-              className={`px-3 py-3 rounded-md border transition-all ${currentVariant === 'gradient'
-                ? 'bg-editor-accent text-editor-bg border-editor-accent shadow-lg'
-                : 'bg-editor-bg text-editor-text-primary border-editor-border hover:border-editor-accent'
-                }`}
-            >
-              <div className="font-semibold text-[10px]">{t('controls.gradient')}</div>
-              <div className="text-[9px] opacity-70">{t('controls.futuristic')}</div>
-            </button>
-            <button
-              onClick={() => setNestedData('hero.heroVariant', 'fitness')}
-              className={`px-3 py-3 rounded-md border transition-all ${currentVariant === 'fitness'
-                ? 'bg-editor-accent text-editor-bg border-editor-accent shadow-lg'
-                : 'bg-editor-bg text-editor-text-primary border-editor-border hover:border-editor-accent'
-                }`}
-            >
-              <div className="font-semibold text-[10px]">{t('controls.fitness')}</div>
-              <div className="text-[9px] opacity-70">{t('controls.boldDynamic')}</div>
-            </button>
-            {/* New Variants */}
-            <button
-              onClick={() => setNestedData('hero.heroVariant', 'editorial')}
-              className={`px-3 py-3 rounded-md border transition-all ${currentVariant === 'editorial'
-                ? 'bg-editor-accent text-editor-bg border-editor-accent shadow-lg'
-                : 'bg-editor-bg text-editor-text-primary border-editor-border hover:border-editor-accent'
-                }`}
-            >
-              <div className="font-semibold text-[10px]">{t('controls.editorial')}</div>
-              <div className="text-[9px] opacity-70">{t('controls.magazine')}</div>
-            </button>
-            <button
-              onClick={() => setNestedData('hero.heroVariant', 'cinematic')}
-              className={`px-3 py-3 rounded-md border transition-all ${currentVariant === 'cinematic'
-                ? 'bg-editor-accent text-editor-bg border-editor-accent shadow-lg'
-                : 'bg-editor-bg text-editor-text-primary border-editor-border hover:border-editor-accent'
-                }`}
-            >
-              <div className="font-semibold text-[10px]">{t('controls.cinematic')}</div>
-              <div className="text-[9px] opacity-70">{t('controls.moviePoster')}</div>
-            </button>
-            <button
-              onClick={() => setNestedData('hero.heroVariant', 'minimal')}
-              className={`px-3 py-3 rounded-md border transition-all ${currentVariant === 'minimal'
-                ? 'bg-editor-accent text-editor-bg border-editor-accent shadow-lg'
-                : 'bg-editor-bg text-editor-text-primary border-editor-border hover:border-editor-accent'
-                }`}
-            >
-              <div className="font-semibold text-[10px]">{t('controls.minimal')}</div>
-              <div className="text-[9px] opacity-70">{t('controls.clean')}</div>
-            </button>
-            <button
-              onClick={() => setNestedData('hero.heroVariant', 'bold')}
-              className={`px-3 py-3 rounded-md border transition-all ${currentVariant === 'bold'
-                ? 'bg-editor-accent text-editor-bg border-editor-accent shadow-lg'
-                : 'bg-editor-bg text-editor-text-primary border-editor-border hover:border-editor-accent'
-                }`}
-            >
-              <div className="font-semibold text-[10px]">{t('controls.bold')}</div>
-              <div className="text-[9px] opacity-70">{t('controls.oversized')}</div>
-            </button>
-            <button
-              onClick={() => setNestedData('hero.heroVariant', 'overlap')}
-              className={`px-3 py-3 rounded-md border transition-all ${currentVariant === 'overlap'
-                ? 'bg-editor-accent text-editor-bg border-editor-accent shadow-lg'
-                : 'bg-editor-bg text-editor-text-primary border-editor-border hover:border-editor-accent'
-                }`}
-            >
-              <div className="font-semibold text-[10px]">{t('controls.overlap')}</div>
-              <div className="text-[9px] opacity-70">{t('controls.floatingCard')}</div>
-            </button>
-            <button
-              onClick={() => setNestedData('hero.heroVariant', 'verticalSplit')}
-              className={`px-3 py-3 rounded-md border transition-all ${currentVariant === 'verticalSplit'
-                ? 'bg-editor-accent text-editor-bg border-editor-accent shadow-lg'
-                : 'bg-editor-bg text-editor-text-primary border-editor-border hover:border-editor-accent'
-                }`}
-            >
-              <div className="font-semibold text-[10px]">{t('controls.verticalSplit')}</div>
-              <div className="text-[9px] opacity-70">{t('controls.split5050')}</div>
-            </button>
-            <button
-              onClick={() => setNestedData('hero.heroVariant', 'glass')}
-              className={`px-3 py-3 rounded-md border transition-all ${currentVariant === 'glass'
-                ? 'bg-editor-accent text-editor-bg border-editor-accent shadow-lg'
-                : 'bg-editor-bg text-editor-text-primary border-editor-border hover:border-editor-accent'
-                }`}
-            >
-              <div className="font-semibold text-[10px]">{t('controls.glass')}</div>
-              <div className="text-[9px] opacity-70">{t('controls.frosted')}</div>
-            </button>
-            <button
-              onClick={() => setNestedData('hero.heroVariant', 'stacked')}
-              className={`px-3 py-3 rounded-md border transition-all ${currentVariant === 'stacked'
-                ? 'bg-editor-accent text-editor-bg border-editor-accent shadow-lg'
-                : 'bg-editor-bg text-editor-text-primary border-editor-border hover:border-editor-accent'
-                }`}
-            >
-              <div className="font-semibold text-[10px]">{t('controls.stacked')}</div>
-              <div className="text-[9px] opacity-70">{t('controls.imageAndText')}</div>
-            </button>
+          <div className="mb-4">
+            <Select
+              label={t('editor.controls.hero.heroStyle')}
+              value={currentVariant || 'classic'}
+              onChange={(v) => setNestedData('hero.heroVariant', v)}
+              options={[
+                { value: 'classic', label: `${t('controls.classic')} (${t('controls.twoColumn')})` },
+                { value: 'modern', label: `${t('controls.modern')} (${t('controls.fullScreen')})` },
+                { value: 'gradient', label: `${t('controls.gradient')} (${t('controls.futuristic')})` },
+                { value: 'fitness', label: `${t('controls.fitness')} (${t('controls.boldDynamic')})` },
+                { value: 'editorial', label: `${t('controls.editorial')} (${t('controls.magazine')})` },
+                { value: 'cinematic', label: `${t('controls.cinematic')} (${t('controls.moviePoster')})` },
+                { value: 'minimal', label: `${t('controls.minimal')} (${t('controls.clean')})` },
+                { value: 'bold', label: `${t('controls.bold')} (${t('controls.oversized')})` },
+                { value: 'overlap', label: `${t('controls.overlap')} (${t('controls.floatingCard')})` },
+                { value: 'verticalSplit', label: `${t('controls.verticalSplit')} (${t('controls.split5050')})` },
+                { value: 'glass', label: `${t('controls.glass')} (${t('controls.frosted')})` },
+                { value: 'stacked', label: `${t('controls.stacked')} (${t('controls.imageAndText')})` },
+                { value: 'cinematic-gym', label: `Gym (Brutalist)` }
+              ]}
+            />
           </div>
-          <p className="text-xs text-editor-text-secondary mt-2">
-            {currentVariant === 'classic' && `📐 ${t('controls.traditionalLayout')}`}
-            {currentVariant === 'modern' && `✨ ${t('controls.fullScreenHero')}`}
-            {currentVariant === 'gradient' && `🎨 ${t('controls.gradientLayout')}`}
-            {currentVariant === 'fitness' && `💪 ${t('controls.fitnessLayout')}`}
-            {currentVariant === 'editorial' && `📰 ${t('controls.editorialLayout')}`}
-            {currentVariant === 'cinematic' && `🎬 ${t('controls.cinematicLayout')}`}
-            {currentVariant === 'minimal' && `✧ ${t('controls.minimalLayout')}`}
-            {currentVariant === 'bold' && `🔤 ${t('controls.boldLayout')}`}
-            {currentVariant === 'overlap' && `📋 ${t('controls.overlapLayout')}`}
-            {currentVariant === 'verticalSplit' && `◧ ${t('controls.verticalSplitLayout')}`}
-            {currentVariant === 'glass' && `🪟 ${t('controls.glassLayout')}`}
-            {currentVariant === 'stacked' && `📚 ${t('controls.stackedLayout')}`}
-          </p>
         </div>
 
         <hr className="border-editor-border/50" />
@@ -1490,6 +1396,8 @@ const Controls: React.FC = () => {
             <ColorControl label={t('editor.controls.common.background')} value={data.hero.colors?.background} onChange={(v) => setNestedData('hero.colors.background', v)} />
             <ColorControl label={t('editor.controls.common.title')} value={data.hero.colors?.heading || '#ffffff'} onChange={(v) => setNestedData('hero.colors.heading', v)} />
             <ColorControl label={t('editor.controls.common.text')} value={data.hero.colors?.text} onChange={(v) => setNestedData('hero.colors.text', v)} />
+            <ColorControl label={t('editor.controls.common.accent', { defaultValue: 'Primary Accent' })} value={data.hero.colors?.primary} onChange={(v) => setNestedData('hero.colors.primary', v)} />
+            <ColorControl label={t('editor.controls.common.secondary', { defaultValue: 'Secondary' })} value={data.hero.colors?.secondary} onChange={(v) => setNestedData('hero.colors.secondary', v)} />
 
             <div className="pt-2">
               <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">{t('editor.primaryButton')}</h5>
@@ -1775,6 +1683,12 @@ const Controls: React.FC = () => {
             >
               {t('editor.controls.features.overlay')}
             </button>
+            <button
+              onClick={() => setNestedData('features.featuresVariant', 'cinematic-gym')}
+              className={`py-1 text-xs font-medium rounded-sm transition-colors ${currentVariant === 'cinematic-gym' ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:bg-editor-border'}`}
+            >
+              Gym (Brutalist)
+            </button>
           </div>
           <p className="text-xs text-editor-text-secondary mt-2">
             {currentVariant === 'classic'
@@ -1885,8 +1799,8 @@ const Controls: React.FC = () => {
         <p className="text-[10px] text-editor-text-secondary uppercase tracking-wider font-bold">{t('editor.controls.features.cardColors')}</p>
 
         <ColorControl label={`${t('editor.controls.features.cardImage')} ${t('editor.controls.common.background')}`} value={data.features.colors?.cardBackground || '#1a1a2e'} onChange={(v) => setNestedData('features.colors.cardBackground', v)} />
-        <ColorControl label={`${t('editor.controls.features.cardImage')} ${t('editor.controls.common.title')}`} value={data.features.colors?.cardHeading || '#ffffff'} onChange={(v) => setNestedData('features.colors.cardHeading', v)} />
-        <ColorControl label={`${t('editor.controls.features.cardImage')} ${t('editor.controls.common.text')}`} value={data.features.colors?.cardText || '#94a3b8'} onChange={(v) => setNestedData('features.colors.cardText', v)} />
+        <ColorControl label={`${t('editor.controls.features.cardImage')} ${t('editor.controls.common.title')}`} value={(data.features.colors as any)?.cardHeading || '#ffffff'} onChange={(v) => setNestedData('features.colors.cardHeading', v)} />
+        <ColorControl label={`${t('editor.controls.features.cardImage')} ${t('editor.controls.common.text')}`} value={(data.features.colors as any)?.cardText || '#94a3b8'} onChange={(v) => setNestedData('features.colors.cardText', v)} />
         <ColorControl label={t('editor.controls.hero.borderColor')} value={data.features.colors?.borderColor || 'transparent'} onChange={(v) => setNestedData('features.colors.borderColor', v)} />
 
         <hr className="border-editor-border/50" />
@@ -2159,34 +2073,18 @@ const Controls: React.FC = () => {
       <div className="space-y-4">
         {/* Variant Selector */}
         <div className="mb-4">
-          <label className="block text-xs font-bold text-editor-text-secondary mb-2 uppercase tracking-wider">{t('editor.controls.pricing.styleVariant')}</label>
-          <div className="grid grid-cols-2 gap-2">
-            {[
-              { value: 'classic', label: t('editor.controls.pricing.classic'), desc: t('editor.controls.pricing.classicDesc') },
-              { value: 'gradient', label: t('editor.controls.pricing.gradient'), desc: t('editor.controls.pricing.gradientDesc') },
-              { value: 'glassmorphism', label: t('editor.controls.pricing.glassmorphism'), desc: t('editor.controls.pricing.glassmorphismDesc') },
-              { value: 'minimalist', label: t('editor.controls.pricing.minimalist'), desc: t('editor.controls.pricing.minimalistDesc') }
-            ].map((variant) => (
-              <button
-                key={variant.value}
-                onClick={() => setNestedData('pricing.pricingVariant', variant.value)}
-                className={`
-                                p-3 text-left rounded-lg border transition-all
-                                ${currentVariant === variant.value
-                    ? 'bg-editor-accent border-editor-accent text-editor-bg'
-                    : 'bg-editor-panel-bg border-editor-border text-editor-text-secondary hover:border-editor-accent/50'
-                  }
-                            `}
-              >
-                <div className={`text-xs font-bold mb-1 ${currentVariant === variant.value ? 'text-editor-bg' : 'text-editor-text-primary'}`}>
-                  {variant.label}
-                </div>
-                <div className={`text-[10px] ${currentVariant === variant.value ? 'text-editor-bg/80' : 'text-editor-text-secondary'}`}>
-                  {variant.desc}
-                </div>
-              </button>
-            ))}
-          </div>
+          <Select
+            label={t('editor.controls.pricing.styleVariant')}
+            value={currentVariant || 'classic'}
+            onChange={(v) => setNestedData('pricing.pricingVariant', v)}
+            options={[
+              { value: 'classic', label: `${t('editor.controls.pricing.classic')} - ${t('editor.controls.pricing.classicDesc')}` },
+              { value: 'gradient', label: `${t('editor.controls.pricing.gradient')} - ${t('editor.controls.pricing.gradientDesc')}` },
+              { value: 'glassmorphism', label: `${t('editor.controls.pricing.glassmorphism')} - ${t('editor.controls.pricing.glassmorphismDesc')}` },
+              { value: 'minimalist', label: `${t('editor.controls.pricing.minimalist')} - ${t('editor.controls.pricing.minimalistDesc')}` },
+              { value: 'comparison', label: `Comparison - Detailed` }
+            ]}
+          />
         </div>
 
         <hr className="border-editor-border/50" />
@@ -2519,19 +2417,17 @@ const Controls: React.FC = () => {
 
         <hr className="border-editor-border/50" />
 
-        <div>
-          <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">Style Variant</label>
-          <select
-            value={data.slideshow.slideshowVariant || 'classic'}
-            onChange={(e) => setNestedData('slideshow.slideshowVariant', e.target.value)}
-            className="w-full bg-editor-panel-bg border border-editor-border rounded-md px-3 py-2 text-sm text-editor-text-primary focus:outline-none focus:ring-1 focus:ring-editor-accent"
-          >
-            <option value="classic">Classic Slide</option>
-            <option value="kenburns">Ken Burns Effect</option>
-            <option value="cards3d">3D Cards Stack</option>
-            <option value="thumbnails">Thumbnail Gallery</option>
-          </select>
-        </div>
+        <Select
+          label="Style Variant"
+          value={data.slideshow.slideshowVariant || 'classic'}
+          onChange={(v) => setNestedData('slideshow.slideshowVariant', v)}
+          options={[
+            { value: 'classic', label: 'Classic Slide' },
+            { value: 'kenburns', label: 'Ken Burns Effect' },
+            { value: 'cards3d', label: '3D Cards Stack' },
+            { value: 'thumbnails', label: 'Thumbnail Gallery' }
+          ]}
+        />
 
         <BorderRadiusSelector
           label="Border Radius"
@@ -3310,30 +3206,17 @@ const Controls: React.FC = () => {
       <div className="space-y-4">
         {/* Map Variant */}
         <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-          <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
-            <Layout size={14} />
-            Map Style
-          </label>
-          <div className="grid grid-cols-2 gap-2">
-            {[
-              { value: 'modern', label: '🏢 Modern Split', desc: 'Info card + map' },
-              { value: 'minimal', label: '✨ Minimal', desc: 'Clean with badge' },
-              { value: 'dark-tech', label: '🌃 Dark Tech', desc: 'Tech overlay' },
-              { value: 'night', label: '🌙 Night Bar', desc: 'Bottom info bar' }
-            ].map((variant) => (
-              <button
-                key={variant.value}
-                onClick={() => setNestedData('map.mapVariant', variant.value)}
-                className={`px-3 py-3 rounded-md border text-left transition-all ${(data?.map.mapVariant || 'modern') === variant.value
-                  ? 'bg-editor-accent text-editor-bg border-editor-accent shadow-sm font-bold'
-                  : 'bg-editor-panel-bg text-editor-text-primary border-editor-border hover:border-editor-accent'
-                  }`}
-              >
-                <div className="text-xs font-medium mb-0.5">{variant.label}</div>
-                <div className="text-[10px] opacity-70">{variant.desc}</div>
-              </button>
-            ))}
-          </div>
+          <Select
+            label="Map Style"
+            value={data?.map.mapVariant || 'modern'}
+            onChange={(v) => setNestedData('map.mapVariant', v)}
+            options={[
+              { value: 'modern', label: '🏢 Modern Split - Info card + map' },
+              { value: 'minimal', label: '✨ Minimal - Clean with badge' },
+              { value: 'dark-tech', label: '🌃 Dark Tech - Tech overlay' },
+              { value: 'night', label: '🌙 Night Bar - Bottom info bar' }
+            ]}
+          />
         </div>
 
         {/* Map Height */}
@@ -3516,7 +3399,7 @@ const Controls: React.FC = () => {
                 <button
                   key={pos}
                   onClick={() => setNestedData('heroSplit.imagePosition', pos)}
-                  className={`flex-1 py-2 text-sm font-medium rounded-sm capitalize transition-colors ${data.heroSplit.imagePosition === pos
+                  className={`flex-1 py-2 text-sm font-medium rounded-sm capitalize ${data.heroSplit.imagePosition === pos
                     ? 'bg-editor-accent text-editor-bg'
                     : 'text-editor-text-secondary hover:bg-editor-border'
                     }`}
@@ -3621,28 +3504,16 @@ const Controls: React.FC = () => {
         <div className="space-y-4">
           {/* Services Variant Selector */}
           <div className="bg-editor-panel-bg/50 p-3 rounded-lg border border-editor-border">
-            <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">
-              Services Style
-            </label>
-            <div className="grid grid-cols-3 gap-2">
-              {['cards', 'grid', 'minimal'].map((variant) => (
-                <button
-                  key={variant}
-                  onClick={() => setNestedData('services.servicesVariant', variant)}
-                  className={`px-2 py-2 rounded-md border text-xs transition-all capitalize ${(data?.services?.servicesVariant || 'cards') === variant
-                    ? 'bg-editor-accent text-editor-bg border-editor-accent shadow-sm font-bold'
-                    : 'bg-editor-panel-bg text-editor-text-primary border-editor-border hover:border-editor-accent'
-                    }`}
-                >
-                  {variant}
-                </button>
-              ))}
-            </div>
-            <p className="text-xs text-editor-text-secondary mt-2 italic">
-              {(data?.services?.servicesVariant || 'cards') === 'cards' && '✨ Standard centered cards with hover effects.'}
-              {(data?.services?.servicesVariant || 'cards') === 'grid' && '🎨 Modern bento-style grid with left alignment.'}
-              {(data?.services?.servicesVariant || 'cards') === 'minimal' && '📋 Clean list layout for a professional look.'}
-            </p>
+            <Select
+              label="Services Style"
+              value={data?.services?.servicesVariant || 'cards'}
+              onChange={(v) => setNestedData('services.servicesVariant', v)}
+              options={[
+                { value: 'cards', label: 'Cards - Standard centered cards' },
+                { value: 'grid', label: 'Grid - Modern bento-style' },
+                { value: 'minimal', label: 'Minimal - Clean list layout' }
+              ]}
+            />
           </div>
 
           <hr className="border-editor-border/50" />
@@ -3718,26 +3589,17 @@ const Controls: React.FC = () => {
         <div className="space-y-4">
           {/* Team Variant Selector */}
           <div className="bg-editor-panel-bg/50 p-3 rounded-lg border border-editor-border">
-            <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">{t('editor.controls.team.teamStyle')}</label>
-            <div className="grid grid-cols-2 gap-2">
-              {[
+            <Select
+              label={t('editor.controls.team.teamStyle')}
+              value={data?.team?.teamVariant || 'classic'}
+              onChange={(v) => setNestedData('team.teamVariant', v)}
+              options={[
                 { value: 'classic', label: t('editor.controls.features.classic') },
                 { value: 'cards', label: t('editor.controls.team.cards') },
                 { value: 'minimal', label: t('editor.controls.team.minimal') },
                 { value: 'overlay', label: t('editor.controls.team.overlay') }
-              ].map((variant) => (
-                <button
-                  key={variant.value}
-                  onClick={() => setNestedData('team.teamVariant', variant.value)}
-                  className={`p-2 text-xs font-medium rounded-md border transition-all ${(data?.team?.teamVariant || 'classic') === variant.value
-                    ? 'bg-editor-accent text-editor-bg border-editor-accent'
-                    : 'bg-editor-panel-bg text-editor-text-secondary border-editor-border hover:border-editor-accent'
-                    }`}
-                >
-                  {variant.label}
-                </button>
-              ))}
-            </div>
+              ]}
+            />
           </div>
 
           <hr className="border-editor-border/50" />
@@ -3841,23 +3703,17 @@ const Controls: React.FC = () => {
         <div className="space-y-4">
           {/* FAQ Variant Selector */}
           <div className="bg-editor-panel-bg/50 p-3 rounded-lg border border-editor-border">
-            <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">
-              FAQ Style
-            </label>
-            <div className="grid grid-cols-2 gap-2">
-              {['classic', 'cards', 'gradient', 'minimal'].map((variant) => (
-                <button
-                  key={variant}
-                  onClick={() => setNestedData('faq.faqVariant', variant)}
-                  className={`px-2 py-2 rounded-md border text-xs transition-all capitalize ${(data?.faq?.faqVariant || 'classic') === variant
-                    ? 'bg-editor-accent text-editor-bg border-editor-accent shadow-sm font-bold'
-                    : 'bg-editor-panel-bg text-editor-text-primary border-editor-border hover:border-editor-accent'
-                    }`}
-                >
-                  {variant}
-                </button>
-              ))}
-            </div>
+            <Select
+              label="FAQ Style"
+              value={data?.faq?.faqVariant || 'classic'}
+              onChange={(v) => setNestedData('faq.faqVariant', v)}
+              options={[
+                { value: 'classic', label: 'Classic' },
+                { value: 'cards', label: 'Cards' },
+                { value: 'gradient', label: 'Gradient' },
+                { value: 'minimal', label: 'Minimal' }
+              ]}
+            />
           </div>
 
           <hr className="border-editor-border/50" />
@@ -3906,27 +3762,16 @@ const Controls: React.FC = () => {
         return (
           <div className="space-y-4">
             {/* Style Variant */}
-            <div>
-              <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{t('editor.controls.portfolio.portfolioStyle')}</label>
-              <div className="grid grid-cols-2 gap-1 bg-editor-bg p-1 rounded-md border border-editor-border">
-                <button
-                  onClick={() => setNestedData('portfolio.portfolioVariant', 'classic')}
-                  className={`py-1 text-xs font-medium rounded-sm transition-colors ${currentPortfolioVariant === 'classic' ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:bg-editor-border'}`}
-                >
-                  {t('editor.controls.features.classic')}
-                </button>
-                <button
-                  onClick={() => setNestedData('portfolio.portfolioVariant', 'image-overlay')}
-                  className={`py-1 text-xs font-medium rounded-sm transition-colors ${currentPortfolioVariant === 'image-overlay' ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:bg-editor-border'}`}
-                >
-                  {t('editor.controls.portfolio.overlay')}
-                </button>
-              </div>
-              <p className="text-xs text-editor-text-secondary mt-1">
-                {currentPortfolioVariant === 'classic'
-                  ? '📦 Card-based grid layout'
-                  : '🖼️ Full-width images with text overlay'}
-              </p>
+            <div className="mb-4">
+              <Select
+                label={t('editor.controls.portfolio.portfolioStyle')}
+                value={currentPortfolioVariant}
+                onChange={(v) => setNestedData('portfolio.portfolioVariant', v)}
+                options={[
+                  { value: 'classic', label: `${t('editor.controls.features.classic')} - Card-based grid layout` },
+                  { value: 'image-overlay', label: `${t('editor.controls.portfolio.overlay')} - Full-width images` }
+                ]}
+              />
             </div>
 
             {/* Overlay-specific controls */}
@@ -5580,6 +5425,16 @@ const Controls: React.FC = () => {
               <div className="font-semibold text-[10px]">{t('controls.stacked')}</div>
               <div className="text-[9px] opacity-70">{t('controls.imageAndText')}</div>
             </button>
+            <button
+              onClick={() => setNestedData('hero.heroVariant', 'cinematic-gym')}
+              className={`px-3 py-3 rounded-md border transition-all ${currentVariant === 'cinematic-gym'
+                ? 'bg-editor-accent text-editor-bg border-editor-accent shadow-lg'
+                : 'bg-editor-bg text-editor-text-primary border-editor-border hover:border-editor-accent'
+                }`}
+            >
+              <div className="font-semibold text-[10px]">Gym</div>
+              <div className="text-[9px] opacity-70">Brutalist</div>
+            </button>
           </div>
           <p className="text-xs text-editor-text-secondary mt-2">
             {currentVariant === 'classic' && `📐 ${t('controls.traditionalLayout')}`}
@@ -5724,7 +5579,7 @@ const Controls: React.FC = () => {
               <button
                 key={style}
                 onClick={() => setNestedData('hero.secondaryButtonStyle', style)}
-                className={`flex-1 py-1.5 text-xs font-medium rounded-sm capitalize transition-colors ${(data.hero.secondaryButtonStyle || 'solid') === style
+                className={`flex-1 py-1.5 text-xs font-medium rounded-sm capitalize ${(data.hero.secondaryButtonStyle || 'solid') === style
                   ? 'bg-editor-accent text-editor-bg'
                   : 'text-editor-text-secondary hover:bg-editor-border'
                   }`}
@@ -5829,7 +5684,7 @@ const Controls: React.FC = () => {
                         }`}
                     >
                       <div className="text-lg mb-1">{style.icon}</div>
-                      {style.label}
+                      <div>{style.label}</div>
                     </button>
                   ))}
                 </div>
@@ -6173,97 +6028,103 @@ const Controls: React.FC = () => {
         <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
           <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
             <Layout size={14} />
-            Section Style
+            {t('editor.controls.features.sectionStyle')}
           </label>
-          <div className="grid grid-cols-4 gap-1 bg-editor-bg p-1 rounded-md border border-editor-border">
-            <button
-              onClick={() => setNestedData('features.featuresVariant', 'classic')}
-              className={`py-1 text-xs font-medium rounded-sm transition-colors ${currentVariant === 'classic' ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:bg-editor-border'}`}
-            >
-              Classic
-            </button>
-            <button
-              onClick={() => setNestedData('features.featuresVariant', 'modern')}
-              className={`py-1 text-xs font-medium rounded-sm transition-colors ${currentVariant === 'modern' ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:bg-editor-border'}`}
-            >
-              Bento
-            </button>
-            <button
-              onClick={() => setNestedData('features.featuresVariant', 'bento-premium')}
-              className={`py-1 text-xs font-medium rounded-sm transition-colors ${currentVariant === 'bento-premium' ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:bg-editor-border'}`}
-            >
-              Premium
-            </button>
-            <button
-              onClick={() => setNestedData('features.featuresVariant', 'image-overlay')}
-              className={`py-1 text-xs font-medium rounded-sm transition-colors ${currentVariant === 'image-overlay' ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:bg-editor-border'}`}
-            >
-              Overlay
-            </button>
+          <div className="mb-4">
+            <Select
+              label={t('editor.controls.features.styleVariant')}
+              value={currentVariant}
+              onChange={(v) => setNestedData('features.featuresVariant', v)}
+              options={[
+                { value: 'classic', label: 'Classic (Grid Uniforme)' },
+                { value: 'modern', label: 'Modern (Bento Asimétrico)' },
+                { value: 'bento-premium', label: 'Premium (Bento Destacado)' },
+                { value: 'image-overlay', label: 'Overlay (Tarjetas Completas)' },
+                { value: 'cinematic-gym', label: 'Gym (Brutalist)' }
+              ]}
+            />
+            <p className="text-xs text-editor-text-secondary mt-2">
+              {currentVariant === 'classic'
+                ? '📦 Layout de cuadrícula tradicional'
+                : currentVariant === 'modern'
+                  ? '✨ Layout moderno bento asimétrico'
+                  : currentVariant === 'bento-premium'
+                    ? '🎯 Bento premium con primera tarjeta destacada'
+                    : currentVariant === 'cinematic-gym'
+                      ? '⛓️ Texto interactivo y tarjetas con scroll flotante'
+                      : '🖼️ Imágenes completas con texto superpuesto'}
+            </p>
           </div>
-          <p className="text-xs text-editor-text-secondary mt-2">
-            {currentVariant === 'classic'
-              ? '📦 Traditional uniform grid layout'
-              : currentVariant === 'modern'
-                ? '✨ Modern asymmetrical bento grid layout'
-                : currentVariant === 'bento-premium'
-                  ? '🎯 Premium bento with featured first card'
-                  : '🖼️ Full-width images with text overlay'}
-          </p>
-        </div>
 
-        {/* Overlay Settings - only shown when image-overlay variant is selected */}
-        {currentVariant === 'image-overlay' && (
-          <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-3">
-            <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
-              <Image size={14} />
-              Overlay Settings
-            </label>
-            <div>
-              <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">Text Alignment</label>
-              <div className="flex bg-editor-bg p-1 rounded-md border border-editor-border">
-                {(['left', 'center', 'right'] as const).map(align => (
-                  <button
-                    key={align}
-                    onClick={() => setNestedData('features.overlayTextAlignment', align)}
-                    className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors capitalize ${(data.features as any).overlayTextAlignment === align || (!((data.features as any).overlayTextAlignment) && align === 'left') ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:bg-editor-border'}`}
-                  >
-                    {align === 'left' ? '⬅️ Left' : align === 'center' ? '↔️ Center' : '➡️ Right'}
-                  </button>
-                ))}
+          {currentVariant === 'cinematic-gym' && (
+            <div className="mb-4">
+              <Select
+                label="Alineación del Layout"
+                value={(data.features as any)?.layoutAlignment || 'left'}
+                onChange={(v) => setNestedData('features.layoutAlignment', v)}
+                options={[
+                  { value: 'left', label: 'Texto a la Izquierda, Tarjetas a la Derecha' },
+                  { value: 'right', label: 'Texto a la Derecha, Tarjetas a la Izquierda' }
+                ]}
+              />
+            </div>
+          )}
+
+          {/* Overlay Settings - only shown when image-overlay variant is selected */}
+          {currentVariant === 'image-overlay' && (
+            <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-3">
+              <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+                <Image size={14} />
+                Overlay Settings
+              </label>
+              <div>
+                <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">Text Alignment</label>
+                <div className="flex bg-editor-bg p-1 rounded-md border border-editor-border">
+                  {(['left', 'center', 'right'] as const).map(align => (
+                    <button
+                      key={align}
+                      onClick={() => setNestedData('features.overlayTextAlignment', align)}
+                      className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors capitalize ${(data.features as any).overlayTextAlignment === align || (!((data.features as any).overlayTextAlignment) && align === 'left') ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:bg-editor-border'}`}
+                    >
+                      {align === 'left' ? '⬅️ Left' : align === 'center' ? '↔️ Center' : '➡️ Right'}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Show Section Header</label>
+                <button
+                  onClick={() => setNestedData('features.showSectionHeader', !((data.features as any).showSectionHeader !== false))}
+                  className={`relative w-10 h-5 rounded-full transition-colors ${(data.features as any).showSectionHeader !== false ? 'bg-editor-accent' : 'bg-editor-border'}`}
+                >
+                  <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition-transform ${(data.features as any).showSectionHeader !== false ? 'left-5' : 'left-0.5'}`} />
+                </button>
               </div>
             </div>
-            <div className="flex items-center justify-between">
-              <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Show Section Header</label>
-              <button
-                onClick={() => setNestedData('features.showSectionHeader', !((data.features as any).showSectionHeader !== false))}
-                className={`relative w-10 h-5 rounded-full transition-colors ${(data.features as any).showSectionHeader !== false ? 'bg-editor-accent' : 'bg-editor-border'}`}
-              >
-                <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition-transform ${(data.features as any).showSectionHeader !== false ? 'left-5' : 'left-0.5'}`} />
-              </button>
+          )}
+        </div>
+
+        {/* Grid Layout */}
+        {currentVariant !== 'cinematic-gym' && (
+          <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
+            <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+              <Grid size={14} />
+              Grid Layout
+            </label>
+            <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">Columns (Desktop)</label>
+            <div className="flex bg-editor-bg p-1 rounded-md border border-editor-border">
+              {[2, 3, 4].map(cols => (
+                <button
+                  key={cols}
+                  onClick={() => setNestedData('features.gridColumns', cols)}
+                  className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors ${data.features.gridColumns === cols ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:bg-editor-border'}`}
+                >
+                  {cols}
+                </button>
+              ))}
             </div>
           </div>
         )}
-
-        {/* Grid Layout */}
-        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-          <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
-            <Grid size={14} />
-            Grid Layout
-          </label>
-          <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">Columns (Desktop)</label>
-          <div className="flex bg-editor-bg p-1 rounded-md border border-editor-border">
-            {[2, 3, 4].map(cols => (
-              <button
-                key={cols}
-                onClick={() => setNestedData('features.gridColumns', cols)}
-                className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors ${data.features.gridColumns === cols ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:bg-editor-border'}`}
-              >
-                {cols}
-              </button>
-            ))}
-          </div>
-        </div>
 
         {/* Card Image */}
         <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
@@ -6283,20 +6144,22 @@ const Controls: React.FC = () => {
               className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
             />
           </div>
-          <div>
-            <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">Object Fit</label>
-            <div className="grid grid-cols-3 gap-1 bg-editor-bg p-1 rounded-md border border-editor-border">
-              {['cover', 'contain', 'fill', 'none', 'scale-down'].map(fit => (
-                <button
-                  key={fit}
-                  onClick={() => setNestedData('features.imageObjectFit', fit)}
-                  className={`py-1 px-2 text-xs font-semibold rounded-sm transition-colors capitalize ${data.features.imageObjectFit === fit ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:bg-editor-border'}`}
-                >
-                  {fit === 'scale-down' ? 'Scale' : fit}
-                </button>
-              ))}
+          {currentVariant !== 'cinematic-gym' && (
+            <div>
+              <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">Object Fit</label>
+              <div className="grid grid-cols-3 gap-1 bg-editor-bg p-1 rounded-md border border-editor-border">
+                {['cover', 'contain', 'fill', 'none', 'scale-down'].map(fit => (
+                  <button
+                    key={fit}
+                    onClick={() => setNestedData('features.imageObjectFit', fit)}
+                    className={`py-1 px-2 text-xs font-semibold rounded-sm transition-colors capitalize ${data.features.imageObjectFit === fit ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:bg-editor-border'}`}
+                  >
+                    {fit === 'scale-down' ? 'Scale' : fit}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* Spacing */}

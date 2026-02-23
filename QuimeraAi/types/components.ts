@@ -85,7 +85,7 @@ export interface HeaderData {
 // =============================================================================
 // HERO
 // =============================================================================
-export type HeroVariant = 'classic' | 'modern' | 'gradient' | 'fitness' | 'editorial' | 'cinematic' | 'minimal' | 'bold' | 'overlap' | 'verticalSplit' | 'glass' | 'stacked';
+export type HeroVariant = 'classic' | 'modern' | 'gradient' | 'fitness' | 'editorial' | 'cinematic' | 'cinematic-gym' | 'minimal' | 'bold' | 'overlap' | 'verticalSplit' | 'glass' | 'stacked';
 
 export interface HeroData {
     heroVariant?: HeroVariant;
@@ -187,7 +187,7 @@ export interface FeatureItem {
 }
 
 export interface FeaturesData {
-    featuresVariant?: 'classic' | 'modern' | 'bento-premium' | 'image-overlay';
+    featuresVariant?: 'classic' | 'modern' | 'bento-premium' | 'image-overlay' | 'cinematic-gym';
     title: string;
     subtitle?: string;              // Alias for description
     description: string;
@@ -206,6 +206,8 @@ export interface FeaturesData {
     // Properties for image-overlay variant
     overlayTextAlignment?: TextAlignment;
     showSectionHeader?: boolean;
+    // Property for asymmetric layouts like Gym
+    layoutAlignment?: 'left' | 'right';
 }
 
 // =============================================================================

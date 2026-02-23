@@ -125,6 +125,7 @@ const fontStacks: Record<FontFamily, string> = {
 
 // Import useSafeEditor
 import { useSafeEditor } from '../contexts/EditorContext';
+import { useSafeTenant } from '../contexts/tenant';
 
 // ... (rest of imports)
 
@@ -133,6 +134,8 @@ const LandingPageContent: React.FC = () => {
   const authContext = useSafeAuth();
   const user = authContext?.user ?? null;
   const { activeSection, onSectionSelect } = useUI();
+  const tenantContext = useSafeTenant();
+  const hasWhiteLabelBranding = !!(tenantContext?.currentTenant?.branding?.companyName || tenantContext?.currentTenant?.branding?.logoUrl);
 
   // Context resolution: Prefer EditorContext data for real-time updates when in editor
   const editorContext = useSafeEditor();
@@ -861,6 +864,8 @@ const LandingPageContent: React.FC = () => {
   // Resolve Footer Columns dynamically
   const resolvedFooterData: FooterData = {
     ...mergedFooterData,
+    // Auto-hide "Made with Quimera" badge when White Label branding is active
+    hideBranding: mergedFooterData.hideBranding || hasWhiteLabelBranding,
     linkColumns: mergedFooterData.linkColumns.map(col => {
       if (col.menuId) {
         const menu = menus.find(m => m.id === col.menuId);

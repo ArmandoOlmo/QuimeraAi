@@ -533,10 +533,10 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
               onClick={() => navigate(ROUTES.DASHBOARD)}
               className={`flex items-center gap-3 transition-all duration-300 cursor-pointer ${isCollapsed ? 'lg:px-0 lg:justify-center lg:gap-0' : 'lg:px-6'}`}
             >
-              {/* Logo Image */}
+              {/* Logo Image - reads from tenant branding if available */}
               <img
-                src="https://firebasestorage.googleapis.com/v0/b/quimeraai.firebasestorage.app/o/quimera%2Fquimeralogo.png?alt=media&token=82368c1c-0f63-42b7-831f-72780006f032"
-                alt="Quimera Logo"
+                src={tenantContext?.currentTenant?.branding?.logoUrl || "https://firebasestorage.googleapis.com/v0/b/quimeraai.firebasestorage.app/o/quimera%2Fquimeralogo.png?alt=media&token=82368c1c-0f63-42b7-831f-72780006f032"}
+                alt={tenantContext?.currentTenant?.branding?.companyName || "Quimera Logo"}
                 className="w-10 h-10 object-contain flex-shrink-0"
                 width={40}
                 height={40}
@@ -545,7 +545,10 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
               />
               {/* Text Logo (Hidden when collapsed on desktop) */}
               <span className={`text-xl lg:text-2xl font-extrabold tracking-tight text-foreground whitespace-nowrap transition-opacity duration-300 ${isCollapsed ? 'lg:opacity-0 lg:hidden' : 'opacity-100'}`}>
-                Quimera<span className="text-primary">.ai</span>
+                {tenantContext?.currentTenant?.branding?.companyName
+                  ? tenantContext.currentTenant.branding.companyName
+                  : <>Quimera<span className="text-primary">.ai</span></>
+                }
               </span>
             </div>
 

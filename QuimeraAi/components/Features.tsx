@@ -6,6 +6,7 @@ import ImagePlaceholder from './ui/ImagePlaceholder';
 import { isPendingImage } from '../utils/imagePlaceholders';
 import { hexToRgba } from '../utils/colorUtils';
 import { ArrowRight } from 'lucide-react';
+import FeaturesCinematicGym from './cinematic/FeaturesCinematicGym';
 
 interface FeatureCardProps {
   imageUrl: string;
@@ -229,7 +230,8 @@ const ImageOverlayCard: React.FC<ImageOverlayCardProps> = ({
   imageObjectFit,
   textAlignment,
   animationType = 'fade-in-up',
-  enableAnimation = true
+  enableAnimation = true,
+  onNavigate
 }) => {
   const animationClass = getAnimationClass(animationType, enableAnimation);
   const delay = getAnimationDelay(index);
@@ -284,7 +286,7 @@ const ImageOverlayCard: React.FC<ImageOverlayCardProps> = ({
             target={feature.linkUrl.startsWith('http') ? '_blank' : undefined}
             rel={feature.linkUrl.startsWith('http') ? 'noopener noreferrer' : undefined}
             onClick={(e) => {
-              if (onNavigate && !feature.linkUrl.startsWith('http://') && !feature.linkUrl.startsWith('https://')) {
+              if (feature.linkType === 'content' && feature.linkUrl && onNavigate && !feature.linkUrl.startsWith('http://') && !feature.linkUrl.startsWith('https://')) {
                 e.preventDefault();
                 onNavigate(feature.linkUrl);
               }
@@ -329,8 +331,14 @@ const Features: React.FC<FeaturesProps> = ({
   enableCardAnimation = true,
   overlayTextAlignment = 'left',
   showSectionHeader = true,
-  onNavigate
+  layoutAlignment = 'left',
+  onNavigate,
+  isPreview
 }) => {
+  if (featuresVariant === 'cinematic-gym') {
+    return <FeaturesCinematicGym {...{ title, description, items, paddingY, paddingX, colors, titleFontSize, descriptionFontSize, gridColumns, imageHeight, imageObjectFit, layoutAlignment, isPreview }} />;
+  }
+
   // Get design tokens with fallback to component colors
   const { getColor } = useDesignTokens();
 

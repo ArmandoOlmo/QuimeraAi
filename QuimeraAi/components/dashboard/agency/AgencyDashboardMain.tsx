@@ -5,7 +5,7 @@
 
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Building2, Menu, CreditCard, FileText, UserPlus, Package, LayoutDashboard, BarChart3, Globe, Layers, PenTool, Navigation, ArrowLeft, FolderOpen } from 'lucide-react';
+import { Building2, Menu, CreditCard, FileText, UserPlus, Package, LayoutDashboard, BarChart3, Globe, Layers, PenTool, Navigation, ArrowLeft, FolderOpen, Shield } from 'lucide-react';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import { useRouter } from '../../../hooks/useRouter';
 import { ROUTES } from '../../../routes/config';
@@ -22,10 +22,11 @@ import { AgencyPlanManager } from './plans';
 import AgencyContentDashboard from './AgencyContentDashboard';
 import AgencyNavigationManagement from './AgencyNavigationManagement';
 import { AgencyProjects } from './AgencyProjects';
+import { WhiteLabelSettings } from './WhiteLabelSettings';
 import { toast } from 'react-hot-toast';
 import QuimeraLoader from '@/components/ui/QuimeraLoader';
 
-type AgencyTab = 'overview' | 'analytics' | 'landing' | 'billing' | 'reports' | 'new-client' | 'addons' | 'plans' | 'cms' | 'navigation' | 'projects';
+type AgencyTab = 'overview' | 'analytics' | 'landing' | 'billing' | 'reports' | 'new-client' | 'addons' | 'plans' | 'cms' | 'navigation' | 'projects' | 'white-label';
 
 const AgencyDashboardMain: React.FC = () => {
     const { t } = useTranslation();
@@ -46,6 +47,7 @@ const AgencyDashboardMain: React.FC = () => {
         if (path.includes('/cms')) return 'cms';
         if (path.includes('/navigation')) return 'navigation';
         if (path.includes('/projects')) return 'projects';
+        if (path.includes('/white-label')) return 'white-label';
         return 'overview';
     };
 
@@ -85,6 +87,9 @@ const AgencyDashboardMain: React.FC = () => {
                 break;
             case 'projects':
                 navigate(ROUTES.AGENCY_PROJECTS);
+                break;
+            case 'white-label':
+                navigate(ROUTES.AGENCY_WHITE_LABEL);
                 break;
         }
     };
@@ -144,6 +149,11 @@ const AgencyDashboardMain: React.FC = () => {
             id: 'projects' as AgencyTab,
             label: t('agency.projects', 'Proyectos'),
             icon: FolderOpen,
+        },
+        {
+            id: 'white-label' as AgencyTab,
+            label: t('agency.whiteLabel.tab', 'White Label'),
+            icon: Shield,
         },
     ];
 
@@ -368,6 +378,10 @@ const AgencyDashboardMain: React.FC = () => {
 
                                     {activeTab === 'projects' && (
                                         <AgencyProjects />
+                                    )}
+
+                                    {activeTab === 'white-label' && (
+                                        <WhiteLabelSettings />
                                     )}
                                 </>
                             )}

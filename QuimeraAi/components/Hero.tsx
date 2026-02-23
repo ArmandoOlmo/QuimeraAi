@@ -137,22 +137,30 @@ const renderBadgeIcon = (badgeIcon?: ServiceIcon | string) => {
   return badgeIcon;
 };
 
+import HeroCinematicGym from './cinematic/HeroCinematicGym';
 
-const Hero: React.FC<HeroProps> = ({
-  headline, subheadline, primaryCta, secondaryCta, imageUrl,
-  imageStyle, imageDropShadow, imageBorderRadius, imageBorderSize, imageBorderColor, imageJustification, imagePosition,
-  imageWidth, imageHeight, imageHeightEnabled, imageAspectRatio, imageObjectFit,
-  paddingY, paddingX, sectionBorderSize, sectionBorderColor, colors = {}, borderRadius,
-  headlineFontSize = 'lg', subheadlineFontSize = 'lg',
-  showBadge = true, badgeText = '', badgeIcon = '✨',
-  badgeColor, badgeBackgroundColor,
-  secondaryButtonStyle = 'solid',
-  secondaryButtonOpacity = 100,
-  heroHeight,
-  primaryCtaLink = '/#cta',
-  secondaryCtaLink = '/#features',
-  onNavigate,
-}) => {
+
+const Hero: React.FC<HeroProps> = (props) => {
+  if (props.heroVariant === 'cinematic-gym') {
+    return <HeroCinematicGym {...props} />;
+  }
+
+  const {
+    headline, subheadline, primaryCta, secondaryCta, imageUrl,
+    imageStyle, imageDropShadow, imageBorderRadius, imageBorderSize, imageBorderColor, imageJustification, imagePosition,
+    imageWidth, imageHeight, imageHeightEnabled, imageAspectRatio, imageObjectFit,
+    paddingY, paddingX, sectionBorderSize, sectionBorderColor, colors, borderRadius,
+    headlineFontSize = 'lg', subheadlineFontSize = 'lg',
+    showBadge = true, badgeText = '', badgeIcon = '✨',
+    badgeColor, badgeBackgroundColor,
+    secondaryButtonStyle = 'solid',
+    secondaryButtonOpacity = 100,
+    heroHeight,
+    primaryCtaLink = '/#cta',
+    secondaryCtaLink = '/#features',
+    onNavigate,
+  } = props;
+
   // Get design tokens with fallback to component colors
   const { getColor, colors: tokenColors } = useDesignTokens();
 

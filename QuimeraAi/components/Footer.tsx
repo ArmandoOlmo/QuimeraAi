@@ -1,8 +1,9 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { FooterData, SocialPlatform, FontSize } from '../types';
 import { Twitter, Github, Facebook, Instagram, Linkedin, MapPin, Phone, Mail } from 'lucide-react';
 import BusinessHours from './BusinessHours';
+import { db, doc, getDoc } from '../firebase';
 
 // Quimera logo URL for the badge
 const QUIMERA_LOGO = "https://firebasestorage.googleapis.com/v0/b/quimeraai.firebasestorage.app/o/quimera%2Fquimeralogo.png?alt=media&token=82368c1c-0f63-42b7-831f-72780006f032";
@@ -47,6 +48,36 @@ const Footer: React.FC<FooterData & {
     const actualTitle = title || companyName;
     const actualDescription = description || tagline;
     const actualCopyrightText = copyrightText || copyright;
+
+    // Auto-detect White Label branding when hideBranding prop is not explicitly set
+    // This handles the PublicWebsitePreview (/preview/) route where tenant context is unavailable
+    const [autoHideBranding, setAutoHideBranding] = useState(false);
+    useEffect(() => {
+      if (hideBranding) return; // Already hidden by parent
+      // Check if we're on a preview route with userId
+      const path = window.location.pathname;
+      const match = path.match(/\/preview\/([^/]+)\//);
+      if (!match) return;
+      const userId = match[1];
+      // Fetch tenant doc to check for White Label branding
+      const checkTenantBranding = async () => {
+        try {
+          const tenantRef = doc(db, 'tenants', `tenant_${userId}`);
+          const tenantSnap = await getDoc(tenantRef);
+          if (tenantSnap.exists()) {
+            const data = tenantSnap.data();
+            if (data?.branding?.companyName || data?.branding?.logoUrl) {
+              setAutoHideBranding(true);
+            }
+          }
+        } catch (e) {
+          // Silently ignore - branding stays visible
+        }
+      };
+      checkTenantBranding();
+    }, [hideBranding]);
+
+    const shouldHideBranding = hideBranding || autoHideBranding;
 
     // Colors are now 100% from props - no hardcoded fallbacks
     // Editor is responsible for providing all colors via colors prop
@@ -172,8 +203,8 @@ const Footer: React.FC<FooterData & {
           <div className="mt-12 pt-8 flex flex-col sm:flex-row justify-between items-center" style={{ borderTopColor: actualColors.border }}>
             <div className="text-sm font-body mb-4 sm:mb-0 flex flex-wrap items-center gap-1" style={{ color: actualColors.text }}>
               <span>{finalCopyrightText}</span>
-              {/* Made with Quimera badge - visible unless hideBranding is true */}
-              {!hideBranding && (
+              {/* Made with Quimera badge - visible unless branding is hidden */}
+              {!shouldHideBranding && (
                 <>
                   <span className="mx-1">·</span>
                   <a

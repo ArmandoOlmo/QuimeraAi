@@ -168,6 +168,7 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
   const [error, setError] = useState<string | null>(null);
   const [cmsPosts, setCmsPosts] = useState<CMSPost[]>([]);
   const [menus, setMenus] = useState<Menu[]>([]);
+  const [hasWhiteLabelBranding, setHasWhiteLabelBranding] = useState(false);
   const [activePost, setActivePost] = useState<CMSPost | null>(null);
   const [storeView, setStoreView] = useState<StoreViewState>({ type: 'none' });
   const [activePage, setActivePage] = useState<SitePage | null>(null);
@@ -439,6 +440,24 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
 
         if (projectData) {
           setProject(projectData);
+
+          // Check tenant branding for White Label (hide "Made with Quimera" badges)
+          const ownerUserId = projectData.userId || userId;
+          if (ownerUserId) {
+            try {
+              // Try personal tenant first: tenant_{userId}
+              const tenantRef = doc(db, 'tenants', `tenant_${ownerUserId}`);
+              const tenantSnap = await getDoc(tenantRef);
+              if (tenantSnap.exists()) {
+                const tenantData = tenantSnap.data();
+                const hasBranding = !!(tenantData?.branding?.companyName || tenantData?.branding?.logoUrl);
+                setHasWhiteLabelBranding(hasBranding);
+                console.log('[PublicWebsitePreview] Tenant branding check:', { hasBranding, companyName: tenantData?.branding?.companyName });
+              }
+            } catch (tenantErr) {
+              console.log('[PublicWebsitePreview] Could not check tenant branding:', tenantErr);
+            }
+          }
 
           // Load CMS posts for this project
           // First try publicStores (published), then fall back to user draft if userId available
@@ -1272,6 +1291,8 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
   // Resolve footer columns from menus (using effectiveMenus for SSR hydration timing)
   const resolvedFooterData: FooterData = {
     ...mergedData.footer,
+    // Auto-hide "Made with Quimera" badge when White Label branding is active
+    hideBranding: mergedData.footer?.hideBranding || hasWhiteLabelBranding,
     linkColumns: mergedData.footer?.linkColumns?.map((col: any) => {
       if (col.menuId) {
         const menu = effectiveMenus.find((m: Menu) => m.id === col.menuId);
@@ -1512,6 +1533,7 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
       {/* Chatbot Widget (if enabled in project) */}
       {(project.aiAssistantConfig?.isActive || (project.data?.chatbot?.isActive)) && (
         <ChatbotWidget
+          hidePoweredBy={hasWhiteLabelBranding}
           standaloneConfig={project.aiAssistantConfig || {
             // Fallback for legacy chatbot configuration
             isActive: true,

@@ -110,6 +110,7 @@ export const ROUTES = {
   AGENCY_CMS: '/agency/cms',
   AGENCY_NAVIGATION: '/agency/navigation',
   AGENCY_PROJECTS: '/agency/projects',
+  AGENCY_WHITE_LABEL: '/agency/white-label',
 
   // Agency Signup (Public)
   AGENCY_SIGNUP: '/agency-signup',
@@ -628,6 +629,16 @@ export const routeConfigs: RouteConfig[] = [
     view: 'agency',
     type: 'private',
     title: 'Agency Projects',
+    requiresAuth: true,
+    requiresEmailVerified: true,
+    roles: ['owner', 'superadmin', 'agency_owner', 'agency_admin'],
+    parent: ROUTES.AGENCY,
+  },
+  {
+    path: ROUTES.AGENCY_WHITE_LABEL,
+    view: 'agency',
+    type: 'private',
+    title: 'White Label',
     requiresAuth: true,
     requiresEmailVerified: true,
     roles: ['owner', 'superadmin', 'agency_owner', 'agency_admin'],

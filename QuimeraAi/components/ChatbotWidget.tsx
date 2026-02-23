@@ -9,6 +9,7 @@ import { getDefaultAppearanceConfig, getSizeClasses, getButtonSizeClasses, getSh
 import ChatCore, { ChatAppointmentData, AppointmentSlot } from './chat/ChatCore';
 import { db, collection, addDoc, getDocs, getDoc, doc, query, where, orderBy } from '../firebase';
 import { useSafeAuth } from '../contexts/core/AuthContext';
+import { useSafeTenant } from '../contexts/tenant';
 import { useRouter } from '../hooks/useRouter';
 
 interface ChatbotWidgetProps {
@@ -25,18 +26,23 @@ interface ChatbotWidgetProps {
         sectionVisibility?: Record<string, boolean>;
         [key: string]: any;
     };
+    // Directly hide "Powered by Quimera" badge (for contexts without tenant context)
+    hidePoweredBy?: boolean;
 }
 
 const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
     isPreview = false,
     standaloneConfig,
-    standaloneProject
+    standaloneProject,
+    hidePoweredBy: propHidePoweredBy = false
 }) => {
     // Use safe editor context - may be null in public preview
     const editorContext = useSafeEditor();
     const projectContext = useSafeProject();
     const authContext = useSafeAuth();
     const user = authContext?.user ?? null;
+    const tenantContext = useSafeTenant();
+    const hasWhiteLabelBranding = !!(tenantContext?.currentTenant?.branding?.companyName || tenantContext?.currentTenant?.branding?.logoUrl);
     const { t } = useTranslation();
 
     // Use standalone config or editor context values
@@ -515,6 +521,7 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
                             visibleSections: (componentOrder as any)?.filter((sec: any) => sectionVisibility?.[sec] !== false) || []
                         }}
                         cmsArticles={cmsArticles}
+                        hidePoweredBy={hasWhiteLabelBranding || propHidePoweredBy}
                     />
                 )}
                 {isOpen && !activeProject && (

@@ -63,6 +63,7 @@ export interface ChatCoreProps {
     onClose?: () => void;
     autoOpen?: boolean;
     isEmbedded?: boolean;
+    hidePoweredBy?: boolean;
     currentPageContext?: PageContext;
     cmsArticles?: { id: string; title: string; content: string }[];
 }
@@ -335,6 +336,7 @@ const ChatCore: React.FC<ChatCoreProps> = ({
     onClose,
     autoOpen = false,
     isEmbedded = false,
+    hidePoweredBy = false,
     currentPageContext,
     cmsArticles
 }) => {
@@ -347,6 +349,31 @@ const ChatCore: React.FC<ChatCoreProps> = ({
     const projectContext = useSafeProject();
     const activeProject = projectContext?.activeProject ?? project; // Use prop project if context not available
     const { t } = useTranslation();
+
+    // Auto-detect White Label branding on /preview/ routes (where tenant context is unavailable)
+    const [autoHidePoweredBy, setAutoHidePoweredBy] = useState(false);
+    useEffect(() => {
+        if (hidePoweredBy) return; // Already hidden
+        const path = window.location.pathname;
+        const match = path.match(/\/preview\/([^/]+)\//);
+        if (!match) return;
+        const userId = match[1];
+        const checkBranding = async () => {
+            try {
+                const { db: fireDb, doc: fbDoc, getDoc: fbGetDoc } = await import('../../firebase');
+                const tenantRef = fbDoc(fireDb, 'tenants', `tenant_${userId}`);
+                const snap = await fbGetDoc(tenantRef);
+                if (snap.exists()) {
+                    const data = snap.data();
+                    if (data?.branding?.companyName || data?.branding?.logoUrl) {
+                        setAutoHidePoweredBy(true);
+                    }
+                }
+            } catch (e) { /* ignore */ }
+        };
+        checkBranding();
+    }, [hidePoweredBy]);
+    const shouldHidePoweredBy = hidePoweredBy || autoHidePoweredBy;
 
     // Ecommerce chat hook for order lookups and product info
     const isEcommerceEnabled = !!(project as any)?.ecommerceEnabled || !!(activeProject as any)?.ecommerceEnabled;
@@ -2093,9 +2120,11 @@ ${suggestAvailableSlots()}
             {/* Input Bar */}
             {!isLiveActive && !showPreChatForm && (
                 <>
-                    <div className="py-1 px-2 text-center border-t text-[9px] opacity-40 flex items-center justify-center gap-1" style={{ borderColor: appearance.colors?.inputBorder, color: appearance.colors?.inputText }}>
-                        <Sparkles size={8} /> {t('chatbotWidget.poweredBy')}
-                    </div>
+                    {!shouldHidePoweredBy && (
+                        <div className="py-1 px-2 text-center border-t text-[9px] opacity-40 flex items-center justify-center gap-1" style={{ borderColor: appearance.colors?.inputBorder, color: appearance.colors?.inputText }}>
+                            <Sparkles size={8} /> {t('chatbotWidget.poweredBy')}
+                        </div>
+                    )}
                     <div
                         className="px-2 py-2 border-t flex items-center gap-1.5"
                         style={{
