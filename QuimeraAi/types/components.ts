@@ -219,6 +219,7 @@ export interface TestimonialItem {
     quote: string;
     name: string;
     title: string;
+    imageUrl?: string;
 }
 
 export interface TestimonialsData {

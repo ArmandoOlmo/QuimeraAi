@@ -2374,6 +2374,12 @@ const Controls: React.FC = () => {
                 <Trash2 size={14} />
               </button>
             </div>
+            <ImagePicker
+              label={`Avatar #${index + 1}`}
+              value={item.imageUrl || ''}
+              onChange={(url) => setNestedData(`testimonials.items.${index}.imageUrl`, url)}
+              onRemove={() => setNestedData(`testimonials.items.${index}.imageUrl`, '')}
+            />
             <textarea
               placeholder="Quote"
               value={item.quote}
@@ -2397,7 +2403,7 @@ const Controls: React.FC = () => {
         ))}
         <button
           onClick={() => {
-            const newItem = { quote: '', name: '', title: '' };
+            const newItem = { quote: '', name: '', title: '', imageUrl: '' };
             setNestedData('testimonials.items', [...(data.testimonials.items || []), newItem]);
           }}
           className="w-full py-2 border border-dashed border-editor-border rounded-lg text-editor-text-secondary hover:text-editor-accent hover:border-editor-accent transition-all flex items-center justify-center gap-2 text-sm font-medium"
@@ -6245,6 +6251,12 @@ const Controls: React.FC = () => {
                   <Trash2 size={14} />
                 </button>
               </div>
+              <ImagePicker
+                label={`Avatar #${index + 1}`}
+                value={item.imageUrl || ''}
+                onChange={(url) => setNestedData(`testimonials.items.${index}.imageUrl`, url)}
+                onRemove={() => setNestedData(`testimonials.items.${index}.imageUrl`, '')}
+              />
               <textarea
                 placeholder="Quote"
                 value={item.quote}
@@ -6258,7 +6270,7 @@ const Controls: React.FC = () => {
           ))}
           <button
             onClick={() => {
-              setNestedData('testimonials.items', [...(data.testimonials.items || []), { quote: '', name: '', title: '' }]);
+              setNestedData('testimonials.items', [...(data.testimonials.items || []), { quote: '', name: '', title: '', imageUrl: '' }]);
             }}
             className="w-full py-2 border border-dashed border-editor-border rounded-lg text-editor-text-secondary hover:text-editor-accent hover:border-editor-accent transition-all flex items-center justify-center gap-2 text-sm font-medium"
           >

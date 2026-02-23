@@ -10,6 +10,7 @@ interface TestimonialCardProps {
   quote: string;
   name: string;
   title: string;
+  imageUrl?: string;
   delay?: string;
   // Colors
   accentColor: string;
@@ -87,6 +88,7 @@ const TestimonialCard: React.FC<TestimonialCardProps> = ({
   quote,
   name,
   title,
+  imageUrl,
   delay = '0s',
   // Colors
   accentColor,
@@ -223,7 +225,22 @@ const TestimonialCard: React.FC<TestimonialCardProps> = ({
         {quote}
         <span className="inline-block transition-all duration-300 group-hover:scale-110 group-hover:opacity-80" style={{ color: accentColor }}>&rdquo;</span>
       </blockquote>
-      <div className={`flex items-center ${needsZIndex ? 'relative z-10' : ''}`}>
+      <div className={`flex items-center gap-3 ${needsZIndex ? 'relative z-10' : ''}`}>
+        {imageUrl ? (
+          <img
+            src={imageUrl}
+            alt={name}
+            className="w-10 h-10 rounded-full object-cover flex-shrink-0 ring-2 transition-all duration-300 group-hover:ring-[var(--hover-accent)]"
+            style={{ ringColor: `${accentColor}44`, '--hover-accent': accentColor } as React.CSSProperties}
+          />
+        ) : (
+          <div
+            className="w-10 h-10 rounded-full flex-shrink-0 flex items-center justify-center text-sm font-bold transition-all duration-300 group-hover:scale-110"
+            style={{ backgroundColor: `${accentColor}22`, color: accentColor }}
+          >
+            {name?.charAt(0)?.toUpperCase() || '?'}
+          </div>
+        )}
         <div>
           <p className="font-bold font-body transition-colors duration-300 group-hover:text-[var(--hover-accent)]" style={{ color: textColor, '--hover-accent': accentColor } as React.CSSProperties}>{name}</p>
           <p className="text-sm font-body transition-opacity duration-300 group-hover:opacity-100" style={{ color: personTitleColor, opacity: 0.8 }}>{title}</p>
@@ -314,6 +331,7 @@ const Testimonials: React.FC<TestimonialsProps> = ({
               quote={testimonial.quote}
               name={testimonial.name}
               title={testimonial.title}
+              imageUrl={testimonial.imageUrl}
               delay={getAnimationDelay(index)}
               // Colors
               accentColor={actualColors.accent}

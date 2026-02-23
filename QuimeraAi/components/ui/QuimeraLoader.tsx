@@ -2,9 +2,10 @@
  * QuimeraLoader Component
  * Unified loading animation using the app icon.
  * Shows tenant/agency branding when available, falls back to generic icon or Quimera logo.
+ * On /preview/ routes, detects tenant branding from URL userId via Firestore.
  */
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Sparkles } from 'lucide-react';
 import { useSafeTenant } from '../../contexts/tenant/TenantContext';
 
@@ -22,9 +23,9 @@ interface QuimeraLoaderProps {
 }
 
 const sizeMap = {
-    sm: { logo: 'w-8 h-8', container: 'w-10 h-10', halo1: 'w-14 h-14', halo2: 'w-12 h-12', halo3: 'w-18 h-18', border: 'border', logoSize: 32, containerPx: 40, iconSize: 'w-4 h-4' },
-    md: { logo: 'w-12 h-12', container: 'w-16 h-16', halo1: 'w-24 h-24', halo2: 'w-20 h-20', halo3: 'w-28 h-28', border: 'border-2', logoSize: 48, containerPx: 64, iconSize: 'w-6 h-6' },
-    lg: { logo: 'w-14 h-14', container: 'w-20 h-20', halo1: 'w-32 h-32', halo2: 'w-24 h-24', halo3: 'w-40 h-40', border: 'border-2', logoSize: 56, containerPx: 80, iconSize: 'w-8 h-8' },
+    sm: { logo: 'w-8 h-8', container: 'w-10 h-10', halo1: 'w-14 h-14', halo2: 'w-12 h-12', border: 'border', logoSize: 32, iconSize: 'w-4 h-4' },
+    md: { logo: 'w-12 h-12', container: 'w-16 h-16', halo1: 'w-24 h-24', halo2: 'w-20 h-20', border: 'border-2', logoSize: 48, iconSize: 'w-6 h-6' },
+    lg: { logo: 'w-14 h-14', container: 'w-20 h-20', halo1: 'w-32 h-32', halo2: 'w-24 h-24', border: 'border-2', logoSize: 56, iconSize: 'w-8 h-8' },
 };
 
 const QuimeraLoader: React.FC<QuimeraLoaderProps> = ({
@@ -36,16 +37,47 @@ const QuimeraLoader: React.FC<QuimeraLoaderProps> = ({
     const s = sizeMap[size];
     const tenantContext = useSafeTenant();
     const branding = tenantContext?.currentTenant?.branding;
-    const hasAgencyBranding = !!(branding?.companyName || branding?.logoUrl);
-    const accentColor = (branding as any)?.primaryColor || undefined;
+
+    // URL-based branding detection for /preview/ routes (no TenantProvider available)
+    const [previewBranding, setPreviewBranding] = useState<{ logoUrl?: string; companyName?: string; primaryColor?: string } | null>(null);
+    useEffect(() => {
+        if (branding) return; // Already have branding from context
+        const path = window.location.pathname;
+        const match = path.match(/\/preview\/([^/]+)\//);
+        if (!match) return;
+        const userId = match[1];
+        const fetchBranding = async () => {
+            try {
+                const { db, doc, getDoc } = await import('../../firebase');
+                const snap = await getDoc(doc(db, 'tenants', `tenant_${userId}`));
+                if (snap.exists()) {
+                    const data = snap.data();
+                    if (data?.branding?.companyName || data?.branding?.logoUrl) {
+                        setPreviewBranding({
+                            logoUrl: data.branding.logoUrl,
+                            companyName: data.branding.companyName,
+                            primaryColor: data.branding.primaryColor,
+                        });
+                    }
+                }
+            } catch (e) { /* ignore */ }
+        };
+        fetchBranding();
+    }, [branding]);
+
+    // Merge branding sources: context > preview URL detection
+    const effectiveBranding = branding || previewBranding;
+    const hasAgencyBranding = !!(effectiveBranding?.companyName || effectiveBranding?.logoUrl);
+    const accentColor = (effectiveBranding as any)?.primaryColor || undefined;
+    const haloColor = hasAgencyBranding && accentColor ? accentColor : undefined;
 
     const renderLogo = () => {
-        if (branding?.logoUrl) {
+        if (effectiveBranding?.logoUrl) {
             return (
                 <img
-                    src={branding.logoUrl}
+                    src={effectiveBranding.logoUrl}
                     alt="Loading..."
-                    className={`${s.logo} object-contain animate-pulse`}
+                    className={`${s.logo} object-contain animate-pulse rounded-full`}
                     style={{ animationDuration: '1.5s' }}
                     width={s.logoSize}
                     height={s.logoSize}
@@ -55,7 +87,8 @@ const QuimeraLoader: React.FC<QuimeraLoaderProps> = ({
                 />
             );
         }
-        if (branding?.companyName) {
+        if (effectiveBranding?.companyName) {
+            // Generic Sparkles icon inside a colored circle
             return <Sparkles className={`${s.iconSize} text-white animate-pulse`} style={{ animationDuration: '1.5s' }} />;
         }
         return (
@@ -73,7 +106,18 @@ const QuimeraLoader: React.FC<QuimeraLoaderProps> = ({
         );
     };
 
-    const haloColor = hasAgencyBranding && accentColor ? accentColor : undefined;
+    // Circle styling: for agency with no logo, the circle IS the colored container
+    // For agency with logo, the circle has a subtle border
+    // For Quimera default, original yellow border
+    const circleStyle: React.CSSProperties = {};
+    if (hasAgencyBranding && !effectiveBranding?.logoUrl && accentColor) {
+        circleStyle.backgroundColor = accentColor;
+        circleStyle.borderColor = `${accentColor}80`;
+    } else if (haloColor) {
+        circleStyle.borderColor = `${haloColor}4D`;
+    } else {
+        circleStyle.borderColor = 'rgba(250, 204, 21, 0.3)';
+    }
 
     const loader = (
         <div className={`flex flex-col items-center justify-center gap-3 ${className}`}>
@@ -88,13 +132,10 @@ const QuimeraLoader: React.FC<QuimeraLoaderProps> = ({
                     style={{ animationDuration: '1.5s', animationDelay: '0.2s', backgroundColor: haloColor ? `${haloColor}4D` : 'rgba(250, 204, 21, 0.3)' }}
                 />
 
-                {/* Logo container with glow */}
+                {/* Logo container — always a circle */}
                 <div
-                    className={`relative z-10 ${s.container} rounded-full shadow-2xl flex items-center justify-center ${s.border}`}
-                    style={{
-                        backgroundColor: hasAgencyBranding && !branding?.logoUrl && accentColor ? accentColor : undefined,
-                        borderColor: haloColor ? `${haloColor}4D` : 'rgba(250, 204, 21, 0.3)',
-                    }}
+                    className={`relative z-10 ${s.container} rounded-full bg-editor-panel-bg shadow-2xl flex items-center justify-center ${s.border}`}
+                    style={circleStyle}
                 >
                     {renderLogo()}
                 </div>
