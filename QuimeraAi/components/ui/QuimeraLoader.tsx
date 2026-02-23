@@ -1,11 +1,12 @@
 /**
  * QuimeraLoader Component
  * Unified loading animation using the app icon.
- * Shows tenant/agency branding when available, falls back to generic icon or Quimera logo.
- * On /preview/ routes, detects tenant branding from URL userId via Firestore.
+ * Shows tenant/agency branding when available from context.
+ * NOTE: Does NOT fetch from Firestore — this is a transient loader,
+ * showing the default briefly is acceptable for performance.
  */
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Sparkles } from 'lucide-react';
 import { useSafeTenant } from '../../contexts/tenant/TenantContext';
 
@@ -37,45 +38,15 @@ const QuimeraLoader: React.FC<QuimeraLoaderProps> = ({
     const s = sizeMap[size];
     const tenantContext = useSafeTenant();
     const branding = tenantContext?.currentTenant?.branding;
-
-    // URL-based branding detection for /preview/ routes (no TenantProvider available)
-    const [previewBranding, setPreviewBranding] = useState<{ logoUrl?: string; companyName?: string; primaryColor?: string } | null>(null);
-    useEffect(() => {
-        if (branding) return; // Already have branding from context
-        const path = window.location.pathname;
-        const match = path.match(/\/preview\/([^/]+)\//);
-        if (!match) return;
-        const userId = match[1];
-        const fetchBranding = async () => {
-            try {
-                const { db, doc, getDoc } = await import('../../firebase');
-                const snap = await getDoc(doc(db, 'tenants', `tenant_${userId}`));
-                if (snap.exists()) {
-                    const data = snap.data();
-                    if (data?.branding?.companyName || data?.branding?.logoUrl) {
-                        setPreviewBranding({
-                            logoUrl: data.branding.logoUrl,
-                            companyName: data.branding.companyName,
-                            primaryColor: data.branding.primaryColor,
-                        });
-                    }
-                }
-            } catch (e) { /* ignore */ }
-        };
-        fetchBranding();
-    }, [branding]);
-
-    // Merge branding sources: context > preview URL detection
-    const effectiveBranding = branding || previewBranding;
-    const hasAgencyBranding = !!(effectiveBranding?.companyName || effectiveBranding?.logoUrl);
-    const accentColor = (effectiveBranding as any)?.primaryColor || undefined;
+    const hasAgencyBranding = !!(branding?.companyName || branding?.logoUrl);
+    const accentColor = (branding as any)?.primaryColor || undefined;
     const haloColor = hasAgencyBranding && accentColor ? accentColor : undefined;
 
     const renderLogo = () => {
-        if (effectiveBranding?.logoUrl) {
+        if (branding?.logoUrl) {
             return (
                 <img
-                    src={effectiveBranding.logoUrl}
+                    src={branding.logoUrl}
                     alt="Loading..."
                     className={`${s.logo} object-contain animate-pulse rounded-full`}
                     style={{ animationDuration: '1.5s' }}
@@ -87,8 +58,7 @@ const QuimeraLoader: React.FC<QuimeraLoaderProps> = ({
                 />
             );
         }
-        if (effectiveBranding?.companyName) {
-            // Generic Sparkles icon inside a colored circle
+        if (branding?.companyName) {
             return <Sparkles className={`${s.iconSize} text-white animate-pulse`} style={{ animationDuration: '1.5s' }} />;
         }
         return (
@@ -106,11 +76,9 @@ const QuimeraLoader: React.FC<QuimeraLoaderProps> = ({
         );
     };
 
-    // Circle styling: for agency with no logo, the circle IS the colored container
-    // For agency with logo, the circle has a subtle border
-    // For Quimera default, original yellow border
+    // Circle styling
     const circleStyle: React.CSSProperties = {};
-    if (hasAgencyBranding && !effectiveBranding?.logoUrl && accentColor) {
+    if (hasAgencyBranding && !branding?.logoUrl && accentColor) {
         circleStyle.backgroundColor = accentColor;
         circleStyle.borderColor = `${accentColor}80`;
     } else if (haloColor) {

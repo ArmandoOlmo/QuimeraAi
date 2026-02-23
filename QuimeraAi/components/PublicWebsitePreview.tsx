@@ -441,22 +441,22 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
         if (projectData) {
           setProject(projectData);
 
-          // Check tenant branding for White Label (hide "Made with Quimera" badges)
+          // Check tenant branding for White Label (fire-and-forget, non-blocking)
           const ownerUserId = projectData.userId || userId;
           if (ownerUserId) {
-            try {
-              // Try personal tenant first: tenant_{userId}
-              const tenantRef = doc(db, 'tenants', `tenant_${ownerUserId}`);
-              const tenantSnap = await getDoc(tenantRef);
-              if (tenantSnap.exists()) {
-                const tenantData = tenantSnap.data();
-                const hasBranding = !!(tenantData?.branding?.companyName || tenantData?.branding?.logoUrl);
-                setHasWhiteLabelBranding(hasBranding);
-                console.log('[PublicWebsitePreview] Tenant branding check:', { hasBranding, companyName: tenantData?.branding?.companyName });
+            (async () => {
+              try {
+                const tenantRef = doc(db, 'tenants', `tenant_${ownerUserId}`);
+                const tenantSnap = await getDoc(tenantRef);
+                if (tenantSnap.exists()) {
+                  const tenantData = tenantSnap.data();
+                  const hasBranding = !!(tenantData?.branding?.companyName || tenantData?.branding?.logoUrl);
+                  setHasWhiteLabelBranding(hasBranding);
+                }
+              } catch (e) {
+                // Silently ignore — branding stays visible
               }
-            } catch (tenantErr) {
-              console.log('[PublicWebsitePreview] Could not check tenant branding:', tenantErr);
-            }
+            })();
           }
 
           // Load CMS posts for this project
