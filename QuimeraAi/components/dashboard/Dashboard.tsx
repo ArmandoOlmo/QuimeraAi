@@ -2,6 +2,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/core/AuthContext';
+import { useSafeTenant } from '../../contexts/tenant/TenantContext';
 import { useUI } from '../../contexts/core/UIContext';
 import DashboardWaveRibbons from './DashboardWaveRibbons';
 import { useProject } from '../../contexts/project';
@@ -41,6 +42,7 @@ const Dashboard: React.FC = () => {
     const upgradeContext = useSafeUpgrade();
     const { usage } = useCreditsUsage();
     const { projectUsage } = useProjectTokenUsage();
+    const tenantContext = useSafeTenant();
 
     // Compute max credits across all projects for relative bar scaling
     const maxTokens = useMemo(() => {
@@ -381,15 +383,35 @@ const Dashboard: React.FC = () => {
                                     {/* Greeting Header with CTA */}
                                     <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6 mb-4">
                                         <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight text-foreground flex items-center flex-wrap">
-                                            <img
-                                                src="https://firebasestorage.googleapis.com/v0/b/quimeraai.firebasestorage.app/o/quimera%2Fquimeralogo.png?alt=media&token=82368c1c-0f63-42b7-831f-72780006f032"
-                                                alt="Quimera Logo"
-                                                className="w-12 h-12 md:w-16 md:h-16 object-contain mr-4 drop-shadow-[0_0_10px_rgba(250,204,21,0.4)]"
-                                                width={64}
-                                                height={64}
-                                                loading="eager"
-                                                decoding="async"
-                                            />
+                                            {/* Logo - conditional: tenant logo > generic agency icon > Quimera logo */}
+                                            {tenantContext?.currentTenant?.branding?.logoUrl ? (
+                                                <img
+                                                    src={tenantContext.currentTenant.branding.logoUrl}
+                                                    alt={tenantContext.currentTenant.branding.companyName || "Logo"}
+                                                    className="w-12 h-12 md:w-16 md:h-16 object-contain mr-4 drop-shadow-[0_0_10px_rgba(250,204,21,0.4)]"
+                                                    width={64}
+                                                    height={64}
+                                                    loading="eager"
+                                                    decoding="async"
+                                                />
+                                            ) : tenantContext?.currentTenant?.branding?.companyName ? (
+                                                <div
+                                                    className="w-12 h-12 md:w-16 md:h-16 flex items-center justify-center rounded-2xl mr-4 drop-shadow-[0_0_10px_rgba(250,204,21,0.4)]"
+                                                    style={{ backgroundColor: (tenantContext.currentTenant.branding as any)?.primaryColor || 'hsl(var(--primary))' }}
+                                                >
+                                                    <Sparkles className="w-6 h-6 md:w-8 md:h-8 text-white" />
+                                                </div>
+                                            ) : (
+                                                <img
+                                                    src="https://firebasestorage.googleapis.com/v0/b/quimeraai.firebasestorage.app/o/quimera%2Fquimeralogo.png?alt=media&token=82368c1c-0f63-42b7-831f-72780006f032"
+                                                    alt="Quimera Logo"
+                                                    className="w-12 h-12 md:w-16 md:h-16 object-contain mr-4 drop-shadow-[0_0_10px_rgba(250,204,21,0.4)]"
+                                                    width={64}
+                                                    height={64}
+                                                    loading="eager"
+                                                    decoding="async"
+                                                />
+                                            )}
                                             <span>
                                                 {getGreeting()}, <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500">{userDocument?.name?.split(' ')[0] || 'Creator'}</span>.
                                             </span>

@@ -7,7 +7,7 @@ import { useAdmin } from '../../contexts/admin';
 import { useRouter } from '../../hooks/useRouter';
 import { ROUTES } from '../../routes/config';
 import { auth, signOut } from '../../firebase';
-import { LogOut, LayoutDashboard, Globe, Settings, ChevronLeft, ChevronRight, ChevronDown, Zap, User as UserIcon, PenTool, Menu as MenuIcon, Sun, Moon, Circle, MessageSquare, Users, Link2, Search, DollarSign, GripVertical, LayoutTemplate, Calendar, X, Wrench, ShoppingBag, Package, FolderTree, ShoppingCart, Tag, TrendingUp, BarChart3, Mail, UserCheck, Lock, Building2 } from 'lucide-react';
+import { LogOut, LayoutDashboard, Globe, Settings, ChevronLeft, ChevronRight, ChevronDown, Zap, User as UserIcon, PenTool, Menu as MenuIcon, Sun, Moon, Circle, MessageSquare, Users, Link2, Search, DollarSign, GripVertical, LayoutTemplate, Calendar, X, Wrench, ShoppingBag, Package, FolderTree, ShoppingCart, Tag, TrendingUp, BarChart3, Mail, UserCheck, Lock, Building2, Sparkles } from 'lucide-react';
 import LanguageSelector from '../ui/LanguageSelector';
 import WorkspaceSwitcher from './WorkspaceSwitcher';
 import ProjectSwitcher from './ProjectSwitcher';
@@ -533,16 +533,36 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
               onClick={() => navigate(ROUTES.DASHBOARD)}
               className={`flex items-center gap-3 transition-all duration-300 cursor-pointer ${isCollapsed ? 'lg:px-0 lg:justify-center lg:gap-0' : 'lg:px-6'}`}
             >
-              {/* Logo Image - reads from tenant branding if available */}
-              <img
-                src={tenantContext?.currentTenant?.branding?.logoUrl || "https://firebasestorage.googleapis.com/v0/b/quimeraai.firebasestorage.app/o/quimera%2Fquimeralogo.png?alt=media&token=82368c1c-0f63-42b7-831f-72780006f032"}
-                alt={tenantContext?.currentTenant?.branding?.companyName || "Quimera Logo"}
-                className="w-10 h-10 object-contain flex-shrink-0"
-                width={40}
-                height={40}
-                loading="eager"
-                decoding="async"
-              />
+              {/* Logo - reads from tenant branding; uses generic icon for agencies without logo */}
+              {tenantContext?.currentTenant?.branding?.logoUrl ? (
+                <img
+                  src={tenantContext.currentTenant.branding.logoUrl}
+                  alt={tenantContext.currentTenant.branding.companyName || "Logo"}
+                  className="w-10 h-10 object-contain flex-shrink-0"
+                  width={40}
+                  height={40}
+                  loading="eager"
+                  decoding="async"
+                />
+              ) : tenantContext?.currentTenant?.branding?.companyName ? (
+                /* Agency without custom logo — show generic Sparkles icon with accent color */
+                <div
+                  className="w-10 h-10 flex items-center justify-center rounded-xl flex-shrink-0"
+                  style={{ backgroundColor: (tenantContext.currentTenant.branding as any)?.primaryColor || 'hsl(var(--primary))' }}
+                >
+                  <Sparkles className="w-5 h-5 text-white" />
+                </div>
+              ) : (
+                <img
+                  src="https://firebasestorage.googleapis.com/v0/b/quimeraai.firebasestorage.app/o/quimera%2Fquimeralogo.png?alt=media&token=82368c1c-0f63-42b7-831f-72780006f032"
+                  alt="Quimera Logo"
+                  className="w-10 h-10 object-contain flex-shrink-0"
+                  width={40}
+                  height={40}
+                  loading="eager"
+                  decoding="async"
+                />
+              )}
               {/* Text Logo (Hidden when collapsed on desktop) */}
               <span className={`text-xl lg:text-2xl font-extrabold tracking-tight text-foreground whitespace-nowrap transition-opacity duration-300 ${isCollapsed ? 'lg:opacity-0 lg:hidden' : 'opacity-100'}`}>
                 {tenantContext?.currentTenant?.branding?.companyName
