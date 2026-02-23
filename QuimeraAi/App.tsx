@@ -213,6 +213,30 @@ const App: React.FC = () => {
   // CONDITIONAL RENDERS (after all hooks)
   // ==========================================================================
 
+  // Preview route - no providers, no auth, no domain detection needed
+  // MUST be checked FIRST to avoid being blocked by customDomain.isLoading or lightAuth
+  if (isPreview) {
+    return (
+      <ErrorBoundary>
+        <Suspense fallback={<MinimalLoader />}>
+          <PublicWebsitePreview />
+        </Suspense>
+      </ErrorBoundary>
+    );
+  }
+
+  // Public Bio Page route - no providers needed
+  if (isBioRoute()) {
+    const username = window.location.pathname.split('/bio/')[1];
+    return (
+      <ErrorBoundary>
+        <Suspense fallback={<MinimalLoader />}>
+          <PublicBioPage username={username} />
+        </Suspense>
+      </ErrorBoundary>
+    );
+  }
+
   // Handle custom domain detection - loading state
   if (customDomain.isLoading) {
     return <DomainLoadingPage />;
@@ -231,29 +255,6 @@ const App: React.FC = () => {
             userId={customDomain.userId}
             projectId={customDomain.projectId}
           />
-        </Suspense>
-      </ErrorBoundary>
-    );
-  }
-
-  // Preview route - no providers needed
-  if (isPreview) {
-    return (
-      <ErrorBoundary>
-        <Suspense fallback={<MinimalLoader />}>
-          <PublicWebsitePreview />
-        </Suspense>
-      </ErrorBoundary>
-    );
-  }
-
-  // Public Bio Page route - no providers needed
-  if (isBioRoute()) {
-    const username = window.location.pathname.split('/bio/')[1];
-    return (
-      <ErrorBoundary>
-        <Suspense fallback={<MinimalLoader />}>
-          <PublicBioPage username={username} />
         </Suspense>
       </ErrorBoundary>
     );
