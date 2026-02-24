@@ -10,7 +10,6 @@ import {
 } from '../../utils/geminiProxyClient';
 import { CMSPost } from '../../types';
 import { useAuth } from '../../contexts/core/AuthContext';
-import { useCMS } from '../../contexts/cms';
 import { useProject } from '../../contexts/project';
 import { useAdmin } from '../../contexts/admin';
 import { sanitizeHtml } from '../../utils/sanitize';
@@ -26,7 +25,6 @@ type Step = 'topic' | 'details' | 'generating' | 'preview';
 const ContentCreatorAssistant: React.FC<ContentCreatorAssistantProps> = ({ onClose, onPostCreated }) => {
     const { t } = useTranslation();
     const { user } = useAuth();
-    const { saveCMSPost } = useCMS();
     const { activeProject } = useProject();
     const { getPrompt } = useAdmin();
     const [step, setStep] = useState<Step>('topic');
@@ -279,48 +277,33 @@ const ContentCreatorAssistant: React.FC<ContentCreatorAssistantProps> = ({ onClo
         }
     };
 
-    const handleConfirm = async () => {
-        console.log("🚀 Opening editor with post:", generatedPost);
+    const handleConfirm = () => {
+        console.log("🚀 Passing AI-generated post to parent:", generatedPost);
 
         if (!generatedPost || !user) {
             console.error("❌ Cannot confirm: missing data", { generatedPost, user });
             return;
         }
 
-        try {
-            // Crear el post asegurándose de que no haya campos undefined
-            const newPost: CMSPost = {
-                id: '', // ID vacío para que Firebase genere uno nuevo
-                title: generatedPost.title || 'Untitled',
-                slug: generatedPost.slug || `post-${Date.now()}`,
-                content: generatedPost.content || '<p>Contenido generado por IA</p>',
-                excerpt: generatedPost.excerpt || '',
-                featuredImage: '',
-                status: 'draft',
-                authorId: user.uid,
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString(),
-                seoTitle: generatedPost.seoTitle || '',
-                seoDescription: generatedPost.seoDescription || ''
-            };
+        // Build the post object — DO NOT save here, the parent handles saving
+        // to avoid creating duplicate articles (double-save bug).
+        const newPost: CMSPost = {
+            id: '', // ID vacío para que Firebase genere uno nuevo
+            title: generatedPost.title || 'Untitled',
+            slug: generatedPost.slug || `post-${Date.now()}`,
+            content: generatedPost.content || '<p>Contenido generado por IA</p>',
+            excerpt: generatedPost.excerpt || '',
+            featuredImage: '',
+            status: 'draft',
+            authorId: user.uid,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            seoTitle: generatedPost.seoTitle || '',
+            seoDescription: generatedPost.seoDescription || ''
+        };
 
-            console.log("💾 Saving post:", newPost);
-
-            // Guardamos el post - Firebase generará el ID automáticamente
-            await saveCMSPost(newPost);
-
-            console.log("✅ Post saved successfully");
-
-            // Pequeño delay para asegurar que el post se guardó y se cargó en la lista
-            await new Promise(resolve => setTimeout(resolve, 500));
-
-            // Notificamos al padre para que abra el editor
-            // Usamos el post con los datos actuales, el padre debería recargarlo
-            onPostCreated(newPost);
-        } catch (error) {
-            console.error("❌ Error in handleConfirm:", error);
-            alert(t('cms_editor.errors.failedToSave'));
-        }
+        // Notify the parent — it will save and open the editor
+        onPostCreated(newPost);
     };
 
     return (
@@ -378,8 +361,8 @@ const ContentCreatorAssistant: React.FC<ContentCreatorAssistantProps> = ({ onClo
                                         onDrop={handleMediaDrop}
                                         onClick={() => mediaInputRef.current?.click()}
                                         className={`w-full border-2 border-dashed rounded-xl p-6 flex flex-col items-center justify-center gap-2 cursor-pointer transition-all ${isDragging
-                                                ? 'border-primary bg-primary/10 scale-[1.02]'
-                                                : 'border-border hover:border-primary/50 hover:bg-secondary/20'
+                                            ? 'border-primary bg-primary/10 scale-[1.02]'
+                                            : 'border-border hover:border-primary/50 hover:bg-secondary/20'
                                             }`}
                                     >
                                         <Upload size={24} className="text-muted-foreground" />

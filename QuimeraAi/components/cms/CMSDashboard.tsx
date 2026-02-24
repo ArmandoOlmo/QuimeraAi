@@ -11,7 +11,7 @@ import QuimeraLoader from '../ui/QuimeraLoader';
 import ModernCMSEditor from './modern/ModernCMSEditor';
 import ContentCreatorAssistant from './ContentCreatorAssistant';
 import CMSProjectSelectorPage from './CMSProjectSelectorPage';
-import { Menu, Plus, Search, FileText, Edit3, Trash2, Loader2, Calendar, Globe, PenTool, ArrowDown, ArrowUp, Grid, List, Eye, X as XIcon, Copy, Edit2, Download, Sparkles, ArrowLeft, ChevronDown } from 'lucide-react';
+import { Menu, Plus, Search, FileText, Edit3, Trash2, Loader2, Calendar, Globe, PenTool, ArrowDown, ArrowUp, Grid, List, Eye, X as XIcon, Copy, Edit2, Download, Sparkles, ArrowLeft, ChevronDown, Check } from 'lucide-react';
 import { useRouter } from '../../hooks/useRouter';
 import { ROUTES } from '../../routes/config';
 import { CMSPost } from '../../types';
@@ -127,28 +127,27 @@ const CMSDashboard: React.FC = () => {
 
     const handlePostCreatedFromAi = async (post: CMSPost) => {
         setIsAiAssistantOpen(false);
-        console.log("📋 Dashboard: Post created from AI", post);
+        console.log("📋 Dashboard: Saving AI-generated post", post);
 
-        // 1. Recargamos la lista para obtener el post con su ID real de Firebase
-        await loadCMSPosts();
+        try {
+            // 1. Save the post — this is the ONLY save (no double-save).
+            //    saveCMSPost returns the Firebase-generated ID for new posts.
+            const savedId = await saveCMSPost(post);
+            console.log("✅ Post saved to Firestore with ID:", savedId);
 
-        // 2. Esperamos un momento para que la lista se actualice
-        await new Promise(resolve => setTimeout(resolve, 300));
+            // 2. Set the real Firebase ID on the post so the editor does
+            //    updateDoc (not addDoc) on subsequent saves.
+            const postWithId: CMSPost = { ...post, id: savedId };
 
-        // 3. Buscamos el post recién creado por slug (más confiable que por ID vacío)
-        const createdPost = cmsPosts.find(p => p.slug === post.slug);
-
-        if (createdPost) {
-            console.log("✅ Found created post:", createdPost);
-            setEditingPost(createdPost);
-        } else {
-            // Si no lo encontramos, usamos el post tal cual (probablemente funcionará de todos modos)
-            console.warn("⚠️ Could not find created post, using original");
+            // 3. Open the editor with the real ID
+            setEditingPost(postWithId);
+            setIsEditorOpen(true);
+        } catch (error) {
+            console.error("❌ Error saving AI post:", error);
+            // Still open the editor so the user doesn't lose their content
             setEditingPost(post);
+            setIsEditorOpen(true);
         }
-
-        // 4. Abrimos el editor inmediatamente
-        setIsEditorOpen(true);
     };
 
     // Bulk actions handlers
@@ -444,9 +443,29 @@ const CMSDashboard: React.FC = () => {
 
                         {/* Barra de Filtros */}
                         <div className="space-y-3">
-                            {/* Top row - Count and view toggles */}
+                            {/* Top row - Count, select-all, and view toggles */}
                             <div className="flex items-center justify-between gap-2">
                                 <div className="flex items-center gap-2 flex-wrap">
+                                    {/* Select All Checkbox */}
+                                    {filteredAndSortedPosts.length > 0 && (
+                                        <label
+                                            className="flex items-center gap-2 cursor-pointer px-2.5 py-1.5 rounded-lg hover:bg-secondary/50 transition-colors"
+                                            title={t('cms.selectAll', 'Seleccionar todos')}
+                                        >
+                                            <input
+                                                type="checkbox"
+                                                checked={selectedPosts.length === filteredAndSortedPosts.length && filteredAndSortedPosts.length > 0}
+                                                onChange={handleSelectAll}
+                                                className="rounded border-border w-4 h-4 accent-primary"
+                                            />
+                                            <span className="text-xs font-medium text-muted-foreground hidden sm:inline">
+                                                {selectedPosts.length > 0
+                                                    ? `${selectedPosts.length} / ${filteredAndSortedPosts.length}`
+                                                    : t('cms.selectAll', 'Seleccionar')}
+                                            </span>
+                                        </label>
+                                    )}
+
                                     <span className="px-3 py-1.5 bg-secondary/50 text-xs rounded-full text-muted-foreground font-medium">
                                         {filteredAndSortedPosts.length} of {cmsPosts.length}
                                     </span>
@@ -662,10 +681,21 @@ const CMSDashboard: React.FC = () => {
                                     {filteredAndSortedPosts.map(post => (
                                         <div
                                             key={post.id}
-                                            className="bg-card border border-border rounded-xl p-3 active:bg-secondary/30 transition-colors"
+                                            className={`bg-card border rounded-xl p-3 active:bg-secondary/30 transition-colors ${selectedPosts.includes(post.id) ? 'border-primary bg-primary/5' : 'border-border'
+                                                }`}
                                             onClick={() => handleEdit(post)}
                                         >
                                             <div className="flex gap-3">
+                                                {/* Selection Checkbox - Mobile */}
+                                                <div className="flex items-center flex-shrink-0">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={selectedPosts.includes(post.id)}
+                                                        onChange={(e) => { e.stopPropagation(); handleSelectPost(post.id); }}
+                                                        onClick={(e) => e.stopPropagation()}
+                                                        className="rounded border-border w-4 h-4 accent-primary"
+                                                    />
+                                                </div>
                                                 {/* Thumbnail */}
                                                 <div className="w-16 h-16 rounded-lg overflow-hidden bg-secondary flex-shrink-0">
                                                     {post.featuredImage ? (
@@ -729,7 +759,8 @@ const CMSDashboard: React.FC = () => {
                                 {filteredAndSortedPosts.map(post => (
                                     <div
                                         key={post.id}
-                                        className="group relative rounded-xl sm:rounded-2xl overflow-hidden transition-all duration-500 hover:shadow-2xl sm:hover:scale-[1.02] h-[280px] sm:h-[400px]"
+                                        className={`group relative rounded-xl sm:rounded-2xl overflow-hidden transition-all duration-500 hover:shadow-2xl sm:hover:scale-[1.02] h-[280px] sm:h-[400px] ${selectedPosts.includes(post.id) ? 'ring-2 ring-primary ring-offset-2 ring-offset-background' : ''
+                                            }`}
                                         onClick={() => handleEdit(post)}
                                     >
                                         {/* Full Background Image */}
@@ -750,6 +781,27 @@ const CMSDashboard: React.FC = () => {
                                             {/* Dark Gradient Overlay */}
                                             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-black/20" />
 
+                                            {/* Selection Checkbox - Grid View */}
+                                            <div className="absolute top-3 right-3 sm:top-4 sm:right-4 z-30">
+                                                <label
+                                                    className={`flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-full border-2 cursor-pointer transition-all backdrop-blur-md shadow-lg ${selectedPosts.includes(post.id)
+                                                        ? 'bg-primary border-primary text-primary-foreground'
+                                                        : 'bg-black/30 border-white/50 text-transparent hover:border-white hover:bg-black/50 sm:opacity-0 sm:group-hover:opacity-100'
+                                                        }`}
+                                                    onClick={(e) => e.stopPropagation()}
+                                                >
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={selectedPosts.includes(post.id)}
+                                                        onChange={() => handleSelectPost(post.id)}
+                                                        className="sr-only"
+                                                    />
+                                                    {selectedPosts.includes(post.id) && (
+                                                        <Check size={14} className="text-primary-foreground" />
+                                                    )}
+                                                </label>
+                                            </div>
+
                                             {/* Top Section: Status Badge */}
                                             <div className="absolute top-3 left-3 sm:top-4 sm:left-4 z-20">
                                                 <span className={`px-2 py-0.5 sm:px-3 sm:py-1 text-[10px] sm:text-xs font-bold uppercase tracking-wider rounded-md sm:rounded-lg border backdrop-blur-md shadow-lg ${post.status === 'published' ? 'bg-green-500/20 text-green-400 border-green-500/30' : 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30'}`}>
@@ -757,8 +809,8 @@ const CMSDashboard: React.FC = () => {
                                                 </span>
                                             </div>
 
-                                            {/* Mobile: Always visible quick actions at top right */}
-                                            <div className="sm:hidden absolute top-3 right-3 z-20 flex gap-1">
+                                            {/* Mobile: Always visible quick actions at top right, below checkbox */}
+                                            <div className="sm:hidden absolute top-12 right-3 z-20 flex flex-col gap-1">
                                                 <button
                                                     onClick={(e) => { e.stopPropagation(); handleQuickPreview(post); }}
                                                     className="bg-white/90 text-blue-500 p-2 rounded-full shadow-lg active:scale-95 transition-transform"
@@ -893,31 +945,34 @@ const CMSDashboard: React.FC = () => {
                             </div>
                         )}
 
-                        {/* Bulk Actions Bar - Mobile optimized */}
-                        {selectedPosts.length > 0 && (
-                            <div className="fixed bottom-4 sm:bottom-6 left-2 right-2 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 sm:w-auto bg-card border border-border rounded-xl shadow-2xl p-3 sm:p-4 flex items-center justify-between sm:justify-start gap-3 sm:gap-4 z-50 animate-fade-in-up">
-                                <span className="text-xs sm:text-sm font-medium text-foreground">
-                                    {selectedPosts.length} {t('common.selected', 'seleccionados')}
-                                </span>
-                                <div className="flex items-center gap-2">
-                                    <button
-                                        onClick={handleBulkDelete}
-                                        className="px-2.5 sm:px-3 py-1.5 text-xs bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors flex items-center gap-1"
-                                    >
-                                        <Trash2 size={12} /> <span className="hidden sm:inline">{t('common.delete', 'Eliminar')}</span>
-                                    </button>
-                                    <button
-                                        onClick={() => setSelectedPosts([])}
-                                        className="px-2.5 sm:px-3 py-1.5 text-xs bg-secondary text-foreground rounded-lg hover:bg-secondary/80 transition-colors"
-                                    >
-                                        {t('common.cancel', 'Cancelar')}
-                                    </button>
-                                </div>
-                            </div>
-                        )}
                     </div>
                 </main>
             </div>
+
+            {/* Bulk Actions Bar - OUTSIDE overflow container for proper fixed positioning */}
+            {selectedPosts.length > 0 && (
+                <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[9999]" style={{ animation: 'slideUp 0.3s ease-out' }}>
+                    <div className="bg-card border border-border rounded-2xl shadow-2xl px-5 py-3 flex items-center gap-4 backdrop-blur-xl">
+                        <span className="text-sm font-bold text-foreground whitespace-nowrap">
+                            {selectedPosts.length} {t('common.selected', 'seleccionados')}
+                        </span>
+                        <div className="w-px h-6 bg-border" />
+                        <button
+                            onClick={handleBulkDelete}
+                            className="px-4 py-2 text-sm font-bold bg-red-500 text-white rounded-xl hover:bg-red-600 transition-all flex items-center gap-2 shadow-lg shadow-red-500/20 hover:shadow-red-500/40"
+                        >
+                            <Trash2 size={14} /> {t('common.delete', 'Eliminar')}
+                        </button>
+                        <button
+                            onClick={() => setSelectedPosts([])}
+                            className="px-4 py-2 text-sm font-medium bg-secondary text-foreground rounded-xl hover:bg-secondary/80 transition-all"
+                        >
+                            {t('common.cancel', 'Cancelar')}
+                        </button>
+                    </div>
+                </div>
+            )}
+
             {/* Single Delete Confirmation Modal */}
             <ConfirmationModal
                 isOpen={!!deleteConfirmId}

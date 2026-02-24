@@ -30,7 +30,7 @@ interface CMSContextType {
     cmsPosts: CMSPost[];
     isLoadingCMS: boolean;
     loadCMSPosts: () => Promise<void>;
-    saveCMSPost: (post: CMSPost) => Promise<void>;
+    saveCMSPost: (post: CMSPost) => Promise<string>;
     deleteCMSPost: (postId: string) => Promise<void>;
 
     // Project info for CMS
@@ -184,15 +184,15 @@ export const CMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         }
     };
 
-    // Save CMS post (to current project)
-    const saveCMSPost = async (post: CMSPost) => {
+    // Save CMS post (to current project) — returns the saved post ID
+    const saveCMSPost = async (post: CMSPost): Promise<string> => {
         if (!user || !activeProject) {
             console.error("Cannot save post: No user or active project");
-            return;
+            return '';
         }
 
         const collectionPath = getPostsCollectionPath();
-        if (!collectionPath) return;
+        if (!collectionPath) return '';
 
         try {
             const { id, ...data } = post;
@@ -274,6 +274,7 @@ export const CMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
                 console.warn('[CMSContext] Skipping public sync: Missing activeProject.id or savedPostId');
             }
 
+            return savedPostId;
         } catch (error) {
             console.error("Error saving post:", error);
             throw error;
