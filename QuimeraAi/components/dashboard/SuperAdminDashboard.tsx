@@ -369,13 +369,14 @@ const SuperAdminDashboard = () => {
                         <h1 className="text-lg font-bold text-editor-text-primary">{t('superadmin.title')}</h1>
                     </div>
 
-                    <div className="flex items-center gap-2 sm:gap-4">
-                        {/* Mobile Search Button */}
+                    <div className="flex items-center gap-3">
+                        {/* Search Button */}
                         <button
                             onClick={() => setIsMobileSearchOpen(true)}
-                            className="md:hidden h-8 w-8 flex items-center justify-center rounded-md text-editor-text-secondary hover:text-editor-text-primary transition-colors"
+                            className="text-muted-foreground hover:text-foreground transition-colors"
+                            aria-label={t('common.search', 'Buscar')}
                         >
-                            <Search className="w-4 h-4" />
+                            <Search size={20} />
                         </button>
                         <MobileSearchModal
                             isOpen={isMobileSearchOpen}
@@ -386,55 +387,17 @@ const SuperAdminDashboard = () => {
                         />
                         <button
                             onClick={handleBackToDashboard}
-                            className="flex items-center text-sm font-medium text-editor-text-secondary hover:text-editor-accent transition-colors"
+                            className="text-muted-foreground hover:text-foreground transition-colors"
+                            aria-label={t('superadmin.backToDashboard')}
                         >
-                            <ArrowLeft className="w-4 h-4 mr-1.5" />
-                            <span className="hidden sm:inline">{t('superadmin.backToDashboard')}</span>
+                            <ArrowLeft size={20} />
                         </button>
-                        <div className="hidden md:flex items-center gap-3">
-                            <button
-                                onClick={() => setViewMode('grid')}
-                                className={`transition-colors ${viewMode === 'grid' ? 'text-editor-accent' : 'text-editor-text-secondary hover:text-editor-text-primary'}`}
-                                title={t('superadmin.viewGrid')}
-                            >
-                                <Grid3x3 className="w-5 h-5" />
-                            </button>
-                            <button
-                                onClick={() => setViewMode('list')}
-                                className={`transition-colors ${viewMode === 'list' ? 'text-editor-accent' : 'text-editor-text-secondary hover:text-editor-text-primary'}`}
-                                title={t('superadmin.viewList')}
-                            >
-                                <List className="w-5 h-5" />
-                            </button>
-                            <button
-                                onClick={() => setViewMode('compact')}
-                                className={`transition-colors ${viewMode === 'compact' ? 'text-editor-accent' : 'text-editor-text-secondary hover:text-editor-text-primary'}`}
-                                title={t('superadmin.viewCompact')}
-                            >
-                                <Settings className="w-5 h-5" />
-                            </button>
-                        </div>
                     </div>
                 </header>
 
                 <main className="flex-1 overflow-y-auto relative z-10">
                     <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
-                        {/* Search */}
-                        <div className="hidden md:flex items-center gap-2 bg-editor-border/40 rounded-lg px-3 py-2 mb-6">
-                            <Search className="w-4 h-4 text-editor-text-secondary flex-shrink-0" />
-                            <input
-                                type="text"
-                                placeholder={t('superadmin.searchFeatures')}
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                className="flex-1 bg-transparent outline-none text-sm min-w-0"
-                            />
-                            {searchQuery && (
-                                <button onClick={() => setSearchQuery('')} className="text-editor-text-secondary hover:text-editor-text-primary flex-shrink-0">
-                                    <X size={16} />
-                                </button>
-                            )}
-                        </div>
+
 
                         {/* Categories - Horizontal scroll on mobile */}
                         <div className="mb-4 sm:mb-6">

@@ -28,6 +28,7 @@ import { useProject } from '../../../contexts/project';
 import { Project } from '../../../types/components';
 import DashboardSidebar from '../DashboardSidebar';
 import QuimeraLoader from '../../ui/QuimeraLoader';
+import MobileSearchModal from '../../ui/MobileSearchModal';
 
 interface ProjectSelectorPageProps {
     onProjectSelect: (projectId: string) => void;
@@ -48,6 +49,7 @@ const ProjectSelectorPage: React.FC<ProjectSelectorPageProps> = ({
     const [filterStatus, setFilterStatus] = useState<'all' | 'Published' | 'Draft'>('all');
     const [sortBy, setSortBy] = useState<'recent' | 'name'>('recent');
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const [isSearchOpen, setIsSearchOpen] = useState(false);
 
     // Filter and sort projects
     const filteredProjects = useMemo(() => {
@@ -112,34 +114,20 @@ const ProjectSelectorPage: React.FC<ProjectSelectorPageProps> = ({
                         </div>
                     </div>
 
-                    {/* Center: Search */}
-                    <div className="hidden md:flex flex-1 justify-center px-4">
-                        <div className="flex items-center gap-2 w-full max-w-xl bg-editor-border/40 rounded-lg px-3 py-2">
-                            <Search className="w-4 h-4 text-editor-text-secondary flex-shrink-0" />
-                            <input
-                                type="search"
-                                placeholder={t('ecommerce.searchProjects', 'Buscar proyectos...')}
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                className="flex-1 bg-transparent outline-none text-sm min-w-0"
-                                aria-label={t('ecommerce.searchProjects', 'Buscar proyectos')}
-                            />
-                            {searchQuery && (
-                                <button onClick={() => setSearchQuery('')} className="text-editor-text-secondary hover:text-editor-text-primary flex-shrink-0">
-                                    <X size={16} />
-                                </button>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* Right: Back Button - solo icono */}
-                    <div className="flex items-center justify-end flex-shrink-0 ml-auto">
+                    {/* Right: Search icon + Back icon */}
+                    <div className="flex items-center gap-3 flex-shrink-0 ml-auto">
+                        <button
+                            onClick={() => setIsSearchOpen(true)}
+                            className="text-muted-foreground hover:text-foreground transition-colors"
+                            aria-label={t('common.search', 'Buscar')}
+                        >
+                            <Search size={20} />
+                        </button>
                         {onBack && (
                             <button
                                 onClick={onBack}
-                                className="h-9 w-9 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
+                                className="text-muted-foreground hover:text-foreground transition-colors"
                                 aria-label={t('common.back', 'Volver')}
-                                title={t('common.back', 'Volver')}
                             >
                                 <ArrowLeft size={20} />
                             </button>
@@ -147,25 +135,14 @@ const ProjectSelectorPage: React.FC<ProjectSelectorPageProps> = ({
                     </div>
                 </header>
 
-                {/* Mobile Search */}
-                <div className="md:hidden px-4 py-3 border-b border-border bg-background">
-                    <div className="flex items-center gap-2 w-full bg-editor-border/40 rounded-lg px-3 py-2">
-                        <Search className="w-4 h-4 text-editor-text-secondary flex-shrink-0" />
-                        <input
-                            type="search"
-                            placeholder={t('ecommerce.searchProjects', 'Buscar proyectos...')}
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="flex-1 bg-transparent outline-none text-sm min-w-0"
-                            aria-label={t('ecommerce.searchProjects', 'Buscar proyectos')}
-                        />
-                        {searchQuery && (
-                            <button onClick={() => setSearchQuery('')} className="text-editor-text-secondary hover:text-editor-text-primary flex-shrink-0">
-                                <X size={16} />
-                            </button>
-                        )}
-                    </div>
-                </div>
+                {/* Search Modal */}
+                <MobileSearchModal
+                    isOpen={isSearchOpen}
+                    searchQuery={searchQuery}
+                    onSearchChange={setSearchQuery}
+                    onClose={() => setIsSearchOpen(false)}
+                    placeholder={t('ecommerce.searchProjects', 'Buscar proyectos...')}
+                />
 
                 {/* Main Content */}
                 <main className="flex-1 overflow-auto p-4 sm:p-6 lg:p-8">
@@ -384,8 +361,8 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, onSelect, formatDate
                 {/* Status Badge */}
                 <div className="absolute top-3 right-3">
                     <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${project.status === 'Published'
-                            ? 'bg-green-500/90 text-white'
-                            : 'bg-slate-500/90 text-white'
+                        ? 'bg-green-500/90 text-white'
+                        : 'bg-slate-500/90 text-white'
                         }`}>
                         {project.status === 'Published' ? t('dashboard.published', 'Publicado') : t('dashboard.draft', 'Borrador')}
                     </span>

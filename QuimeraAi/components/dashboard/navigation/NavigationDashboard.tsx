@@ -187,78 +187,54 @@ const NavigationDashboard: React.FC = () => {
                         </div>
                     </div>
 
-                    {/* Center Section - Search Bar */}
-                    <div className="flex-1 flex justify-center px-2 sm:px-4">
-                        <div className="hidden md:flex items-center gap-2 w-full max-w-xl bg-editor-border/40 rounded-lg px-3 py-2" role="search">
-                            <Search className="w-4 h-4 text-editor-text-secondary flex-shrink-0" aria-hidden="true" />
-                            <input
-                                type="search"
-                                placeholder={t('navigationDashboard.searchMenus')}
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                className="flex-1 bg-transparent outline-none text-sm min-w-0"
-                                aria-label={t('navigationDashboard.searchMenus')}
-                            />
-                            {searchQuery && (
-                                <button onClick={() => setSearchQuery('')} className="text-editor-text-secondary hover:text-editor-text-primary flex-shrink-0">
-                                    <X size={16} />
-                                </button>
-                            )}
-                        </div>
-
-                        {/* Mobile Search Button */}
+                    {/* Right: Search icon + Controls */}
+                    <div className="flex items-center gap-3 flex-shrink-0">
                         <button
                             onClick={() => setIsMobileSearchOpen(true)}
-                            className="md:hidden p-2.5 text-muted-foreground hover:text-foreground hover:bg-secondary/60 rounded-xl transition-colors"
-                            aria-label="Toggle search"
+                            className="text-muted-foreground hover:text-foreground transition-colors"
+                            aria-label="Search"
                         >
                             <Search size={20} />
                         </button>
-                    </div>
 
-                    <MobileSearchModal
-                        isOpen={isMobileSearchOpen}
-                        searchQuery={searchQuery}
-                        onSearchChange={setSearchQuery}
-                        onClose={() => setIsMobileSearchOpen(false)}
-                        placeholder={t('navigationDashboard.searchMenus')}
-                    />
-
-                    {/* Right Section - Buttons */}
-                    <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
                         {/* Create Button */}
                         {effectiveProject && (
                             <button
                                 onClick={handleCreateNew}
-                                className="flex items-center gap-1.5 h-9 px-3 rounded-lg text-sm font-medium transition-all text-muted-foreground hover:text-primary hover:bg-primary/10"
+                                className="text-muted-foreground hover:text-foreground transition-colors"
                                 title={t('navigationDashboard.addMenu')}
                             >
-                                <Plus className="w-4 h-4" />
-                                <span className="hidden lg:inline">{t('navigationDashboard.addMenu')}</span>
+                                <Plus size={20} />
                             </button>
                         )}
 
-                        {/* View Toggle */}
-                        <div className="hidden sm:flex items-center gap-1 bg-secondary/40 rounded-lg p-1" role="group" aria-label="View mode">
+                        {/* View Toggle - bare icons */}
+                        <div className="hidden sm:flex gap-2">
                             <button
                                 onClick={() => setViewMode('grid')}
-                                className={`h-8 w-8 flex items-center justify-center rounded-md transition-all ${viewMode === 'grid' ? 'text-primary bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+                                className={`transition-colors ${viewMode === 'grid' ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}
                                 aria-label="Grid view"
-                                aria-pressed={viewMode === 'grid'}
                             >
-                                <LayoutGrid size={15} aria-hidden="true" />
+                                <LayoutGrid size={15} />
                             </button>
                             <button
                                 onClick={() => setViewMode('list')}
-                                className={`h-8 w-8 flex items-center justify-center rounded-md transition-all ${viewMode === 'list' ? 'text-primary bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+                                className={`transition-colors ${viewMode === 'list' ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}
                                 aria-label="List view"
-                                aria-pressed={viewMode === 'list'}
                             >
-                                <LayoutList size={15} aria-hidden="true" />
+                                <LayoutList size={15} />
                             </button>
                         </div>
                     </div>
                 </header>
+
+                <MobileSearchModal
+                    isOpen={isMobileSearchOpen}
+                    searchQuery={searchQuery}
+                    onSearchChange={setSearchQuery}
+                    onClose={() => setIsMobileSearchOpen(false)}
+                    placeholder={t('navigationDashboard.searchMenus')}
+                />
 
                 <main className="flex-1 p-4 sm:p-8 overflow-y-auto bg-background/50 relative z-10">
                     <div className="max-w-7xl mx-auto space-y-8">
@@ -333,21 +309,37 @@ const NavigationDashboard: React.FC = () => {
                             </div>
                         )}
 
-                        {/* Filter Bar */}
-                        <div className="flex items-center gap-3">
-                            <select
-                                value={filterUsage}
-                                onChange={(e) => setFilterUsage(e.target.value as any)}
-                                className="px-3 py-2 text-sm bg-secondary/50 hover:bg-secondary border border-transparent focus:border-primary/30 rounded-lg outline-none cursor-pointer transition-all appearance-none"
-                            >
-                                <option value="all">{t('navigationDashboard.allMenus')}</option>
-                                <option value="used">{t('navigationDashboard.inUse')}</option>
-                                <option value="unused">{t('navigationDashboard.notInUse')}</option>
-                                <option value="empty">{t('navigationDashboard.empty')}</option>
-                            </select>
-                            <span className="text-xs text-muted-foreground">
-                                {filteredMenus.length} {filteredMenus.length === 1 ? 'menú' : 'menús'}
+                        {/* Filter Bar - icon only */}
+                        <div className="flex items-center gap-3 sm:gap-4">
+                            <span className="text-[10px] text-muted-foreground font-medium flex-shrink-0">
+                                {filteredMenus.length}/{menus.length}
                             </span>
+
+                            {/* Usage filter - icon only */}
+                            <div className="relative flex-shrink-0 cursor-pointer" title={t('navigationDashboard.allMenus', 'Filtrar')}>
+                                <Layers size={15} className={`pointer-events-none transition-colors ${filterUsage !== 'all' ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`} />
+                                <select
+                                    value={filterUsage}
+                                    onChange={(e) => setFilterUsage(e.target.value as any)}
+                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                >
+                                    <option value="all">{t('navigationDashboard.allMenus')}</option>
+                                    <option value="used">{t('navigationDashboard.inUse')}</option>
+                                    <option value="unused">{t('navigationDashboard.notInUse')}</option>
+                                    <option value="empty">{t('navigationDashboard.empty')}</option>
+                                </select>
+                            </div>
+
+                            {/* Clear filter */}
+                            {filterUsage !== 'all' && (
+                                <button
+                                    onClick={() => setFilterUsage('all')}
+                                    className="text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
+                                    title={t('common.clear', 'Limpiar filtros')}
+                                >
+                                    <X size={13} />
+                                </button>
+                            )}
                         </div>
 
                         {/* Content Area */}

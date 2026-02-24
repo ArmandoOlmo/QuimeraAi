@@ -22,6 +22,7 @@ import NewsUpdates from './NewsUpdates';
 import DashboardHelpGuide from './DashboardHelpGuide';
 import DashboardStatusCards from './DashboardStatusCards';
 import { Plus, Menu, Search, LayoutGrid, Globe, Images, List, ArrowUpDown, CheckCircle, FileEdit, X, Loader2, Sparkles, MousePointerClick, Palette, Rocket, LayoutTemplate, BookOpen, ArrowLeft, Crown, ChevronUp, ChevronDown } from 'lucide-react';
+import MobileSearchModal from '../ui/MobileSearchModal';
 import { trackSearchPerformed, trackFilterApplied, trackSortChanged, trackViewModeChanged, trackDashboardView } from '../../utils/analytics';
 import { useInfiniteScroll, paginateArray, hasMoreItems } from '../../hooks/useInfiniteScroll';
 import { usePlans } from '../../contexts/PlansContext';
@@ -262,54 +263,19 @@ const Dashboard: React.FC = () => {
                         </div>
                     </div>
 
-                    {/* Center Section - Search Bar */}
-                    <div className="flex-1 flex justify-center px-2 sm:px-4">
-                        {(isDashboard || isWebsites) && (
-                            <div className="hidden md:flex items-center gap-2 w-full max-w-xl bg-editor-border/40 rounded-lg px-3 py-2" role="search">
-                                <Search className="w-4 h-4 text-editor-text-secondary flex-shrink-0" aria-hidden="true" />
-                                <input
-                                    type="search"
-                                    placeholder={t('dashboard.searchPlaceholder')}
-                                    value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                    className="flex-1 bg-transparent outline-none text-sm min-w-0"
-                                    aria-label={t('dashboard.searchProjects')}
-                                />
-                                {searchQuery && (
-                                    <button onClick={() => setSearchQuery('')} className="text-editor-text-secondary hover:text-editor-text-primary flex-shrink-0">
-                                        <X size={16} />
-                                    </button>
-                                )}
-                            </div>
-                        )}
+                    {/* Spacer */}
+                    <div className="flex-1" />
 
-                        {/* Mobile Search Button */}
+                    {/* Right Section - Search + Back */}
+                    <div className="flex items-center gap-3 flex-shrink-0 mr-2.5">
+                        {/* Search Icon */}
                         {(isDashboard || isWebsites) && (
                             <button
                                 onClick={() => setShowMobileSearch(true)}
-                                className="md:hidden p-2.5 text-muted-foreground hover:text-foreground hover:bg-secondary/60 rounded-xl transition-colors"
+                                className="text-muted-foreground hover:text-foreground transition-colors"
                                 aria-label="Open search"
-                                aria-expanded={showMobileSearch}
                             >
                                 <Search size={20} />
-                            </button>
-                        )}
-                    </div>
-
-                    {/* Right Section - Back Button Only */}
-                    <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
-                        {/* Help/Instructions Button - Only on Dashboard when instructions are hidden */}
-                        {isDashboard && !showInstructions && (
-                            <button
-                                onClick={() => {
-                                    setShowInstructions(true);
-                                    localStorage.setItem('quimera_show_instructions', 'true');
-                                }}
-                                className="flex items-center gap-1.5 h-9 px-3 rounded-lg text-sm font-medium transition-all text-muted-foreground hover:text-primary hover:bg-primary/10"
-                                title={t('dashboard.showHelp')}
-                            >
-                                <BookOpen className="w-4 h-4" />
-                                <span className="hidden lg:inline">{t('dashboard.help')}</span>
                             </button>
                         )}
 
@@ -317,53 +283,23 @@ const Dashboard: React.FC = () => {
                         {!isDashboard && (
                             <button
                                 onClick={() => navigate(ROUTES.DASHBOARD)}
-                                className="flex items-center justify-center gap-2 h-9 w-9 sm:w-auto sm:px-3 rounded-lg sm:bg-secondary/50 sm:hover:bg-secondary text-sm font-medium transition-all text-muted-foreground hover:text-foreground"
+                                className="text-muted-foreground hover:text-foreground transition-colors"
                                 aria-label={t('common.goBack', 'Volver')}
                             >
-                                <ArrowLeft className="w-4 h-4" />
-                                <span className="hidden sm:inline">{t('common.back', 'Volver')}</span>
+                                <ArrowLeft size={20} />
                             </button>
                         )}
-
                     </div>
                 </header>
 
-                {/* Mobile Search Overlay */}
-                {showMobileSearch && (
-                    <div
-                        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 md:hidden flex items-start justify-center pt-20"
-                        role="dialog"
-                        aria-modal="true"
-                        aria-label="Search projects"
-                    >
-                        <div className="bg-card border border-border rounded-2xl shadow-2xl w-[90%] max-w-md p-4 animate-fade-in-up">
-                            <div className="flex items-center gap-2 mb-2" role="search">
-                                <Search className="text-muted-foreground" size={20} aria-hidden="true" />
-                                <input
-                                    type="search"
-                                    placeholder={t('dashboard.searchPlaceholder')}
-                                    value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                    className="flex-1 bg-transparent outline-none text-foreground placeholder:text-muted-foreground"
-                                    autoFocus
-                                    aria-label={t('dashboard.searchProjects')}
-                                />
-                                <button
-                                    onClick={() => setShowMobileSearch(false)}
-                                    className="p-2 text-muted-foreground hover:text-foreground transition-colors"
-                                    aria-label="Close search"
-                                >
-                                    <X size={20} aria-hidden="true" />
-                                </button>
-                            </div>
-                            {searchQuery && (
-                                <div className="text-xs text-muted-foreground" role="status" aria-live="polite">
-                                    {t('dashboard.resultsFound', { count: userProjects.length })}
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                )}
+                {/* Search Modal */}
+                <MobileSearchModal
+                    isOpen={showMobileSearch}
+                    searchQuery={searchQuery}
+                    onSearchChange={setSearchQuery}
+                    onClose={() => setShowMobileSearch(false)}
+                    placeholder={t('dashboard.searchPlaceholder')}
+                />
 
                 {/* Skip to content link for accessibility */}
                 <a

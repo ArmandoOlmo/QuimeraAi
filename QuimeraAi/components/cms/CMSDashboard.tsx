@@ -441,113 +441,111 @@ const CMSDashboard: React.FC = () => {
                             </div>
                         )}
 
-                        {/* Barra de Filtros */}
-                        <div className="space-y-3">
-                            {/* Top row - Count, select-all, and view toggles */}
-                            <div className="flex items-center justify-between gap-2">
-                                <div className="flex items-center gap-2 flex-wrap">
-                                    {/* Select All Checkbox */}
-                                    {filteredAndSortedPosts.length > 0 && (
-                                        <label
-                                            className="flex items-center gap-2 cursor-pointer px-2.5 py-1.5 rounded-lg hover:bg-secondary/50 transition-colors"
-                                            title={t('cms.selectAll', 'Seleccionar todos')}
-                                        >
-                                            <input
-                                                type="checkbox"
-                                                checked={selectedPosts.length === filteredAndSortedPosts.length && filteredAndSortedPosts.length > 0}
-                                                onChange={handleSelectAll}
-                                                className="rounded border-border w-4 h-4 accent-primary"
-                                            />
-                                            <span className="text-xs font-medium text-muted-foreground hidden sm:inline">
-                                                {selectedPosts.length > 0
-                                                    ? `${selectedPosts.length} / ${filteredAndSortedPosts.length}`
-                                                    : t('cms.selectAll', 'Seleccionar')}
-                                            </span>
-                                        </label>
+                        {/* Barra de Filtros - Icons only, no boxes */}
+                        <div className="flex items-center gap-3 sm:gap-4 overflow-x-auto pb-1 -mx-4 px-4 sm:mx-0 sm:px-0 sm:overflow-visible scrollbar-hide">
+                            {/* Select All Checkbox */}
+                            {filteredAndSortedPosts.length > 0 && (
+                                <label
+                                    className="flex items-center gap-1.5 cursor-pointer flex-shrink-0"
+                                    title={t('cms.selectAll', 'Seleccionar todos')}
+                                >
+                                    <input
+                                        type="checkbox"
+                                        checked={selectedPosts.length === filteredAndSortedPosts.length && filteredAndSortedPosts.length > 0}
+                                        onChange={handleSelectAll}
+                                        className="rounded border-border w-3.5 h-3.5 accent-primary"
+                                    />
+                                    {selectedPosts.length > 0 && (
+                                        <span className="text-[10px] font-semibold text-primary">
+                                            {selectedPosts.length}
+                                        </span>
                                     )}
+                                </label>
+                            )}
 
-                                    <span className="px-3 py-1.5 bg-secondary/50 text-xs rounded-full text-muted-foreground font-medium">
-                                        {filteredAndSortedPosts.length} of {cmsPosts.length}
-                                    </span>
+                            <span className="text-[10px] text-muted-foreground font-medium flex-shrink-0">
+                                {filteredAndSortedPosts.length}/{cmsPosts.length}
+                            </span>
 
-                                    {/* Filtros activos */}
-                                    {(statusFilter !== 'all' || dateRange !== 'all') && (
-                                        <button
-                                            onClick={() => {
-                                                setStatusFilter('all');
-                                                setDateRange('all');
-                                            }}
-                                            className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors"
-                                        >
-                                            <XIcon size={12} /> {t('common.clear', 'Limpiar')}
-                                        </button>
-                                    )}
-                                </div>
-
-                                <div className="flex items-center gap-1">
-                                    {/* Orden asc/desc */}
-                                    <button
-                                        onClick={() => setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')}
-                                        className="h-8 w-8 sm:h-9 sm:w-9 flex items-center justify-center rounded-md transition-colors text-muted-foreground hover:text-foreground hover:bg-border/40"
-                                        title={sortOrder === 'asc' ? 'Ascending' : 'Descending'}
-                                    >
-                                        {sortOrder === 'desc' ? <ArrowDown size={14} /> : <ArrowUp size={14} />}
-                                    </button>
-
-                                    {/* Vista Grid/List */}
-                                    <div className="flex gap-0.5 sm:gap-1">
-                                        <button
-                                            onClick={() => setViewMode('grid')}
-                                            className={`h-8 w-8 sm:h-9 sm:w-9 flex items-center justify-center rounded-md transition-colors ${viewMode === 'grid' ? 'text-editor-accent bg-editor-accent/10' : 'text-muted-foreground hover:text-foreground hover:bg-border/40'}`}
-                                            title="Grid View"
-                                        >
-                                            <Grid size={14} />
-                                        </button>
-                                        <button
-                                            onClick={() => setViewMode('list')}
-                                            className={`h-8 w-8 sm:h-9 sm:w-9 flex items-center justify-center rounded-md transition-colors ${viewMode === 'list' ? 'text-editor-accent bg-editor-accent/10' : 'text-muted-foreground hover:text-foreground hover:bg-border/40'}`}
-                                            title="List View"
-                                        >
-                                            <List size={14} />
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Filters row - Horizontal scroll on mobile */}
-                            <div className="flex items-center gap-2 overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 sm:overflow-visible scrollbar-hide">
-                                {/* Filtro de estado */}
+                            {/* Icon-only filter selects — no boxes */}
+                            <div className="relative flex-shrink-0 cursor-pointer" title={t('cms.filters.allStatus', 'Estado')}>
+                                <Globe size={15} className={`pointer-events-none transition-colors ${statusFilter !== 'all' ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`} />
                                 <select
                                     value={statusFilter}
                                     onChange={(e) => setStatusFilter(e.target.value as any)}
-                                    className="px-3 py-1.5 text-xs bg-secondary/30 border border-border rounded-lg focus:ring-2 focus:ring-primary/50 outline-none flex-shrink-0"
+                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                                 >
-                                    <option value="all">{t('cms.filters.allStatus', 'Todos los estados')}</option>
+                                    <option value="all">{t('cms.filters.allStatus', 'Todos')}</option>
                                     <option value="published">{t('cms.filters.published', 'Publicados')}</option>
                                     <option value="draft">{t('cms.filters.draft', 'Borradores')}</option>
                                 </select>
+                            </div>
 
-                                {/* Filtro de fecha */}
+                            <div className="relative flex-shrink-0 cursor-pointer" title={t('cms.filters.allTime', 'Fecha')}>
+                                <Calendar size={15} className={`pointer-events-none transition-colors ${dateRange !== 'all' ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`} />
                                 <select
                                     value={dateRange}
                                     onChange={(e) => setDateRange(e.target.value as any)}
-                                    className="px-3 py-1.5 text-xs bg-secondary/30 border border-border rounded-lg focus:ring-2 focus:ring-primary/50 outline-none flex-shrink-0"
+                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                                 >
-                                    <option value="all">{t('cms.filters.allTime', 'Todo el tiempo')}</option>
+                                    <option value="all">{t('cms.filters.allTime', 'Todo')}</option>
                                     <option value="today">{t('cms.filters.today', 'Hoy')}</option>
-                                    <option value="week">{t('cms.filters.last7Days', 'Últimos 7 días')}</option>
-                                    <option value="month">{t('cms.filters.last30Days', 'Últimos 30 días')}</option>
+                                    <option value="week">{t('cms.filters.last7Days', '7 días')}</option>
+                                    <option value="month">{t('cms.filters.last30Days', '30 días')}</option>
                                 </select>
+                            </div>
 
-                                {/* Ordenamiento */}
+                            <div className="relative flex-shrink-0 cursor-pointer" title={t('cms.filters.sortByDate', 'Ordenar')}>
+                                <ChevronDown size={15} className="pointer-events-none text-muted-foreground hover:text-foreground transition-colors" />
                                 <select
                                     value={sortBy}
                                     onChange={(e) => setSortBy(e.target.value as any)}
-                                    className="px-3 py-1.5 text-xs bg-secondary/30 border border-border rounded-lg focus:ring-2 focus:ring-primary/50 outline-none flex-shrink-0"
+                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                                 >
-                                    <option value="date">{t('cms.filters.sortByDate', 'Ordenar por fecha')}</option>
-                                    <option value="title">{t('cms.filters.sortByTitle', 'Ordenar por título')}</option>
+                                    <option value="date">{t('cms.filters.sortByDate', 'Fecha')}</option>
+                                    <option value="title">{t('cms.filters.sortByTitle', 'Título')}</option>
                                 </select>
+                            </div>
+
+                            {/* Clear filters */}
+                            {(statusFilter !== 'all' || dateRange !== 'all') && (
+                                <button
+                                    onClick={() => { setStatusFilter('all'); setDateRange('all'); }}
+                                    className="text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
+                                    title={t('common.clear', 'Limpiar filtros')}
+                                >
+                                    <XIcon size={13} />
+                                </button>
+                            )}
+
+                            {/* Spacer */}
+                            <div className="flex-1 min-w-0" />
+
+                            {/* Orden asc/desc */}
+                            <button
+                                onClick={() => setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')}
+                                className="text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
+                                title={sortOrder === 'asc' ? 'Ascending' : 'Descending'}
+                            >
+                                {sortOrder === 'desc' ? <ArrowDown size={15} /> : <ArrowUp size={15} />}
+                            </button>
+
+                            {/* Vista Grid/List */}
+                            <div className="flex gap-2 flex-shrink-0">
+                                <button
+                                    onClick={() => setViewMode('grid')}
+                                    className={`transition-colors ${viewMode === 'grid' ? 'text-editor-accent' : 'text-muted-foreground hover:text-foreground'}`}
+                                    title="Grid View"
+                                >
+                                    <Grid size={15} />
+                                </button>
+                                <button
+                                    onClick={() => setViewMode('list')}
+                                    className={`transition-colors ${viewMode === 'list' ? 'text-editor-accent' : 'text-muted-foreground hover:text-foreground'}`}
+                                    title="List View"
+                                >
+                                    <List size={15} />
+                                </button>
                             </div>
                         </div>
 
@@ -949,9 +947,9 @@ const CMSDashboard: React.FC = () => {
                 </main>
             </div>
 
-            {/* Bulk Actions Bar - OUTSIDE overflow container for proper fixed positioning */}
+            {/* Floating Bulk Actions Bar - above global assistant */}
             {selectedPosts.length > 0 && (
-                <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[9999]" style={{ animation: 'slideUp 0.3s ease-out' }}>
+                <div className="fixed bottom-[106px] left-1/2 -translate-x-1/2 z-[99998]" style={{ animation: 'slideUp 0.3s ease-out' }}>
                     <div className="bg-card border border-border rounded-2xl shadow-2xl px-5 py-3 flex items-center gap-4 backdrop-blur-xl">
                         <span className="text-sm font-bold text-foreground whitespace-nowrap">
                             {selectedPosts.length} {t('common.selected', 'seleccionados')}

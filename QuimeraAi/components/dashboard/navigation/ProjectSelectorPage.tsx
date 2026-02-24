@@ -20,12 +20,15 @@ import {
     Menu as MenuIcon,
     X,
     ArrowLeft,
+    Trash2,
 } from 'lucide-react';
 import { useUI } from '../../../contexts/core/UIContext';
 import { useProject } from '../../../contexts/project/ProjectContext';
 import { Project } from '../../../types/components';
 import DashboardSidebar from '../DashboardSidebar';
 import QuimeraLoader from '../../ui/QuimeraLoader';
+import MobileSearchModal from '../../ui/MobileSearchModal';
+import ConfirmationModal from '../../ui/ConfirmationModal';
 
 interface ProjectSelectorPageProps {
     onProjectSelect: (projectId: string) => void;
@@ -46,6 +49,11 @@ const ProjectSelectorPage: React.FC<ProjectSelectorPageProps> = ({
     const [filterStatus, setFilterStatus] = useState<'all' | 'Published' | 'Draft'>('all');
     const [sortBy, setSortBy] = useState<'recent' | 'name'>('recent');
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const [isSearchOpen, setIsSearchOpen] = useState(false);
+    const [selectedProjects, setSelectedProjects] = useState<string[]>([]);
+    const [bulkDeleteConfirm, setBulkDeleteConfirm] = useState(false);
+    const [isDeletingBulk, setIsDeletingBulk] = useState(false);
+    const { deleteProject } = useProject();
 
     // Filter and sort projects
     const filteredProjects = useMemo(() => {
@@ -81,6 +89,41 @@ const ProjectSelectorPage: React.FC<ProjectSelectorPageProps> = ({
         });
     };
 
+    const handleSelectAll = () => {
+        if (selectedProjects.length === filteredProjects.length) {
+            setSelectedProjects([]);
+        } else {
+            setSelectedProjects(filteredProjects.map(p => p.id));
+        }
+    };
+
+    const toggleProjectSelection = (projectId: string) => {
+        setSelectedProjects(prev =>
+            prev.includes(projectId)
+                ? prev.filter(id => id !== projectId)
+                : [...prev, projectId]
+        );
+    };
+
+    const handleBulkDelete = () => {
+        setBulkDeleteConfirm(true);
+    };
+
+    const confirmBulkDelete = async () => {
+        setIsDeletingBulk(true);
+        try {
+            for (const projectId of selectedProjects) {
+                await deleteProject(projectId);
+            }
+            setSelectedProjects([]);
+        } catch (error) {
+            console.error('Error deleting projects:', error);
+        } finally {
+            setIsDeletingBulk(false);
+            setBulkDeleteConfirm(false);
+        }
+    };
+
     return (
         <div className="h-screen bg-background flex overflow-hidden">
             {/* Sidebar - Fixed in place */}
@@ -112,34 +155,20 @@ const ProjectSelectorPage: React.FC<ProjectSelectorPageProps> = ({
                         </div>
                     </div>
 
-                    {/* Center: Search */}
-                    <div className="hidden md:flex flex-1 justify-center px-4">
-                        <div className="flex items-center gap-2 w-full max-w-xl bg-secondary/50 border border-border rounded-lg px-3 py-2">
-                            <Search className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                            <input
-                                type="search"
-                                placeholder={t('navigationDashboard.searchProjects', 'Buscar proyectos...')}
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                className="flex-1 bg-transparent outline-none text-sm min-w-0 text-foreground placeholder:text-muted-foreground"
-                                aria-label={t('navigationDashboard.searchProjects', 'Buscar proyectos')}
-                            />
-                            {searchQuery && (
-                                <button onClick={() => setSearchQuery('')} className="text-muted-foreground hover:text-foreground flex-shrink-0">
-                                    <X size={16} />
-                                </button>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* Right: Back Button - solo icono, dentro del header */}
-                    <div className="flex items-center justify-end flex-shrink-0 ml-auto">
+                    {/* Right: Search icon + Back icon */}
+                    <div className="flex items-center gap-3 flex-shrink-0 ml-auto">
+                        <button
+                            onClick={() => setIsSearchOpen(true)}
+                            className="text-muted-foreground hover:text-foreground transition-colors"
+                            aria-label={t('common.search', 'Buscar')}
+                        >
+                            <Search size={20} />
+                        </button>
                         {onBack && (
                             <button
                                 onClick={onBack}
-                                className="h-9 w-9 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
+                                className="text-muted-foreground hover:text-foreground transition-colors"
                                 aria-label={t('common.back', 'Volver')}
-                                title={t('common.back', 'Volver')}
                             >
                                 <ArrowLeft size={20} />
                             </button>
@@ -147,25 +176,14 @@ const ProjectSelectorPage: React.FC<ProjectSelectorPageProps> = ({
                     </div>
                 </header>
 
-                {/* Mobile Search - Below header */}
-                <div className="md:hidden px-4 py-3 border-b border-border bg-card/30">
-                    <div className="flex items-center gap-2 w-full bg-secondary/50 border border-border rounded-lg px-3 py-2">
-                        <Search className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                        <input
-                            type="search"
-                            placeholder={t('navigationDashboard.searchProjects', 'Buscar proyectos...')}
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="flex-1 bg-transparent outline-none text-sm min-w-0 text-foreground placeholder:text-muted-foreground"
-                            aria-label={t('navigationDashboard.searchProjects', 'Buscar proyectos')}
-                        />
-                        {searchQuery && (
-                            <button onClick={() => setSearchQuery('')} className="text-muted-foreground hover:text-foreground flex-shrink-0">
-                                <X size={16} />
-                            </button>
-                        )}
-                    </div>
-                </div>
+                {/* Search Modal */}
+                <MobileSearchModal
+                    isOpen={isSearchOpen}
+                    searchQuery={searchQuery}
+                    onSearchChange={setSearchQuery}
+                    onClose={() => setIsSearchOpen(false)}
+                    placeholder={t('navigationDashboard.searchProjects', 'Buscar proyectos...')}
+                />
 
                 {/* Main Content - Scrollable Area */}
                 <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
@@ -353,6 +371,41 @@ const ProjectSelectorPage: React.FC<ProjectSelectorPageProps> = ({
                     </div>
                 </main>
             </div>
+
+            {/* Floating Bulk Actions Bar */}
+            {selectedProjects.length > 0 && (
+                <div className="fixed bottom-[106px] left-1/2 -translate-x-1/2 z-[99998]" style={{ animation: 'slideUp 0.3s ease-out' }}>
+                    <div className="bg-card border border-border rounded-2xl shadow-2xl px-5 py-3 flex items-center gap-4 backdrop-blur-xl">
+                        <span className="text-sm font-bold text-foreground whitespace-nowrap">
+                            {selectedProjects.length} {t('common.selected', 'seleccionados')}
+                        </span>
+                        <div className="w-px h-6 bg-border" />
+                        <button
+                            onClick={handleBulkDelete}
+                            className="px-4 py-2 text-sm font-bold bg-red-500 text-white rounded-xl hover:bg-red-600 transition-all flex items-center gap-2 shadow-lg shadow-red-500/20 hover:shadow-red-500/40"
+                        >
+                            <Trash2 size={14} /> {t('common.delete', 'Eliminar')}
+                        </button>
+                        <button
+                            onClick={() => setSelectedProjects([])}
+                            className="px-4 py-2 text-sm font-medium bg-secondary text-foreground rounded-xl hover:bg-secondary/80 transition-all"
+                        >
+                            {t('common.cancel', 'Cancelar')}
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {/* Bulk Delete Confirmation Modal */}
+            <ConfirmationModal
+                isOpen={bulkDeleteConfirm}
+                onConfirm={confirmBulkDelete}
+                onCancel={() => setBulkDeleteConfirm(false)}
+                title={t('cms.confirmBulkDeleteTitle', `¿Eliminar ${selectedProjects.length} proyecto(s)?`)}
+                message={t('cms.confirmBulkDeleteProjectsMessage', 'Esta acción no se puede deshacer. Los proyectos seleccionados serán eliminados permanentemente.')}
+                variant="danger"
+                isLoading={isDeletingBulk}
+            />
         </div>
     );
 };

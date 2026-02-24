@@ -10,6 +10,7 @@ import {
     Search,
     Layers,
     ChevronRight,
+    ChevronDown,
     Globe,
     FileEdit,
     Clock,
@@ -22,6 +23,7 @@ import {
     PenTool,
     FileText,
     ArrowLeft,
+    Trash2,
 } from 'lucide-react';
 import { useUI } from '../../contexts/core/UIContext';
 import { useProject } from '../../contexts/project/ProjectContext';
@@ -29,6 +31,8 @@ import { Project } from '../../types/components';
 import DashboardSidebar from '../dashboard/DashboardSidebar';
 import { useRouter } from '../../hooks/useRouter';
 import QuimeraLoader from '../ui/QuimeraLoader';
+import ConfirmationModal from '../ui/ConfirmationModal';
+import MobileSearchModal from '../ui/MobileSearchModal';
 import { ROUTES } from '../../routes/config';
 
 interface CMSProjectSelectorPageProps {
@@ -49,6 +53,11 @@ const CMSProjectSelectorPage: React.FC<CMSProjectSelectorPageProps> = ({
     const [filterStatus, setFilterStatus] = useState<'all' | 'Published' | 'Draft'>('all');
     const [sortBy, setSortBy] = useState<'recent' | 'name'>('recent');
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const [selectedProjects, setSelectedProjects] = useState<string[]>([]);
+    const [bulkDeleteConfirm, setBulkDeleteConfirm] = useState(false);
+    const [isDeletingBulk, setIsDeletingBulk] = useState(false);
+    const [isSearchOpen, setIsSearchOpen] = useState(false);
+    const { deleteProject } = useProject();
 
     // Filter and sort projects
     const filteredProjects = useMemo(() => {
@@ -84,6 +93,41 @@ const CMSProjectSelectorPage: React.FC<CMSProjectSelectorPageProps> = ({
         });
     };
 
+    const handleSelectAll = () => {
+        if (selectedProjects.length === filteredProjects.length) {
+            setSelectedProjects([]);
+        } else {
+            setSelectedProjects(filteredProjects.map(p => p.id));
+        }
+    };
+
+    const toggleProjectSelection = (projectId: string) => {
+        setSelectedProjects(prev =>
+            prev.includes(projectId)
+                ? prev.filter(id => id !== projectId)
+                : [...prev, projectId]
+        );
+    };
+
+    const handleBulkDelete = () => {
+        setBulkDeleteConfirm(true);
+    };
+
+    const confirmBulkDelete = async () => {
+        setIsDeletingBulk(true);
+        try {
+            for (const projectId of selectedProjects) {
+                await deleteProject(projectId);
+            }
+            setSelectedProjects([]);
+        } catch (error) {
+            console.error('Error deleting projects:', error);
+        } finally {
+            setIsDeletingBulk(false);
+            setBulkDeleteConfirm(false);
+        }
+    };
+
     return (
         <div className="h-screen bg-background flex overflow-hidden">
             {/* Sidebar */}
@@ -115,56 +159,33 @@ const CMSProjectSelectorPage: React.FC<CMSProjectSelectorPageProps> = ({
                         </div>
                     </div>
 
-                    {/* Center: Search */}
-                    <div className="hidden md:flex flex-1 max-w-xl mx-8">
-                        <div className="flex items-center gap-2 w-full bg-editor-border/40 rounded-lg px-3 py-2">
-                            <Search className="w-4 h-4 text-editor-text-secondary flex-shrink-0" />
-                            <input
-                                type="search"
-                                placeholder={t('cms.searchProjects', 'Buscar proyectos...')}
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                className="flex-1 bg-transparent outline-none text-sm min-w-0"
-                            />
-                            {searchQuery && (
-                                <button onClick={() => setSearchQuery('')} className="text-editor-text-secondary hover:text-editor-text-primary flex-shrink-0">
-                                    <X size={16} />
-                                </button>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* Right: Back Button */}
-                    <div className="flex items-center gap-2 ml-auto">
+                    {/* Right: Search icon + Back icon */}
+                    <div className="flex items-center gap-3 ml-auto">
+                        <button
+                            onClick={() => setIsSearchOpen(true)}
+                            className="text-muted-foreground hover:text-foreground transition-colors"
+                            aria-label={t('common.search', 'Buscar')}
+                        >
+                            <Search size={20} />
+                        </button>
                         <button
                             onClick={() => navigate(ROUTES.DASHBOARD)}
-                            className="flex items-center justify-center gap-2 h-9 px-3 rounded-lg bg-secondary/50 hover:bg-secondary text-sm font-medium transition-all text-muted-foreground hover:text-foreground"
+                            className="text-muted-foreground hover:text-foreground transition-colors"
                             aria-label={t('common.back', 'Volver')}
                         >
-                            <ArrowLeft className="w-4 h-4" />
-                            <span className="hidden sm:inline">{t('common.back', 'Volver')}</span>
+                            <ArrowLeft size={20} />
                         </button>
                     </div>
                 </header>
 
-                {/* Mobile Search - Below header */}
-                <div className="md:hidden px-4 py-3 border-b border-border bg-card/30">
-                    <div className="flex items-center gap-2 w-full bg-editor-border/40 rounded-lg px-3 py-2">
-                        <Search className="w-4 h-4 text-editor-text-secondary flex-shrink-0" />
-                        <input
-                            type="search"
-                            placeholder={t('cms.searchProjects', 'Buscar proyectos...')}
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="flex-1 bg-transparent outline-none text-sm min-w-0"
-                        />
-                        {searchQuery && (
-                            <button onClick={() => setSearchQuery('')} className="text-editor-text-secondary hover:text-editor-text-primary flex-shrink-0">
-                                <X size={16} />
-                            </button>
-                        )}
-                    </div>
-                </div>
+                {/* Search Modal */}
+                <MobileSearchModal
+                    isOpen={isSearchOpen}
+                    searchQuery={searchQuery}
+                    onSearchChange={setSearchQuery}
+                    onClose={() => setIsSearchOpen(false)}
+                    placeholder={t('cms.searchProjects', 'Buscar proyectos...')}
+                />
 
                 {/* Main Content - Scrollable Area */}
                 <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
@@ -227,71 +248,90 @@ const CMSProjectSelectorPage: React.FC<CMSProjectSelectorPageProps> = ({
                             </div>
                         </div>
 
-                        {/* Filter Chips */}
-                        <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-6">
-                            <button
-                                onClick={() => setFilterStatus('all')}
-                                className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-all ${filterStatus === 'all'
-                                        ? 'bg-primary text-primary-foreground shadow-md'
-                                        : 'bg-secondary/50 text-muted-foreground hover:text-foreground hover:bg-secondary'
-                                    }`}
-                            >
-                                {t('common.all', 'Todos')} ({userProjects.length})
-                            </button>
-                            <button
-                                onClick={() => setFilterStatus('Published')}
-                                className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-all ${filterStatus === 'Published'
-                                        ? 'bg-green-500 text-white shadow-md'
-                                        : 'bg-secondary/50 text-muted-foreground hover:text-foreground hover:bg-secondary'
-                                    }`}
-                            >
-                                {t('dashboard.published', 'Publicados')} ({publishedCount})
-                            </button>
-                            <button
-                                onClick={() => setFilterStatus('Draft')}
-                                className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-all ${filterStatus === 'Draft'
-                                        ? 'bg-slate-500 text-white shadow-md'
-                                        : 'bg-secondary/50 text-muted-foreground hover:text-foreground hover:bg-secondary'
-                                    }`}
-                            >
-                                {t('dashboard.draft', 'Borradores')} ({draftCount})
-                            </button>
+                        {/* Filter toolbar - Icons only, no boxes */}
+                        <div className="flex items-center gap-3 sm:gap-4 mb-6">
+                            {/* Select All Checkbox */}
+                            {filteredProjects.length > 0 && (
+                                <label
+                                    className="flex items-center gap-1.5 cursor-pointer flex-shrink-0"
+                                    title={t('cms.selectAll', 'Seleccionar todos')}
+                                >
+                                    <input
+                                        type="checkbox"
+                                        checked={selectedProjects.length === filteredProjects.length && filteredProjects.length > 0}
+                                        onChange={handleSelectAll}
+                                        className="rounded border-border w-3.5 h-3.5 accent-primary"
+                                    />
+                                    {selectedProjects.length > 0 && (
+                                        <span className="text-[10px] font-semibold text-primary">
+                                            {selectedProjects.length}
+                                        </span>
+                                    )}
+                                </label>
+                            )}
 
-                            <div className="flex-1" />
+                            <span className="text-[10px] text-muted-foreground font-medium flex-shrink-0">
+                                {filteredProjects.length}/{userProjects.length}
+                            </span>
 
-                            {/* Sort */}
-                            <select
-                                value={sortBy}
-                                onChange={(e) => setSortBy(e.target.value as 'recent' | 'name')}
-                                className="bg-secondary/50 border border-border rounded-lg px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm text-foreground outline-none focus:border-primary cursor-pointer"
-                            >
-                                <option value="recent">{t('common.mostRecent', 'Más recientes')}</option>
-                                <option value="name">{t('common.alphabetical', 'Alfabético')}</option>
-                            </select>
+                            {/* Status filter - icon only */}
+                            <div className="relative flex-shrink-0 cursor-pointer" title={t('cms.filters.allStatus', 'Estado')}>
+                                <Globe size={15} className={`pointer-events-none transition-colors ${filterStatus !== 'all' ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`} />
+                                <select
+                                    value={filterStatus}
+                                    onChange={(e) => setFilterStatus(e.target.value as any)}
+                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                >
+                                    <option value="all">{t('common.all', 'Todos')} ({userProjects.length})</option>
+                                    <option value="Published">{t('dashboard.published', 'Publicados')} ({publishedCount})</option>
+                                    <option value="Draft">{t('dashboard.draft', 'Borradores')} ({draftCount})</option>
+                                </select>
+                            </div>
 
-                            {/* View Toggle - Desktop */}
-                            <div className="hidden sm:flex items-center gap-1 bg-secondary/40 rounded-lg p-1">
+                            {/* Sort - icon only */}
+                            <div className="relative flex-shrink-0 cursor-pointer" title={t('common.mostRecent', 'Ordenar')}>
+                                <ChevronDown size={15} className="pointer-events-none text-muted-foreground hover:text-foreground transition-colors" />
+                                <select
+                                    value={sortBy}
+                                    onChange={(e) => setSortBy(e.target.value as 'recent' | 'name')}
+                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                >
+                                    <option value="recent">{t('common.mostRecent', 'Más recientes')}</option>
+                                    <option value="name">{t('common.alphabetical', 'Alfabético')}</option>
+                                </select>
+                            </div>
+
+                            {/* Clear filter */}
+                            {filterStatus !== 'all' && (
+                                <button
+                                    onClick={() => setFilterStatus('all')}
+                                    className="text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
+                                    title={t('common.clear', 'Limpiar filtros')}
+                                >
+                                    <X size={13} />
+                                </button>
+                            )}
+
+                            {/* Spacer */}
+                            <div className="flex-1 min-w-0" />
+
+                            {/* View Grid/List */}
+                            <div className="flex gap-2 flex-shrink-0">
                                 <button
                                     onClick={() => setViewMode('grid')}
-                                    className={`p-2 rounded-md transition-all ${viewMode === 'grid' ? 'text-primary bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+                                    className={`transition-colors ${viewMode === 'grid' ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}
+                                    title="Grid View"
                                 >
-                                    <LayoutGrid size={16} />
+                                    <LayoutGrid size={15} />
                                 </button>
                                 <button
                                     onClick={() => setViewMode('list')}
-                                    className={`p-2 rounded-md transition-all ${viewMode === 'list' ? 'text-primary bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+                                    className={`transition-colors ${viewMode === 'list' ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}
+                                    title="List View"
                                 >
-                                    <List size={16} />
+                                    <List size={15} />
                                 </button>
                             </div>
-
-                            {/* View Toggle - Mobile */}
-                            <button
-                                onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
-                                className="sm:hidden p-2 bg-secondary/50 rounded-lg text-muted-foreground hover:text-foreground transition-colors"
-                            >
-                                {viewMode === 'grid' ? <List size={16} /> : <LayoutGrid size={16} />}
-                            </button>
                         </div>
 
                         {/* Results Count */}
@@ -346,6 +386,8 @@ const CMSProjectSelectorPage: React.FC<CMSProjectSelectorPageProps> = ({
                                         project={project}
                                         onSelect={() => onProjectSelect(project.id)}
                                         formatDate={formatDate}
+                                        isSelected={selectedProjects.includes(project.id)}
+                                        onToggleSelect={() => toggleProjectSelection(project.id)}
                                     />
                                 ))}
                             </div>
@@ -357,6 +399,8 @@ const CMSProjectSelectorPage: React.FC<CMSProjectSelectorPageProps> = ({
                                         project={project}
                                         onSelect={() => onProjectSelect(project.id)}
                                         formatDate={formatDate}
+                                        isSelected={selectedProjects.includes(project.id)}
+                                        onToggleSelect={() => toggleProjectSelection(project.id)}
                                     />
                                 ))}
                             </div>
@@ -364,6 +408,41 @@ const CMSProjectSelectorPage: React.FC<CMSProjectSelectorPageProps> = ({
                     </div>
                 </main>
             </div>
+
+            {/* Floating Bulk Actions Bar */}
+            {selectedProjects.length > 0 && (
+                <div className="fixed bottom-[106px] left-1/2 -translate-x-1/2 z-[99998]" style={{ animation: 'slideUp 0.3s ease-out' }}>
+                    <div className="bg-card border border-border rounded-2xl shadow-2xl px-5 py-3 flex items-center gap-4 backdrop-blur-xl">
+                        <span className="text-sm font-bold text-foreground whitespace-nowrap">
+                            {selectedProjects.length} {t('common.selected', 'seleccionados')}
+                        </span>
+                        <div className="w-px h-6 bg-border" />
+                        <button
+                            onClick={handleBulkDelete}
+                            className="px-4 py-2 text-sm font-bold bg-red-500 text-white rounded-xl hover:bg-red-600 transition-all flex items-center gap-2 shadow-lg shadow-red-500/20 hover:shadow-red-500/40"
+                        >
+                            <Trash2 size={14} /> {t('common.delete', 'Eliminar')}
+                        </button>
+                        <button
+                            onClick={() => setSelectedProjects([])}
+                            className="px-4 py-2 text-sm font-medium bg-secondary text-foreground rounded-xl hover:bg-secondary/80 transition-all"
+                        >
+                            {t('common.cancel', 'Cancelar')}
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {/* Bulk Delete Confirmation Modal */}
+            <ConfirmationModal
+                isOpen={bulkDeleteConfirm}
+                onConfirm={confirmBulkDelete}
+                onCancel={() => setBulkDeleteConfirm(false)}
+                title={t('cms.confirmBulkDeleteTitle', `¿Eliminar ${selectedProjects.length} proyecto(s)?`)}
+                message={t('cms.confirmBulkDeleteProjectsMessage', 'Esta acción no se puede deshacer. Los proyectos seleccionados serán eliminados permanentemente.')}
+                variant="danger"
+                isLoading={isDeletingBulk}
+            />
         </div>
     );
 };
@@ -373,60 +452,72 @@ interface ProjectCardProps {
     project: Project;
     onSelect: () => void;
     formatDate: (date: string) => string;
+    isSelected: boolean;
+    onToggleSelect: () => void;
 }
 
-const ProjectCard: React.FC<ProjectCardProps> = ({ project, onSelect, formatDate }) => {
+const ProjectCard: React.FC<ProjectCardProps> = ({ project, onSelect, formatDate, isSelected, onToggleSelect }) => {
     const { t } = useTranslation();
 
     return (
-        <button
-            onClick={onSelect}
-            className="group relative bg-card/50 hover:bg-card border border-border hover:border-primary/50 rounded-2xl overflow-hidden transition-all duration-300 text-left hover:shadow-xl hover:shadow-primary/5 hover:-translate-y-1 w-full"
-        >
-            {/* Thumbnail */}
-            <div className="aspect-video relative overflow-hidden bg-muted">
-                {project.thumbnailUrl ? (
-                    <img
-                        src={project.thumbnailUrl}
-                        alt={project.name}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
-                ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted to-muted/50">
-                        <Layers size={40} className="text-muted-foreground/30" />
-                    </div>
-                )}
+        <div className={`group relative bg-card/50 hover:bg-card border rounded-2xl overflow-hidden transition-all duration-300 text-left hover:shadow-xl hover:shadow-primary/5 hover:-translate-y-1 w-full ${isSelected ? 'border-primary ring-2 ring-primary/30 bg-primary/5' : 'border-border hover:border-primary/50'}`}>
+            {/* Selection Checkbox */}
+            <div
+                className="absolute top-3 left-3 z-10"
+                onClick={(e) => { e.stopPropagation(); onToggleSelect(); }}
+            >
+                <div className={`w-6 h-6 rounded-full flex items-center justify-center cursor-pointer transition-all ${isSelected ? 'bg-primary text-white shadow-lg' : 'bg-black/40 text-white/70 hover:bg-black/60 backdrop-blur-sm'}`}>
+                    {isSelected && <span className="text-xs font-bold">✓</span>}
+                </div>
+            </div>
 
-                {/* Status Badge */}
-                <div className="absolute top-3 right-3">
-                    <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${project.status === 'Published'
+            {/* Clickable area */}
+            <button onClick={onSelect} className="w-full text-left">
+                {/* Thumbnail */}
+                <div className="aspect-video relative overflow-hidden bg-muted">
+                    {project.thumbnailUrl ? (
+                        <img
+                            src={project.thumbnailUrl}
+                            alt={project.name}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        />
+                    ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted to-muted/50">
+                            <Layers size={40} className="text-muted-foreground/30" />
+                        </div>
+                    )}
+
+                    {/* Status Badge */}
+                    <div className="absolute top-3 right-3">
+                        <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${project.status === 'Published'
                             ? 'bg-green-500/90 text-white'
                             : 'bg-slate-500/90 text-white'
-                        }`}>
-                        {project.status === 'Published' ? t('dashboard.published', 'Publicado') : t('dashboard.draft', 'Borrador')}
-                    </span>
+                            }`}>
+                            {project.status === 'Published' ? t('dashboard.published', 'Publicado') : t('dashboard.draft', 'Borrador')}
+                        </span>
+                    </div>
+
+                    {/* Hover Overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center pb-4">
+                        <span className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg font-medium text-sm transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
+                            <PenTool size={16} />
+                            {t('cms.manageContent', 'Gestionar Contenido')}
+                        </span>
+                    </div>
                 </div>
 
-                {/* Hover Overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center pb-4">
-                    <span className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg font-medium text-sm transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
-                        <PenTool size={16} />
-                        {t('cms.manageContent', 'Gestionar Contenido')}
-                    </span>
+                {/* Content */}
+                <div className="p-4">
+                    <h3 className="font-semibold text-foreground mb-1 truncate group-hover:text-primary transition-colors">
+                        {project.name}
+                    </h3>
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <Clock size={12} />
+                        <span>{formatDate(project.lastUpdated)}</span>
+                    </div>
                 </div>
-            </div>
-
-            {/* Content */}
-            <div className="p-4">
-                <h3 className="font-semibold text-foreground mb-1 truncate group-hover:text-primary transition-colors">
-                    {project.name}
-                </h3>
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <Clock size={12} />
-                    <span>{formatDate(project.lastUpdated)}</span>
-                </div>
-            </div>
-        </button>
+            </button>
+        </div>
     );
 };
 
@@ -435,60 +526,71 @@ interface ProjectListItemProps {
     project: Project;
     onSelect: () => void;
     formatDate: (date: string) => string;
+    isSelected: boolean;
+    onToggleSelect: () => void;
 }
 
-const ProjectListItem: React.FC<ProjectListItemProps> = ({ project, onSelect, formatDate }) => {
+const ProjectListItem: React.FC<ProjectListItemProps> = ({ project, onSelect, formatDate, isSelected, onToggleSelect }) => {
     const { t } = useTranslation();
 
     return (
-        <button
-            onClick={onSelect}
-            className="w-full flex items-center gap-4 p-4 bg-card/50 hover:bg-card border border-border hover:border-primary/50 rounded-xl transition-all text-left group"
-        >
-            {/* Thumbnail */}
-            <div className="w-16 h-12 sm:w-20 sm:h-14 rounded-lg overflow-hidden bg-muted flex-shrink-0">
-                {project.thumbnailUrl ? (
-                    <img
-                        src={project.thumbnailUrl}
-                        alt={project.name}
-                        className="w-full h-full object-cover"
-                    />
-                ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted to-muted/50">
-                        <Layers size={18} className="text-muted-foreground/30" />
-                    </div>
-                )}
-            </div>
-
-            {/* Info */}
-            <div className="flex-1 min-w-0">
-                <h3 className="font-semibold text-foreground truncate group-hover:text-primary transition-colors">
-                    {project.name}
-                </h3>
-                <div className="flex items-center gap-3 sm:gap-4 text-xs text-muted-foreground mt-1">
-                    <span className={`flex items-center gap-1 ${project.status === 'Published' ? 'text-green-500' : ''
-                        }`}>
-                        {project.status === 'Published' ? <Globe size={12} /> : <FileEdit size={12} />}
-                        <span className="hidden sm:inline">
-                            {project.status === 'Published' ? t('dashboard.published', 'Publicado') : t('dashboard.draft', 'Borrador')}
-                        </span>
-                    </span>
-                    <span className="flex items-center gap-1">
-                        <Clock size={12} />
-                        <span className="hidden sm:inline">{formatDate(project.lastUpdated)}</span>
-                        <span className="sm:hidden">{new Date(project.lastUpdated).toLocaleDateString()}</span>
-                    </span>
+        <div className={`w-full flex items-center gap-4 p-4 bg-card/50 hover:bg-card border rounded-xl transition-all text-left group ${isSelected ? 'border-primary ring-2 ring-primary/30 bg-primary/5' : 'border-border hover:border-primary/50'}`}>
+            {/* Selection Checkbox */}
+            <div
+                className="flex-shrink-0 cursor-pointer"
+                onClick={(e) => { e.stopPropagation(); onToggleSelect(); }}
+            >
+                <div className={`w-6 h-6 rounded-full flex items-center justify-center transition-all ${isSelected ? 'bg-primary text-white shadow-lg' : 'bg-secondary/50 text-muted-foreground hover:bg-secondary'}`}>
+                    {isSelected && <span className="text-xs font-bold">✓</span>}
                 </div>
             </div>
 
-            {/* Action */}
-            <div className="flex items-center gap-2 text-muted-foreground group-hover:text-primary transition-colors">
-                <span className="text-sm font-medium hidden md:block">
-                    {t('cms.manageContent', 'Gestionar Contenido')}
-                </span>
-                <ChevronRight size={20} className="group-hover:translate-x-1 transition-transform" />
-            </div>
-        </button>
+            {/* Clickable area */}
+            <button onClick={onSelect} className="flex-1 flex items-center gap-4 text-left min-w-0">
+                {/* Thumbnail */}
+                <div className="w-16 h-12 sm:w-20 sm:h-14 rounded-lg overflow-hidden bg-muted flex-shrink-0">
+                    {project.thumbnailUrl ? (
+                        <img
+                            src={project.thumbnailUrl}
+                            alt={project.name}
+                            className="w-full h-full object-cover"
+                        />
+                    ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted to-muted/50">
+                            <Layers size={18} className="text-muted-foreground/30" />
+                        </div>
+                    )}
+                </div>
+
+                {/* Info */}
+                <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold text-foreground truncate group-hover:text-primary transition-colors">
+                        {project.name}
+                    </h3>
+                    <div className="flex items-center gap-3 sm:gap-4 text-xs text-muted-foreground mt-1">
+                        <span className={`flex items-center gap-1 ${project.status === 'Published' ? 'text-green-500' : ''}`}>
+                            {project.status === 'Published' ? <Globe size={12} /> : <FileEdit size={12} />}
+                            <span className="hidden sm:inline">
+                                {project.status === 'Published' ? t('dashboard.published', 'Publicado') : t('dashboard.draft', 'Borrador')}
+                            </span>
+                        </span>
+                        <span className="flex items-center gap-1">
+                            <Clock size={12} />
+                            <span className="hidden sm:inline">{formatDate(project.lastUpdated)}</span>
+                            <span className="sm:hidden">{new Date(project.lastUpdated).toLocaleDateString()}</span>
+                        </span>
+                    </div>
+                </div>
+
+                {/* Action */}
+                <div className="flex items-center gap-2 text-muted-foreground group-hover:text-primary transition-colors">
+                    <span className="text-sm font-medium hidden md:block">
+                        {t('cms.manageContent', 'Gestionar Contenido')}
+                    </span>
+                    <ChevronRight size={20} className="group-hover:translate-x-1 transition-transform" />
+                </div>
+            </button>
+        </div>
     );
 };
 

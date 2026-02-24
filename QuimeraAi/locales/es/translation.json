@@ -7,6 +7,7 @@
     "actions": "Acciones",
     "clear": "Limpiar",
     "delete": "Eliminar",
+    "selected": "seleccionados",
     "edit": "Editar",
     "duplicate": "Duplicar",
     "copy": "Copiar",
@@ -1811,7 +1812,13 @@
       "status": "Estado",
       "date": "Fecha",
       "actions": "Acciones"
-    }
+    },
+    "selectAll": "Seleccionar todos",
+    "changeProject": "Cambiar proyecto",
+    "confirmDeleteTitle": "¿Eliminar artículo?",
+    "confirmDeleteMessage": "Esta acción no se puede deshacer. El artículo será eliminado permanentemente.",
+    "confirmBulkDeleteTitle": "¿Eliminar artículos?",
+    "confirmBulkDeleteMessage": "Se eliminarán {{count}} artículo(s) permanentemente."
   },
   "cms_editor": {
     "contentEditor": "Editor de Contenido",

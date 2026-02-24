@@ -131,8 +131,8 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
 
     return createPortal(
         <div
-            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-fade-in"
-            style={{ zIndex: 9999 }}
+            className="fixed inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-fade-in"
+            style={{ zIndex: 99999 }}
             onClick={(e) => {
                 if (e.target === e.currentTarget && !isLoading) {
                     onCancel();

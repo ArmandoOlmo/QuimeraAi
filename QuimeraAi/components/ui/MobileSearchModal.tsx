@@ -1,4 +1,5 @@
 import React, { useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Search, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
@@ -13,8 +14,8 @@ interface MobileSearchModalProps {
 
 /**
  * MobileSearchModal
- * Replicates the exact mobile search overlay from Dashboard.tsx (lines 322-356).
- * Fixed fullscreen overlay with a floating search card, matching the main dashboard UX.
+ * Floating search overlay rendered via portal to escape parent stacking contexts.
+ * Triggered by the magnifying glass icon in dashboard headers.
  */
 const MobileSearchModal: React.FC<MobileSearchModalProps> = ({
     isOpen, searchQuery, onSearchChange, onClose, placeholder,
@@ -41,10 +42,10 @@ const MobileSearchModal: React.FC<MobileSearchModalProps> = ({
 
     if (!isOpen) return null;
 
-    // Exact same structure as Dashboard.tsx mobile search overlay
-    return (
+    // Render via portal to escape any parent stacking context
+    return createPortal(
         <div
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 md:hidden flex items-start justify-center pt-20"
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9999] flex items-start justify-center pt-20"
             onClick={onClose}
             role="dialog"
             aria-modal="true"
@@ -81,8 +82,10 @@ const MobileSearchModal: React.FC<MobileSearchModalProps> = ({
                     </div>
                 )}
             </div>
-        </div>
+        </div>,
+        document.body
     );
 };
 
 export default MobileSearchModal;
+

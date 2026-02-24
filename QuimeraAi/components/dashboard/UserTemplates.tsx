@@ -153,33 +153,14 @@ const UserTemplates: React.FC = () => {
                         </div>
                     </div>
 
-                    {/* Search Bar */}
-                    <div className="flex-1 flex justify-center px-2 sm:px-4">
-                        <div className="hidden md:flex items-center gap-2 w-full max-w-xl bg-editor-border/40 rounded-lg px-3 py-2">
-                            <Search className="w-4 h-4 text-editor-text-secondary flex-shrink-0" />
-                            <input
-                                type="search"
-                                placeholder={t('userTemplates.searchPlaceholder', 'Buscar plantillas...')}
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                className="flex-1 bg-transparent outline-none text-sm min-w-0"
-                            />
-                            {searchTerm && (
-                                <button onClick={() => setSearchTerm('')} className="text-editor-text-secondary hover:text-editor-text-primary flex-shrink-0">
-                                    <X size={16} />
-                                </button>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* Controls */}
-                    <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
-                        {/* Mobile Search Button */}
+                    {/* Right: Search icon + Back icon */}
+                    <div className="flex items-center gap-3 flex-shrink-0">
                         <button
                             onClick={() => setIsMobileSearchOpen(true)}
-                            className="md:hidden h-8 w-8 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground transition-colors"
+                            className="text-muted-foreground hover:text-foreground transition-colors"
+                            aria-label={t('common.search', 'Buscar')}
                         >
-                            <Search className="w-4 h-4" />
+                            <Search size={20} />
                         </button>
                         <MobileSearchModal
                             isOpen={isMobileSearchOpen}
@@ -188,14 +169,12 @@ const UserTemplates: React.FC = () => {
                             onClose={() => setIsMobileSearchOpen(false)}
                             placeholder={t('userTemplates.searchPlaceholder', 'Buscar plantillas...')}
                         />
-                        {/* Back Button */}
                         <button
                             onClick={() => navigate(ROUTES.DASHBOARD)}
-                            className="flex items-center justify-center gap-2 h-9 w-9 sm:w-auto sm:px-3 rounded-lg sm:bg-secondary/50 sm:hover:bg-secondary text-sm font-medium transition-all text-muted-foreground hover:text-foreground"
+                            className="text-muted-foreground hover:text-foreground transition-colors"
                             aria-label={t('common.goBack', 'Volver')}
                         >
-                            <ArrowLeft className="w-4 h-4" />
-                            <span className="hidden sm:inline">{t('common.back', 'Volver')}</span>
+                            <ArrowLeft size={20} />
                         </button>
                     </div>
                 </header>
@@ -276,76 +255,71 @@ const UserTemplates: React.FC = () => {
                             </div>
                         )}
 
-                        {/* Stats & Controls Row */}
-                        <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
-                            {/* Stats Badges */}
-                            <div className="flex flex-wrap items-center gap-3">
-                                <div className="inline-flex items-center gap-2.5 px-4 py-2 bg-gradient-to-r from-primary/15 to-primary/5 border border-primary/20 rounded-xl">
-                                    <div className="flex items-center justify-center w-8 h-8 bg-primary/20 rounded-lg">
-                                        <LayoutTemplate size={16} className="text-primary" />
-                                    </div>
-                                    <div className="flex flex-col">
-                                        <span className="text-lg font-bold text-foreground leading-tight">{templates.length}</span>
-                                        <span className="text-xs text-muted-foreground leading-tight">{t('userTemplates.availableTemplates', 'Plantillas disponibles')}</span>
-                                    </div>
-                                </div>
-                                {filteredTemplates.length !== templates.length && (
-                                    <div className="inline-flex items-center gap-2.5 px-4 py-2 bg-secondary/50 border border-border/50 rounded-xl">
-                                        <div className="flex items-center justify-center w-8 h-8 bg-secondary rounded-lg">
-                                            <Search size={14} className="text-muted-foreground" />
-                                        </div>
-                                        <div className="flex flex-col">
-                                            <span className="text-lg font-bold text-foreground leading-tight">{filteredTemplates.length}</span>
-                                            <span className="text-xs text-muted-foreground leading-tight">{t('userTemplates.showing', 'Mostrando')}</span>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
+                        {/* Filter toolbar - Icons only, no boxes */}
+                        <div className="flex items-center gap-3 sm:gap-4 mb-6">
+                            <span className="text-[10px] text-muted-foreground font-medium flex-shrink-0">
+                                {filteredTemplates.length}/{templates.length}
+                            </span>
 
-                            {/* Controls */}
-                            <div className="flex items-center gap-2">
-                                {/* Industry Filter */}
+                            {/* Category filter - icon only */}
+                            <div className="relative flex-shrink-0 cursor-pointer" title={t('superadmin.allCategories', 'Categoría')}>
+                                <Building2 size={15} className={`pointer-events-none transition-colors ${filterIndustry !== 'all' ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`} />
                                 <select
                                     value={filterIndustry}
                                     onChange={(e) => setFilterIndustry(e.target.value)}
-                                    className="bg-secondary/50 border border-border/40 px-3 py-2 rounded-lg text-sm outline-none focus:border-primary/60"
+                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                                 >
                                     <option value="all">{t('superadmin.allCategories', 'Todas las categorías')}</option>
                                     {usedIndustries.map(ind => (
                                         <option key={ind} value={ind}>{getIndustryLabel(ind)}</option>
                                     ))}
                                 </select>
+                            </div>
 
-                                {/* View Mode Toggle */}
-                                <div className="flex items-center gap-1 bg-secondary/40 rounded-lg p-1">
-                                    <button
-                                        onClick={() => setViewMode('grid')}
-                                        className={`h-8 w-8 flex items-center justify-center rounded-md transition-all ${viewMode === 'grid' ? 'text-primary bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
-                                    >
-                                        <Grid size={15} />
-                                    </button>
-                                    <button
-                                        onClick={() => setViewMode('list')}
-                                        className={`h-8 w-8 flex items-center justify-center rounded-md transition-all ${viewMode === 'list' ? 'text-primary bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
-                                    >
-                                        <List size={15} />
-                                    </button>
-                                </div>
+                            {/* Clear filter */}
+                            {filterIndustry !== 'all' && (
+                                <button
+                                    onClick={() => setFilterIndustry('all')}
+                                    className="text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
+                                    title={t('common.clear', 'Limpiar filtros')}
+                                >
+                                    <X size={13} />
+                                </button>
+                            )}
 
-                                {/* Help Button - Show when instructions are hidden */}
-                                {!showInstructions && (
-                                    <button
-                                        onClick={() => {
-                                            setShowInstructions(true);
-                                            localStorage.setItem('quimera_show_templates_instructions', 'true');
-                                        }}
-                                        className="flex items-center gap-1.5 h-9 px-3 rounded-lg text-sm font-medium transition-all bg-secondary/50 border border-border/40 text-muted-foreground hover:text-primary hover:border-primary/40 hover:bg-primary/10"
-                                        title={t('dashboard.showHelp', 'Mostrar guía')}
-                                    >
-                                        <BookOpen className="w-4 h-4" />
-                                        <span className="hidden lg:inline">{t('dashboard.help', 'Ayuda')}</span>
-                                    </button>
-                                )}
+                            {/* Spacer */}
+                            <div className="flex-1 min-w-0" />
+
+                            {/* Help icon */}
+                            {!showInstructions && (
+                                <button
+                                    onClick={() => {
+                                        setShowInstructions(true);
+                                        localStorage.setItem('quimera_show_templates_instructions', 'true');
+                                    }}
+                                    className="text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
+                                    title={t('dashboard.showHelp', 'Mostrar guía')}
+                                >
+                                    <BookOpen size={15} />
+                                </button>
+                            )}
+
+                            {/* View Grid/List */}
+                            <div className="flex gap-2 flex-shrink-0">
+                                <button
+                                    onClick={() => setViewMode('grid')}
+                                    className={`transition-colors ${viewMode === 'grid' ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}
+                                    title="Grid View"
+                                >
+                                    <Grid size={15} />
+                                </button>
+                                <button
+                                    onClick={() => setViewMode('list')}
+                                    className={`transition-colors ${viewMode === 'list' ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}
+                                    title="List View"
+                                >
+                                    <List size={15} />
+                                </button>
                             </div>
                         </div>
 

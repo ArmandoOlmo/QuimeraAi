@@ -27,6 +27,7 @@ import SocialChannelsSettings from './SocialChannelsSettings';
 import VoiceSettings from './VoiceSettings';
 import SocialChatInbox from './SocialChatInbox';
 import { useProjectChatStats, ProjectChatStats } from '../../chat/hooks/useProjectChatStats';
+import MobileSearchModal from '../../ui/MobileSearchModal';
 
 type Tab = 'overview' | 'knowledge' | 'personality' | 'voice' | 'leadCapture' | 'customization' | 'socialChannels' | 'socialInbox' | 'settings';
 
@@ -131,6 +132,7 @@ const AiAssistantDashboard: React.FC = () => {
     } = useProjectChatStats(projectIds);
 
     const [searchQuery, setSearchQuery] = useState('');
+    const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
 
     // Filter projects by search
     const filteredProjects = useMemo(() => {
@@ -206,22 +208,28 @@ const AiAssistantDashboard: React.FC = () => {
                                 <h1 className="text-sm sm:text-lg font-semibold text-foreground">Chatbot</h1>
                             </div>
                         </div>
-                        <div className="flex items-center gap-1 sm:gap-2">
+                        <div className="flex items-center gap-3">
+                            <button
+                                onClick={() => setIsMobileSearchOpen(true)}
+                                className="text-muted-foreground hover:text-foreground transition-colors"
+                                aria-label="Search"
+                            >
+                                <Search size={20} />
+                            </button>
                             <button
                                 onClick={refreshStats}
                                 disabled={isLoadingStats}
-                                className="flex items-center justify-center h-9 w-9 rounded-lg hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
+                                className="text-muted-foreground hover:text-foreground transition-colors"
                                 title="Actualizar estadísticas"
                             >
                                 <RefreshCw size={16} className={isLoadingStats ? 'animate-spin' : ''} />
                             </button>
                             <button
                                 onClick={() => setView('dashboard')}
-                                className="flex items-center justify-center gap-2 h-9 w-9 sm:w-auto sm:px-3 rounded-lg sm:bg-secondary/50 sm:hover:bg-secondary text-sm font-medium transition-all text-muted-foreground hover:text-foreground"
+                                className="text-muted-foreground hover:text-foreground transition-colors"
                                 aria-label={t('common.back', 'Volver')}
                             >
-                                <ArrowLeft size={16} />
-                                <span className="hidden sm:inline">{t('common.back', 'Volver')}</span>
+                                <ArrowLeft size={20} />
                             </button>
                         </div>
                     </header>
@@ -304,22 +312,14 @@ const AiAssistantDashboard: React.FC = () => {
                                 </div>
                             </div>
 
-                            {/* Search and Filter Bar */}
-                            <div className="flex items-center gap-4">
-                                <div className="flex-1 relative">
-                                    <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                                    <input
-                                        type="text"
-                                        placeholder="Buscar proyecto..."
-                                        value={searchQuery}
-                                        onChange={(e) => setSearchQuery(e.target.value)}
-                                        className="w-full h-12 pl-12 pr-4 rounded-xl bg-card border border-border focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-all"
-                                    />
-                                </div>
-                                <div className="text-sm text-muted-foreground">
-                                    {filteredProjects.length} proyecto{filteredProjects.length !== 1 ? 's' : ''}
-                                </div>
-                            </div>
+                            {/* Search Modal */}
+                            <MobileSearchModal
+                                isOpen={isMobileSearchOpen}
+                                searchQuery={searchQuery}
+                                onSearchChange={setSearchQuery}
+                                onClose={() => setIsMobileSearchOpen(false)}
+                                placeholder="Buscar proyecto..."
+                            />
 
                             {/* Header */}
                             <div>
