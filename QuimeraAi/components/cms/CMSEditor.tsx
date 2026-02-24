@@ -16,9 +16,16 @@ import {
     MoreVertical, Loader2, Sparkles,
     Undo, Redo, Link as LinkIcon, Unlink, RemoveFormatting, Minus,
     ChevronDown, Table, Palette,
-    Heading1, Heading2, Heading3, Quote, Check, X as XIcon, Upload as UploadIcon, Hash
+    Heading1, Heading2, Heading3, Quote, Check, X as XIcon, Upload as UploadIcon, Hash,
+    Camera
 } from 'lucide-react';
-import { generateContentViaProxy, extractTextFromResponse } from '../../utils/geminiProxyClient';
+import {
+    generateContentViaProxy,
+    generateMultimodalContentViaProxy,
+    extractTextFromResponse,
+    fileToMediaInput,
+    type MediaInput
+} from '../../utils/geminiProxyClient';
 import ImageGeneratorModal from '../ui/ImageGeneratorModal';
 import ImagePicker from '../ui/ImagePicker';
 import { logApiCall } from '../../services/apiLoggingService';
@@ -63,6 +70,13 @@ const CMSEditor: React.FC<CMSEditorProps> = ({ post, onClose }) => {
     const [isSaving, setIsSaving] = useState(false);
     const [isAiWorking, setIsAiWorking] = useState(false);
     const [isImageModalOpen, setIsImageModalOpen] = useState(false);
+
+    // AI Vision State
+    const [showVisionPopover, setShowVisionPopover] = useState(false);
+    const [visionMedia, setVisionMedia] = useState<MediaInput | null>(null);
+    const [visionMediaPreview, setVisionMediaPreview] = useState<string | null>(null);
+    const [visionInstruction, setVisionInstruction] = useState('');
+    const visionFileRef = useRef<HTMLInputElement>(null);
 
     // Toolbar Active States
     const [activeFormats, setActiveFormats] = useState<Record<string, any>>({});
@@ -368,6 +382,79 @@ const CMSEditor: React.FC<CMSEditorProps> = ({ post, onClose }) => {
         }
     };
 
+    // --- AI Vision (Image/Video Analysis) ---
+    const handleVisionFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        try {
+            const mediaInput = await fileToMediaInput(file);
+            setVisionMedia(mediaInput);
+            setVisionMediaPreview(URL.createObjectURL(file));
+        } catch (err) {
+            console.error('Vision file read error:', err);
+        }
+        if (visionFileRef.current) visionFileRef.current.value = '';
+    };
+
+    const handleVisionGenerate = async () => {
+        if (!visionMedia) return;
+        setIsAiWorking(true);
+        setShowVisionPopover(false);
+
+        let usedModel = 'gemini-2.5-flash';
+        try {
+            const instruction = visionInstruction.trim() || 'Describe what you see and write a detailed, engaging paragraph about it.';
+            const promptText = `You are a content writer working inside a CMS editor. Based on the uploaded image/video, ${instruction}\n\nReturn ONLY the HTML content (using <p>, <h2>, <h3>, <ul>, <li> tags). Do NOT wrap in code blocks or JSON.`;
+
+            const promptConfig = getPrompt('cms-vision-write');
+            const finalPrompt = promptConfig
+                ? promptConfig.template.replace('{{instruction}}', instruction)
+                : promptText;
+            usedModel = promptConfig?.model || 'gemini-2.5-flash';
+
+            const projectId = activeProject?.id || 'cms-editor';
+            const response = await generateMultimodalContentViaProxy(
+                projectId, finalPrompt, [visionMedia], usedModel, {}, user?.uid
+            );
+
+            if (user) {
+                logApiCall({
+                    userId: user.uid,
+                    projectId: activeProject?.id,
+                    model: usedModel,
+                    feature: 'cms-vision-write',
+                    success: true
+                });
+            }
+
+            let result = extractTextFromResponse(response).trim();
+            // Strip markdown code blocks if present
+            result = result.replace(/^```html\n?/i, '').replace(/\n?```$/i, '');
+            result = result.replace(/^```\n?/, '').replace(/\n?```$/, '');
+            execCmd('insertHTML', result);
+
+            // Reset vision state
+            setVisionMedia(null);
+            setVisionMediaPreview(null);
+            setVisionInstruction('');
+        } catch (error: any) {
+            if (user) {
+                logApiCall({
+                    userId: user.uid,
+                    projectId: activeProject?.id,
+                    model: usedModel,
+                    feature: 'cms-vision-write',
+                    success: false,
+                    errorMessage: error.message || 'Unknown error'
+                });
+            }
+            handleApiError(error);
+            console.error(error);
+        } finally {
+            setIsAiWorking(false);
+        }
+    };
+
     const generateSEO = async () => {
         if (hasApiKey === false) { await promptForKeySelection(); return; }
         setIsAiWorking(true);
@@ -631,6 +718,81 @@ const CMSEditor: React.FC<CMSEditorProps> = ({ post, onClose }) => {
                                 <span className="px-2 text-xs font-bold text-purple-700 flex items-center"><Sparkles size={10} className="mr-1" /> AI</span>
                                 <button onMouseDown={(e) => { e.preventDefault(); aiMagicWrite('fix'); }} className="px-2 py-1 text-xs font-medium text-purple-700 hover:bg-purple-100 rounded disabled:opacity-50" disabled={isAiWorking}>{t('postEditor.fixGrammar')}</button>
                                 <button onMouseDown={(e) => { e.preventDefault(); aiMagicWrite('continue'); }} className="px-2 py-1 text-xs font-medium text-purple-700 hover:bg-purple-100 rounded disabled:opacity-50" disabled={isAiWorking}>{t('postEditor.continue')}</button>
+                                <div className="relative">
+                                    <button
+                                        onMouseDown={(e) => { e.preventDefault(); saveSelection(); setShowVisionPopover(!showVisionPopover); }}
+                                        className="px-2 py-1 text-xs font-medium text-purple-700 hover:bg-purple-100 rounded disabled:opacity-50 flex items-center gap-1"
+                                        disabled={isAiWorking}
+                                        title="Write from Image/Video"
+                                    >
+                                        <Camera size={12} /> {t('postEditor.fromImage', { defaultValue: 'From Image' })}
+                                    </button>
+                                    {showVisionPopover && (
+                                        <div className="absolute top-full right-0 mt-1 w-72 bg-white border border-gray-200 rounded-xl shadow-2xl z-50 p-4 text-black animate-fade-in-up">
+                                            <div className="flex justify-between items-center mb-3">
+                                                <h4 className="text-sm font-bold text-gray-800 flex items-center gap-1.5">
+                                                    <Camera size={14} className="text-purple-600" />
+                                                    {t('postEditor.visionTitle', { defaultValue: 'AI from Image/Video' })}
+                                                </h4>
+                                                <button onClick={() => setShowVisionPopover(false)} className="p-1 hover:bg-gray-100 rounded">
+                                                    <XIcon size={14} />
+                                                </button>
+                                            </div>
+
+                                            <input
+                                                ref={visionFileRef}
+                                                type="file"
+                                                accept="image/jpeg,image/png,image/gif,image/webp,video/mp4,video/webm"
+                                                onChange={handleVisionFileChange}
+                                                className="hidden"
+                                            />
+
+                                            {!visionMediaPreview ? (
+                                                <button
+                                                    onClick={() => visionFileRef.current?.click()}
+                                                    className="w-full border-2 border-dashed border-gray-300 rounded-lg p-4 flex flex-col items-center gap-1.5 text-gray-500 hover:border-purple-400 hover:bg-purple-50/50 transition-all"
+                                                >
+                                                    <UploadIcon size={20} />
+                                                    <span className="text-xs">{t('postEditor.visionUpload', { defaultValue: 'Upload image or video' })}</span>
+                                                </button>
+                                            ) : (
+                                                <div className="relative mb-3">
+                                                    {visionMedia?.mimeType.startsWith('video/') ? (
+                                                        <video src={visionMediaPreview} className="w-full h-28 object-cover rounded-lg" controls muted />
+                                                    ) : (
+                                                        <img src={visionMediaPreview} alt="Preview" className="w-full h-28 object-cover rounded-lg" />
+                                                    )}
+                                                    <button
+                                                        onClick={() => { setVisionMedia(null); setVisionMediaPreview(null); }}
+                                                        className="absolute top-1 right-1 bg-black/60 text-white p-1 rounded-full hover:bg-black/80"
+                                                    >
+                                                        <XIcon size={12} />
+                                                    </button>
+                                                </div>
+                                            )}
+
+                                            <div className="mt-2">
+                                                <input
+                                                    type="text"
+                                                    value={visionInstruction}
+                                                    onChange={(e) => setVisionInstruction(e.target.value)}
+                                                    placeholder={t('postEditor.visionInstructionPlaceholder', { defaultValue: 'e.g. Describe this product photo...' })}
+                                                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-purple-500 outline-none"
+                                                    onKeyDown={(e) => e.key === 'Enter' && visionMedia && handleVisionGenerate()}
+                                                />
+                                            </div>
+
+                                            <button
+                                                onClick={handleVisionGenerate}
+                                                disabled={!visionMedia || isAiWorking}
+                                                className="mt-3 w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white py-2 rounded-lg text-sm font-bold flex items-center justify-center gap-1.5 hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                            >
+                                                {isAiWorking ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
+                                                {t('postEditor.visionGenerate', { defaultValue: 'Generate Content' })}
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         </div>
                     </div>

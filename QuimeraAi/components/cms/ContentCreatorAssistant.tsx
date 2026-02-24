@@ -1,7 +1,13 @@
-import React, { useState, useMemo } from 'react';
-import { X, Sparkles, ArrowRight, Loader2, CheckCircle } from 'lucide-react';
+import React, { useState, useMemo, useRef } from 'react';
+import { X, Sparkles, ArrowRight, Loader2, CheckCircle, Upload, Image as ImageIcon, Film, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { generateContentViaProxy, extractTextFromResponse } from '../../utils/geminiProxyClient';
+import {
+    generateContentViaProxy,
+    generateMultimodalContentViaProxy,
+    extractTextFromResponse,
+    fileToMediaInput,
+    type MediaInput
+} from '../../utils/geminiProxyClient';
 import { CMSPost } from '../../types';
 import { useAuth } from '../../contexts/core/AuthContext';
 import { useCMS } from '../../contexts/cms';
@@ -29,6 +35,13 @@ const ContentCreatorAssistant: React.FC<ContentCreatorAssistantProps> = ({ onClo
     const [tone, setTone] = useState('professional');
     const [generatedPost, setGeneratedPost] = useState<Partial<CMSPost> | null>(null);
     const [isGenerating, setIsGenerating] = useState(false);
+
+    // Media upload state
+    const [mediaFiles, setMediaFiles] = useState<MediaInput[]>([]);
+    const [mediaPreview, setMediaPreview] = useState<string | null>(null);
+    const [mediaType, setMediaType] = useState<'image' | 'video' | null>(null);
+    const [isDragging, setIsDragging] = useState(false);
+    const mediaInputRef = useRef<HTMLInputElement>(null);
 
     // Tones configuration
     const tones = [
@@ -88,6 +101,52 @@ const ContentCreatorAssistant: React.FC<ContentCreatorAssistantProps> = ({ onClo
         }
     };
 
+    // Media upload handlers
+    const handleMediaUpload = async (file: File) => {
+        try {
+            const isVideo = file.type.startsWith('video/');
+            const isImage = file.type.startsWith('image/');
+            if (!isImage && !isVideo) {
+                alert(t('cms_assistant.invalidFileType'));
+                return;
+            }
+            // Size limit: 20MB images, 50MB videos
+            const maxSize = isVideo ? 50 * 1024 * 1024 : 20 * 1024 * 1024;
+            if (file.size > maxSize) {
+                alert(t('cms_assistant.fileTooLarge'));
+                return;
+            }
+            const mediaInput = await fileToMediaInput(file);
+            setMediaFiles([mediaInput]);
+            setMediaType(isVideo ? 'video' : 'image');
+            // Create preview URL
+            const previewUrl = URL.createObjectURL(file);
+            setMediaPreview(previewUrl);
+        } catch (error) {
+            console.error('Media upload error:', error);
+        }
+    };
+
+    const handleMediaDrop = (e: React.DragEvent) => {
+        e.preventDefault();
+        setIsDragging(false);
+        const file = e.dataTransfer.files[0];
+        if (file) handleMediaUpload(file);
+    };
+
+    const handleMediaInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) handleMediaUpload(file);
+        // Reset input so the same file can be re-uploaded
+        if (mediaInputRef.current) mediaInputRef.current.value = '';
+    };
+
+    const removeMedia = () => {
+        setMediaFiles([]);
+        setMediaPreview(null);
+        setMediaType(null);
+    };
+
     const handleGenerate = async () => {
         if (!topic) return;
 
@@ -95,6 +154,7 @@ const ContentCreatorAssistant: React.FC<ContentCreatorAssistantProps> = ({ onClo
         setStep('generating');
 
         let modelToUse = 'gemini-2.5-flash'; // Default fallback - declared outside try for error logging
+        const hasMedia = mediaFiles.length > 0;
 
         try {
             // Get dynamic prompt
@@ -131,11 +191,28 @@ const ContentCreatorAssistant: React.FC<ContentCreatorAssistantProps> = ({ onClo
                 `;
             }
 
+            // If media is present, add multimodal context to the prompt
+            if (hasMedia) {
+                const mediaLabel = mediaType === 'video' ? 'video' : 'image';
+                promptText += `\n\nIMPORTANT: I have uploaded a ${mediaLabel} as visual reference. Analyze it carefully and use what you see in it to create the content. Reference visual details, objects, scenes, or information from the ${mediaLabel} in your writing. Make the content directly relevant to what the ${mediaLabel} shows.`;
+            }
+
             const projectId = activeProject?.id || 'content-creator-assistant';
-            const response = await generateContentViaProxy(projectId, promptText, modelToUse, {
-                temperature: 0.9,
-                maxOutputTokens: 8192  // Ensure enough tokens for complete JSON response
-            }, user?.uid);
+
+            // Use multimodal or text-only generation based on media presence
+            let response;
+            if (hasMedia) {
+                console.log(`📸 Using multimodal generation with ${mediaFiles.length} ${mediaType}(s)`);
+                response = await generateMultimodalContentViaProxy(projectId, promptText, mediaFiles, modelToUse, {
+                    temperature: 0.9,
+                    maxOutputTokens: 8192
+                }, user?.uid);
+            } else {
+                response = await generateContentViaProxy(projectId, promptText, modelToUse, {
+                    temperature: 0.9,
+                    maxOutputTokens: 8192
+                }, user?.uid);
+            }
 
             // Log successful API call
             if (user) {
@@ -280,6 +357,72 @@ const ContentCreatorAssistant: React.FC<ContentCreatorAssistantProps> = ({ onClo
                                 placeholder={t('cms_assistant.topicPlaceholder')}
                                 className="w-full h-32 bg-secondary/30 border border-border rounded-xl p-4 text-lg focus:ring-2 focus:ring-primary/50 outline-none resize-none"
                             />
+
+                            {/* Media Upload Zone */}
+                            <div>
+                                <label className="block text-sm font-medium text-muted-foreground mb-2 flex items-center gap-2">
+                                    <ImageIcon size={16} />
+                                    {t('cms_assistant.mediaUploadLabel', { defaultValue: 'Visual reference (optional)' })}
+                                </label>
+                                <input
+                                    ref={mediaInputRef}
+                                    type="file"
+                                    accept="image/jpeg,image/png,image/gif,image/webp,video/mp4,video/webm"
+                                    onChange={handleMediaInputChange}
+                                    className="hidden"
+                                />
+                                {!mediaPreview ? (
+                                    <div
+                                        onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+                                        onDragLeave={() => setIsDragging(false)}
+                                        onDrop={handleMediaDrop}
+                                        onClick={() => mediaInputRef.current?.click()}
+                                        className={`w-full border-2 border-dashed rounded-xl p-6 flex flex-col items-center justify-center gap-2 cursor-pointer transition-all ${isDragging
+                                                ? 'border-primary bg-primary/10 scale-[1.02]'
+                                                : 'border-border hover:border-primary/50 hover:bg-secondary/20'
+                                            }`}
+                                    >
+                                        <Upload size={24} className="text-muted-foreground" />
+                                        <p className="text-sm text-muted-foreground text-center">
+                                            {t('cms_assistant.mediaUploadHint', { defaultValue: 'Drop an image or video here, or click to upload' })}
+                                        </p>
+                                        <p className="text-xs text-muted-foreground/60">
+                                            {t('cms_assistant.mediaUploadFormats', { defaultValue: 'JPG, PNG, GIF, WebP, MP4, WebM' })}
+                                        </p>
+                                    </div>
+                                ) : (
+                                    <div className="relative group rounded-xl overflow-hidden border border-border">
+                                        {mediaType === 'video' ? (
+                                            <video
+                                                src={mediaPreview}
+                                                className="w-full max-h-48 object-cover rounded-xl"
+                                                controls
+                                                muted
+                                            />
+                                        ) : (
+                                            <img
+                                                src={mediaPreview}
+                                                alt="Upload preview"
+                                                className="w-full max-h-48 object-cover rounded-xl"
+                                            />
+                                        )}
+                                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                            <button
+                                                onClick={(e) => { e.stopPropagation(); removeMedia(); }}
+                                                className="bg-red-500 text-white p-2 rounded-full hover:bg-red-600 transition-colors"
+                                                title={t('cms_assistant.removeMedia', { defaultValue: 'Remove' })}
+                                            >
+                                                <Trash2 size={16} />
+                                            </button>
+                                        </div>
+                                        <div className="absolute top-2 left-2 bg-black/60 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1">
+                                            {mediaType === 'video' ? <Film size={12} /> : <ImageIcon size={12} />}
+                                            {mediaType === 'video' ? 'Video' : 'Image'}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
                             <div className="flex justify-end">
                                 <button
                                     onClick={() => setStep('details')}

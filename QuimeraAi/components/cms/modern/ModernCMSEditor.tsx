@@ -22,14 +22,21 @@ import { CMSPost } from '../../../types';
 import {
     ArrowLeft, Save, Globe, Type, Loader2, Sparkles,
     MoreVertical, Calendar, Check, X as XIcon, Link as LinkIcon,
-    Monitor, Tablet, Smartphone, Eye, EyeOff, Layout, Menu, RefreshCw, Settings, User
+    Monitor, Tablet, Smartphone, Eye, EyeOff, Layout, Menu, RefreshCw, Settings, User,
+    Upload
 } from 'lucide-react';
 
 import EditorMenuBar from './EditorMenuBar';
 import EditorBubbleMenu from './EditorBubbleMenu';
 import SlashCommands from './SlashCommands';
 import ImagePicker from '../../ui/ImagePicker';
-import { generateContentViaProxy, extractTextFromResponse } from '../../../utils/geminiProxyClient';
+import {
+    generateContentViaProxy,
+    generateMultimodalContentViaProxy,
+    extractTextFromResponse,
+    fileToMediaInput,
+    type MediaInput
+} from '../../../utils/geminiProxyClient';
 import DashboardSidebar from '../../dashboard/DashboardSidebar';
 import { logApiCall } from '../../../services/apiLoggingService';
 import { useViewportType } from '../../../hooks/use-mobile';
@@ -219,6 +226,13 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
 
     const contentFileInputRef = useRef<HTMLInputElement>(null);
     const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+    // AI Vision State
+    const [showVisionModal, setShowVisionModal] = useState(false);
+    const [visionMedia, setVisionMedia] = useState<MediaInput | null>(null);
+    const [visionMediaPreview, setVisionMediaPreview] = useState<string | null>(null);
+    const [visionInstruction, setVisionInstruction] = useState('');
+    const visionFileRef = useRef<HTMLInputElement>(null);
 
     // TipTap Editor
     // Get preview iframe/container width based on device
@@ -435,8 +449,14 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
             ' '
         );
 
-        if (!selectedText && command !== 'continue') {
+        if (!selectedText && command !== 'continue' && command !== 'vision') {
             alert("Please select some text first.");
+            return;
+        }
+
+        // Vision command opens pick-media modal instead of direct generation
+        if (command === 'vision') {
+            setShowVisionModal(true);
             return;
         }
 
@@ -505,6 +525,78 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
                     feature: `modern-cms-${command}`,
                     success: false,
                     errorMessage: error instanceof Error ? error.message : 'Unknown error'
+                });
+            }
+            handleApiError(error);
+            console.error(error);
+        } finally {
+            setIsAiWorking(false);
+        }
+    };
+
+    // --- AI Vision (Image/Video Analysis) ---
+    const handleVisionFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        try {
+            const mediaInput = await fileToMediaInput(file);
+            setVisionMedia(mediaInput);
+            setVisionMediaPreview(URL.createObjectURL(file));
+        } catch (err) {
+            console.error('Vision file read error:', err);
+        }
+        if (visionFileRef.current) visionFileRef.current.value = '';
+    };
+
+    const handleVisionGenerate = async () => {
+        if (!visionMedia || !editor) return;
+        setIsAiWorking(true);
+        setShowVisionModal(false);
+
+        let usedModel = 'gemini-2.5-flash';
+        try {
+            const instruction = visionInstruction.trim() || 'Describe what you see and write a detailed, engaging paragraph about it.';
+            const promptText = `You are a content writer working inside a CMS editor. Based on the uploaded image/video, ${instruction}\n\nReturn ONLY the HTML content (using <p>, <h2>, <h3>, <ul>, <li> tags). Do NOT wrap in code blocks or JSON.`;
+
+            const promptConfig = getPrompt('cms-vision-write');
+            const finalPrompt = promptConfig
+                ? promptConfig.template.replace('{{instruction}}', instruction)
+                : promptText;
+            usedModel = promptConfig?.model || 'gemini-2.5-flash';
+
+            const projectId = activeProject?.id || 'modern-cms-editor';
+            const response = await generateMultimodalContentViaProxy(
+                projectId, finalPrompt, [visionMedia], usedModel, {}, user?.uid
+            );
+
+            if (user) {
+                logApiCall({
+                    userId: user.uid,
+                    projectId: activeProject?.id,
+                    model: usedModel,
+                    feature: 'modern-cms-vision-write',
+                    success: true
+                });
+            }
+
+            let result = extractTextFromResponse(response).trim();
+            result = result.replace(/^```html\n?/i, '').replace(/\n?```$/i, '');
+            result = result.replace(/^```\n?/, '').replace(/\n?```$/, '');
+            editor.chain().focus().insertContent(result).run();
+
+            // Reset vision state
+            setVisionMedia(null);
+            setVisionMediaPreview(null);
+            setVisionInstruction('');
+        } catch (error: any) {
+            if (user) {
+                logApiCall({
+                    userId: user.uid,
+                    projectId: activeProject?.id,
+                    model: usedModel,
+                    feature: 'modern-cms-vision-write',
+                    success: false,
+                    errorMessage: error?.message || 'Unknown error'
                 });
             }
             handleApiError(error);
@@ -658,6 +750,90 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
                     className="hidden"
                     accept="image/*"
                 />
+
+                {/* AI Vision Modal */}
+                {showVisionModal && (
+                    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                        <div className="bg-card border border-border rounded-2xl shadow-2xl p-6 w-full max-w-md mx-4">
+                            <div className="flex justify-between items-center mb-4">
+                                <h3 className="text-lg font-bold flex items-center gap-2">
+                                    <Sparkles size={18} className="text-primary" />
+                                    {t('cms_editor.visionTitle', { defaultValue: 'Write from Image/Video' })}
+                                </h3>
+                                <button
+                                    onClick={() => { setShowVisionModal(false); setVisionMedia(null); setVisionMediaPreview(null); setVisionInstruction(''); }}
+                                    className="p-1.5 hover:bg-secondary rounded-lg text-muted-foreground hover:text-foreground transition-colors"
+                                >
+                                    <XIcon size={18} />
+                                </button>
+                            </div>
+
+                            <input
+                                ref={visionFileRef}
+                                type="file"
+                                accept="image/jpeg,image/png,image/gif,image/webp,video/mp4,video/webm"
+                                onChange={handleVisionFileChange}
+                                className="hidden"
+                            />
+
+                            {!visionMediaPreview ? (
+                                <button
+                                    onClick={() => visionFileRef.current?.click()}
+                                    className="w-full border-2 border-dashed border-border rounded-xl p-8 flex flex-col items-center gap-2 text-muted-foreground hover:border-primary/50 hover:bg-secondary/20 transition-all"
+                                >
+                                    <Upload size={28} />
+                                    <span className="text-sm font-medium">{t('cms_editor.visionUpload', { defaultValue: 'Upload image or video' })}</span>
+                                    <span className="text-xs text-muted-foreground/60">JPG, PNG, GIF, WebP, MP4, WebM</span>
+                                </button>
+                            ) : (
+                                <div className="relative mb-4">
+                                    {visionMedia?.mimeType.startsWith('video/') ? (
+                                        <video src={visionMediaPreview} className="w-full h-40 object-cover rounded-xl" controls muted />
+                                    ) : (
+                                        <img src={visionMediaPreview} alt="Preview" className="w-full h-40 object-cover rounded-xl" />
+                                    )}
+                                    <button
+                                        onClick={() => { setVisionMedia(null); setVisionMediaPreview(null); }}
+                                        className="absolute top-2 right-2 bg-black/60 text-white p-1.5 rounded-full hover:bg-black/80"
+                                    >
+                                        <XIcon size={14} />
+                                    </button>
+                                </div>
+                            )}
+
+                            <div className="mt-3">
+                                <label className="block text-xs font-medium text-muted-foreground mb-1.5">
+                                    {t('cms_editor.visionInstructionLabel', { defaultValue: 'Instruction (optional)' })}
+                                </label>
+                                <input
+                                    type="text"
+                                    value={visionInstruction}
+                                    onChange={(e) => setVisionInstruction(e.target.value)}
+                                    placeholder={t('cms_editor.visionPlaceholder', { defaultValue: 'e.g. Describe this product photo...' })}
+                                    className="w-full bg-secondary/50 border border-border rounded-lg px-3 py-2.5 text-sm focus:ring-1 focus:ring-primary outline-none text-foreground"
+                                    onKeyDown={(e) => e.key === 'Enter' && visionMedia && handleVisionGenerate()}
+                                />
+                            </div>
+
+                            <div className="flex gap-2 mt-4">
+                                <button
+                                    onClick={() => { setShowVisionModal(false); setVisionMedia(null); setVisionMediaPreview(null); setVisionInstruction(''); }}
+                                    className="flex-1 py-2.5 rounded-lg text-sm font-medium bg-secondary text-foreground hover:bg-secondary/80"
+                                >
+                                    {t('common.cancel', { defaultValue: 'Cancel' })}
+                                </button>
+                                <button
+                                    onClick={handleVisionGenerate}
+                                    disabled={!visionMedia || isAiWorking}
+                                    className="flex-1 py-2.5 rounded-lg text-sm font-bold bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1.5"
+                                >
+                                    {isAiWorking ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
+                                    {t('cms_editor.visionGenerate', { defaultValue: 'Generate' })}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 {/* Link Modal */}
                 {showLinkModal && (

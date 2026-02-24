@@ -138,11 +138,39 @@ export async function generateContentViaProxy(
 }
 
 /**
- * Image data for multimodal requests
+ * Media data for multimodal requests (images and videos)
  */
 export interface ImageInput {
-    mimeType: string;  // e.g., 'image/jpeg', 'image/png'
-    data: string;      // base64 encoded image data (without data URL prefix)
+    mimeType: string;  // e.g., 'image/jpeg', 'image/png', 'video/mp4', 'video/webm'
+    data: string;      // base64 encoded media data (without data URL prefix)
+}
+
+/** Alias for clarity when passing images or videos */
+export type MediaInput = ImageInput;
+
+/**
+ * Convert a browser File object to a MediaInput for use with multimodal proxy.
+ * Reads the file as base64 and strips the data URL prefix.
+ */
+export function fileToMediaInput(file: File): Promise<MediaInput> {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+            const dataUrl = reader.result as string;
+            // Strip "data:<mimeType>;base64," prefix
+            const base64 = dataUrl.split(',')[1];
+            if (!base64) {
+                reject(new Error('Failed to read file as base64'));
+                return;
+            }
+            resolve({
+                mimeType: file.type,
+                data: base64,
+            });
+        };
+        reader.onerror = () => reject(new Error('Failed to read file'));
+        reader.readAsDataURL(file);
+    });
 }
 
 /**

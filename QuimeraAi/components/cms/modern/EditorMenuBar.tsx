@@ -9,7 +9,7 @@ import {
     Code, Link as LinkIcon, Image as ImageIcon,
     Table, Minus, Undo, Redo,
     ChevronDown, Type, Sparkles, Palette,
-    RemoveFormatting, Highlighter
+    RemoveFormatting, Highlighter, Camera
 } from 'lucide-react';
 
 interface EditorMenuBarProps {
@@ -258,6 +258,13 @@ const EditorMenuBar: React.FC<EditorMenuBarProps> = ({ editor, onImageUpload, on
                     className="px-3 py-1 text-xs font-medium text-primary hover:bg-primary/10 rounded disabled:opacity-50"
                 >
                     {t('cms_editor.assistant.continue')}
+                </button>
+                <button
+                    onClick={() => onAICommand('vision')}
+                    disabled={isAiWorking}
+                    className="px-3 py-1 text-xs font-medium text-primary hover:bg-primary/10 rounded disabled:opacity-50 flex items-center gap-1"
+                >
+                    <Camera size={12} /> {t('cms_editor.assistant.fromImage', { defaultValue: 'From Image' })}
                 </button>
             </div>
         </div>

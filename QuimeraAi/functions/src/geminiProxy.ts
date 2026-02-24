@@ -671,17 +671,21 @@ export const generateContent = functions.https.onRequest(async (req, res) => {
         // MULTIMODAL: Get images array if provided
         const images: Array<{ mimeType: string; data: string }> = [];
         if (Array.isArray(req.body.images)) {
-            const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-            const MAX_IMAGES = 10;
+            const ALLOWED_MIME_TYPES = [
+                'image/jpeg', 'image/png', 'image/gif', 'image/webp',
+                'video/mp4', 'video/webm', 'video/quicktime'
+            ];
+            const MAX_MEDIA = 10;
 
-            for (const img of req.body.images.slice(0, MAX_IMAGES)) {
+            for (const img of req.body.images.slice(0, MAX_MEDIA)) {
                 if (img && typeof img.mimeType === 'string' && typeof img.data === 'string') {
                     // Validate MIME type
                     if (!ALLOWED_MIME_TYPES.includes(img.mimeType)) {
                         continue; // Skip invalid MIME types
                     }
-                    // Validate base64 data (basic check)
-                    if (img.data.length > 0 && img.data.length < 20 * 1024 * 1024) { // Max ~15MB per image
+                    // Validate base64 data (basic check) - 50MB limit for video, 20MB for images
+                    const maxSize = img.mimeType.startsWith('video/') ? 50 * 1024 * 1024 : 20 * 1024 * 1024;
+                    if (img.data.length > 0 && img.data.length < maxSize) {
                         images.push({ mimeType: img.mimeType, data: img.data });
                     }
                 }
