@@ -29,9 +29,9 @@ const MenuButton: React.FC<{
     <button
         onClick={onClick}
         disabled={disabled}
-        className={`p-2 rounded-md transition-colors disabled:opacity-30 disabled:cursor-not-allowed ${isActive
-            ? 'bg-primary text-primary-foreground'
-            : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+        className={`p-1.5 rounded-md transition-colors disabled:opacity-30 disabled:cursor-not-allowed ${isActive
+            ? 'text-primary'
+            : 'text-muted-foreground hover:text-foreground'
             }`}
         title={title}
     >
@@ -39,7 +39,7 @@ const MenuButton: React.FC<{
     </button>
 );
 
-const MenuDivider = () => <div className="w-px h-6 bg-border mx-1" />;
+const MenuDivider = () => <div className="w-px h-5 bg-border mx-0.5" />;
 
 const EditorMenuBar: React.FC<EditorMenuBarProps> = ({ editor, onImageUpload, onAICommand, isAiWorking }) => {
     const { t } = useTranslation();
@@ -69,42 +69,42 @@ const EditorMenuBar: React.FC<EditorMenuBarProps> = ({ editor, onImageUpload, on
     const colors = ['#000000', '#4b5563', '#9ca3af', '#ffffff', '#ef4444', '#f97316', '#f59e0b', '#84cc16', '#10b981', '#06b6d4', '#3b82f6', '#6366f1', '#8b5cf6', '#d946ef', '#f43f5e'];
 
     return (
-        <div className="border-b border-border bg-card p-2 flex flex-wrap gap-1 items-center sticky top-0 z-30">
-            {/* History */}
-            <div className="flex shrink-0 bg-background border border-border rounded-md shadow-sm">
-                <MenuButton onClick={() => editor.chain().focus().undo().run()} disabled={!editor.can().undo()} title={t('cms_editor.toolbar.undo')}>
-                    <Undo size={16} />
-                </MenuButton>
-                <MenuButton onClick={() => editor.chain().focus().redo().run()} disabled={!editor.can().redo()} title={t('cms_editor.toolbar.redo')}>
-                    <Redo size={16} />
-                </MenuButton>
-            </div>
+        <div className="border-b border-border bg-card px-2 py-1.5 flex flex-wrap items-center gap-0.5 sticky top-0 z-30">
+            {/* Undo / Redo */}
+            <MenuButton onClick={() => editor.chain().focus().undo().run()} disabled={!editor.can().undo()} title={t('cms_editor.toolbar.undo')}>
+                <Undo size={16} />
+            </MenuButton>
+            <MenuButton onClick={() => editor.chain().focus().redo().run()} disabled={!editor.can().redo()} title={t('cms_editor.toolbar.redo')}>
+                <Redo size={16} />
+            </MenuButton>
+
+            <MenuDivider />
 
             {/* Heading Dropdown */}
             <div className="relative shrink-0">
                 <button
                     onClick={() => setShowHeadings(!showHeadings)}
-                    className="flex items-center justify-between w-32 px-3 py-1.5 bg-background border border-border rounded-md shadow-sm text-sm hover:bg-muted"
+                    className="flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
                 >
-                    <span className="truncate font-medium text-foreground">{getBlockLabel()}</span>
-                    <ChevronDown size={14} className="ml-1 opacity-50" />
+                    <span className="truncate max-w-[80px]">{getBlockLabel()}</span>
+                    <ChevronDown size={12} className="opacity-50" />
                 </button>
                 {showHeadings && (
-                    <div className="absolute top-full left-0 mt-1 w-48 bg-card border border-border rounded-lg shadow-xl z-50 py-1">
-                        <button onClick={() => { editor.chain().focus().setParagraph().run(); setShowHeadings(false); }} className="block w-full text-left px-4 py-2 text-sm hover:bg-muted flex items-center text-foreground">
+                    <div className="absolute top-full left-0 mt-1 w-44 bg-card border border-border rounded-lg shadow-xl z-50 py-1">
+                        <button onClick={() => { editor.chain().focus().setParagraph().run(); setShowHeadings(false); }} className="block w-full text-left px-3 py-1.5 text-sm hover:bg-muted flex items-center text-foreground">
                             <Type size={14} className="mr-2" /> {t('cms_editor.toolbar.paragraph')}
                         </button>
-                        <button onClick={() => setHeading(1)} className="block w-full text-left px-4 py-2 text-lg font-bold hover:bg-muted flex items-center text-foreground">
-                            <Heading1 size={18} className="mr-2" /> {t('cms_editor.toolbar.h1')}
+                        <button onClick={() => setHeading(1)} className="block w-full text-left px-3 py-1.5 text-base font-bold hover:bg-muted flex items-center text-foreground">
+                            <Heading1 size={16} className="mr-2" /> {t('cms_editor.toolbar.h1')}
                         </button>
-                        <button onClick={() => setHeading(2)} className="block w-full text-left px-4 py-2 text-md font-bold hover:bg-muted flex items-center text-foreground">
-                            <Heading2 size={16} className="mr-2" /> {t('cms_editor.toolbar.h2')}
+                        <button onClick={() => setHeading(2)} className="block w-full text-left px-3 py-1.5 text-sm font-bold hover:bg-muted flex items-center text-foreground">
+                            <Heading2 size={14} className="mr-2" /> {t('cms_editor.toolbar.h2')}
                         </button>
-                        <button onClick={() => setHeading(3)} className="block w-full text-left px-4 py-2 text-sm font-bold hover:bg-muted flex items-center text-foreground">
+                        <button onClick={() => setHeading(3)} className="block w-full text-left px-3 py-1.5 text-sm font-semibold hover:bg-muted flex items-center text-foreground">
                             <Heading3 size={14} className="mr-2" /> {t('cms_editor.toolbar.h3')}
                         </button>
                         <div className="border-t border-border my-1"></div>
-                        <button onClick={() => { editor.chain().focus().toggleBlockquote().run(); setShowHeadings(false); }} className="block w-full text-left px-4 py-2 text-sm italic hover:bg-muted flex items-center text-muted-foreground">
+                        <button onClick={() => { editor.chain().focus().toggleBlockquote().run(); setShowHeadings(false); }} className="block w-full text-left px-3 py-1.5 text-sm italic hover:bg-muted flex items-center text-muted-foreground">
                             <Quote size={14} className="mr-2" /> {t('cms_editor.toolbar.quote')}
                         </button>
                     </div>
@@ -114,27 +114,27 @@ const EditorMenuBar: React.FC<EditorMenuBarProps> = ({ editor, onImageUpload, on
             <MenuDivider />
 
             {/* Text Formatting */}
-            <div className="flex shrink-0 bg-background border border-border rounded-md shadow-sm">
-                <MenuButton onClick={() => editor.chain().focus().toggleBold().run()} isActive={editor.isActive('bold')} title={t('cms_editor.toolbar.bold')}>
-                    <Bold size={16} />
-                </MenuButton>
-                <MenuButton onClick={() => editor.chain().focus().toggleItalic().run()} isActive={editor.isActive('italic')} title={t('cms_editor.toolbar.italic')}>
-                    <Italic size={16} />
-                </MenuButton>
-                <MenuButton onClick={() => editor.chain().focus().toggleUnderline().run()} isActive={editor.isActive('underline')} title={t('cms_editor.toolbar.underline')}>
-                    <Underline size={16} />
-                </MenuButton>
-                <MenuButton onClick={() => editor.chain().focus().toggleStrike().run()} isActive={editor.isActive('strike')} title={t('cms_editor.toolbar.strikethrough')}>
-                    <Strikethrough size={16} />
-                </MenuButton>
-                <MenuButton onClick={() => editor.chain().focus().toggleCode().run()} isActive={editor.isActive('code')} title={t('cms_editor.toolbar.code')}>
-                    <Code size={16} />
-                </MenuButton>
-            </div>
+            <MenuButton onClick={() => editor.chain().focus().toggleBold().run()} isActive={editor.isActive('bold')} title={t('cms_editor.toolbar.bold')}>
+                <Bold size={16} />
+            </MenuButton>
+            <MenuButton onClick={() => editor.chain().focus().toggleItalic().run()} isActive={editor.isActive('italic')} title={t('cms_editor.toolbar.italic')}>
+                <Italic size={16} />
+            </MenuButton>
+            <MenuButton onClick={() => editor.chain().focus().toggleUnderline().run()} isActive={editor.isActive('underline')} title={t('cms_editor.toolbar.underline')}>
+                <Underline size={16} />
+            </MenuButton>
+            <MenuButton onClick={() => editor.chain().focus().toggleStrike().run()} isActive={editor.isActive('strike')} title={t('cms_editor.toolbar.strikethrough')}>
+                <Strikethrough size={16} />
+            </MenuButton>
+            <MenuButton onClick={() => editor.chain().focus().toggleCode().run()} isActive={editor.isActive('code')} title={t('cms_editor.toolbar.code')}>
+                <Code size={16} />
+            </MenuButton>
 
-            {/* Color Picker */}
+            <MenuDivider />
+
+            {/* Color & Highlight */}
             <div className="relative shrink-0">
-                <MenuButton onClick={() => setShowColors(!showColors)} title={t('cms_editor.toolbar.textColor')}>
+                <MenuButton onClick={() => { setShowColors(!showColors); setShowHighlight(false); }} title={t('cms_editor.toolbar.textColor')}>
                     <Palette size={16} />
                 </MenuButton>
                 {showColors && (
@@ -154,10 +154,8 @@ const EditorMenuBar: React.FC<EditorMenuBarProps> = ({ editor, onImageUpload, on
                     </div>
                 )}
             </div>
-
-            {/* Highlight */}
             <div className="relative shrink-0">
-                <MenuButton onClick={() => setShowHighlight(!showHighlight)} isActive={editor.isActive('highlight')} title={t('cms_editor.toolbar.highlight')}>
+                <MenuButton onClick={() => { setShowHighlight(!showHighlight); setShowColors(false); }} isActive={editor.isActive('highlight')} title={t('cms_editor.toolbar.highlight')}>
                     <Highlighter size={16} />
                 </MenuButton>
                 {showHighlight && (
@@ -187,84 +185,62 @@ const EditorMenuBar: React.FC<EditorMenuBarProps> = ({ editor, onImageUpload, on
             <MenuDivider />
 
             {/* Alignment */}
-            <div className="flex shrink-0 bg-background border border-border rounded-md shadow-sm">
-                <MenuButton onClick={() => editor.chain().focus().setTextAlign('left').run()} isActive={editor.isActive({ textAlign: 'left' })} title={t('cms_editor.toolbar.alignLeft')}>
-                    <AlignLeft size={16} />
-                </MenuButton>
-                <MenuButton onClick={() => editor.chain().focus().setTextAlign('center').run()} isActive={editor.isActive({ textAlign: 'center' })} title={t('cms_editor.toolbar.alignCenter')}>
-                    <AlignCenter size={16} />
-                </MenuButton>
-                <MenuButton onClick={() => editor.chain().focus().setTextAlign('right').run()} isActive={editor.isActive({ textAlign: 'right' })} title={t('cms_editor.toolbar.alignRight')}>
-                    <AlignRight size={16} />
-                </MenuButton>
-                <MenuButton onClick={() => editor.chain().focus().setTextAlign('justify').run()} isActive={editor.isActive({ textAlign: 'justify' })} title={t('cms_editor.toolbar.alignJustify')}>
-                    <AlignJustify size={16} />
-                </MenuButton>
-            </div>
+            <MenuButton onClick={() => editor.chain().focus().setTextAlign('left').run()} isActive={editor.isActive({ textAlign: 'left' })} title={t('cms_editor.toolbar.alignLeft')}>
+                <AlignLeft size={16} />
+            </MenuButton>
+            <MenuButton onClick={() => editor.chain().focus().setTextAlign('center').run()} isActive={editor.isActive({ textAlign: 'center' })} title={t('cms_editor.toolbar.alignCenter')}>
+                <AlignCenter size={16} />
+            </MenuButton>
+            <MenuButton onClick={() => editor.chain().focus().setTextAlign('right').run()} isActive={editor.isActive({ textAlign: 'right' })} title={t('cms_editor.toolbar.alignRight')}>
+                <AlignRight size={16} />
+            </MenuButton>
+            <MenuButton onClick={() => editor.chain().focus().setTextAlign('justify').run()} isActive={editor.isActive({ textAlign: 'justify' })} title={t('cms_editor.toolbar.alignJustify')}>
+                <AlignJustify size={16} />
+            </MenuButton>
+
+            <MenuDivider />
 
             {/* Lists */}
-            <div className="flex shrink-0 bg-background border border-border rounded-md shadow-sm">
-                <MenuButton onClick={() => editor.chain().focus().toggleBulletList().run()} isActive={editor.isActive('bulletList')} title={t('cms_editor.toolbar.bulletList')}>
-                    <List size={16} />
-                </MenuButton>
-                <MenuButton onClick={() => editor.chain().focus().toggleOrderedList().run()} isActive={editor.isActive('orderedList')} title={t('cms_editor.toolbar.numberedList')}>
-                    <ListOrdered size={16} />
-                </MenuButton>
-            </div>
+            <MenuButton onClick={() => editor.chain().focus().toggleBulletList().run()} isActive={editor.isActive('bulletList')} title={t('cms_editor.toolbar.bulletList')}>
+                <List size={16} />
+            </MenuButton>
+            <MenuButton onClick={() => editor.chain().focus().toggleOrderedList().run()} isActive={editor.isActive('orderedList')} title={t('cms_editor.toolbar.numberedList')}>
+                <ListOrdered size={16} />
+            </MenuButton>
 
             <MenuDivider />
 
             {/* Insert */}
-            <div className="flex shrink-0 bg-background border border-border rounded-md shadow-sm">
-                <MenuButton onClick={onImageUpload} title={t('cms_editor.insertImage')}>
-                    <ImageIcon size={16} />
-                </MenuButton>
-                <MenuButton onClick={() => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()} title={t('cms_editor.toolbar.table')}>
-                    <Table size={16} />
-                </MenuButton>
-                <MenuButton onClick={() => editor.chain().focus().setHorizontalRule().run()} title={t('cms_editor.toolbar.horizontalLine')}>
-                    <Minus size={16} />
-                </MenuButton>
-            </div>
+            <MenuButton onClick={onImageUpload} title={t('cms_editor.insertImage')}>
+                <ImageIcon size={16} />
+            </MenuButton>
+            <MenuButton onClick={() => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()} title={t('cms_editor.toolbar.table')}>
+                <Table size={16} />
+            </MenuButton>
+            <MenuButton onClick={() => editor.chain().focus().setHorizontalRule().run()} title={t('cms_editor.toolbar.horizontalLine')}>
+                <Minus size={16} />
+            </MenuButton>
 
             <MenuDivider />
 
+            {/* Clear Formatting */}
             <MenuButton onClick={() => editor.chain().focus().unsetAllMarks().clearNodes().run()} title={t('cms_editor.toolbar.clearFormatting')}>
                 <RemoveFormatting size={16} />
             </MenuButton>
 
-            {/* AI Commands */}
-            <div className="ml-auto flex shrink-0 items-center gap-1 bg-primary/10 border border-primary/30 rounded-lg p-0.5">
-                <span className="px-2 text-xs font-bold text-primary flex items-center">
-                    <Sparkles size={12} className="mr-1" /> {t('cms_editor.assistant.ai')}
-                </span>
-                <button
-                    onClick={() => onAICommand('improve')}
-                    disabled={isAiWorking}
-                    className="px-3 py-1 text-xs font-medium text-primary hover:bg-primary/10 rounded disabled:opacity-50"
-                >
-                    {t('cms_editor.assistant.improve')}
+            {/* AI Commands - Right aligned, primary/yellow color */}
+            <div className="ml-auto flex items-center gap-0.5">
+                <button onClick={() => onAICommand('improve')} disabled={isAiWorking} title={t('cms_editor.assistant.improve')} className="p-1.5 rounded-md transition-colors text-primary hover:text-primary/70 active:opacity-50 disabled:opacity-30 disabled:cursor-not-allowed">
+                    <Sparkles size={16} />
                 </button>
-                <button
-                    onClick={() => onAICommand('fix')}
-                    disabled={isAiWorking}
-                    className="px-3 py-1 text-xs font-medium text-primary hover:bg-primary/10 rounded disabled:opacity-50"
-                >
-                    {t('cms_editor.assistant.fix')}
+                <button onClick={() => onAICommand('fix')} disabled={isAiWorking} title={t('cms_editor.assistant.fix')} className="p-1.5 rounded-md transition-colors text-primary hover:text-primary/70 active:opacity-50 disabled:opacity-30 disabled:cursor-not-allowed">
+                    <Code size={16} />
                 </button>
-                <button
-                    onClick={() => onAICommand('continue')}
-                    disabled={isAiWorking}
-                    className="px-3 py-1 text-xs font-medium text-primary hover:bg-primary/10 rounded disabled:opacity-50"
-                >
-                    {t('cms_editor.assistant.continue')}
+                <button onClick={() => onAICommand('continue')} disabled={isAiWorking} title={t('cms_editor.assistant.continue')} className="p-1.5 rounded-md transition-colors text-primary hover:text-primary/70 active:opacity-50 disabled:opacity-30 disabled:cursor-not-allowed">
+                    <Type size={16} />
                 </button>
-                <button
-                    onClick={() => onAICommand('vision')}
-                    disabled={isAiWorking}
-                    className="px-3 py-1 text-xs font-medium text-primary hover:bg-primary/10 rounded disabled:opacity-50 flex items-center gap-1"
-                >
-                    <Camera size={12} /> {t('cms_editor.assistant.fromImage', { defaultValue: 'From Image' })}
+                <button onClick={() => onAICommand('vision')} disabled={isAiWorking} title={t('cms_editor.assistant.fromImage', { defaultValue: 'From Image' })} className="p-1.5 rounded-md transition-colors text-primary hover:text-primary/70 active:opacity-50 disabled:opacity-30 disabled:cursor-not-allowed">
+                    <Camera size={16} />
                 </button>
             </div>
         </div>

@@ -90,7 +90,7 @@ const SimpleEditorHeader: React.FC<SimpleEditorHeaderProps> = ({
         {onOpenMobileMenu && (
           <button
             onClick={onOpenMobileMenu}
-            className="h-10 w-10 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary/80 active:bg-secondary rounded-xl transition-colors touch-manipulation lg:hidden"
+            className="h-10 w-10 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors touch-manipulation lg:hidden"
             title={t('common.menu')}
             aria-label={t('common.menu')}
           >
@@ -101,7 +101,7 @@ const SimpleEditorHeader: React.FC<SimpleEditorHeaderProps> = ({
         {/* Dashboard Button - More prominent on mobile */}
         <button
           title={t('editor.goToDashboard')}
-          className="h-10 w-10 md:h-9 md:w-9 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary/80 active:bg-secondary rounded-xl md:rounded-full transition-colors touch-manipulation"
+          className="h-10 w-10 md:h-9 md:w-9 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors touch-manipulation"
           onClick={handleGoToDashboard}
         >
           <LayoutDashboard className="w-5 h-5 md:w-4 md:h-4" />
@@ -110,7 +110,7 @@ const SimpleEditorHeader: React.FC<SimpleEditorHeaderProps> = ({
         {/* Mobile Controls Button - Editor Controls Panel */}
         <button
           onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-          className={`h-10 w-10 md:h-9 md:w-9 flex items-center justify-center hover:bg-secondary/80 rounded-xl md:rounded-full transition-colors touch-manipulation md:hidden ${isSidebarOpen ? 'text-primary bg-primary/10' : 'text-muted-foreground hover:text-foreground'
+          className={`h-10 w-10 md:h-9 md:w-9 flex items-center justify-center transition-colors touch-manipulation md:hidden ${isSidebarOpen ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
             }`}
           title={t('editor.toggleControls')}
           aria-label={t('editor.toggleControls')}
@@ -146,7 +146,7 @@ const SimpleEditorHeader: React.FC<SimpleEditorHeaderProps> = ({
       </div>
 
       {/* CENTER SECTION - Device Preview Controls */}
-      <div className="hidden md:flex items-center gap-1 bg-secondary/30 rounded-lg p-1">
+      <div className="hidden md:flex items-center gap-1">
         {([
           { name: 'desktop' as PreviewDevice, icon: <Monitor className="w-4 h-4" /> },
           { name: 'tablet' as PreviewDevice, icon: <Tablet className="w-4 h-4" /> },
@@ -156,9 +156,9 @@ const SimpleEditorHeader: React.FC<SimpleEditorHeaderProps> = ({
             key={name}
             title={t(`editor.previewOn${name.charAt(0).toUpperCase() + name.slice(1)}`)}
             onClick={() => setPreviewDevice(name)}
-            className={`h-8 w-8 flex items-center justify-center rounded-md transition-all ${previewDevice === name
-                ? 'bg-primary text-primary-foreground'
-                : 'text-muted-foreground hover:text-foreground hover:bg-secondary/80'
+            className={`h-8 w-8 flex items-center justify-center transition-all ${previewDevice === name
+              ? 'text-primary'
+              : 'text-muted-foreground hover:text-foreground'
               }`}
           >
             {icon}
@@ -170,11 +170,10 @@ const SimpleEditorHeader: React.FC<SimpleEditorHeaderProps> = ({
         {/* Back Button - Go to projects/websites */}
         <button
           onClick={() => navigate(ROUTES.WEBSITES)}
-          className="flex items-center justify-center gap-2 h-9 px-3 rounded-lg bg-secondary/50 hover:bg-secondary text-sm font-medium transition-all text-muted-foreground hover:text-foreground"
+          className="flex items-center justify-center gap-2 h-9 text-sm font-medium transition-all text-muted-foreground hover:text-foreground"
           aria-label={t('common.back')}
         >
           <ArrowLeft className="w-4 h-4" />
-          <span className="hidden sm:inline">{t('common.back')}</span>
         </button>
 
         {/* Save Button */}
@@ -183,16 +182,13 @@ const SimpleEditorHeader: React.FC<SimpleEditorHeaderProps> = ({
             title={saveState === 'idle' ? t('editor.saveChanges') : t('editor.saved')}
             onClick={handleSaveClick}
             disabled={saveState === 'saved'}
-            className="flex items-center gap-2 h-9 px-4 rounded-lg text-sm font-medium transition-all text-muted-foreground hover:text-foreground hover:bg-border/40 disabled:text-green-500 disabled:hover:bg-transparent"
+            className="flex items-center gap-2 h-9 text-sm font-medium transition-all text-muted-foreground hover:text-foreground disabled:text-green-500"
           >
             {saveState === 'idle' ? (
               <CloudUpload className="w-4 h-4" />
             ) : (
               <Check className="w-4 h-4" />
             )}
-            <span className="hidden lg:inline">
-              {saveState === 'idle' ? t('common.save') : t('editor.saved')}
-            </span>
           </button>
         )}
 

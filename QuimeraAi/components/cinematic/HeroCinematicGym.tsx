@@ -168,20 +168,20 @@ const HeroCinematicGym: React.FC<HeroCinematicGymProps> = (props) => {
     return (
         <section
             ref={containerRef}
-            className={`relative w-full ${paddingYClasses[paddingY as PaddingSize] || paddingYClasses.xl} ${paddingXClasses[paddingX as PaddingSize] || paddingXClasses.lg} flex flex-col lg:flex-row overflow-hidden font-sans transition-colors duration-500`}
-            style={{ backgroundColor: primaryBg, minHeight: props.heroHeight ? `${props.heroHeight}vh` : '90vh' }}
+            className={`relative w-full ${paddingYClasses[paddingY as PaddingSize] || paddingYClasses.xl} ${paddingXClasses[paddingX as PaddingSize] || paddingXClasses.lg} flex flex-col-reverse lg:flex-row overflow-hidden font-sans transition-colors duration-500`}
+            style={{ backgroundColor: primaryBg, minHeight: props.heroHeight ? `${props.heroHeight}vh` : undefined }}
         >
             {/* Left Content Area - Brutalist Typography */}
             <div
                 ref={textRef}
-                className="relative z-10 w-full lg:w-[55%] flex flex-col justify-center py-24 lg:py-0"
+                className="relative z-10 w-full lg:w-[55%] flex flex-col justify-center py-12 sm:py-16 lg:py-0"
             >
                 {/* Decorative brutalist elements */}
-                <div className="absolute top-12 left-0 lg:left-12 w-12 h-12 border-t-4 border-l-4 opacity-20 transition-colors" style={{ borderColor: darkText }} />
+                <div className="absolute top-12 left-0 lg:left-12 w-8 h-8 sm:w-12 sm:h-12 border-t-4 border-l-4 opacity-20 transition-colors hidden sm:block" style={{ borderColor: darkText }} />
                 <div className="absolute bottom-12 right-12 w-12 h-12 border-b-4 border-r-4 opacity-20 transition-colors hidden lg:block" style={{ borderColor: darkText }} />
 
                 {props.showBadge && props.badgeText && (
-                    <div className="mb-8 flex items-center gap-3 overflow-hidden">
+                    <div className="mb-4 sm:mb-8 flex items-center gap-3 overflow-hidden">
                         <div className="w-12 h-[2px] brutalist-split transition-colors" style={{ backgroundColor: accentRed }} />
                         <span
                             className="text-xs sm:text-sm font-bold tracking-[0.2em] uppercase brutalist-headline-line transition-colors"
@@ -192,12 +192,12 @@ const HeroCinematicGym: React.FC<HeroCinematicGymProps> = (props) => {
                     </div>
                 )}
 
-                <h1 className={`${headlineSizeClasses[headlineFontSize as FontSize] || headlineSizeClasses.xl} font-black leading-none mb-8 mix-blend-multiply flex flex-wrap transition-colors`}>
+                <h1 className={`${headlineSizeClasses[headlineFontSize as FontSize] || headlineSizeClasses.xl} font-black leading-none mb-4 sm:mb-8 mix-blend-multiply flex flex-wrap transition-colors`}>
                     {splitHeadline}
                 </h1>
 
                 <p
-                    className={`${subheadlineSizeClasses[subheadlineFontSize as FontSize] || subheadlineSizeClasses.lg} font-medium max-w-xl brutalist-subheadline opacity-80 leading-relaxed mb-12 transition-colors`}
+                    className={`${subheadlineSizeClasses[subheadlineFontSize as FontSize] || subheadlineSizeClasses.lg} font-medium max-w-xl brutalist-subheadline opacity-80 leading-relaxed mb-6 sm:mb-8 lg:mb-12 transition-colors`}
                     style={{ color: actualColors.text }}
                 >
                     {props.subheadline}
@@ -208,7 +208,7 @@ const HeroCinematicGym: React.FC<HeroCinematicGymProps> = (props) => {
                         <a
                             href={props.primaryCtaLink || '#'}
                             onClick={handlePrimaryClick}
-                            className="brutalist-btn group relative px-8 py-5 flex items-center gap-4 overflow-hidden transition-colors"
+                            className="brutalist-btn group relative px-6 py-4 sm:px-8 sm:py-5 flex items-center gap-4 overflow-hidden transition-colors"
                             style={{ backgroundColor: actualColors.buttonBackground, color: actualColors.buttonText }}
                         >
                             <span className="relative z-10 font-bold uppercase tracking-wider text-sm sm:text-base">
@@ -237,7 +237,7 @@ const HeroCinematicGym: React.FC<HeroCinematicGymProps> = (props) => {
             </div>
 
             {/* Right Media Area - Angled/Cut-out Image */}
-            <div className="relative w-full lg:w-[45%] mt-12 lg:mt-0 h-[60vh] lg:h-auto overflow-hidden">
+            <div className="relative w-full lg:w-[45%] mt-6 sm:mt-8 lg:mt-0 h-[40vh] sm:h-[50vh] lg:h-auto overflow-hidden">
                 {/* Diagonal cut overlay spanning from content */}
                 <div
                     className="absolute inset-y-0 left-0 w-32 z-20 brutalist-split hidden lg:block transition-colors"

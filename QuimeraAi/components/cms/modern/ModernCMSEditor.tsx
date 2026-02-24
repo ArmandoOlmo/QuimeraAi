@@ -23,7 +23,7 @@ import {
     ArrowLeft, Save, Globe, Type, Loader2, Sparkles,
     MoreVertical, Calendar, Check, X as XIcon, Link as LinkIcon,
     Monitor, Tablet, Smartphone, Eye, EyeOff, Layout, Menu, RefreshCw, Settings, User,
-    Upload
+    Upload, ExternalLink
 } from 'lucide-react';
 
 import EditorMenuBar from './EditorMenuBar';
@@ -38,6 +38,8 @@ import {
     type MediaInput
 } from '../../../utils/geminiProxyClient';
 import DashboardSidebar from '../../dashboard/DashboardSidebar';
+import { useRouter } from '../../../hooks/useRouter';
+import { ROUTES } from '../../../routes/config';
 import { logApiCall } from '../../../services/apiLoggingService';
 import { useViewportType } from '../../../hooks/use-mobile';
 import MobileBottomSheet from '../../ui/MobileBottomSheet';
@@ -182,6 +184,7 @@ const SettingsSidebarContent: React.FC<SettingsSidebarContentProps> = ({
 
 const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
     const { t } = useTranslation();
+    const { navigate } = useRouter();
     // Use CMSContext for posts (scoped to active project)
     const { saveCMSPost } = useCMS();
     // Use EditorContext for other utilities
@@ -691,62 +694,69 @@ IMPORTANT FORMATTING RULES:
             {/* Main Content Area */}
             <div className="flex flex-col flex-1 min-w-0">
                 {/* Header - Replicated from LandingPageEditor */}
-                <header className="h-14 px-4 lg:px-6 border-b border-border flex items-center bg-background z-20 sticky top-0">
-                    {/* Left Section - Logo + Title + Badge */}
-                    <div className="flex items-center gap-3">
+                <header className="h-12 px-3 lg:px-4 border-b border-border flex items-center bg-background z-20 sticky top-0">
+                    {/* Left Section - Menu + Icon */}
+                    <div className="flex items-center gap-2">
                         <button
                             onClick={() => setIsMobileSidebarOpen(true)}
-                            className="lg:hidden h-10 w-10 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary/80 rounded-xl transition-colors"
+                            className="lg:hidden h-9 w-9 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
                         >
                             <Menu className="w-5 h-5" />
                         </button>
-                        <div className="flex items-center gap-2">
-                            <Layout className="text-primary w-5 h-5" />
-                            <span className="text-sm sm:text-base font-semibold text-foreground">
-                                {t('cms_editor.title', 'Editor Landing Page')}
-                            </span>
-                        </div>
-
-                        {/* Unsaved changes indicator - "Cambios sin guardar" */}
-                        <span className="hidden sm:inline-flex px-2.5 py-1 text-xs font-medium bg-amber-500/20 text-amber-400 rounded-full">
-                            {t('editor.unsavedChanges', 'Cambios sin guardar')}
-                        </span>
+                        <Layout className="text-primary w-5 h-5" />
                     </div>
 
+                    {/* Center - Status Toggle */}
+                    <div className="flex items-center gap-2 mx-auto">
+                        {lastSaved && (
+                            <span className="text-xs text-muted-foreground flex items-center gap-1 mr-2">
+                                <Check size={12} className="text-green-500" />
+                                {lastSaved.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            </span>
+                        )}
+                        <div className="flex items-center gap-1 text-xs font-medium">
+                            <button onClick={() => setStatus('draft')} className={`px-2 py-1 rounded-md transition-all ${status === 'draft' ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'}`}>{t('cms_editor.draft')}</button>
+                            <button onClick={() => setStatus('published')} className={`px-2 py-1 rounded-md transition-all ${status === 'published' ? 'text-green-400' : 'text-muted-foreground hover:text-foreground'}`}>{t('cms_editor.published')}</button>
+                        </div>
+                    </div>
 
-
-                    {/* Right Section - Icons + Guardar + Volver */}
-                    <div className="flex items-center gap-2 ml-auto">
-
-                        {/* Save button - Yellow/Primary style */}
+                    {/* Right Section - Icon-only buttons */}
+                    <div className="flex items-center gap-1">
+                        {/* Save */}
                         <button
                             onClick={handleSave}
                             disabled={isSaving}
-                            className="flex items-center gap-2 h-8 px-4 rounded-md text-sm font-medium transition-all bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-50"
+                            className="h-9 w-9 flex items-center justify-center rounded-lg transition-all text-primary hover:text-primary/80 disabled:opacity-50"
+                            title={t('common.save', 'Guardar')}
                         >
-                            {isSaving ? (
-                                <Loader2 className="w-4 h-4 animate-spin" />
-                            ) : (
-                                <Save size={14} />
-                            )}
-                            <span className="hidden sm:inline">
-                                {t('common.save', 'Guardar')}
-                            </span>
+                            {isSaving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save size={18} />}
                         </button>
 
-                        {/* Volver button - Outlined style on the right */}
+                        {/* Web Editor */}
+                        {activeProject?.id && (
+                            <button
+                                onClick={() => navigate(ROUTES.EDITOR.replace(':projectId', activeProject.id))}
+                                className="h-9 w-9 flex items-center justify-center transition-all text-muted-foreground hover:text-foreground"
+                                title={t('cms_editor.goToWebEditor', 'Ir al Web Editor')}
+                            >
+                                <Monitor className="w-4 h-4" />
+                            </button>
+                        )}
+
+                        {/* Back */}
                         <button
                             onClick={onClose}
-                            className="flex items-center gap-1.5 h-8 px-3 rounded-md text-sm font-medium transition-all border border-border text-muted-foreground hover:text-foreground hover:bg-secondary"
+                            className="h-9 w-9 flex items-center justify-center transition-all text-muted-foreground hover:text-foreground"
+                            title={t('common.back', 'Volver')}
                         >
                             <ArrowLeft className="w-4 h-4" />
-                            <span className="hidden sm:inline">{t('common.back', 'Volver')}</span>
                         </button>
 
                         {/* Sidebar Toggle */}
                         <button
                             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                            className={`h-9 w-9 flex items-center justify-center rounded-md transition-colors ${isSidebarOpen ? 'bg-accent text-accent-foreground' : 'text-muted-foreground hover:bg-secondary'}`}
+                            className={`h-9 w-9 flex items-center justify-center transition-colors ${isSidebarOpen ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}
+                            title={t('cms_editor.postSettings')}
                         >
                             <MoreVertical size={18} />
                         </button>
@@ -903,33 +913,7 @@ IMPORTANT FORMATTING RULES:
                     />
                 )}
 
-                {/* CMS Editor Toolbar - Simplified, Remove Save Button */}
-                <div className="h-14 border-b border-border bg-card flex items-center justify-between px-6 shrink-0 shadow-sm">
-                    <div className="flex items-center gap-4 flex-1">
-                        {/* Title input moved to header, keeping this bar for secondary controls or removing entirely? 
-                           The user request wants strict replication. The Admin Editor has 'Controls' on the right.
-                           But this is the CMS editor, so we might need this bar for different things. 
-                           I will keep the status toggles here but remove the Big Title Input and Save button since they are up top now.
-                       */}
-                        <div className="text-sm text-muted-foreground font-medium flex items-center gap-2">
-                            <Type size={16} />
-                            <span>{t('cms_editor.contentEditor')}</span>
-                        </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                        {lastSaved && (
-                            <span className="text-xs text-muted-foreground flex items-center gap-1">
-                                <Check size={12} className="text-green-500" />
-                                {t('cms_editor.saved', { time: lastSaved.toLocaleTimeString() })}
-                            </span>
-                        )}
-                        <div className="flex items-center bg-secondary rounded-lg p-1 text-xs font-medium">
-                            <button onClick={() => setStatus('draft')} className={`px-3 py-1.5 rounded-md transition-all ${status === 'draft' ? 'bg-background shadow text-foreground' : 'text-muted-foreground hover:text-foreground'}`}>{t('cms_editor.draft')}</button>
-                            <button onClick={() => setStatus('published')} className={`px-3 py-1.5 rounded-md transition-all ${status === 'published' ? 'bg-green-500/20 text-green-400' : 'text-muted-foreground hover:text-foreground'}`}>{t('cms_editor.published')}</button>
-                        </div>
-                        {/* Save Button Removed from here */}
-                    </div>
-                </div>
+
 
                 <div className="flex flex-1 min-h-0">
                     {/* Main Editor */}

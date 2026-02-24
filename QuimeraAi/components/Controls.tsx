@@ -1248,7 +1248,7 @@ const Controls: React.FC = () => {
                 { value: 'verticalSplit', label: `${t('controls.verticalSplit')} (${t('controls.split5050')})` },
                 { value: 'glass', label: `${t('controls.glass')} (${t('controls.frosted')})` },
                 { value: 'stacked', label: `${t('controls.stacked')} (${t('controls.imageAndText')})` },
-                { value: 'cinematic-gym', label: `Gym (Brutalist)` }
+                { value: 'cinematic-gym', label: `Brutalist` }
               ]}
             />
           </div>
@@ -1687,7 +1687,7 @@ const Controls: React.FC = () => {
               onClick={() => setNestedData('features.featuresVariant', 'cinematic-gym')}
               className={`py-1 text-xs font-medium rounded-sm transition-colors ${currentVariant === 'cinematic-gym' ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:bg-editor-border'}`}
             >
-              Gym (Brutalist)
+              Brutalist
             </button>
           </div>
           <p className="text-xs text-editor-text-secondary mt-2">
@@ -6046,7 +6046,7 @@ const Controls: React.FC = () => {
                 { value: 'modern', label: 'Modern (Bento Asimétrico)' },
                 { value: 'bento-premium', label: 'Premium (Bento Destacado)' },
                 { value: 'image-overlay', label: 'Overlay (Tarjetas Completas)' },
-                { value: 'cinematic-gym', label: 'Gym (Brutalist)' }
+                { value: 'cinematic-gym', label: 'Brutalist' }
               ]}
             />
             <p className="text-xs text-editor-text-secondary mt-2">

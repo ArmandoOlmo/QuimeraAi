@@ -25,6 +25,8 @@ import {
 import { useAuth } from '../../../contexts/core/AuthContext';
 import { useUI } from '../../../contexts/core/UIContext';
 import { useProject } from '../../../contexts/project';
+import { useRouter } from '../../../hooks/useRouter';
+import { ROUTES } from '../../../routes/config';
 import { useEmailSettings, useEmailLogs } from '../../../hooks/useEmailSettings';
 import DashboardSidebar from '../DashboardSidebar';
 import DashboardWaveRibbons from '../DashboardWaveRibbons';
@@ -60,6 +62,7 @@ const EmailDashboard: React.FC<EmailDashboardProps> = ({ projectId: propProjectI
     const { user } = useAuth();
     const { setView } = useUI();
     const { projects, activeProject, activeProjectId } = useProject();
+    const { navigate } = useRouter();
     const userId = user?.uid || '';
 
     // State for selected project (similar to ecommerce)
@@ -136,7 +139,7 @@ const EmailDashboard: React.FC<EmailDashboardProps> = ({ projectId: propProjectI
                         // If we were showing all projects but have a selected project, go back to it
                         setShowAllProjects(false);
                     } else {
-                        setView('dashboard');
+                        navigate(ROUTES.DASHBOARD);
                     }
                 }}
             />
@@ -194,7 +197,7 @@ const EmailDashboard: React.FC<EmailDashboardProps> = ({ projectId: propProjectI
 
                         {/* Back Button Only */}
                         <button
-                            onClick={() => setView('dashboard')}
+                            onClick={() => navigate(ROUTES.DASHBOARD)}
                             className="flex items-center justify-center gap-2 h-9 px-3 rounded-lg bg-secondary/50 hover:bg-secondary text-sm font-medium transition-all text-muted-foreground hover:text-foreground"
                             aria-label={t('common.back', 'Volver')}
                         >

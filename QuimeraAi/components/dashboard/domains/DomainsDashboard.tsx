@@ -6,6 +6,8 @@ import { useUI } from '../../../contexts/core/UIContext';
 import { useSafeTenant } from '../../../contexts/tenant';
 import { useSafeUpgrade } from '../../../contexts/UpgradeContext';
 import { usePlanAccess } from '../../../hooks/usePlanFeatures';
+import { useRouter } from '../../../hooks/useRouter';
+import { ROUTES } from '../../../routes/config';
 import DashboardSidebar from '../DashboardSidebar';
 import DashboardWaveRibbons from '../DashboardWaveRibbons';
 import ConfirmationModal from '../../ui/ConfirmationModal';
@@ -1151,6 +1153,7 @@ const DomainsDashboard: React.FC = () => {
     const { domains, addDomain, refetch } = useDomains();
     const { projects } = useProject();
     const { setView } = useUI();
+    const { navigate } = useRouter();
     const tenantContext = useSafeTenant();
     const upgradeContext = useSafeUpgrade();
 
@@ -1291,7 +1294,7 @@ const DomainsDashboard: React.FC = () => {
                             <ShoppingCart className="w-4 h-4" /> <span className="hidden sm:inline">{t('domainsDashboard.buyDomain')}</span>
                         </button>
                         <button
-                            onClick={() => setView('dashboard')}
+                            onClick={() => navigate(ROUTES.DASHBOARD)}
                             className="flex items-center justify-center gap-2 h-9 w-9 sm:w-auto sm:px-3 rounded-lg sm:bg-secondary/50 sm:border sm:border-border/40 sm:hover:bg-secondary text-sm font-medium transition-all text-muted-foreground hover:text-foreground"
                             aria-label={t('common.back', 'Volver')}
                         >
