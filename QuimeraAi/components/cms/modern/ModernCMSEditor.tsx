@@ -472,21 +472,29 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
                 if (promptConfig) {
                     populatedPrompt = promptConfig.template.replace('{{context}}', context);
                 } else {
-                    populatedPrompt = `Continue writing based on this context: ${context}`;
+                    populatedPrompt = `You are a professional content writer working inside a CMS rich text editor. Continue writing based on the following context. Write naturally flowing paragraphs that continue the existing content seamlessly.
+
+Context: ${context}
+
+IMPORTANT: Return ONLY properly formatted HTML using <p>, <h2>, <h3>, <strong>, <em> tags. Write in well-structured paragraphs, NOT bullet points. Do NOT return markdown or code blocks.`;
                 }
             } else if (command === 'fix') {
                 promptConfig = getPrompt('cms-fix-grammar');
                 if (promptConfig) {
                     populatedPrompt = promptConfig.template.replace('{{text}}', selectedText || '');
                 } else {
-                    populatedPrompt = `Fix grammar and spelling in this text: "${selectedText}"`;
+                    populatedPrompt = `Fix grammar, spelling, and punctuation in the following text. Keep the same structure, tone, and HTML formatting. Return ONLY the corrected text without any explanation, markdown, or code blocks.
+
+Text to fix: "${selectedText}"`;
                 }
             } else if (command === 'improve') {
                 promptConfig = getPrompt('cms-improve-text');
                 if (promptConfig) {
                     populatedPrompt = promptConfig.template.replace('{{text}}', selectedText || '');
                 } else {
-                    populatedPrompt = `Improve this text making it more clear and engaging: "${selectedText}"`;
+                    populatedPrompt = `Improve the following text, making it more clear, engaging, and professional. Keep the same general meaning and HTML structure. Return ONLY the improved HTML text without any explanation, markdown, or code blocks.
+
+Text to improve: "${selectedText}"`;
                 }
             }
 
@@ -555,8 +563,17 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
 
         let usedModel = 'gemini-2.5-flash';
         try {
-            const instruction = visionInstruction.trim() || 'Describe what you see and write a detailed, engaging paragraph about it.';
-            const promptText = `You are a content writer working inside a CMS editor. Based on the uploaded image/video, ${instruction}\n\nReturn ONLY the HTML content (using <p>, <h2>, <h3>, <ul>, <li> tags). Do NOT wrap in code blocks or JSON.`;
+            const instruction = visionInstruction.trim() || 'Describe what you see and write a detailed, engaging content about it.';
+            const promptText = `You are a professional content writer working inside a CMS rich text editor. Based on the uploaded image/video, ${instruction}
+
+IMPORTANT FORMATTING RULES:
+- Return ONLY properly formatted HTML content
+- Use <h2> for main headings, <h3> for subheadings
+- Use <p> for paragraphs — write in flowing, well-structured paragraphs
+- Use <strong> and <em> for emphasis
+- Only use <ul>/<li> when listing specific items, NOT as the default format
+- Do NOT wrap in code blocks, markdown, or JSON
+- Do NOT use bullet points as the primary content structure — use descriptive paragraphs`;
 
             const promptConfig = getPrompt('cms-vision-write');
             const finalPrompt = promptConfig
