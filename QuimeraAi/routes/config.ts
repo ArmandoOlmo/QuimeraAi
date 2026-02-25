@@ -142,6 +142,7 @@ export const ROUTES = {
   ADMIN_NEWS: '/admin/news',
   ADMIN_LANDING_EDITOR: '/admin/landing-editor',
   ADMIN_SERVICE_AVAILABILITY: '/admin/service-availability',
+  ADMIN_FINANCES: '/admin/finances',
 } as const;
 
 // =============================================================================
@@ -934,6 +935,17 @@ export const routeConfigs: RouteConfig[] = [
     roles: ['owner', 'superadmin'],
     parent: ROUTES.SUPERADMIN,
   },
+  {
+    path: ROUTES.ADMIN_FINANCES,
+    view: 'superadmin',
+    adminView: 'finances',
+    type: 'admin',
+    title: 'Finanzas & MRR',
+    requiresAuth: true,
+    requiresEmailVerified: true,
+    roles: ['owner', 'superadmin'],
+    parent: ROUTES.SUPERADMIN,
+  }
 ];
 
 // =============================================================================

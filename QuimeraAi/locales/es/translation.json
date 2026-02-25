@@ -2709,7 +2709,7 @@
     "menuManager": "Gestor de Menús"
   },
   "superadmin": {
-    "title": "Panel de Super Administrador",
+    "title": "Admin",
     "users": "Usuarios",
     "allUsers": "Todos los Usuarios",
     "roles": "Roles",
@@ -2720,6 +2720,32 @@
     "globalSettings": "Configuración Global",
     "backToDashboard": "Volver",
     "accessMessage": "Tienes acceso a todas las funciones administrativas de la plataforma.",
+    "finances": "Finanzas & MRR",
+    "financesDesc": "Dashboard financiero completo con gráficas, MRR, ingresos por plan y crecimiento.",
+    "financesDetail": {
+      "thisMonth": "Este Mes",
+      "lastMonth": "Mes Pasado",
+      "last90Days": "90 Días",
+      "thisYear": "Este Año",
+      "allTime": "Todo",
+      "totalMRR": "MRR Total",
+      "paidSubs": "Suscripciones",
+      "conversionRate": "Conversión",
+      "projectedMonthly": "Ingreso recurrente mensual",
+      "totalActive": "activos totales",
+      "avgRevenue": "Ingreso promedio por usuario",
+      "paidVsFree": "Pago vs gratuito",
+      "mrrOverTime": "MRR a lo largo del tiempo",
+      "revenueByPlan": "Ingresos por Plan",
+      "tenantGrowth": "Crecimiento de Clientes",
+      "recentClients": "Clientes Recientes",
+      "newClients": "Nuevos Clientes",
+      "name": "Nombre",
+      "plan": "Plan",
+      "status": "Estado",
+      "noData": "Sin datos de planes",
+      "noClients": "No hay clientes registrados"
+    },
     "adminManagement": "Gestión de Administradores",
     "adminManagementDesc": "Gestionar administradores y permisos del sistema.",
     "tenantManagement": "Gestión de Clientes",
@@ -3103,7 +3129,23 @@
       },
       "detailsModal": {
         "title": "Detalles del Tenant",
-        "close": "Cerrar"
+        "close": "Cerrar",
+        "tabs": {
+          "general": "General",
+          "clients": "Clientes",
+          "subscription": "Suscripción y Pagos",
+          "credits": "Créditos IA"
+        },
+        "subscriptionInfo": "Información del Plan",
+        "mrr": "Ingreso Recurrente (MRR)",
+        "billingCycle": "Ciclo de Facturación",
+        "limits": "Límites del Plan",
+        "changePlan": "Cambiar Plan",
+        "aiCreditsUsage": "Uso de Créditos IA",
+        "transactionHistory": "Historial de Transacciones",
+        "addCredits": "Añadir Créditos",
+        "creditsRemaining": "Créditos Restantes",
+        "noTransactions": "No hay transacciones recientes"
       },
       "metrics": {
         "projects": "Proyectos",

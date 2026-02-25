@@ -3,13 +3,12 @@
  * Página pública para mostrar un artículo individual del blog de Quimera
  */
 
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   ArrowLeft,
   Calendar,
   Clock,
-  Star,
   User,
   Share2,
   Twitter,
@@ -17,30 +16,19 @@ import {
   Facebook,
   Link as LinkIcon,
   Tag,
-  ChevronRight
+  Check
 } from 'lucide-react';
 import { marked } from 'marked';
 import { useSafeAppContent } from '../contexts/appContent';
-import { AppArticle, AppArticleCategory, DEFAULT_APP_NAVIGATION } from '../types/appContent';
+import { AppArticleCategory, DEFAULT_APP_NAVIGATION } from '../types/appContent';
 import LanguageSelector from './ui/LanguageSelector';
-import { sanitizeHtml } from '../utils/sanitize';
-
-// Configure marked for better rendering
-marked.setOptions({
-  breaks: true, // Convert \n to <br>
-  gfm: true,    // GitHub Flavored Markdown
-});
 
 // --- Brand Assets ---
 const QUIMERA_LOGO = "https://firebasestorage.googleapis.com/v0/b/quimeraai.firebasestorage.app/o/quimera%2Fquimeralogo.png?alt=media&token=82368c1c-0f63-42b7-831f-72780006f032";
 
 interface PublicArticlePageProps {
+  onNavigateBack: () => void;
   slug: string;
-  onNavigateToHome: () => void;
-  onNavigateToBlog: () => void;
-  onNavigateToLogin: () => void;
-  onNavigateToRegister: () => void;
-  onNavigateToArticle: (slug: string) => void;
 }
 
 const CATEGORY_LABELS: Record<AppArticleCategory, string> = {
@@ -55,404 +43,375 @@ const CATEGORY_LABELS: Record<AppArticleCategory, string> = {
 };
 
 const PublicArticlePage: React.FC<PublicArticlePageProps> = ({
-  slug,
-  onNavigateToHome,
-  onNavigateToBlog,
-  onNavigateToLogin,
-  onNavigateToRegister,
-  onNavigateToArticle
+  onNavigateBack,
+  slug
 }) => {
   const { t } = useTranslation();
   const appContent = useSafeAppContent();
-
   const articles = appContent?.articles || [];
+  const navigation = appContent?.navigation || DEFAULT_APP_NAVIGATION;
   const isLoading = appContent?.isLoadingArticles || false;
 
-  // Find the current article
+  const [copiedLink, setCopiedLink] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 50);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   const article = useMemo(() => {
-    return articles.find(a => a.slug === slug && a.status === 'published');
+    return articles.find(a => a.slug === slug);
   }, [articles, slug]);
 
   // Related articles (same category, excluding current)
   const relatedArticles = useMemo(() => {
     if (!article) return [];
     return articles
-      .filter(a =>
-        a.id !== article.id &&
-        a.status === 'published' &&
-        (a.category === article.category || a.tags.some(tag => article.tags.includes(tag)))
-      )
+      .filter(a => a.status === 'published' && a.category === article.category && a.id !== article.id)
       .slice(0, 3);
   }, [articles, article]);
 
-  // Convert Markdown to HTML and sanitize
-  const sanitizedContent = useMemo(() => {
-    if (!article || !article.content) return '';
+  // Convert markdown to HTML via marked
+  const articleHtml = useMemo(() => {
+    if (!article?.content) return '';
+    const rawHtml = marked.parse(article.content) as string;
 
-    try {
-      // Detect Markdown by common patterns
-      const isMarkdown = article.content.trim().startsWith('#') ||
-        article.content.includes('\n##') ||
-        article.content.includes('\n- ') ||
-        article.content.includes('\n* ') ||
-        article.content.includes('```');
+    // Convert <a> tags to properly open in new tabs and use elegant stylings
+    const processedHtml = rawHtml.replace(
+      /<a href="(.*?)".*?>(.*?)<\/a>/g,
+      '<a href="$1" target="_blank" rel="noopener noreferrer" class="text-yellow-400 hover:text-yellow-300 font-medium underline underline-offset-4 decoration-yellow-400/30 hover:decoration-yellow-400 transition-colors">$2</a>'
+    );
 
-      let htmlContent: string;
+    return processedHtml;
+  }, [article?.content]);
 
-      if (isMarkdown) {
-        // Parse markdown to HTML
-        const parsed = marked.parse(article.content);
-        htmlContent = typeof parsed === 'string' ? parsed : article.content;
-      } else {
-        // Check if it's already HTML
-        const containsHtmlTags = /<[a-z][\s\S]*>/i.test(article.content);
-        htmlContent = containsHtmlTags ? article.content : marked.parse(article.content) as string;
-      }
+  // Copy to clipboard
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(window.location.href);
+    setCopiedLink(true);
+    setTimeout(() => setCopiedLink(false), 2000);
+  };
 
-      return sanitizeHtml(htmlContent);
-    } catch (error) {
-      console.error('Error parsing article content:', error);
-      return sanitizeHtml(article.content);
+  const handleShare = (platform: 'twitter' | 'linkedin' | 'facebook') => {
+    const url = encodeURIComponent(window.location.href);
+    const text = encodeURIComponent(`He leído "${article?.title}" en Quimera.ai`);
+
+    let shareUrl = '';
+    switch (platform) {
+      case 'twitter':
+        shareUrl = `https://twitter.com/intent/tweet?url=${url}&text=${text}`;
+        break;
+      case 'linkedin':
+        shareUrl = `https://www.linkedin.com/shareArticle?mini=true&url=${url}&title=${text}`;
+        break;
+      case 'facebook':
+        shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${url}`;
+        break;
     }
-  }, [article]);
 
-  // Share functions
-  const shareUrl = typeof window !== 'undefined' ? window.location.href : '';
-  const shareTitle = article?.title || '';
-
-  const shareOnTwitter = () => {
-    window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareTitle)}`, '_blank');
+    window.open(shareUrl, '_blank', 'width=600,height=400');
   };
 
-  const shareOnLinkedIn = () => {
-    window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`, '_blank');
-  };
-
-  const shareOnFacebook = () => {
-    window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`, '_blank');
-  };
-
-  const copyLink = () => {
-    navigator.clipboard.writeText(shareUrl);
-    // Could show a toast here
-  };
-
-  // Scroll to top on mount
+  // Scroll to top on mount and reset overflow
   useEffect(() => {
     window.scrollTo(0, 0);
+
+    // Override overflow:hidden from index.html to allow native page scrolling
+    const html = document.documentElement;
+    const body = document.body;
+    const root = document.getElementById('root');
+
+    html.style.overflow = 'auto';
+    html.style.height = 'auto';
+    body.style.overflow = 'auto';
+    body.style.height = 'auto';
+    if (root) {
+      root.style.overflow = 'visible';
+      root.style.height = 'auto';
+    }
+
+    return () => {
+      html.style.overflow = '';
+      html.style.height = '';
+      body.style.overflow = '';
+      body.style.height = '';
+      if (root) {
+        root.style.overflow = '';
+        root.style.height = '';
+      }
+    };
   }, [slug]);
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#0A0A0A] text-white flex items-center justify-center">
-        <img src="https://firebasestorage.googleapis.com/v0/b/quimeraai.firebasestorage.app/o/quimera%2Fquimeralogo.png?alt=media&token=82368c1c-0f63-42b7-831f-72780006f032" alt="Loading..." className="w-8 h-8 object-contain animate-pulse" />
+      <div className="min-h-screen bg-[#0A0A0A] flex items-center justify-center">
+        <div className="w-16 h-16 border-4 border-yellow-400 border-t-transparent rounded-full animate-spin shadow-[0_0_40px_rgba(250,204,21,0.6)]" />
       </div>
     );
   }
 
   if (!article) {
     return (
-      <div className="min-h-screen bg-[#0A0A0A] text-white">
-        {/* Header */}
-        <header className="sticky top-0 z-50 bg-[#0A0A0A]/95 backdrop-blur-sm border-b border-white/5">
-          <div className="container mx-auto px-4 sm:px-6 py-4">
-            <div className="flex items-center justify-between">
-              <button onClick={onNavigateToHome} className="flex items-center gap-2 sm:gap-3">
-                <img src={QUIMERA_LOGO} alt="Quimera.ai" className="w-8 h-8 sm:w-10 sm:h-10" />
-                <span className="text-lg sm:text-xl font-bold text-white">
-                  Quimera<span className="text-yellow-400">.ai</span>
-                </span>
-              </button>
-            </div>
-          </div>
-        </header>
-
-        <main className="container mx-auto px-4 sm:px-6 py-20 text-center">
-          <h1 className="text-3xl font-bold mb-4">Article Not Found</h1>
-          <p className="text-gray-400 mb-8">The article you're looking for doesn't exist or has been removed.</p>
-          <button
-            onClick={onNavigateToBlog}
-            className="px-6 py-3 bg-yellow-400 text-black font-semibold rounded-xl hover:bg-yellow-300 transition-colors"
-          >
-            Browse All Articles
-          </button>
-        </main>
+      <div className="min-h-screen bg-[#0A0A0A] text-white flex flex-col items-center justify-center p-4">
+        <h1 className="text-4xl font-bold mb-4">{t('blog.articleNotFound', 'Article Not Found')}</h1>
+        <p className="text-gray-400 mb-8 max-w-md text-center">
+          {t('blog.articleNotFoundDesc', 'The article you are looking for might have been removed, had its name changed, or is temporarily unavailable.')}
+        </p>
+        <button
+          onClick={onNavigateBack}
+          className="px-6 py-3 bg-white text-black font-bold rounded-full hover:bg-yellow-400 transition-colors shadow-lg"
+        >
+          {t('blog.backToBlog', 'Return to Blog')}
+        </button>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#0A0A0A] text-white">
-      {/* Header */}
-      <header className="sticky top-0 z-50 bg-[#0A0A0A]/95 backdrop-blur-sm border-b border-white/5">
-        <div className="container mx-auto px-4 sm:px-6 py-4">
+    <div className="min-h-screen bg-[#0A0A0A] text-white selection:bg-yellow-400 selection:text-black font-sans pb-20">
+      {/* Dynamic Header */}
+      <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${scrolled ? 'bg-[#0A0A0A]/90 backdrop-blur-xl border-b border-white/5 py-3' : 'bg-gradient-to-b from-[#0A0A0A]/80 to-transparent py-5'}`}>
+        <div className="container mx-auto px-4 sm:px-6">
           <div className="flex items-center justify-between">
-            {/* Logo */}
-            <button onClick={onNavigateToHome} className="flex items-center gap-2 sm:gap-3">
-              <img src={QUIMERA_LOGO} alt="Quimera.ai" className="w-8 h-8 sm:w-10 sm:h-10" />
-              <span className="text-lg sm:text-xl font-bold text-white">
-                Quimera<span className="text-yellow-400">.ai</span>
-              </span>
-            </button>
+            {/* Back Button / Logo */}
+            <div className="flex items-center gap-6">
+              <button
+                onClick={onNavigateBack}
+                className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 border border-white/10 flex items-center justify-center transition-all backdrop-blur-md group"
+                aria-label={t('blog.backToBlog', 'Volver al Blog')}
+              >
+                <ArrowLeft size={18} className="text-white group-hover:-translate-x-1 transition-transform" />
+              </button>
+
+              <div className={`hidden sm:flex items-center gap-2 group transition-opacity duration-500 ${scrolled ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+                <img src={QUIMERA_LOGO} alt="Quimera.ai" className="w-6 h-6" />
+                <span className="text-sm font-bold tracking-tight text-white line-clamp-1 max-w-[200px] md:max-w-xs lg:max-w-md">
+                  {article.title}
+                </span>
+              </div>
+            </div>
 
             {/* Actions */}
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
               <LanguageSelector variant="minimal" />
               <button
-                onClick={onNavigateToLogin}
-                className="hidden sm:block text-sm text-gray-300 hover:text-white transition-colors"
+                onClick={handleCopyLink}
+                className="hidden sm:flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full text-sm font-medium transition-colors backdrop-blur-md"
               >
-                {t('landing.login', 'Login')}
-              </button>
-              <button
-                onClick={onNavigateToRegister}
-                className="px-4 py-2 bg-yellow-400 text-black font-semibold rounded-lg hover:bg-yellow-300 transition-colors text-sm"
-              >
-                {t('landing.register', 'Get Started')}
+                {copiedLink ? <Check size={14} className="text-green-400" /> : <Share2 size={14} />}
+                <span className={copiedLink ? "text-green-400" : ""}>{copiedLink ? t('common.copied', 'Copiado') : t('blog.share', 'Compartir')}</span>
               </button>
             </div>
           </div>
         </div>
       </header>
 
-      {/* Hero */}
-      <div className="relative">
+      {/* Immersive Parallax Hero */}
+      <div className="relative pt-0 h-[60vh] sm:h-[70vh] min-h-[400px] max-h-[800px] overflow-hidden">
+        <div className="absolute inset-0 bg-black z-0 pointer-events-none" />
         {article.featuredImage ? (
-          <div className="relative h-[40vh] sm:h-[50vh] overflow-hidden">
+          <div className="absolute inset-0 z-0">
+            {/* Overlay Gradients */}
+            <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-[#0A0A0A] via-[#0A0A0A]/80 to-transparent z-10" />
+            <div className="absolute inset-0 bg-black/30 z-10" />
+            {/* Image */}
             <img
               src={article.featuredImage}
               alt={article.title}
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover animate-slow-zoom scale-105"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#0A0A0A] via-[#0A0A0A]/50 to-transparent" />
           </div>
         ) : (
-          <div className="h-32 bg-gradient-to-r from-yellow-400/10 to-purple-600/10" />
+          <div className="absolute inset-0 bg-gradient-to-br from-yellow-400/20 to-purple-900/40 z-0">
+            <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay" />
+            <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-[#0A0A0A] to-transparent" />
+          </div>
         )}
-      </div>
 
-      <main className="container mx-auto px-4 sm:px-6">
-        {/* Article Header */}
-        <div className={`max-w-3xl mx-auto ${article.featuredImage ? '-mt-32 relative z-10' : 'pt-8'}`}>
-          {/* Breadcrumb */}
-          <div className="flex items-center gap-2 text-sm text-gray-400 mb-6">
-            <button onClick={onNavigateToHome} className="hover:text-white transition-colors">
-              Home
-            </button>
-            <ChevronRight size={14} />
-            <button onClick={onNavigateToBlog} className="hover:text-white transition-colors">
-              Blog
-            </button>
-            <ChevronRight size={14} />
-            <span className="text-gray-600 truncate max-w-[200px]">{article.title}</span>
-          </div>
-
-          {/* Meta */}
-          <div className="flex flex-wrap items-center gap-3 text-sm text-gray-400 mb-4">
-            <span className="px-3 py-1 bg-yellow-400/10 text-yellow-400 rounded-full font-medium capitalize">
-              {CATEGORY_LABELS[article.category]}
-            </span>
-            {article.featured && (
-              <span className="px-3 py-1 bg-yellow-400 text-black rounded-full font-medium flex items-center gap-1">
-                <Star size={12} /> Featured
+        {/* Hero Content positioned at the bottom of the image area */}
+        <div className="absolute inset-0 z-20 flex flex-col justify-end pb-24 sm:pb-32 container mx-auto px-4 sm:px-6">
+          <div className="max-w-4xl mx-auto w-full text-center sm:text-left drop-shadow-[0_4px_20px_rgba(0,0,0,0.8)]">
+            <div className="flex items-center justify-center sm:justify-start gap-3 text-xs sm:text-sm font-bold text-white mb-6 uppercase tracking-widest">
+              <span className="text-yellow-400 bg-yellow-400/20 px-3 py-1 rounded-full border border-yellow-400/20 backdrop-blur-sm">
+                {CATEGORY_LABELS[article.category] || article.category}
               </span>
-            )}
-          </div>
+              {article.showDate !== false && (
+                <span className="flex items-center gap-1.5 opacity-80 decoration-transparent">
+                  <Calendar size={14} />
+                  {new Date(article.publishedAt || article.createdAt).toLocaleDateString()}
+                </span>
+              )}
+            </div>
 
-          {/* Title */}
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-6 leading-tight">
-            {article.title}
-          </h1>
+            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black mb-6 leading-[1.1] tracking-tighter">
+              {article.title}
+            </h1>
 
-          {/* Excerpt */}
-          {article.excerpt && (
-            <p className="text-xl text-gray-400 mb-8 leading-relaxed">
+            <p className="text-lg sm:text-xl md:text-2xl text-gray-300 font-light leading-relaxed max-w-3xl opacity-90">
               {article.excerpt}
             </p>
-          )}
-
-          {/* Author & Date */}
-          <div className="flex flex-wrap items-center justify-between gap-4 pb-8 border-b border-white/10">
-            {article.showAuthor !== false && (
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center">
-                  {article.authorImage ? (
-                    <img src={article.authorImage} alt={article.author} className="w-full h-full rounded-full object-cover" />
-                  ) : (
-                    <User size={20} className="text-gray-400" />
-                  )}
-                </div>
-                <div>
-                  <p className="font-medium text-white">{article.author}</p>
-                  <div className="flex items-center gap-3 text-sm text-gray-500">
-                    {article.showDate !== false && (
-                      <span className="flex items-center gap-1">
-                        <Calendar size={12} />
-                        {new Date(article.publishedAt || article.createdAt).toLocaleDateString('en-US', {
-                          month: 'long',
-                          day: 'numeric',
-                          year: 'numeric'
-                        })}
-                      </span>
-                    )}
-                    {article.readTime && (
-                      <span className="flex items-center gap-1">
-                        <Clock size={12} />
-                        {article.readTime} min read
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
-            {!article.showAuthor && article.showDate !== false && (
-              <div className="flex items-center gap-3 text-sm text-gray-500">
-                <span className="flex items-center gap-1">
-                  <Calendar size={12} />
-                  {new Date(article.publishedAt || article.createdAt).toLocaleDateString('en-US', {
-                    month: 'long',
-                    day: 'numeric',
-                    year: 'numeric'
-                  })}
-                </span>
-                {article.readTime && (
-                  <span className="flex items-center gap-1">
-                    <Clock size={12} />
-                    {article.readTime} min read
-                  </span>
-                )}
-              </div>
-            )}
-
-            {/* Share */}
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-500 mr-2">Share:</span>
-              <button
-                onClick={shareOnTwitter}
-                className="w-9 h-9 bg-white/5 hover:bg-white/10 rounded-lg flex items-center justify-center text-gray-400 hover:text-white transition-colors"
-                title="Share on Twitter"
-              >
-                <Twitter size={16} />
-              </button>
-              <button
-                onClick={shareOnLinkedIn}
-                className="w-9 h-9 bg-white/5 hover:bg-white/10 rounded-lg flex items-center justify-center text-gray-400 hover:text-white transition-colors"
-                title="Share on LinkedIn"
-              >
-                <Linkedin size={16} />
-              </button>
-              <button
-                onClick={shareOnFacebook}
-                className="w-9 h-9 bg-white/5 hover:bg-white/10 rounded-lg flex items-center justify-center text-gray-400 hover:text-white transition-colors"
-                title="Share on Facebook"
-              >
-                <Facebook size={16} />
-              </button>
-              <button
-                onClick={copyLink}
-                className="w-9 h-9 bg-white/5 hover:bg-white/10 rounded-lg flex items-center justify-center text-gray-400 hover:text-white transition-colors"
-                title="Copy link"
-              >
-                <LinkIcon size={16} />
-              </button>
-            </div>
           </div>
         </div>
+      </div>
 
-        {/* Content */}
-        <article className="max-w-3xl mx-auto py-12">
-          <div
-            className="prose prose-lg prose-invert max-w-none
-              prose-headings:font-bold prose-headings:text-white
-              prose-p:text-gray-300 prose-p:leading-relaxed
-              prose-a:text-yellow-400 prose-a:no-underline hover:prose-a:underline
-              prose-strong:text-white
-              prose-code:text-yellow-400 prose-code:bg-white/5 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded
-              prose-pre:bg-white/5 prose-pre:border prose-pre:border-white/10
-              prose-blockquote:border-l-yellow-400 prose-blockquote:text-gray-400
-              prose-img:rounded-xl
-              prose-hr:border-white/10"
-            dangerouslySetInnerHTML={{ __html: sanitizedContent }}
-          />
-        </article>
+      <main className="container mx-auto px-4 sm:px-6 relative z-30">
+        {/* Floating Glassmorphism Content Box */}
+        <div className="max-w-4xl mx-auto rounded-[2rem] sm:rounded-[2.5rem] bg-[#0d0d0d]/90 backdrop-blur-[40px] border border-white/10 shadow-[0_-20px_60px_rgba(0,0,0,0.7)] p-6 sm:p-10 md:p-16 relative -mt-16 sm:-mt-24">
 
-        {/* Tags */}
-        {article.tags.length > 0 && (
-          <div className="max-w-3xl mx-auto pb-8 border-b border-white/10">
-            <div className="flex items-center gap-2 flex-wrap">
-              <Tag size={16} className="text-gray-500" />
-              {article.tags.map(tag => (
-                <span
-                  key={tag}
-                  className="px-3 py-1 bg-white/5 text-gray-400 rounded-full text-sm"
-                >
-                  {tag}
-                </span>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Related Articles */}
-        {relatedArticles.length > 0 && (
-          <div className="max-w-5xl mx-auto py-16">
-            <h2 className="text-2xl font-bold mb-8">Related Articles</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {relatedArticles.map(related => (
-                <article
-                  key={related.id}
-                  onClick={() => onNavigateToArticle(related.slug)}
-                  className="group bg-white/5 border border-white/10 rounded-xl overflow-hidden hover:bg-white/10 hover:border-yellow-400/30 transition-all cursor-pointer"
-                >
-                  <div className="relative h-40 overflow-hidden">
-                    {related.featuredImage ? (
-                      <img
-                        src={related.featuredImage}
-                        alt={related.title}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                      />
+          {/* Author info & Read Time */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 pb-8 border-b border-white/10 mb-10">
+            {article.showAuthor !== false && (
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 rounded-full bg-gradient-to-tr from-yellow-400 to-purple-600 p-[2px] shadow-[0_0_20px_rgba(250,204,21,0.3)]">
+                  <div className="w-full h-full bg-[#111] rounded-full overflow-hidden flex items-center justify-center">
+                    {article.authorImage ? (
+                      <img src={article.authorImage} alt={article.author} className="w-full h-full object-cover" />
                     ) : (
-                      <div className="w-full h-full bg-gradient-to-br from-yellow-400/10 to-purple-600/10" />
+                      <User size={24} className="text-white/50" />
                     )}
                   </div>
-                  <div className="p-4">
-                    <p className="text-xs text-gray-500 mb-2 capitalize">{CATEGORY_LABELS[related.category]}</p>
-                    <h3 className="font-semibold text-white group-hover:text-yellow-400 transition-colors line-clamp-2">
-                      {related.title}
-                    </h3>
-                  </div>
-                </article>
-              ))}
+                </div>
+                <div>
+                  <p className="font-bold text-white text-lg">{article.author}</p>
+                  <p className="text-sm text-yellow-400 font-medium">{t('blog.author', 'Author')}</p>
+                </div>
+              </div>
+            )}
+
+            <div className="flex items-center gap-6">
+              {article.readTime && (
+                <div className="flex items-center gap-2 text-gray-400 bg-white/5 py-2 px-4 rounded-full border border-white/5 font-medium">
+                  <Clock size={16} />
+                  <span>{article.readTime} min read</span>
+                </div>
+              )}
             </div>
           </div>
-        )}
 
-        {/* CTA */}
-        <div className="max-w-3xl mx-auto py-16 text-center">
-          <div className="p-8 bg-gradient-to-r from-yellow-400/10 to-purple-600/10 rounded-2xl border border-white/10">
-            <h3 className="text-2xl font-bold mb-4">Ready to build with Quimera?</h3>
-            <p className="text-gray-400 mb-6">Start creating amazing websites with AI today.</p>
-            <button
-              onClick={onNavigateToRegister}
-              className="px-8 py-3 bg-yellow-400 text-black font-bold rounded-xl hover:bg-yellow-300 transition-colors"
-            >
-              Get Started Free
-            </button>
+          {/* Article Markdown Body */}
+          <div
+            className="prose prose-invert prose-lg max-w-none hover:prose-a:text-yellow-300 prose-headings:font-bold prose-h2:text-4xl prose-h2:mt-16 prose-h2:mb-8 prose-h3:text-2xl prose-h3:mt-12 prose-img:rounded-2xl prose-img:shadow-2xl prose-a:text-yellow-400 prose-p:leading-loose prose-p:text-gray-300 prose-li:text-gray-300 prose-hr:border-white/10 prose-blockquote:border-yellow-400 prose-blockquote:bg-yellow-400/5 prose-blockquote:py-2 prose-blockquote:px-6 prose-blockquote:rounded-r-2xl prose-blockquote:text-gray-300 prose-blockquote:not-italic"
+            dangerouslySetInnerHTML={{ __html: articleHtml }}
+          />
+
+          {/* Tags */}
+          {article.tags && article.tags.length > 0 && (
+            <div className="mt-16 pt-10 border-t border-white/10">
+              <div className="flex flex-wrap gap-2">
+                <Tag size={18} className="text-gray-500 mr-2 mt-1 hidden sm:block" />
+                {article.tags.map((tag, index) => (
+                  <span
+                    key={index}
+                    className="px-4 py-2 bg-[#1a1a1a] border border-white/10 text-gray-300 text-sm font-medium rounded-xl hover:bg-white/10 hover:text-white transition-colors cursor-default"
+                  >
+                    #{tag}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Share Section */}
+          <div className="mt-12 p-8 bg-gradient-to-r from-yellow-400/5 to-transparent border border-yellow-400/20 rounded-3xl flex flex-col sm:flex-row items-center justify-between gap-6">
+            <div>
+              <h4 className="font-bold text-xl mb-2 text-white">{t('blog.shareArticle', '¿Te ha gustado este artículo?')}</h4>
+              <p className="text-sm text-gray-400">{t('blog.shareArticleDesc', 'Compártelo con tu red y ayuda a otros a descubrirlo.')}</p>
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={() => handleShare('twitter')}
+                className="w-12 h-12 rounded-full bg-[#1DA1F2]/10 text-[#1DA1F2] border border-[#1DA1F2]/20 flex items-center justify-center hover:bg-[#1DA1F2] hover:text-white transition-all hover:scale-110 shadow-lg"
+                aria-label="Share on Twitter"
+              >
+                <Twitter size={20} />
+              </button>
+              <button
+                onClick={() => handleShare('linkedin')}
+                className="w-12 h-12 rounded-full bg-[#0A66C2]/10 text-[#0A66C2] border border-[#0A66C2]/20 flex items-center justify-center hover:bg-[#0A66C2] hover:text-white transition-all hover:scale-110 shadow-lg"
+                aria-label="Share on LinkedIn"
+              >
+                <Linkedin size={20} />
+              </button>
+              <button
+                onClick={() => handleShare('facebook')}
+                className="w-12 h-12 rounded-full bg-[#1877F2]/10 text-[#1877F2] border border-[#1877F2]/20 flex items-center justify-center hover:bg-[#1877F2] hover:text-white transition-all hover:scale-110 shadow-lg"
+                aria-label="Share on Facebook"
+              >
+                <Facebook size={20} />
+              </button>
+              <button
+                onClick={handleCopyLink}
+                className="w-12 h-12 rounded-full bg-white/5 text-white border border-white/10 flex items-center justify-center hover:bg-white/20 transition-all hover:scale-110 shadow-lg"
+                aria-label="Copy link"
+              >
+                {copiedLink ? <Check size={20} className="text-green-400" /> : <LinkIcon size={20} />}
+              </button>
+            </div>
           </div>
         </div>
       </main>
 
-      {/* Footer */}
-      <footer className="py-8 border-t border-white/10">
-        <div className="container mx-auto px-4 sm:px-6">
-          <div className="flex flex-col items-center gap-4 md:flex-row md:justify-between">
-            <button onClick={onNavigateToHome} className="flex items-center gap-2">
-              <img src={QUIMERA_LOGO} alt="Quimera.ai" className="w-7 h-7" />
-              <span className="font-bold text-sm">Quimera<span className="text-yellow-400">.ai</span></span>
-            </button>
-            <div className="text-xs text-gray-500">
-              © {new Date().getFullYear()} Quimera.ai. All rights reserved.
+      {/* Recommended Articles */}
+      {relatedArticles.length > 0 && (
+        <section className="container mx-auto px-4 sm:px-6 mt-24">
+          <div className="max-w-6xl mx-auto">
+            <h3 className="text-2xl sm:text-3xl font-bold mb-10 flex items-center gap-4">
+              {t('blog.relatedArticles', 'Artículos Relacionados')}
+              <div className="h-[1px] flex-1 bg-gradient-to-r from-white/20 to-transparent" />
+            </h3>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {relatedArticles.map((relatedArticle) => (
+                <div
+                  key={relatedArticle.id}
+                  onClick={() => window.location.href = `/blog/${relatedArticle.slug}`}
+                  className="group cursor-pointer bg-[#111] border border-white/5 hover:border-white/20 rounded-3xl overflow-hidden hover:-translate-y-2 transition-all duration-500 hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.5)] flex flex-col h-full"
+                >
+                  <div className="relative h-48 overflow-hidden">
+                    {relatedArticle.featuredImage ? (
+                      <img
+                        src={relatedArticle.featuredImage}
+                        alt={relatedArticle.title}
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-[1.5s]"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-[#1a1a1a] flex items-center justify-center">
+                        <span className="text-white/20">Quimera.ai</span>
+                      </div>
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#111] to-transparent opacity-60" />
+                  </div>
+
+                  <div className="p-6 flex-1 flex flex-col">
+                    <div className="text-xs font-semibold text-yellow-400 uppercase tracking-widest mb-3">
+                      {CATEGORY_LABELS[relatedArticle.category] || relatedArticle.category}
+                    </div>
+                    <h4 className="text-lg font-bold text-white mb-3 leading-snug group-hover:text-yellow-400 transition-colors">
+                      {relatedArticle.title}
+                    </h4>
+                    <p className="text-sm text-gray-500 line-clamp-2 mt-auto">
+                      {relatedArticle.excerpt}
+                    </p>
+                  </div>
+                </div>
+              ))}
             </div>
+          </div>
+        </section>
+      )}
+
+      {/* Footer */}
+      <footer className="mt-32 py-12 border-t border-white/5 bg-[#050505] text-center">
+        <div className="container mx-auto px-4 sm:px-6">
+          <button onClick={onNavigateBack} className="flex items-center justify-center gap-3 group mx-auto mb-6">
+            <img src={QUIMERA_LOGO} alt="Quimera.ai" className="w-8 h-8 opacity-50 group-hover:opacity-100 transition-opacity" />
+          </button>
+          <div className="text-sm text-gray-600 font-medium">
+            © {new Date().getFullYear()} Quimera.ai. {t('blog.allRightsReserved', 'Todos los derechos reservados.')}
           </div>
         </div>
       </footer>
@@ -461,9 +420,3 @@ const PublicArticlePage: React.FC<PublicArticlePageProps> = ({
 };
 
 export default PublicArticlePage;
-
-
-
-
-
-

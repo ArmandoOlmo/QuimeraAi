@@ -9,9 +9,13 @@ import {
     ArrowLeft, Users, Trash2, Building2, User, Search, Filter,
     Plus, ChevronDown, ChevronRight, MoreVertical, Edit2, UserPlus,
     Folder, HardDrive, Zap, DollarSign, CheckCircle, AlertCircle,
-    Clock, XCircle, X
+    Clock, XCircle, X, CreditCard, History, Gift
 } from 'lucide-react';
 import QuimeraLoader from '@/components/ui/QuimeraLoader';
+import { db, collection, getDocs, query, where, orderBy, limit } from '../../../firebase';
+import { doc, getDoc } from 'firebase/firestore';
+import { AiCreditsUsage, AiCreditTransaction, getUsageColor } from '../../../types/subscription';
+import { addCredits } from '../../../services/aiCreditsService';
 
 interface TenantManagementProps {
     onBack: () => void;
@@ -566,7 +570,66 @@ const TenantDetailsModal: React.FC<{
     onSelectTenant: (tenant: Tenant) => void;
 }> = ({ tenant, allTenants, onClose, onSelectTenant }) => {
     const { t } = useTranslation();
-    const [activeTab, setActiveTab] = useState<'general' | 'clients'>('general');
+    const [activeTab, setActiveTab] = useState<'general' | 'clients' | 'subscription' | 'credits'>('general');
+
+    const [creditUsage, setCreditUsage] = useState<AiCreditsUsage | null>(null);
+    const [creditTransactions, setCreditTransactions] = useState<AiCreditTransaction[]>([]);
+    const [isLoadingCredits, setIsLoadingCredits] = useState(false);
+    const [isAddingCredits, setIsAddingCredits] = useState(false);
+    const [addCreditAmount, setAddCreditAmount] = useState(100);
+    const [addCreditReason, setAddCreditReason] = useState('');
+
+    useEffect(() => {
+        if (activeTab === 'credits' || activeTab === 'subscription') {
+            loadCreditData();
+        }
+    }, [activeTab, tenant.id]);
+
+    const loadCreditData = async () => {
+        if (!tenant.id) return;
+        setIsLoadingCredits(true);
+        try {
+            const usageRef = doc(db, 'aiCreditsUsage', tenant.id);
+            const usageSnap = await getDoc(usageRef);
+            if (usageSnap.exists()) {
+                setCreditUsage(usageSnap.data() as AiCreditsUsage);
+            } else {
+                setCreditUsage(null);
+            }
+
+            const txnsSnap = await getDocs(query(
+                collection(db, 'aiCreditsTransactions'),
+                where('tenantId', '==', tenant.id),
+                orderBy('timestamp', 'desc'),
+                limit(10)
+            ));
+            setCreditTransactions(txnsSnap.docs.map(d => ({ id: d.id, ...d.data() } as AiCreditTransaction)));
+        } catch (error) {
+            console.error('Error loading credit data:', error);
+        } finally {
+            setIsLoadingCredits(false);
+        }
+    };
+
+    const handleAddCredits = async () => {
+        if (addCreditAmount <= 0) return;
+        setIsAddingCredits(true);
+        try {
+            const success = await addCredits(tenant.id, addCreditAmount, 'manual', { reason: addCreditReason });
+            if (success) {
+                await loadCreditData();
+                setAddCreditAmount(100);
+                setAddCreditReason('');
+                alert(t('superadmin.tenant.detailsModal.addCreditsSuccess', 'Créditos añadidos con éxito'));
+            } else {
+                alert('Error al añadir créditos.');
+            }
+        } catch (error) {
+            console.error('Error adding credits:', error);
+        } finally {
+            setIsAddingCredits(false);
+        }
+    };
 
     // Filtrar sub-clientes si es una agencia
     const agencyClients = allTenants.filter(t => t.ownerTenantId === tenant.id);
@@ -582,7 +645,7 @@ const TenantDetailsModal: React.FC<{
 
     return (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-editor-panel-bg border border-editor-border rounded-lg p-6 max-w-2xl w-full max-h-[85vh] overflow-y-auto flex flex-col">
+            <div className="bg-editor-panel-bg border border-editor-border rounded-lg p-6 max-w-4xl w-full max-h-[85vh] overflow-y-auto flex flex-col">
                 <div className="flex items-center justify-between mb-6 flex-shrink-0">
                     <h2 className="text-xl font-bold text-editor-text-primary">
                         {tenant.type === 'agency' ? 'Detalles de Agencia' : 'Detalles del Tenant'}
@@ -592,18 +655,35 @@ const TenantDetailsModal: React.FC<{
                     </button>
                 </div>
 
-                {/* Tabs para agencias */}
-                {tenant.type === 'agency' && (
-                    <div className="flex border-b border-editor-border mb-6 flex-shrink-0">
-                        <button
-                            onClick={() => setActiveTab('general')}
-                            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${activeTab === 'general'
-                                ? 'border-editor-accent text-editor-accent'
-                                : 'border-transparent text-editor-text-secondary hover:text-editor-text-primary'
-                                }`}
-                        >
-                            General
-                        </button>
+                <div className="flex border-b border-editor-border mb-6 flex-shrink-0">
+                    <button
+                        onClick={() => setActiveTab('general')}
+                        className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${activeTab === 'general'
+                            ? 'border-editor-accent text-editor-accent'
+                            : 'border-transparent text-editor-text-secondary hover:text-editor-text-primary'
+                            }`}
+                    >
+                        {t('superadmin.tenant.detailsModal.tabs.general', 'General')}
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('subscription')}
+                        className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${activeTab === 'subscription'
+                            ? 'border-editor-accent text-editor-accent'
+                            : 'border-transparent text-editor-text-secondary hover:text-editor-text-primary'
+                            }`}
+                    >
+                        {t('superadmin.tenant.detailsModal.tabs.subscription', 'Suscripción y Pagos')}
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('credits')}
+                        className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${activeTab === 'credits'
+                            ? 'border-editor-accent text-editor-accent'
+                            : 'border-transparent text-editor-text-secondary hover:text-editor-text-primary'
+                            }`}
+                    >
+                        {t('superadmin.tenant.detailsModal.tabs.credits', 'Créditos IA')}
+                    </button>
+                    {tenant.type === 'agency' && (
                         <button
                             onClick={() => setActiveTab('clients')}
                             className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${activeTab === 'clients'
@@ -611,13 +691,13 @@ const TenantDetailsModal: React.FC<{
                                 : 'border-transparent text-editor-text-secondary hover:text-editor-text-primary'
                                 }`}
                         >
-                            Clientes ({agencyClients.length})
+                            {t('superadmin.tenant.detailsModal.tabs.clients', 'Clientes')} ({agencyClients.length})
                         </button>
-                    </div>
-                )}
+                    )}
+                </div>
 
-                <div className="flex-1 overflow-y-auto min-h-0">
-                    {activeTab === 'general' ? (
+                <div className="flex-1 overflow-y-auto min-h-0 pr-2">
+                    {activeTab === 'general' && (
                         <div className="space-y-4">
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
@@ -647,8 +727,8 @@ const TenantDetailsModal: React.FC<{
                                     </div>
                                 </div>
                                 <div>
-                                    <label className="text-sm text-editor-text-secondary block mb-1">Plan</label>
-                                    <span className="px-2 py-1 bg-purple-500/10 text-purple-400 rounded text-sm border border-purple-500/20">
+                                    <label className="text-sm text-editor-text-secondary block mb-1">Plan Actual</label>
+                                    <span className="px-2 py-1 bg-purple-500/10 text-purple-400 rounded text-sm border border-purple-500/20 font-medium capitalize">
                                         {tenant.subscriptionPlan}
                                     </span>
                                 </div>
@@ -678,17 +758,185 @@ const TenantDetailsModal: React.FC<{
                                 </div>
                             </div>
                         </div>
-                    ) : (
+                    )}
+
+                    {activeTab === 'subscription' && (
+                        <div className="space-y-6">
+                            <div>
+                                <h3 className="text-lg font-semibold text-editor-text-primary mb-4 flex items-center gap-2">
+                                    <CreditCard className="w-5 h-5 text-editor-accent" />
+                                    {t('superadmin.tenant.detailsModal.subscriptionInfo', 'Información del Plan')}
+                                </h3>
+                                <div className="bg-editor-panel-bg border border-editor-border rounded-lg p-5 grid grid-cols-2 gap-6">
+                                    <div>
+                                        <p className="text-sm text-editor-text-secondary mb-1">Plan Actual</p>
+                                        <span className="px-3 py-1 bg-purple-500/10 text-purple-400 rounded-md text-sm border border-purple-500/20 font-medium capitalize inline-block mt-1">
+                                            {tenant.subscriptionPlan}
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <p className="text-sm text-editor-text-secondary mb-1">Estado</p>
+                                        <div className="flex items-center gap-2 mt-1.5">
+                                            {getStatusIcon(tenant.status)}
+                                            <span className="capitalize font-medium text-editor-text-primary">{tenant.status}</span>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <p className="text-sm text-editor-text-secondary mb-1">{t('superadmin.tenant.detailsModal.mrr', 'Ingreso Recurrente (MRR)')}</p>
+                                        <p className="text-editor-text-primary font-bold text-2xl mt-1">${tenant.billingInfo?.mrr || 0} <span className="text-sm font-normal text-editor-text-secondary">/mes</span></p>
+                                    </div>
+                                    <div>
+                                        <p className="text-sm text-editor-text-secondary mb-2">{t('superadmin.tenant.detailsModal.limits', 'Límites del Plan')}</p>
+                                        <ul className="text-sm text-editor-text-primary space-y-1">
+                                            <li className="flex justify-between border-b border-editor-border/50 pb-1">
+                                                <span className="text-editor-text-secondary">Proyectos:</span>
+                                                <span className="font-medium">{tenant.limits.maxProjects}</span>
+                                            </li>
+                                            <li className="flex justify-between border-b border-editor-border/50 pb-1 pt-1">
+                                                <span className="text-editor-text-secondary">Usuarios:</span>
+                                                <span className="font-medium">{tenant.limits.maxUsers}</span>
+                                            </li>
+                                            <li className="flex justify-between pt-1">
+                                                <span className="text-editor-text-secondary">Almacenamiento:</span>
+                                                <span className="font-medium">{tenant.limits.maxStorageGB} GB</span>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {activeTab === 'credits' && (
+                        <div className="space-y-6">
+                            {isLoadingCredits ? (
+                                <div className="flex justify-center py-8">
+                                    <QuimeraLoader size="md" />
+                                </div>
+                            ) : (
+                                <>
+                                    {/* Usage Bar */}
+                                    <div>
+                                        <h3 className="text-lg font-semibold text-editor-text-primary mb-4 flex items-center gap-2">
+                                            <Zap className="w-5 h-5 text-editor-accent" />
+                                            {t('superadmin.tenant.detailsModal.aiCreditsUsage', 'Uso de Créditos IA')}
+                                        </h3>
+
+                                        <div className="bg-editor-panel-bg border border-editor-border rounded-lg p-6">
+                                            <div className="flex justify-between items-end mb-2">
+                                                <div>
+                                                    <p className="text-3xl font-bold text-editor-text-primary tracking-tight">
+                                                        {(creditUsage?.creditsRemaining || 0).toLocaleString()}
+                                                    </p>
+                                                    <p className="text-sm text-editor-text-secondary font-medium">
+                                                        {t('superadmin.tenant.detailsModal.creditsRemaining', 'Créditos Restantes')}
+                                                    </p>
+                                                </div>
+                                                <div className="text-right">
+                                                    <p className="text-sm text-editor-text-primary font-medium">
+                                                        {((creditUsage?.creditsUsed || 0)).toLocaleString()} / {(creditUsage?.creditsIncluded || 0).toLocaleString()} usados
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                            <div className="h-3 bg-editor-bg rounded-full overflow-hidden mb-6 border border-editor-border/50">
+                                                <div
+                                                    className="h-full rounded-full transition-all"
+                                                    style={{
+                                                        width: `${Math.min(((creditUsage?.creditsUsed || 0) / (creditUsage?.creditsIncluded || 1)) * 100, 100)}%`,
+                                                        backgroundColor: getUsageColor(((creditUsage?.creditsUsed || 0) / (creditUsage?.creditsIncluded || 1)) * 100)
+                                                    }}
+                                                />
+                                            </div>
+
+                                            {/* Add Credits Inline Form */}
+                                            <div className="mt-6 pt-6 border-t border-editor-border">
+                                                <h4 className="text-sm font-semibold text-editor-text-primary mb-4 flex items-center gap-2">
+                                                    <Gift className="w-4 h-4 text-editor-accent" />
+                                                    {t('superadmin.tenant.detailsModal.addCredits', 'Añadir Créditos')}
+                                                </h4>
+                                                <div className="flex gap-3">
+                                                    <input
+                                                        type="number"
+                                                        value={addCreditAmount}
+                                                        onChange={(e) => setAddCreditAmount(parseInt(e.target.value) || 0)}
+                                                        className="w-32 px-3 py-2 bg-editor-bg border border-editor-border rounded-lg text-editor-text-primary focus:outline-none focus:border-editor-accent"
+                                                        placeholder="Cant."
+                                                    />
+                                                    <input
+                                                        type="text"
+                                                        value={addCreditReason}
+                                                        onChange={(e) => setAddCreditReason(e.target.value)}
+                                                        className="flex-1 px-3 py-2 bg-editor-bg border border-editor-border rounded-lg text-editor-text-primary focus:outline-none focus:border-editor-accent"
+                                                        placeholder="Razón de la recarga"
+                                                    />
+                                                    <button
+                                                        onClick={handleAddCredits}
+                                                        disabled={isAddingCredits || addCreditAmount <= 0}
+                                                        className="px-4 py-2 bg-editor-accent text-white font-medium rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 whitespace-nowrap"
+                                                    >
+                                                        {isAddingCredits ? '...' : t('common.add', 'Añadir')}
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Transaction History */}
+                                    <div>
+                                        <h3 className="text-lg font-semibold text-editor-text-primary mb-4 flex items-center gap-2">
+                                            <History className="w-5 h-5 text-editor-accent" />
+                                            {t('superadmin.tenant.detailsModal.transactionHistory', 'Historial de Transacciones')}
+                                        </h3>
+
+                                        {creditTransactions.length > 0 ? (
+                                            <div className="space-y-2">
+                                                {creditTransactions.map(tx => (
+                                                    <div key={tx.id} className="flex items-center justify-between p-3 bg-editor-panel-bg border border-editor-border rounded-lg hover:border-editor-accent/30 transition-colors">
+                                                        <div className="flex items-center gap-4">
+                                                            <div className={`p-2 rounded-lg ${tx.type === 'deposit' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
+                                                                {tx.type === 'deposit' ? <Plus size={16} /> : <Zap size={16} />}
+                                                            </div>
+                                                            <div>
+                                                                <p className="text-sm font-medium text-editor-text-primary">
+                                                                    {tx.description}
+                                                                </p>
+                                                                <p className="text-xs text-editor-text-secondary mt-0.5">
+                                                                    {new Date(tx.timestamp.seconds * 1000).toLocaleString()}
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                        <div className={`font-semibold ${tx.type === 'deposit' ? 'text-green-500' : 'text-editor-text-primary'}`}>
+                                                            {tx.type === 'deposit' ? '+' : ''}{tx.amount.toLocaleString()}
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        ) : (
+                                            <div className="text-center py-6 bg-editor-panel-bg border border-editor-border rounded-lg border-dashed">
+                                                <History size={24} className="mx-auto text-editor-text-secondary mb-2 opacity-50" />
+                                                <p className="text-editor-text-secondary text-sm">
+                                                    {t('superadmin.tenant.detailsModal.noTransactions', 'No hay transacciones recientes')}
+                                                </p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </>
+                            )}
+                        </div>
+                    )}
+
+                    {activeTab === 'clients' && tenant.type === 'agency' && (
                         <div className="space-y-3">
                             {agencyClients.length > 0 ? (
                                 agencyClients.map(client => (
                                     <div
                                         key={client.id}
                                         onClick={() => onSelectTenant(client)}
-                                        className="flex items-center justify-between p-3 bg-editor-bg border border-editor-border rounded-lg hover:border-editor-accent/50 cursor-pointer transition-colors group"
+                                        className="flex items-center justify-between p-3 bg-editor-panel-bg border border-editor-border rounded-lg hover:border-editor-accent/50 cursor-pointer transition-colors group"
                                     >
                                         <div className="flex items-center gap-3">
-                                            <div className="p-2 bg-editor-panel-bg rounded text-purple-400">
+                                            <div className="p-2 bg-editor-bg rounded text-purple-400">
                                                 <User size={18} />
                                             </div>
                                             <div>
@@ -715,7 +963,7 @@ const TenantDetailsModal: React.FC<{
                                     </div>
                                 ))
                             ) : (
-                                <div className="text-center py-8 bg-editor-bg border border-editor-border rounded-lg border-dashed">
+                                <div className="text-center py-8 bg-editor-panel-bg border border-editor-border rounded-lg border-dashed">
                                     <Users size={32} className="mx-auto text-editor-text-secondary mb-2 opacity-50" />
                                     <p className="text-editor-text-secondary">Esta agencia no tiene clientes registrados aún.</p>
                                 </div>

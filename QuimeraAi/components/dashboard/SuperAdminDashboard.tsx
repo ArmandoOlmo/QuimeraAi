@@ -9,7 +9,7 @@ import {
     ArrowLeft, Menu, Image, MessageSquare, PackageSearch, Palette,
     FlaskConical, Languages, Search, FileText, FolderOpen,
     Navigation, Star, Settings, Grid3x3, List, X, Sparkles, Zap, Newspaper, Layout,
-    Loader2
+    Loader2, DollarSign
 } from 'lucide-react';
 import DashboardSidebar from './DashboardSidebar';
 import MobileSearchModal from '../ui/MobileSearchModal';
@@ -23,6 +23,7 @@ const LLMPromptManagement = React.lazy(() => import('./admin/LLMPromptManagement
 const UsageStatistics = React.lazy(() => import('./admin/UsageStatistics'));
 const TemplateManagement = React.lazy(() => import('./admin/TemplateManagement'));
 const ComponentsDashboard = React.lazy(() => import('./admin/ComponentsDashboard'));
+const FinancialDashboard = React.lazy(() => import('./admin/FinancialDashboard'));
 const ImageLibraryManagement = React.lazy(() => import('./admin/ImageLibraryManagement'));
 const AdminAssetLibrary = React.lazy(() => import('./admin/AdminAssetLibrary'));
 const GlobalAssistantSettings = React.lazy(() => import('./admin/GlobalAssistantSettings'));
@@ -264,6 +265,7 @@ const SuperAdminDashboard = () => {
         { id: 'design-tokens', title: t('superadmin.designTokens'), description: t('superadmin.designTokensDesc'), icon: <Palette size={24} />, category: 'development', route: ROUTES.ADMIN_DESIGN_TOKENS, allowedRoles: ['owner', 'superadmin', 'admin'] },
 
         // Analytics & Testing
+        { id: 'finances', title: t('superadmin.finances', 'Finanzas y MRR'), description: t('superadmin.financesDesc', 'Dashboard financiero, MRR, y suscripciones.'), icon: <DollarSign size={24} />, category: 'analytics', route: ROUTES.ADMIN_FINANCES, isNew: true, allowedRoles: ['owner', 'superadmin'] },
         { id: 'stats', title: t('superadmin.usageStatistics'), description: t('superadmin.usageStatisticsDesc'), icon: <BarChart3 size={24} />, category: 'analytics', route: ROUTES.ADMIN_STATS, allowedRoles: ['owner', 'superadmin', 'admin', 'manager'] },
         { id: 'analytics', title: t('superadmin.componentAnalytics'), description: t('superadmin.componentAnalyticsDesc'), icon: <PackageSearch size={24} />, category: 'analytics', route: ROUTES.ADMIN_ANALYTICS, allowedRoles: ['owner', 'superadmin', 'admin', 'manager'] },
         { id: 'global-tracking-pixels', title: t('superadmin.globalTrackingPixels', 'Píxeles de Tracking'), description: t('superadmin.globalTrackingPixelsDesc', 'Analytics y píxeles de ads para toda la app'), icon: <BarChart3 size={24} />, category: 'analytics', route: ROUTES.ADMIN_GLOBAL_TRACKING_PIXELS, isNew: true, allowedRoles: ['owner', 'superadmin'] },
@@ -340,6 +342,7 @@ const SuperAdminDashboard = () => {
             case 'news': return <NewsManagement onBack={handleBack} />;
             case 'landing-editor': return <LandingPageEditor onBack={handleBack} />;
             case 'service-availability': return <ServiceAvailabilityControl onBack={handleBack} />;
+            case 'finances': return <FinancialDashboard onBack={handleBack} />;
             case 'design-tokens': return <AdminViewLayout title={t('superadmin.designTokensTitle')} onBack={handleBack}><DesignTokensEditor /></AdminViewLayout>;
             case 'analytics': return <AdminViewLayout title={t('superadmin.componentAnalyticsTitle')} onBack={handleBack} noPadding><AnalyticsDashboard /></AdminViewLayout>;
             default: return null;
@@ -369,11 +372,36 @@ const SuperAdminDashboard = () => {
                         <h1 className="text-lg font-bold text-editor-text-primary">{t('superadmin.title')}</h1>
                     </div>
 
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2">
+                        {/* View Mode Controls */}
+                        <div className="hidden md:flex items-center gap-3 mr-4">
+                            <button
+                                onClick={() => setViewMode('grid')}
+                                className={`transition-colors ${viewMode === 'grid' ? 'text-editor-accent' : 'text-editor-text-secondary hover:text-editor-text-primary'}`}
+                                title={t('superadmin.viewGrid', 'Vista Cuadrícula')}
+                            >
+                                <Grid3x3 size={20} />
+                            </button>
+                            <button
+                                onClick={() => setViewMode('list')}
+                                className={`transition-colors ${viewMode === 'list' ? 'text-editor-accent' : 'text-editor-text-secondary hover:text-editor-text-primary'}`}
+                                title={t('superadmin.viewList', 'Vista Lista')}
+                            >
+                                <List size={20} />
+                            </button>
+                            <button
+                                onClick={() => setViewMode('compact')}
+                                className={`transition-colors ${viewMode === 'compact' ? 'text-editor-accent' : 'text-editor-text-secondary hover:text-editor-text-primary'}`}
+                                title={t('superadmin.viewCompact', 'Vista Compacta')}
+                            >
+                                <Settings size={20} />
+                            </button>
+                        </div>
+
                         {/* Search Button */}
                         <button
                             onClick={() => setIsMobileSearchOpen(true)}
-                            className="text-muted-foreground hover:text-foreground transition-colors"
+                            className="text-muted-foreground hover:text-foreground transition-colors p-1.5 rounded-md hover:bg-editor-border/40"
                             aria-label={t('common.search', 'Buscar')}
                         >
                             <Search size={20} />
@@ -387,8 +415,9 @@ const SuperAdminDashboard = () => {
                         />
                         <button
                             onClick={handleBackToDashboard}
-                            className="text-muted-foreground hover:text-foreground transition-colors"
-                            aria-label={t('superadmin.backToDashboard')}
+                            className="text-muted-foreground hover:text-foreground transition-colors p-1.5 rounded-md hover:bg-editor-border/40"
+                            aria-label={t('superadmin.backToDashboard', 'Volver al Dashboard')}
+                            title={t('superadmin.backToDashboard', 'Volver al Dashboard')}
                         >
                             <ArrowLeft size={20} />
                         </button>

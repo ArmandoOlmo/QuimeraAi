@@ -2616,7 +2616,7 @@
     "menuManager": "Menu Manager"
   },
   "superadmin": {
-    "title": "Super Admin Panel",
+    "title": "Admin",
     "users": "Users",
     "allUsers": "All Users",
     "roles": "Roles",
@@ -2627,6 +2627,32 @@
     "globalSettings": "Global Settings",
     "backToDashboard": "Back to Dashboard",
     "accessMessage": "You have access to all administrative functions of the platform.",
+    "finances": "Finances & MRR",
+    "financesDesc": "Complete financial dashboard with charts, MRR, revenue by plan, and growth.",
+    "financesDetail": {
+      "thisMonth": "This Month",
+      "lastMonth": "Last Month",
+      "last90Days": "90 Days",
+      "thisYear": "This Year",
+      "allTime": "All Time",
+      "totalMRR": "Total MRR",
+      "paidSubs": "Subscriptions",
+      "conversionRate": "Conversion",
+      "projectedMonthly": "Monthly recurring revenue",
+      "totalActive": "total active",
+      "avgRevenue": "Average revenue per user",
+      "paidVsFree": "Paid vs free",
+      "mrrOverTime": "MRR Over Time",
+      "revenueByPlan": "Revenue by Plan",
+      "tenantGrowth": "Client Growth",
+      "recentClients": "Recent Clients",
+      "newClients": "New Clients",
+      "name": "Name",
+      "plan": "Plan",
+      "status": "Status",
+      "noData": "No plan data available",
+      "noClients": "No clients registered"
+    },
     "adminManagement": "Admin Management",
     "adminManagementDesc": "Manage system administrators and permissions.",
     "tenantManagement": "Tenant Management",
@@ -3027,7 +3053,23 @@
       },
       "detailsModal": {
         "title": "Tenant Details",
-        "close": "Close"
+        "close": "Close",
+        "tabs": {
+          "general": "General",
+          "clients": "Clients",
+          "subscription": "Subscription & Billing",
+          "credits": "AI Credits"
+        },
+        "subscriptionInfo": "Plan Information",
+        "mrr": "Monthly Recurring Revenue (MRR)",
+        "billingCycle": "Billing Cycle",
+        "limits": "Plan Limits",
+        "changePlan": "Change Plan",
+        "aiCreditsUsage": "AI Credits Usage",
+        "transactionHistory": "Transaction History",
+        "addCredits": "Add Credits",
+        "creditsRemaining": "Credits Remaining",
+        "noTransactions": "No recent transactions"
       },
       "metrics": {
         "projects": "Projects",
