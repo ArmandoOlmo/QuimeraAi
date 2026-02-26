@@ -11,7 +11,8 @@ import {
     XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from 'recharts';
 import {
-    startOfMonth, endOfMonth, subMonths, format
+    startOfMonth, endOfMonth, subMonths, startOfYear, endOfYear,
+    subDays, endOfDay, format
 } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { db, collection, getDocs } from '../../../firebase';
@@ -30,34 +31,22 @@ interface FinancialDashboardProps {
     onBack: () => void;
 }
 
+type DatePreset = 'thisMonth' | 'lastMonth' | 'last90Days' | 'thisYear' | 'all';
+
 // ─────────────────────────────────────────────────────────────────────────────
 // CONSTANTS
 // ─────────────────────────────────────────────────────────────────────────────
 
 const PLAN_COLORS: Record<string, string> = {
-    free: '#6b7280',
-    starter: '#06b6d4',
-    básico: '#3b82f6',
-    basic: '#3b82f6',
-    profesional: '#8b5cf6',
-    professional: '#8b5cf6',
-    pro: '#8b5cf6',
-    individual: '#4f46e5',
-    avanzado: '#4f46e5',
-    advanced: '#4f46e5',
-    agencia: '#ec4899',
-    agency: '#ec4899',
-    enterprise: '#f59e0b',
-    custom: '#10b981',
+    free: '#6b7280', starter: '#06b6d4', básico: '#3b82f6', basic: '#3b82f6',
+    profesional: '#8b5cf6', professional: '#8b5cf6', pro: '#8b5cf6', individual: '#4f46e5',
+    avanzado: '#4f46e5', advanced: '#4f46e5', agencia: '#ec4899', agency: '#ec4899',
+    enterprise: '#f59e0b', custom: '#10b981',
 };
-
 const FALLBACK_COLORS = ['#4f46e5', '#06b6d4', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#ef4444', '#3b82f6'];
-
 const STATUS_COLORS: Record<string, string> = {
-    active: 'bg-emerald-500/20 text-emerald-400',
-    trial: 'bg-amber-500/20 text-amber-400',
-    suspended: 'bg-red-500/20 text-red-400',
-    expired: 'bg-gray-500/20 text-gray-400',
+    active: 'bg-emerald-500/20 text-emerald-400', trial: 'bg-amber-500/20 text-amber-400',
+    suspended: 'bg-red-500/20 text-red-400', expired: 'bg-gray-500/20 text-gray-400',
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -65,12 +54,7 @@ const STATUS_COLORS: Record<string, string> = {
 // ─────────────────────────────────────────────────────────────────────────────
 
 const StatCard = ({ title, value, icon: Icon, trend, trendLabel, isPositiveTrend }: {
-    title: string;
-    value: string;
-    icon: any;
-    trend?: string;
-    trendLabel?: string;
-    isPositiveTrend?: boolean;
+    title: string; value: string; icon: any; trend?: string; trendLabel?: string; isPositiveTrend?: boolean;
 }) => (
     <div className="group relative overflow-hidden rounded-2xl border border-white/[0.08] dark:border-white/[0.06] bg-card/80 dark:bg-card/70 backdrop-blur-xl p-4 sm:p-5 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 ease-out">
         <div className="absolute -top-8 -right-8 w-24 h-24 rounded-full opacity-15 dark:opacity-10 blur-2xl bg-gradient-to-br from-primary to-primary/60 group-hover:opacity-30 group-hover:scale-110 transition-all duration-500" aria-hidden="true" />
@@ -116,20 +100,26 @@ const FinancialDashboard: React.FC<FinancialDashboardProps> = ({ onBack }) => {
     const { t } = useTranslation();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [loading, setLoading] = useState(true);
+    const [datePreset, setDatePreset] = useState<DatePreset>('thisYear');
     const [stripeData, setStripeData] = useState<BillingData | null>(null);
     const [allTenants, setAllTenants] = useState<Tenant[]>([]);
+    const [stripeError, setStripeError] = useState(false);
 
     // ─── Data Loading ────────────────────────────────────────────────────────
 
     const loadAllData = async () => {
         setLoading(true);
+        setStripeError(false);
         try {
-            // Fetch Stripe data (real revenue) and Firestore tenants in parallel
             const [billing, tenantsSnap] = await Promise.all([
-                fetchBillingData(),
+                fetchBillingData().catch(() => { setStripeError(true); return null; }),
                 getDocs(collection(db, 'tenants')),
             ]);
-            setStripeData(billing);
+            if (billing && billing.mrr > 0) {
+                setStripeData(billing);
+            } else {
+                setStripeError(true);
+            }
             setAllTenants(tenantsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Tenant)));
         } catch (error) {
             console.error('Error loading financial data:', error);
@@ -138,11 +128,9 @@ const FinancialDashboard: React.FC<FinancialDashboardProps> = ({ onBack }) => {
         }
     };
 
-    useEffect(() => {
-        loadAllData();
-    }, []);
+    useEffect(() => { loadAllData(); }, []);
 
-    // ─── Derived from Firestore (tenant-level aggregation) ───────────────────
+    // ─── Helpers ─────────────────────────────────────────────────────────────
 
     const getCreatedDate = (tenant: Tenant): Date => {
         if (!tenant.createdAt) return new Date(2024, 0, 1);
@@ -150,10 +138,45 @@ const FinancialDashboard: React.FC<FinancialDashboardProps> = ({ onBack }) => {
         return new Date(tenant.createdAt.seconds * 1000);
     };
 
+    // ─── Firestore-based calculations (always available) ─────────────────────
+
     const activeTenants = useMemo(
         () => allTenants.filter(t => t.status === 'active' || t.status === 'trial'),
         [allTenants]
     );
+
+    const firestoreStats = useMemo(() => {
+        let totalMRR = 0;
+        let paidCount = 0;
+        const planDist: Record<string, { count: number; mrr: number }> = {};
+
+        activeTenants.forEach(tenant => {
+            const plan = (tenant.subscriptionPlan || 'free').toLowerCase();
+            const mrr = tenant.billingInfo?.mrr || 0;
+            if (mrr > 0 || plan !== 'free') { paidCount++; totalMRR += mrr; }
+            if (!planDist[plan]) planDist[plan] = { count: 0, mrr: 0 };
+            planDist[plan].count++;
+            planDist[plan].mrr += mrr;
+        });
+
+        return { totalMRR, paidCount, planDist };
+    }, [activeTenants]);
+
+    // MRR Over Time from Firestore (simulated from tenant createdAt)
+    const firestoreMrrOverTime = useMemo(() => {
+        const data: { month: string; revenue: number }[] = [];
+        for (let i = 11; i >= 0; i--) {
+            const monthDate = subMonths(new Date(), i);
+            const monthEnd = endOfMonth(monthDate);
+            const label = format(monthDate, 'MMM', { locale: es });
+            let monthMRR = 0;
+            activeTenants.forEach(tenant => {
+                if (getCreatedDate(tenant) <= monthEnd) monthMRR += tenant.billingInfo?.mrr || 0;
+            });
+            data.push({ month: label, revenue: monthMRR });
+        }
+        return data;
+    }, [activeTenants]);
 
     const tenantGrowth = useMemo(() => {
         const data: { month: string; newTenants: number }[] = [];
@@ -172,34 +195,68 @@ const FinancialDashboard: React.FC<FinancialDashboardProps> = ({ onBack }) => {
     }, [allTenants]);
 
     const recentTenants = useMemo(() =>
-        [...allTenants]
-            .sort((a, b) => getCreatedDate(b).getTime() - getCreatedDate(a).getTime())
-            .slice(0, 10),
+        [...allTenants].sort((a, b) => getCreatedDate(b).getTime() - getCreatedDate(a).getTime()).slice(0, 10),
         [allTenants]
     );
 
-    // ─── Stripe-powered values ───────────────────────────────────────────────
+    // ─── Final values: Stripe preferred, Firestore fallback ──────────────────
 
-    const mrr = stripeData?.mrr ?? 0;
-    const activeSubscriptions = stripeData?.activeSubscriptions ?? 0;
-    const arpu = stripeData?.arpu ?? 0;
-    const churnRate = stripeData?.churnRate ?? 0;
-    const revenueTrend = stripeData?.revenueTrend ?? [];
-    const planDistribution = stripeData?.planDistribution ?? [];
+    const hasStripe = !!stripeData && !stripeError;
+    const mrr = hasStripe ? stripeData!.mrr : firestoreStats.totalMRR;
+    const activeSubscriptions = hasStripe ? stripeData!.activeSubscriptions : firestoreStats.paidCount;
+    const arpu = hasStripe ? stripeData!.arpu : (firestoreStats.paidCount > 0 ? firestoreStats.totalMRR / firestoreStats.paidCount : 0);
+    const revenueTrend = hasStripe ? stripeData!.revenueTrend : firestoreMrrOverTime;
+    const planDistribution = hasStripe ? stripeData!.planDistribution : [];
 
     const conversionRate = activeTenants.length > 0
-        ? Math.round((activeSubscriptions / activeTenants.length) * 100)
-        : 0;
+        ? Math.round((activeSubscriptions / activeTenants.length) * 100) : 0;
 
-    // PieChart data from Stripe
-    const pieData = useMemo(() =>
-        planDistribution.map((p, idx) => ({
-            name: p.planName,
-            value: p.subscribers,
-            fill: p.color || PLAN_COLORS[p.planName.toLowerCase()] || FALLBACK_COLORS[idx % FALLBACK_COLORS.length],
-        })),
-        [planDistribution]
-    );
+    // Firestore plan distribution as fallback for pie
+    const pieData = useMemo(() => {
+        if (hasStripe && planDistribution.length > 0) {
+            return planDistribution.map((p, idx) => ({
+                name: p.planName,
+                value: p.subscribers,
+                fill: p.color || PLAN_COLORS[p.planName.toLowerCase()] || FALLBACK_COLORS[idx % FALLBACK_COLORS.length],
+            }));
+        }
+        // Fallback: from Firestore
+        return Object.entries(firestoreStats.planDist)
+            .filter(([, d]) => d.count > 0)
+            .map(([plan, data], idx) => ({
+                name: plan.charAt(0).toUpperCase() + plan.slice(1),
+                value: data.count,
+                fill: PLAN_COLORS[plan.toLowerCase()] || FALLBACK_COLORS[idx % FALLBACK_COLORS.length],
+            }));
+    }, [hasStripe, planDistribution, firestoreStats.planDist]);
+
+    // ─── Date Presets ────────────────────────────────────────────────────────
+
+    const datePresets: { id: DatePreset; label: string }[] = [
+        { id: 'thisMonth', label: t('superadmin.financesDetail.thisMonth', 'Este Mes') },
+        { id: 'lastMonth', label: t('superadmin.financesDetail.lastMonth', 'Mes Pasado') },
+        { id: 'last90Days', label: t('superadmin.financesDetail.last90Days', '90 Días') },
+        { id: 'thisYear', label: t('superadmin.financesDetail.thisYear', 'Este Año') },
+        { id: 'all', label: t('superadmin.financesDetail.allTime', 'Todo') },
+    ];
+
+    // Filter revenue trend data based on period
+    const filteredRevenueTrend = useMemo(() => {
+        if (datePreset === 'all') return revenueTrend;
+        const monthsToShow: Record<DatePreset, number> = {
+            thisMonth: 1, lastMonth: 2, last90Days: 3, thisYear: 12, all: 12,
+        };
+        const count = monthsToShow[datePreset];
+        return revenueTrend.slice(-count);
+    }, [revenueTrend, datePreset]);
+
+    const filteredTenantGrowth = useMemo(() => {
+        if (datePreset === 'all') return tenantGrowth;
+        const monthsToShow: Record<DatePreset, number> = {
+            thisMonth: 1, lastMonth: 2, last90Days: 3, thisYear: 12, all: 12,
+        };
+        return tenantGrowth.slice(-monthsToShow[datePreset]);
+    }, [tenantGrowth, datePreset]);
 
     // ─── Render ──────────────────────────────────────────────────────────────
 
@@ -223,40 +280,43 @@ const FinancialDashboard: React.FC<FinancialDashboardProps> = ({ onBack }) => {
                             </h1>
                         </div>
                     </div>
-                    <div className="flex items-center gap-1 sm:gap-3">
-                        {/* Live MRR badge */}
+                    <div className="flex items-center gap-2 sm:gap-3">
                         <div className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-primary/10 rounded-lg">
                             <Zap className="w-4 h-4 text-primary" />
-                            <span className="text-sm font-bold text-foreground">
-                                ${mrr.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                            </span>
+                            <span className="text-sm font-bold text-foreground">${mrr.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                             <span className="text-xs text-muted-foreground">/mo</span>
                         </div>
-                        <button
-                            onClick={loadAllData}
-                            disabled={loading}
-                            className="text-muted-foreground hover:text-foreground transition-colors"
-                        >
+                        <button onClick={loadAllData} disabled={loading} className="text-muted-foreground hover:text-foreground transition-colors">
                             <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
                         </button>
-                        <button
-                            onClick={onBack}
-                            className="text-muted-foreground hover:text-foreground transition-colors"
-                        >
+                        <button onClick={onBack} className="text-muted-foreground hover:text-foreground transition-colors">
                             <ArrowLeft size={20} />
                         </button>
                     </div>
                 </header>
 
-                {/* ── Live data source indicator ──────────────────────────── */}
-                <div className="flex items-center gap-2 px-3 sm:px-6 py-2 bg-card/50 border-b border-border z-10">
-                    <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                    <span className="text-xs text-muted-foreground font-medium">
-                        {t('superadmin.financesDetail.liveStripe', 'Datos en vivo from Stripe')}
-                    </span>
-                    <span className="text-[10px] text-muted-foreground ml-auto">
-                        {activeTenants.length} {t('superadmin.financesDetail.totalActive', 'activos totales')} · {allTenants.length} total
-                    </span>
+                {/* ── Period Selector ─────────────────────────────────────── */}
+                <div className="flex items-center gap-1 border-b border-border px-3 sm:px-6 py-2 bg-card/50 z-10 overflow-x-auto">
+                    <Calendar className="w-4 h-4 text-muted-foreground mr-1 shrink-0" />
+                    {datePresets.map(preset => (
+                        <button
+                            key={preset.id}
+                            onClick={() => setDatePreset(preset.id)}
+                            className={`px-3 py-1.5 text-xs sm:text-sm font-medium rounded-lg transition-all whitespace-nowrap ${datePreset === preset.id
+                                    ? 'bg-primary text-primary-foreground shadow-sm'
+                                    : 'text-muted-foreground hover:text-foreground hover:bg-secondary'
+                                }`}
+                        >
+                            {preset.label}
+                        </button>
+                    ))}
+                    {/* Data source indicator */}
+                    <div className="ml-auto flex items-center gap-1.5 shrink-0">
+                        <div className={`w-2 h-2 rounded-full ${hasStripe ? 'bg-emerald-500' : 'bg-amber-500'} animate-pulse`} />
+                        <span className="text-[10px] text-muted-foreground font-medium hidden sm:inline">
+                            {hasStripe ? 'Stripe' : 'Firestore'}
+                        </span>
+                    </div>
                 </div>
 
                 {/* ── Main Content ────────────────────────────────────────── */}
@@ -299,17 +359,17 @@ const FinancialDashboard: React.FC<FinancialDashboardProps> = ({ onBack }) => {
                             {/* ── Charts Row ──────────────────────────────────── */}
                             <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6">
 
-                                {/* Revenue Over Time from Stripe (AreaChart) */}
+                                {/* Revenue Over Time (AreaChart) */}
                                 <div className="xl:col-span-2">
                                     <div className="relative overflow-hidden rounded-2xl border border-white/[0.08] dark:border-white/[0.06] bg-card/80 dark:bg-card/70 backdrop-blur-xl p-4 sm:p-6">
                                         <h3 className="font-bold text-base sm:text-lg mb-4 sm:mb-6 flex items-center gap-2">
                                             <TrendingUp className="w-5 h-5 text-primary" />
-                                            {t('superadmin.financesDetail.revenueOverTime', 'Ingresos por Mes (Stripe)')}
+                                            {t('superadmin.financesDetail.mrrOverTime', 'Ingresos por Mes')}
                                         </h3>
                                         <div className="h-[250px] sm:h-[300px] w-full">
-                                            {revenueTrend.length > 0 ? (
+                                            {filteredRevenueTrend.length > 0 ? (
                                                 <ResponsiveContainer width="100%" height="100%">
-                                                    <AreaChart data={revenueTrend} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                                                    <AreaChart data={filteredRevenueTrend} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                                                         <defs>
                                                             <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
                                                                 <stop offset="5%" stopColor="#4f46e5" stopOpacity={0.3} />
@@ -317,91 +377,57 @@ const FinancialDashboard: React.FC<FinancialDashboardProps> = ({ onBack }) => {
                                                             </linearGradient>
                                                         </defs>
                                                         <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} />
-                                                        <XAxis
-                                                            dataKey="month"
-                                                            stroke="#94a3b8"
-                                                            axisLine={false}
-                                                            tickLine={false}
-                                                            tick={{ fontSize: 11 }}
-                                                        />
-                                                        <YAxis
-                                                            stroke="#94a3b8"
-                                                            axisLine={false}
-                                                            tickLine={false}
-                                                            tick={{ fontSize: 11 }}
-                                                            tickFormatter={(v) => `$${v}`}
-                                                        />
+                                                        <XAxis dataKey="month" stroke="#94a3b8" axisLine={false} tickLine={false} tick={{ fontSize: 11 }} />
+                                                        <YAxis stroke="#94a3b8" axisLine={false} tickLine={false} tick={{ fontSize: 11 }} tickFormatter={(v) => `$${v}`} />
                                                         <Tooltip content={<CustomTooltip />} />
-                                                        <Area
-                                                            type="monotone"
-                                                            dataKey="revenue"
-                                                            stroke="#4f46e5"
-                                                            strokeWidth={3}
-                                                            fillOpacity={1}
-                                                            fill="url(#colorRevenue)"
-                                                            name={t('superadmin.financesDetail.revenue', 'Ingresos')}
-                                                            animationDuration={1500}
-                                                        />
+                                                        <Area type="monotone" dataKey="revenue" stroke="#4f46e5" strokeWidth={3} fillOpacity={1} fill="url(#colorRevenue)" name={t('superadmin.financesDetail.revenue', 'Ingresos')} animationDuration={1500} />
                                                     </AreaChart>
                                                 </ResponsiveContainer>
                                             ) : (
                                                 <div className="flex items-center justify-center h-full text-muted-foreground text-sm italic">
-                                                    {t('superadmin.financesDetail.noData', 'Sin datos de planes')}
+                                                    {t('superadmin.financesDetail.noData', 'Sin datos')}
                                                 </div>
                                             )}
                                         </div>
                                     </div>
                                 </div>
 
-                                {/* Plan Distribution from Stripe (PieChart) */}
+                                {/* Plan Distribution (PieChart) */}
                                 <div className="xl:col-span-1">
                                     <div className="relative overflow-hidden rounded-2xl border border-white/[0.08] dark:border-white/[0.06] bg-card/80 dark:bg-card/70 backdrop-blur-xl p-4 sm:p-6 h-full">
                                         <h3 className="font-bold text-base sm:text-lg mb-4 flex items-center gap-2">
                                             <PieChartIcon className="w-5 h-5 text-primary" />
-                                            {t('superadmin.financesDetail.revenueByPlan', 'Suscriptores por Plan')}
+                                            {t('superadmin.financesDetail.revenueByPlan', 'Distribución por Plan')}
                                         </h3>
                                         {pieData.length > 0 ? (
                                             <>
                                                 <div className="h-[170px] sm:h-[180px]">
                                                     <ResponsiveContainer width="100%" height="100%">
                                                         <PieChart>
-                                                            <Pie
-                                                                data={pieData}
-                                                                cx="50%"
-                                                                cy="50%"
-                                                                innerRadius={45}
-                                                                outerRadius={70}
-                                                                paddingAngle={4}
-                                                                dataKey="value"
-                                                                animationDuration={1200}
-                                                            >
+                                                            <Pie data={pieData} cx="50%" cy="50%" innerRadius={45} outerRadius={70} paddingAngle={4} dataKey="value" animationDuration={1200}>
                                                                 {pieData.map((entry, index) => (
                                                                     <Cell key={`cell-${index}`} fill={entry.fill} />
                                                                 ))}
                                                             </Pie>
-                                                            <Tooltip
-                                                                content={<CustomTooltip prefix="" />}
-                                                            />
+                                                            <Tooltip content={<CustomTooltip prefix="" />} />
                                                         </PieChart>
                                                     </ResponsiveContainer>
                                                 </div>
                                                 <div className="space-y-2 mt-2">
-                                                    {pieData
-                                                        .sort((a, b) => b.value - a.value)
-                                                        .map((item) => (
-                                                            <div key={item.name} className="flex items-center justify-between text-sm">
-                                                                <div className="flex items-center gap-2">
-                                                                    <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: item.fill }} />
-                                                                    <span className="font-medium text-foreground truncate">{item.name}</span>
-                                                                </div>
-                                                                <span className="font-bold text-foreground ml-2">{item.value}</span>
+                                                    {pieData.sort((a, b) => b.value - a.value).map((item) => (
+                                                        <div key={item.name} className="flex items-center justify-between text-sm">
+                                                            <div className="flex items-center gap-2">
+                                                                <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: item.fill }} />
+                                                                <span className="font-medium text-foreground truncate">{item.name}</span>
                                                             </div>
-                                                        ))}
+                                                            <span className="font-bold text-foreground ml-2">{item.value}</span>
+                                                        </div>
+                                                    ))}
                                                 </div>
                                             </>
                                         ) : (
                                             <div className="flex items-center justify-center h-[250px] text-muted-foreground text-sm italic">
-                                                {t('superadmin.financesDetail.noData', 'Sin datos de planes')}
+                                                {t('superadmin.financesDetail.noData', 'Sin datos')}
                                             </div>
                                         )}
                                     </div>
@@ -419,30 +445,12 @@ const FinancialDashboard: React.FC<FinancialDashboardProps> = ({ onBack }) => {
                                     </h3>
                                     <div className="h-[220px] sm:h-[260px] w-full">
                                         <ResponsiveContainer width="100%" height="100%">
-                                            <BarChart data={tenantGrowth} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
+                                            <BarChart data={filteredTenantGrowth} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
                                                 <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} />
-                                                <XAxis
-                                                    dataKey="month"
-                                                    stroke="#94a3b8"
-                                                    axisLine={false}
-                                                    tickLine={false}
-                                                    tick={{ fontSize: 10 }}
-                                                />
-                                                <YAxis
-                                                    stroke="#94a3b8"
-                                                    axisLine={false}
-                                                    tickLine={false}
-                                                    tick={{ fontSize: 11 }}
-                                                    allowDecimals={false}
-                                                />
+                                                <XAxis dataKey="month" stroke="#94a3b8" axisLine={false} tickLine={false} tick={{ fontSize: 10 }} />
+                                                <YAxis stroke="#94a3b8" axisLine={false} tickLine={false} tick={{ fontSize: 11 }} allowDecimals={false} />
                                                 <Tooltip content={<CustomTooltip prefix="" />} />
-                                                <Bar
-                                                    dataKey="newTenants"
-                                                    fill="#4f46e5"
-                                                    radius={[6, 6, 0, 0]}
-                                                    name={t('superadmin.financesDetail.newClients', 'Nuevos Clientes')}
-                                                    animationDuration={1200}
-                                                />
+                                                <Bar dataKey="newTenants" fill="#4f46e5" radius={[6, 6, 0, 0]} name={t('superadmin.financesDetail.newClients', 'Nuevos Clientes')} animationDuration={1200} />
                                             </BarChart>
                                         </ResponsiveContainer>
                                     </div>
@@ -468,32 +476,20 @@ const FinancialDashboard: React.FC<FinancialDashboardProps> = ({ onBack }) => {
                                                 {recentTenants.map(tenant => (
                                                     <tr key={tenant.id} className="border-b border-border/50 hover:bg-secondary/20 transition-colors">
                                                         <td className="py-2.5 pl-4 sm:pl-0 pr-3">
-                                                            <div className="font-medium text-foreground truncate max-w-[120px] sm:max-w-[180px]">
-                                                                {tenant.name || tenant.companyName || tenant.email}
-                                                            </div>
+                                                            <div className="font-medium text-foreground truncate max-w-[120px] sm:max-w-[180px]">{tenant.name || tenant.companyName || tenant.email}</div>
                                                             <div className="text-[10px] sm:text-xs text-muted-foreground truncate max-w-[120px] sm:max-w-[180px]">{tenant.email}</div>
                                                         </td>
                                                         <td className="py-2.5 pr-3">
-                                                            <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] sm:text-xs font-semibold bg-secondary/50 text-foreground capitalize">
-                                                                {tenant.subscriptionPlan || 'free'}
-                                                            </span>
+                                                            <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] sm:text-xs font-semibold bg-secondary/50 text-foreground capitalize">{tenant.subscriptionPlan || 'free'}</span>
                                                         </td>
-                                                        <td className="py-2.5 pr-3 text-right font-bold text-foreground text-xs sm:text-sm">
-                                                            ${(tenant.billingInfo?.mrr || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                                                        </td>
+                                                        <td className="py-2.5 pr-3 text-right font-bold text-foreground text-xs sm:text-sm">${(tenant.billingInfo?.mrr || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
                                                         <td className="py-2.5 pr-4 sm:pr-0 text-center">
-                                                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-semibold ${STATUS_COLORS[tenant.status] || STATUS_COLORS.expired}`}>
-                                                                {tenant.status}
-                                                            </span>
+                                                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-semibold ${STATUS_COLORS[tenant.status] || STATUS_COLORS.expired}`}>{tenant.status}</span>
                                                         </td>
                                                     </tr>
                                                 ))}
                                                 {recentTenants.length === 0 && (
-                                                    <tr>
-                                                        <td colSpan={4} className="text-center py-8 text-muted-foreground italic">
-                                                            {t('superadmin.financesDetail.noClients', 'No hay clientes registrados')}
-                                                        </td>
-                                                    </tr>
+                                                    <tr><td colSpan={4} className="text-center py-8 text-muted-foreground italic">{t('superadmin.financesDetail.noClients', 'No hay clientes registrados')}</td></tr>
                                                 )}
                                             </tbody>
                                         </table>
