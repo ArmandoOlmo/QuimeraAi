@@ -1059,8 +1059,136 @@ export const archivePlan = functions.https.onRequest(async (req, res) => {
     }
 });
 
+/**
+ * Sync all Stripe subscription billing data → Firestore tenant billingInfo
+ * Reads every active Stripe subscription, computes MRR, and writes it
+ * to the matching tenant document so the Financial Dashboard can read it.
+ * 
+ * SECURITY: Owner-only auth required.
+ */
+export const syncBillingToFirestore = functions.https.onRequest(async (req, res) => {
+    setCorsHeaders(req, res);
+    if (req.method === 'OPTIONS') { res.status(204).send(''); return; }
+    if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
 
+    const auth = await verifyOwnerAuth(req);
+    if (!auth.authorized) { res.status(403).json({ error: auth.error }); return; }
 
+    try {
+        const stripe = getStripe();
+        const db = admin.firestore();
 
+        // Fetch all active subscriptions with expanded price+product data
+        const allSubscriptions: Stripe.Subscription[] = [];
+        let hasMore = true;
+        let startingAfter: string | undefined;
+
+        while (hasMore) {
+            const batch = await stripe.subscriptions.list({
+                status: 'active',
+                limit: 100,
+                expand: ['data.items.data.price.product'],
+                ...(startingAfter && { starting_after: startingAfter }),
+            });
+            allSubscriptions.push(...batch.data);
+            hasMore = batch.has_more;
+            if (batch.data.length > 0) {
+                startingAfter = batch.data[batch.data.length - 1].id;
+            }
+        }
+
+        console.log(`[syncBilling] Found ${allSubscriptions.length} active subscriptions`);
+
+        let updated = 0;
+        let skipped = 0;
+
+        for (const sub of allSubscriptions) {
+            // Try both metadata keys: tenantId (platform subs) and clientTenantId (agency subs)
+            const tenantId = sub.metadata?.tenantId || sub.metadata?.clientTenantId;
+
+            if (!tenantId) {
+                skipped++;
+                continue;
+            }
+
+            // Compute per-subscription MRR
+            let subscriptionMRR = 0;
+            let planName = 'Unknown Plan';
+
+            for (const item of sub.items.data) {
+                const price = item.price;
+                if (price.recurring) {
+                    let monthlyAmount = price.unit_amount || 0;
+                    if (price.recurring.interval === 'year') monthlyAmount = monthlyAmount / 12;
+                    else if (price.recurring.interval === 'week') monthlyAmount = monthlyAmount * 4;
+                    subscriptionMRR += monthlyAmount;
+
+                    const productObj = price.product as Stripe.Product | undefined;
+                    if (productObj && 'name' in productObj) planName = productObj.name;
+                }
+            }
+
+            // Convert from cents to dollars
+            subscriptionMRR = Math.round((subscriptionMRR / 100) * 100) / 100;
+
+            // Determine next billing date
+            const nextBillingDate = sub.current_period_end
+                ? new Date(sub.current_period_end * 1000).toISOString()
+                : null;
+
+            // Write to the tenant doc
+            const tenantRef = db.collection('tenants').doc(tenantId);
+            const tenantDoc = await tenantRef.get();
+
+            if (tenantDoc.exists) {
+                await tenantRef.update({
+                    'billingInfo.mrr': subscriptionMRR,
+                    'billingInfo.planName': planName,
+                    'billingInfo.nextBillingDate': nextBillingDate,
+                    'billingInfo.stripeSubscriptionId': sub.id,
+                    'billingInfo.stripeCustomerId': typeof sub.customer === 'string' ? sub.customer : sub.customer?.id,
+                    'billingInfo.lastSyncedAt': admin.firestore.FieldValue.serverTimestamp(),
+                    updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+                });
+                updated++;
+                console.log(`[syncBilling] Updated tenant ${tenantId}: MRR=$${subscriptionMRR}, plan=${planName}`);
+            } else {
+                skipped++;
+                console.log(`[syncBilling] Tenant doc ${tenantId} not found, skipping`);
+            }
+        }
+
+        // Also zero-out MRR for tenants that no longer have active subscriptions
+        const tenantsSnap = await db.collection('tenants').where('billingInfo.mrr', '>', 0).get();
+        const activeTenantIds = new Set(allSubscriptions.map(s => s.metadata?.tenantId || s.metadata?.clientTenantId).filter(Boolean));
+
+        let zeroed = 0;
+        for (const doc of tenantsSnap.docs) {
+            if (!activeTenantIds.has(doc.id)) {
+                await doc.ref.update({
+                    'billingInfo.mrr': 0,
+                    'billingInfo.lastSyncedAt': admin.firestore.FieldValue.serverTimestamp(),
+                    updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+                });
+                zeroed++;
+            }
+        }
+
+        res.status(200).json({
+            success: true,
+            totalSubscriptions: allSubscriptions.length,
+            tenantsUpdated: updated,
+            tenantsSkipped: skipped,
+            tenantsZeroed: zeroed,
+        });
+
+    } catch (error) {
+        console.error('[syncBilling] Error:', error);
+        res.status(500).json({
+            error: 'Failed to sync billing data',
+            message: error instanceof Error ? error.message : 'Unknown error',
+        });
+    }
+});
 
 

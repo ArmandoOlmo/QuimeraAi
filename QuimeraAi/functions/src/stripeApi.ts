@@ -933,6 +933,63 @@ async function updateTenantSubscription(
             });
         }
 
+        // ── Sync billingInfo to tenant doc ────────────────────────────────
+        try {
+            const tenantRef = db.doc(`tenants/${tenantId}`);
+            const isActive = updates.status === 'active' || updates.status === 'trialing';
+
+            if (isActive && updates.stripeSubscriptionId) {
+                // Fetch the Stripe subscription to compute MRR
+                const stripe = getStripe();
+                const stripeSub = await stripe.subscriptions.retrieve(
+                    updates.stripeSubscriptionId,
+                    { expand: ['items.data.price.product'] }
+                );
+
+                let subscriptionMRR = 0;
+                let planName = planId;
+
+                for (const item of stripeSub.items.data) {
+                    const price = item.price;
+                    if (price.recurring) {
+                        let monthlyAmount = price.unit_amount || 0;
+                        if (price.recurring.interval === 'year') monthlyAmount /= 12;
+                        else if (price.recurring.interval === 'week') monthlyAmount *= 4;
+                        subscriptionMRR += monthlyAmount;
+
+                        const productObj = price.product as Stripe.Product | undefined;
+                        if (productObj && 'name' in productObj) planName = productObj.name;
+                    }
+                }
+
+                subscriptionMRR = Math.round((subscriptionMRR / 100) * 100) / 100;
+
+                await tenantRef.update({
+                    'billingInfo.mrr': subscriptionMRR,
+                    'billingInfo.planName': planName,
+                    'billingInfo.nextBillingDate': updates.currentPeriodEnd
+                        ? updates.currentPeriodEnd.toISOString() : null,
+                    'billingInfo.stripeSubscriptionId': updates.stripeSubscriptionId,
+                    'billingInfo.stripeCustomerId': updates.stripeCustomerId || null,
+                    'billingInfo.lastSyncedAt': now,
+                    updatedAt: now,
+                });
+
+                console.log(`[syncBilling] Tenant ${tenantId}: MRR=$${subscriptionMRR}, plan=${planName}`);
+            } else if (updates.status === 'cancelled') {
+                // Zero out MRR on cancellation
+                await tenantRef.update({
+                    'billingInfo.mrr': 0,
+                    'billingInfo.lastSyncedAt': now,
+                    updatedAt: now,
+                });
+                console.log(`[syncBilling] Tenant ${tenantId}: MRR zeroed (cancelled)`);
+            }
+        } catch (billingError) {
+            // Non-fatal: don't fail the subscription update if billingInfo sync fails
+            console.error(`[syncBilling] Error syncing billingInfo for tenant ${tenantId}:`, billingError);
+        }
+
         // Also update the AI credits usage based on the new plan
         await updateAiCreditsForPlan(tenantId, planId);
 

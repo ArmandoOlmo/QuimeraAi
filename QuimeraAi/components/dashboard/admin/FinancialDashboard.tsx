@@ -4,7 +4,7 @@ import {
     DollarSign, TrendingUp, TrendingDown, Users,
     Activity, Crown, Wallet, BarChart3, ArrowLeft,
     RefreshCw, Menu, Calendar, PieChart as PieChartIcon,
-    Building2, Zap
+    Building2, Zap, CloudDownload
 } from 'lucide-react';
 import {
     AreaChart, Area, PieChart, Pie, Cell, BarChart, Bar,
@@ -21,6 +21,7 @@ import DashboardWaveRibbons from '../DashboardWaveRibbons';
 import { fetchBillingData } from '../../../data/mockBillingData';
 import { BillingData } from '../../../types';
 import { useAdmin } from '../../../contexts/admin';
+import { getAuth } from 'firebase/auth';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // TYPES
@@ -102,6 +103,7 @@ const FinancialDashboard: React.FC<FinancialDashboardProps> = ({ onBack }) => {
     const { tenants, fetchTenants } = useAdmin();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [loading, setLoading] = useState(true);
+    const [syncing, setSyncing] = useState(false);
     const [datePreset, setDatePreset] = useState<DatePreset>('thisYear');
     const [stripeData, setStripeData] = useState<BillingData | null>(null);
     const [stripeLoaded, setStripeLoaded] = useState(false);
@@ -131,6 +133,28 @@ const FinancialDashboard: React.FC<FinancialDashboardProps> = ({ onBack }) => {
     };
 
     useEffect(() => { loadAllData(); }, []);
+
+    const syncBilling = async () => {
+        setSyncing(true);
+        try {
+            const auth = getAuth();
+            const user = auth.currentUser;
+            if (!user) throw new Error('Not authenticated');
+            const token = await user.getIdToken();
+            const res = await fetch('https://us-central1-quimeraai.cloudfunctions.net/syncBillingToFirestore', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+            });
+            const data = await res.json();
+            console.log('[Sync Billing] Result:', data);
+            // Reload all data after sync
+            await loadAllData();
+        } catch (error) {
+            console.error('[Sync Billing] Error:', error);
+        } finally {
+            setSyncing(false);
+        }
+    };
 
     // ─── Tenant Stats (always from Firestore via useAdmin) ───────────────────
 
@@ -275,6 +299,15 @@ const FinancialDashboard: React.FC<FinancialDashboardProps> = ({ onBack }) => {
                             <span className="text-sm font-bold text-foreground">${mrr.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                             <span className="text-xs text-muted-foreground">/mo</span>
                         </div>
+                        <button
+                            onClick={syncBilling}
+                            disabled={syncing || loading}
+                            className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-lg bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 transition-all disabled:opacity-50"
+                            title="Sync Stripe → Firestore"
+                        >
+                            <CloudDownload size={14} className={syncing ? 'animate-bounce' : ''} />
+                            <span>{syncing ? 'Syncing...' : 'Sync'}</span>
+                        </button>
                         <button onClick={loadAllData} disabled={loading} className="text-muted-foreground hover:text-foreground transition-colors">
                             <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
                         </button>
@@ -292,8 +325,8 @@ const FinancialDashboard: React.FC<FinancialDashboardProps> = ({ onBack }) => {
                             key={preset.id}
                             onClick={() => setDatePreset(preset.id)}
                             className={`px-3 py-1.5 text-xs sm:text-sm font-medium rounded-lg transition-all whitespace-nowrap ${datePreset === preset.id
-                                    ? 'bg-primary text-primary-foreground shadow-sm'
-                                    : 'text-muted-foreground hover:text-foreground hover:bg-secondary'
+                                ? 'bg-primary text-primary-foreground shadow-sm'
+                                : 'text-muted-foreground hover:text-foreground hover:bg-secondary'
                                 }`}
                         >
                             {preset.label}

@@ -43,6 +43,7 @@ import {
     cancelSubscription,
     reactivateSubscription,
     getSubscriptionDetails,
+    syncBillingToFirestore,
 } from './stripeBilling';
 
 // Agency Stripe Connect Billing functions
@@ -444,6 +445,7 @@ export {
     cancelSubscription,
     reactivateSubscription,
     getSubscriptionDetails,
+    syncBillingToFirestore,
     // Stripe Connect exports (Multi-tenant)
     createConnectAccount,
     createConnectOnboardingLink,
