@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-    DollarSign, TrendingUp, TrendingDown, Users, ArrowUpRight,
-    Activity, Crown, Wallet, BarChart3, Receipt, ArrowLeft,
+    DollarSign, TrendingUp, TrendingDown, Users,
+    Activity, Crown, Wallet, BarChart3, ArrowLeft,
     RefreshCw, Menu, Calendar, PieChart as PieChartIcon,
     Building2, Zap
 } from 'lucide-react';
@@ -11,17 +11,16 @@ import {
     XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from 'recharts';
 import {
-    startOfMonth, endOfMonth, subMonths, startOfYear, endOfYear,
-    subDays, endOfDay, format
+    startOfMonth, endOfMonth, subMonths, format
 } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { db, collection, getDocs } from '../../../firebase';
 import QuimeraLoader from '@/components/ui/QuimeraLoader';
 import { Tenant } from '../../../types';
 import DashboardSidebar from '../DashboardSidebar';
 import DashboardWaveRibbons from '../DashboardWaveRibbons';
 import { fetchBillingData } from '../../../data/mockBillingData';
 import { BillingData } from '../../../types';
+import { useAdmin } from '../../../contexts/admin';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // TYPES
@@ -41,12 +40,14 @@ const PLAN_COLORS: Record<string, string> = {
     free: '#6b7280', starter: '#06b6d4', básico: '#3b82f6', basic: '#3b82f6',
     profesional: '#8b5cf6', professional: '#8b5cf6', pro: '#8b5cf6', individual: '#4f46e5',
     avanzado: '#4f46e5', advanced: '#4f46e5', agencia: '#ec4899', agency: '#ec4899',
+    'agency starter': '#06b6d4', 'agency pro': '#8b5cf6', 'agency scale': '#4f46e5',
     enterprise: '#f59e0b', custom: '#10b981',
 };
 const FALLBACK_COLORS = ['#4f46e5', '#06b6d4', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#ef4444', '#3b82f6'];
 const STATUS_COLORS: Record<string, string> = {
     active: 'bg-emerald-500/20 text-emerald-400', trial: 'bg-amber-500/20 text-amber-400',
     suspended: 'bg-red-500/20 text-red-400', expired: 'bg-gray-500/20 text-gray-400',
+    cancelled: 'bg-gray-500/20 text-gray-400',
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -98,29 +99,30 @@ const CustomTooltip = ({ active, payload, label, prefix = '$' }: any) => {
 
 const FinancialDashboard: React.FC<FinancialDashboardProps> = ({ onBack }) => {
     const { t } = useTranslation();
+    const { tenants, fetchTenants } = useAdmin();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [loading, setLoading] = useState(true);
     const [datePreset, setDatePreset] = useState<DatePreset>('thisYear');
     const [stripeData, setStripeData] = useState<BillingData | null>(null);
-    const [allTenants, setAllTenants] = useState<Tenant[]>([]);
-    const [stripeError, setStripeError] = useState(false);
+    const [stripeLoaded, setStripeLoaded] = useState(false);
 
     // ─── Data Loading ────────────────────────────────────────────────────────
 
     const loadAllData = async () => {
         setLoading(true);
-        setStripeError(false);
         try {
-            const [billing, tenantsSnap] = await Promise.all([
-                fetchBillingData().catch(() => { setStripeError(true); return null; }),
-                getDocs(collection(db, 'tenants')),
+            // Fetch tenants from admin context and Stripe data in parallel
+            const [, billing] = await Promise.all([
+                fetchTenants(),
+                fetchBillingData().catch(err => {
+                    console.warn('Stripe API failed, using Firestore fallback:', err);
+                    return null;
+                }),
             ]);
-            if (billing && billing.mrr > 0) {
+            if (billing && (billing.mrr > 0 || billing.activeSubscriptions > 0 || billing.revenueTrend?.some(r => r.revenue > 0))) {
                 setStripeData(billing);
-            } else {
-                setStripeError(true);
+                setStripeLoaded(true);
             }
-            setAllTenants(tenantsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Tenant)));
         } catch (error) {
             console.error('Error loading financial data:', error);
         } finally {
@@ -130,54 +132,54 @@ const FinancialDashboard: React.FC<FinancialDashboardProps> = ({ onBack }) => {
 
     useEffect(() => { loadAllData(); }, []);
 
-    // ─── Helpers ─────────────────────────────────────────────────────────────
+    // ─── Tenant Stats (always from Firestore via useAdmin) ───────────────────
 
     const getCreatedDate = (tenant: Tenant): Date => {
         if (!tenant.createdAt) return new Date(2024, 0, 1);
         if (typeof tenant.createdAt === 'string') return new Date(tenant.createdAt);
-        return new Date(tenant.createdAt.seconds * 1000);
+        if (typeof tenant.createdAt === 'object' && 'seconds' in tenant.createdAt) {
+            return new Date(tenant.createdAt.seconds * 1000);
+        }
+        return new Date(2024, 0, 1);
     };
 
-    // ─── Firestore-based calculations (always available) ─────────────────────
-
     const activeTenants = useMemo(
-        () => allTenants.filter(t => t.status === 'active' || t.status === 'trial'),
-        [allTenants]
+        () => tenants.filter(t => t.status === 'active' || t.status === 'trial'),
+        [tenants]
     );
 
-    const firestoreStats = useMemo(() => {
-        let totalMRR = 0;
-        let paidCount = 0;
-        const planDist: Record<string, { count: number; mrr: number }> = {};
+    const paidTenants = useMemo(
+        () => tenants.filter(t => {
+            const plan = (t.subscriptionPlan || 'free').toLowerCase();
+            return plan !== 'free' && (t.status === 'active' || t.status === 'trial');
+        }),
+        [tenants]
+    );
 
-        activeTenants.forEach(tenant => {
-            const plan = (tenant.subscriptionPlan || 'free').toLowerCase();
-            const mrr = tenant.billingInfo?.mrr || 0;
-            if (mrr > 0 || plan !== 'free') { paidCount++; totalMRR += mrr; }
-            if (!planDist[plan]) planDist[plan] = { count: 0, mrr: 0 };
-            planDist[plan].count++;
-            planDist[plan].mrr += mrr;
+    // Plan distribution from Firestore (always available)
+    const firestorePlanDist = useMemo(() => {
+        const dist: Record<string, number> = {};
+        tenants.forEach(t => {
+            const plan = (t.subscriptionPlan || 'free');
+            dist[plan] = (dist[plan] || 0) + 1;
         });
+        return Object.entries(dist)
+            .filter(([, count]) => count > 0)
+            .map(([plan, count], idx) => ({
+                name: plan.charAt(0).toUpperCase() + plan.slice(1),
+                value: count,
+                fill: PLAN_COLORS[plan.toLowerCase()] || FALLBACK_COLORS[idx % FALLBACK_COLORS.length],
+            }))
+            .sort((a, b) => b.value - a.value);
+    }, [tenants]);
 
-        return { totalMRR, paidCount, planDist };
-    }, [activeTenants]);
+    // MRR from Firestore tenants
+    const firestoreMRR = useMemo(
+        () => tenants.reduce((sum, t) => sum + (t.billingInfo?.mrr || 0), 0),
+        [tenants]
+    );
 
-    // MRR Over Time from Firestore (simulated from tenant createdAt)
-    const firestoreMrrOverTime = useMemo(() => {
-        const data: { month: string; revenue: number }[] = [];
-        for (let i = 11; i >= 0; i--) {
-            const monthDate = subMonths(new Date(), i);
-            const monthEnd = endOfMonth(monthDate);
-            const label = format(monthDate, 'MMM', { locale: es });
-            let monthMRR = 0;
-            activeTenants.forEach(tenant => {
-                if (getCreatedDate(tenant) <= monthEnd) monthMRR += tenant.billingInfo?.mrr || 0;
-            });
-            data.push({ month: label, revenue: monthMRR });
-        }
-        return data;
-    }, [activeTenants]);
-
+    // Tenant growth over time
     const tenantGrowth = useMemo(() => {
         const data: { month: string; newTenants: number }[] = [];
         for (let i = 11; i >= 0; i--) {
@@ -185,52 +187,43 @@ const FinancialDashboard: React.FC<FinancialDashboardProps> = ({ onBack }) => {
             const mStart = startOfMonth(monthDate);
             const mEnd = endOfMonth(monthDate);
             const label = format(monthDate, 'MMM yy', { locale: es });
-            const newCount = allTenants.filter(t => {
+            const newCount = tenants.filter(t => {
                 const created = getCreatedDate(t);
                 return created >= mStart && created <= mEnd;
             }).length;
             data.push({ month: label, newTenants: newCount });
         }
         return data;
-    }, [allTenants]);
+    }, [tenants]);
 
     const recentTenants = useMemo(() =>
-        [...allTenants].sort((a, b) => getCreatedDate(b).getTime() - getCreatedDate(a).getTime()).slice(0, 10),
-        [allTenants]
+        [...tenants].sort((a, b) => getCreatedDate(b).getTime() - getCreatedDate(a).getTime()).slice(0, 10),
+        [tenants]
     );
 
-    // ─── Final values: Stripe preferred, Firestore fallback ──────────────────
+    // ─── Final values: Stripe > Firestore fallback ──────────────────────────
 
-    const hasStripe = !!stripeData && !stripeError;
-    const mrr = hasStripe ? stripeData!.mrr : firestoreStats.totalMRR;
-    const activeSubscriptions = hasStripe ? stripeData!.activeSubscriptions : firestoreStats.paidCount;
-    const arpu = hasStripe ? stripeData!.arpu : (firestoreStats.paidCount > 0 ? firestoreStats.totalMRR / firestoreStats.paidCount : 0);
-    const revenueTrend = hasStripe ? stripeData!.revenueTrend : firestoreMrrOverTime;
-    const planDistribution = hasStripe ? stripeData!.planDistribution : [];
+    const mrr = stripeLoaded ? stripeData!.mrr : firestoreMRR;
+    const activeSubscriptions = stripeLoaded ? stripeData!.activeSubscriptions : paidTenants.length;
+    const arpu = stripeLoaded ? stripeData!.arpu : (paidTenants.length > 0 ? firestoreMRR / paidTenants.length : 0);
+    const revenueTrend = stripeLoaded ? stripeData!.revenueTrend : [];
 
     const conversionRate = activeTenants.length > 0
-        ? Math.round((activeSubscriptions / activeTenants.length) * 100) : 0;
+        ? Math.round((paidTenants.length / activeTenants.length) * 100) : 0;
 
-    // Firestore plan distribution as fallback for pie
+    // Pie data: Stripe plan distribution if available, else Firestore counts
     const pieData = useMemo(() => {
-        if (hasStripe && planDistribution.length > 0) {
-            return planDistribution.map((p, idx) => ({
+        if (stripeLoaded && stripeData!.planDistribution?.length > 0) {
+            return stripeData!.planDistribution.map((p, idx) => ({
                 name: p.planName,
                 value: p.subscribers,
                 fill: p.color || PLAN_COLORS[p.planName.toLowerCase()] || FALLBACK_COLORS[idx % FALLBACK_COLORS.length],
             }));
         }
-        // Fallback: from Firestore
-        return Object.entries(firestoreStats.planDist)
-            .filter(([, d]) => d.count > 0)
-            .map(([plan, data], idx) => ({
-                name: plan.charAt(0).toUpperCase() + plan.slice(1),
-                value: data.count,
-                fill: PLAN_COLORS[plan.toLowerCase()] || FALLBACK_COLORS[idx % FALLBACK_COLORS.length],
-            }));
-    }, [hasStripe, planDistribution, firestoreStats.planDist]);
+        return firestorePlanDist;
+    }, [stripeLoaded, stripeData, firestorePlanDist]);
 
-    // ─── Date Presets ────────────────────────────────────────────────────────
+    // ─── Period filter ───────────────────────────────────────────────────────
 
     const datePresets: { id: DatePreset; label: string }[] = [
         { id: 'thisMonth', label: t('superadmin.financesDetail.thisMonth', 'Este Mes') },
@@ -240,23 +233,19 @@ const FinancialDashboard: React.FC<FinancialDashboardProps> = ({ onBack }) => {
         { id: 'all', label: t('superadmin.financesDetail.allTime', 'Todo') },
     ];
 
-    // Filter revenue trend data based on period
-    const filteredRevenueTrend = useMemo(() => {
-        if (datePreset === 'all') return revenueTrend;
-        const monthsToShow: Record<DatePreset, number> = {
-            thisMonth: 1, lastMonth: 2, last90Days: 3, thisYear: 12, all: 12,
-        };
-        const count = monthsToShow[datePreset];
-        return revenueTrend.slice(-count);
-    }, [revenueTrend, datePreset]);
+    const monthsToShow: Record<DatePreset, number> = {
+        thisMonth: 1, lastMonth: 2, last90Days: 3, thisYear: 12, all: 12,
+    };
 
-    const filteredTenantGrowth = useMemo(() => {
-        if (datePreset === 'all') return tenantGrowth;
-        const monthsToShow: Record<DatePreset, number> = {
-            thisMonth: 1, lastMonth: 2, last90Days: 3, thisYear: 12, all: 12,
-        };
-        return tenantGrowth.slice(-monthsToShow[datePreset]);
-    }, [tenantGrowth, datePreset]);
+    const filteredRevenueTrend = useMemo(() =>
+        datePreset === 'all' ? revenueTrend : revenueTrend.slice(-monthsToShow[datePreset]),
+        [revenueTrend, datePreset]
+    );
+
+    const filteredTenantGrowth = useMemo(() =>
+        datePreset === 'all' ? tenantGrowth : tenantGrowth.slice(-monthsToShow[datePreset]),
+        [tenantGrowth, datePreset]
+    );
 
     // ─── Render ──────────────────────────────────────────────────────────────
 
@@ -310,11 +299,10 @@ const FinancialDashboard: React.FC<FinancialDashboardProps> = ({ onBack }) => {
                             {preset.label}
                         </button>
                     ))}
-                    {/* Data source indicator */}
                     <div className="ml-auto flex items-center gap-1.5 shrink-0">
-                        <div className={`w-2 h-2 rounded-full ${hasStripe ? 'bg-emerald-500' : 'bg-amber-500'} animate-pulse`} />
+                        <div className={`w-2 h-2 rounded-full ${stripeLoaded ? 'bg-emerald-500' : 'bg-amber-500'} animate-pulse`} />
                         <span className="text-[10px] text-muted-foreground font-medium hidden sm:inline">
-                            {hasStripe ? 'Stripe' : 'Firestore'}
+                            {stripeLoaded ? 'Stripe' : 'Firestore'}
                         </span>
                     </div>
                 </div>
@@ -352,22 +340,25 @@ const FinancialDashboard: React.FC<FinancialDashboardProps> = ({ onBack }) => {
                                     title={t('superadmin.financesDetail.conversionRate', 'Conversión')}
                                     value={`${conversionRate}%`}
                                     icon={TrendingUp}
-                                    trendLabel={t('superadmin.financesDetail.paidVsFree', 'Pago vs gratuito')}
+                                    trendLabel={`${paidTenants.length} ${t('superadmin.financesDetail.paidVsFree', 'de pago')} / ${activeTenants.length} total`}
                                 />
                             </div>
 
                             {/* ── Charts Row ──────────────────────────────────── */}
                             <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6">
 
-                                {/* Revenue Over Time (AreaChart) */}
+                                {/* Revenue Over Time (AreaChart) — only if Stripe data */}
                                 <div className="xl:col-span-2">
                                     <div className="relative overflow-hidden rounded-2xl border border-white/[0.08] dark:border-white/[0.06] bg-card/80 dark:bg-card/70 backdrop-blur-xl p-4 sm:p-6">
                                         <h3 className="font-bold text-base sm:text-lg mb-4 sm:mb-6 flex items-center gap-2">
                                             <TrendingUp className="w-5 h-5 text-primary" />
-                                            {t('superadmin.financesDetail.mrrOverTime', 'Ingresos por Mes')}
+                                            {stripeLoaded
+                                                ? t('superadmin.financesDetail.mrrOverTime', 'Ingresos por Mes (Stripe)')
+                                                : t('superadmin.financesDetail.tenantGrowth', 'Crecimiento de Clientes')
+                                            }
                                         </h3>
                                         <div className="h-[250px] sm:h-[300px] w-full">
-                                            {filteredRevenueTrend.length > 0 ? (
+                                            {stripeLoaded && filteredRevenueTrend.length > 0 ? (
                                                 <ResponsiveContainer width="100%" height="100%">
                                                     <AreaChart data={filteredRevenueTrend} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                                                         <defs>
@@ -380,19 +371,26 @@ const FinancialDashboard: React.FC<FinancialDashboardProps> = ({ onBack }) => {
                                                         <XAxis dataKey="month" stroke="#94a3b8" axisLine={false} tickLine={false} tick={{ fontSize: 11 }} />
                                                         <YAxis stroke="#94a3b8" axisLine={false} tickLine={false} tick={{ fontSize: 11 }} tickFormatter={(v) => `$${v}`} />
                                                         <Tooltip content={<CustomTooltip />} />
-                                                        <Area type="monotone" dataKey="revenue" stroke="#4f46e5" strokeWidth={3} fillOpacity={1} fill="url(#colorRevenue)" name={t('superadmin.financesDetail.revenue', 'Ingresos')} animationDuration={1500} />
+                                                        <Area type="monotone" dataKey="revenue" stroke="#4f46e5" strokeWidth={3} fillOpacity={1} fill="url(#colorRevenue)" name="Ingresos" animationDuration={1500} />
                                                     </AreaChart>
                                                 </ResponsiveContainer>
                                             ) : (
-                                                <div className="flex items-center justify-center h-full text-muted-foreground text-sm italic">
-                                                    {t('superadmin.financesDetail.noData', 'Sin datos')}
-                                                </div>
+                                                /* Fallback: show tenant growth as BarChart if no Stripe */
+                                                <ResponsiveContainer width="100%" height="100%">
+                                                    <BarChart data={filteredTenantGrowth} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
+                                                        <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} />
+                                                        <XAxis dataKey="month" stroke="#94a3b8" axisLine={false} tickLine={false} tick={{ fontSize: 11 }} />
+                                                        <YAxis stroke="#94a3b8" axisLine={false} tickLine={false} tick={{ fontSize: 11 }} allowDecimals={false} />
+                                                        <Tooltip content={<CustomTooltip prefix="" />} />
+                                                        <Bar dataKey="newTenants" fill="#4f46e5" radius={[6, 6, 0, 0]} name={t('superadmin.financesDetail.newClients', 'Nuevos Clientes')} animationDuration={1200} />
+                                                    </BarChart>
+                                                </ResponsiveContainer>
                                             )}
                                         </div>
                                     </div>
                                 </div>
 
-                                {/* Plan Distribution (PieChart) */}
+                                {/* Plan Distribution (PieChart) — always from tenants */}
                                 <div className="xl:col-span-1">
                                     <div className="relative overflow-hidden rounded-2xl border border-white/[0.08] dark:border-white/[0.06] bg-card/80 dark:bg-card/70 backdrop-blur-xl p-4 sm:p-6 h-full">
                                         <h3 className="font-bold text-base sm:text-lg mb-4 flex items-center gap-2">
@@ -414,15 +412,22 @@ const FinancialDashboard: React.FC<FinancialDashboardProps> = ({ onBack }) => {
                                                     </ResponsiveContainer>
                                                 </div>
                                                 <div className="space-y-2 mt-2">
-                                                    {pieData.sort((a, b) => b.value - a.value).map((item) => (
-                                                        <div key={item.name} className="flex items-center justify-between text-sm">
-                                                            <div className="flex items-center gap-2">
-                                                                <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: item.fill }} />
-                                                                <span className="font-medium text-foreground truncate">{item.name}</span>
+                                                    {pieData.map((item) => {
+                                                        const total = pieData.reduce((s, p) => s + p.value, 0);
+                                                        const pct = total > 0 ? ((item.value / total) * 100).toFixed(0) : '0';
+                                                        return (
+                                                            <div key={item.name} className="flex items-center justify-between text-sm">
+                                                                <div className="flex items-center gap-2">
+                                                                    <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: item.fill }} />
+                                                                    <span className="font-medium text-foreground truncate">{item.name}</span>
+                                                                </div>
+                                                                <div className="flex items-center gap-2 shrink-0">
+                                                                    <span className="font-bold text-foreground">{item.value}</span>
+                                                                    <span className="text-xs text-muted-foreground">{pct}%</span>
+                                                                </div>
                                                             </div>
-                                                            <span className="font-bold text-foreground ml-2">{item.value}</span>
-                                                        </div>
-                                                    ))}
+                                                        );
+                                                    })}
                                                 </div>
                                             </>
                                         ) : (
@@ -461,30 +466,43 @@ const FinancialDashboard: React.FC<FinancialDashboardProps> = ({ onBack }) => {
                                     <h3 className="font-bold text-base sm:text-lg mb-4 flex items-center gap-2">
                                         <Building2 className="w-5 h-5 text-primary" />
                                         {t('superadmin.financesDetail.recentClients', 'Clientes Recientes')}
+                                        <span className="text-xs text-muted-foreground font-normal ml-auto">{tenants.length} total</span>
                                     </h3>
                                     <div className="overflow-x-auto -mx-4 sm:mx-0">
-                                        <table className="w-full text-sm min-w-[400px]">
+                                        <table className="w-full text-sm min-w-[380px]">
                                             <thead>
                                                 <tr className="text-[10px] sm:text-xs text-muted-foreground uppercase tracking-wider border-b border-border">
-                                                    <th className="text-left py-2 pl-4 sm:pl-0 pr-3">{t('superadmin.financesDetail.name', 'Nombre')}</th>
-                                                    <th className="text-left py-2 pr-3">{t('superadmin.financesDetail.plan', 'Plan')}</th>
-                                                    <th className="text-right py-2 pr-3">MRR</th>
+                                                    <th className="text-left py-2 pl-4 sm:pl-0 pr-2">{t('superadmin.financesDetail.name', 'Nombre')}</th>
+                                                    <th className="text-left py-2 pr-2">{t('superadmin.financesDetail.plan', 'Plan')}</th>
+                                                    <th className="text-left py-2 pr-2">Tipo</th>
                                                     <th className="text-center py-2 pr-4 sm:pr-0">{t('superadmin.financesDetail.status', 'Estado')}</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
                                                 {recentTenants.map(tenant => (
                                                     <tr key={tenant.id} className="border-b border-border/50 hover:bg-secondary/20 transition-colors">
-                                                        <td className="py-2.5 pl-4 sm:pl-0 pr-3">
-                                                            <div className="font-medium text-foreground truncate max-w-[120px] sm:max-w-[180px]">{tenant.name || tenant.companyName || tenant.email}</div>
-                                                            <div className="text-[10px] sm:text-xs text-muted-foreground truncate max-w-[120px] sm:max-w-[180px]">{tenant.email}</div>
+                                                        <td className="py-2.5 pl-4 sm:pl-0 pr-2">
+                                                            <div className="font-medium text-foreground truncate max-w-[120px] sm:max-w-[180px]">
+                                                                {tenant.name || tenant.companyName || tenant.email || 'Sin nombre'}
+                                                            </div>
+                                                            <div className="text-[10px] sm:text-xs text-muted-foreground truncate max-w-[120px] sm:max-w-[180px]">
+                                                                {tenant.email || tenant.id}
+                                                            </div>
                                                         </td>
-                                                        <td className="py-2.5 pr-3">
-                                                            <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] sm:text-xs font-semibold bg-secondary/50 text-foreground capitalize">{tenant.subscriptionPlan || 'free'}</span>
+                                                        <td className="py-2.5 pr-2">
+                                                            <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] sm:text-xs font-semibold bg-secondary/50 text-foreground capitalize">
+                                                                {tenant.subscriptionPlan || 'free'}
+                                                            </span>
                                                         </td>
-                                                        <td className="py-2.5 pr-3 text-right font-bold text-foreground text-xs sm:text-sm">${(tenant.billingInfo?.mrr || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                                                        <td className="py-2.5 pr-2">
+                                                            <span className="text-xs text-muted-foreground capitalize">
+                                                                {tenant.type || '—'}
+                                                            </span>
+                                                        </td>
                                                         <td className="py-2.5 pr-4 sm:pr-0 text-center">
-                                                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-semibold ${STATUS_COLORS[tenant.status] || STATUS_COLORS.expired}`}>{tenant.status}</span>
+                                                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-semibold ${STATUS_COLORS[tenant.status] || STATUS_COLORS.expired}`}>
+                                                                {tenant.status || 'unknown'}
+                                                            </span>
                                                         </td>
                                                     </tr>
                                                 ))}
