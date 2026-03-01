@@ -168,7 +168,7 @@ const HeroCinematicGym: React.FC<HeroCinematicGymProps> = (props) => {
     return (
         <section
             ref={containerRef}
-            className={`relative w-full ${paddingYClasses[paddingY as PaddingSize] || paddingYClasses.xl} ${paddingXClasses[paddingX as PaddingSize] || paddingXClasses.lg} flex flex-col-reverse lg:flex-row overflow-hidden font-sans transition-colors duration-500`}
+            className={`relative w-full ${paddingYClasses[paddingY as PaddingSize] || paddingYClasses.xl} ${paddingXClasses[paddingX as PaddingSize] || paddingXClasses.lg} flex flex-col-reverse lg:flex-row lg:min-h-[90vh] overflow-hidden font-sans transition-colors duration-500`}
             style={{ backgroundColor: primaryBg, minHeight: props.heroHeight ? `${props.heroHeight}vh` : undefined }}
         >
             {/* Left Content Area - Brutalist Typography */}
