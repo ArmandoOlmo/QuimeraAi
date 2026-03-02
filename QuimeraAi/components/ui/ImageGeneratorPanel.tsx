@@ -103,14 +103,14 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
         { label: t('editor.tiltShift'), value: 'Tilt-Shift Effect' }
     ];
 
-    // Quimera AI Model - Vision Pro (default and only model)
+    // Quimera AI Model - Nano Banana 2 (gemini-3.1-flash-image-preview)
     const DEFAULT_MODEL = {
-        id: 'vision-pro',
-        label: 'Quimera Vision Pro',
-        value: 'gemini-3-pro-image-preview',
-        icon: Eye,
-        badge: 'PRO',
-        color: 'from-violet-500 to-purple-600'
+        id: 'nano-banana-2',
+        label: 'Quimera Nano Banana 2',
+        value: 'gemini-3.1-flash-image-preview',
+        icon: Zap,
+        badge: 'NEW',
+        color: 'from-yellow-400 to-amber-600'
     };
 
     const THINKING_LEVELS = [
@@ -122,7 +122,7 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
 
     // State
     const [prompt, setPrompt] = useState('');
-    const selectedModel = 'gemini-3-pro-image-preview';
+    const selectedModel = 'gemini-3.1-flash-image-preview';
     const [thinkingLevel, setThinkingLevel] = useState('high');
     const [personGeneration, setPersonGeneration] = useState('allow_adult');
     const [temperature, setTemperature] = useState(1.0);
@@ -373,785 +373,408 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
     const isVisionPro = true;
 
     return (
-        <div className={`bg-editor-bg flex flex-col h-full overflow-hidden ${className}`}>
+        <div className={`bg-[#2D1854] text-[#FAFAFA] font-sans flex flex-col h-full overflow-hidden ${className}`}>
+            <style>{`
+            .vector-bg-container { background-color: hsl(272, 45%, 14%); background-image: radial-gradient(circle at 50% 50%, hsl(272, 45%, 18%) 0%, hsl(272, 45%, 10%) 100%); position: relative; }
+            .vector-grid { position: absolute; inset: 0; background-image: linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px); background-size: 40px 40px; mask-image: radial-gradient(circle at center, black 40%, transparent 100%); }
+            .vector-glow-points { position: absolute; inset: 0; background-image: radial-gradient(circle at center, rgba(147, 51, 234, 0.15) 0%, transparent 50%); }
+            .vector-lines { position: absolute; inset: 0; background: linear-gradient(135deg, transparent 49.5%, rgba(255, 255, 255, 0.02) 49.5%, rgba(255, 255, 255, 0.02) 50.5%, transparent 50.5%); background-size: 100px 100px; mask-image: radial-gradient(circle at center, black 60%, transparent 100%); }
+            input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; height: 16px; width: 16px; border-radius: 50%; background: #F2B90D; cursor: pointer; margin-top: -6px; }
+            `}</style>
+
             {/* Header */}
-            <div className="flex-shrink-0 px-4 py-3 md:px-5 md:py-4 border-b border-editor-border bg-gradient-to-r from-editor-panel-bg to-editor-bg">
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <div className={`p-2 rounded-xl bg-gradient-to-br ${currentModel.color} shadow-lg`}>
-                            <Sparkles size={20} className="text-white" />
-                        </div>
-                        <div>
-                            <h2 className="text-base font-bold text-editor-text-primary flex items-center gap-2">
-                                {t('editor.quimeraImageGenerator', { defaultValue: 'Generador de Imágenes Quimera' })}
-                            </h2>
-                        </div>
+            <header className="flex items-center justify-between whitespace-nowrap border-b border-white/10 bg-[#2D1854]/80 backdrop-blur-md px-6 py-3 shrink-0 z-20">
+                <div className="flex items-center gap-4">
+                    <div className="w-6 h-6 text-[#F2B90D] flex items-center justify-center">
+                        <Wand2 size={24} />
                     </div>
-                    <div className="flex items-center gap-1">
-                        {onCollapse && (
-                            <button
-                                onClick={onCollapse}
-                                className="p-2 rounded-lg hover:bg-editor-border text-editor-text-secondary hover:text-editor-text-primary transition-colors"
-                                title={t('common.minimize', { defaultValue: 'Minimizar' })}
-                            >
-                                <PanelLeftClose size={18} />
-                            </button>
-                        )}
-                        {onClose && (
-                            <button
-                                onClick={onClose}
-                                className="p-2 rounded-lg hover:bg-editor-border text-editor-text-secondary hover:text-editor-text-primary transition-colors"
-                            >
-                                <X size={18} />
-                            </button>
-                        )}
-                    </div>
+                    <h2 className="text-[#FAFAFA] text-lg font-bold leading-tight tracking-[-0.015em]">
+                        {t('editor.quimeraImageGenerator', { defaultValue: 'Image Generator' })}
+                    </h2>
                 </div>
-            </div>
+                {onClose && (
+                    <button
+                        onClick={onClose}
+                        className="flex items-center justify-center rounded-lg w-10 h-10 hover:bg-[#3A2460] text-white/60 hover:text-white transition-colors"
+                    >
+                        <X size={20} />
+                    </button>
+                )}
+            </header>
 
+            <div className="flex flex-1 overflow-hidden">
+                {/* Main Content Area */}
+                <main className="flex-1 flex flex-col relative bg-[#1A0D35] overflow-hidden">
+                    <div className="flex-1 flex flex-col relative w-full h-full vector-bg-container overflow-y-auto">
+                        <div className="vector-grid pointer-events-none"></div>
+                        <div className="vector-lines pointer-events-none"></div>
+                        <div className="vector-glow-points pointer-events-none"></div>
 
-            {/* Main Content Area */}
-            {/* Main Content Area */}
-            <div className="flex-1 min-h-0 flex flex-col md:flex-row overflow-hidden md:max-h-[765px]">
-                {/* Left Panel - Controls */}
-                <div className="w-full md:w-[320px] lg:w-[380px] flex-shrink-0 border-b md:border-b-0 md:border-r border-editor-border overflow-y-auto">
-                    <div className="p-4 md:p-5 space-y-4 md:space-y-5">
-                        {/* Prompt Section */}
-                        <div>
-                            <div className="flex items-center justify-between mb-2">
-                                <label className="text-sm font-bold text-editor-text-primary">
-                                    {t('editor.prompt', { defaultValue: 'Prompt' })}
-                                </label>
-                                <button
-                                    onClick={handleEnhancePrompt}
-                                    disabled={isEnhancing || !prompt}
-                                    className="flex items-center gap-1.5 text-xs font-medium text-editor-accent hover:text-editor-accent-hover disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                                >
-                                    {isEnhancing ? (
-                                        <Loader2 size={12} className="animate-spin" />
-                                    ) : (
-                                        <Wand2 size={12} />
-                                    )}
-                                    {t('editor.enhance', { defaultValue: 'Mejorar' })}
-                                </button>
+                        <div className="w-full h-full flex items-center justify-center p-8 lg:p-12 min-h-[600px] relative z-10">
+                            <div className="relative w-full max-w-4xl aspect-video bg-black/20 shadow-2xl flex flex-col rounded-xl overflow-hidden border border-white/5">
+                                {isGenerating ? (
+                                    <div className="w-full h-full flex flex-col items-center justify-center">
+                                        <Loader2 size={48} className="animate-spin text-[#F2B90D] mb-4" />
+                                        <p className="text-white/70 font-medium tracking-wide">
+                                            {t('editor.creatingInResolution', { resolution, defaultValue: `Creating in ${resolution}...` })}
+                                        </p>
+                                    </div>
+                                ) : generatedImage ? (
+                                    <>
+                                        <div className="absolute top-4 left-0 w-full flex items-center justify-center gap-4 z-20">
+                                            {onUseImage && (
+                                                <button
+                                                    onClick={() => onUseImage(savedImageUrl || generatedImage)}
+                                                    className="flex items-center gap-2 bg-[#F2B90D] hover:bg-[#D9A60C] text-[#2D1854] px-5 py-2.5 rounded-lg font-bold text-sm shadow-lg shadow-[#F2B90D]/20 transition-all hover:-translate-y-0.5"
+                                                >
+                                                    <Check size={20} />
+                                                    <span>{t('editor.useThisImage', { defaultValue: 'Use in Project' })}</span>
+                                                </button>
+                                            )}
+                                            <button
+                                                onClick={() => {
+                                                    if (referenceImages.length < 14) {
+                                                        setReferenceImages(prev => [...prev, generatedImage]);
+                                                    }
+                                                }}
+                                                disabled={referenceImages.length >= 14}
+                                                className="flex items-center gap-2 bg-[#3A2460] hover:bg-[#4C3575] text-white px-5 py-2.5 rounded-lg font-bold text-sm shadow-lg transition-all hover:-translate-y-0.5 disabled:opacity-50"
+                                            >
+                                                <ImageIcon size={20} />
+                                                <span>{t('editor.useAsReference', { defaultValue: 'Use as Reference' })}</span>
+                                            </button>
+                                        </div>
+                                        <div className="w-full h-full relative group cursor-pointer" onClick={() => setShowImageDetail(true)}>
+                                            <img alt="Generated result" className="w-full h-full object-contain" src={generatedImage} />
+                                            <div className="absolute inset-0 bg-gradient-to-t from-[#2D1854]/90 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-6">
+                                                <div className="flex justify-between items-end">
+                                                    <div>
+                                                        <p className="text-white/80 text-sm font-medium">Prompt: {prompt.substring(0, 50)}...</p>
+                                                        <p className="text-white/50 text-xs">Model: Quimera Nano Banana 2 • Res: {resolution}</p>
+                                                    </div>
+                                                    <div className="flex gap-2">
+                                                        <a
+                                                            href={savedImageUrl || generatedImage}
+                                                            download={`quimera-${Date.now()}.png`}
+                                                            target="_blank"
+                                                            rel="noreferrer"
+                                                            className="p-2 bg-white/10 hover:bg-white/20 rounded-lg text-white transition-colors backdrop-blur-sm"
+                                                            title="Download"
+                                                            onClick={(e) => e.stopPropagation()}
+                                                        >
+                                                            <Download size={20} />
+                                                        </a>
+                                                        <button
+                                                            className="p-2 bg-white/10 hover:bg-white/20 rounded-lg text-white transition-colors backdrop-blur-sm"
+                                                            title="Expand"
+                                                        >
+                                                            <Eye size={20} />
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </>
+                                ) : (
+                                    <div className="w-full h-full flex flex-col items-center justify-center bg-black/30 backdrop-blur-sm">
+                                        <div className="w-24 h-24 rounded-3xl border border-white/5 bg-white/[0.02] flex items-center justify-center mb-6">
+                                            <ImageIcon size={48} className="text-slate-600" />
+                                        </div>
+                                        <h3 className="text-2xl font-medium text-white tracking-tight mb-2">Ready to generate</h3>
+                                        <p className="text-slate-500 text-sm max-w-sm text-center">
+                                            Enter a prompt below and adjust settings in the sidebar to create your image.
+                                        </p>
+                                    </div>
+                                )}
                             </div>
-                            <textarea
-                                value={prompt}
-                                onChange={(e) => setPrompt(e.target.value)}
-                                placeholder={t('editor.describeImage', { defaultValue: 'Describe the image you want to create...' })}
-                                className="w-full h-28 bg-editor-panel-bg border border-editor-border rounded-xl p-3 text-sm text-editor-text-primary placeholder:text-editor-text-secondary/50 focus:ring-2 focus:ring-editor-accent focus:border-transparent outline-none resize-none transition-all"
-                            />
                         </div>
+                    </div>
 
-                        {/* Negative Prompt - Collapsible */}
-                        <div className="bg-editor-panel-bg/50 rounded-xl p-3 border border-editor-border/50">
-                            <label className="flex items-center gap-2 text-xs font-medium text-editor-text-secondary mb-2">
-                                <X size={12} className="text-red-400" />
-                                {t('editor.negativePrompt', { defaultValue: 'Negative Prompt' })}
-                            </label>
-                            <input
-                                type="text"
-                                value={negativePrompt}
-                                onChange={(e) => setNegativePrompt(e.target.value)}
-                                placeholder={t('editor.negativePromptPlaceholder', { defaultValue: 'Avoid: blurry, low quality...' })}
-                                className="w-full bg-editor-bg border border-editor-border rounded-lg px-3 py-2 text-xs text-editor-text-primary placeholder:text-editor-text-secondary/50 focus:ring-1 focus:ring-editor-accent focus:border-transparent outline-none"
-                            />
-                        </div>
-
-                        {/* Reference Images */}
-                        <div>
-                            <div className="flex items-center justify-between mb-2">
-                                <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wide">
-                                    {t('editor.referenceImages', { defaultValue: 'Reference Images' })}
-                                </label>
-                                <span className="text-xs text-editor-text-secondary bg-editor-panel-bg px-2 py-0.5 rounded-full">
-                                    {referenceImages.length}/14
-                                </span>
+                    {/* Bottom Prompt Bar */}
+                    <div className="w-full p-6 bg-[#2D1854]/60 backdrop-blur-xl border-t border-white/10 shrink-0 z-30">
+                        <div className="max-w-4xl mx-auto w-full">
+                            <div className="flex w-full items-stretch rounded-xl bg-[#3A2460] border border-white/5 transition-all relative">
+                                <div className="pl-4 flex items-center justify-center text-[#F2B90D]">
+                                    <Sparkles size={24} className={isGenerating ? 'animate-pulse' : ''} />
+                                </div>
+                                <input
+                                    className="flex-1 bg-transparent border-none text-[#FAFAFA] placeholder:text-white/30 px-4 py-4 focus:ring-0 text-base font-medium"
+                                    placeholder={t('editor.describeImage', { defaultValue: 'Describe your image...' })}
+                                    value={prompt}
+                                    onChange={(e) => setPrompt(e.target.value)}
+                                    onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleGenerate()}
+                                />
+                                <div className="flex items-center pr-2 gap-3 pl-2 border-l border-white/10 my-2">
+                                    <button
+                                        onClick={handleEnhancePrompt}
+                                        disabled={isEnhancing || !prompt}
+                                        className="p-2 text-[#F2B90D] bg-transparent transition-colors hover:text-[#D9A60C] relative flex items-center justify-center disabled:opacity-50"
+                                        title={t('editor.enhance', { defaultValue: 'Enhance Prompt' })}
+                                    >
+                                        {isEnhancing ? <Loader2 size={24} className="animate-spin" /> : <Wand2 size={24} />}
+                                    </button>
+                                    <button
+                                        onClick={handleGenerate}
+                                        disabled={isGenerating || !prompt}
+                                        className="hidden sm:flex items-center justify-center gap-2 bg-[#F2B90D] hover:bg-[#D9A60C] text-[#2D1854] px-6 py-2 rounded-lg font-bold text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed w-[120px]"
+                                    >
+                                        {isGenerating ? <Loader2 size={18} className="animate-spin" /> : <><span>Generate</span><Zap size={16} /></>}
+                                    </button>
+                                </div>
                             </div>
-                            <input
-                                type="file"
-                                ref={fileInputRef}
-                                accept="image/*"
-                                multiple
-                                onChange={handleReferenceImageUpload}
-                                className="hidden"
-                            />
-                            <div
-                                className={`
-                                    border-2 border-dashed rounded-xl p-3 transition-all cursor-pointer
-                                    ${isDragging
-                                        ? 'border-editor-accent bg-editor-accent/10'
-                                        : 'border-editor-border hover:border-editor-text-secondary hover:bg-editor-panel-bg/50'
-                                    }
-                                `}
-                                onDragOver={handleDragOver}
-                                onDragLeave={handleDragLeave}
-                                onDrop={handleDrop}
-                                onClick={() => fileInputRef.current?.click()}
+                            <button
+                                onClick={handleGenerate}
+                                disabled={isGenerating || !prompt}
+                                className="sm:hidden mt-3 w-full flex items-center justify-center gap-2 bg-[#F2B90D] hover:bg-[#D9A60C] text-[#2D1854] px-6 py-3 rounded-lg font-bold text-sm transition-all disabled:opacity-50"
                             >
-                                {referenceImages.length > 0 ? (
-                                    <div className="flex flex-wrap gap-2" onClick={(e) => e.stopPropagation()}>
+                                {isGenerating ? <Loader2 size={18} className="animate-spin" /> : <><span>Generate</span><Zap size={16} /></>}
+                            </button>
+                        </div>
+                    </div>
+                </main>
+
+                {/* Sidebar Configuration */}
+                <aside className="w-80 border-l border-white/10 bg-[#3A2460] flex flex-col shrink-0 overflow-hidden relative z-40">
+                    <div className="flex items-center justify-between p-4 border-b border-white/10">
+                        <h3 className="text-[#FAFAFA] font-bold text-sm uppercase tracking-wider">Configuration</h3>
+                    </div>
+
+                    <div className="flex-1 overflow-y-auto p-4 space-y-8 custom-scrollbar">
+                        {/* Reference Images */}
+                        <div className="space-y-4">
+                            <div className="space-y-3">
+                                <div className="flex justify-between items-center">
+                                    <label className="text-xs font-bold text-white/50 uppercase tracking-wide">Reference Image</label>
+                                    <span className="text-xs text-white/50">{referenceImages.length}/14</span>
+                                </div>
+                                <input
+                                    type="file"
+                                    ref={fileInputRef}
+                                    accept="image/*"
+                                    multiple
+                                    onChange={handleReferenceImageUpload}
+                                    className="hidden"
+                                />
+                                <div
+                                    className={`w-full border-2 border-dashed rounded-xl transition-colors cursor-pointer group p-6 flex flex-col items-center justify-center gap-3 ${isDragging ? 'border-[#F2B90D] bg-[#F2B90D]/10' : 'border-white/10 hover:border-[#F2B90D]/50 bg-[#2D1854]/30'}`}
+                                    onDragOver={handleDragOver}
+                                    onDragLeave={handleDragLeave}
+                                    onDrop={handleDrop}
+                                    onClick={() => fileInputRef.current?.click()}
+                                >
+                                    {isUploading ? (
+                                        <Loader2 size={32} className="animate-spin text-[#F2B90D]" />
+                                    ) : (
+                                        <>
+                                            <div className="size-10 rounded-full bg-white/5 group-hover:bg-[#F2B90D]/10 flex items-center justify-center transition-colors">
+                                                <Upload size={20} className="text-white/30 group-hover:text-[#F2B90D] transition-colors" />
+                                            </div>
+                                            <span className="text-xs font-medium text-white/40 group-hover:text-[#F2B90D] transition-colors text-center">Upload Reference Image</span>
+                                        </>
+                                    )}
+                                </div>
+
+                                {referenceImages.length > 0 && (
+                                    <div className="flex flex-wrap gap-2 pt-2">
                                         {referenceImages.map((img, idx) => (
-                                            <div key={idx} className="relative w-14 h-14 rounded-lg overflow-hidden group border border-editor-border">
+                                            <div key={idx} className="relative w-12 h-12 rounded-lg overflow-hidden group border border-white/10">
                                                 <img src={img} alt={`Ref ${idx}`} className="w-full h-full object-cover" />
                                                 <button
-                                                    onClick={() => handleRemoveReferenceImage(idx)}
+                                                    onClick={(e) => { e.stopPropagation(); handleRemoveReferenceImage(idx); }}
                                                     className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
                                                 >
                                                     <X size={14} className="text-white" />
                                                 </button>
                                             </div>
                                         ))}
-                                        {referenceImages.length < 14 && (
-                                            <button
-                                                onClick={() => fileInputRef.current?.click()}
-                                                disabled={isUploading}
-                                                className="w-14 h-14 flex items-center justify-center border border-dashed border-editor-border rounded-lg hover:border-editor-accent hover:bg-editor-panel-bg text-editor-text-secondary hover:text-editor-accent transition-all"
-                                            >
-                                                {isUploading ? <Loader2 size={16} className="animate-spin" /> : <Plus size={16} />}
-                                            </button>
-                                        )}
-                                    </div>
-                                ) : (
-                                    <div className="flex flex-col items-center py-3 text-editor-text-secondary">
-                                        {isUploading ? (
-                                            <Loader2 size={20} className="animate-spin text-editor-accent mb-2" />
-                                        ) : (
-                                            <Upload size={20} className="mb-2" />
-                                        )}
-                                        <span className="text-xs font-medium">{t('editor.clickOrDrag', { defaultValue: 'Click or drag images' })}</span>
                                     </div>
                                 )}
                             </div>
                         </div>
 
-                        {/* Quick Settings Row */}
-                        <div className="grid grid-cols-2 gap-3">
-                            {/* Aspect Ratio */}
-                            <div>
-                                <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wide mb-2">
-                                    {t('editor.aspectRatio', { defaultValue: 'Aspect Ratio' })}
-                                </label>
-                                <div className="flex flex-wrap gap-1">
-                                    {ASPECT_RATIOS.map(ratio => (
-                                        <button
-                                            key={ratio.value}
-                                            onClick={() => setAspectRatio(ratio.value)}
-                                            className={`
-                                                px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all
-                                                ${aspectRatio === ratio.value
-                                                    ? 'bg-editor-accent text-editor-bg'
-                                                    : 'bg-editor-panel-bg text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border'
-                                                }
-                                            `}
-                                        >
-                                            {ratio.label}
-                                        </button>
-                                    ))}
-                                </div>
+                        {/* Aspect Ratio */}
+                        <div className="space-y-3">
+                            <div className="flex justify-between items-center">
+                                <label className="text-xs font-bold text-white/50 uppercase tracking-wide">Aspect Ratio</label>
+                                <span className="text-xs text-[#F2B90D] font-mono font-bold">{aspectRatio}</span>
                             </div>
-
-                            {/* Resolution */}
-                            <div>
-                                <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wide mb-2">
-                                    {t('editor.resolution', { defaultValue: 'Resolution' })}
-                                </label>
-                                <div className="flex gap-1">
-                                    {RESOLUTIONS.map(res => (
-                                        <button
-                                            key={res.value}
-                                            onClick={() => setResolution(res.value as '1K' | '2K' | '4K')}
-                                            className={`
-                                                flex-1 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all
-                                                ${resolution === res.value
-                                                    ? 'bg-editor-accent text-editor-bg'
-                                                    : 'bg-editor-panel-bg text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border'
-                                                }
-                                            `}
-                                        >
-                                            {res.label}
-                                        </button>
-                                    ))}
-                                </div>
+                            <div className="grid grid-cols-3 gap-2">
+                                {ASPECT_RATIOS.slice(0, 6).map(ratio => (
+                                    <button
+                                        key={ratio.value}
+                                        onClick={() => setAspectRatio(ratio.value)}
+                                        className={`flex flex-col items-center justify-center gap-1.5 p-2.5 rounded-lg border transition-all ${aspectRatio === ratio.value ? 'border-[#F2B90D] bg-[#F2B90D]/10 text-[#F2B90D]' : 'border-white/10 hover:bg-[#2D1854] text-white/40 hover:text-[#F2B90D]'}`}
+                                    >
+                                        <span className="text-sm font-bold">{ratio.value}</span>
+                                    </button>
+                                ))}
                             </div>
                         </div>
 
-                        {/* 4K Warning */}
-                        {resolution === '4K' && (
-                            <div className="flex items-start gap-2 p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl">
-                                <AlertTriangle size={14} className="text-amber-500 mt-0.5 flex-shrink-0" />
-                                <p className="text-xs text-amber-400">
-                                    {t('editor.warning4K', { defaultValue: '4K generation takes longer and uses more resources.' })}
-                                </p>
+                        {/* Resolution */}
+                        <div className="space-y-3">
+                            <div className="flex justify-between items-center">
+                                <label className="text-xs font-bold text-white/50 uppercase tracking-wide">Resolution</label>
+                                <span className="text-xs text-[#F2B90D] font-mono font-bold">{resolution}</span>
                             </div>
-                        )}
+                            <div className="flex gap-2">
+                                {RESOLUTIONS.map(res => (
+                                    <button
+                                        key={res.value}
+                                        onClick={() => setResolution(res.value as '1K' | '2K' | '4K')}
+                                        className={`flex-1 py-2 rounded-lg text-xs font-bold border transition-all ${resolution === res.value ? 'border-[#F2B90D] bg-[#F2B90D]/10 text-[#F2B90D]' : 'border-white/10 hover:bg-[#2D1854] text-white/40 hover:text-[#FAFAFA]'}`}
+                                    >
+                                        {res.label}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
 
-                        {/* Style Selector */}
-                        <div>
-                            <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wide mb-2">
-                                {t('editor.style', { defaultValue: 'Style' })}
-                            </label>
+                        {/* Style Presets */}
+                        <div className="space-y-3">
+                            <div className="flex justify-between items-center">
+                                <label className="text-xs font-bold text-white/50 uppercase tracking-wide">Style</label>
+                            </div>
                             <div className="relative">
                                 <select
                                     value={style}
                                     onChange={(e) => setStyle(e.target.value)}
-                                    className="w-full appearance-none bg-editor-panel-bg border border-editor-border rounded-xl px-3 py-2.5 text-sm text-editor-text-primary focus:outline-none focus:ring-2 focus:ring-editor-accent focus:border-transparent cursor-pointer"
+                                    className="w-full bg-[#2D1854]/80 border border-white/10 rounded-xl py-3 px-4 text-sm focus:ring-1 focus:ring-[#F2B90D]/50 focus:border-[#F2B90D]/50 outline-none appearance-none cursor-pointer text-white"
                                 >
                                     {STYLES.map(s => (
                                         <option key={s.value} value={s.value}>{s.label}</option>
                                     ))}
                                 </select>
-                                <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-editor-text-secondary pointer-events-none" />
+                                <ChevronDown size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-white/50 pointer-events-none" />
                             </div>
                         </div>
 
-                        {/* Advanced Settings Toggle */}
-                        <button
-                            onClick={() => setShowAdvanced(!showAdvanced)}
-                            className="w-full flex items-center justify-between p-3 bg-editor-panel-bg/50 rounded-xl border border-editor-border/50 hover:border-editor-border transition-colors group"
-                        >
-                            <div className="flex items-center gap-2">
-                                <Settings2 size={14} className="text-editor-text-secondary group-hover:text-editor-accent transition-colors" />
-                                <span className="text-xs font-bold text-editor-text-secondary uppercase tracking-wide">
-                                    {t('editor.advancedControls', { defaultValue: 'Advanced Settings' })}
-                                </span>
-                            </div>
-                            <ChevronDown
-                                size={16}
-                                className={`text-editor-text-secondary transition-transform duration-200 ${showAdvanced ? 'rotate-180' : ''}`}
-                            />
-                        </button>
-
-                        {/* Advanced Controls */}
-                        {showAdvanced && (
-                            <div className="space-y-4 p-4 bg-editor-panel-bg/30 rounded-xl border border-editor-border/50">
-                                {/* Vision Pro Controls */}
-                                {isVisionPro && (
-                                    <div className="space-y-4 pb-4 border-b border-editor-border/50">
-                                        <div className="flex items-center gap-2 text-editor-accent">
-                                            <Eye size={14} />
-                                            <span className="text-xs font-bold uppercase">Vision Pro Controls</span>
-                                        </div>
-
-                                        {/* Thinking Level */}
-                                        <div>
-                                            <div className="flex items-center gap-2 mb-2">
-                                                <Brain size={12} className="text-editor-text-secondary" />
-                                                <label className="text-xs text-editor-text-secondary">
-                                                    {t('editor.thinkingLevel', { defaultValue: 'Thinking' })}
-                                                </label>
-                                            </div>
-                                            <div className="flex gap-1">
-                                                {THINKING_LEVELS.map(level => (
-                                                    <button
-                                                        key={level.value}
-                                                        onClick={() => setThinkingLevel(level.value)}
-                                                        className={`
-                                                            flex-1 px-2 py-1.5 rounded-lg text-xs font-medium transition-all
-                                                            ${thinkingLevel === level.value
-                                                                ? 'bg-editor-accent text-editor-bg'
-                                                                : 'bg-editor-bg text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border'
-                                                            }
-                                                        `}
-                                                    >
-                                                        {level.label}
-                                                    </button>
-                                                ))}
-                                            </div>
-                                        </div>
-
-                                        {/* Person Generation */}
-                                        <div>
-                                            <div className="flex items-center gap-2 mb-2">
-                                                <Users size={12} className="text-editor-text-secondary" />
-                                                <label className="text-xs text-editor-text-secondary">
-                                                    {t('editor.personGeneration', { defaultValue: 'People' })}
-                                                </label>
-                                            </div>
-                                            <div className="flex gap-1">
+                        {/* Advanced Collapsible */}
+                        <div className="pt-2 border-t border-white/10">
+                            <details className="group">
+                                <summary className="flex items-center justify-between cursor-pointer list-none text-[#FAFAFA] font-medium text-sm py-2">
+                                    <span className="flex items-center gap-2"><Settings2 size={16} /> Advanced Settings</span>
+                                    <ChevronDown size={16} className="transition-transform group-open:rotate-180" />
+                                </summary>
+                                <div className="pt-4 space-y-5">
+                                    {/* Nano Banana 2 Thinking Level */}
+                                    <div className="space-y-3">
+                                        <label className="text-xs font-bold text-white/50 uppercase tracking-wide">Thinking Level</label>
+                                        <div className="flex gap-1">
+                                            {THINKING_LEVELS.map(level => (
                                                 <button
-                                                    onClick={() => setPersonGeneration('allow_adult')}
-                                                    className={`
-                                                        flex-1 px-2 py-1.5 rounded-lg text-xs font-medium transition-all
-                                                        ${personGeneration === 'allow_adult'
-                                                            ? 'bg-editor-accent text-editor-bg'
-                                                            : 'bg-editor-bg text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border'
-                                                        }
-                                                    `}
+                                                    key={level.value}
+                                                    onClick={() => setThinkingLevel(level.value)}
+                                                    className={`flex-1 py-1.5 rounded-lg text-xs font-medium transition-all border ${thinkingLevel === level.value ? 'bg-[#F2B90D] text-[#2D1854] border-transparent' : 'bg-[#2D1854] text-white/60 border-white/5 hover:text-white'}`}
                                                 >
-                                                    {t('editor.allowAdults', { defaultValue: 'Allow' })}
+                                                    {level.label}
                                                 </button>
-                                                <button
-                                                    onClick={() => setPersonGeneration('dont_allow')}
-                                                    className={`
-                                                        flex-1 px-2 py-1.5 rounded-lg text-xs font-medium transition-all
-                                                        ${personGeneration === 'dont_allow'
-                                                            ? 'bg-editor-accent text-editor-bg'
-                                                            : 'bg-editor-bg text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border'
-                                                        }
-                                                    `}
-                                                >
-                                                    {t('editor.dontAllow', { defaultValue: "Don't Allow" })}
-                                                </button>
-                                            </div>
-                                        </div>
-
-                                        {/* Temperature */}
-                                        <div>
-                                            <div className="flex items-center justify-between mb-2">
-                                                <div className="flex items-center gap-2">
-                                                    <Thermometer size={12} className="text-editor-text-secondary" />
-                                                    <label className="text-xs text-editor-text-secondary">
-                                                        {t('editor.temperature', { defaultValue: 'Creativity' })}
-                                                    </label>
-                                                </div>
-                                                <span className="text-xs text-editor-accent font-mono font-bold">{temperature.toFixed(1)}</span>
-                                            </div>
-                                            <input
-                                                type="range"
-                                                min="0"
-                                                max="2"
-                                                step="0.1"
-                                                value={temperature}
-                                                onChange={(e) => setTemperature(parseFloat(e.target.value))}
-                                                className="w-full h-1.5 bg-editor-border rounded-full appearance-none cursor-pointer accent-editor-accent"
-                                            />
-                                            <div className="flex justify-between text-[10px] text-editor-text-secondary/60 mt-1">
-                                                <span>{t('editor.precise', { defaultValue: 'Precise' })}</span>
-                                                <span>{t('editor.creative', { defaultValue: 'Creative' })}</span>
-                                            </div>
+                                            ))}
                                         </div>
                                     </div>
-                                )}
 
-                                {/* Visual Controls */}
-                                <div className="space-y-3">
-                                    <div className="flex items-center gap-2 text-editor-text-secondary">
-                                        <Palette size={14} />
-                                        <span className="text-xs font-bold uppercase">Visual Controls</span>
+                                    {/* Negative Prompt */}
+                                    <div className="space-y-3">
+                                        <label className="text-xs font-bold text-white/50 uppercase tracking-wide">Negative Prompt</label>
+                                        <textarea
+                                            value={negativePrompt}
+                                            onChange={(e) => setNegativePrompt(e.target.value)}
+                                            className="w-full bg-[#2D1854] border border-white/10 text-[#FAFAFA] text-xs rounded-lg focus:ring-[#F2B90D] focus:border-[#F2B90D] block p-3 resize-none placeholder:text-white/20"
+                                            placeholder="Describe what you want to exclude..."
+                                            rows={3}
+                                        />
                                     </div>
 
-                                    <div className="grid grid-cols-2 gap-3">
-                                        <div>
-                                            <label className="flex items-center gap-1.5 text-xs text-editor-text-secondary mb-1.5">
-                                                <Sun size={11} /> {t('editor.lighting', { defaultValue: 'Lighting' })}
-                                            </label>
+                                    {/* Lighting */}
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-bold text-white/40 uppercase">Lighting</label>
+                                        <div className="relative">
                                             <select
                                                 value={lighting}
                                                 onChange={(e) => setLighting(e.target.value)}
-                                                className="w-full appearance-none bg-editor-bg border border-editor-border rounded-lg px-2.5 py-1.5 text-xs text-editor-text-primary focus:outline-none focus:ring-1 focus:ring-editor-accent"
+                                                className="w-full bg-[#2D1854] border border-white/5 rounded-lg py-2 px-3 text-xs focus:ring-1 focus:ring-[#F2B90D] focus:border-[#F2B90D] outline-none appearance-none cursor-pointer text-white/80"
                                             >
                                                 {LIGHTING_OPTIONS.map(l => (
                                                     <option key={l.value} value={l.value}>{l.label}</option>
                                                 ))}
                                             </select>
+                                            <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 pointer-events-none" />
                                         </div>
+                                    </div>
 
-                                        <div>
-                                            <label className="flex items-center gap-1.5 text-xs text-editor-text-secondary mb-1.5">
-                                                <Camera size={11} /> {t('editor.cameraAngle', { defaultValue: 'Camera' })}
-                                            </label>
+                                    {/* Camera Angle */}
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-bold text-white/40 uppercase">Camera Angle</label>
+                                        <div className="relative">
                                             <select
                                                 value={cameraAngle}
                                                 onChange={(e) => setCameraAngle(e.target.value)}
-                                                className="w-full appearance-none bg-editor-bg border border-editor-border rounded-lg px-2.5 py-1.5 text-xs text-editor-text-primary focus:outline-none focus:ring-1 focus:ring-editor-accent"
+                                                className="w-full bg-[#2D1854] border border-white/5 rounded-lg py-2 px-3 text-xs focus:ring-1 focus:ring-[#F2B90D] focus:border-[#F2B90D] outline-none appearance-none cursor-pointer text-white/80"
                                             >
                                                 {CAMERA_ANGLES.map(c => (
                                                     <option key={c.value} value={c.value}>{c.label}</option>
                                                 ))}
                                             </select>
-                                        </div>
-
-                                        <div>
-                                            <label className="flex items-center gap-1.5 text-xs text-editor-text-secondary mb-1.5">
-                                                <Palette size={11} /> {t('editor.colorGrading', { defaultValue: 'Colors' })}
-                                            </label>
-                                            <select
-                                                value={colorGrading}
-                                                onChange={(e) => setColorGrading(e.target.value)}
-                                                className="w-full appearance-none bg-editor-bg border border-editor-border rounded-lg px-2.5 py-1.5 text-xs text-editor-text-primary focus:outline-none focus:ring-1 focus:ring-editor-accent"
-                                            >
-                                                {COLOR_GRADING.map(c => (
-                                                    <option key={c.value} value={c.value}>{c.label}</option>
-                                                ))}
-                                            </select>
-                                        </div>
-
-                                        <div>
-                                            <label className="flex items-center gap-1.5 text-xs text-editor-text-secondary mb-1.5">
-                                                <Eye size={11} /> {t('editor.depthOfField', { defaultValue: 'Depth' })}
-                                            </label>
-                                            <select
-                                                value={depthOfField}
-                                                onChange={(e) => setDepthOfField(e.target.value)}
-                                                className="w-full appearance-none bg-editor-bg border border-editor-border rounded-lg px-2.5 py-1.5 text-xs text-editor-text-primary focus:outline-none focus:ring-1 focus:ring-editor-accent"
-                                            >
-                                                {DEPTH_OF_FIELD.map(d => (
-                                                    <option key={d.value} value={d.value}>{d.label}</option>
-                                                ))}
-                                            </select>
+                                            <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 pointer-events-none" />
                                         </div>
                                     </div>
-                                </div>
-                            </div>
-                        )}
 
-                        {/* Generate Button */}
-                        <button
-                            onClick={handleGenerate}
-                            disabled={isGenerating || !prompt}
-                            className={`
-                                w-full py-3.5 rounded-xl font-bold text-sm transition-all duration-200
-                                flex items-center justify-center gap-2 shadow-lg
-                                ${isGenerating || !prompt
-                                    ? 'bg-editor-border text-editor-text-secondary cursor-not-allowed'
-                                    : `bg-gradient-to-r ${currentModel.color} text-white hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]`
-                                }
-                            `}
-                        >
-                            {isGenerating ? (
-                                <>
-                                    <Loader2 size={18} className="animate-spin" />
-                                    {t('editor.dreaming', { defaultValue: 'Creating...' })}
-                                </>
-                            ) : (
-                                <>
-                                    <Zap size={18} />
-                                    {t('editor.generateImage', { defaultValue: 'Generate Image' })}
-                                </>
-                            )}
-                        </button>
-                    </div>
-                </div>
-
-                {/* Right Panel - Preview */}
-
-                <div className="flex-1 min-w-0 flex flex-col p-5 bg-gradient-to-br from-editor-bg to-editor-panel-bg/30">
-                    {/* Preview Area */}
-                    <div className="flex-1 min-h-0 flex items-center justify-center bg-black/30 rounded-2xl border border-editor-border overflow-hidden backdrop-blur-sm">
-                        {isGenerating ? (
-                            <div className="text-center p-8">
-                                <div className={`w-20 h-20 rounded-full bg-gradient-to-br ${currentModel.color} p-1 mx-auto mb-5`}>
-                                    <div className="w-full h-full bg-editor-bg rounded-full flex items-center justify-center">
-                                        <Loader2 size={32} className="animate-spin text-editor-accent" />
-                                    </div>
                                 </div>
-                                <p className="text-lg font-semibold text-editor-text-primary mb-1">
-                                    {t('editor.creatingInResolution', { resolution, defaultValue: `Creating in ${resolution}...` })}
-                                </p>
-                                <p className="text-sm text-editor-text-secondary">
-                                    {t('editor.poweredByQuimera', { defaultValue: 'Powered by Quimera AI' })}
-                                </p>
-                            </div>
-                        ) : generatedImage ? (
-                            <div
-                                className="w-full h-full flex items-center justify-center relative cursor-pointer group"
-                                onClick={() => setShowImageDetail(true)}
-                                role="button"
-                                tabIndex={0}
-                                onKeyDown={(e) => e.key === 'Enter' && setShowImageDetail(true)}
-                            >
-                                <img
-                                    src={generatedImage}
-                                    alt="Generated"
-                                    className="max-w-full max-h-full object-contain transition-transform group-hover:scale-[1.02]"
-                                />
-                                {/* Hover overlay */}
-                                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-all duration-200 flex items-center justify-center">
-                                    <div className="bg-white/95 text-gray-800 px-5 py-2.5 rounded-full text-sm font-semibold shadow-xl opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center gap-2">
-                                        <Eye size={16} />
-                                        {t('editor.clickToViewDetails', { defaultValue: 'View Details' })}
-                                    </div>
-                                </div>
-                                {/* Info button always visible */}
-                                <button
-                                    type="button"
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        setShowImageDetail(true);
-                                    }}
-                                    className="absolute top-3 right-3 p-2 bg-black/60 hover:bg-black/80 text-white rounded-full transition-colors z-10"
-                                    title={t('editor.viewDetails', { defaultValue: 'View details' })}
-                                >
-                                    <Eye size={18} />
-                                </button>
-                            </div>
-                        ) : (
-                            <div className="text-center p-8">
-                                <div className="w-20 h-20 rounded-full bg-editor-panel-bg border border-editor-border flex items-center justify-center mx-auto mb-5">
-                                    <ImageIcon size={32} className="text-editor-text-secondary/50" />
-                                </div>
-                                <p className="text-sm text-editor-text-secondary">
-                                    {t('editor.enterPrompt', { defaultValue: 'Enter a prompt to generate an image' })}
-                                </p>
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Action Buttons */}
-                    {generatedImage && (
-                        <div className="flex-shrink-0 flex items-center justify-between mt-4 pt-4 border-t border-editor-border/50">
-                            <div className="flex items-center gap-2">
-                                {isSaving ? (
-                                    <>
-                                        <Loader2 size={14} className="animate-spin text-editor-accent" />
-                                        <span className="text-xs font-medium text-editor-text-secondary">
-                                            {t('editor.savingToLibrary', { defaultValue: 'Saving to library...' })}
-                                        </span>
-                                    </>
-                                ) : savedToLibrary ? (
-                                    <>
-                                        <CheckCircle2 size={14} className="text-green-500" />
-                                        <span className="text-xs font-medium text-green-500">
-                                            {destination === 'global'
-                                                ? t('editor.savedToGlobalLibrary', { defaultValue: 'Saved to global library' })
-                                                : t('editor.savedToLibrary', { defaultValue: 'Saved to library' })
-                                            }
-                                        </span>
-                                    </>
-                                ) : (
-                                    <>
-                                        <AlertTriangle size={14} className="text-amber-500" />
-                                        <span className="text-xs font-medium text-amber-500">
-                                            {t('editor.notSaved', { defaultValue: 'Not saved (no active project)' })}
-                                        </span>
-                                    </>
-                                )}
-                            </div>
-                            <div className="flex gap-2">
-                                {onUseImage && (
-                                    <button
-                                        onClick={() => {
-                                            onUseImage(savedImageUrl || generatedImage);
-                                        }}
-                                        className="flex items-center gap-2 px-5 py-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg text-xs font-bold hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all"
-                                    >
-                                        <Check size={14} />
-                                        {t('editor.useThisImage', { defaultValue: 'Use this image' })}
-                                    </button>
-                                )}
-                                <button
-                                    onClick={() => {
-                                        if (referenceImages.length >= 14) return;
-                                        // Use the base64 data URL directly for reference
-                                        if (generatedImage) {
-                                            setReferenceImages(prev => [...prev, generatedImage]);
-                                        }
-                                    }}
-                                    disabled={referenceImages.length >= 14}
-                                    className="flex items-center gap-2 px-4 py-2 bg-editor-panel-bg border border-editor-border rounded-lg text-xs font-medium text-editor-text-primary hover:bg-editor-border transition-colors disabled:opacity-50"
-                                >
-                                    <ImageIcon size={14} />
-                                    {t('editor.useAsReference', { defaultValue: 'Use as Reference' })}
-                                </button>
-                                <a
-                                    href={savedImageUrl || generatedImage}
-                                    download={`quimera-${Date.now()}.png`}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    className="flex items-center gap-2 px-4 py-2 bg-editor-panel-bg border border-editor-border rounded-lg text-xs font-medium text-editor-text-primary hover:bg-editor-border transition-colors"
-                                >
-                                    <Download size={14} />
-                                    {t('editor.download', { defaultValue: 'Download' })}
-                                </a>
-                                <button
-                                    onClick={handleReset}
-                                    className={`flex items-center gap-2 px-5 py-2 rounded-lg text-xs font-bold text-white bg-gradient-to-r ${currentModel.color} hover:shadow-lg transition-all`}
-                                >
-                                    <Plus size={14} />
-                                    {t('editor.generateAnother', { defaultValue: 'New' })}
-                                </button>
-                            </div>
+                            </details>
                         </div>
-                    )}
-                </div>
+                    </div>
+                </aside>
             </div>
 
-            {/* Image Detail Modal */}
+            {/* Image Details Modal omitted for brevity, logic remains in state, but view might not be needed if it's rendered inline. To keep it functional, we can add a simple wrapper if showImageDetail is true, but the new UI design displays the tools directly on the image hover so we mapped it there. */}
+
             {showImageDetail && generatedImage && (
                 <div
                     className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in"
                     onClick={() => setShowImageDetail(false)}
                 >
-                    <div
-                        className="bg-editor-bg border border-editor-border rounded-2xl shadow-2xl max-w-5xl w-full max-h-[90vh] overflow-hidden flex flex-col lg:flex-row animate-scale-in"
-                        onClick={(e) => e.stopPropagation()}
-                    >
-                        {/* Image Preview */}
-                        <div className="flex-1 min-h-[300px] lg:min-h-0 bg-black/50 flex items-center justify-center p-4">
-                            <img
-                                src={generatedImage}
-                                alt="Generated"
-                                className="max-w-full max-h-[60vh] lg:max-h-[80vh] object-contain rounded-lg shadow-xl"
-                            />
+                    <div className="bg-[#2D1854] border border-white/10 rounded-2xl shadow-2xl max-w-5xl w-full max-h-[90vh] overflow-hidden flex flex-col lg:flex-row relative" onClick={e => e.stopPropagation()}>
+                        <button onClick={() => setShowImageDetail(false)} className="absolute top-4 right-4 z-50 p-2 bg-black/50 text-white rounded-full hover:bg-black/70"><X size={20} /></button>
+                        <div className="flex-1 bg-black/50 flex items-center justify-center p-6 min-h-[400px]">
+                            <img src={generatedImage} className="max-w-full max-h-[80vh] object-contain rounded-lg shadow-xl" />
                         </div>
-
-                        {/* Details Panel */}
-                        <div className="w-full lg:w-[380px] flex-shrink-0 border-t lg:border-t-0 lg:border-l border-editor-border bg-editor-panel-bg/50 overflow-y-auto">
-                            {/* Header */}
-                            <div className="p-4 border-b border-editor-border flex items-center justify-between">
-                                <div className="flex items-center gap-2">
-                                    <Sparkles size={18} className="text-editor-accent" />
-                                    <h3 className="font-bold text-editor-text-primary">
-                                        {t('editor.imageDetails', { defaultValue: 'Image Details' })}
-                                    </h3>
-                                </div>
-                                <button
-                                    onClick={() => setShowImageDetail(false)}
-                                    className="p-1.5 rounded-lg hover:bg-editor-border text-editor-text-secondary hover:text-editor-text-primary transition-colors"
-                                >
-                                    <X size={18} />
-                                </button>
-                            </div>
-
-                            {/* Content */}
-                            <div className="p-4 space-y-5">
-                                {/* Prompt Used */}
+                        <div className="w-full lg:w-[380px] p-6 overflow-y-auto bg-[#3A2460]">
+                            <h3 className="font-bold text-lg mb-6 flex items-center gap-2"><Sparkles className="text-[#F2B90D]" /> Details</h3>
+                            <div className="space-y-6">
                                 <div>
-                                    <label className="flex items-center gap-2 text-xs font-bold text-editor-text-secondary uppercase tracking-wide mb-2">
-                                        <Wand2 size={12} />
-                                        {t('editor.promptUsed', { defaultValue: 'Prompt Used' })}
-                                    </label>
-                                    <div className="bg-editor-bg border border-editor-border rounded-xl p-3">
-                                        <p className="text-sm text-editor-text-primary leading-relaxed">
-                                            {generatedPrompt || prompt}
-                                        </p>
-                                    </div>
-                                    <button
-                                        onClick={() => {
-                                            navigator.clipboard.writeText(generatedPrompt || prompt);
-                                        }}
-                                        className="mt-2 text-xs text-editor-accent hover:text-editor-accent-hover transition-colors"
-                                    >
-                                        {t('editor.copyPrompt', { defaultValue: 'Copy prompt' })}
-                                    </button>
+                                    <h4 className="text-xs text-white/50 uppercase font-bold tracking-wide mb-2">Prompt</h4>
+                                    <p className="text-sm bg-black/20 p-3 rounded-lg border border-white/5">{generatedPrompt || prompt}</p>
                                 </div>
-
-                                {/* Negative Prompt */}
-                                {generatedOptions?.negativePrompt && (
-                                    <div>
-                                        <label className="flex items-center gap-2 text-xs font-bold text-editor-text-secondary uppercase tracking-wide mb-2">
-                                            <X size={12} className="text-red-400" />
-                                            {t('editor.negativePrompt', { defaultValue: 'Negative Prompt' })}
-                                        </label>
-                                        <div className="bg-editor-bg border border-editor-border rounded-xl p-3">
-                                            <p className="text-sm text-editor-text-secondary">
-                                                {generatedOptions.negativePrompt}
-                                            </p>
-                                        </div>
-                                    </div>
-                                )}
-
-                                {/* Generation Settings */}
                                 <div>
-                                    <label className="flex items-center gap-2 text-xs font-bold text-editor-text-secondary uppercase tracking-wide mb-3">
-                                        <Settings2 size={12} />
-                                        {t('editor.generationSettings', { defaultValue: 'Generation Settings' })}
-                                    </label>
+                                    <h4 className="text-xs text-white/50 uppercase font-bold tracking-wide mb-2">Settings</h4>
                                     <div className="grid grid-cols-2 gap-3">
-                                        {/* Model */}
-                                        <div className="bg-editor-bg border border-editor-border rounded-xl p-3">
-                                            <span className="text-[10px] text-editor-text-secondary uppercase tracking-wide">
-                                                {t('editor.model', { defaultValue: 'Model' })}
-                                            </span>
-                                            <p className="text-sm font-medium text-editor-text-primary mt-0.5">
-                                                {MODELS.find(m => m.value === generatedOptions?.model)?.label || 'Unknown'}
-                                            </p>
+                                        <div className="bg-black/20 p-3 rounded-lg border border-white/5">
+                                            <span className="text-[10px] text-white/40 uppercase block">Model</span>
+                                            <span className="text-sm font-medium">{generatedOptions?.model || 'Nano Banana 2'}</span>
                                         </div>
-
-                                        {/* Aspect Ratio */}
-                                        <div className="bg-editor-bg border border-editor-border rounded-xl p-3">
-                                            <span className="text-[10px] text-editor-text-secondary uppercase tracking-wide">
-                                                {t('editor.aspectRatio', { defaultValue: 'Aspect Ratio' })}
-                                            </span>
-                                            <p className="text-sm font-medium text-editor-text-primary mt-0.5">
-                                                {generatedOptions?.aspectRatio || aspectRatio}
-                                            </p>
+                                        <div className="bg-black/20 p-3 rounded-lg border border-white/5">
+                                            <span className="text-[10px] text-white/40 uppercase block">Ratio</span>
+                                            <span className="text-sm font-medium">{generatedOptions?.aspectRatio || aspectRatio}</span>
                                         </div>
-
-                                        {/* Resolution */}
-                                        <div className="bg-editor-bg border border-editor-border rounded-xl p-3">
-                                            <span className="text-[10px] text-editor-text-secondary uppercase tracking-wide">
-                                                {t('editor.resolution', { defaultValue: 'Resolution' })}
-                                            </span>
-                                            <p className="text-sm font-medium text-editor-text-primary mt-0.5">
-                                                {generatedOptions?.resolution || resolution}
-                                            </p>
+                                        <div className="bg-black/20 p-3 rounded-lg border border-white/5">
+                                            <span className="text-[10px] text-white/40 uppercase block">Resolution</span>
+                                            <span className="text-sm font-medium">{generatedOptions?.resolution || resolution}</span>
                                         </div>
-
-                                        {/* Style */}
-                                        <div className="bg-editor-bg border border-editor-border rounded-xl p-3">
-                                            <span className="text-[10px] text-editor-text-secondary uppercase tracking-wide">
-                                                {t('editor.style', { defaultValue: 'Style' })}
-                                            </span>
-                                            <p className="text-sm font-medium text-editor-text-primary mt-0.5">
-                                                {generatedOptions?.style || style || 'None'}
-                                            </p>
+                                        <div className="bg-black/20 p-3 rounded-lg border border-white/5">
+                                            <span className="text-[10px] text-white/40 uppercase block">Style</span>
+                                            <span className="text-sm font-medium">{generatedOptions?.style || style}</span>
                                         </div>
                                     </div>
                                 </div>
-
-                                {/* Save Status */}
-                                <div className="pt-3 border-t border-editor-border">
-                                    <div className="flex items-center gap-2 mb-4">
-                                        {savedToLibrary ? (
-                                            <>
-                                                <CheckCircle2 size={16} className="text-green-500" />
-                                                <span className="text-sm font-medium text-green-500">
-                                                    {destination === 'global'
-                                                        ? t('editor.savedToGlobalLibrary', { defaultValue: 'Saved to global library' })
-                                                        : t('editor.savedToLibrary', { defaultValue: 'Saved to project library' })
-                                                    }
-                                                </span>
-                                            </>
-                                        ) : (
-                                            <>
-                                                <AlertTriangle size={16} className="text-amber-500" />
-                                                <span className="text-sm font-medium text-amber-500">
-                                                    {t('editor.notSaved', { defaultValue: 'Not saved' })}
-                                                </span>
-                                            </>
-                                        )}
-                                    </div>
-
-                                    {/* Actions */}
-                                    <div className="flex flex-col gap-2">
-                                        {onUseImage && (
-                                            <button
-                                                onClick={() => {
-                                                    onUseImage(savedImageUrl || generatedImage);
-                                                    setShowImageDetail(false);
-                                                }}
-                                                className="flex items-center justify-center gap-2 w-full py-2.5 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl text-sm font-bold hover:shadow-lg transition-all"
-                                            >
-                                                <Check size={16} />
-                                                {t('editor.useThisImage', { defaultValue: 'Use this image' })}
-                                            </button>
-                                        )}
-                                        <a
-                                            href={savedImageUrl || generatedImage}
-                                            download={`quimera-${Date.now()}.png`}
-                                            target="_blank"
-                                            rel="noreferrer"
-                                            className="flex items-center justify-center gap-2 w-full py-2.5 bg-editor-accent text-editor-bg rounded-xl text-sm font-bold hover:bg-editor-accent-hover transition-colors"
-                                        >
-                                            <Download size={16} />
-                                            {t('editor.downloadImage', { defaultValue: 'Download Image' })}
-                                        </a>
-                                        <button
-                                            onClick={() => {
-                                                if (referenceImages.length < 14 && generatedImage) {
-                                                    setReferenceImages(prev => [...prev, generatedImage]);
-                                                    setShowImageDetail(false);
-                                                }
-                                            }}
-                                            disabled={referenceImages.length >= 14}
-                                            className="flex items-center justify-center gap-2 w-full py-2.5 bg-editor-panel-bg border border-editor-border rounded-xl text-sm font-medium text-editor-text-primary hover:bg-editor-border transition-colors disabled:opacity-50"
-                                        >
-                                            <ImageIcon size={16} />
-                                            {t('editor.useAsReference', { defaultValue: 'Use as Reference' })}
+                                <div className="pt-4 border-t border-white/10 flex flex-col gap-3">
+                                    <a href={savedImageUrl || generatedImage} download={`quimera-${Date.now()}.png`} target="_blank" className="flex items-center justify-center gap-2 w-full py-3 bg-[#F2B90D] text-[#2D1854] rounded-xl text-sm font-bold hover:bg-[#D9A60C] transition-colors">
+                                        <Download size={18} /> Download Image
+                                    </a>
+                                    {onUseImage && (
+                                        <button onClick={() => { onUseImage(savedImageUrl || generatedImage); setShowImageDetail(false); }} className="flex items-center justify-center gap-2 w-full py-3 bg-white/10 text-white rounded-xl text-sm font-bold hover:bg-white/20 transition-colors">
+                                            <Check size={18} /> Use in Project
                                         </button>
-                                    </div>
+                                    )}
                                 </div>
                             </div>
                         </div>

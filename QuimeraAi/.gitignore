@@ -46,3 +46,4 @@ service-account*.json
 *.sln
 *.sw?
 service-account.json
+functions/.runtimeconfig.json

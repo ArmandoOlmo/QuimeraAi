@@ -241,7 +241,7 @@ export const AIProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
 
                 await logApiCall({
                     endpoint: 'imagen/generate',
-                    model: options?.model || 'gemini-3-pro-image-preview',
+                    model: options?.model || 'imagen-4.0-nano-banana-002',
                     promptTokens: enhancedPrompt.length,
                     completionTokens: 0,
                     totalTokens: enhancedPrompt.length,
@@ -292,7 +292,7 @@ export const AIProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
         } catch (error) {
             await logApiCall({
                 endpoint: 'imagen/generate',
-                model: 'gemini-3-pro-image-preview',
+                model: 'imagen-4.0-nano-banana-002',
                 promptTokens: prompt.length,
                 completionTokens: 0,
                 totalTokens: prompt.length,

@@ -334,7 +334,7 @@ export async function getUsageStats(projectId: string) {
 
 /**
  * Image generation configuration
- * Supports Quimera Vision Pro advanced controls
+ * Supports Quimera Nano Banana 2 advanced controls
  */
 export interface ImageGenerationConfig {
     aspectRatio?: string;
@@ -374,7 +374,7 @@ export interface ImageProxyResponse {
 /**
  * Generate image using the secure Gemini proxy
  * This keeps the API key secure on the server side
- * Supports Quimera Vision Pro with full controls
+ * Supports Quimera Nano Banana 2 with full controls
  */
 export async function generateImageViaProxy(
     userId: string,
@@ -394,8 +394,8 @@ export async function generateImageViaProxy(
                 userId,
                 projectId: projectId || `image-gen-${userId}`,
                 prompt,
-                // Model selection (defaults to Imagen 3.0 which is more stable)
-                model: config.model || 'gemini-3-pro-image-preview',
+                // Model selection (defaults to Nano Banana 2 - gemini-3.1-flash-image-preview)
+                model: config.model || 'gemini-3.1-flash-image-preview',
                 aspectRatio: config.aspectRatio || '1:1',
                 style: config.style,
                 resolution: config.resolution || '1K',

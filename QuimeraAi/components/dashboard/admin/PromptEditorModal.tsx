@@ -127,7 +127,7 @@ const PromptEditorModal: React.FC<PromptEditorModalProps> = ({ isOpen, onClose, 
                             <select id="prompt-model" name="model" value={formData.model} onChange={handleChange} className="w-full bg-editor-bg text-white p-2 rounded-md border border-editor-border focus:ring-2 focus:ring-editor-accent focus:outline-none">
                                 <option value="gemini-3-pro-preview">Gemini 3 Pro (Recommended)</option>
                                 <option value="gemini-3-flash-preview">Gemini 3 Flash</option>
-                                <option value="gemini-3-pro-image-preview">Quimera Vision Pro</option>
+                                <option value="imagen-4.0-nano-banana-002">Quimera Nano Banana 2</option>
                                 <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
                                 <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
                                 <option value="gemini-2.5-flash-image">Gemini 2.5 Flash Image</option>

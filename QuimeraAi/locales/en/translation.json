@@ -1184,7 +1184,7 @@
       "negativePromptPlaceholder": "What to avoid: blurry, distorted...",
       "aspectRatio": "Aspect Ratio",
       "style": "Style",
-      "visionProControls": "Vision Pro Controls",
+      "visionProControls": "Nano Banana 2 Controls",
       "thinking": "Thinking",
       "people": "People",
       "allow": "Allow",
@@ -2884,7 +2884,7 @@
     "temperature": "Temperature",
     "precise": "Precise",
     "creative": "Creative",
-    "quimeraVisionControls": "Vision Pro Controls",
+    "quimeraVisionControls": "Nano Banana 2 Controls",
     "quimeraVisionProDesc": "Best quality, text in images, thinking level",
     "quimeraStandardDesc": "Balanced quality and speed",
     "quimeraFastDesc": "Fastest generation, good quality",
@@ -3186,7 +3186,7 @@
         "negativePrompt": "Negative Prompt",
         "aspectRatio": "Aspect Ratio",
         "style": "Style",
-        "visionProControls": "Vision Pro Controls",
+        "visionProControls": "Nano Banana 2 Controls",
         "thinking": "Thinking",
         "people": "People",
         "creativity": "Creativity",
@@ -7800,7 +7800,7 @@
       "uploadOneNow": "Upload one now",
       "uploadSuccess": "{{name}} subido successfully",
       "useThisImage": "Usar Esta Image",
-      "visionProControls": "Controls Vision Pro"
+      "visionProControls": "Nano Banana 2 Controls"
     },
     "imagePlaceholder": {
       "description": "Esta image no pudo generarse automáticamente. Puedes generarla después from el editor.",

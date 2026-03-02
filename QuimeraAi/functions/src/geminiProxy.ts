@@ -139,12 +139,17 @@ const ALLOWED_MODELS = [
     'gemini-2.0-flash-preview-image-generation',
     'gemini-2.5-flash-image',
     'gemini-2.0-flash-image',
-    // Image generation models - Imagen (may require Vertex AI)
+    // Nano Banana series (Gemini native image generation)
+    'gemini-3.1-flash-image-preview',  // Nano Banana 2 - Feb 2026
+    'gemini-3-pro-image-preview',       // Nano Banana Pro
+    // Image generation models - Imagen
     'imagen-3.0-generate-001',
     'imagen-3.0-fast-generate-001',
     'imagen-4.0-generate-001',
     'imagen-4.0-ultra-generate-001',
     'imagen-4.0-fast-generate-001',
+    // Legacy alias (kept for backwards compatibility - maps to gemini-3.1-flash-image-preview)
+    'imagen-4.0-nano-banana-002',
 ];
 
 function isValidModel(model: string): boolean {
@@ -388,6 +393,9 @@ const MODEL_TOKEN_MULTIPLIERS: Record<string, number> = {
     'gemini-1.5-pro': 3,
     // Image generation - Imagen Ultra: 10x multiplier
     'imagen-4.0-ultra-generate-001': 10,
+    // Nano Banana 2 (gemini-3.1-flash-image-preview): 5x multiplier
+    'gemini-3.1-flash-image-preview': 5,
+    'imagen-4.0-nano-banana-002': 5,  // legacy alias
     // Other image models: 5x multiplier
     'gemini-2.5-flash-image': 5,
     'gemini-2.0-flash-image': 5,
@@ -1086,7 +1094,17 @@ export const generateImage = functions.https.onRequest(async (req, res) => {
             enhancedPrompt = `${enhancedPrompt}. Avoid: ${negativePrompt}`;
         }
 
-        const actualModel = model;
+        let actualModel = model;
+        // Map legacy/alias names to correct Google API model identifiers
+        if (model === 'imagen-4.0-nano-banana-002') {
+            // Nano Banana 2 alias → gemini-3.1-flash-image-preview (the real model)
+            actualModel = 'gemini-3.1-flash-image-preview';
+        } else if (model === 'imagen-4.0-fast-generate-001') {
+            actualModel = 'imagen-3.0-fast-generate-001';
+        } else if (model === 'imagen-4.0-generate-001' || model === 'imagen-4.0-ultra-generate-001') {
+            actualModel = 'imagen-3.0-generate-001';
+        }
+
         const genAI = new GoogleGenAI({ apiKey });
 
         try {
