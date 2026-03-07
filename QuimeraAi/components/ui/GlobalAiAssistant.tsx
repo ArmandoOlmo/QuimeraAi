@@ -2722,6 +2722,21 @@ const GlobalAiAssistant: React.FC = () => {
 
         console.log('[InferTool] Input:', { raw, norm });
 
+        // ============================================================
+        // GUARD: Detect QUESTIONS and skip fast-path entirely.
+        // When the user is asking about what they see on screen,
+        // we must let the LLM with vision answer — NOT navigate.
+        // ============================================================
+        const hasQuestionMark = raw.includes('?');
+        const startsWithQuestionWord = /^(que |qué |cual |cuál |como |cómo |por que |por qué |cuanto |cuánto |cuantos |cuántos |donde |dónde |cuando |cuándo |quien |quién |what |how |why |where |when |who |which |explain |tell me |describe |is this |is that |are these |can you tell |do you see |what's )/.test(norm);
+        const isQuestionPattern = /\b(que es |que son |que significa |para que |como funciona |como se |como puedo |se puede |puedo |que hace |que pasa |que hay |que veo |que estoy viendo |que tengo |dime sobre |dime como |explicame |cuentame |enseñame |ayudame a entender |what is |what are |what does |how does |how do |how can |can i |tell me about |explain |describe |show me how )/.test(norm);
+
+        if (hasQuestionMark || startsWithQuestionWord || isQuestionPattern) {
+            console.log('[InferTool] Detected QUESTION — skipping fast-path, delegating to LLM with vision');
+            return null;
+        }
+
+
         // 0) PRIORITY: Direct navigation to app views (before checking editor sections)
         // These keywords should ALWAYS navigate to app views, not editor sections
         const hasNavIntent = /\b(ir a|ve a|abre|abrir|open|go to|llevame|muestrame|show)\b/.test(norm);
@@ -2850,12 +2865,12 @@ const GlobalAiAssistant: React.FC = () => {
             }
         }
 
-        // 3) Also check if ANY known section word appears anywhere
+        // 3) Also check if a section word appears WITH an action verb prefix
+        //    (NOT a bare keyword match — that caused questions like "que es el hero" to navigate)
         if (!foundSection) {
-            const words = raw.split(/\s+/);
-            for (const word of words) {
-                foundSection = resolveEditorSectionId(word);
-                if (foundSection) break;
+            const actionSectionMatch = norm.match(/(?:abre|abrir|open|editar|edit|ir a|ve a|muestrame|go to|show)\s+(?:el |la |los |las |the )?(.+)/);
+            if (actionSectionMatch && actionSectionMatch[1]) {
+                foundSection = resolveEditorSectionId(actionSectionMatch[1].trim());
             }
         }
 
@@ -3162,7 +3177,7 @@ Usuario: ${userMsg}`;
 
                 // Use model, temperature, and maxTokens from admin config
                 const proxyProjectId = activeProject?.id || user?.uid || 'anonymous';
-                const chatModel = globalAssistantConfig.model || 'gemini-2.5-flash';
+                const chatModel = globalAssistantConfig.model || 'gemini-3-flash-preview';
                 const proxyConfig = {
                     temperature: globalAssistantConfig.temperature ?? 0.7,
                     maxOutputTokens: globalAssistantConfig.maxTokens ?? 2048
