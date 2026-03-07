@@ -6568,6 +6568,7 @@
       "preguntasFrecuentes": "FAQ",
       "testimonios": "Testimonios"
     },
+    "componentsTitle": "Biblioteca de Componentes",
     "componentsDesc": "Gestionar biblioteca y valores predeterminados de diseño.",
     "designTokens": "Tokens de Diseño",
     "designTokensDesc": "Configurar tokens del sistema de diseño global.",

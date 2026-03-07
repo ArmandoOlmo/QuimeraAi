@@ -6585,6 +6585,7 @@
       "preguntasFrecuentes": "FAQ",
       "testimonios": "Testimonials"
     },
+    "componentsTitle": "Component Library",
     "componentsDesc": "Manage library and design defaults.",
     "designTokens": "Design Tokens",
     "designTokensDesc": "Configure global design system tokens.",

@@ -1,5 +1,6 @@
 
 import React, { useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAdmin } from '../../../contexts/admin';
 import { useProject } from '../../../contexts/project';
 import { PageSection, CustomComponent } from '../../../types';
@@ -50,6 +51,7 @@ const componentNames: Record<PageSection, string> = {
     team: 'Team Section',
     video: 'Video Section',
     howItWorks: 'How It Works Section',
+    howItWorksDesc: 'Step by step guide',
     map: 'Location Map',
     menu: 'Restaurant Menu',
     banner: 'Banner Section',
@@ -111,6 +113,7 @@ const componentCategories: Record<PageSection, string> = {
 };
 
 const ComponentLibrary: React.FC = () => {
+    const { t } = useTranslation();
     const { componentStatus, updateComponentStatus, customComponents } = useAdmin();
     const { projects } = useProject();
     const [showDependenciesModal, setShowDependenciesModal] = useState(false);
@@ -152,9 +155,9 @@ const ComponentLibrary: React.FC = () => {
     return (
         <div className="p-6 sm:p-8 overflow-y-auto h-full">
             <div className="max-w-6xl mx-auto">
-                <h2 className="text-2xl font-bold text-editor-text-primary mb-2">Component Library</h2>
+                <h2 className="text-2xl font-bold text-editor-text-primary mb-2">{t('superadmin.componentsTitle')}</h2>
                 <p className="text-editor-text-secondary mb-6">
-                    Enable or disable components globally across the entire platform. Disabled components will not be available in the editor for any user.
+                    {t('superadmin.componentsDesc')}
                 </p>
 
                 {/* Search and Filters */}
@@ -203,8 +206,8 @@ const ComponentLibrary: React.FC = () => {
                                         key={status}
                                         onClick={() => setFilterStatus(status as any)}
                                         className={`px-3 py-1 text-sm font-medium transition-colors ${filterStatus === status
-                                                ? 'text-editor-accent'
-                                                : 'text-editor-text-secondary hover:text-editor-text-primary'
+                                            ? 'text-editor-accent'
+                                            : 'text-editor-text-secondary hover:text-editor-text-primary'
                                             }`}
                                     >
                                         {status.charAt(0).toUpperCase() + status.slice(1)}

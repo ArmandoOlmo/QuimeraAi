@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import DashboardSidebar from '../DashboardSidebar';
 import ComponentLibrary from './ComponentLibrary';
 import ComponentDesigner from './ComponentDesigner';
@@ -13,6 +14,7 @@ interface ComponentsDashboardProps {
 type ActiveTab = 'library' | 'studio';
 
 const ComponentsDashboard: React.FC<ComponentsDashboardProps> = ({ onBack }) => {
+    const { t } = useTranslation();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [activeTab, setActiveTab] = useState<ActiveTab>('library');
     const [previewDevice, setPreviewDevice] = useState<PreviewDevice>('desktop');
@@ -38,14 +40,14 @@ const ComponentsDashboard: React.FC<ComponentsDashboardProps> = ({ onBack }) => 
                             <button
                                 onClick={() => setIsMobileMenuOpen(true)}
                                 className="h-9 w-9 flex items-center justify-center text-editor-text-secondary hover:text-editor-text-primary lg:hidden mr-2 transition-colors"
-                                title="Open menu"
+                                title={t('common.openMenu', 'Open menu')}
                             >
                                 <Menu className="w-5 h-5" />
                             </button>
                         )}
                         <div className="flex items-center gap-2">
                             <Puzzle className="text-editor-accent w-5 h-5" />
-                            <h1 className="text-lg font-semibold text-editor-text-primary">Components</h1>
+                            <h1 className="text-lg font-semibold text-editor-text-primary">{t('superadmin.componentsTitle')}</h1>
                         </div>
                     </div>
 
@@ -61,7 +63,7 @@ const ComponentsDashboard: React.FC<ComponentsDashboardProps> = ({ onBack }) => 
                                     >
                                         {icon}
                                     </button>
-                                ))}
+                                )) /* turbo */}
                             </div>
                             <div className="flex items-center gap-1 rounded-lg border border-editor-border/60 p-1">
                                 {(['portrait', 'landscape'] as PreviewOrientation[]).map((orientation) => (
@@ -70,8 +72,8 @@ const ComponentsDashboard: React.FC<ComponentsDashboardProps> = ({ onBack }) => 
                                         onClick={() => setPreviewOrientation(orientation)}
                                         disabled={previewDevice === 'desktop'}
                                         className={`h-8 w-9 text-xs font-semibold transition-all ${previewOrientation === orientation
-                                                ? 'text-editor-accent'
-                                                : 'text-editor-text-secondary hover:text-editor-text-primary'
+                                            ? 'text-editor-accent'
+                                            : 'text-editor-text-secondary hover:text-editor-text-primary'
                                             } ${previewDevice === 'desktop' ? 'opacity-50 cursor-not-allowed' : ''}`}
                                         aria-label={`Preview ${orientation}`}
                                     >
@@ -87,7 +89,7 @@ const ComponentsDashboard: React.FC<ComponentsDashboardProps> = ({ onBack }) => 
                         className="flex items-center gap-1.5 h-9 px-3 text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary"
                     >
                         <ArrowLeft className="w-4 h-4" />
-                        Volver
+                        {t('common.back', 'Volver')}
                     </button>
                 </header>
 
