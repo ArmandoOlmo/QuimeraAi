@@ -402,15 +402,15 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
                 )}
             </header>
 
-            <div className="flex flex-1 overflow-hidden">
+            <div className="flex flex-col md:flex-row flex-1 overflow-hidden">
                 {/* Main Content Area */}
-                <main className="flex-1 flex flex-col relative bg-[#1A0D35] overflow-hidden">
+                <main className="hidden md:flex flex-1 flex-col relative bg-[#1A0D35] overflow-hidden">
                     <div className="flex-1 flex flex-col relative w-full h-full vector-bg-container overflow-y-auto">
                         <div className="vector-grid pointer-events-none"></div>
                         <div className="vector-lines pointer-events-none"></div>
                         <div className="vector-glow-points pointer-events-none"></div>
 
-                        <div className="w-full h-full flex items-center justify-center p-8 lg:p-12 min-h-[600px] relative z-10">
+                        <div className="w-full h-full flex items-center justify-center p-4 md:p-8 lg:p-12 min-h-[300px] md:min-h-[600px] relative z-10">
                             <div className="relative w-full max-w-4xl aspect-video bg-black/20 shadow-2xl flex flex-col rounded-xl overflow-hidden border border-white/5">
                                 {isGenerating ? (
                                     <div className="w-full h-full flex flex-col items-center justify-center">
@@ -534,7 +534,38 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
                 </main>
 
                 {/* Sidebar Configuration */}
-                <aside className="w-80 border-l border-white/10 bg-[#3A2460] flex flex-col shrink-0 overflow-hidden relative z-40">
+                {/* Mobile-only generated image preview */}
+                {generatedImage && (
+                    <div className="md:hidden w-full bg-[#1A0D35] p-4 border-b border-white/10 shrink-0">
+                        <div className="relative w-full aspect-video bg-black/20 shadow-lg rounded-xl overflow-hidden border border-white/5">
+                            <img alt="Generated result" className="w-full h-full object-contain" src={generatedImage} />
+                            <div className="absolute top-2 left-0 w-full flex items-center justify-center gap-2 z-20">
+                                {onUseImage && (
+                                    <button
+                                        onClick={() => onUseImage(savedImageUrl || generatedImage)}
+                                        className="flex items-center gap-1.5 bg-[#F2B90D] hover:bg-[#D9A60C] text-[#2D1854] px-3 py-1.5 rounded-lg font-bold text-xs shadow-lg shadow-[#F2B90D]/20 transition-all"
+                                    >
+                                        <Check size={14} />
+                                        <span>{t('editor.useThisImage', { defaultValue: 'Use in Project' })}</span>
+                                    </button>
+                                )}
+                                <button
+                                    onClick={() => {
+                                        if (referenceImages.length < 14) {
+                                            setReferenceImages(prev => [...prev, generatedImage]);
+                                        }
+                                    }}
+                                    disabled={referenceImages.length >= 14}
+                                    className="flex items-center gap-1.5 bg-[#3A2460] hover:bg-[#4C3575] text-white px-3 py-1.5 rounded-lg font-bold text-xs shadow-lg transition-all disabled:opacity-50"
+                                >
+                                    <ImageIcon size={14} />
+                                    <span>{t('editor.useAsReference', { defaultValue: 'Reference' })}</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+                <aside className="w-full md:w-80 border-t md:border-t-0 md:border-l border-white/10 bg-[#3A2460] flex flex-col shrink-0 overflow-hidden relative z-40 flex-1 md:flex-none">
                     <div className="flex items-center justify-between p-4 border-b border-white/10">
                         <h3 className="text-[#FAFAFA] font-bold text-sm uppercase tracking-wider">Configuration</h3>
                     </div>
@@ -724,6 +755,39 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
                         </div>
                     </div>
                 </aside>
+            </div>
+
+            {/* Mobile-only bottom prompt bar */}
+            <div className="md:hidden w-full p-3 bg-[#2D1854]/90 backdrop-blur-xl border-t border-white/10 shrink-0 z-50">
+                <div className="flex w-full items-stretch rounded-xl bg-[#3A2460] border border-white/5 transition-all relative">
+                    <div className="pl-3 flex items-center justify-center text-[#F2B90D]">
+                        <Sparkles size={20} className={isGenerating ? 'animate-pulse' : ''} />
+                    </div>
+                    <input
+                        className="flex-1 bg-transparent border-none text-[#FAFAFA] placeholder:text-white/30 px-3 py-3 focus:ring-0 text-sm font-medium min-w-0"
+                        placeholder={t('editor.describeImage', { defaultValue: 'Describe la imagen...' })}
+                        value={prompt}
+                        onChange={(e) => setPrompt(e.target.value)}
+                        onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleGenerate()}
+                    />
+                    <div className="flex items-center pr-2 gap-2 pl-2 border-l border-white/10 my-2">
+                        <button
+                            onClick={handleEnhancePrompt}
+                            disabled={isEnhancing || !prompt}
+                            className="p-1.5 text-[#F2B90D] bg-transparent transition-colors hover:text-[#D9A60C] flex items-center justify-center disabled:opacity-50"
+                            title={t('editor.enhance', { defaultValue: 'Enhance Prompt' })}
+                        >
+                            {isEnhancing ? <Loader2 size={18} className="animate-spin" /> : <Wand2 size={18} />}
+                        </button>
+                    </div>
+                </div>
+                <button
+                    onClick={handleGenerate}
+                    disabled={isGenerating || !prompt}
+                    className="mt-2 w-full flex items-center justify-center gap-2 bg-[#F2B90D] hover:bg-[#D9A60C] text-[#2D1854] px-6 py-3 rounded-lg font-bold text-sm transition-all disabled:opacity-50"
+                >
+                    {isGenerating ? <Loader2 size={18} className="animate-spin" /> : <><span>Generate</span><Zap size={16} /></>}
+                </button>
             </div>
 
             {/* Image Details Modal omitted for brevity, logic remains in state, but view might not be needed if it's rendered inline. To keep it functional, we can add a simple wrapper if showImageDetail is true, but the new UI design displays the tools directly on the image hover so we mapped it there. */}
