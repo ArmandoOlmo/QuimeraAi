@@ -9,9 +9,11 @@ interface ImageGeneratorModalProps {
     onImageGenerated?: (imageUrl: string) => void;
     onUseImage?: (imageUrl: string) => void;
     projectId?: string;
+    /** Generation context hint. 'background' optimizes for website section backgrounds. */
+    generationContext?: 'background' | 'general';
 }
 
-const ImageGeneratorModal: React.FC<ImageGeneratorModalProps> = ({ isOpen, onClose, destination, onImageGenerated, onUseImage, projectId }) => {
+const ImageGeneratorModal: React.FC<ImageGeneratorModalProps> = ({ isOpen, onClose, destination, onImageGenerated, onUseImage, projectId, generationContext }) => {
     return (
         <Modal
             isOpen={isOpen}
@@ -26,6 +28,7 @@ const ImageGeneratorModal: React.FC<ImageGeneratorModalProps> = ({ isOpen, onClo
                 onImageGenerated={onImageGenerated}
                 onUseImage={onUseImage}
                 projectId={projectId}
+                generationContext={generationContext}
             />
         </Modal>
     );

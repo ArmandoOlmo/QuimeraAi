@@ -864,6 +864,23 @@ const Controls: React.FC = () => {
     }
   };
 
+  // --- Background Image Control (reusable for all sections) ---
+  const BackgroundImageControl = ({ sectionKey }: { sectionKey: string }) => (
+    <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
+      <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+        <Image size={14} />
+        {t('editor.controls.common.backgroundImage', 'Background Image')}
+      </label>
+      <ImagePicker
+        label={t('editor.controls.common.backgroundImage', 'Background Image')}
+        value={(data as any)?.[sectionKey]?.backgroundImageUrl || ''}
+        onChange={(url) => setNestedData(`${sectionKey}.backgroundImageUrl`, url)}
+        onRemove={() => setNestedData(`${sectionKey}.backgroundImageUrl`, '')}
+        generationContext="background"
+      />
+    </div>
+  );
+
   // --- Section Renderers ---
 
   const renderHeaderControls = () => {
@@ -3210,6 +3227,8 @@ const Controls: React.FC = () => {
 
     const styleTab = (
       <div className="space-y-4">
+        <BackgroundImageControl sectionKey="map" />
+        <hr className="border-editor-border/50" />
         {/* Map Variant */}
         <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
           <Select
@@ -3390,6 +3409,8 @@ const Controls: React.FC = () => {
 
     const styleTab = (
       <div className="space-y-4">
+        <BackgroundImageControl sectionKey="heroSplit" />
+        <hr className="border-editor-border/50" />
         {/* Layout */}
         <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
           <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
@@ -4607,6 +4628,7 @@ const Controls: React.FC = () => {
               label="Background Image"
               value={data?.banner?.backgroundImageUrl || ''}
               onChange={(url) => setNestedData('banner.backgroundImageUrl', url)}
+              generationContext="background"
             />
           </div>
 
@@ -5303,6 +5325,8 @@ const Controls: React.FC = () => {
 
     const styleTab = (
       <div className="space-y-4">
+        <BackgroundImageControl sectionKey="hero" />
+        <hr className="border-editor-border/50" />
         {/* Hero Variant */}
         <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
           <Select
@@ -5913,6 +5937,8 @@ const Controls: React.FC = () => {
 
     const styleTab = (
       <div className="space-y-4">
+        <BackgroundImageControl sectionKey="features" />
+        <hr className="border-editor-border/50" />
         {/* Section Style */}
         <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
           <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
@@ -6165,6 +6191,8 @@ const Controls: React.FC = () => {
 
     const styleTab = (
       <div className="space-y-4">
+        <BackgroundImageControl sectionKey="testimonials" />
+        <hr className="border-editor-border/50" />
         {/* Card Styling */}
         <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
           <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
@@ -6328,6 +6356,8 @@ const Controls: React.FC = () => {
 
     const styleTab = (
       <div className="space-y-4">
+        <BackgroundImageControl sectionKey="services" />
+        <hr className="border-editor-border/50" />
         {/* Section Colors */}
         <div className="space-y-2">
           <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Section Colors</label>
@@ -6464,6 +6494,8 @@ const Controls: React.FC = () => {
 
     const styleTab = (
       <div className="space-y-4">
+        <BackgroundImageControl sectionKey="team" />
+        <hr className="border-editor-border/50" />
         {/* Section Colors */}
         <div className="space-y-2">
           <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Section Colors</label>
@@ -6563,6 +6595,8 @@ const Controls: React.FC = () => {
 
     const styleTab = (
       <div className="space-y-4">
+        <BackgroundImageControl sectionKey="faq" />
+        <hr className="border-editor-border/50" />
         {/* Section Colors */}
         <div className="space-y-2">
           <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Section Colors</label>
@@ -6828,6 +6862,8 @@ const Controls: React.FC = () => {
 
     const styleTab = (
       <div className="space-y-4">
+        <BackgroundImageControl sectionKey="portfolio" />
+        <hr className="border-editor-border/50" />
         {/* Section Colors */}
         <div className="space-y-2">
           <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Section Colors</label>
@@ -6945,6 +6981,8 @@ const Controls: React.FC = () => {
 
     const styleTab = (
       <div className="space-y-4">
+        <BackgroundImageControl sectionKey="leads" />
+        <hr className="border-editor-border/50" />
         {/* Border Radius Controls */}
         <div className="space-y-2">
           <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Border Radius</label>
@@ -7046,6 +7084,8 @@ const Controls: React.FC = () => {
 
     const styleTab = (
       <div className="space-y-4">
+        <BackgroundImageControl sectionKey="newsletter" />
+        <hr className="border-editor-border/50" />
         {/* Spacing */}
         <div className="space-y-2">
           <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Spacing</label>
@@ -7197,6 +7237,8 @@ const Controls: React.FC = () => {
 
     const styleTab = (
       <div className="space-y-4">
+        <BackgroundImageControl sectionKey="cta" />
+        <hr className="border-editor-border/50" />
         {/* Spacing */}
         <div className="space-y-2">
           <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Spacing</label>
@@ -7335,6 +7377,8 @@ const Controls: React.FC = () => {
 
     const styleTab = (
       <div className="space-y-4">
+        <BackgroundImageControl sectionKey="howItWorks" />
+        <hr className="border-editor-border/50" />
         {/* Section Colors */}
         <div className="space-y-2">
           <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Section Colors</label>
@@ -7499,6 +7543,8 @@ const Controls: React.FC = () => {
 
     const styleTab = (
       <div className="space-y-4">
+        <BackgroundImageControl sectionKey="menu" />
+        <hr className="border-editor-border/50" />
         {/* Section Colors */}
         <div className="space-y-3">
           <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Section Colors</label>
@@ -7686,6 +7732,7 @@ const Controls: React.FC = () => {
             label="Background Image"
             value={data?.banner?.backgroundImageUrl || ''}
             onChange={(url) => setNestedData('banner.backgroundImageUrl', url)}
+            generationContext="background"
           />
         </div>
       </div>
@@ -7693,6 +7740,8 @@ const Controls: React.FC = () => {
 
     const styleTab = (
       <div className="space-y-4">
+        <BackgroundImageControl sectionKey="banner" />
+        <hr className="border-editor-border/50" />
         {/* Layout & Size */}
         <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
           <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
@@ -7913,6 +7962,8 @@ const Controls: React.FC = () => {
 
     const styleTab = (
       <div className="space-y-4">
+        <BackgroundImageControl sectionKey="pricing" />
+        <hr className="border-editor-border/50" />
         {/* Spacing */}
         <div className="space-y-2">
           <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Spacing</label>
@@ -8084,6 +8135,8 @@ const Controls: React.FC = () => {
 
     const styleTab = (
       <div className="space-y-4">
+        <BackgroundImageControl sectionKey="slideshow" />
+        <hr className="border-editor-border/50" />
         {/* Border Radius */}
         <BorderRadiusSelector
           label="Border Radius"
@@ -8324,6 +8377,8 @@ const Controls: React.FC = () => {
 
     const styleTab = (
       <div className="space-y-4">
+        <BackgroundImageControl sectionKey="video" />
+        <hr className="border-editor-border/50" />
         {/* Spacing */}
         <div className="space-y-2">
           <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Spacing</label>

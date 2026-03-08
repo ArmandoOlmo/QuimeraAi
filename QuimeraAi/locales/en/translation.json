@@ -2793,6 +2793,8 @@
     "finance": "Finance",
     "imageGenerator": "Image Generator",
     "quimeraImageGenerator": "Quimera Image Generator",
+    "generatingForBackground": "Generating for: Background",
+    "backgroundImageHint": "This image will be used as a section background",
     "prompt": "Prompt",
     "enhance": "Enhance",
     "enhancePromptTitle": "Use AI to improve your prompt",
@@ -3292,7 +3294,8 @@
         "search": "Search",
         "size": "Size",
         "url": "URL",
-        "note": "Note"
+        "note": "Note",
+        "backgroundImage": "Background Image"
       }
     },
     "quimeraBrand": "Quimera Brand",

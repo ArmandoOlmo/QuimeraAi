@@ -18,9 +18,11 @@ interface ImageGeneratorPanelProps {
     onImageGenerated?: (imageUrl: string) => void;
     onUseImage?: (imageUrl: string) => void;
     projectId?: string;
+    /** Generation context hint. 'background' optimizes defaults and prompt for website section backgrounds. */
+    generationContext?: 'background' | 'general';
 }
 
-const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, className = '', onClose, onCollapse, hidePreview = false, onImageGenerated, onUseImage, projectId }) => {
+const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, className = '', onClose, onCollapse, hidePreview = false, onImageGenerated, onUseImage, projectId, generationContext = 'general' }) => {
     const { generateImage, enhancePrompt } = useAI();
     const { uploadGlobalFile, uploadFile, hasActiveProject } = useFiles();
     const { t } = useTranslation();
@@ -127,8 +129,8 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
     const [personGeneration, setPersonGeneration] = useState('allow_adult');
     const [temperature, setTemperature] = useState(1.0);
     const [negativePrompt, setNegativePrompt] = useState('');
-    const [aspectRatio, setAspectRatio] = useState('1:1');
-    const [style, setStyle] = useState('None');
+    const [aspectRatio, setAspectRatio] = useState(generationContext === 'background' ? '16:9' : '1:1');
+    const [style, setStyle] = useState(generationContext === 'background' ? 'Photorealistic' : 'None');
     const [resolution, setResolution] = useState<'1K' | '2K' | '4K'>('2K');
     const [lighting, setLighting] = useState('None');
     const [cameraAngle, setCameraAngle] = useState('None');
@@ -311,6 +313,7 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
                 depthOfField: depthOfField !== 'None' ? depthOfField : undefined,
                 referenceImages: referenceImages.length > 0 ? referenceImages : undefined,
                 projectId,
+                generationContext,
             };
 
             console.log('✨ [ImageGeneratorPanel] Quimera options:', options);
@@ -391,6 +394,12 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
                     <h2 className="text-[#FAFAFA] text-lg font-bold leading-tight tracking-[-0.015em]">
                         {t('editor.quimeraImageGenerator', { defaultValue: 'Image Generator' })}
                     </h2>
+                    {generationContext === 'background' && (
+                        <span className="flex items-center gap-1.5 bg-blue-500/20 text-blue-300 border border-blue-500/30 px-2.5 py-1 rounded-full text-xs font-medium">
+                            <ImageIcon size={12} />
+                            {t('editor.generatingForBackground', { defaultValue: 'Generating for: Background' })}
+                        </span>
+                    )}
                 </div>
                 {onClose && (
                     <button

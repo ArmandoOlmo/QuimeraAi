@@ -46,6 +46,7 @@ import Footer from './Footer';
 import BusinessMap from './BusinessMap';
 import Menu from './Menu';
 import Banner from './Banner';
+import SectionBackground from './ui/SectionBackground';
 
 // Import ecommerce sections
 import FeaturedProducts from './ecommerce/sections/FeaturedProducts';
@@ -304,172 +305,207 @@ const PageRenderer: React.FC<PageRendererProps> = ({
                     />
                 );
 
-            case 'hero':
+            case 'hero': {
                 // Render correct hero variant based on heroVariant field
                 const heroData = mergedData.hero;
                 const heroBorderRadius = heroData?.buttonBorderRadius || buttonBorderRadius;
-
-                if (heroData?.heroVariant === 'modern') return <HeroModern key={key} {...heroData} borderRadius={heroBorderRadius} onNavigate={handleLinkNavigation} />;
-                if (heroData?.heroVariant === 'gradient') return <HeroGradient key={key} {...heroData} borderRadius={heroBorderRadius} onNavigate={handleLinkNavigation} />;
-                if (heroData?.heroVariant === 'fitness') return <HeroFitness key={key} {...heroData} borderRadius={heroBorderRadius} onNavigate={handleLinkNavigation} />;
-                if (heroData?.heroVariant === 'editorial') return <HeroEditorial key={key} {...heroData} borderRadius={heroBorderRadius} onNavigate={handleLinkNavigation} />;
-                if (heroData?.heroVariant === 'cinematic') return <HeroCinematic key={key} {...heroData} borderRadius={heroBorderRadius} onNavigate={handleLinkNavigation} />;
-                if (heroData?.heroVariant === 'minimal') return <HeroMinimal key={key} {...heroData} borderRadius={heroBorderRadius} onNavigate={handleLinkNavigation} />;
-                if (heroData?.heroVariant === 'bold') return <HeroBold key={key} {...heroData} borderRadius={heroBorderRadius} onNavigate={handleLinkNavigation} />;
-                if (heroData?.heroVariant === 'overlap') return <HeroOverlap key={key} {...heroData} borderRadius={heroBorderRadius} onNavigate={handleLinkNavigation} />;
-                if (heroData?.heroVariant === 'verticalSplit') return <HeroVerticalSplit key={key} {...heroData} borderRadius={heroBorderRadius} onNavigate={handleLinkNavigation} />;
-                if (heroData?.heroVariant === 'glass') return <HeroGlass key={key} {...heroData} borderRadius={heroBorderRadius} onNavigate={handleLinkNavigation} />;
-                if (heroData?.heroVariant === 'stacked') return <HeroStacked key={key} {...heroData} borderRadius={heroBorderRadius} onNavigate={handleLinkNavigation} />;
-                return <Hero key={key} {...heroData} borderRadius={heroBorderRadius} onNavigate={handleLinkNavigation} />;
+                const heroComponent = (() => {
+                    if (heroData?.heroVariant === 'modern') return <HeroModern key={key} {...heroData} borderRadius={heroBorderRadius} onNavigate={handleLinkNavigation} />;
+                    if (heroData?.heroVariant === 'gradient') return <HeroGradient key={key} {...heroData} borderRadius={heroBorderRadius} onNavigate={handleLinkNavigation} />;
+                    if (heroData?.heroVariant === 'fitness') return <HeroFitness key={key} {...heroData} borderRadius={heroBorderRadius} onNavigate={handleLinkNavigation} />;
+                    if (heroData?.heroVariant === 'editorial') return <HeroEditorial key={key} {...heroData} borderRadius={heroBorderRadius} onNavigate={handleLinkNavigation} />;
+                    if (heroData?.heroVariant === 'cinematic') return <HeroCinematic key={key} {...heroData} borderRadius={heroBorderRadius} onNavigate={handleLinkNavigation} />;
+                    if (heroData?.heroVariant === 'minimal') return <HeroMinimal key={key} {...heroData} borderRadius={heroBorderRadius} onNavigate={handleLinkNavigation} />;
+                    if (heroData?.heroVariant === 'bold') return <HeroBold key={key} {...heroData} borderRadius={heroBorderRadius} onNavigate={handleLinkNavigation} />;
+                    if (heroData?.heroVariant === 'overlap') return <HeroOverlap key={key} {...heroData} borderRadius={heroBorderRadius} onNavigate={handleLinkNavigation} />;
+                    if (heroData?.heroVariant === 'verticalSplit') return <HeroVerticalSplit key={key} {...heroData} borderRadius={heroBorderRadius} onNavigate={handleLinkNavigation} />;
+                    if (heroData?.heroVariant === 'glass') return <HeroGlass key={key} {...heroData} borderRadius={heroBorderRadius} onNavigate={handleLinkNavigation} />;
+                    if (heroData?.heroVariant === 'stacked') return <HeroStacked key={key} {...heroData} borderRadius={heroBorderRadius} onNavigate={handleLinkNavigation} />;
+                    return <Hero key={key} {...heroData} borderRadius={heroBorderRadius} onNavigate={handleLinkNavigation} />;
+                })();
+                return <SectionBackground backgroundImageUrl={heroData?.backgroundImageUrl} backgroundColor={heroData?.colors?.background}>{heroComponent}</SectionBackground>;
+            }
 
             case 'heroSplit':
                 return (
-                    <HeroSplit
-                        key={key}
-                        {...mergedData.heroSplit}
-                        borderRadius={mergedData.heroSplit?.buttonBorderRadius || buttonBorderRadius}
-                        onNavigate={handleLinkNavigation}
-                    />
+                    <SectionBackground backgroundImageUrl={mergedData.heroSplit?.backgroundImageUrl} backgroundColor={mergedData.heroSplit?.colors?.background}>
+                        <HeroSplit
+                            key={key}
+                            {...mergedData.heroSplit}
+                            borderRadius={mergedData.heroSplit?.buttonBorderRadius || buttonBorderRadius}
+                            onNavigate={handleLinkNavigation}
+                        />
+                    </SectionBackground>
                 );
 
             case 'features':
                 return (
-                    <Features
-                        key={key}
-                        {...mergedData.features}
-                        borderRadius={mergedData.features?.borderRadius || cardBorderRadius}
-                        onNavigate={handleLinkNavigation}
-                    />
+                    <SectionBackground backgroundImageUrl={mergedData.features?.backgroundImageUrl} backgroundColor={mergedData.features?.colors?.background}>
+                        <Features
+                            key={key}
+                            {...mergedData.features}
+                            borderRadius={mergedData.features?.borderRadius || cardBorderRadius}
+                            onNavigate={handleLinkNavigation}
+                        />
+                    </SectionBackground>
                 );
 
             case 'testimonials':
                 return (
-                    <Testimonials
-                        key={key}
-                        {...mergedData.testimonials}
-                        borderRadius={mergedData.testimonials?.borderRadius || cardBorderRadius}
-                    />
+                    <SectionBackground backgroundImageUrl={mergedData.testimonials?.backgroundImageUrl} backgroundColor={mergedData.testimonials?.colors?.background}>
+                        <Testimonials
+                            key={key}
+                            {...mergedData.testimonials}
+                            borderRadius={mergedData.testimonials?.borderRadius || cardBorderRadius}
+                        />
+                    </SectionBackground>
                 );
 
             case 'pricing':
                 return (
-                    <Pricing
-                        key={key}
-                        {...mergedData.pricing}
-                        cardBorderRadius={cardBorderRadius}
-                        buttonBorderRadius={buttonBorderRadius}
-                    />
+                    <SectionBackground backgroundImageUrl={mergedData.pricing?.backgroundImageUrl} backgroundColor={mergedData.pricing?.colors?.background}>
+                        <Pricing
+                            key={key}
+                            {...mergedData.pricing}
+                            cardBorderRadius={cardBorderRadius}
+                            buttonBorderRadius={buttonBorderRadius}
+                        />
+                    </SectionBackground>
                 );
 
             case 'faq':
                 return (
-                    <Faq
-                        key={key}
-                        {...mergedData.faq}
-                        borderRadius={cardBorderRadius}
-                    />
+                    <SectionBackground backgroundImageUrl={mergedData.faq?.backgroundImageUrl} backgroundColor={mergedData.faq?.colors?.background}>
+                        <Faq
+                            key={key}
+                            {...mergedData.faq}
+                            borderRadius={cardBorderRadius}
+                        />
+                    </SectionBackground>
                 );
 
             case 'cta':
                 return (
-                    <CTASection
-                        key={key}
-                        {...mergedData.cta}
-                        cardBorderRadius={cardBorderRadius}
-                        buttonBorderRadius={buttonBorderRadius}
-                        onNavigate={handleLinkNavigation}
-                    />
+                    <SectionBackground backgroundImageUrl={mergedData.cta?.backgroundImageUrl} backgroundColor={mergedData.cta?.colors?.background}>
+                        <CTASection
+                            key={key}
+                            {...mergedData.cta}
+                            cardBorderRadius={cardBorderRadius}
+                            buttonBorderRadius={buttonBorderRadius}
+                            onNavigate={handleLinkNavigation}
+                        />
+                    </SectionBackground>
                 );
 
             case 'services':
                 return (
-                    <Services
-                        key={key}
-                        {...mergedData.services}
-                        borderRadius={cardBorderRadius}
-                    />
+                    <SectionBackground backgroundImageUrl={mergedData.services?.backgroundImageUrl} backgroundColor={mergedData.services?.colors?.background}>
+                        <Services
+                            key={key}
+                            {...mergedData.services}
+                            borderRadius={cardBorderRadius}
+                        />
+                    </SectionBackground>
                 );
 
             case 'team':
                 return (
-                    <Team
-                        key={key}
-                        {...mergedData.team}
-                        borderRadius={cardBorderRadius}
-                    />
+                    <SectionBackground backgroundImageUrl={mergedData.team?.backgroundImageUrl} backgroundColor={mergedData.team?.colors?.background}>
+                        <Team
+                            key={key}
+                            {...mergedData.team}
+                            borderRadius={cardBorderRadius}
+                        />
+                    </SectionBackground>
                 );
 
             case 'video':
                 return (
-                    <Video
-                        key={key}
-                        {...mergedData.video}
-                    />
+                    <SectionBackground backgroundImageUrl={mergedData.video?.backgroundImageUrl} backgroundColor={mergedData.video?.colors?.background}>
+                        <Video
+                            key={key}
+                            {...mergedData.video}
+                        />
+                    </SectionBackground>
                 );
 
             case 'slideshow':
                 return (
-                    <Slideshow
-                        key={key}
-                        {...mergedData.slideshow}
-                        borderRadius={cardBorderRadius}
-                    />
+                    <SectionBackground backgroundImageUrl={mergedData.slideshow?.backgroundImageUrl} backgroundColor={mergedData.slideshow?.colors?.background}>
+                        <Slideshow
+                            key={key}
+                            {...mergedData.slideshow}
+                            borderRadius={cardBorderRadius}
+                        />
+                    </SectionBackground>
                 );
 
             case 'portfolio':
                 return (
-                    <Portfolio
-                        key={key}
-                        {...mergedData.portfolio}
-                        borderRadius={cardBorderRadius}
-                        onNavigate={handleLinkNavigation}
-                    />
+                    <SectionBackground backgroundImageUrl={mergedData.portfolio?.backgroundImageUrl} backgroundColor={mergedData.portfolio?.colors?.background}>
+                        <Portfolio
+                            key={key}
+                            {...mergedData.portfolio}
+                            borderRadius={cardBorderRadius}
+                            onNavigate={handleLinkNavigation}
+                        />
+                    </SectionBackground>
                 );
 
             case 'leads':
                 return (
-                    <Leads
-                        key={key}
-                        {...mergedData.leads}
-                        cardBorderRadius={mergedData.leads?.cardBorderRadius || cardBorderRadius}
-                        buttonBorderRadius={mergedData.leads?.buttonBorderRadius || buttonBorderRadius}
-                        projectId={project.id}
-                    />
+                    <SectionBackground backgroundImageUrl={mergedData.leads?.backgroundImageUrl} backgroundColor={mergedData.leads?.colors?.background}>
+                        <Leads
+                            key={key}
+                            {...mergedData.leads}
+                            cardBorderRadius={mergedData.leads?.cardBorderRadius || cardBorderRadius}
+                            buttonBorderRadius={mergedData.leads?.buttonBorderRadius || buttonBorderRadius}
+                            projectId={project.id}
+                        />
+                    </SectionBackground>
                 );
 
             case 'newsletter':
                 return (
-                    <Newsletter
-                        key={key}
-                        {...mergedData.newsletter}
-                    />
+                    <SectionBackground backgroundImageUrl={mergedData.newsletter?.backgroundImageUrl} backgroundColor={mergedData.newsletter?.colors?.background}>
+                        <Newsletter
+                            key={key}
+                            {...mergedData.newsletter}
+                        />
+                    </SectionBackground>
                 );
 
             case 'howItWorks':
                 return (
-                    <HowItWorks
-                        key={key}
-                        {...mergedData.howItWorks}
-                        borderRadius={cardBorderRadius}
-                    />
+                    <SectionBackground backgroundImageUrl={mergedData.howItWorks?.backgroundImageUrl} backgroundColor={mergedData.howItWorks?.colors?.background}>
+                        <HowItWorks
+                            key={key}
+                            {...mergedData.howItWorks}
+                            borderRadius={cardBorderRadius}
+                        />
+                    </SectionBackground>
                 );
 
             case 'map':
                 return (
-                    <BusinessMap
-                        key={key}
-                        {...mergedData.map}
-                        borderRadius={cardBorderRadius}
-                    />
+                    <SectionBackground backgroundImageUrl={mergedData.map?.backgroundImageUrl} backgroundColor={mergedData.map?.colors?.background}>
+                        <BusinessMap
+                            key={key}
+                            {...mergedData.map}
+                            borderRadius={cardBorderRadius}
+                        />
+                    </SectionBackground>
                 );
 
             case 'menu':
                 return (
-                    <Menu
-                        key={key}
-                        {...mergedData.menu}
-                        borderRadius={cardBorderRadius}
-                    />
+                    <SectionBackground backgroundImageUrl={mergedData.menu?.backgroundImageUrl} backgroundColor={mergedData.menu?.colors?.background}>
+                        <Menu
+                            key={key}
+                            {...mergedData.menu}
+                            borderRadius={cardBorderRadius}
+                        />
+                    </SectionBackground>
                 );
 
             case 'banner':

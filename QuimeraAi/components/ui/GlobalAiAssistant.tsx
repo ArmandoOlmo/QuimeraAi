@@ -1582,11 +1582,9 @@ const GlobalAiAssistant: React.FC = () => {
                     activeProjectRef.current = project;
                     dataRef.current = project.data;
 
-                    // Generate context immediately for the AI to know what it can edit
-                    const schema = generateDataSchema(project.data);
-                    const dataContext = `DATA STRUCTURE for ${project.name} (Available Paths):\n${schema}\n- Use 'update_site_content' for single values.\n- Use 'manage_section_items' for arrays/lists.`;
-
-                    const result = { result: `Project '${project.name}' loaded successfully.\n${dataContext}` };
+                    // Schema context is already injected via getEffectiveSystemInstruction(),
+                    // so no need to include it in the tool result (it would be dumped into chat).
+                    const result = { result: `Project '${project.name}' loaded successfully.` };
                     console.log(`[Tool Result] ${name}`, result);
                     return result;
                 } else {

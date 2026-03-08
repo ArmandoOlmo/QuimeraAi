@@ -36,6 +36,7 @@ interface AIContextType {
         depthOfField?: string;
         referenceImage?: string;
         referenceImages?: string[];
+        generationContext?: 'background' | 'general';
     }) => Promise<string>;
 
     // Batch Image Generation
@@ -194,12 +195,19 @@ export const AIProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
         temperature?: number;
         negativePrompt?: string;
         projectId?: string;
+        generationContext?: 'background' | 'general';
     }): Promise<string> => {
         const startTime = Date.now();
 
         try {
             // Build enhanced prompt
             let enhancedPrompt = prompt;
+
+            // Background context: prepend background-specific instructions
+            if (options?.generationContext === 'background') {
+                enhancedPrompt = `Create a wide, seamless background image suitable for a website section. The image should have no central focal subject, work well as a backdrop behind text and UI elements, and have smooth edges with no hard borders. ${enhancedPrompt}`;
+            }
+
             if (options?.style && options.style !== 'None') {
                 enhancedPrompt = `${options.style} style: ${enhancedPrompt}`;
             }

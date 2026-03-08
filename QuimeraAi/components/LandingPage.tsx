@@ -33,6 +33,7 @@ import ChatbotWidget from './ChatbotWidget';
 import BusinessMap from './BusinessMap';
 import Menu from './Menu';
 import Banner from './Banner';
+import SectionBackground from './ui/SectionBackground';
 import Products from './Products';
 import { PageSection, FontFamily, CMSPost, FooterData } from '../types';
 import { useSafeAuth } from '../contexts/core/AuthContext';
@@ -721,39 +722,41 @@ const LandingPageContent: React.FC = () => {
 
   const componentsMap: Record<PageSection, React.ReactNode> = {
     hero: (
-      (() => {
-        const hbr = mergedHeroData.buttonBorderRadius || theme.buttonBorderRadius;
-        const nav = handleLinkNavigation;
-        if (mergedHeroData.heroVariant === 'modern') return <HeroModern {...mergedHeroData} borderRadius={hbr} onNavigate={nav} />;
-        if (mergedHeroData.heroVariant === 'gradient') return <HeroGradient {...mergedHeroData} borderRadius={hbr} onNavigate={nav} />;
-        if (mergedHeroData.heroVariant === 'fitness') return <HeroFitness {...mergedHeroData} borderRadius={hbr} onNavigate={nav} />;
-        if (mergedHeroData.heroVariant === 'editorial') return <HeroEditorial {...mergedHeroData} borderRadius={hbr} onNavigate={nav} />;
-        if (mergedHeroData.heroVariant === 'cinematic') return <HeroCinematic {...mergedHeroData} borderRadius={hbr} onNavigate={nav} />;
-        if (mergedHeroData.heroVariant === 'minimal') return <HeroMinimal {...mergedHeroData} borderRadius={hbr} onNavigate={nav} />;
-        if (mergedHeroData.heroVariant === 'bold') return <HeroBold {...mergedHeroData} borderRadius={hbr} onNavigate={nav} />;
-        if (mergedHeroData.heroVariant === 'overlap') return <HeroOverlap {...mergedHeroData} borderRadius={hbr} onNavigate={nav} />;
-        if (mergedHeroData.heroVariant === 'verticalSplit') return <HeroVerticalSplit {...mergedHeroData} borderRadius={hbr} onNavigate={nav} />;
-        if (mergedHeroData.heroVariant === 'glass') return <HeroGlass {...mergedHeroData} borderRadius={hbr} onNavigate={nav} />;
-        if (mergedHeroData.heroVariant === 'stacked') return <HeroStacked {...mergedHeroData} borderRadius={hbr} onNavigate={nav} />;
-        return <Hero {...mergedHeroData} borderRadius={hbr} onNavigate={nav} />;
-      })()
+      <SectionBackground backgroundImageUrl={mergedHeroData?.backgroundImageUrl} backgroundColor={mergedHeroData?.colors?.background}>
+        {(() => {
+          const hbr = mergedHeroData.buttonBorderRadius || theme.buttonBorderRadius;
+          const nav = handleLinkNavigation;
+          if (mergedHeroData.heroVariant === 'modern') return <HeroModern {...mergedHeroData} borderRadius={hbr} onNavigate={nav} />;
+          if (mergedHeroData.heroVariant === 'gradient') return <HeroGradient {...mergedHeroData} borderRadius={hbr} onNavigate={nav} />;
+          if (mergedHeroData.heroVariant === 'fitness') return <HeroFitness {...mergedHeroData} borderRadius={hbr} onNavigate={nav} />;
+          if (mergedHeroData.heroVariant === 'editorial') return <HeroEditorial {...mergedHeroData} borderRadius={hbr} onNavigate={nav} />;
+          if (mergedHeroData.heroVariant === 'cinematic') return <HeroCinematic {...mergedHeroData} borderRadius={hbr} onNavigate={nav} />;
+          if (mergedHeroData.heroVariant === 'minimal') return <HeroMinimal {...mergedHeroData} borderRadius={hbr} onNavigate={nav} />;
+          if (mergedHeroData.heroVariant === 'bold') return <HeroBold {...mergedHeroData} borderRadius={hbr} onNavigate={nav} />;
+          if (mergedHeroData.heroVariant === 'overlap') return <HeroOverlap {...mergedHeroData} borderRadius={hbr} onNavigate={nav} />;
+          if (mergedHeroData.heroVariant === 'verticalSplit') return <HeroVerticalSplit {...mergedHeroData} borderRadius={hbr} onNavigate={nav} />;
+          if (mergedHeroData.heroVariant === 'glass') return <HeroGlass {...mergedHeroData} borderRadius={hbr} onNavigate={nav} />;
+          if (mergedHeroData.heroVariant === 'stacked') return <HeroStacked {...mergedHeroData} borderRadius={hbr} onNavigate={nav} />;
+          return <Hero {...mergedHeroData} borderRadius={hbr} onNavigate={nav} />;
+        })()}
+      </SectionBackground>
     ),
-    heroSplit: <HeroSplit {...mergedHeroSplitData} borderRadius={mergedHeroSplitData?.buttonBorderRadius || theme.buttonBorderRadius} onNavigate={handleLinkNavigation} />,
-    features: <Features {...mergedFeaturesData} borderRadius={mergedFeaturesData.borderRadius || theme.cardBorderRadius} onNavigate={handleLinkNavigation} />,
-    testimonials: <Testimonials {...mergedTestimonialsData} borderRadius={mergedTestimonialsData.borderRadius || theme.cardBorderRadius} cardShadow={mergedTestimonialsData.cardShadow} borderStyle={mergedTestimonialsData.borderStyle} cardPadding={mergedTestimonialsData.cardPadding} testimonialsVariant={mergedTestimonialsData.testimonialsVariant} />,
-    slideshow: <Slideshow {...mergedSlideshowData} borderRadius={theme.cardBorderRadius} />,
-    pricing: <Pricing {...mergedPricingData} cardBorderRadius={theme.cardBorderRadius} buttonBorderRadius={theme.buttonBorderRadius} />,
-    faq: <Faq {...mergedFaqData} borderRadius={theme.cardBorderRadius} />,
-    leads: <Leads {...mergedLeadsData} cardBorderRadius={mergedLeadsData.cardBorderRadius || theme.cardBorderRadius} inputBorderRadius={mergedLeadsData.inputBorderRadius || 'md'} buttonBorderRadius={mergedLeadsData.buttonBorderRadius || theme.buttonBorderRadius} />,
-    newsletter: <Newsletter {...mergedNewsletterData} cardBorderRadius={theme.cardBorderRadius} buttonBorderRadius={theme.buttonBorderRadius} />,
-    cta: <CTASection {...mergedCtaData} cardBorderRadius={theme.cardBorderRadius} buttonBorderRadius={theme.buttonBorderRadius} onNavigate={handleLinkNavigation} />,
-    portfolio: <Portfolio {...mergedPortfolioData} borderRadius={theme.cardBorderRadius} />,
-    services: <Services {...mergedServicesData} borderRadius={theme.cardBorderRadius} />,
-    team: <Team {...mergedTeamData} borderRadius={theme.cardBorderRadius} />,
-    video: <Video {...mergedVideoData} borderRadius={theme.cardBorderRadius} />,
-    howItWorks: <HowItWorks {...mergedHowItWorksData} borderRadius={theme.cardBorderRadius} />,
-    map: <BusinessMap {...mergedMapData} apiKey={import.meta.env.VITE_GOOGLE_MAPS_KEY || ''} borderRadius={theme.cardBorderRadius} />,
-    menu: <Menu {...mergedMenuData} borderRadius={theme.cardBorderRadius} />,
+    heroSplit: <SectionBackground backgroundImageUrl={mergedHeroSplitData?.backgroundImageUrl} backgroundColor={mergedHeroSplitData?.colors?.background}><HeroSplit {...mergedHeroSplitData} borderRadius={mergedHeroSplitData?.buttonBorderRadius || theme.buttonBorderRadius} onNavigate={handleLinkNavigation} /></SectionBackground>,
+    features: <SectionBackground backgroundImageUrl={mergedFeaturesData?.backgroundImageUrl} backgroundColor={mergedFeaturesData?.colors?.background}><Features {...mergedFeaturesData} borderRadius={mergedFeaturesData.borderRadius || theme.cardBorderRadius} onNavigate={handleLinkNavigation} /></SectionBackground>,
+    testimonials: <SectionBackground backgroundImageUrl={mergedTestimonialsData?.backgroundImageUrl} backgroundColor={mergedTestimonialsData?.colors?.background}><Testimonials {...mergedTestimonialsData} borderRadius={mergedTestimonialsData.borderRadius || theme.cardBorderRadius} cardShadow={mergedTestimonialsData.cardShadow} borderStyle={mergedTestimonialsData.borderStyle} cardPadding={mergedTestimonialsData.cardPadding} testimonialsVariant={mergedTestimonialsData.testimonialsVariant} /></SectionBackground>,
+    slideshow: <SectionBackground backgroundImageUrl={mergedSlideshowData?.backgroundImageUrl} backgroundColor={mergedSlideshowData?.colors?.background}><Slideshow {...mergedSlideshowData} borderRadius={theme.cardBorderRadius} /></SectionBackground>,
+    pricing: <SectionBackground backgroundImageUrl={mergedPricingData?.backgroundImageUrl} backgroundColor={mergedPricingData?.colors?.background}><Pricing {...mergedPricingData} cardBorderRadius={theme.cardBorderRadius} buttonBorderRadius={theme.buttonBorderRadius} /></SectionBackground>,
+    faq: <SectionBackground backgroundImageUrl={mergedFaqData?.backgroundImageUrl} backgroundColor={mergedFaqData?.colors?.background}><Faq {...mergedFaqData} borderRadius={theme.cardBorderRadius} /></SectionBackground>,
+    leads: <SectionBackground backgroundImageUrl={mergedLeadsData?.backgroundImageUrl} backgroundColor={mergedLeadsData?.colors?.background}><Leads {...mergedLeadsData} cardBorderRadius={mergedLeadsData.cardBorderRadius || theme.cardBorderRadius} inputBorderRadius={mergedLeadsData.inputBorderRadius || 'md'} buttonBorderRadius={mergedLeadsData.buttonBorderRadius || theme.buttonBorderRadius} /></SectionBackground>,
+    newsletter: <SectionBackground backgroundImageUrl={mergedNewsletterData?.backgroundImageUrl} backgroundColor={mergedNewsletterData?.colors?.background}><Newsletter {...mergedNewsletterData} cardBorderRadius={theme.cardBorderRadius} buttonBorderRadius={theme.buttonBorderRadius} /></SectionBackground>,
+    cta: <SectionBackground backgroundImageUrl={mergedCtaData?.backgroundImageUrl} backgroundColor={mergedCtaData?.colors?.background}><CTASection {...mergedCtaData} cardBorderRadius={theme.cardBorderRadius} buttonBorderRadius={theme.buttonBorderRadius} onNavigate={handleLinkNavigation} /></SectionBackground>,
+    portfolio: <SectionBackground backgroundImageUrl={mergedPortfolioData?.backgroundImageUrl} backgroundColor={mergedPortfolioData?.colors?.background}><Portfolio {...mergedPortfolioData} borderRadius={theme.cardBorderRadius} /></SectionBackground>,
+    services: <SectionBackground backgroundImageUrl={mergedServicesData?.backgroundImageUrl} backgroundColor={mergedServicesData?.colors?.background}><Services {...mergedServicesData} borderRadius={theme.cardBorderRadius} /></SectionBackground>,
+    team: <SectionBackground backgroundImageUrl={mergedTeamData?.backgroundImageUrl} backgroundColor={mergedTeamData?.colors?.background}><Team {...mergedTeamData} borderRadius={theme.cardBorderRadius} /></SectionBackground>,
+    video: <SectionBackground backgroundImageUrl={mergedVideoData?.backgroundImageUrl} backgroundColor={mergedVideoData?.colors?.background}><Video {...mergedVideoData} borderRadius={theme.cardBorderRadius} /></SectionBackground>,
+    howItWorks: <SectionBackground backgroundImageUrl={mergedHowItWorksData?.backgroundImageUrl} backgroundColor={mergedHowItWorksData?.colors?.background}><HowItWorks {...mergedHowItWorksData} borderRadius={theme.cardBorderRadius} /></SectionBackground>,
+    map: <SectionBackground backgroundImageUrl={mergedMapData?.backgroundImageUrl} backgroundColor={mergedMapData?.colors?.background}><BusinessMap {...mergedMapData} apiKey={import.meta.env.VITE_GOOGLE_MAPS_KEY || ''} borderRadius={theme.cardBorderRadius} /></SectionBackground>,
+    menu: <SectionBackground backgroundImageUrl={mergedMenuData?.backgroundImageUrl} backgroundColor={mergedMenuData?.colors?.background}><Menu {...mergedMenuData} borderRadius={theme.cardBorderRadius} /></SectionBackground>,
     banner: <Banner {...mergedBannerData} buttonBorderRadius={theme.buttonBorderRadius} />,
     products: (
       <Products

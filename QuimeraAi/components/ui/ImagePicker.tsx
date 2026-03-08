@@ -28,9 +28,11 @@ interface ImagePickerProps {
     destination?: 'user' | 'global';
     /** Optional flag to hide the raw URL text input */
     hideUrlInput?: boolean;
+    /** Generation context hint for AI image generator. 'background' optimizes for website section backgrounds. */
+    generationContext?: 'background' | 'general';
 }
 
-const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, storeId, defaultOpen = false, onClose, onRemove, destination = 'user', hideUrlInput = true }) => {
+const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, storeId, defaultOpen = false, onClose, onRemove, destination = 'user', hideUrlInput = true, generationContext = 'general' }) => {
     const { t } = useTranslation();
     const {
         files, uploadFile,
@@ -224,7 +226,7 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
                         </div>
 
                         {/* Content */}
-                        <div className="flex-grow overflow-hidden p-6 bg-editor-bg">
+                        <div className={`flex-grow overflow-hidden bg-editor-bg ${activeTab === 'generate' ? '' : 'p-6'}`}>
 
                             {/* LIBRARY TAB */}
                             {activeTab === 'library' && (
@@ -388,6 +390,7 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
                                 <ImageGeneratorPanel
                                     destination={destination}
                                     className="h-full"
+                                    generationContext={generationContext}
                                     onUseImage={(url) => {
                                         onChange(url);
                                         handleClose();
