@@ -203,7 +203,11 @@ const SimpleEditorHeader: React.FC<SimpleEditorHeaderProps> = ({
 
               setPublishState('publishing');
               try {
-                const success = await publishProject();
+                // Wrap in timeout to prevent hanging indefinitely on Firestore issues
+                const timeoutPromise = new Promise<boolean>((_, reject) =>
+                  setTimeout(() => reject(new Error('Publish timed out after 30 seconds')), 30000)
+                );
+                const success = await Promise.race([publishProject(), timeoutPromise]);
                 setPublishState(success ? 'published' : 'error');
                 setTimeout(() => setPublishState('idle'), 3000);
               } catch (error) {
