@@ -354,8 +354,8 @@ service cloud.firestore {
     // Tracks AI credits usage for each tenant
     // ============================================
     match /aiCreditsUsage/{tenantId} {
-      // Tenant members can read their credits usage
-      allow read: if request.auth != null && isTenantMember(tenantId);
+      // Tenant members can read their credits usage, superadmin/owner can read all
+      allow read: if request.auth != null && (isTenantMember(tenantId) || isSuperAdminOrOwner());
       // Only backend (admin SDK) or superadmin can write
       allow write: if request.auth != null && isSuperAdminOrOwner();
     }
