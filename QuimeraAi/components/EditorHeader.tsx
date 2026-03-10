@@ -142,8 +142,8 @@ const EditorHeader: React.FC = () => {
                 title={t(`editor.previewOn${name.charAt(0).toUpperCase() + name.slice(1)}`)}
                 onClick={() => setPreviewDevice(name)}
                 className={`h-9 w-9 flex items-center justify-center transition-all ${previewDevice === name
-                    ? 'text-editor-accent'
-                    : 'text-editor-text-secondary hover:text-editor-text-primary'
+                  ? 'text-editor-accent'
+                  : 'text-editor-text-secondary hover:text-editor-text-primary'
                   }`}
               >
                 {icon}
@@ -158,8 +158,8 @@ const EditorHeader: React.FC = () => {
                 onClick={() => setPreviewOrientation(option.value)}
                 disabled={orientationDisabled}
                 className={`h-9 w-9 text-xs font-semibold transition-all ${previewOrientation === option.value
-                    ? 'text-editor-accent'
-                    : 'text-editor-text-secondary hover:text-editor-text-primary'
+                  ? 'text-editor-accent'
+                  : 'text-editor-text-secondary hover:text-editor-text-primary'
                   } ${orientationDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
                 aria-pressed={previewOrientation === option.value}
                 aria-label={`${t('editor.preview')} ${option.label}`}
@@ -190,21 +190,25 @@ const EditorHeader: React.FC = () => {
           </button>
 
           {/* Publish Button */}
-          <button 
+          <button
             onClick={async () => {
               console.log('[EditorHeader] Publish button clicked');
               console.log('[EditorHeader] publishProject function:', typeof publishProject);
               console.log('[EditorHeader] activeProject:', activeProject?.id, activeProject?.name);
-              
+
               if (!publishProject) {
                 console.error('[EditorHeader] publishProject is not available!');
                 return;
               }
-              
+
               setPublishState('publishing');
               try {
                 console.log('[EditorHeader] Calling publishProject...');
-                const success = await publishProject();
+                // Wrap in timeout to prevent hanging indefinitely on Firestore issues
+                const timeoutPromise = new Promise<boolean>((_, reject) =>
+                  setTimeout(() => reject(new Error('Publish timed out after 30 seconds')), 30000)
+                );
+                const success = await Promise.race([publishProject(), timeoutPromise]);
                 console.log('[EditorHeader] publishProject result:', success);
                 setPublishState(success ? 'published' : 'error');
                 setTimeout(() => setPublishState('idle'), 3000);
@@ -215,13 +219,12 @@ const EditorHeader: React.FC = () => {
               }
             }}
             disabled={publishState === 'publishing'}
-            className={`font-medium text-sm h-9 px-3 transition-colors flex items-center gap-1.5 ${
-              publishState === 'published' 
-                ? 'text-green-500' 
+            className={`font-medium text-sm h-9 px-3 transition-colors flex items-center gap-1.5 ${publishState === 'published'
+                ? 'text-green-500'
                 : publishState === 'error'
                   ? 'text-red-500'
                   : 'text-editor-accent hover:text-editor-accent-hover'
-            } ${publishState === 'publishing' ? 'opacity-50 cursor-wait' : ''}`}
+              } ${publishState === 'publishing' ? 'opacity-50 cursor-wait' : ''}`}
           >
             {publishState === 'publishing' ? (
               <>
