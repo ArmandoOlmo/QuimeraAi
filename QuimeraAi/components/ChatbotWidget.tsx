@@ -481,25 +481,29 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
     // Cap at 70% of viewport height or configured height, whichever is smaller
     const maxHeightValue = Math.min(configuredHeight, typeof window !== 'undefined' ? window.innerHeight * 0.70 : configuredHeight);
 
+    // Detect mobile viewport for fullscreen chat
+    const isMobileViewport = typeof window !== 'undefined' && window.innerWidth < 640;
+
     // Widget content - use absolute positioning in editor to stay within preview
     const widgetContent = (
         <div
-            className={`${isInEditor ? 'absolute' : 'fixed'} z-[9999] flex flex-col items-end font-body pointer-events-none`}
-            style={getPositionStyle()}
+            className={`${isInEditor ? 'absolute' : 'fixed'} z-[9999] flex flex-col items-end font-body pointer-events-none ${isMobileViewport && isOpen ? 'inset-0' : ''}`}
+            style={isMobileViewport && isOpen ? {} : getPositionStyle()}
         >
             {/* Chat Window */}
             <div
                 className={`
-                    mb-4 ${sizeClasses.width} rounded-2xl shadow-2xl overflow-hidden transition-all duration-300 origin-bottom-right border pointer-events-auto
+                    ${isMobileViewport ? 'w-full h-full rounded-none' : `mb-4 ${sizeClasses.width} rounded-2xl`} shadow-2xl overflow-hidden transition-all duration-300 origin-bottom-right border pointer-events-auto
                     ${isOpen ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-90 translate-y-10 pointer-events-none h-0'}
                 `}
                 style={{
-                    maxHeight: `min(${maxHeightValue}px, calc(100vh - 150px))`,
-                    height: `min(${maxHeightValue}px, calc(100vh - 150px))`,
+                    ...(isMobileViewport ? { height: '100%' } : {
+                        maxHeight: `min(${maxHeightValue}px, calc(100vh - 150px))`,
+                        height: `min(${maxHeightValue}px, calc(100vh - 150px))`,
+                    }),
                     backgroundColor: appearance.colors?.backgroundColor,
                     borderColor: appearance.colors?.inputBorder,
-                    outline: '3px solid white',
-                    outlineOffset: '0px'
+                    ...(isMobileViewport ? {} : { outline: '3px solid white', outlineOffset: '0px' })
                 }}
             >
                 {isOpen && activeProject && (
@@ -538,41 +542,43 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
                 )}
             </div>
 
-            {/* Chat Button */}
-            <button
-                onClick={() => setIsOpen(!isOpen)}
-                className={`
-                    ${getButtonSizeClasses(appearance.button.buttonSize)}
-                    ${getButtonStyleClasses(appearance.button.buttonStyle)}
-                    ${getShadowClasses(appearance.button.shadowSize)}
-                    ${appearance.button.pulseEffect && !isOpen ? 'animate-pulse' : ''}
-                    hover:scale-110 transition-all duration-300 flex items-center justify-center group relative mb-2 sm:mb-[55px] pointer-events-auto
-                    ${isInEditor ? 'pointer-events-auto cursor-default' : ''}
-                `}
-                style={{
-                    backgroundColor: appearance.colors?.primaryColor,
-                    color: appearance.colors?.headerText,
-                    outline: '3px solid white',
-                    outlineOffset: '0px'
-                }}
-                title={appearance.button.showTooltip ? appearance.button.tooltipText : undefined}
-            >
-                {appearance.button.buttonIcon === 'custom-emoji' && appearance.button.customEmoji ? (
-                    <span className={isOpen ? 'rotate-180 scale-0 transition-transform duration-300' : 'scale-100 transition-transform duration-300'}>
-                        {appearance.button.customEmoji}
-                    </span>
-                ) : (
-                    <MessageSquare size={28} className={`transition-transform duration-300 ${isOpen ? 'rotate-180 scale-0' : 'scale-100'}`} />
-                )}
-                <X size={28} className={`absolute transition-transform duration-300 ${isOpen ? 'scale-100' : 'rotate-180 scale-0'}`} />
+            {/* Chat Button - hidden on mobile when chat is fullscreen open */}
+            {!(isMobileViewport && isOpen) && (
+                <button
+                    onClick={() => setIsOpen(!isOpen)}
+                    className={`
+                        ${isMobileViewport ? 'w-11 h-11 text-lg' : getButtonSizeClasses(appearance.button.buttonSize)}
+                        ${getButtonStyleClasses(appearance.button.buttonStyle)}
+                        ${getShadowClasses(appearance.button.shadowSize)}
+                        ${appearance.button.pulseEffect && !isOpen ? 'animate-pulse' : ''}
+                        hover:scale-110 transition-all duration-300 flex items-center justify-center group relative mb-2 sm:mb-[55px] pointer-events-auto
+                        ${isInEditor ? 'pointer-events-auto cursor-default' : ''}
+                    `}
+                    style={{
+                        backgroundColor: appearance.colors?.primaryColor,
+                        color: appearance.colors?.headerText,
+                        outline: '3px solid white',
+                        outlineOffset: '0px'
+                    }}
+                    title={appearance.button.showTooltip ? appearance.button.tooltipText : undefined}
+                >
+                    {appearance.button.buttonIcon === 'custom-emoji' && appearance.button.customEmoji ? (
+                        <span className={isOpen ? 'rotate-180 scale-0 transition-transform duration-300' : 'scale-100 transition-transform duration-300'}>
+                            {appearance.button.customEmoji}
+                        </span>
+                    ) : (
+                        <MessageSquare size={isMobileViewport ? 20 : 28} className={`transition-transform duration-300 ${isOpen ? 'rotate-180 scale-0' : 'scale-100'}`} />
+                    )}
+                    <X size={isMobileViewport ? 20 : 28} className={`absolute transition-transform duration-300 ${isOpen ? 'scale-100' : 'rotate-180 scale-0'}`} />
 
-                {/* Notification Badge */}
-                {!isOpen && (
-                    <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center">
-                        <span className="text-white text-xs font-bold">1</span>
-                    </div>
-                )}
-            </button>
+                    {/* Notification Badge */}
+                    {!isOpen && (
+                        <div className={`absolute -top-1 -right-1 ${isMobileViewport ? 'w-4 h-4' : 'w-5 h-5'} bg-red-500 rounded-full flex items-center justify-center`}>
+                            <span className="text-white text-xs font-bold">1</span>
+                        </div>
+                    )}
+                </button>
+            )}
         </div>
     );
 
