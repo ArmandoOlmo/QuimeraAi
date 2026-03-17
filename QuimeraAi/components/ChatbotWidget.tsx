@@ -484,7 +484,7 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
     // Widget content - use absolute positioning in editor to stay within preview
     const widgetContent = (
         <div
-            className={`${isInEditor ? 'absolute' : 'fixed'} z-[9999] flex flex-col items-end font-body`}
+            className={`${isInEditor ? 'absolute' : 'fixed'} z-[9999] flex flex-col items-end font-body pointer-events-none`}
             style={getPositionStyle()}
         >
             {/* Chat Window */}
@@ -546,7 +546,7 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
                     ${getButtonStyleClasses(appearance.button.buttonStyle)}
                     ${getShadowClasses(appearance.button.shadowSize)}
                     ${appearance.button.pulseEffect && !isOpen ? 'animate-pulse' : ''}
-                    hover:scale-110 transition-all duration-300 flex items-center justify-center group relative mb-[55px]
+                    hover:scale-110 transition-all duration-300 flex items-center justify-center group relative mb-2 sm:mb-[55px] pointer-events-auto
                     ${isInEditor ? 'pointer-events-auto cursor-default' : ''}
                 `}
                 style={{
