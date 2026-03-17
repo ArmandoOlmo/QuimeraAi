@@ -6,6 +6,7 @@ import ImagePlaceholder from './ui/ImagePlaceholder';
 import { isPendingImage } from '../utils/imagePlaceholders';
 import CornerGradient from './ui/CornerGradient';
 import { ArrowRight } from 'lucide-react';
+import { hexToRgba } from '../utils/colorUtils';
 
 interface PortfolioCardProps {
   imageUrl: string;
@@ -198,8 +199,8 @@ const PortfolioCard: React.FC<PortfolioCardProps> = ({
 
   return (
     <div
-      className={`relative h-[400px] border transform hover:scale-[1.02] transition-all duration-500 overflow-hidden group ${borderRadiusClasses[borderRadius]} ${animationClass}`}
-      style={{ animationDelay: delay, borderColor: borderColor, backgroundColor: cardBackground }}
+      className={`relative h-[400px] border border-white/10 transform hover:scale-[1.02] transition-all duration-500 overflow-hidden group backdrop-blur-xl ${borderRadiusClasses[borderRadius]} ${animationClass}`}
+      style={{ animationDelay: delay, borderColor: borderColor, backgroundColor: hexToRgba(cardBackground.startsWith('rgba') ? '#000000' : cardBackground, 0.35) }}
     >
       {/* Full Background Image */}
       <div className="absolute inset-0">

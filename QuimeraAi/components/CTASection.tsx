@@ -4,6 +4,7 @@ import { CtaData, PaddingSize, BorderRadiusSize, FontSize, CornerGradientConfig 
 import { useDesignTokens } from '../hooks/useDesignTokens';
 import CornerGradient from './ui/CornerGradient';
 import { ArrowRight } from 'lucide-react';
+import { hexToRgba } from '../utils/colorUtils';
 
 const paddingYClasses: Record<PaddingSize, string> = {
   none: 'py-0',
@@ -109,8 +110,8 @@ const CTASection: React.FC<CTASectionProps> = ({ title, description, buttonText,
                     onNavigate(href);
                   }
                 }}
-                className={`group inline-flex items-center gap-3 font-bold py-4 px-10 transition-all duration-300 transform hover:scale-105 font-button ${borderRadiusClasses[buttonBorderRadius]}`}
-                style={{ backgroundColor: actualColors.buttonBackground, color: actualColors.buttonText, textTransform: 'var(--buttons-transform, none)' as any, letterSpacing: 'var(--buttons-spacing, normal)' }}
+                className={`group inline-flex items-center gap-3 font-bold py-4 px-10 transition-all duration-300 transform hover:scale-105 font-button backdrop-blur-md border border-white/15 ${borderRadiusClasses[buttonBorderRadius]}`}
+                style={{ backgroundColor: hexToRgba(actualColors.buttonBackground, 0.7), color: actualColors.buttonText, textTransform: 'var(--buttons-transform, none)' as any, letterSpacing: 'var(--buttons-spacing, normal)' }}
               >
                 <span>{buttonText}</span>
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />

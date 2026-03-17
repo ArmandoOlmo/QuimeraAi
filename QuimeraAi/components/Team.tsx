@@ -40,24 +40,24 @@ const paddingXClasses: Record<PaddingSize, string> = {
 };
 
 const titleSizeClasses: Record<FontSize, string> = {
-    sm: 'text-2xl md:text-3xl',
-    md: 'text-3xl md:text-4xl',
-    lg: 'text-4xl md:text-5xl',
-    xl: 'text-5xl md:text-7xl',
+  sm: 'text-2xl md:text-3xl',
+  md: 'text-3xl md:text-4xl',
+  lg: 'text-4xl md:text-5xl',
+  xl: 'text-5xl md:text-7xl',
 };
 
 const descriptionSizeClasses: Record<FontSize, string> = {
-    sm: 'text-sm',
-    md: 'text-base',
-    lg: 'text-lg',
-    xl: 'text-xl',
+  sm: 'text-sm',
+  md: 'text-base',
+  lg: 'text-lg',
+  xl: 'text-xl',
 };
 
-const TeamMemberCard: React.FC<TeamMemberCardProps> = ({ 
-  imageUrl, 
-  name, 
-  role, 
-  delay = '0s', 
+const TeamMemberCard: React.FC<TeamMemberCardProps> = ({
+  imageUrl,
+  name,
+  role,
+  delay = '0s',
   variant = 'classic',
   accentColor = '#4f46e5',
   nameColor = '#ffffff',
@@ -68,10 +68,10 @@ const TeamMemberCard: React.FC<TeamMemberCardProps> = ({
   photoBorderColor
 }) => {
   const animationClass = getAnimationClass(animationType, enableAnimation);
-  
+
   // Use photoBorderColor if provided, otherwise fall back to accentColor
   const borderColor = photoBorderColor || accentColor;
-  
+
   // Classic variant - simple circular images with text below
   if (variant === 'classic') {
     return (
@@ -81,12 +81,12 @@ const TeamMemberCard: React.FC<TeamMemberCardProps> = ({
             <ImagePlaceholder aspectRatio="1:1" showGenerateButton={false} className="rounded-full" />
           </div>
         ) : (
-          <img 
-            src={imageUrl} 
-            alt={name} 
-            className="w-32 h-32 md:w-40 md:h-40 rounded-full mx-auto mb-4 object-cover border-4 transform transition-transform duration-300 hover:scale-105" 
+          <img
+            src={imageUrl}
+            alt={name}
+            className="w-32 h-32 md:w-40 md:h-40 rounded-full mx-auto mb-4 object-cover border-4 transform transition-transform duration-300 hover:scale-105"
             style={{ borderColor: borderColor }}
-            key={imageUrl} 
+            key={imageUrl}
           />
         )}
         <h3 className="text-xl font-bold mb-1 font-header" style={{ color: nameColor, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>{name}</h3>
@@ -94,15 +94,15 @@ const TeamMemberCard: React.FC<TeamMemberCardProps> = ({
       </div>
     );
   }
-  
+
   // Cards variant - elevated cards with hover effects
   if (variant === 'cards') {
     return (
-      <div 
-        className={`rounded-xl overflow-hidden transition-all duration-300 transform hover:-translate-y-2 ${animationClass}`}
-        style={{ 
+      <div
+        className={`rounded-xl overflow-hidden transition-all duration-300 transform hover:-translate-y-2 backdrop-blur-xl border border-white/10 ${animationClass}`}
+        style={{
           animationDelay: delay,
-          backgroundColor: cardBackground
+          backgroundColor: hexToRgba(cardBackground, 0.35)
         }}
       >
         <div className="relative overflow-hidden">
@@ -111,14 +111,14 @@ const TeamMemberCard: React.FC<TeamMemberCardProps> = ({
               <ImagePlaceholder aspectRatio="3:4" showGenerateButton={false} className="h-full" />
             </div>
           ) : (
-            <img 
-              src={imageUrl} 
-              alt={name} 
-              className="w-full h-64 object-cover transform transition-transform duration-500 hover:scale-110" 
-              key={imageUrl} 
+            <img
+              src={imageUrl}
+              alt={name}
+              className="w-full h-64 object-cover transform transition-transform duration-500 hover:scale-110"
+              key={imageUrl}
             />
           )}
-          <div 
+          <div
             className="absolute bottom-0 left-0 right-0 h-1"
             style={{ backgroundColor: accentColor }}
           />
@@ -130,7 +130,7 @@ const TeamMemberCard: React.FC<TeamMemberCardProps> = ({
       </div>
     );
   }
-  
+
   // Minimal variant - clean modern layout with square images
   if (variant === 'minimal') {
     return (
@@ -139,21 +139,21 @@ const TeamMemberCard: React.FC<TeamMemberCardProps> = ({
           {isPendingImage(imageUrl) ? (
             <ImagePlaceholder aspectRatio="1:1" showGenerateButton={false} />
           ) : (
-            <img 
-              src={imageUrl} 
-              alt={name} 
-              className="w-full aspect-square object-cover transform transition-all duration-300 group-hover:scale-105 filter grayscale group-hover:grayscale-0" 
-              key={imageUrl} 
+            <img
+              src={imageUrl}
+              alt={name}
+              className="w-full aspect-square object-cover transform transition-all duration-300 group-hover:scale-105 filter grayscale group-hover:grayscale-0"
+              key={imageUrl}
             />
           )}
-          <div 
+          <div
             className="absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity duration-300"
             style={{ backgroundColor: accentColor }}
           />
         </div>
         <div className="text-center">
           <h3 className="text-lg font-bold mb-1 font-header" style={{ color: nameColor, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>{name}</h3>
-          <p 
+          <p
             className="text-sm font-medium font-body uppercase tracking-wider"
             style={{ color: roleColor }}
           >
@@ -163,11 +163,11 @@ const TeamMemberCard: React.FC<TeamMemberCardProps> = ({
       </div>
     );
   }
-  
+
   // Overlay variant - text overlays on image hover
   if (variant === 'overlay') {
     return (
-      <div 
+      <div
         className={`group relative overflow-hidden rounded-2xl cursor-pointer ${animationClass}`}
         style={{ animationDelay: delay }}
       >
@@ -175,31 +175,31 @@ const TeamMemberCard: React.FC<TeamMemberCardProps> = ({
           {isPendingImage(imageUrl) ? (
             <ImagePlaceholder aspectRatio="3:4" showGenerateButton={false} className="absolute inset-0" />
           ) : (
-            <img 
-              src={imageUrl} 
-              alt={name} 
-              className="w-full h-full object-cover" 
-              key={imageUrl} 
+            <img
+              src={imageUrl}
+              alt={name}
+              className="w-full h-full object-cover"
+              key={imageUrl}
             />
           )}
           {/* Dark overlay */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-60 group-hover:opacity-90 transition-opacity duration-300" />
-          
+
           {/* Content */}
           <div className="absolute inset-0 flex flex-col justify-end p-6 text-white">
             {/* Role badge - always visible */}
-            <div 
+            <div
               className="inline-block px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider mb-3 self-start"
               style={{ backgroundColor: accentColor }}
             >
               {role}
             </div>
-            
+
             {/* Name - always visible but moves up on hover */}
             <h3 className="text-2xl font-bold font-header transform transition-transform duration-300 group-hover:-translate-y-2" style={{ color: nameColor }}>
               {name}
             </h3>
-            
+
             {/* Additional info appears on hover */}
             <div className="opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 mt-2">
               <div className="w-12 h-1 mb-2" style={{ backgroundColor: accentColor }} />
@@ -212,23 +212,23 @@ const TeamMemberCard: React.FC<TeamMemberCardProps> = ({
       </div>
     );
   }
-  
+
   return null;
 };
 
 interface TeamProps extends TeamData {
-    borderRadius: BorderRadiusSize;
-    cornerGradient?: CornerGradientConfig;
+  borderRadius: BorderRadiusSize;
+  cornerGradient?: CornerGradientConfig;
 }
 
-const Team: React.FC<TeamProps> = ({ 
-  title, 
-  description, 
-  items = [], 
-  paddingY, 
-  paddingX, 
-  colors, 
-  titleFontSize = 'md', 
+const Team: React.FC<TeamProps> = ({
+  title,
+  description,
+  items = [],
+  paddingY,
+  paddingX,
+  colors,
+  titleFontSize = 'md',
   descriptionFontSize = 'md',
   teamVariant = 'classic',
   animationType = 'fade-in-up',
@@ -240,7 +240,7 @@ const Team: React.FC<TeamProps> = ({
   const secondaryColor = tokenColors.secondary || '#10b981';
   // Use user-defined photo border color, or fall back to 50% of secondary color
   const photoBorderColor = (colors as any)?.photoBorderColor || hexToRgba(secondaryColor, 0.5);
-  
+
   // Grid columns based on variant - mobile-first responsive
   const gridClasses = {
     classic: 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 sm:gap-12',
@@ -250,22 +250,22 @@ const Team: React.FC<TeamProps> = ({
   };
 
   return (
-    <section 
-      id="team" 
-      className={`w-full relative overflow-hidden`} 
+    <section
+      id="team"
+      className={`w-full relative overflow-hidden`}
       style={{ backgroundColor: colors?.background || secondaryColor }}
     >
       <CornerGradient config={cornerGradient} />
       <div className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]} relative z-10`}>
         <div className="text-center max-w-3xl mx-auto mb-16">
-          <h2 
-            className={`${titleSizeClasses[titleFontSize]} font-extrabold text-site-heading mb-4 font-header`} 
+          <h2
+            className={`${titleSizeClasses[titleFontSize]} font-extrabold text-site-heading mb-4 font-header`}
             style={{ color: colors?.heading }}
           >
             {title}
           </h2>
-          <p 
-            className={`${descriptionSizeClasses[descriptionFontSize]} font-body`} 
+          <p
+            className={`${descriptionSizeClasses[descriptionFontSize]} font-body`}
             style={{ color: colors?.description || colors?.text }}
           >
             {description}
@@ -273,20 +273,20 @@ const Team: React.FC<TeamProps> = ({
         </div>
         <div className={gridClasses[teamVariant]}>
           {items.map((member, index) => (
-            <TeamMemberCard 
-                key={index} 
-                imageUrl={member.imageUrl}
-                name={member.name}
-                role={member.role}
-                delay={getAnimationDelay(index, 0.15)}
-                variant={teamVariant}
-                accentColor={colors?.accent || '#4f46e5'}
-                nameColor={(colors as any)?.cardHeading || '#ffffff'}
-                roleColor={(colors as any)?.cardText || '#94a3b8'}
-                cardBackground={colors?.cardBackground || 'rgba(30, 41, 59, 0.5)'}
-                animationType={animationType}
-                enableAnimation={enableCardAnimation}
-                photoBorderColor={photoBorderColor}
+            <TeamMemberCard
+              key={index}
+              imageUrl={member.imageUrl}
+              name={member.name}
+              role={member.role}
+              delay={getAnimationDelay(index, 0.15)}
+              variant={teamVariant}
+              accentColor={colors?.accent || '#4f46e5'}
+              nameColor={(colors as any)?.cardHeading || '#ffffff'}
+              roleColor={(colors as any)?.cardText || '#94a3b8'}
+              cardBackground={colors?.cardBackground || 'rgba(30, 41, 59, 0.5)'}
+              animationType={animationType}
+              enableAnimation={enableCardAnimation}
+              photoBorderColor={photoBorderColor}
             />
           ))}
         </div>

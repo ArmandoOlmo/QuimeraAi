@@ -727,6 +727,8 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
                 headline: snapshot.data?.hero?.headline?.substring(0, 30),
                 hasBackgroundImage: !!snapshot.data?.hero?.backgroundImage,
                 imageUrl: snapshot.data?.hero?.imageUrl?.substring(0, 50),
+                primaryCtaLink: snapshot.data?.hero?.primaryCtaLink,
+                primaryCtaLinkType: snapshot.data?.hero?.primaryCtaLinkType,
             });
             console.log(`🔍 [ProjectContext] Theme in snapshot:`, {
                 primaryColor: snapshot.theme?.globalColors?.primary,

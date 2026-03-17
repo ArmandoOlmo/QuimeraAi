@@ -22,17 +22,17 @@ const paddingXClasses: Record<PaddingSize, string> = {
 };
 
 const titleSizeClasses: Record<FontSize, string> = {
-    sm: 'text-2xl md:text-3xl',
-    md: 'text-3xl md:text-4xl',
-    lg: 'text-4xl md:text-5xl',
-    xl: 'text-5xl md:text-7xl',
+  sm: 'text-2xl md:text-3xl',
+  md: 'text-3xl md:text-4xl',
+  lg: 'text-4xl md:text-5xl',
+  xl: 'text-5xl md:text-7xl',
 };
 
 const descriptionSizeClasses: Record<FontSize, string> = {
-    sm: 'text-sm',
-    md: 'text-base',
-    lg: 'text-lg',
-    xl: 'text-xl',
+  sm: 'text-sm',
+  md: 'text-base',
+  lg: 'text-lg',
+  xl: 'text-xl',
 };
 
 const borderRadiusClasses: Record<BorderRadiusSize, string> = {
@@ -65,14 +65,14 @@ interface FaqItemProps {
 
 const FaqItemClassic: React.FC<FaqItemProps> = ({ question, answer, isOpen, onClick, accentColor, textColor, headingColor, borderColor }) => {
   return (
-    <div className="border-b" style={{ borderColor: borderColor || 'rgba(128, 128, 128, 0.3)' }}>
+    <div className="border-b backdrop-blur-lg" style={{ borderColor: borderColor || 'rgba(255, 255, 255, 0.1)' }}>
       <button
         onClick={onClick}
         className="w-full flex justify-between items-center text-left py-6 transition-colors"
         aria-expanded={isOpen}
       >
-        <h3 
-          className="text-lg font-semibold transition-colors hover:opacity-80" 
+        <h3
+          className="text-lg font-semibold transition-colors hover:opacity-80"
           style={{ color: isOpen ? accentColor : headingColor }}
         >
           {question}
@@ -89,9 +89,9 @@ const FaqItemClassic: React.FC<FaqItemProps> = ({ question, answer, isOpen, onCl
         className={`grid overflow-hidden transition-all duration-300 ease-in-out ${isOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}
       >
         <div className="overflow-hidden">
-            <p className="pb-6 pr-8" style={{ color: textColor }}>
+          <p className="pb-6 pr-8" style={{ color: textColor }}>
             {answer}
-            </p>
+          </p>
         </div>
       </div>
     </div>
@@ -100,11 +100,11 @@ const FaqItemClassic: React.FC<FaqItemProps> = ({ question, answer, isOpen, onCl
 
 const FaqItemCards: React.FC<FaqItemProps> = ({ question, answer, isOpen, onClick, accentColor, textColor, headingColor, borderRadius, cardBackground, borderColor }) => {
   return (
-    <div 
-      className={`mb-4 ${borderRadiusClasses[borderRadius]} overflow-hidden transition-all duration-300 border`}
-      style={{ 
-        backgroundColor: cardBackground || 'rgba(30, 41, 59, 0.5)',
-        borderColor: isOpen ? accentColor : (borderColor || 'rgba(255, 255, 255, 0.1)')
+    <div
+      className={`mb-4 ${borderRadiusClasses[borderRadius]} overflow-hidden transition-all duration-300 border border-white/10 backdrop-blur-xl`}
+      style={{
+        backgroundColor: hexToRgba((cardBackground && !cardBackground.startsWith('rgba')) ? cardBackground : '#1e293b', 0.35),
+        borderColor: isOpen ? accentColor : 'rgba(255, 255, 255, 0.1)'
       }}
     >
       <button
@@ -113,9 +113,9 @@ const FaqItemCards: React.FC<FaqItemProps> = ({ question, answer, isOpen, onClic
         aria-expanded={isOpen}
       >
         <div className="flex items-center gap-4 flex-1">
-          <div 
+          <div
             className="p-2 rounded-lg transition-transform duration-300"
-            style={{ 
+            style={{
               backgroundColor: hexToRgba(accentColor, 0.125),
               transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)'
             }}
@@ -144,16 +144,16 @@ const FaqItemCards: React.FC<FaqItemProps> = ({ question, answer, isOpen, onClic
 
 const FaqItemGradient: React.FC<FaqItemProps> = ({ question, answer, isOpen, onClick, accentColor, textColor, headingColor, borderRadius, gradientStart, gradientEnd }) => {
   return (
-    <div 
+    <div
       className={`mb-4 ${borderRadiusClasses[borderRadius]} overflow-hidden transition-all duration-500 relative group`}
-      style={{ 
-        background: isOpen 
+      style={{
+        background: isOpen
           ? `linear-gradient(135deg, ${hexToRgba(gradientStart || accentColor, 0.08)}, ${hexToRgba(gradientEnd || accentColor, 0.03)})`
           : 'rgba(30, 41, 59, 0.3)',
         border: isOpen ? `2px solid ${hexToRgba(accentColor, 0.31)}` : '2px solid transparent'
       }}
     >
-      <div 
+      <div
         className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
         style={{
           background: `linear-gradient(135deg, ${hexToRgba(gradientStart || accentColor, 0.06)}, ${hexToRgba(gradientEnd || accentColor, 0.03)})`
@@ -164,26 +164,26 @@ const FaqItemGradient: React.FC<FaqItemProps> = ({ question, answer, isOpen, onC
         className="w-full flex justify-between items-center text-left p-6 relative z-10"
         aria-expanded={isOpen}
       >
-        <h3 
+        <h3
           className="text-lg font-semibold transition-all duration-300 flex-1"
-          style={{ 
+          style={{
             color: isOpen ? accentColor : headingColor,
             textShadow: isOpen ? `0 0 20px ${hexToRgba(accentColor, 0.25)}` : 'none'
           }}
         >
           {question}
         </h3>
-        <div 
+        <div
           className={`p-2 rounded-full transition-all duration-300 ${isOpen ? 'rotate-180' : 'rotate-0'}`}
-          style={{ 
-            background: isOpen 
+          style={{
+            background: isOpen
               ? `linear-gradient(135deg, ${gradientStart || accentColor}, ${gradientEnd || accentColor})`
               : hexToRgba(accentColor, 0.125)
           }}
         >
-          <Plus 
+          <Plus
             className={`h-5 w-5 transition-transform duration-300 ${isOpen ? 'rotate-45' : 'rotate-0'}`}
-            style={{ color: isOpen ? '#ffffff' : accentColor }} 
+            style={{ color: isOpen ? '#ffffff' : accentColor }}
           />
         </div>
       </button>
@@ -192,7 +192,7 @@ const FaqItemGradient: React.FC<FaqItemProps> = ({ question, answer, isOpen, onC
       >
         <div className="overflow-hidden">
           <div className="px-6 pb-6 relative z-10">
-            <div 
+            <div
               className="pl-4 border-l-2"
               style={{ borderColor: accentColor }}
             >
@@ -209,7 +209,7 @@ const FaqItemGradient: React.FC<FaqItemProps> = ({ question, answer, isOpen, onC
 
 const FaqItemMinimal: React.FC<FaqItemProps> = ({ question, answer, isOpen, onClick, accentColor, textColor, headingColor, borderRadius }) => {
   return (
-    <div 
+    <div
       className={`mb-8 transition-all duration-300`}
     >
       <button
@@ -217,20 +217,20 @@ const FaqItemMinimal: React.FC<FaqItemProps> = ({ question, answer, isOpen, onCl
         className="w-full flex items-start gap-6 text-left transition-all duration-300"
         aria-expanded={isOpen}
       >
-        <div 
+        <div
           className={`flex-shrink-0 w-12 h-12 ${borderRadiusClasses[borderRadius]} flex items-center justify-center transition-all duration-300`}
-          style={{ 
+          style={{
             backgroundColor: isOpen ? accentColor : hexToRgba(accentColor, 0.125),
             transform: isOpen ? 'scale(1.1)' : 'scale(1)'
           }}
         >
-          <HelpCircle 
-            className="h-6 w-6" 
-            style={{ color: isOpen ? '#ffffff' : accentColor }} 
+          <HelpCircle
+            className="h-6 w-6"
+            style={{ color: isOpen ? '#ffffff' : accentColor }}
           />
         </div>
         <div className="flex-1">
-          <h3 
+          <h3
             className="text-xl font-bold mb-2 transition-colors duration-300"
             style={{ color: isOpen ? accentColor : headingColor }}
           >
@@ -246,7 +246,7 @@ const FaqItemMinimal: React.FC<FaqItemProps> = ({ question, answer, isOpen, onCl
             </div>
           </div>
         </div>
-        <div 
+        <div
           className={`flex-shrink-0 transform transition-transform duration-300 ${isOpen ? 'rotate-180' : 'rotate-0'}`}
         >
           <ChevronDown className="h-6 w-6" style={{ color: accentColor }} />
@@ -257,24 +257,24 @@ const FaqItemMinimal: React.FC<FaqItemProps> = ({ question, answer, isOpen, onCl
 };
 
 interface FaqProps extends FaqData {
-    borderRadius: BorderRadiusSize;
-    faqVariant?: FaqVariant;
+  borderRadius: BorderRadiusSize;
+  faqVariant?: FaqVariant;
 }
 
-const Faq: React.FC<FaqProps> = ({ 
-  title, 
-  description, 
-  items = [], 
-  paddingY, 
-  paddingX, 
-  colors, 
-  borderRadius, 
-  titleFontSize = 'md', 
+const Faq: React.FC<FaqProps> = ({
+  title,
+  description,
+  items = [],
+  paddingY,
+  paddingX,
+  colors,
+  borderRadius,
+  titleFontSize = 'md',
   descriptionFontSize = 'md',
   faqVariant = 'classic'
 }) => {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
-  
+
   // Get design tokens for primary color
   const { colors: tokenColors } = useDesignTokens();
   const primaryColor = tokenColors.primary;
@@ -291,7 +291,7 @@ const Faq: React.FC<FaqProps> = ({
     // Card/Question-level colors  
     const questionText = colors?.text || '#F9FAFB';
     const answerText = colors?.text || '#94a3b8';
-    
+
     return {
       heading: sectionHeading,
       text: questionText,
@@ -305,7 +305,7 @@ const Faq: React.FC<FaqProps> = ({
   const renderFaqItem = (item: any, index: number) => {
     // For card-based variants, use card-specific colors
     const isCardVariant = faqVariant === 'cards' || faqVariant === 'gradient';
-    
+
     const commonProps = {
       question: item.question,
       answer: item.answer,
@@ -343,7 +343,7 @@ const Faq: React.FC<FaqProps> = ({
             {description}
           </p>
         </div>
-        
+
         <div className={`${faqVariant === 'minimal' ? 'max-w-4xl' : 'max-w-3xl'} mx-auto`}>
           {items.map((item, index) => renderFaqItem(item, index))}
         </div>

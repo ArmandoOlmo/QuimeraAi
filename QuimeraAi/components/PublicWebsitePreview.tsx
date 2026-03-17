@@ -1114,6 +1114,12 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
       categoryGrid: !!data?.categoryGrid,
       productHero: !!data?.productHero,
       trustBadges: !!data?.trustBadges,
+    },
+    heroCTALinks: {
+      primaryCtaLink: data?.hero?.primaryCtaLink,
+      primaryCtaLinkType: data?.hero?.primaryCtaLinkType,
+      secondaryCtaLink: data?.hero?.secondaryCtaLink,
+      secondaryCtaLinkType: data?.hero?.secondaryCtaLinkType,
     }
   });
 

@@ -229,8 +229,8 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
     if (variant === 'cards') {
         return (
             <div
-                className={`p-8 text-center border border-transparent hover:border-opacity-50 group ${radiusClass} ${animationClass} relative overflow-hidden card-hover-lift card-shine-sweep card-border-glow`}
-                style={{ backgroundColor: cardBackground, borderColor: borderColor, animationDelay: delay, '--card-accent': `${accentColor}66` } as React.CSSProperties}
+                className={`p-8 text-center border border-white/10 hover:border-opacity-50 group ${radiusClass} ${animationClass} relative overflow-hidden card-hover-lift card-shine-sweep card-border-glow backdrop-blur-xl`}
+                style={{ backgroundColor: hexToRgba(cardBackground, 0.35), borderColor: borderColor, animationDelay: delay, '--card-accent': `${accentColor}66` } as React.CSSProperties}
             >
                 <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
@@ -254,9 +254,9 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
     if (variant === 'grid') {
         return (
             <div
-                className={`h-full p-8 flex flex-col items-start text-left group card-hover-lift card-shine-sweep ${radiusClass} ${animationClass}`}
+                className={`h-full p-8 flex flex-col items-start text-left group card-hover-lift card-shine-sweep backdrop-blur-xl border border-white/10 ${radiusClass} ${animationClass}`}
                 style={{
-                    backgroundColor: cardBackground,
+                    backgroundColor: hexToRgba(cardBackground, 0.35),
                     borderLeft: `4px solid ${accentColor}`,
                     animationDelay: delay,
                     '--card-accent': `${accentColor}66`,
@@ -278,7 +278,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
     // VARIANT 3: MINIMAL LIST
     if (variant === 'minimal') {
         return (
-            <div className={`group flex gap-6 p-6 card-hover-tilt card-shine-sweep ${radiusClass} ${animationClass}`} style={{ backgroundColor: cardBackground, animationDelay: delay, '--card-accent': `${accentColor}66` } as React.CSSProperties}>
+            <div className={`group flex gap-6 p-6 card-hover-tilt card-shine-sweep backdrop-blur-lg border border-white/10 ${radiusClass} ${animationClass}`} style={{ backgroundColor: hexToRgba(cardBackground, 0.25), animationDelay: delay, '--card-accent': `${accentColor}66` } as React.CSSProperties}>
                 <div className="flex-shrink-0 mt-1">
                     <div className="w-12 h-12 flex items-center justify-center rounded-full card-icon-bounce" style={{ backgroundColor: hexToRgba(accentColor, 0.08), color: accentColor }}>
                         {React.cloneElement(icon as React.ReactElement<any>, { size: 20 })}

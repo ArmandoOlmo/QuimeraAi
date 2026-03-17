@@ -159,6 +159,10 @@ export async function publishProject(options: PublishOptions): Promise<PublishRe
             headline: project.data?.hero?.headline?.substring(0, 30),
             hasBackgroundImage: !!project.data?.hero?.backgroundImage,
             imageUrl: project.data?.hero?.imageUrl?.substring(0, 50),
+            primaryCtaLink: project.data?.hero?.primaryCtaLink,
+            primaryCtaLinkType: project.data?.hero?.primaryCtaLinkType,
+            secondaryCtaLink: project.data?.hero?.secondaryCtaLink,
+            secondaryCtaLinkType: project.data?.hero?.secondaryCtaLinkType,
         });
 
         // =========================================================================

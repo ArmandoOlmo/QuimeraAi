@@ -1279,37 +1279,64 @@ const Controls: React.FC = () => {
 
   const renderHeroControls = () => {
     if (!data?.hero) return null;
-    const currentVariant = data.hero.heroVariant || 'classic';
 
     return (
       <div className="space-y-4">
-        {/* ========== HERO VARIANT ========== */}
+        {/* ========== TEXT LAYOUT ========== */}
         <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
           <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
             <Layout size={14} />
-            {t('editor.controls.hero.heroStyle')}
+            Ubicación del Texto
           </label>
-          <div className="mb-4">
-            <Select
-              label={t('editor.controls.hero.heroStyle')}
-              value={currentVariant || 'classic'}
-              onChange={(v) => setNestedData('hero.heroVariant', v)}
-              options={[
-                { value: 'classic', label: `${t('controls.classic')} (${t('controls.twoColumn')})` },
-                { value: 'modern', label: `${t('controls.modern')} (${t('controls.fullScreen')})` },
-                { value: 'gradient', label: `${t('controls.gradient')} (${t('controls.futuristic')})` },
-                { value: 'fitness', label: `${t('controls.fitness')} (${t('controls.boldDynamic')})` },
-                { value: 'editorial', label: `${t('controls.editorial')} (${t('controls.magazine')})` },
-                { value: 'cinematic', label: `${t('controls.cinematic')} (${t('controls.moviePoster')})` },
-                { value: 'minimal', label: `${t('controls.minimal')} (${t('controls.clean')})` },
-                { value: 'bold', label: `${t('controls.bold')} (${t('controls.oversized')})` },
-                { value: 'overlap', label: `${t('controls.overlap')} (${t('controls.floatingCard')})` },
-                { value: 'verticalSplit', label: `${t('controls.verticalSplit')} (${t('controls.split5050')})` },
-                { value: 'glass', label: `${t('controls.glass')} (${t('controls.frosted')})` },
-                { value: 'stacked', label: `${t('controls.stacked')} (${t('controls.imageAndText')})` },
-                { value: 'cinematic-gym', label: `Brutalist` }
-              ]}
+          <div className="grid grid-cols-3 gap-2">
+            {([
+              { value: 'left-top', label: '↖️ Izq. Arriba' },
+              { value: 'center-top', label: '⬆️ Centro Arriba' },
+              { value: 'right-top', label: '↗️ Der. Arriba' },
+              { value: 'left-bottom', label: '↙️ Izq. Abajo' },
+              { value: 'center', label: '↔️ Centrado' },
+              { value: 'right-bottom', label: '↘️ Der. Abajo' },
+              { value: 'center-bottom', label: '⬇️ Centro Abajo' },
+            ] as const).map(opt => (
+              <button
+                key={opt.value}
+                onClick={() => setNestedData('hero.textLayout', opt.value)}
+                className={`py-2 px-3 text-xs font-semibold rounded-md transition-all ${(data.hero.textLayout || 'left-top') === opt.value
+                  ? 'bg-editor-accent text-editor-bg ring-2 ring-editor-accent/30'
+                  : 'bg-editor-bg text-editor-text-secondary hover:bg-editor-border border border-editor-border'
+                  }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <hr className="border-editor-border/50" />
+
+        {/* ========== BACKGROUND IMAGE ========== */}
+        <div>
+          <h4 className="font-bold text-editor-text-primary text-sm mb-3 flex items-center gap-2">
+            <Image size={14} />
+            Imagen de Fondo
+          </h4>
+          <ImagePicker label="Imagen de Fondo" value={data.hero.imageUrl} onChange={(url) => setNestedData('hero.imageUrl', url)} />
+
+          {/* Overlay Opacity */}
+          <div className="mt-4">
+            <div className="flex justify-between items-center mb-1">
+              <label className="text-xs font-medium text-editor-text-secondary">Oscurecimiento del Overlay</label>
+              <span className="text-xs text-editor-text-primary font-mono">{data.hero.overlayOpacity ?? 50}%</span>
+            </div>
+            <input
+              type="range" min="0" max="100" step="5"
+              value={data.hero.overlayOpacity ?? 50}
+              onChange={(e) => setNestedData('hero.overlayOpacity', parseInt(e.target.value))}
+              className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
             />
+            <p className="text-xs text-editor-text-secondary mt-1">
+              Controla el nivel de oscurecimiento sobre la imagen de fondo para mejorar la legibilidad del texto.
+            </p>
           </div>
         </div>
 
@@ -1342,9 +1369,6 @@ const Controls: React.FC = () => {
                 <span className="text-[9px] text-editor-text-secondary">{t('controls.auto')}</span>
                 <span className="text-[9px] text-editor-text-secondary">100vh</span>
               </div>
-              <p className="text-xs text-editor-text-secondary mt-1">
-                {t('controls.heroHeightHelp')}
-              </p>
             </div>
           </div>
         </div>
@@ -1376,74 +1400,6 @@ const Controls: React.FC = () => {
 
         <hr className="border-editor-border/50" />
 
-        {/* ========== BADGE ========== */}
-        <div>
-          <div className="flex items-center justify-between mb-3">
-            <h4 className="font-bold text-editor-text-primary text-sm flex items-center gap-2">
-              <Star size={14} />
-              {t('editor.controls.hero.badge')}
-            </h4>
-            <ToggleControl
-              label=""
-              checked={data.hero.showBadge !== false}
-              onChange={(v) => setNestedData('hero.showBadge', v)}
-            />
-          </div>
-          {data.hero.showBadge !== false && (
-            <div className="space-y-3 animate-fade-in-up bg-editor-bg/50 p-3 rounded-lg">
-              <div className="grid grid-cols-2 gap-3">
-                <IconSelector
-                  label={t('editor.controls.hero.icon')}
-                  value={(data.hero.badgeIcon || 'sparkles') as ServiceIcon}
-                  onChange={(icon) => setNestedData('hero.badgeIcon', icon)}
-                  size="sm"
-                />
-                <Input
-                  label={t('editor.controls.common.text')}
-                  value={data.hero.badgeText || ''}
-                  onChange={(e) => setNestedData('hero.badgeText', e.target.value)}
-                  placeholder="e.g., Since 2010, Award-Winning..."
-                  className="mb-0"
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <ColorControl
-                  label={t('editor.controls.common.colors')}
-                  value={data.hero.badgeColor || data.hero.colors?.primary || '#4f46e5'}
-                  onChange={(v) => setNestedData('hero.badgeColor', v)}
-                />
-                <ColorControl
-                  label={t('editor.controls.common.background')}
-                  value={data.hero.badgeBackgroundColor || `${data.hero.colors?.primary}15`}
-                  onChange={(v) => setNestedData('hero.badgeBackgroundColor', v)}
-                />
-              </div>
-            </div>
-          )}
-        </div>
-
-        <hr className="border-editor-border/50" />
-
-        {/* ========== LAYOUT & SPACING (Only for Classic) ========== */}
-        {currentVariant === 'classic' && (
-          <>
-            <div>
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <AlignJustify size={12} className="text-editor-accent" />
-                  <label className="text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">{t('editor.controls.common.spacing')}</label>
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <PaddingSelector label={t('editor.controls.common.vertical')} value={data.hero.paddingY || 'md'} onChange={(v) => setNestedData('hero.paddingY', v)} />
-                  <PaddingSelector label={t('editor.controls.common.horizontal')} value={data.hero.paddingX || 'md'} onChange={(v) => setNestedData('hero.paddingX', v)} />
-                </div>
-              </div>
-            </div>
-
-            <hr className="border-editor-border/50" />
-          </>
-        )}
-
         {/* ========== COLORS ========== */}
         <div>
           <h4 className="font-bold text-editor-text-primary text-sm mb-3 flex items-center gap-2">
@@ -1456,7 +1412,6 @@ const Controls: React.FC = () => {
             <ColorControl label={t('editor.controls.common.title')} value={data.hero.colors?.heading || '#ffffff'} onChange={(v) => setNestedData('hero.colors.heading', v)} />
             <ColorControl label={t('editor.controls.common.text')} value={data.hero.colors?.text} onChange={(v) => setNestedData('hero.colors.text', v)} />
             <ColorControl label={t('editor.controls.common.accent', { defaultValue: 'Primary Accent' })} value={data.hero.colors?.primary} onChange={(v) => setNestedData('hero.colors.primary', v)} />
-            <ColorControl label={t('editor.controls.common.secondary', { defaultValue: 'Secondary' })} value={data.hero.colors?.secondary} onChange={(v) => setNestedData('hero.colors.secondary', v)} />
 
             <div className="pt-2">
               <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">{t('editor.primaryButton')}</h5>
@@ -1511,190 +1466,6 @@ const Controls: React.FC = () => {
             </div>
           </div>
         </div>
-
-        {/* ========== GRADIENT OVERLAY (Only for Modern) ========== */}
-        {currentVariant === 'modern' && (
-          <>
-            <hr className="border-editor-border/50" />
-            <div>
-              <h4 className="font-bold text-editor-text-primary text-sm mb-3 flex items-center gap-2">
-                <Palette size={14} />
-                {t('editor.controls.hero.gradientOverlay')}
-              </h4>
-              <div className="space-y-3 bg-editor-bg/50 p-3 rounded-lg">
-                <div>
-                  <div className="flex justify-between items-center mb-1">
-                    <label className="text-xs font-medium text-editor-text-secondary">{t('editor.controls.hero.overlayOpacity')}</label>
-                    <span className="text-xs text-editor-text-primary">{data.hero.gradientOpacity ?? 70}%</span>
-                  </div>
-                  <input
-                    type="range" min="0" max="100" step="5"
-                    value={data.hero.gradientOpacity ?? 70}
-                    onChange={(e) => setNestedData('hero.gradientOpacity', parseInt(e.target.value))}
-                    className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
-                  />
-                  <p className="text-xs text-editor-text-secondary mt-1">
-                    {t('editor.controls.hero.overlayOpacityHelp')}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </>
-        )}
-
-        {/* ========== IMAGE (Only for Classic) ========== */}
-        {currentVariant === 'classic' && (
-          <>
-            <hr className="border-editor-border/50" />
-            <div>
-              <h4 className="font-bold text-editor-text-primary text-sm mb-3 flex items-center gap-2">
-                <Image size={14} />
-                {t('editor.controls.hero.image')}
-              </h4>
-
-              <ImagePicker label={t('editor.controls.hero.image')} value={data.hero.imageUrl} onChange={(url) => setNestedData('hero.imageUrl', url)} />
-
-              {/* Image Style */}
-              <div className="mb-3">
-                <label className="block text-xs font-bold text-editor-text-secondary mb-2 uppercase tracking-wider">{t('editor.controls.hero.imageStyle')}</label>
-                <div className="grid grid-cols-3 gap-1 bg-editor-bg p-1 rounded-md border border-editor-border">
-                  {['default', 'rounded-full', 'glow', 'float', 'hexagon', 'polaroid'].map(style => (
-                    <button
-                      key={style}
-                      onClick={() => setNestedData('hero.imageStyle', style)}
-                      className={`py-1.5 px-2 text-xs font-semibold rounded-sm transition-colors capitalize ${data.hero.imageStyle === style ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:bg-editor-border'}`}
-                    >
-                      {style === 'rounded-full' ? 'Circle' : style}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <ToggleControl label="Drop Shadow" checked={data.hero.imageDropShadow || false} onChange={(v) => setNestedData('hero.imageDropShadow', v)} />
-
-              {/* Position & Alignment */}
-              <div className="grid grid-cols-2 gap-4 mb-3">
-                <div>
-                  <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{t('editor.controls.hero.position')}</label>
-                  <div className="flex bg-editor-bg p-1 rounded-md border border-editor-border">
-                    {['left', 'right'].map(pos => (
-                      <button
-                        key={pos}
-                        onClick={() => setNestedData('hero.imagePosition', pos)}
-                        className={`flex-1 py-1 text-xs font-medium rounded-sm capitalize ${data.hero.imagePosition === pos ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary'}`}
-                      >
-                        {pos}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{t('editor.controls.hero.alignment')}</label>
-                  <div className="flex bg-editor-bg p-1 rounded-md border border-editor-border">
-                    {['start', 'center', 'end'].map(align => (
-                      <button
-                        key={align}
-                        onClick={() => setNestedData('hero.imageJustification', align)}
-                        className={`flex-1 py-1 text-xs font-medium rounded-sm capitalize ${data.hero.imageJustification === align ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary'}`}
-                      >
-                        {align}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* Border Controls */}
-              <div className="mb-3">
-                <BorderRadiusSelector label="Corner Radius" value={data.hero.imageBorderRadius || 'md'} onChange={(v) => setNestedData('hero.imageBorderRadius', v)} />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4 mb-3">
-                <div>
-                  <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">Border Size</label>
-                  <div className="flex bg-editor-bg p-1 rounded-md border border-editor-border">
-                    {['none', 'sm', 'md', 'lg'].map(size => (
-                      <button
-                        key={size}
-                        onClick={() => setNestedData('hero.imageBorderSize', size)}
-                        className={`flex-1 py-1 text-xs font-medium rounded-sm uppercase ${data.hero.imageBorderSize === size ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary'}`}
-                      >
-                        {size}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                <ColorControl label="Border Color" value={data.hero.imageBorderColor || 'transparent'} onChange={(v) => setNestedData('hero.imageBorderColor', v)} />
-              </div>
-
-              {/* Image Sizing */}
-              <div className="space-y-3 bg-editor-bg/50 p-3 rounded-lg">
-                <div>
-                  <div className="flex justify-between items-center mb-1">
-                    <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Image Width</label>
-                    <span className="text-xs text-editor-text-primary">{data.hero.imageWidth || 100}%</span>
-                  </div>
-                  <input
-                    type="range" min="25" max="100" step="5"
-                    value={data.hero.imageWidth || 100}
-                    onChange={(e) => setNestedData('hero.imageWidth', parseInt(e.target.value))}
-                    className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
-                  />
-                </div>
-
-                <ToggleControl
-                  label="Set Max Height"
-                  checked={data.hero.imageHeightEnabled || false}
-                  onChange={(v) => setNestedData('hero.imageHeightEnabled', v)}
-                />
-                {data.hero.imageHeightEnabled && (
-                  <div className="animate-fade-in-up">
-                    <div className="flex justify-between items-center mb-1">
-                      <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Max Height</label>
-                      <span className="text-xs text-editor-text-primary">{data.hero.imageHeight || 500}px</span>
-                    </div>
-                    <input
-                      type="range" min="200" max="800" step="10"
-                      value={data.hero.imageHeight || 500}
-                      onChange={(e) => setNestedData('hero.imageHeight', parseInt(e.target.value))}
-                      className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
-                    />
-                  </div>
-                )}
-
-                <div>
-                  <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">Aspect Ratio</label>
-                  <div className="grid grid-cols-3 gap-1 bg-editor-bg p-1 rounded-md border border-editor-border">
-                    {['auto', '1:1', '4:3', '3:4', '16:9', '9:16'].map(ratio => (
-                      <button
-                        key={ratio}
-                        onClick={() => setNestedData('hero.imageAspectRatio', ratio)}
-                        className={`py-1 px-2 text-xs font-semibold rounded-sm transition-colors ${data.hero.imageAspectRatio === ratio ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:bg-editor-border'}`}
-                      >
-                        {ratio}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">Object Fit</label>
-                  <div className="grid grid-cols-3 gap-1 bg-editor-bg p-1 rounded-md border border-editor-border">
-                    {['cover', 'contain', 'fill', 'none', 'scale-down'].map(fit => (
-                      <button
-                        key={fit}
-                        onClick={() => setNestedData('hero.imageObjectFit', fit)}
-                        className={`py-1 px-2 text-xs font-semibold rounded-sm transition-colors capitalize ${data.hero.imageObjectFit === fit ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:bg-editor-border'}`}
-                      >
-                        {fit === 'scale-down' ? 'Scale' : fit}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </>
-        )}
 
       </div>
     );
@@ -5025,6 +4796,28 @@ const Controls: React.FC = () => {
         </AIFormControl>
         <FontSizeSelector label={t('controls.headlineSize')} value={data.hero.headlineFontSize || 'lg'} onChange={(v) => setNestedData('hero.headlineFontSize', v)} />
 
+        {/* Logo / Headline Image — optional override */}
+        <div className="bg-editor-panel-bg/50 p-3 rounded-lg border border-editor-border">
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-2 flex items-center gap-2">
+            <Image size={14} />
+            Logo / Imagen del Título (opcional)
+          </label>
+          <p className="text-xs text-editor-text-secondary mb-3">Si subes una imagen, se mostrará en lugar del texto del título.</p>
+          <ImagePicker
+            label="Logo del Título"
+            value={data.hero.headlineImageUrl || ''}
+            onChange={(url) => setNestedData('hero.headlineImageUrl', url)}
+          />
+          {data.hero.headlineImageUrl && (
+            <button
+              onClick={() => setNestedData('hero.headlineImageUrl', '')}
+              className="mt-2 text-xs text-red-400 hover:text-red-300 underline"
+            >
+              Quitar imagen y usar texto
+            </button>
+          )}
+        </div>
+
         <AIFormControl label={t('controls.subheadline')} onAssistClick={() => setAiAssistField({ path: 'hero.subheadline', value: data.hero.subheadline, context: 'Hero Subheadline' })}>
           <TextArea value={data.hero.subheadline} onChange={(e) => setNestedData('hero.subheadline', e.target.value)} rows={3} />
         </AIFormControl>
@@ -5271,157 +5064,80 @@ const Controls: React.FC = () => {
           )}
         </div>
 
-        {/* Badge */}
-        <div className="mt-4">
-          <div className="flex items-center justify-between mb-3">
-            <h4 className="font-bold text-editor-text-primary text-sm flex items-center gap-2">
-              <Star size={14} />
-              {t('controls.badge')}
-            </h4>
-            <ToggleControl
-              label=""
-              checked={data.hero.showBadge !== false}
-              onChange={(v) => setNestedData('hero.showBadge', v)}
-            />
-          </div>
-          {data.hero.showBadge !== false && (
-            <div className="space-y-3 animate-fade-in-up bg-editor-bg/50 p-3 rounded-lg">
-              <div className="grid grid-cols-2 gap-3">
-                <IconSelector
-                  label={t('controls.icon')}
-                  value={(data.hero.badgeIcon || 'sparkles') as ServiceIcon}
-                  onChange={(icon) => setNestedData('hero.badgeIcon', icon)}
-                  size="sm"
-                />
-                <Input label={t('controls.text')} value={data.hero.badgeText || ''} onChange={(e) => setNestedData('hero.badgeText', e.target.value)} className="mb-0" />
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Image */}
-        <ImagePicker
-          label={t('controls.heroImage')}
-          value={data.hero.imageUrl}
-          onChange={(url) => setNestedData('hero.imageUrl', url)}
-        />
-
-        {/* Image Position & Layout - Only for Classic variant */}
-        {currentVariant === 'classic' && (
-          <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border mt-4">
-            <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
-              <Layout size={14} />
-              {t('controls.layout')}
-            </label>
-
-            <div className="grid grid-cols-2 gap-4 mb-3">
-              <div>
-                <label className="block text-xs font-bold text-editor-text-secondary mb-2 uppercase tracking-wider">{t('controls.position')}</label>
-                <div className="flex bg-editor-bg p-1 rounded-md border border-editor-border">
-                  {[
-                    { value: 'left', label: t('controls.left'), icon: '←' },
-                    { value: 'right', label: t('controls.right'), icon: '→' }
-                  ].map(pos => (
-                    <button
-                      key={pos.value}
-                      onClick={() => setNestedData('hero.imagePosition', pos.value)}
-                      className={`flex-1 py-2 text-xs font-medium rounded-sm transition-all ${data.hero.imagePosition === pos.value
-                        ? 'bg-editor-accent text-editor-bg'
-                        : 'text-editor-text-secondary hover:bg-editor-border'
-                        }`}
-                    >
-                      <span className="mr-1">{pos.icon}</span>
-                      {pos.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-editor-text-secondary mb-2 uppercase tracking-wider">Alignment</label>
-                <div className="flex bg-editor-bg p-1 rounded-md border border-editor-border">
-                  {[
-                    { value: 'start', label: 'Start', icon: '⊣' },
-                    { value: 'center', label: 'Center', icon: '⊢⊣' },
-                    { value: 'end', label: 'End', icon: '⊢' }
-                  ].map(align => (
-                    <button
-                      key={align.value}
-                      onClick={() => setNestedData('hero.imageJustification', align.value)}
-                      className={`flex-1 py-2 text-[10px] font-medium rounded-sm transition-all ${data.hero.imageJustification === align.value
-                        ? 'bg-editor-accent text-editor-bg'
-                        : 'text-editor-text-secondary hover:bg-editor-border'
-                        }`}
-                    >
-                      <div className="text-xs mb-0.5">{align.icon}</div>
-                      <div>{align.label}</div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            <p className="text-xs text-editor-text-secondary/70 mt-2">
-              <strong>Position:</strong> Image on left or right side of content<br />
-              <strong>Alignment:</strong> Vertical alignment of image within its column
-            </p>
-          </div>
-        )}
-
       </div>
     );
 
     const styleTab = (
       <div className="space-y-4">
-        <BackgroundImageControl sectionKey="hero" />
-        <hr className="border-editor-border/50" />
-        {/* Hero Variant */}
+        {/* ========== TEXT LAYOUT ========== */}
         <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-          <Select
-            label={t('controls.heroStyle')}
-            value={currentVariant}
-            onChange={(v) => setNestedData('hero.heroVariant', v)}
-            options={[
-              { value: 'classic', label: `${t('controls.classic')} (${t('controls.twoColumn')})` },
-              { value: 'modern', label: `${t('controls.modern')} (${t('controls.fullScreen')})` },
-              { value: 'gradient', label: `${t('controls.gradient')} (${t('controls.futuristic')})` },
-              { value: 'fitness', label: `${t('controls.fitness')} (${t('controls.boldDynamic')})` },
-              { value: 'editorial', label: `${t('controls.editorial')} (${t('controls.magazine')})` },
-              { value: 'cinematic', label: `${t('controls.cinematic')} (${t('controls.moviePoster')})` },
-              { value: 'minimal', label: `${t('controls.minimal')} (${t('controls.clean')})` },
-              { value: 'bold', label: `${t('controls.bold')} (${t('controls.oversized')})` },
-              { value: 'overlap', label: `${t('controls.overlap')} (${t('controls.floatingCard')})` },
-              { value: 'verticalSplit', label: `${t('controls.verticalSplit')} (${t('controls.split5050')})` },
-              { value: 'glass', label: `${t('controls.glass')} (${t('controls.frosted')})` },
-              { value: 'stacked', label: `${t('controls.stacked')} (${t('controls.imageAndText')})` },
-              { value: 'cinematic-gym', label: `Brutalist` }
-            ]}
-          />
-          <p className="text-xs text-editor-text-secondary mt-2">
-            {currentVariant === 'classic' && `📐 ${t('controls.traditionalLayout')}`}
-            {currentVariant === 'modern' && `✨ ${t('controls.fullScreenHero')}`}
-            {currentVariant === 'gradient' && `🎨 ${t('controls.gradientLayout')}`}
-            {currentVariant === 'fitness' && `💪 ${t('controls.fitnessLayout')}`}
-            {currentVariant === 'editorial' && `📰 ${t('controls.editorialLayout')}`}
-            {currentVariant === 'cinematic' && `🎬 ${t('controls.cinematicLayout')}`}
-            {currentVariant === 'minimal' && `✧ ${t('controls.minimalLayout')}`}
-            {currentVariant === 'bold' && `🔤 ${t('controls.boldLayout')}`}
-            {currentVariant === 'overlap' && `📋 ${t('controls.overlapLayout')}`}
-            {currentVariant === 'verticalSplit' && `◧ ${t('controls.verticalSplitLayout')}`}
-            {currentVariant === 'glass' && `🪟 ${t('controls.glassLayout')}`}
-            {currentVariant === 'stacked' && `📚 ${t('controls.stackedLayout')}`}
-          </p>
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+            <Layout size={14} />
+            Ubicación del Texto
+          </label>
+          <div className="grid grid-cols-3 gap-2">
+            {([
+              { value: 'left-top', label: '↖️ Izq. Arriba' },
+              { value: 'center-top', label: '⬆️ Centro Arriba' },
+              { value: 'right-top', label: '↗️ Der. Arriba' },
+              { value: 'left-bottom', label: '↙️ Izq. Abajo' },
+              { value: 'center', label: '↔️ Centrado' },
+              { value: 'right-bottom', label: '↘️ Der. Abajo' },
+              { value: 'center-bottom', label: '⬇️ Centro Abajo' },
+            ] as const).map(opt => (
+              <button
+                key={opt.value}
+                onClick={() => setNestedData('hero.textLayout', opt.value)}
+                className={`py-2 px-3 text-xs font-semibold rounded-md transition-all ${(data.hero.textLayout || 'left-top') === opt.value
+                  ? 'bg-editor-accent text-editor-bg ring-2 ring-editor-accent/30'
+                  : 'bg-editor-bg text-editor-text-secondary hover:bg-editor-border border border-editor-border'
+                  }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
         </div>
+
+        <hr className="border-editor-border/50" />
+
+        {/* ========== BACKGROUND IMAGE ========== */}
+        <div>
+          <h4 className="font-bold text-editor-text-primary text-sm mb-3 flex items-center gap-2">
+            <Image size={14} />
+            Imagen de Fondo
+          </h4>
+          <ImagePicker label="Imagen de Fondo" value={data.hero.imageUrl} onChange={(url) => setNestedData('hero.imageUrl', url)} />
+
+          {/* Overlay Opacity */}
+          <div className="mt-4">
+            <div className="flex justify-between items-center mb-1">
+              <label className="text-xs font-medium text-editor-text-secondary">Oscurecimiento del Overlay</label>
+              <span className="text-xs text-editor-text-primary font-mono">{data.hero.overlayOpacity ?? 50}%</span>
+            </div>
+            <input
+              type="range" min="0" max="100" step="5"
+              value={data.hero.overlayOpacity ?? 50}
+              onChange={(e) => setNestedData('hero.overlayOpacity', parseInt(e.target.value))}
+              className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
+            />
+            <p className="text-xs text-editor-text-secondary mt-1">
+              Controla el nivel de oscurecimiento sobre la imagen de fondo para mejorar la legibilidad del texto.
+            </p>
+          </div>
+        </div>
+
+        <hr className="border-editor-border/50" />
 
         {/* ========== HERO HEIGHT ========== */}
         <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
           <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
             <AlignJustify size={14} />
-            {t('controls.heroHeight')}
+            Altura de Sección
           </label>
           <div className="space-y-2">
             <div className="flex justify-between items-center mb-1">
-              <span className="text-xs font-medium text-editor-text-secondary">{t('controls.sectionHeight')}</span>
+              <span className="text-xs font-medium text-editor-text-secondary">Altura</span>
               <span className="text-xs text-editor-text-primary font-mono">
                 {data.hero.heroHeight ? `${data.hero.heroHeight}vh` : t('controls.auto')}
               </span>
@@ -5439,86 +5155,13 @@ const Controls: React.FC = () => {
               <span className="text-[9px] text-editor-text-secondary">{t('controls.auto')}</span>
               <span className="text-[9px] text-editor-text-secondary">100vh</span>
             </div>
-            <p className="text-xs text-editor-text-secondary">
-              {t('controls.heroHeightHelp')}
-            </p>
           </div>
-        </div>
-
-        {/* Variant-Specific Info & Controls */}
-        {currentVariant === 'modern' && (
-          <div className="bg-blue-500/10 border border-blue-500/30 p-4 rounded-lg">
-            <div className="flex items-start gap-2">
-              <HelpCircle size={16} className="text-blue-400 mt-0.5 flex-shrink-0" />
-              <div className="text-xs text-blue-200">
-                <p className="font-bold mb-1">Modern Hero (Full Screen)</p>
-                <ul className="space-y-1 text-blue-300/90">
-                  <li>• Image is used as full-screen background</li>
-                  <li>• Text colors are forced to white for readability</li>
-                  <li>• Content is centered on screen</li>
-                  <li>• Dark gradient overlay applied automatically</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {currentVariant === 'fitness' && (
-          <div className="bg-orange-500/10 border border-orange-500/30 p-4 rounded-lg">
-            <div className="flex items-start gap-2">
-              <HelpCircle size={16} className="text-orange-400 mt-0.5 flex-shrink-0" />
-              <div className="text-xs text-orange-200">
-                <p className="font-bold mb-1">Fitness Hero (Bold & Dynamic)</p>
-                <ul className="space-y-1 text-orange-300/90">
-                  <li>• Image is used as full-screen background</li>
-                  <li>• Bold typography with 3D text shadow effects</li>
-                  <li>• Animated diagonal energy lines</li>
-                  <li>• Energy burst visual effects</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {currentVariant === 'gradient' && (
-          <div className="bg-purple-500/10 border border-purple-500/30 p-4 rounded-lg">
-            <div className="flex items-start gap-2">
-              <HelpCircle size={16} className="text-purple-400 mt-0.5 flex-shrink-0" />
-              <div className="text-xs text-purple-200">
-                <p className="font-bold mb-1">Gradient Hero (Futuristic)</p>
-                <ul className="space-y-1 text-purple-300/90">
-                  <li>• Two-column layout with content left, image right</li>
-                  <li>• Animated gradient background orbs</li>
-                  <li>• Floating cards on image with glassmorphism</li>
-                  <li>• Stats in horizontal card format</li>
-                  <li>• Decorative rotating rings</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        )}
-
-        <hr className="border-editor-border/50" />
-
-        <h4 className="font-bold text-editor-text-primary text-sm">Spacing</h4>
-        <div className="grid grid-cols-2 gap-3">
-          <PaddingSelector label="Vertical" value={data.hero.paddingY || 'md'} onChange={(v) => setNestedData('hero.paddingY', v)} />
-          <PaddingSelector label="Horizontal" value={data.hero.paddingX || 'md'} onChange={(v) => setNestedData('hero.paddingX', v)} />
         </div>
 
         <hr className="border-editor-border/50" />
 
+        {/* ========== COLORS ========== */}
         <h4 className="font-bold text-editor-text-primary text-sm">Colors</h4>
-
-        {currentVariant === 'modern' && (
-          <div className="bg-yellow-500/10 border border-yellow-500/30 p-3 rounded-lg mb-3">
-            <p className="text-xs text-yellow-200 flex items-center gap-2">
-              <AlertCircle size={14} className="flex-shrink-0" />
-              <span><strong>Modern Hero:</strong> Text colors (Heading/Text) are forced to white for contrast over the background image. Only Primary/Secondary colors affect gradients.</span>
-            </p>
-          </div>
-        )}
-
         <ColorControl label="Background" value={data.hero.colors?.background} onChange={(v) => setNestedData('hero.colors.background', v)} />
         <ColorControl label="Primary Color" value={data.hero.colors?.primary || '#4f46e5'} onChange={(v) => setNestedData('hero.colors.primary', v)} />
         <ColorControl label="Secondary Color" value={data.hero.colors?.secondary || '#10b981'} onChange={(v) => setNestedData('hero.colors.secondary', v)} />
@@ -5567,266 +5210,9 @@ const Controls: React.FC = () => {
           </div>
         )}
 
-        {/* Gradient Overlay Opacity - Only for Modern variant */}
-        {currentVariant === 'modern' && (
-          <>
-            <hr className="border-editor-border/50" />
-            <h4 className="font-bold text-editor-text-primary text-sm flex items-center gap-2">
-              <Palette size={14} />
-              {t('controls.gradientOverlay', { defaultValue: 'Gradient Overlay' })}
-            </h4>
-            <div className="space-y-3 bg-editor-bg/50 p-3 rounded-lg">
-              <div>
-                <div className="flex justify-between items-center mb-1">
-                  <label className="text-xs font-medium text-editor-text-secondary">{t('controls.overlayOpacity', { defaultValue: 'Overlay Opacity' })}</label>
-                  <span className="text-xs text-editor-text-primary">{data.hero.gradientOpacity ?? 70}%</span>
-                </div>
-                <input
-                  type="range" min="0" max="100" step="5"
-                  value={data.hero.gradientOpacity ?? 70}
-                  onChange={(e) => setNestedData('hero.gradientOpacity', parseInt(e.target.value))}
-                  className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
-                />
-                <p className="text-xs text-editor-text-secondary mt-1">
-                  {t('controls.overlayOpacityHelp', { defaultValue: 'Controls the darkness of the gradient overlay on the background image' })}
-                </p>
-              </div>
-            </div>
-          </>
-        )}
-
-        {data.hero.showBadge !== false && (
-          <>
-            <hr className="border-editor-border/50" />
-            <h4 className="font-bold text-editor-text-primary text-sm">Badge Colors</h4>
-
-            {currentVariant === 'fitness' && (
-              <div className="bg-orange-500/10 border border-orange-500/30 p-3 rounded-lg mb-3">
-                <p className="text-xs text-orange-200">
-                  <strong>Fitness Badge:</strong> Features angular skew transformation and bold uppercase styling for maximum impact.
-                </p>
-              </div>
-            )}
-
-            <ColorControl label="Badge Background" value={data.hero.badgeBackgroundColor || '#000000'} onChange={(v) => setNestedData('hero.badgeBackgroundColor', v)} />
-            <ColorControl label="Badge Text" value={data.hero.badgeColor || '#ffffff'} onChange={(v) => setNestedData('hero.badgeColor', v)} />
-          </>
-        )}
-
-
-        {/* Image Style Controls - Only for Classic variant */}
-        {currentVariant === 'classic' && (
-          <>
-            <hr className="border-editor-border/50" />
-            <h4 className="font-bold text-editor-text-primary text-sm flex items-center gap-2">
-              <Image size={14} />
-              Image Style
-            </h4>
-
-            <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-4">
-              {/* Image Style Selector */}
-              <div>
-                <label className="block text-xs font-bold text-editor-text-secondary mb-2 uppercase tracking-wider">Style Preset</label>
-                <div className="grid grid-cols-3 gap-2">
-                  {[
-                    { value: 'default', label: 'Default', icon: '▢' },
-                    { value: 'rounded-full', label: 'Circle', icon: '●' },
-                    { value: 'glow', label: 'Glow', icon: '✦' },
-                    { value: 'float', label: 'Float', icon: '⇡' },
-                    { value: 'hexagon', label: 'Hexagon', icon: '⬡' },
-                    { value: 'polaroid', label: 'Polaroid', icon: '▭' }
-                  ].map(style => (
-                    <button
-                      key={style.value}
-                      onClick={() => setNestedData('hero.imageStyle', style.value)}
-                      className={`py-2.5 px-2 text-xs font-semibold rounded-md border transition-all ${data.hero.imageStyle === style.value
-                        ? 'bg-editor-accent text-editor-bg border-editor-accent shadow-lg'
-                        : 'bg-editor-bg text-editor-text-secondary border-editor-border hover:border-editor-accent'
-                        }`}
-                    >
-                      <div className="text-lg mb-1">{style.icon}</div>
-                      <div>{style.label}</div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <hr className="border-editor-border/50" />
-
-              {/* Drop Shadow */}
-              <ToggleControl
-                label="Drop Shadow"
-                checked={data.hero.imageDropShadow || false}
-                onChange={(v) => setNestedData('hero.imageDropShadow', v)}
-              />
-
-              <hr className="border-editor-border/50" />
-
-              {/* Border Radius */}
-              <BorderRadiusSelector
-                label="Corner Radius"
-                value={data.hero.imageBorderRadius || 'xl'}
-                onChange={(v) => setNestedData('hero.imageBorderRadius', v)}
-              />
-
-              {/* Border Size & Color */}
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-bold text-editor-text-secondary mb-2 uppercase tracking-wider">Border Size</label>
-                  <div className="flex bg-editor-bg p-1 rounded-md border border-editor-border">
-                    {['none', 'sm', 'md', 'lg'].map(size => (
-                      <button
-                        key={size}
-                        onClick={() => setNestedData('hero.imageBorderSize', size)}
-                        className={`flex-1 py-1.5 text-xs font-medium rounded-sm uppercase transition-all ${data.hero.imageBorderSize === size
-                          ? 'bg-editor-accent text-editor-bg'
-                          : 'text-editor-text-secondary hover:bg-editor-border'
-                          }`}
-                      >
-                        {size}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                <ColorControl
-                  label="Border Color"
-                  value={data.hero.imageBorderColor || '#4f46e5'}
-                  onChange={(v) => setNestedData('hero.imageBorderColor', v)}
-                />
-              </div>
-
-              <hr className="border-editor-border/50" />
-
-              {/* Image Sizing */}
-              <div>
-                <div className="flex justify-between items-center mb-2">
-                  <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Image Width</label>
-                  <span className="text-xs text-editor-text-primary font-mono">{data.hero.imageWidth || 100}%</span>
-                </div>
-                <input
-                  type="range"
-                  min="25"
-                  max="100"
-                  step="5"
-                  value={data.hero.imageWidth || 100}
-                  onChange={(e) => setNestedData('hero.imageWidth', parseInt(e.target.value))}
-                  className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
-                />
-              </div>
-
-              {/* Image Height */}
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Fixed Height</label>
-                  <ToggleControl
-                    label=""
-                    checked={data.hero.imageHeightEnabled || false}
-                    onChange={(v) => setNestedData('hero.imageHeightEnabled', v)}
-                  />
-                </div>
-                {data.hero.imageHeightEnabled && (
-                  <div className="animate-fade-in">
-                    <div className="flex justify-between items-center mb-1">
-                      <span className="text-xs text-editor-text-secondary">Height</span>
-                      <span className="text-xs text-editor-text-primary font-mono">{data.hero.imageHeight || 500}px</span>
-                    </div>
-                    <input
-                      type="range"
-                      min="200"
-                      max="800"
-                      step="25"
-                      value={data.hero.imageHeight || 500}
-                      onChange={(e) => setNestedData('hero.imageHeight', parseInt(e.target.value))}
-                      className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
-                    />
-                  </div>
-                )}
-              </div>
-
-              {/* Aspect Ratio & Object Fit */}
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-bold text-editor-text-secondary mb-2 uppercase tracking-wider">Aspect Ratio</label>
-                  <select
-                    value={data.hero.imageAspectRatio || 'auto'}
-                    onChange={(e) => setNestedData('hero.imageAspectRatio', e.target.value)}
-                    className="w-full bg-editor-panel-bg border border-editor-border rounded-md px-2 py-2 text-xs text-editor-text-primary focus:outline-none focus:ring-1 focus:ring-editor-accent"
-                  >
-                    <option value="auto">Auto</option>
-                    <option value="1:1">1:1 (Square)</option>
-                    <option value="4:3">4:3</option>
-                    <option value="3:4">3:4</option>
-                    <option value="16:9">16:9</option>
-                    <option value="9:16">9:16</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-editor-text-secondary mb-2 uppercase tracking-wider">Object Fit</label>
-                  <select
-                    value={data.hero.imageObjectFit || 'cover'}
-                    onChange={(e) => setNestedData('hero.imageObjectFit', e.target.value)}
-                    className="w-full bg-editor-panel-bg border border-editor-border rounded-md px-2 py-2 text-xs text-editor-text-primary focus:outline-none focus:ring-1 focus:ring-editor-accent"
-                  >
-                    <option value="cover">Cover</option>
-                    <option value="contain">Contain</option>
-                    <option value="fill">Fill</option>
-                    <option value="none">None</option>
-                    <option value="scale-down">Scale Down</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-          </>
-        )}
-
         <hr className="border-editor-border/50" />
         <h4 className="font-bold text-editor-text-primary text-sm">Button Style</h4>
-
-        {currentVariant === 'fitness' && (
-          <div className="bg-orange-500/10 border border-orange-500/30 p-3 rounded-lg mb-3">
-            <p className="text-xs text-orange-200">
-              <strong>Fitness Buttons:</strong> Primary button includes Zap icon with scale hover effect. Secondary button has 4px border with hover overlay.
-            </p>
-          </div>
-        )}
-
-        {currentVariant === 'modern' && (
-          <div className="bg-blue-500/10 border border-blue-500/30 p-3 rounded-lg mb-3">
-            <p className="text-xs text-blue-200">
-              <strong>Modern Buttons:</strong> Secondary button uses glassmorphism effect with transparent background.
-            </p>
-          </div>
-        )}
-
         <BorderRadiusSelector label="Button Radius" value={data.hero.buttonBorderRadius || 'md'} onChange={(v) => setNestedData('hero.buttonBorderRadius', v)} />
-
-        {/* Section Border */}
-        <hr className="border-editor-border/50" />
-        <h4 className="font-bold text-editor-text-primary text-sm">Section Border</h4>
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="block text-xs font-bold text-editor-text-secondary mb-2 uppercase tracking-wider">Border Size</label>
-            <div className="flex bg-editor-bg p-1 rounded-md border border-editor-border">
-              {['none', 'sm', 'md', 'lg'].map(size => (
-                <button
-                  key={size}
-                  onClick={() => setNestedData('hero.sectionBorderSize', size)}
-                  className={`flex-1 py-1.5 text-xs font-medium rounded-sm uppercase transition-all ${(data.hero.sectionBorderSize || 'none') === size
-                    ? 'bg-editor-accent text-editor-bg'
-                    : 'text-editor-text-secondary hover:bg-editor-border'
-                    }`}
-                >
-                  {size}
-                </button>
-              ))}
-            </div>
-          </div>
-          <ColorControl
-            label="Border Color"
-            value={data.hero.sectionBorderColor || '#334155'}
-            onChange={(v) => setNestedData('hero.sectionBorderColor', v)}
-          />
-        </div>
       </div>
     );
 

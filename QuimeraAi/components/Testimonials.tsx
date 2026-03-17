@@ -126,20 +126,20 @@ const TestimonialCard: React.FC<TestimonialCardProps> = ({
   const getVariantClasses = () => {
     switch (variant) {
       case 'minimal-cards':
-        return 'border border-white/20 card-hover-lift card-shine-sweep card-border-glow';
+        return 'backdrop-blur-xl border border-white/10 card-hover-lift card-shine-sweep card-border-glow';
       case 'glassmorphism':
         return 'backdrop-blur-xl border border-white/20 card-hover-lift card-shine-sweep';
       case 'gradient-glow':
-        return 'relative overflow-hidden card-hover-glow card-shine-sweep before:absolute before:inset-0 before:bg-gradient-to-br before:from-white/10 before:to-white/5 before:opacity-0 hover:before:opacity-100 before:transition-opacity before:duration-300';
+        return 'backdrop-blur-xl border border-white/10 relative overflow-hidden card-hover-glow card-shine-sweep before:absolute before:inset-0 before:bg-gradient-to-br before:from-white/10 before:to-white/5 before:opacity-0 hover:before:opacity-100 before:transition-opacity before:duration-300';
       case 'neon-border':
-        return 'relative border-2 card-hover-tilt card-shine-sweep transition-all duration-500 animate-[pulse_3s_ease-in-out_infinite]';
+        return 'backdrop-blur-xl relative border-2 card-hover-tilt card-shine-sweep transition-all duration-500 animate-[pulse_3s_ease-in-out_infinite]';
       case 'floating-cards':
-        return 'border border-white/20 card-hover-lift card-shine-sweep';
+        return 'backdrop-blur-xl border border-white/10 card-hover-lift card-shine-sweep';
       case 'gradient-shift':
-        return 'relative border-0 overflow-hidden card-hover-tilt card-shine-sweep transition-all duration-500 hover:scale-[1.03]';
+        return 'backdrop-blur-xl border border-white/10 relative border-0 overflow-hidden card-hover-tilt card-shine-sweep transition-all duration-500 hover:scale-[1.03]';
       case 'classic':
       default:
-        return 'card-hover-lift card-shine-sweep card-border-glow';
+        return 'backdrop-blur-xl border border-white/10 card-hover-lift card-shine-sweep card-border-glow';
     }
   };
 
@@ -154,7 +154,7 @@ const TestimonialCard: React.FC<TestimonialCardProps> = ({
       case 'minimal-cards':
         return {
           ...baseStyle,
-          backgroundColor: cardBackground,
+          backgroundColor: hexToRgba(cardBackground, 0.35),
           borderColor: borderStyle === 'solid' ? borderColor : undefined,
         };
       case 'glassmorphism':
@@ -166,26 +166,26 @@ const TestimonialCard: React.FC<TestimonialCardProps> = ({
       case 'gradient-glow':
         return {
           ...baseStyle,
-          backgroundColor: cardBackground,
+          backgroundColor: hexToRgba(cardBackground, 0.35),
           borderColor: borderStyle === 'solid' ? borderColor : undefined,
         };
       case 'neon-border':
         return {
           ...baseStyle,
-          backgroundColor: cardBackground,
+          backgroundColor: hexToRgba(cardBackground, 0.35),
           borderColor: accentColor,
         };
       case 'floating-cards':
         return {
           ...baseStyle,
-          backgroundColor: cardBackground,
+          backgroundColor: hexToRgba(cardBackground, 0.35),
           borderColor: borderStyle === 'solid' ? borderColor : undefined,
           transform: 'perspective(1000px) translateZ(0)',
         };
       case 'gradient-shift':
         return {
           ...baseStyle,
-          background: `linear-gradient(135deg, ${cardBackground}ee, ${cardBackground}, ${cardBackground}dd)`,
+          background: `linear-gradient(135deg, ${hexToRgba(cardBackground, 0.35)}, ${hexToRgba(cardBackground, 0.3)}, ${hexToRgba(cardBackground, 0.25)})`,
           backgroundSize: '200% 200%',
           animation: 'gradientShift 8s ease infinite',
         };
@@ -194,7 +194,7 @@ const TestimonialCard: React.FC<TestimonialCardProps> = ({
         return {
           ...baseStyle,
           borderColor: borderStyle === 'solid' || borderStyle === 'glow' ? borderColor : undefined,
-          backgroundColor: cardBackground,
+          backgroundColor: hexToRgba(cardBackground, 0.35),
         };
     }
   };

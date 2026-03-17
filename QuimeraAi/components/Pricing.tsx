@@ -26,17 +26,17 @@ const paddingXClasses: Record<PaddingSize, string> = {
 };
 
 const titleSizeClasses: Record<FontSize, string> = {
-    sm: 'text-2xl md:text-3xl',
-    md: 'text-3xl md:text-4xl',
-    lg: 'text-4xl md:text-5xl',
-    xl: 'text-5xl md:text-7xl',
+  sm: 'text-2xl md:text-3xl',
+  md: 'text-3xl md:text-4xl',
+  lg: 'text-4xl md:text-5xl',
+  xl: 'text-5xl md:text-7xl',
 };
 
 const descriptionSizeClasses: Record<FontSize, string> = {
-    sm: 'text-sm',
-    md: 'text-base',
-    lg: 'text-lg',
-    xl: 'text-xl',
+  sm: 'text-sm',
+  md: 'text-base',
+  lg: 'text-lg',
+  xl: 'text-xl',
 };
 
 const borderRadiusClasses: Record<BorderRadiusSize, string> = {
@@ -51,35 +51,35 @@ const borderRadiusClasses: Record<BorderRadiusSize, string> = {
 
 // Update props to accept separate border radius for card and button to align with other components and fix type errors.
 interface PricingProps extends PricingData {
-    cardBorderRadius: BorderRadiusSize;
-    buttonBorderRadius: BorderRadiusSize;
-    animationType?: AnimationType;
-    enableCardAnimation?: boolean;
-    cornerGradient?: CornerGradientConfig;
+  cardBorderRadius: BorderRadiusSize;
+  buttonBorderRadius: BorderRadiusSize;
+  animationType?: AnimationType;
+  enableCardAnimation?: boolean;
+  cornerGradient?: CornerGradientConfig;
 }
 
-const Pricing: React.FC<PricingProps> = ({ 
-    pricingVariant = 'classic',
-    title, 
-    description, 
-    tiers, 
-    paddingY, 
-    paddingX, 
-    colors, 
-    cardBorderRadius = 'xl', 
-    buttonBorderRadius, 
-    titleFontSize = 'md', 
-    descriptionFontSize = 'md',
-    animationType = 'fade-in-up',
-    enableCardAnimation = true,
-    cornerGradient
+const Pricing: React.FC<PricingProps> = ({
+  pricingVariant = 'classic',
+  title,
+  description,
+  tiers,
+  paddingY,
+  paddingX,
+  colors,
+  cardBorderRadius = 'xl',
+  buttonBorderRadius,
+  titleFontSize = 'md',
+  descriptionFontSize = 'md',
+  animationType = 'fade-in-up',
+  enableCardAnimation = true,
+  cornerGradient
 }) => {
   // Get design tokens with fallback to component colors
   const { getColor, colors: tokenColors } = useDesignTokens();
-  
+
   // Use primary color for section background
   const primaryColor = tokenColors.primary;
-  
+
   // Merge component colors with Design Tokens (component colors take priority)
   const actualColors = {
     background: colors?.background || primaryColor, // Fallback to primary if not set
@@ -120,100 +120,102 @@ const Pricing: React.FC<PricingProps> = ({
       <section id="pricing" className={`${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]} relative overflow-hidden`} style={{ backgroundColor: actualColors.background }}>
         <CornerGradient config={cornerGradient} />
         <div className="container mx-auto relative z-10">
-            <div className="text-center max-w-3xl mx-auto mb-16">
-              <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold mb-4 font-header`} style={{ color: safeColors.heading, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>{title}</h2>
-              <p className={`${descriptionSizeClasses[descriptionFontSize]} font-body`} style={{ color: safeColors.description }}>
-                {description}
-              </p>
-            </div>
+          <div className="text-center max-w-3xl mx-auto mb-16">
+            <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold mb-4 font-header`} style={{ color: safeColors.heading, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>{title}</h2>
+            <p className={`${descriptionSizeClasses[descriptionFontSize]} font-body`} style={{ color: safeColors.description }}>
+              {description}
+            </p>
+          </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 items-center">
-              {tiers.map((tier, index) => (
-                <div
-                  key={index}
-                  className={`
-                    p-8 border relative flex flex-col h-full
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 items-center">
+            {tiers.map((tier, index) => (
+              <div
+                key={index}
+                className={`
+                    p-8 border border-white/10 relative flex flex-col h-full
                     transform transition-all duration-300 hover:scale-105
+                    backdrop-blur-xl
                     ${borderRadiusClasses[cardBorderRadius]}
                     ${tier.featured ? 'border-2' : 'border'}
                     ${getAnimationClass(animationType, enableCardAnimation)}
                   `}
-                  style={{ 
-                      backgroundColor: actualColors.cardBackground,
-                      borderColor: tier.featured ? actualColors.accent : actualColors.borderColor,
-                      animationDelay: getAnimationDelay(index)
-                  }}
-                >
-                  {tier.featured && (
-                    <div className="absolute top-0 -translate-y-1/2 left-1/2 -translate-x-1/2">
-                      <span
-                          className={`animate-pulse px-4 py-1.5 text-xs font-bold text-white uppercase tracking-wider ${borderRadiusClasses.full} shadow-lg flex items-center gap-1.5`}
-                          style={{ 
-                            backgroundImage: `linear-gradient(135deg, ${actualColors.gradientStart || actualColors.accent}, ${actualColors.gradientEnd || '#ec4899'})`,
-                            boxShadow: `0 4px 15px ${hexToRgba(actualColors.accent, 0.4)}`
-                          }}
-                      >
-                        <Sparkles size={12} />
-                        Más Popular
-                      </span>
-                    </div>
+                style={{
+                  backgroundColor: hexToRgba(actualColors.cardBackground, 0.35),
+                  borderColor: tier.featured ? actualColors.accent : 'rgba(255,255,255,0.1)',
+                  animationDelay: getAnimationDelay(index)
+                }}
+              >
+                {tier.featured && (
+                  <div className="absolute top-0 -translate-y-1/2 left-1/2 -translate-x-1/2">
+                    <span
+                      className={`animate-pulse px-4 py-1.5 text-xs font-bold text-white uppercase tracking-wider ${borderRadiusClasses.full} shadow-lg flex items-center gap-1.5`}
+                      style={{
+                        backgroundImage: `linear-gradient(135deg, ${actualColors.gradientStart || actualColors.accent}, ${actualColors.gradientEnd || '#ec4899'})`,
+                        boxShadow: `0 4px 15px ${hexToRgba(actualColors.accent, 0.4)}`
+                      }}
+                    >
+                      <Sparkles size={12} />
+                      Más Popular
+                    </span>
+                  </div>
+                )}
+
+                <div className="flex-grow">
+                  <h3 className="text-2xl font-bold text-center mb-2 font-header" style={{ color: safeColors.cardHeading }}>
+                    {tier.name}
+                  </h3>
+
+                  {tier.description && (
+                    <p className="text-center text-sm font-body mb-4" style={{ color: safeColors.cardText, opacity: 0.8 }}>
+                      {tier.description}
+                    </p>
                   )}
-                  
-                  <div className="flex-grow">
-                      <h3 className="text-2xl font-bold text-center mb-2 font-header" style={{ color: safeColors.cardHeading }}>
-                          {tier.name}
-                      </h3>
-                      
-                      {tier.description && (
-                          <p className="text-center text-sm font-body mb-4" style={{ color: safeColors.cardText, opacity: 0.8 }}>
-                              {tier.description}
-                          </p>
-                      )}
-                      
-                      <div className="text-center mb-8">
-                          <span className="text-5xl font-extrabold font-header" style={{ color: safeColors.priceColor }}>
-                              {tier.price}
-                          </span>
-                          <span className="text-lg font-header ml-1" style={{ color: safeColors.cardText }}>
-                              {tier.frequency}
-                          </span>
-                      </div>
-                      
-                      <ul className="space-y-4 mb-8">
-                          {tier.features.map((feature, i) => (
-                              <li key={i} className="flex items-start font-body" style={{ color: safeColors.cardText }}>
-                                <CheckCircle 
-                                    size={20} 
-                                    className="mr-3 flex-shrink-0" 
-                                    style={{ color: actualColors.checkmarkColor }}
-                                />
-                                <span>{feature}</span>
-                              </li>
-                          ))}
-                      </ul>
+
+                  <div className="text-center mb-8">
+                    <span className="text-5xl font-extrabold font-header" style={{ color: safeColors.priceColor }}>
+                      {tier.price}
+                    </span>
+                    <span className="text-lg font-header ml-1" style={{ color: safeColors.cardText }}>
+                      {tier.frequency}
+                    </span>
                   </div>
 
-                  <a
-                    href={tier.buttonLink || '#'}
-                    target={tier.buttonLink?.startsWith('http') ? '_blank' : undefined}
-                    rel={tier.buttonLink?.startsWith('http') ? 'noopener noreferrer' : undefined}
-                    className={`
+                  <ul className="space-y-4 mb-8">
+                    {tier.features.map((feature, i) => (
+                      <li key={i} className="flex items-start font-body" style={{ color: safeColors.cardText }}>
+                        <CheckCircle
+                          size={20}
+                          className="mr-3 flex-shrink-0"
+                          style={{ color: actualColors.checkmarkColor }}
+                        />
+                        <span>{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                <a
+                  href={tier.buttonLink || '#'}
+                  target={tier.buttonLink?.startsWith('http') ? '_blank' : undefined}
+                  rel={tier.buttonLink?.startsWith('http') ? 'noopener noreferrer' : undefined}
+                  className={`
                       w-full text-center block font-bold py-3 px-8
+                      backdrop-blur-md border border-white/15
                       transition-all duration-300 transform hover:scale-105 font-button
                       ${borderRadiusClasses[buttonBorderRadius]}
                     `}
-                    style={{ 
-                        backgroundColor: tier.featured ? actualColors.accent : actualColors.buttonBackground,
-                        color: actualColors.buttonText,
-                        textTransform: 'var(--buttons-transform, none)' as any,
-                        letterSpacing: 'var(--buttons-spacing, normal)'
-                     }}
-                  >
-                    {tier.buttonText}
-                  </a>
-                </div>
-              ))}
-            </div>
+                  style={{
+                    backgroundColor: hexToRgba(tier.featured ? actualColors.accent : actualColors.buttonBackground, 0.6),
+                    color: actualColors.buttonText,
+                    textTransform: 'var(--buttons-transform, none)' as any,
+                    letterSpacing: 'var(--buttons-spacing, normal)'
+                  }}
+                >
+                  {tier.buttonText}
+                </a>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
     );
@@ -231,130 +233,132 @@ const Pricing: React.FC<PricingProps> = ({
         </div>
 
         <div className="container mx-auto relative z-10">
-            <div className="text-center max-w-3xl mx-auto mb-16">
-              <h2 
-                className={`${titleSizeClasses[titleFontSize]} font-extrabold mb-4 font-header bg-gradient-to-r bg-clip-text text-transparent`}
-                style={{ backgroundImage: `linear-gradient(to right, ${actualColors.gradientStart}, ${actualColors.gradientEnd})` }}
-              >
-                {title}
-              </h2>
-              <p className={`${descriptionSizeClasses[descriptionFontSize]} font-body`} style={{ color: safeColors.description }}>
-                {description}
-              </p>
-            </div>
+          <div className="text-center max-w-3xl mx-auto mb-16">
+            <h2
+              className={`${titleSizeClasses[titleFontSize]} font-extrabold mb-4 font-header bg-gradient-to-r bg-clip-text text-transparent`}
+              style={{ backgroundImage: `linear-gradient(to right, ${actualColors.gradientStart}, ${actualColors.gradientEnd})` }}
+            >
+              {title}
+            </h2>
+            <p className={`${descriptionSizeClasses[descriptionFontSize]} font-body`} style={{ color: safeColors.description }}>
+              {description}
+            </p>
+          </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 items-center">
-              {tiers.map((tier, index) => (
-                <div
-                  key={index}
-                  className={`
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 items-center">
+            {tiers.map((tier, index) => (
+              <div
+                key={index}
+                className={`
                     p-8 relative flex flex-col h-full
                     transform transition-all duration-500 hover:scale-105 hover:-translate-y-2
+                    backdrop-blur-xl border border-white/10
                     ${borderRadiusClasses[cardBorderRadius]}
                     ${tier.featured ? 'lg:scale-110' : ''}
                     ${getAnimationClass(animationType, enableCardAnimation)}
                   `}
-                  style={{ 
-                      backgroundColor: actualColors.cardBackground,
-                      backgroundImage: tier.featured 
-                        ? `linear-gradient(135deg, ${hexToRgba(actualColors.gradientStart, 0.08)}, ${hexToRgba(actualColors.gradientEnd, 0.08)})`
-                        : 'none',
-                      animationDelay: getAnimationDelay(index)
+                style={{
+                  backgroundColor: hexToRgba(actualColors.cardBackground, 0.35),
+                  backgroundImage: tier.featured
+                    ? `linear-gradient(135deg, ${hexToRgba(actualColors.gradientStart, 0.08)}, ${hexToRgba(actualColors.gradientEnd, 0.08)})`
+                    : 'none',
+                  animationDelay: getAnimationDelay(index)
+                }}
+              >
+                {/* Gradient border effect */}
+                <div
+                  className={`absolute inset-0 ${borderRadiusClasses[cardBorderRadius]} p-[2px]`}
+                  style={{
+                    background: tier.featured
+                      ? `linear-gradient(135deg, ${actualColors.gradientStart}, ${actualColors.gradientEnd})`
+                      : actualColors.borderColor,
+                    WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
+                    WebkitMaskComposite: 'xor',
+                    maskComposite: 'exclude'
                   }}
-                >
-                  {/* Gradient border effect */}
-                  <div 
-                    className={`absolute inset-0 ${borderRadiusClasses[cardBorderRadius]} p-[2px]`}
-                    style={{
-                      background: tier.featured 
-                        ? `linear-gradient(135deg, ${actualColors.gradientStart}, ${actualColors.gradientEnd})`
-                        : actualColors.borderColor,
-                      WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
-                      WebkitMaskComposite: 'xor',
-                      maskComposite: 'exclude'
-                    }}
-                  />
+                />
 
-                  {tier.featured && (
-                    <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-10">
-                      <div
-                        className="animate-pulse flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-bold text-white uppercase tracking-wider shadow-lg"
-                        style={{
-                          backgroundImage: `linear-gradient(135deg, ${actualColors.gradientStart}, ${actualColors.gradientEnd})`,
-                          boxShadow: `0 4px 20px ${hexToRgba(actualColors.gradientStart, 0.5)}`
-                        }}
-                      >
-                        <Sparkles size={14} className="animate-bounce" />
-                        Más Popular
-                      </div>
+                {tier.featured && (
+                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-10">
+                    <div
+                      className="animate-pulse flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-bold text-white uppercase tracking-wider shadow-lg"
+                      style={{
+                        backgroundImage: `linear-gradient(135deg, ${actualColors.gradientStart}, ${actualColors.gradientEnd})`,
+                        boxShadow: `0 4px 20px ${hexToRgba(actualColors.gradientStart, 0.5)}`
+                      }}
+                    >
+                      <Sparkles size={14} className="animate-bounce" />
+                      Más Popular
                     </div>
+                  </div>
+                )}
+
+                <div className="flex-grow relative z-10">
+                  <h3 className="text-2xl font-bold text-center mb-2 font-header" style={{ color: safeColors.cardHeading }}>
+                    {tier.name}
+                  </h3>
+
+                  {tier.description && (
+                    <p className="text-center text-sm font-body mb-6" style={{ color: safeColors.cardText, opacity: 0.8 }}>
+                      {tier.description}
+                    </p>
                   )}
-                  
-                  <div className="flex-grow relative z-10">
-                      <h3 className="text-2xl font-bold text-center mb-2 font-header" style={{ color: safeColors.cardHeading }}>
-                          {tier.name}
-                      </h3>
-                      
-                      {tier.description && (
-                          <p className="text-center text-sm font-body mb-6" style={{ color: safeColors.cardText, opacity: 0.8 }}>
-                              {tier.description}
-                          </p>
-                      )}
-                      
-                      <div className="text-center mb-8">
-                          <div className="inline-block">
-                            <span 
-                              className="text-6xl font-black font-header bg-gradient-to-br bg-clip-text text-transparent"
-                              style={{ backgroundImage: `linear-gradient(135deg, ${actualColors.gradientStart}, ${actualColors.gradientEnd})` }}
-                            >
-                                {tier.price}
-                            </span>
-                            <span className="text-lg font-header ml-1" style={{ color: safeColors.cardText }}>
-                                {tier.frequency}
-                            </span>
-                          </div>
-                      </div>
-                      
-                      <ul className="space-y-3 mb-8">
-                          {tier.features.map((feature, i) => (
-                              <li key={i} className="flex items-start font-body" style={{ color: safeColors.cardText }}>
-                                <div 
-                                  className="mr-3 flex-shrink-0 rounded-full p-1"
-                                  style={{ 
-                                    backgroundImage: `linear-gradient(135deg, ${actualColors.gradientStart}, ${actualColors.gradientEnd})`
-                                  }}
-                                >
-                                  <Check size={14} className="text-white" />
-                                </div>
-                                <span>{feature}</span>
-                              </li>
-                          ))}
-                      </ul>
+
+                  <div className="text-center mb-8">
+                    <div className="inline-block">
+                      <span
+                        className="text-6xl font-black font-header bg-gradient-to-br bg-clip-text text-transparent"
+                        style={{ backgroundImage: `linear-gradient(135deg, ${actualColors.gradientStart}, ${actualColors.gradientEnd})` }}
+                      >
+                        {tier.price}
+                      </span>
+                      <span className="text-lg font-header ml-1" style={{ color: safeColors.cardText }}>
+                        {tier.frequency}
+                      </span>
+                    </div>
                   </div>
 
-                  <a
-                    href={tier.buttonLink || '#'}
-                    target={tier.buttonLink?.startsWith('http') ? '_blank' : undefined}
-                    rel={tier.buttonLink?.startsWith('http') ? 'noopener noreferrer' : undefined}
-                    className={`
+                  <ul className="space-y-3 mb-8">
+                    {tier.features.map((feature, i) => (
+                      <li key={i} className="flex items-start font-body" style={{ color: safeColors.cardText }}>
+                        <div
+                          className="mr-3 flex-shrink-0 rounded-full p-1"
+                          style={{
+                            backgroundImage: `linear-gradient(135deg, ${actualColors.gradientStart}, ${actualColors.gradientEnd})`
+                          }}
+                        >
+                          <Check size={14} className="text-white" />
+                        </div>
+                        <span>{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                <a
+                  href={tier.buttonLink || '#'}
+                  target={tier.buttonLink?.startsWith('http') ? '_blank' : undefined}
+                  rel={tier.buttonLink?.startsWith('http') ? 'noopener noreferrer' : undefined}
+                  className={`
                       relative z-10 w-full text-center block font-bold py-3 px-8
+                      backdrop-blur-md border border-white/15
                       transition-all duration-300 transform hover:scale-105 font-button
                       ${borderRadiusClasses[buttonBorderRadius]}
                     `}
-                    style={{ 
-                        backgroundImage: tier.featured 
-                          ? `linear-gradient(135deg, ${actualColors.gradientStart}, ${actualColors.gradientEnd})`
-                          : `linear-gradient(135deg, ${actualColors.buttonBackground}, ${actualColors.buttonBackground})`,
-                        color: actualColors.buttonText,
-                        textTransform: 'var(--buttons-transform, none)' as any,
-                        letterSpacing: 'var(--buttons-spacing, normal)'
-                     }}
-                  >
-                    {tier.buttonText}
-                  </a>
-                </div>
-              ))}
-            </div>
+                  style={{
+                    backgroundImage: tier.featured
+                      ? `linear-gradient(135deg, ${hexToRgba(actualColors.gradientStart, 0.6)}, ${hexToRgba(actualColors.gradientEnd, 0.6)})`
+                      : `linear-gradient(135deg, ${hexToRgba(actualColors.buttonBackground, 0.6)}, ${hexToRgba(actualColors.buttonBackground, 0.6)})`,
+                    color: actualColors.buttonText,
+                    textTransform: 'var(--buttons-transform, none)' as any,
+                    letterSpacing: 'var(--buttons-spacing, normal)'
+                  }}
+                >
+                  {tier.buttonText}
+                </a>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
     );
@@ -373,20 +377,20 @@ const Pricing: React.FC<PricingProps> = ({
         </div>
 
         <div className="container mx-auto relative z-10">
-            <div className="text-center max-w-3xl mx-auto mb-16">
-              <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold mb-4 font-header`} style={{ color: safeColors.heading, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>
-                {title}
-              </h2>
-              <p className={`${descriptionSizeClasses[descriptionFontSize]} font-body`} style={{ color: safeColors.description }}>
-                {description}
-              </p>
-            </div>
+          <div className="text-center max-w-3xl mx-auto mb-16">
+            <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold mb-4 font-header`} style={{ color: safeColors.heading, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>
+              {title}
+            </h2>
+            <p className={`${descriptionSizeClasses[descriptionFontSize]} font-body`} style={{ color: safeColors.description }}>
+              {description}
+            </p>
+          </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 items-stretch">
-              {tiers.map((tier, index) => (
-                <div
-                  key={index}
-                  className={`
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 items-stretch">
+            {tiers.map((tier, index) => (
+              <div
+                key={index}
+                className={`
                     p-8 relative flex flex-col h-full
                     backdrop-blur-xl backdrop-saturate-150
                     border border-white/10
@@ -394,88 +398,88 @@ const Pricing: React.FC<PricingProps> = ({
                     ${borderRadiusClasses[cardBorderRadius]}
                     ${getAnimationClass(animationType, enableCardAnimation)}
                   `}
-                  style={{ 
-                      backgroundColor: tier.featured ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.05)',
-                      animationDelay: getAnimationDelay(index)
-                  }}
-                >
-                  {tier.featured && (
-                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
-                      <div
-                        className="animate-pulse flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-bold text-white uppercase tracking-wider backdrop-blur-md border border-white/20 shadow-lg"
-                        style={{
-                          backgroundColor: hexToRgba(actualColors.accent, 0.5),
-                          boxShadow: `0 4px 15px ${hexToRgba(actualColors.accent, 0.3)}`
-                        }}
-                      >
-                        <Zap size={14} className="text-yellow-300" />
-                        Popular
-                      </div>
+                style={{
+                  backgroundColor: tier.featured ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.05)',
+                  animationDelay: getAnimationDelay(index)
+                }}
+              >
+                {tier.featured && (
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
+                    <div
+                      className="animate-pulse flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-bold text-white uppercase tracking-wider backdrop-blur-md border border-white/20 shadow-lg"
+                      style={{
+                        backgroundColor: hexToRgba(actualColors.accent, 0.5),
+                        boxShadow: `0 4px 15px ${hexToRgba(actualColors.accent, 0.3)}`
+                      }}
+                    >
+                      <Zap size={14} className="text-yellow-300" />
+                      Popular
                     </div>
+                  </div>
+                )}
+
+                <div className="flex-grow">
+                  <h3 className="text-2xl font-bold text-center mb-2 font-header" style={{ color: safeColors.cardHeading }}>
+                    {tier.name}
+                  </h3>
+
+                  {tier.description && (
+                    <p className="text-center text-sm font-body mb-6" style={{ color: safeColors.cardText, opacity: 0.9 }}>
+                      {tier.description}
+                    </p>
                   )}
-                  
-                  <div className="flex-grow">
-                      <h3 className="text-2xl font-bold text-center mb-2 font-header" style={{ color: safeColors.cardHeading }}>
-                          {tier.name}
-                      </h3>
-                      
-                      {tier.description && (
-                          <p className="text-center text-sm font-body mb-6" style={{ color: safeColors.cardText, opacity: 0.9 }}>
-                              {tier.description}
-                          </p>
-                      )}
-                      
-                      <div className="text-center mb-8">
-                          <span className="text-6xl font-black font-header" style={{ color: safeColors.priceColor }}>
-                              {tier.price}
-                          </span>
-                          <span className="text-lg font-header ml-1 block mt-1" style={{ color: safeColors.cardText }}>
-                              {tier.frequency}
-                          </span>
-                      </div>
-                      
-                      <ul className="space-y-3 mb-8">
-                          {tier.features.map((feature, i) => (
-                              <li key={i} className="flex items-start font-body" style={{ color: safeColors.cardText }}>
-                                <div 
-                                  className="mr-3 mt-0.5 flex-shrink-0 rounded-full p-1 backdrop-blur-sm"
-                                  style={{ 
-                                    backgroundColor: hexToRgba(actualColors.checkmarkColor, 0.19),
-                                    border: `1px solid ${hexToRgba(actualColors.checkmarkColor, 0.38)}`
-                                  }}
-                                >
-                                  <Check size={12} style={{ color: actualColors.checkmarkColor }} />
-                                </div>
-                                <span className="text-sm">{feature}</span>
-                              </li>
-                          ))}
-                      </ul>
+
+                  <div className="text-center mb-8">
+                    <span className="text-6xl font-black font-header" style={{ color: safeColors.priceColor }}>
+                      {tier.price}
+                    </span>
+                    <span className="text-lg font-header ml-1 block mt-1" style={{ color: safeColors.cardText }}>
+                      {tier.frequency}
+                    </span>
                   </div>
 
-                  <a
-                    href={tier.buttonLink || '#'}
-                    target={tier.buttonLink?.startsWith('http') ? '_blank' : undefined}
-                    rel={tier.buttonLink?.startsWith('http') ? 'noopener noreferrer' : undefined}
-                    className={`
+                  <ul className="space-y-3 mb-8">
+                    {tier.features.map((feature, i) => (
+                      <li key={i} className="flex items-start font-body" style={{ color: safeColors.cardText }}>
+                        <div
+                          className="mr-3 mt-0.5 flex-shrink-0 rounded-full p-1 backdrop-blur-sm"
+                          style={{
+                            backgroundColor: hexToRgba(actualColors.checkmarkColor, 0.19),
+                            border: `1px solid ${hexToRgba(actualColors.checkmarkColor, 0.38)}`
+                          }}
+                        >
+                          <Check size={12} style={{ color: actualColors.checkmarkColor }} />
+                        </div>
+                        <span className="text-sm">{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                <a
+                  href={tier.buttonLink || '#'}
+                  target={tier.buttonLink?.startsWith('http') ? '_blank' : undefined}
+                  rel={tier.buttonLink?.startsWith('http') ? 'noopener noreferrer' : undefined}
+                  className={`
                       w-full text-center block font-bold py-3 px-8
                       backdrop-blur-md border border-white/20
                       transition-all duration-300 transform hover:scale-105 font-button
                       ${borderRadiusClasses[buttonBorderRadius]}
                     `}
-                    style={{ 
-                        backgroundColor: tier.featured 
-                          ? hexToRgba(actualColors.accent, 0.56)
-                          : hexToRgba(actualColors.buttonBackground, 0.44),
-                        color: actualColors.buttonText,
-                        textTransform: 'var(--buttons-transform, none)' as any,
-                        letterSpacing: 'var(--buttons-spacing, normal)'
-                     }}
-                  >
-                    {tier.buttonText}
-                  </a>
-                </div>
-              ))}
-            </div>
+                  style={{
+                    backgroundColor: tier.featured
+                      ? hexToRgba(actualColors.accent, 0.56)
+                      : hexToRgba(actualColors.buttonBackground, 0.44),
+                    color: actualColors.buttonText,
+                    textTransform: 'var(--buttons-transform, none)' as any,
+                    letterSpacing: 'var(--buttons-spacing, normal)'
+                  }}
+                >
+                  {tier.buttonText}
+                </a>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
     );
@@ -487,95 +491,96 @@ const Pricing: React.FC<PricingProps> = ({
       <section id="pricing" className={`${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]} relative overflow-hidden`} style={{ backgroundColor: actualColors.background }}>
         <CornerGradient config={cornerGradient} />
         <div className="container mx-auto relative z-10">
-            <div className="text-center max-w-3xl mx-auto mb-20">
-              <h2 className={`${titleSizeClasses[titleFontSize]} font-bold mb-4 font-header`} style={{ color: safeColors.heading, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>
-                {title}
-              </h2>
-              <p className={`${descriptionSizeClasses[descriptionFontSize]} font-body`} style={{ color: safeColors.description }}>
-                {description}
-              </p>
-            </div>
+          <div className="text-center max-w-3xl mx-auto mb-20">
+            <h2 className={`${titleSizeClasses[titleFontSize]} font-bold mb-4 font-header`} style={{ color: safeColors.heading, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>
+              {title}
+            </h2>
+            <p className={`${descriptionSizeClasses[descriptionFontSize]} font-body`} style={{ color: safeColors.description }}>
+              {description}
+            </p>
+          </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-px bg-gradient-to-r" style={{ backgroundImage: `linear-gradient(to right, ${actualColors.borderColor}, ${actualColors.borderColor})` }}>
-              {tiers.map((tier, index) => (
-                <div
-                  key={index}
-                  className={`
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-px bg-gradient-to-r" style={{ backgroundImage: `linear-gradient(to right, ${actualColors.borderColor}, ${actualColors.borderColor})` }}>
+            {tiers.map((tier, index) => (
+              <div
+                key={index}
+                className={`
                     p-10 flex flex-col h-full
                     transition-all duration-300
+                    backdrop-blur-lg border border-white/10
                     ${tier.featured ? 'transform md:-translate-y-4' : ''}
                     ${getAnimationClass(animationType, enableCardAnimation)}
                   `}
-                  style={{ 
-                      backgroundColor: actualColors.cardBackground,
-                      borderTop: tier.featured ? `3px solid ${actualColors.accent}` : 'none',
-                      animationDelay: getAnimationDelay(index)
-                  }}
-                >
-                  {tier.featured && (
-                    <div className="mb-4">
-                      <span 
-                        className="text-[10px] font-bold uppercase tracking-widest"
-                        style={{ color: actualColors.accent }}
-                      >
-                        Recommended
+                style={{
+                  backgroundColor: hexToRgba(actualColors.cardBackground, 0.3),
+                  borderTop: tier.featured ? `3px solid ${actualColors.accent}` : 'none',
+                  animationDelay: getAnimationDelay(index)
+                }}
+              >
+                {tier.featured && (
+                  <div className="mb-4">
+                    <span
+                      className="text-[10px] font-bold uppercase tracking-widest"
+                      style={{ color: actualColors.accent }}
+                    >
+                      Recommended
+                    </span>
+                  </div>
+                )}
+
+                <div className="flex-grow">
+                  <h3 className="text-lg font-semibold mb-1 font-header uppercase tracking-wide" style={{ color: safeColors.cardHeading }}>
+                    {tier.name}
+                  </h3>
+
+                  {tier.description && (
+                    <p className="text-xs font-body mb-8 leading-relaxed" style={{ color: safeColors.cardText, opacity: 0.7 }}>
+                      {tier.description}
+                    </p>
+                  )}
+
+                  <div className="mb-10 pb-8 border-b" style={{ borderColor: actualColors.borderColor }}>
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-5xl font-light font-header" style={{ color: safeColors.priceColor }}>
+                        {tier.price}
+                      </span>
+                      <span className="text-sm font-header" style={{ color: safeColors.cardText, opacity: 0.6 }}>
+                        {tier.frequency}
                       </span>
                     </div>
-                  )}
-                  
-                  <div className="flex-grow">
-                      <h3 className="text-lg font-semibold mb-1 font-header uppercase tracking-wide" style={{ color: safeColors.cardHeading }}>
-                          {tier.name}
-                      </h3>
-                      
-                      {tier.description && (
-                          <p className="text-xs font-body mb-8 leading-relaxed" style={{ color: safeColors.cardText, opacity: 0.7 }}>
-                              {tier.description}
-                          </p>
-                      )}
-                      
-                      <div className="mb-10 pb-8 border-b" style={{ borderColor: actualColors.borderColor }}>
-                          <div className="flex items-baseline gap-1">
-                            <span className="text-5xl font-light font-header" style={{ color: safeColors.priceColor }}>
-                                {tier.price}
-                            </span>
-                            <span className="text-sm font-header" style={{ color: safeColors.cardText, opacity: 0.6 }}>
-                                {tier.frequency}
-                            </span>
-                          </div>
-                      </div>
-                      
-                      <ul className="space-y-4 mb-10">
-                          {tier.features.map((feature, i) => (
-                              <li key={i} className="flex items-start font-body text-sm leading-relaxed" style={{ color: safeColors.cardText }}>
-                                <span className="mr-3 mt-1 flex-shrink-0" style={{ color: actualColors.accent }}>—</span>
-                                <span>{feature}</span>
-                              </li>
-                          ))}
-                      </ul>
                   </div>
 
-                  <a
-                    href={tier.buttonLink || '#'}
-                    target={tier.buttonLink?.startsWith('http') ? '_blank' : undefined}
-                    rel={tier.buttonLink?.startsWith('http') ? 'noopener noreferrer' : undefined}
-                    className={`
+                  <ul className="space-y-4 mb-10">
+                    {tier.features.map((feature, i) => (
+                      <li key={i} className="flex items-start font-body text-sm leading-relaxed" style={{ color: safeColors.cardText }}>
+                        <span className="mr-3 mt-1 flex-shrink-0" style={{ color: actualColors.accent }}>—</span>
+                        <span>{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                <a
+                  href={tier.buttonLink || '#'}
+                  target={tier.buttonLink?.startsWith('http') ? '_blank' : undefined}
+                  rel={tier.buttonLink?.startsWith('http') ? 'noopener noreferrer' : undefined}
+                  className={`
                       w-full text-center block font-medium py-3 px-8 border
                       transition-all duration-300 font-button text-sm
                     `}
-                    style={{ 
-                        backgroundColor: tier.featured ? actualColors.accent : 'transparent',
-                        borderColor: tier.featured ? actualColors.accent : actualColors.borderColor,
-                        color: tier.featured ? actualColors.buttonText : safeColors.cardHeading,
-                        textTransform: 'var(--buttons-transform, none)' as any,
-                        letterSpacing: 'var(--buttons-spacing, normal)'
-                     }}
-                  >
-                    {tier.buttonText}
-                  </a>
-                </div>
-              ))}
-            </div>
+                  style={{
+                    backgroundColor: tier.featured ? actualColors.accent : 'transparent',
+                    borderColor: tier.featured ? actualColors.accent : actualColors.borderColor,
+                    color: tier.featured ? actualColors.buttonText : safeColors.cardHeading,
+                    textTransform: 'var(--buttons-transform, none)' as any,
+                    letterSpacing: 'var(--buttons-spacing, normal)'
+                  }}
+                >
+                  {tier.buttonText}
+                </a>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
     );

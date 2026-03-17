@@ -107,8 +107,8 @@ const FeatureCard: React.FC<FeatureCardProps> = ({
 
   return (
     <div
-      className={`border transform hover:-translate-y-2 transition-transform duration-300 overflow-hidden ${borderRadiusClasses[borderRadius]} ${animationClass}`}
-      style={{ animationDelay: delay, borderColor: borderColor, backgroundColor: cardBackground }}
+      className={`border border-white/10 transform hover:-translate-y-2 transition-transform duration-300 overflow-hidden backdrop-blur-xl ${borderRadiusClasses[borderRadius]} ${animationClass}`}
+      style={{ animationDelay: delay, borderColor: borderColor, backgroundColor: hexToRgba(cardBackground, 0.35) }}
     >
       {isPendingImage(imageUrl) ? (
         <div style={{ height: `${imageHeight}px` }}>
@@ -160,7 +160,7 @@ const ModernFeatureCard = ({ feature, index, colors, borderRadius, onNavigate }:
   const isExternal = feature.linkUrl?.startsWith('http');
 
   return (
-    <div className={`group relative overflow-hidden border p-8 transition-all duration-500 ${borderRadius} ${isWide ? 'md:col-span-2' : 'md:col-span-1'}`} style={{ borderColor: colors?.borderColor, backgroundColor: colors?.cardBackground }}>
+    <div className={`group relative overflow-hidden border border-white/10 p-8 transition-all duration-500 backdrop-blur-xl ${borderRadius} ${isWide ? 'md:col-span-2' : 'md:col-span-1'}`} style={{ borderColor: colors?.borderColor, backgroundColor: hexToRgba(colors?.cardBackground || '#1f2937', 0.35) }}>
       {/* Efecto Glow sutil */}
       <div className="absolute -right-20 -top-20 h-[300px] w-[300px] rounded-full bg-gradient-to-br from-white/10 to-transparent blur-[100px] transition-all duration-500 group-hover:bg-white/20" style={{ opacity: 0.5 }} />
 

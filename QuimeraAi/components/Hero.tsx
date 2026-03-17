@@ -1,27 +1,9 @@
-
 import React from 'react';
-import { HeroData, PaddingSize, ImageStyle, BorderRadiusSize, BorderSize, JustifyContent, ImagePosition, AspectRatio, ObjectFit, FontSize, ServiceIcon } from '../types';
+import { HeroData, BorderRadiusSize, FontSize } from '../types';
 import { useDesignTokens } from '../hooks/useDesignTokens';
-import * as LucideIcons from 'lucide-react';
 import ImagePlaceholder from './ui/ImagePlaceholder';
 import { isPendingImage } from '../utils/imagePlaceholders';
 import { hexToRgba } from '../utils/colorUtils';
-
-const paddingYClasses: Record<PaddingSize, string> = {
-  none: 'py-0',
-  sm: 'py-10 md:py-16',
-  md: 'py-16 md:py-24',
-  lg: 'py-20 md:py-32',
-  xl: 'py-24 md:py-40',
-};
-
-const paddingXClasses: Record<PaddingSize, string> = {
-  none: 'px-0',
-  sm: 'px-4',
-  md: 'px-6',
-  lg: 'px-8',
-  xl: 'px-12',
-};
 
 const headlineSizeClasses: Record<FontSize, string> = {
   sm: 'text-2xl md:text-3xl',
@@ -37,15 +19,6 @@ const subheadlineSizeClasses: Record<FontSize, string> = {
   xl: 'text-xl md:text-2xl',
 };
 
-const imageStyleClasses: Record<ImageStyle, string> = {
-  default: '',
-  'rounded-full': 'rounded-full',
-  glow: 'rounded-2xl',
-  float: 'rounded-2xl img-style-float',
-  hexagon: 'img-style-hexagon',
-  polaroid: 'block',
-};
-
 const borderRadiusClasses: Record<BorderRadiusSize, string> = {
   none: 'rounded-none',
   sm: 'rounded-sm',
@@ -56,282 +29,163 @@ const borderRadiusClasses: Record<BorderRadiusSize, string> = {
   full: 'rounded-3xl',
 };
 
-const borderSizeClasses: Record<BorderSize, string> = {
-  none: 'border-0',
-  sm: 'border-2',
-  md: 'border-4',
-  lg: 'border-8',
-};
-
-const justificationClasses: Record<JustifyContent, string> = {
-  start: 'md:justify-start',
-  center: 'md:justify-center',
-  end: 'md:justify-end',
-};
-
-const aspectRatioClasses: Record<AspectRatio, string> = {
-  auto: 'aspect-auto',
-  '1:1': 'aspect-square',
-  '4:3': 'aspect-[4/3]',
-  '3:4': 'aspect-[3/4]',
-  '16:9': 'aspect-video',
-  '9:16': 'aspect-[9/16]',
-};
-
-const objectFitClasses: Record<ObjectFit, string> = {
-  cover: 'object-cover',
-  contain: 'object-contain',
-  fill: 'object-fill',
-  none: 'object-none',
-  'scale-down': 'object-scale-down',
-};
-
-
 interface HeroProps extends HeroData {
   borderRadius: BorderRadiusSize;
   onNavigate?: (href: string) => void;
 }
 
-const getAspectRatioValue = (ratio: AspectRatio): number => {
-  if (ratio === 'auto') return 0;
-  const parts = ratio.split(':');
-  if (parts.length !== 2) return 0;
-  const [w, h] = parts.map(Number);
-  if (isNaN(w) || isNaN(h) || w === 0) return 0;
-  return h / w;
-};
-
-// Helper function to render badge icon (supports both emoji strings and Lucide icons)
-const renderBadgeIcon = (badgeIcon?: ServiceIcon | string) => {
-  if (!badgeIcon) return '✨';
-
-  // If it's a single character or emoji, return it directly
-  if (badgeIcon.length <= 2) return badgeIcon;
-
-  // Try to render as Lucide icon
-  const iconMap: Record<string, any> = {
-    'sparkles': LucideIcons.Sparkles,
-    'zap': LucideIcons.Zap,
-    'star': LucideIcons.Star,
-    'award': LucideIcons.Award,
-    'trophy': LucideIcons.Trophy,
-    'rocket': LucideIcons.Rocket,
-    'lightbulb': LucideIcons.Lightbulb,
-    'heart': LucideIcons.Heart,
-    'check-circle': LucideIcons.CheckCircle,
-    'alert-circle': LucideIcons.AlertCircle,
-    'shield': LucideIcons.Shield,
-    'target': LucideIcons.Target,
-    'trending-up': LucideIcons.TrendingUp,
-    'circle-dot': LucideIcons.CircleDot,
-    'hexagon': LucideIcons.Hexagon,
-    'layers': LucideIcons.Layers,
-  };
-
-  const IconComponent = iconMap[badgeIcon];
-  if (IconComponent) {
-    return React.createElement(IconComponent, { size: 16, className: 'inline-block' });
-  }
-
-  // Fallback to string if not found in icon map
-  return badgeIcon;
-};
-
 import HeroCinematicGym from './cinematic/HeroCinematicGym';
 
-
 const Hero: React.FC<HeroProps> = (props) => {
+  // Preserve the cinematic-gym variant as a special case
   if (props.heroVariant === 'cinematic-gym') {
-    return <HeroCinematicGym {...props} />;
+    return <HeroCinematicGym {...props} headlineFontSize={props.headlineFontSize || 'lg'} subheadlineFontSize={props.subheadlineFontSize || 'lg'} />;
   }
 
   const {
-    headline, subheadline, primaryCta, secondaryCta, imageUrl,
-    imageStyle, imageDropShadow, imageBorderRadius, imageBorderSize, imageBorderColor, imageJustification, imagePosition,
-    imageWidth, imageHeight, imageHeightEnabled, imageAspectRatio, imageObjectFit,
-    paddingY, paddingX, sectionBorderSize, sectionBorderColor, colors, borderRadius,
+    textLayout = 'left-top',
+    headline, headlineImageUrl, subheadline, primaryCta, secondaryCta, imageUrl,
+    colors, borderRadius,
     headlineFontSize = 'lg', subheadlineFontSize = 'lg',
-    showBadge = true, badgeText = '', badgeIcon = '✨',
-    badgeColor, badgeBackgroundColor,
     secondaryButtonStyle = 'solid',
     secondaryButtonOpacity = 100,
     heroHeight,
+    overlayOpacity,
     primaryCtaLink = '/#cta',
     secondaryCtaLink = '/#features',
     onNavigate,
   } = props;
 
-  // Get design tokens with fallback to component colors
-  const { getColor, colors: tokenColors } = useDesignTokens();
+  const { getColor } = useDesignTokens();
 
-  // Component colors take priority over Design Tokens
-  // User changes should always override defaults and design tokens
   const actualColors = {
     primary: colors?.primary || getColor('primary.main', '#4f46e5'),
     secondary: colors?.secondary || getColor('secondary.main', '#10b981'),
     background: colors?.background,
-    text: colors?.text,
-    heading: colors?.heading,
+    text: colors?.text || '#ffffff',
+    heading: colors?.heading || '#ffffff',
     buttonBackground: colors?.buttonBackground || getColor('primary.main', '#4f46e5'),
     buttonText: colors?.buttonText || '#ffffff',
     secondaryButtonBackground: colors?.secondaryButtonBackground || '#334155',
     secondaryButtonText: colors?.secondaryButtonText || '#ffffff',
   };
-  // Ensure headline is always a string - handle all edge cases
+
+  // Safe headline
   let safeHeadline: string;
   if (typeof headline === 'string' && headline.length > 0) {
     safeHeadline = headline;
-  } else if (headline && typeof headline.toString === 'function') {
+  } else if (headline && typeof (headline as any).toString === 'function') {
     safeHeadline = String(headline);
   } else {
     safeHeadline = 'Welcome';
   }
 
-  // Create a modified headline for styling the gradient part specifically
   const styledHeadline = safeHeadline.replace(
     /(<span.*?>)(.*?)(<\/span>)/,
     `<span style="background-image: linear-gradient(to right, ${actualColors.primary}, ${actualColors.secondary});" class="text-transparent bg-clip-text">$2</span>`
   );
 
-  const glowStyle = imageStyle === 'glow' && imageDropShadow ? { boxShadow: `0 10px 15px -3px ${actualColors.primary}40, 0 4px 6px -4px ${actualColors.primary}40` } : {};
-  const shadowClass = imageDropShadow && ['default', 'rounded-full', 'glow'].includes(imageStyle) ? 'shadow-2xl' : '';
-
-  const imageBorderRadiusClass = imageStyle === 'default' ? borderRadiusClasses[imageBorderRadius] : '';
-
-  // FIX: Cast to 'any' to allow 'maxWidth' which may be missing from CSSProperties type definition.
-  const imageContainerStyle: any = {
-    width: `${imageWidth}%`,
-    maxWidth: '512px',
+  const handleNavigate = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    if (onNavigate && !href.startsWith('http://') && !href.startsWith('https://')) {
+      e.preventDefault();
+      onNavigate(href);
+    }
   };
 
-  // Logic for fixed aspect ratios: constrain the container's width based on height.
-  if (imageHeightEnabled && imageAspectRatio !== 'auto') {
-    const ratioValue = getAspectRatioValue(imageAspectRatio);
-    if (ratioValue > 0) {
-      const heightBasedMaxWidth = imageHeight / ratioValue;
-
-      const originalMaxWidthStr = imageContainerStyle.maxWidth || '512';
-      const originalMaxWidth = parseInt(originalMaxWidthStr, 10);
-
-      imageContainerStyle.maxWidth = `${Math.min(originalMaxWidth, heightBasedMaxWidth)}px`;
-    }
-  }
-
-  const ImageComponent = () => {
-    // FIX: Cast to 'any' to allow 'maxHeight' which may be missing from CSSProperties type definition.
-    const imgStyle: any = {
-      ...glowStyle,
-      borderColor: imageBorderColor,
-    };
-
-    // Logic for 'auto' aspect ratio: constrain the image's height directly.
-    if (imageHeightEnabled && imageAspectRatio === 'auto') {
-      imgStyle.maxHeight = `${imageHeight}px`;
-    }
-
-    // Show placeholder if image URL is empty or pending
+  // ─── Background Image ───
+  const BackgroundImage = () => {
     if (isPendingImage(imageUrl)) {
       return (
-        <ImagePlaceholder
-          aspectRatio="16:9"
-          showGenerateButton={false}
-          className={`${imageBorderRadiusClass} ${borderSizeClasses[imageBorderSize]}`}
-        />
+        <div className="absolute inset-0 z-0">
+          <ImagePlaceholder
+            aspectRatio="16:9"
+            showGenerateButton={false}
+            className="w-full h-full"
+          />
+        </div>
       );
     }
 
     return (
-      <img
-        src={imageUrl}
-        alt="AI Generated Artwork"
-        className={`w-full ${imageAspectRatio === 'auto' ? 'h-auto' : 'h-full'} ${objectFitClasses[imageObjectFit]} ${imageStyleClasses[imageStyle]} ${imageBorderRadiusClass} ${borderSizeClasses[imageBorderSize]} ${shadowClass}`}
-        style={imgStyle}
-        key={imageUrl}
-      />
+      <div className="absolute inset-0 z-0">
+        <img
+          src={imageUrl}
+          alt="Hero background"
+          className="w-full h-full object-cover"
+          key={imageUrl}
+        />
+        {/* Dark overlay for readability */}
+        <div
+          className="absolute inset-0"
+          style={{
+            background: `linear-gradient(to bottom, rgba(0,0,0,${(overlayOpacity ?? 50) / 100}), rgba(0,0,0,${((overlayOpacity ?? 50) + 15) / 100}))`
+          }}
+        />
+      </div>
     );
   };
 
-  const sectionBorderClass = sectionBorderSize !== 'none' ? `border ${borderSizeClasses[sectionBorderSize]}` : '';
+  // ─── Text Content Block ───
+  const TextContent = ({ align = 'left' }: { align?: 'left' | 'center' | 'right' }) => {
+    const alignClasses = {
+      left: 'items-start text-left',
+      center: 'items-center text-center',
+      right: 'items-end text-right',
+    };
 
-  return (
-    <section
-      className={`relative container mx-auto flex flex-col items-center ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]} ${imagePosition === 'left' ? 'md:flex-row-reverse' : 'md:flex-row'} ${sectionBorderClass}`}
-      style={{ backgroundColor: actualColors.background, borderColor: sectionBorderColor, minHeight: heroHeight ? `${heroHeight}vh` : undefined }}
-    >
-      {/* Decorative orbs with drift animation */}
-      <div className="absolute top-0 left-0 -translate-x-1/4 -translate-y-1/4 w-96 h-96 rounded-full blur-3xl -z-10 classic-orb-1"
-        style={{ background: `radial-gradient(circle, ${actualColors.primary}18 0%, transparent 70%)` }}
-      />
-      <div className="absolute bottom-0 right-0 translate-x-1/4 translate-y-1/4 w-96 h-96 rounded-full blur-3xl -z-10 classic-orb-2"
-        style={{ background: `radial-gradient(circle, ${actualColors.secondary}15 0%, transparent 70%)` }}
-      />
-
-      <div className={`md:w-1/2 text-center ${imagePosition === 'left' ? 'md:text-right' : 'md:text-left'}`}>
-        {/* Badge/Kicker */}
-        {showBadge && badgeText && (
-          <div className={`classic-badge inline-flex items-center gap-2 px-4 py-2 rounded-full mb-4 border backdrop-blur-sm transition-all duration-300 hover:bg-white/10 cursor-default ${imagePosition === 'left' ? 'md:mr-0 md:ml-auto' : ''}`}
+    return (
+      <div className={`flex flex-col gap-5 w-full max-w-2xl ${alignClasses[align]}`}>
+        {/* Headline — Logo image or text */}
+        {headlineImageUrl ? (
+          <img
+            src={headlineImageUrl}
+            alt={safeHeadline}
+            className="max-h-20 md:max-h-28 w-auto object-contain hero-anim-headline"
             style={{
-              backgroundColor: badgeBackgroundColor || `${actualColors.primary}15`,
-              borderColor: badgeColor ? `${badgeColor}30` : `${actualColors.primary}30`
-            }}>
-            <span className="relative flex items-center">
-              <span className="absolute inline-flex h-full w-full rounded-full opacity-60 classic-ping" style={{ backgroundColor: badgeColor || actualColors.primary }} />
-              <span className="relative text-sm font-semibold flex items-center" style={{ color: badgeColor || actualColors.primary }}>
-                {renderBadgeIcon(badgeIcon)}
-              </span>
-            </span>
-            <span className="text-sm font-semibold" style={{ color: badgeColor || actualColors.primary }}>
-              {badgeText}
-            </span>
-          </div>
+              filter: 'drop-shadow(0 2px 20px rgba(0,0,0,0.3))',
+              alignSelf: align === 'center' ? 'center' : align === 'right' ? 'flex-end' : 'flex-start',
+            }}
+          />
+        ) : (
+          <h1
+            className={`${headlineSizeClasses[headlineFontSize]} font-extrabold leading-tight font-header`}
+            style={{
+              color: actualColors.heading,
+              textTransform: 'var(--headings-transform, none)' as any,
+              letterSpacing: 'var(--headings-spacing, normal)',
+              textShadow: '0 2px 20px rgba(0,0,0,0.3)',
+            }}
+            dangerouslySetInnerHTML={{ __html: styledHeadline }}
+          />
         )}
 
-        <h1
-          className={`${headlineSizeClasses[headlineFontSize]} font-extrabold text-site-heading leading-tight mb-6 font-header classic-headline`}
-          style={{
-            color: actualColors.heading,
-            textTransform: 'var(--headings-transform, none)' as any,
-            letterSpacing: 'var(--headings-spacing, normal)'
-          }}
-          dangerouslySetInnerHTML={{ __html: styledHeadline }}
-        />
         <p
-          className={`${subheadlineSizeClasses[subheadlineFontSize]} mb-8 max-w-xl mx-auto md:mx-0 font-body classic-sub`}
-          style={{ color: actualColors.text }}
+          className={`${subheadlineSizeClasses[subheadlineFontSize]} font-body opacity-90`}
+          style={{ color: actualColors.text, textShadow: '0 1px 10px rgba(0,0,0,0.2)' }}
         >
           {subheadline}
         </p>
-        <div className={`classic-ctas flex flex-wrap justify-center gap-4 ${imagePosition === 'left' ? 'md:justify-end' : 'md:justify-start'}`}>
+
+        <div className={`flex flex-wrap gap-4 mt-2 ${align === 'center' ? 'justify-center' : align === 'right' ? 'justify-end' : 'justify-start'}`}>
           <a
             href={primaryCtaLink || '/#cta'}
-            onClick={(e) => {
-              const href = primaryCtaLink || '/#cta';
-              if (onNavigate && !href.startsWith('http://') && !href.startsWith('https://')) {
-                e.preventDefault();
-                onNavigate(href);
-              }
-            }}
+            onClick={(e) => handleNavigate(e, primaryCtaLink || '/#cta')}
             style={{
-              backgroundColor: actualColors.buttonBackground || actualColors.primary,
-              color: actualColors.buttonText || '#ffffff',
+              backgroundColor: hexToRgba(actualColors.buttonBackground, 0.6),
+              color: actualColors.buttonText,
               textTransform: 'var(--buttons-transform, none)' as any,
-              letterSpacing: 'var(--buttons-spacing, normal)'
+              letterSpacing: 'var(--buttons-spacing, normal)',
+              backdropFilter: 'blur(12px) saturate(180%)',
+              WebkitBackdropFilter: 'blur(12px) saturate(180%)',
             }}
-            className={`relative overflow-hidden group text-white font-bold py-3 px-8 hover:-translate-y-1 hover:scale-105 active:translate-y-0 active:scale-95 transition-all duration-300 font-button ${borderRadiusClasses[borderRadius]}`}
+            className={`relative overflow-hidden group font-bold py-3 px-8 border border-white/15 hover:-translate-y-1 hover:scale-105 active:translate-y-0 active:scale-95 transition-all duration-300 font-button ${borderRadiusClasses[borderRadius]}`}
           >
             <span className="relative z-10">{primaryCta}</span>
-            {/* Shine sweep overlay */}
             <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-12" />
           </a>
           <a
             href={secondaryCtaLink || '/#features'}
-            onClick={(e) => {
-              const href = secondaryCtaLink || '/#features';
-              if (onNavigate && !href.startsWith('http://') && !href.startsWith('https://')) {
-                e.preventDefault();
-                onNavigate(href);
-              }
-            }}
+            onClick={(e) => handleNavigate(e, secondaryCtaLink || '/#features')}
             className={`relative overflow-hidden group font-bold py-3 px-8 hover:-translate-y-1 hover:scale-105 active:translate-y-0 active:scale-95 transition-all duration-300 font-button ${borderRadiusClasses[borderRadius]} ${secondaryButtonStyle === 'outline'
               ? 'border-2 bg-transparent'
               : secondaryButtonStyle === 'ghost'
@@ -340,12 +194,14 @@ const Hero: React.FC<HeroProps> = (props) => {
               }`}
             style={{
               backgroundColor: secondaryButtonStyle === 'solid'
-                ? hexToRgba(actualColors.secondaryButtonBackground, secondaryButtonOpacity / 100)
+                ? hexToRgba(actualColors.secondaryButtonBackground, Math.min(secondaryButtonOpacity / 100, 0.5))
                 : 'transparent',
-              borderColor: secondaryButtonStyle === 'outline' ? actualColors.secondaryButtonBackground : 'transparent',
-              color: actualColors.secondaryButtonText || '#ffffff',
+              borderColor: secondaryButtonStyle === 'outline' ? actualColors.secondaryButtonBackground : 'rgba(255,255,255,0.15)',
+              color: actualColors.secondaryButtonText,
               textTransform: 'var(--buttons-transform, none)' as any,
-              letterSpacing: 'var(--buttons-spacing, normal)'
+              letterSpacing: 'var(--buttons-spacing, normal)',
+              backdropFilter: secondaryButtonStyle !== 'ghost' ? 'blur(12px) saturate(180%)' : undefined,
+              WebkitBackdropFilter: secondaryButtonStyle !== 'ghost' ? 'blur(12px) saturate(180%)' : undefined,
             }}
           >
             <span className="relative z-10">{secondaryCta}</span>
@@ -354,80 +210,53 @@ const Hero: React.FC<HeroProps> = (props) => {
             )}
           </a>
         </div>
-
       </div>
-      <div className={`classic-image md:w-1/2 mt-12 md:mt-0 flex justify-center ${justificationClasses[imageJustification]}`}>
-        <div className="relative classic-image-float transition-transform duration-500 hover:scale-[1.03] hover:-translate-y-1" style={imageContainerStyle}>
-          <div className={imageStyle === 'polaroid' || imageAspectRatio === 'auto' ? '' : aspectRatioClasses[imageAspectRatio]}>
-            {imageStyle === 'polaroid' ? (
-              <div className="img-style-polaroid">
-                <ImageComponent />
-              </div>
-            ) : (
-              <ImageComponent />
-            )}
-          </div>
-        </div>
-      </div>
+    );
+  };
 
-      {/* Entrance & Interaction Animations */}
-      <style>{`
-        @keyframes classic-fade-up {
-          from { opacity: 0; transform: translateY(25px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes classic-slide-in {
-          from { opacity: 0; transform: translateX(${imagePosition === 'left' ? '-' : ''}40px) scale(0.95); }
-          to { opacity: 1; transform: translateX(0) scale(1); }
-        }
-        @keyframes classic-float {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-12px); }
-        }
-        @keyframes classic-orb-drift-1 {
-          0%, 100% { opacity: 0.5; transform: translate(-25%, -25%) scale(1); }
-          50% { opacity: 0.8; transform: translate(-20%, -30%) scale(1.1); }
-        }
-        @keyframes classic-orb-drift-2 {
-          0%, 100% { opacity: 0.4; transform: translate(25%, 25%) scale(1); }
-          50% { opacity: 0.7; transform: translate(20%, 20%) scale(1.08); }
-        }
-        @keyframes classic-ping-anim {
-          75%, 100% { transform: scale(2); opacity: 0; }
-        }
-        .classic-badge {
-          animation: classic-fade-up 0.6s ease-out 0.2s forwards;
-          opacity: 0;
-        }
-        .classic-headline {
-          animation: classic-fade-up 0.7s ease-out 0.35s forwards;
-          opacity: 0;
-        }
-        .classic-sub {
-          animation: classic-fade-up 0.7s ease-out 0.5s forwards;
-          opacity: 0;
-        }
-        .classic-ctas {
-          animation: classic-fade-up 0.7s ease-out 0.65s forwards;
-          opacity: 0;
-        }
-        .classic-image {
-          animation: classic-slide-in 0.9s ease-out 0.3s forwards;
-          opacity: 0;
-        }
-        .classic-image-float {
-          animation: classic-float 6s ease-in-out 1.5s infinite;
-        }
-        .classic-orb-1 {
-          animation: classic-orb-drift-1 10s ease-in-out infinite;
-        }
-        .classic-orb-2 {
-          animation: classic-orb-drift-2 12s ease-in-out 1s infinite;
-        }
-        .classic-ping {
-          animation: classic-ping-anim 2s cubic-bezier(0,0,0.2,1) infinite;
-        }
-      `}</style>
+  // ─── Layout positioning helpers ───
+  // Header padding (top positions) — ~80px to clear navigation header
+  // Bottom padding — same as top (~80px) for visual symmetry
+  const HEADER_PADDING = 'pt-28 md:pt-32';
+  const BOTTOM_PADDING = 'pb-20 md:pb-24';
+
+  // Determine alignment from textLayout
+  const getHorizontalAlign = (): 'left' | 'center' | 'right' => {
+    if (textLayout.startsWith('left')) return 'left';
+    if (textLayout.startsWith('right')) return 'right';
+    return 'center';
+  };
+
+  const getJustifyClass = (): string => {
+    const h = getHorizontalAlign();
+    if (h === 'left') return 'justify-start';
+    if (h === 'right') return 'justify-end';
+    return 'justify-center';
+  };
+
+  const getVerticalClass = (): string => {
+    if (textLayout.endsWith('-top') || textLayout === 'center-top') return `items-start ${HEADER_PADDING}`;
+    if (textLayout.endsWith('-bottom') || textLayout === 'center-bottom') return `items-end ${BOTTOM_PADDING}`;
+    return 'items-center'; // center (vertical center)
+  };
+
+  return (
+    <section
+      className="relative w-full overflow-hidden flex flex-col"
+      style={{
+        minHeight: heroHeight ? `${heroHeight}vh` : '80vh',
+        backgroundColor: actualColors.background || '#0f172a',
+      }}
+    >
+      <BackgroundImage />
+
+      {/* Main content container */}
+      <div
+        className={`relative z-10 container mx-auto px-6 md:px-12 flex flex-1 ${getVerticalClass()} ${getJustifyClass()}`}
+        style={{ minHeight: heroHeight ? `${heroHeight}vh` : '80vh' }}
+      >
+        <TextContent align={getHorizontalAlign()} />
+      </div>
     </section>
   );
 };
