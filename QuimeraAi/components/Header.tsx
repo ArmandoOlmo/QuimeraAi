@@ -623,8 +623,8 @@ const Header: React.FC<HeaderData & {
                     />
                   )}
                   {showCart && <CartButton />}
-                  {showLogin && <LoginButton />}
-                  {showCta && <CtaButton />}
+                  {actualShowLogin && <LoginButton />}
+                  {actualShowCta && <CtaButton />}
                 </div>
               </div>
             </div>
@@ -648,8 +648,8 @@ const Header: React.FC<HeaderData & {
                     />
                   )}
                   {showCart && <CartButton />}
-                  {showLogin && <LoginButton />}
-                  {showCta && <CtaButton />}
+                  {actualShowLogin && <LoginButton />}
+                  {actualShowCta && <CtaButton />}
                 </div>
               </div>
             </>

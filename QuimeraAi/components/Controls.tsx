@@ -938,6 +938,9 @@ const Controls: React.FC = () => {
               className="w-full bg-editor-panel-bg border border-editor-border rounded-md px-2 py-2 text-sm text-editor-text-primary"
             >
               <option value="minimal">{t('editor.controls.header.minimal')}</option>
+              <option value="classic">Classic</option>
+              <option value="center">Center</option>
+              <option value="stack">Stack</option>
             </select>
           </div>
           <div>

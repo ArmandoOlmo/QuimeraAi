@@ -24,7 +24,7 @@ export interface CornerGradientConfig {
 // =============================================================================
 // HEADER
 // =============================================================================
-export type NavbarLayout = 'minimal';
+export type NavbarLayout = 'minimal' | 'center' | 'stack' | 'classic';
 export type NavLinkHoverStyle = 'simple' | 'underline' | 'bracket' | 'highlight' | 'glow';
 
 // Estilos de navegación con las 9 nuevas variantes
