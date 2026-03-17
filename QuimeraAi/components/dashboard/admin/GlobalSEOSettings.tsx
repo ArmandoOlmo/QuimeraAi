@@ -435,7 +435,7 @@ const GlobalSEOSettings: React.FC<GlobalSEOSettingsProps> = ({ onBack }) => {
                                             <div className="p-4 bg-green-500/10 border border-green-500/30 rounded-lg">
                                                 <h3 className="font-medium text-green-400 mb-2">✨ {t('superadmin.seo.verifications.benefits.title')}</h3>
                                                 <ul className="text-sm text-editor-text-secondary space-y-1">
-                                                    {(t('superadmin.seo.verifications.benefits.list', { returnObjects: true }) as string[]).map((benefit, i) => (
+                                                    {(() => { const list = t('superadmin.seo.verifications.benefits.list', { returnObjects: true }); return Array.isArray(list) ? list : []; })().map((benefit: string, i: number) => (
                                                         <li key={i}>• {benefit}</li>
                                                     ))}
                                                 </ul>
@@ -526,7 +526,7 @@ const GlobalSEOSettings: React.FC<GlobalSEOSettingsProps> = ({ onBack }) => {
                                             <div className="p-4 bg-purple-500/10 border border-purple-500/30 rounded-lg">
                                                 <h3 className="font-medium text-purple-400 mb-2">🚀 {t('superadmin.seo.ai.special.title')}</h3>
                                                 <ul className="text-sm text-editor-text-secondary space-y-2">
-                                                    {(t('superadmin.seo.ai.special.list', { returnObjects: true }) as string[]).map((box, i) => (
+                                                    {(() => { const list = t('superadmin.seo.ai.special.list', { returnObjects: true }); return Array.isArray(list) ? list : []; })().map((box: string, i: number) => (
                                                         <li key={i}>• <span dangerouslySetInnerHTML={{ __html: box }} /></li>
                                                     ))}
                                                 </ul>

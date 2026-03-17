@@ -4,7 +4,8 @@ import {
     LayoutGrid, Upload, DollarSign, Calendar, Trash2, CheckCircle2,
     Loader2, TrendingUp, Download, Receipt, Sparkles, AlertTriangle,
     FileText, BarChart3, PieChart as PieChartIcon, Menu, TrendingDown,
-    Brain, Zap, Target, Eye, Plus, Search, Building2, List, X
+    Brain, Zap, Target, Eye, Plus, Search, Building2, List, X,
+    Wallet, CreditCard,
 } from 'lucide-react';
 import {
     LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
@@ -19,6 +20,7 @@ import DashboardSidebar from '../DashboardSidebar';
 import DashboardWaveRibbons from '../DashboardWaveRibbons';
 import { extractExpenseFromReceipt } from '../../../utils/expenseExtractor';
 import { ExpenseRecord } from '../../../types/finance';
+import type { CashFlowSummary } from '../../../types/finance';
 import { useAuth } from '../../../contexts/core/AuthContext';
 import { useAI } from '../../../contexts/ai';
 import { useProject } from '../../../contexts/project';
@@ -35,6 +37,14 @@ import {
 } from "../../ui/sheet";
 import { cn } from '../../../utils/cn';
 import ConfirmationModal from '../../ui/ConfirmationModal';
+
+// Accounting sub-components
+import { useAccountingData } from '../../../hooks/useAccountingData';
+import { useInvoices } from '../../../hooks/useInvoices';
+import FinancialInsights from './FinancialInsights';
+import SmartTransactionTable from './SmartTransactionTable';
+import InvoiceManager from './InvoiceManager';
+import ReportGenerator from './ReportGenerator';
 
 const COLORS = ['#4f46e5', '#06b6d4', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#ef4444'];
 
@@ -69,6 +79,140 @@ const StatCard = ({ title, value, icon: Icon, trend, trendColor = "text-primary"
         </div>
     </div>
 );
+
+// Accounting tab content — self-contained component managing accounting hooks
+const AccountingTabContent: React.FC<{
+    activeView: string;
+    user: any;
+    activeProject: any;
+    t: any;
+}> = ({ activeView, user, activeProject, t }) => {
+    const {
+        transactions, vendors, productsServices,
+        isLoading: txLoading, error: txError,
+        addTransaction, updateTransaction, deleteTransaction,
+    } = useAccountingData();
+
+    const {
+        invoices, isLoading: invLoading, error: invError,
+        createInvoice, updateInvoice, deleteInvoice,
+        markAsSent, markAsPaid, cancelInvoice,
+        overdueInvoices, totalOutstanding, totalPaid,
+    } = useInvoices();
+
+    // Cash flow summary derived from transactions
+    const cashFlow: CashFlowSummary[] = useMemo(() => {
+        const byMonth: Record<string, { income: number; expenses: number }> = {};
+        transactions.forEach(tx => {
+            const period = tx.date.substring(0, 7);
+            if (!byMonth[period]) byMonth[period] = { income: 0, expenses: 0 };
+            if (tx.type === 'income') byMonth[period].income += tx.amount;
+            else byMonth[period].expenses += tx.amount;
+        });
+        return Object.entries(byMonth)
+            .sort(([a], [b]) => a.localeCompare(b))
+            .map(([period, d]) => ({ period, ...d, netCashFlow: d.income - d.expenses }));
+    }, [transactions]);
+
+    const totalIncome = useMemo(() => transactions.filter(tx => tx.type === 'income').reduce((s, tx) => s + tx.amount, 0), [transactions]);
+    const totalExpenses = useMemo(() => transactions.filter(tx => tx.type === 'expense').reduce((s, tx) => s + tx.amount, 0), [transactions]);
+
+    // Only render for accounting tabs
+    if (!['dashboard', 'transactions', 'invoices', 'reports'].includes(activeView)) return null;
+
+    return (
+        <main className="flex-1 overflow-y-auto p-6 relative z-10">
+            {/* ACCOUNTING DASHBOARD */}
+            {activeView === 'dashboard' && (
+                <div className="space-y-6 animate-in fade-in duration-500">
+                    {/* KPI Cards */}
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-4">
+                        <StatCard title={t('accounting.totalIncome', 'Total Income')} value={`$${totalIncome.toLocaleString('en-US', { minimumFractionDigits: 2 })}`} icon={TrendingUp} trendColor="text-green-400" />
+                        <StatCard title={t('accounting.totalExpenses', 'Total Expenses')} value={`$${totalExpenses.toLocaleString('en-US', { minimumFractionDigits: 2 })}`} icon={TrendingDown} trendColor="text-red-400" />
+                        <StatCard title={t('accounting.netIncome', 'Net Income')} value={`$${(totalIncome - totalExpenses).toLocaleString('en-US', { minimumFractionDigits: 2 })}`} icon={DollarSign} trendColor={totalIncome - totalExpenses >= 0 ? 'text-green-400' : 'text-red-400'} />
+                        <StatCard title={t('accounting.outstanding', 'Outstanding')} value={`$${totalOutstanding.toLocaleString('en-US', { minimumFractionDigits: 2 })}`} icon={AlertTriangle} trend={overdueInvoices.length > 0 ? `${overdueInvoices.length} ${t('accounting.overdue', 'overdue')}` : undefined} trendColor="text-amber-400" />
+                    </div>
+
+                    {/* Cash Flow Chart */}
+                    {cashFlow.length > 0 && (
+                        <div className="rounded-2xl border border-white/[0.08] bg-card/80 backdrop-blur-xl p-5">
+                            <h3 className="font-bold text-foreground mb-4">{t('accounting.cashFlowChart', 'Cash Flow')}</h3>
+                            <ResponsiveContainer width="100%" height={280}>
+                                <AreaChart data={cashFlow}>
+                                    <defs>
+                                        <linearGradient id="incomeGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#22c55e" stopOpacity={0.3} /><stop offset="95%" stopColor="#22c55e" stopOpacity={0} /></linearGradient>
+                                        <linearGradient id="expenseGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#ef4444" stopOpacity={0.3} /><stop offset="95%" stopColor="#ef4444" stopOpacity={0} /></linearGradient>
+                                    </defs>
+                                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
+                                    <XAxis dataKey="period" stroke="#888" fontSize={12} />
+                                    <YAxis stroke="#888" fontSize={12} tickFormatter={(v: number) => `$${v.toLocaleString()}`} />
+                                    <Tooltip contentStyle={{ background: 'hsl(var(--card))', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', color: 'hsl(var(--foreground))' }} />
+                                    <Area type="monotone" dataKey="income" stroke="#22c55e" fillOpacity={1} fill="url(#incomeGrad)" name={t('accounting.income', 'Income')} />
+                                    <Area type="monotone" dataKey="expenses" stroke="#ef4444" fillOpacity={1} fill="url(#expenseGrad)" name={t('accounting.expense', 'Expenses')} />
+                                    <Legend />
+                                </AreaChart>
+                            </ResponsiveContainer>
+                        </div>
+                    )}
+
+                    {/* AI Financial Insights */}
+                    <FinancialInsights transactions={transactions} cashFlow={cashFlow} isLoading={txLoading} />
+
+                    {/* Overdue invoices widget */}
+                    {overdueInvoices.length > 0 && (
+                        <div className="rounded-2xl border border-red-500/20 bg-card/80 backdrop-blur-xl p-5">
+                            <h3 className="font-bold text-foreground mb-3 flex items-center gap-2"><AlertTriangle size={18} className="text-red-400" />{t('accounting.overdueInvoices', 'Overdue Invoices')}</h3>
+                            <div className="space-y-2">
+                                {overdueInvoices.map(inv => (
+                                    <div key={inv.id} className="flex items-center justify-between p-3 rounded-xl bg-red-500/5 border border-red-500/10">
+                                        <div><span className="font-semibold text-foreground">{inv.invoiceNumber}</span><span className="text-sm text-muted-foreground ml-2">{inv.clientName}</span></div>
+                                        <span className="font-bold text-red-400">${inv.total.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {/* TRANSACTIONS TAB */}
+            {activeView === 'transactions' && (
+                <div className="animate-in fade-in duration-500">
+                    <SmartTransactionTable
+                        transactions={transactions}
+                        isLoading={txLoading}
+                        onAdd={addTransaction}
+                        onUpdate={updateTransaction}
+                        onDelete={deleteTransaction}
+                    />
+                </div>
+            )}
+
+            {/* INVOICES TAB */}
+            {activeView === 'invoices' && (
+                <div className="animate-in fade-in duration-500">
+                    <InvoiceManager
+                        invoices={invoices}
+                        isLoading={invLoading}
+                        onCreate={createInvoice}
+                        onUpdate={updateInvoice}
+                        onDelete={deleteInvoice}
+                        onMarkAsSent={markAsSent}
+                        onMarkAsPaid={markAsPaid}
+                        onCancel={cancelInvoice}
+                    />
+                </div>
+            )}
+
+            {/* REPORTS TAB */}
+            {activeView === 'reports' && (
+                <div className="animate-in fade-in duration-500">
+                    <ReportGenerator transactions={transactions} isLoading={txLoading} />
+                </div>
+            )}
+        </main>
+    );
+};
 
 const FinanceDashboard: React.FC = () => {
     const { t } = useTranslation();
@@ -118,7 +262,7 @@ const FinanceDashboard: React.FC = () => {
     const [isUploading, setIsUploading] = useState(false);
     const [uploadError, setUploadError] = useState<string | null>(null);
     const [selectedExpense, setSelectedExpense] = useState<ExpenseRecord | null>(null);
-    const [activeView, setActiveView] = useState<'overview' | 'list' | 'analytics'>('overview');
+    const [activeView, setActiveView] = useState<'dashboard' | 'transactions' | 'invoices' | 'overview' | 'list' | 'analytics' | 'reports'>('dashboard');
 
     // AI Features states
     const [isGeneratingReport, setIsGeneratingReport] = useState(false);
@@ -563,16 +707,20 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación ni puntu
                 </header>
 
                 {/* View Tabs */}
-                <div className="flex border-b border-border px-3 sm:px-6 bg-card/50">
+                <div className="flex border-b border-border px-3 sm:px-6 bg-card/50 overflow-x-auto scrollbar-none">
                     {[
+                        { id: 'dashboard', label: t('accounting.dashboard', 'Dashboard'), icon: Wallet },
+                        { id: 'transactions', label: t('accounting.transactions', 'Transactions'), icon: CreditCard },
+                        { id: 'invoices', label: t('accounting.invoices', 'Invoices'), icon: FileText },
                         { id: 'overview', label: t('financeDashboard.overview'), icon: BarChart3 },
                         { id: 'list', label: t('financeDashboard.movements'), icon: Receipt },
-                        { id: 'analytics', label: t('financeDashboard.aiAnalytics'), icon: Brain }
+                        { id: 'analytics', label: t('financeDashboard.aiAnalytics'), icon: Brain },
+                        { id: 'reports', label: t('accounting.reports', 'Reports'), icon: PieChartIcon },
                     ].map(tab => (
                         <button
                             key={tab.id}
                             onClick={() => setActiveView(tab.id as any)}
-                            className={`flex items-center gap-2 px-4 py-3 border-b-2 transition-colors ${activeView === tab.id
+                            className={`flex items-center gap-2 px-4 py-3 border-b-2 transition-colors whitespace-nowrap ${activeView === tab.id
                                 ? 'border-primary text-foreground font-semibold'
                                 : 'border-transparent text-muted-foreground hover:text-foreground'
                                 }`}
@@ -583,8 +731,15 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación ni puntu
                     ))}
                 </div>
 
+                <AccountingTabContent
+                    activeView={activeView}
+                    user={user}
+                    activeProject={activeProject}
+                    t={t}
+                />
+
                 <main className="flex-1 overflow-y-auto p-6 relative z-10">
-                    {/* OVERVIEW VIEW */}
+                    {/* OVERVIEW VIEW (Expenses) */}
                     {activeView === 'overview' && (
                         <div className="space-y-6 animate-in fade-in duration-500">
                             {/* Top row: Metrics */}

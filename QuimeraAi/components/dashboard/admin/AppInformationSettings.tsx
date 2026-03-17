@@ -42,6 +42,8 @@ interface AppInfoConfig {
     metaTitle: string;
     metaDescription: string;
     metaKeywords: string[];
+    logoUrl: string;
+    logoStoragePath: string;
     faviconUrl: string;
     faviconStoragePath: string;
     socialImageUrl: string;
@@ -54,6 +56,8 @@ const META_DESCRIPTION_LIMIT = 160;
 const SITE_DESCRIPTION_LIMIT = 320;
 const LONG_DESCRIPTION_LIMIT = 600;
 
+const DEFAULT_LOGO_URL = 'https://firebasestorage.googleapis.com/v0/b/quimeraai.firebasestorage.app/o/quimera%2Fquimeralogo.png?alt=media&token=82368c1c-0f63-42b7-831f-72780006f032';
+
 const getDefaultConfig = (): AppInfoConfig => ({
     appName: 'Quimera.ai',
     tagline: 'Launch beautiful AI-generated websites in minutes.',
@@ -65,7 +69,9 @@ const getDefaultConfig = (): AppInfoConfig => ({
     metaTitle: 'Quimera.ai | AI Website Builder for High-Converting Experiences',
     metaDescription: 'Build, localize, and scale marketing websites using AI. Templates, CMS, localization, and analytics included. Powered by Quimera.ai.',
     metaKeywords: ['AI website builder', 'no-code', 'marketing sites', 'Quimera'],
-    faviconUrl: 'https://firebasestorage.googleapis.com/v0/b/quimeraai.firebasestorage.app/o/quimera%2Fquimeralogo.png?alt=media&token=82368c1c-0f63-42b7-831f-72780006f032',
+    logoUrl: DEFAULT_LOGO_URL,
+    logoStoragePath: '',
+    faviconUrl: DEFAULT_LOGO_URL,
     faviconStoragePath: '',
     socialImageUrl: '',
     socialImageStoragePath: '',
@@ -81,7 +87,7 @@ const AppInformationSettings: React.FC<AppInformationSettingsProps> = ({ onBack 
     const [isSaving, setIsSaving] = useState(false);
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
     const [statusMessage, setStatusMessage] = useState<string>(t('superadmin.appInfo.readyToEdit'));
-    const [uploadingAsset, setUploadingAsset] = useState<'favicon' | 'social' | null>(null);
+    const [uploadingAsset, setUploadingAsset] = useState<'logo' | 'favicon' | 'social' | null>(null);
 
     const [appName, setAppName] = useState(getDefaultConfig().appName);
     const [tagline, setTagline] = useState(getDefaultConfig().tagline);
@@ -93,12 +99,15 @@ const AppInformationSettings: React.FC<AppInformationSettingsProps> = ({ onBack 
     const [metaTitle, setMetaTitle] = useState(getDefaultConfig().metaTitle);
     const [metaDescription, setMetaDescription] = useState(getDefaultConfig().metaDescription);
     const [metaKeywordsInput, setMetaKeywordsInput] = useState(getDefaultConfig().metaKeywords.join(', '));
+    const [logoUrl, setLogoUrl] = useState('');
+    const [logoStoragePath, setLogoStoragePath] = useState('');
     const [faviconUrl, setFaviconUrl] = useState('');
     const [faviconStoragePath, setFaviconStoragePath] = useState('');
     const [socialImageUrl, setSocialImageUrl] = useState('');
     const [socialImageStoragePath, setSocialImageStoragePath] = useState('');
     const [savedConfig, setSavedConfig] = useState<AppInfoConfig | null>(null);
 
+    const logoInputRef = useRef<HTMLInputElement>(null);
     const faviconInputRef = useRef<HTMLInputElement>(null);
     const socialImageInputRef = useRef<HTMLInputElement>(null);
 
@@ -145,6 +154,8 @@ const AppInformationSettings: React.FC<AppInformationSettingsProps> = ({ onBack 
         setMetaTitle(config.metaTitle ?? defaults.metaTitle);
         setMetaDescription(config.metaDescription ?? defaults.metaDescription);
         setMetaKeywordsInput((config.metaKeywords ?? defaults.metaKeywords).join(', '));
+        setLogoUrl(config.logoUrl ?? '');
+        setLogoStoragePath(config.logoStoragePath ?? '');
         setFaviconUrl(config.faviconUrl ?? '');
         setFaviconStoragePath(config.faviconStoragePath ?? '');
         setSocialImageUrl(config.socialImageUrl ?? '');
@@ -182,6 +193,8 @@ const AppInformationSettings: React.FC<AppInformationSettingsProps> = ({ onBack 
                 metaTitle,
                 metaDescription,
                 metaKeywords: keywordsArray,
+                logoUrl,
+                logoStoragePath: logoStoragePath || '',
                 faviconUrl,
                 faviconStoragePath: faviconStoragePath || '',
                 socialImageUrl,
@@ -228,8 +241,8 @@ const AppInformationSettings: React.FC<AppInformationSettingsProps> = ({ onBack 
         return true;
     };
 
-    const handleAssetUpload = async (file: File, type: 'favicon' | 'social') => {
-        if (!validateImage(file, type)) return;
+    const handleAssetUpload = async (file: File, type: 'logo' | 'favicon' | 'social') => {
+        if (!validateImage(file, type === 'logo' ? 'favicon' : type)) return;
         setUploadingAsset(type);
         try {
             const cleanName = file.name.replace(/\s+/g, '-').toLowerCase();
@@ -238,7 +251,14 @@ const AppInformationSettings: React.FC<AppInformationSettingsProps> = ({ onBack 
             const snapshot = await uploadBytes(storageRef, file);
             const downloadURL = await getDownloadURL(snapshot.ref);
 
-            if (type === 'favicon') {
+            if (type === 'logo') {
+                if (logoStoragePath && logoStoragePath !== storagePath) {
+                    await deleteObject(ref(storage, logoStoragePath)).catch(() => undefined);
+                }
+                setLogoUrl(downloadURL);
+                setLogoStoragePath(storagePath);
+                success(t('superadmin.appInfo.logoUpdated', 'Logo actualizado'));
+            } else if (type === 'favicon') {
                 if (faviconStoragePath && faviconStoragePath !== storagePath) {
                     await deleteObject(ref(storage, faviconStoragePath)).catch(() => undefined);
                 }
@@ -262,9 +282,16 @@ const AppInformationSettings: React.FC<AppInformationSettingsProps> = ({ onBack 
         }
     };
 
-    const handleRemoveAsset = async (type: 'favicon' | 'social') => {
+    const handleRemoveAsset = async (type: 'logo' | 'favicon' | 'social') => {
         try {
-            if (type === 'favicon') {
+            if (type === 'logo') {
+                if (logoStoragePath) {
+                    await deleteObject(ref(storage, logoStoragePath)).catch(() => { });
+                }
+                setLogoUrl('');
+                setLogoStoragePath('');
+                success(t('superadmin.appInfo.logoRemoved', 'Logo eliminado'));
+            } else if (type === 'favicon') {
                 if (faviconStoragePath) {
                     await deleteObject(ref(storage, faviconStoragePath)).catch(() => { });
                 }
@@ -521,24 +548,46 @@ const AppInformationSettings: React.FC<AppInformationSettingsProps> = ({ onBack 
                                                 </p>
                                             </div>
                                         </div>
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div className="space-y-4">
+                                            {/* App Logo — Primary logo used across the entire platform */}
                                             <AssetUploader
-                                                title={t('superadmin.appInfo.favicon')}
-                                                description={t('superadmin.appInfo.faviconFormat')}
-                                                imageUrl={faviconUrl}
-                                                isUploading={uploadingAsset === 'favicon'}
-                                                onUpload={() => faviconInputRef.current?.click()}
-                                                onRemove={() => handleRemoveAsset('favicon')}
+                                                title={t('superadmin.appInfo.appLogo', 'Logo de la App')}
+                                                description={t('superadmin.appInfo.appLogoDesc', 'Logo principal que se muestra en el sidebar, landing page, login, footer y toda la plataforma. PNG o SVG, máx. 512KB.')}
+                                                imageUrl={logoUrl}
+                                                isUploading={uploadingAsset === 'logo'}
+                                                onUpload={() => logoInputRef.current?.click()}
+                                                onRemove={() => handleRemoveAsset('logo')}
                                             />
-                                            <AssetUploader
-                                                title={t('superadmin.appInfo.socialPreview')}
-                                                description={t('superadmin.appInfo.socialFormat')}
-                                                imageUrl={socialImageUrl}
-                                                isUploading={uploadingAsset === 'social'}
-                                                onUpload={() => socialImageInputRef.current?.click()}
-                                                onRemove={() => handleRemoveAsset('social')}
-                                            />
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <AssetUploader
+                                                    title={t('superadmin.appInfo.favicon')}
+                                                    description={t('superadmin.appInfo.faviconFormat')}
+                                                    imageUrl={faviconUrl}
+                                                    isUploading={uploadingAsset === 'favicon'}
+                                                    onUpload={() => faviconInputRef.current?.click()}
+                                                    onRemove={() => handleRemoveAsset('favicon')}
+                                                />
+                                                <AssetUploader
+                                                    title={t('superadmin.appInfo.socialPreview')}
+                                                    description={t('superadmin.appInfo.socialFormat')}
+                                                    imageUrl={socialImageUrl}
+                                                    isUploading={uploadingAsset === 'social'}
+                                                    onUpload={() => socialImageInputRef.current?.click()}
+                                                    onRemove={() => handleRemoveAsset('social')}
+                                                />
+                                            </div>
                                         </div>
+                                        <input
+                                            ref={logoInputRef}
+                                            type="file"
+                                            accept=".png,.svg,.webp,image/png,image/svg+xml,image/webp"
+                                            className="hidden"
+                                            onChange={(e) => {
+                                                const file = e.target.files?.[0];
+                                                if (file) handleAssetUpload(file, 'logo');
+                                                e.target.value = '';
+                                            }}
+                                        />
                                         <input
                                             ref={faviconInputRef}
                                             type="file"
@@ -599,6 +648,7 @@ const AppInformationSettings: React.FC<AppInformationSettingsProps> = ({ onBack 
                                     <div className="bg-editor-panel-bg rounded-xl border border-editor-border p-5">
                                         <h3 className="text-lg font-semibold mb-3">{t('superadmin.appInfo.publishingChecklist')}</h3>
                                         <ul className="space-y-3 text-sm">
+                                            <ChecklistItem checked={Boolean(logoUrl)} label={t('superadmin.appInfo.logoUploaded', 'Logo subido')} />
                                             <ChecklistItem checked={Boolean(faviconUrl)} label={t('superadmin.appInfo.faviconUploaded')} />
                                             <ChecklistItem checked={Boolean(socialImageUrl)} label={t('superadmin.appInfo.socialConfigured')} />
                                             <ChecklistItem checked={siteDescription.length >= 60} label={t('superadmin.appInfo.shortDescCheck')} />

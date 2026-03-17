@@ -23,7 +23,7 @@ import { AppArticle, AppArticleCategory, DEFAULT_APP_NAVIGATION } from '../types
 import LanguageSelector from './ui/LanguageSelector';
 
 // --- Brand Assets ---
-const QUIMERA_LOGO = "https://firebasestorage.googleapis.com/v0/b/quimeraai.firebasestorage.app/o/quimera%2Fquimeralogo.png?alt=media&token=82368c1c-0f63-42b7-831f-72780006f032";
+import { QUIMERA_DEFAULT_LOGO } from '../hooks/useAppLogo';
 
 interface PublicBlogPageProps {
   onNavigateToHome: () => void;
@@ -143,7 +143,7 @@ const PublicBlogPage: React.FC<PublicBlogPageProps> = ({
           <div className="flex items-center justify-between">
             {/* Logo */}
             <button onClick={onNavigateToHome} className="flex items-center gap-2 sm:gap-3 group">
-              <img src={QUIMERA_LOGO} alt="Quimera.ai" className="w-8 h-8 sm:w-10 sm:h-10 transition-transform group-hover:scale-110 duration-300" />
+              <img src={QUIMERA_DEFAULT_LOGO} alt="Quimera.ai" className="w-8 h-8 sm:w-10 sm:h-10 transition-transform group-hover:scale-110 duration-300" />
               <span className="text-lg sm:text-xl font-bold text-white tracking-tight">
                 Quimera<span className="text-yellow-400">.ai</span>
               </span>
@@ -462,7 +462,7 @@ const PublicBlogPage: React.FC<PublicBlogPageProps> = ({
         <div className="container mx-auto px-4 sm:px-6">
           <div className="flex flex-col items-center gap-6 md:flex-row md:justify-between">
             <button onClick={onNavigateToHome} className="flex items-center gap-3 group">
-              <img src={QUIMERA_LOGO} alt="Quimera.ai" className="w-8 h-8 group-hover:scale-110 transition-transform" />
+              <img src={QUIMERA_DEFAULT_LOGO} alt="Quimera.ai" className="w-8 h-8 group-hover:scale-110 transition-transform" />
               <span className="font-bold text-base tracking-tight">Quimera<span className="text-yellow-400">.ai</span></span>
             </button>
             <div className="flex items-center gap-6 text-sm text-gray-500 font-medium">

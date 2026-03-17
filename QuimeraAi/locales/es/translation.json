@@ -3729,6 +3729,108 @@
     },
     "expenseAboveAvg": "Gasto {{percent}}% superior al promedio"
   },
+  "accounting": {
+    "dashboard": "Panel",
+    "transactions": "Transacciones",
+    "invoices": "Facturas",
+    "reports": "Reportes",
+    "totalIncome": "Ingresos Totales",
+    "totalExpenses": "Gastos Totales",
+    "netIncome": "Ingreso Neto",
+    "outstanding": "Pendiente",
+    "overdue": "Vencido",
+    "income": "Ingreso",
+    "expense": "Gasto",
+    "cashFlowChart": "Flujo de Caja",
+    "cashFlowHealth": "Flujo de Caja",
+    "savingsOpps": "Ahorros",
+    "forecast": "Pronóstico 3 Meses",
+    "financialInsights": "Análisis Financiero IA",
+    "insightsSubtitle": "Impulsado por análisis de IA de tus datos",
+    "insightsError": "No se pudieron generar los análisis",
+    "generating": "Generando...",
+    "regenerate": "Regenerar",
+    "generateInsights": "Generar Análisis",
+    "noTransactionsForInsights": "Agrega transacciones para desbloquear análisis con IA",
+    "clickGenerate": "Haz clic en generar para analizar",
+    "overdueInvoices": "Facturas Vencidas",
+    "searchTransactions": "Buscar transacciones...",
+    "allTypes": "Todos los Tipos",
+    "allCategories": "Todas las Categorías",
+    "allAccounts": "Todas las Cuentas",
+    "aiVerified": "Verificado por IA",
+    "addTransaction": "Agregar Transacción",
+    "editTransaction": "Editar Transacción",
+    "newTransaction": "Nueva Transacción",
+    "description": "Descripción",
+    "amount": "Monto",
+    "date": "Fecha",
+    "counterparty": "Contraparte",
+    "category": "Categoría",
+    "categoryOptional": "Categoría (IA autocompletará)",
+    "account": "Cuenta",
+    "accountOptional": "Cuenta (IA autocompletará)",
+    "status": "Estado",
+    "actions": "Acciones",
+    "pending": "Pendiente",
+    "delete": "Eliminar",
+    "saveChanges": "Guardar Cambios",
+    "showingCount": "{{count}} transacciones",
+    "noTransactions": "No se encontraron transacciones",
+    "addFirstTransaction": "Agrega tu primera transacción para comenzar",
+    "deleteTransaction": "¿Eliminar Transacción?",
+    "deleteTransactionConfirm": "Esta acción no se puede deshacer.",
+    "aiCategorizing": "IA categorizando...",
+    "searchInvoices": "Buscar facturas...",
+    "allStatuses": "Todos los Estados",
+    "draft": "Borrador",
+    "sent": "Enviada",
+    "paid": "Pagada",
+    "cancelled": "Cancelada",
+    "newInvoice": "Nueva Factura",
+    "editInvoice": "Editar Factura",
+    "noInvoices": "No hay facturas aún",
+    "createFirstInvoice": "Crea tu primera factura para empezar a facturar",
+    "clientInfo": "Información del Cliente",
+    "clientName": "Nombre del Cliente",
+    "clientEmail": "Email del Cliente",
+    "termsAndDates": "Términos y Fechas",
+    "aiOptimize": "IA Optimizar",
+    "issueDate": "Fecha de Emisión",
+    "dueDate": "Fecha de Vencimiento",
+    "due": "Vence",
+    "paymentTerms": "Términos de Pago",
+    "reminderNote": "Recordatorio de Pago",
+    "reminderPlaceholder": "Recordatorio amigable para el cliente...",
+    "lineItems": "Líneas",
+    "itemDescription": "Descripción",
+    "qty": "Cant",
+    "price": "Precio",
+    "addLineItem": "Agregar Línea",
+    "subtotal": "Subtotal",
+    "tax": "Impuesto",
+    "total": "Total",
+    "saveDraft": "Guardar Borrador",
+    "saveAndSend": "Guardar y Enviar",
+    "markAsSent": "Marcar como Enviada",
+    "markAsPaid": "Marcar como Pagada",
+    "deleteInvoice": "¿Eliminar Factura?",
+    "deleteInvoiceConfirm": "Esta acción no se puede deshacer.",
+    "profitLoss": "Pérdidas y Ganancias",
+    "balanceSheet": "Balance General",
+    "generateReport": "Generar Reporte",
+    "noDataForReports": "Sin datos para reportes",
+    "addTransactionsFirst": "Agrega transacciones para generar reportes",
+    "incomeBreakdown": "Desglose de Ingresos",
+    "expenseBreakdown": "Desglose de Gastos",
+    "noIncome": "Sin ingresos registrados",
+    "noExpenses": "Sin gastos registrados",
+    "aiNarrative": "Narrativa IA",
+    "narrativeSubtitle": "IA explica tus resultados en lenguaje claro",
+    "generateNarrative": "Generar Narrativa",
+    "clickToGenerateNarrative": "Haz clic en \"Generar Narrativa\" para un resumen ejecutivo con IA",
+    "insightsPromptLang": "Spanish"
+  },
   "globalStyles": {
     "colors": "Colores",
     "typography": "Tipografía",
@@ -7420,7 +7522,111 @@
       "verificationCode": "código de verificación",
       "myAwesomeWebsite": "Mi Sitio Web Increíble",
       "briefDescriptionOfWebsite": "Una breve descripción de tu sitio web...",
-      "updated": "Actualizado"
+      "updated": "Actualizado",
+      "saveAll": "Guardar Todo",
+      "tabs": {
+        "defaults": "Valores Predeterminados",
+        "templates": "Plantillas",
+        "verifications": "Verificaciones",
+        "ai": "Optimización IA"
+      },
+      "defaults": {
+        "title": "Configuración Predeterminada",
+        "description": "Estos valores se aplicarán como predeterminados a todos los nuevos proyectos creados en la plataforma.",
+        "language": "Idioma Predeterminado",
+        "robots": "Etiqueta Meta Robots",
+        "robotsOptions": {
+          "indexFollow": "Indexar, Seguir (Recomendado)",
+          "noindexFollow": "No Indexar, Seguir",
+          "indexNofollow": "Indexar, No Seguir",
+          "noindexNofollow": "No Indexar, No Seguir"
+        },
+        "schemaType": "Tipo de Schema Predeterminado",
+        "aiCrawling": "Rastreo de IA",
+        "aiCrawlingDesc": "Permitir que los bots de IA rastreen e indexen los sitios web de los usuarios",
+        "ogType": "Tipo Open Graph Predeterminado",
+        "twitterCard": "Tipo de Tarjeta Twitter Predeterminada"
+      },
+      "templates": {
+        "title": "Plantillas SEO",
+        "create": "Crear Plantilla",
+        "description": "Plantillas SEO predefinidas que los usuarios pueden aplicar rápidamente a sus proyectos.",
+        "items": {
+          "ecommerce": {
+            "name": "E-commerce",
+            "desc": "Optimizado para tiendas online con productos y categorías"
+          },
+          "blog": {
+            "name": "Blog / Noticias",
+            "desc": "Optimizado para artículos, publicaciones y contenido editorial"
+          },
+          "portfolio": {
+            "name": "Portafolio",
+            "desc": "Optimizado para mostrar trabajos y proyectos creativos"
+          },
+          "local": {
+            "name": "Negocio Local",
+            "desc": "Optimizado para negocios locales con información de ubicación"
+          },
+          "saas": {
+            "name": "SaaS / Plataforma",
+            "desc": "Optimizado para productos de software y plataformas digitales"
+          }
+        }
+      },
+      "verifications": {
+        "title": "Verificaciones de Sitio",
+        "description": "Configura los códigos de verificación para Google Search Console y Bing Webmaster Tools.",
+        "googleLabel": "Verificación de Bing Webmaster Tools",
+        "googleHelper": "Ingresa el código de la etiqueta meta de Google Search Console",
+        "placeholder": "Ingresa el código de verificación",
+        "bingHelper": "Ingresa el código de la etiqueta meta de Bing Webmaster Tools",
+        "howTo": {
+          "title": "¿Cómo obtener los códigos de verificación?",
+          "google": "Google Search Console",
+          "googleStep": "Ir a Configuración → Verificación de propiedad → Etiqueta HTML → Copiar el valor de content",
+          "bing": "Bing Webmaster Tools",
+          "bingStep": "Registrarse o iniciar sesión → Agregar sitio → Copiar la etiqueta meta de verificación"
+        },
+        "benefits": {
+          "title": "Beneficios de la Verificación",
+          "list": [
+            "Monitorear el rendimiento de búsqueda y las impresiones",
+            "Enviar sitemaps para una indexación más rápida",
+            "Identificar y corregir errores de rastreo",
+            "Ver qué consultas de búsqueda atraen tráfico a tu sitio"
+          ]
+        }
+      },
+      "ai": {
+        "bannerTitle": "Optimización para IA",
+        "bannerDesc": "Configura cómo los motores de búsqueda impulsados por IA como ChatGPT, Perplexity, Claude y otros entienden e indexan los sitios web construidos con Quimera.ai.",
+        "title": "Configuración de Bots de IA",
+        "descTemplateLabel": "Plantilla de Descripción para IA",
+        "descTemplatePlaceholder": "Una descripción que ayuda a la IA a entender el propósito de tu sitio...",
+        "descTemplateHelper": "Esta descripción se usará como base para que los bots de IA entiendan mejor los sitios de la plataforma.",
+        "topicsLabel": "Temas Predeterminados",
+        "topicsPlaceholder": "IA, Constructor Web, Sin Código",
+        "topicsHelper": "Temas separados por comas que ayudan a la IA a categorizar los sitios",
+        "supportedEngines": "Motores de Búsqueda Compatibles",
+        "supportedEnginesDesc": "Los sitios web creados con Quimera.ai están optimizados para estos motores de búsqueda de IA:",
+        "special": {
+          "title": "Características Especiales de IA",
+          "list": [
+            "<strong>Datos Estructurados</strong> — Schema.org generado automáticamente para cada sitio",
+            "<strong>Metadatos de IA</strong> — Etiquetas meta especiales para rastreadores de IA",
+            "<strong>Descripciones Semánticas</strong> — Contenido optimizado para comprensión de IA",
+            "<strong>Indexación Automática</strong> — Sitemap XML generado automáticamente"
+          ]
+        },
+        "metaTags": {
+          "title": "Etiquetas Meta de IA Generadas",
+          "description": "Estas etiquetas meta se agregan automáticamente a todos los sitios publicados para mejorar la visibilidad en IA.",
+          "crawlable": "Permite que los bots de IA rastreen e indexen el sitio",
+          "descriptionTag": "Descripción optimizada para comprensión de IA",
+          "topicsTag": "Temas principales para categorización de IA"
+        }
+      }
     },
     "profile": {
       "title": "Configuración y Perfil",

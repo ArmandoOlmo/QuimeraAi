@@ -865,21 +865,60 @@ const Controls: React.FC = () => {
   };
 
   // --- Background Image Control (reusable for all sections) ---
-  const BackgroundImageControl = ({ sectionKey }: { sectionKey: string }) => (
-    <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-      <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
-        <Image size={14} />
-        {t('editor.controls.common.backgroundImage', 'Background Image')}
-      </label>
-      <ImagePicker
-        label={t('editor.controls.common.backgroundImage', 'Background Image')}
-        value={(data as any)?.[sectionKey]?.backgroundImageUrl || ''}
-        onChange={(url) => setNestedData(`${sectionKey}.backgroundImageUrl`, url)}
-        onRemove={() => setNestedData(`${sectionKey}.backgroundImageUrl`, '')}
-        generationContext="background"
-      />
-    </div>
-  );
+  const BackgroundImageControl = ({ sectionKey }: { sectionKey: string }) => {
+    const sectionData = (data as any)?.[sectionKey];
+    const hasImage = !!sectionData?.backgroundImageUrl;
+
+    return (
+      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
+        <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+          <Image size={14} />
+          {t('editor.controls.common.backgroundImage', 'Background Image')}
+        </label>
+        <ImagePicker
+          label={t('editor.controls.common.backgroundImage', 'Background Image')}
+          value={sectionData?.backgroundImageUrl || ''}
+          onChange={(url) => setNestedData(`${sectionKey}.backgroundImageUrl`, url)}
+          onRemove={() => setNestedData(`${sectionKey}.backgroundImageUrl`, '')}
+          generationContext="background"
+        />
+
+        {/* Overlay Controls - only shown when background image is set */}
+        {hasImage && (
+          <div className="mt-4 pt-4 border-t border-editor-border/50 space-y-3 animate-fade-in-up">
+            <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Overlay</h5>
+            <ToggleControl
+              label="Enable Overlay"
+              checked={sectionData?.backgroundOverlayEnabled !== false}
+              onChange={(v) => setNestedData(`${sectionKey}.backgroundOverlayEnabled`, v)}
+            />
+
+            {sectionData?.backgroundOverlayEnabled !== false && (
+              <div className="space-y-3 animate-fade-in-up">
+                <ColorControl
+                  label="Overlay Color"
+                  value={sectionData?.backgroundOverlayColor || sectionData?.colors?.background || '#000000'}
+                  onChange={(v) => setNestedData(`${sectionKey}.backgroundOverlayColor`, v)}
+                />
+                <div>
+                  <div className="flex justify-between items-center mb-1">
+                    <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Overlay Opacity</label>
+                    <span className="text-xs text-editor-text-primary">{sectionData?.backgroundOverlayOpacity ?? 60}%</span>
+                  </div>
+                  <input
+                    type="range" min="0" max="100" step="5"
+                    value={sectionData?.backgroundOverlayOpacity ?? 60}
+                    onChange={(e) => setNestedData(`${sectionKey}.backgroundOverlayOpacity`, parseInt(e.target.value))}
+                    className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  };
 
   // --- Section Renderers ---
 
@@ -4687,20 +4726,26 @@ const Controls: React.FC = () => {
 
             <hr className="border-editor-border/50 my-3" />
             <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">Overlay</h5>
-            <ColorControl label="Overlay Color" value={data?.banner?.colors?.overlayColor || '#000000'} onChange={(v) => setNestedData('banner.colors.overlayColor', v)} />
+            <ToggleControl label="Enable Overlay" checked={data?.banner?.overlayEnabled !== false} onChange={(v) => setNestedData('banner.overlayEnabled', v)} />
 
-            <div className="mt-3">
-              <div className="flex justify-between items-center mb-1">
-                <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Overlay Opacity</label>
-                <span className="text-xs text-editor-text-primary">{data?.banner?.backgroundOverlayOpacity || 50}%</span>
+            {data?.banner?.overlayEnabled !== false && (
+              <div className="space-y-3 animate-fade-in-up mt-3">
+                <ColorControl label="Overlay Color" value={data?.banner?.colors?.overlayColor || '#000000'} onChange={(v) => setNestedData('banner.colors.overlayColor', v)} />
+
+                <div>
+                  <div className="flex justify-between items-center mb-1">
+                    <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Overlay Opacity</label>
+                    <span className="text-xs text-editor-text-primary">{data?.banner?.backgroundOverlayOpacity ?? 50}%</span>
+                  </div>
+                  <input
+                    type="range" min="0" max="100" step="5"
+                    value={data?.banner?.backgroundOverlayOpacity ?? 50}
+                    onChange={(e) => setNestedData('banner.backgroundOverlayOpacity', parseInt(e.target.value))}
+                    className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
+                  />
+                </div>
               </div>
-              <input
-                type="range" min="0" max="100" step="5"
-                value={data?.banner?.backgroundOverlayOpacity || 50}
-                onChange={(e) => setNestedData('banner.backgroundOverlayOpacity', parseInt(e.target.value))}
-                className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
-              />
-            </div>
+            )}
 
             <hr className="border-editor-border/50 my-3" />
             <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">Text</h5>
@@ -7797,20 +7842,26 @@ const Controls: React.FC = () => {
 
           <hr className="border-editor-border/50 my-3" />
           <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">Overlay</h5>
-          <ColorControl label="Overlay Color" value={data?.banner?.colors?.overlayColor || '#000000'} onChange={(v) => setNestedData('banner.colors.overlayColor', v)} />
+          <ToggleControl label="Enable Overlay" checked={data?.banner?.overlayEnabled !== false} onChange={(v) => setNestedData('banner.overlayEnabled', v)} />
 
-          <div className="mt-3">
-            <div className="flex justify-between items-center mb-1">
-              <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Overlay Opacity</label>
-              <span className="text-xs text-editor-text-primary">{data?.banner?.backgroundOverlayOpacity || 50}%</span>
+          {data?.banner?.overlayEnabled !== false && (
+            <div className="space-y-3 animate-fade-in-up mt-3">
+              <ColorControl label="Overlay Color" value={data?.banner?.colors?.overlayColor || '#000000'} onChange={(v) => setNestedData('banner.colors.overlayColor', v)} />
+
+              <div>
+                <div className="flex justify-between items-center mb-1">
+                  <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Overlay Opacity</label>
+                  <span className="text-xs text-editor-text-primary">{data?.banner?.backgroundOverlayOpacity ?? 50}%</span>
+                </div>
+                <input
+                  type="range" min="0" max="100" step="5"
+                  value={data?.banner?.backgroundOverlayOpacity ?? 50}
+                  onChange={(e) => setNestedData('banner.backgroundOverlayOpacity', parseInt(e.target.value))}
+                  className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
+                />
+              </div>
             </div>
-            <input
-              type="range" min="0" max="100" step="5"
-              value={data?.banner?.backgroundOverlayOpacity || 50}
-              onChange={(e) => setNestedData('banner.backgroundOverlayOpacity', parseInt(e.target.value))}
-              className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
-            />
-          </div>
+          )}
 
           <hr className="border-editor-border/50 my-3" />
           <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">Text</h5>

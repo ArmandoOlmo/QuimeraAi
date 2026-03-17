@@ -323,12 +323,12 @@ const PageRenderer: React.FC<PageRendererProps> = ({
                     if (heroData?.heroVariant === 'stacked') return <HeroStacked key={key} {...heroData} borderRadius={heroBorderRadius} onNavigate={handleLinkNavigation} />;
                     return <Hero key={key} {...heroData} borderRadius={heroBorderRadius} onNavigate={handleLinkNavigation} />;
                 })();
-                return <SectionBackground backgroundImageUrl={heroData?.backgroundImageUrl} backgroundColor={heroData?.colors?.background}>{heroComponent}</SectionBackground>;
+                return <SectionBackground backgroundImageUrl={heroData?.backgroundImageUrl} backgroundColor={heroData?.colors?.background} backgroundOverlayEnabled={heroData?.backgroundOverlayEnabled} backgroundOverlayOpacity={heroData?.backgroundOverlayOpacity} backgroundOverlayColor={heroData?.backgroundOverlayColor}>{heroComponent}</SectionBackground>;
             }
 
             case 'heroSplit':
                 return (
-                    <SectionBackground backgroundImageUrl={mergedData.heroSplit?.backgroundImageUrl} backgroundColor={mergedData.heroSplit?.colors?.background}>
+                    <SectionBackground backgroundImageUrl={mergedData.heroSplit?.backgroundImageUrl} backgroundColor={mergedData.heroSplit?.colors?.background} backgroundOverlayEnabled={mergedData.heroSplit?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedData.heroSplit?.backgroundOverlayOpacity} backgroundOverlayColor={mergedData.heroSplit?.backgroundOverlayColor}>
                         <HeroSplit
                             key={key}
                             {...mergedData.heroSplit}
@@ -340,7 +340,7 @@ const PageRenderer: React.FC<PageRendererProps> = ({
 
             case 'features':
                 return (
-                    <SectionBackground backgroundImageUrl={mergedData.features?.backgroundImageUrl} backgroundColor={mergedData.features?.colors?.background}>
+                    <SectionBackground backgroundImageUrl={mergedData.features?.backgroundImageUrl} backgroundColor={mergedData.features?.colors?.background} backgroundOverlayEnabled={mergedData.features?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedData.features?.backgroundOverlayOpacity} backgroundOverlayColor={mergedData.features?.backgroundOverlayColor}>
                         <Features
                             key={key}
                             {...mergedData.features}
@@ -352,7 +352,7 @@ const PageRenderer: React.FC<PageRendererProps> = ({
 
             case 'testimonials':
                 return (
-                    <SectionBackground backgroundImageUrl={mergedData.testimonials?.backgroundImageUrl} backgroundColor={mergedData.testimonials?.colors?.background}>
+                    <SectionBackground backgroundImageUrl={mergedData.testimonials?.backgroundImageUrl} backgroundColor={mergedData.testimonials?.colors?.background} backgroundOverlayEnabled={mergedData.testimonials?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedData.testimonials?.backgroundOverlayOpacity} backgroundOverlayColor={mergedData.testimonials?.backgroundOverlayColor}>
                         <Testimonials
                             key={key}
                             {...mergedData.testimonials}
@@ -363,7 +363,7 @@ const PageRenderer: React.FC<PageRendererProps> = ({
 
             case 'pricing':
                 return (
-                    <SectionBackground backgroundImageUrl={mergedData.pricing?.backgroundImageUrl} backgroundColor={mergedData.pricing?.colors?.background}>
+                    <SectionBackground backgroundImageUrl={mergedData.pricing?.backgroundImageUrl} backgroundColor={mergedData.pricing?.colors?.background} backgroundOverlayEnabled={mergedData.pricing?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedData.pricing?.backgroundOverlayOpacity} backgroundOverlayColor={mergedData.pricing?.backgroundOverlayColor}>
                         <Pricing
                             key={key}
                             {...mergedData.pricing}
@@ -375,7 +375,7 @@ const PageRenderer: React.FC<PageRendererProps> = ({
 
             case 'faq':
                 return (
-                    <SectionBackground backgroundImageUrl={mergedData.faq?.backgroundImageUrl} backgroundColor={mergedData.faq?.colors?.background}>
+                    <SectionBackground backgroundImageUrl={mergedData.faq?.backgroundImageUrl} backgroundColor={mergedData.faq?.colors?.background} backgroundOverlayEnabled={mergedData.faq?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedData.faq?.backgroundOverlayOpacity} backgroundOverlayColor={mergedData.faq?.backgroundOverlayColor}>
                         <Faq
                             key={key}
                             {...mergedData.faq}
@@ -386,7 +386,7 @@ const PageRenderer: React.FC<PageRendererProps> = ({
 
             case 'cta':
                 return (
-                    <SectionBackground backgroundImageUrl={mergedData.cta?.backgroundImageUrl} backgroundColor={mergedData.cta?.colors?.background}>
+                    <SectionBackground backgroundImageUrl={mergedData.cta?.backgroundImageUrl} backgroundColor={mergedData.cta?.colors?.background} backgroundOverlayEnabled={mergedData.cta?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedData.cta?.backgroundOverlayOpacity} backgroundOverlayColor={mergedData.cta?.backgroundOverlayColor}>
                         <CTASection
                             key={key}
                             {...mergedData.cta}
@@ -399,7 +399,7 @@ const PageRenderer: React.FC<PageRendererProps> = ({
 
             case 'services':
                 return (
-                    <SectionBackground backgroundImageUrl={mergedData.services?.backgroundImageUrl} backgroundColor={mergedData.services?.colors?.background}>
+                    <SectionBackground backgroundImageUrl={mergedData.services?.backgroundImageUrl} backgroundColor={mergedData.services?.colors?.background} backgroundOverlayEnabled={mergedData.services?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedData.services?.backgroundOverlayOpacity} backgroundOverlayColor={mergedData.services?.backgroundOverlayColor}>
                         <Services
                             key={key}
                             {...mergedData.services}
@@ -410,7 +410,7 @@ const PageRenderer: React.FC<PageRendererProps> = ({
 
             case 'team':
                 return (
-                    <SectionBackground backgroundImageUrl={mergedData.team?.backgroundImageUrl} backgroundColor={mergedData.team?.colors?.background}>
+                    <SectionBackground backgroundImageUrl={mergedData.team?.backgroundImageUrl} backgroundColor={mergedData.team?.colors?.background} backgroundOverlayEnabled={mergedData.team?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedData.team?.backgroundOverlayOpacity} backgroundOverlayColor={mergedData.team?.backgroundOverlayColor}>
                         <Team
                             key={key}
                             {...mergedData.team}
@@ -421,7 +421,7 @@ const PageRenderer: React.FC<PageRendererProps> = ({
 
             case 'video':
                 return (
-                    <SectionBackground backgroundImageUrl={mergedData.video?.backgroundImageUrl} backgroundColor={mergedData.video?.colors?.background}>
+                    <SectionBackground backgroundImageUrl={mergedData.video?.backgroundImageUrl} backgroundColor={mergedData.video?.colors?.background} backgroundOverlayEnabled={mergedData.video?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedData.video?.backgroundOverlayOpacity} backgroundOverlayColor={mergedData.video?.backgroundOverlayColor}>
                         <Video
                             key={key}
                             {...mergedData.video}
@@ -431,7 +431,7 @@ const PageRenderer: React.FC<PageRendererProps> = ({
 
             case 'slideshow':
                 return (
-                    <SectionBackground backgroundImageUrl={mergedData.slideshow?.backgroundImageUrl} backgroundColor={mergedData.slideshow?.colors?.background}>
+                    <SectionBackground backgroundImageUrl={mergedData.slideshow?.backgroundImageUrl} backgroundColor={mergedData.slideshow?.colors?.background} backgroundOverlayEnabled={mergedData.slideshow?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedData.slideshow?.backgroundOverlayOpacity} backgroundOverlayColor={mergedData.slideshow?.backgroundOverlayColor}>
                         <Slideshow
                             key={key}
                             {...mergedData.slideshow}
@@ -442,7 +442,7 @@ const PageRenderer: React.FC<PageRendererProps> = ({
 
             case 'portfolio':
                 return (
-                    <SectionBackground backgroundImageUrl={mergedData.portfolio?.backgroundImageUrl} backgroundColor={mergedData.portfolio?.colors?.background}>
+                    <SectionBackground backgroundImageUrl={mergedData.portfolio?.backgroundImageUrl} backgroundColor={mergedData.portfolio?.colors?.background} backgroundOverlayEnabled={mergedData.portfolio?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedData.portfolio?.backgroundOverlayOpacity} backgroundOverlayColor={mergedData.portfolio?.backgroundOverlayColor}>
                         <Portfolio
                             key={key}
                             {...mergedData.portfolio}
@@ -454,7 +454,7 @@ const PageRenderer: React.FC<PageRendererProps> = ({
 
             case 'leads':
                 return (
-                    <SectionBackground backgroundImageUrl={mergedData.leads?.backgroundImageUrl} backgroundColor={mergedData.leads?.colors?.background}>
+                    <SectionBackground backgroundImageUrl={mergedData.leads?.backgroundImageUrl} backgroundColor={mergedData.leads?.colors?.background} backgroundOverlayEnabled={mergedData.leads?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedData.leads?.backgroundOverlayOpacity} backgroundOverlayColor={mergedData.leads?.backgroundOverlayColor}>
                         <Leads
                             key={key}
                             {...mergedData.leads}
@@ -467,7 +467,7 @@ const PageRenderer: React.FC<PageRendererProps> = ({
 
             case 'newsletter':
                 return (
-                    <SectionBackground backgroundImageUrl={mergedData.newsletter?.backgroundImageUrl} backgroundColor={mergedData.newsletter?.colors?.background}>
+                    <SectionBackground backgroundImageUrl={mergedData.newsletter?.backgroundImageUrl} backgroundColor={mergedData.newsletter?.colors?.background} backgroundOverlayEnabled={mergedData.newsletter?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedData.newsletter?.backgroundOverlayOpacity} backgroundOverlayColor={mergedData.newsletter?.backgroundOverlayColor}>
                         <Newsletter
                             key={key}
                             {...mergedData.newsletter}
@@ -477,7 +477,7 @@ const PageRenderer: React.FC<PageRendererProps> = ({
 
             case 'howItWorks':
                 return (
-                    <SectionBackground backgroundImageUrl={mergedData.howItWorks?.backgroundImageUrl} backgroundColor={mergedData.howItWorks?.colors?.background}>
+                    <SectionBackground backgroundImageUrl={mergedData.howItWorks?.backgroundImageUrl} backgroundColor={mergedData.howItWorks?.colors?.background} backgroundOverlayEnabled={mergedData.howItWorks?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedData.howItWorks?.backgroundOverlayOpacity} backgroundOverlayColor={mergedData.howItWorks?.backgroundOverlayColor}>
                         <HowItWorks
                             key={key}
                             {...mergedData.howItWorks}
@@ -488,7 +488,7 @@ const PageRenderer: React.FC<PageRendererProps> = ({
 
             case 'map':
                 return (
-                    <SectionBackground backgroundImageUrl={mergedData.map?.backgroundImageUrl} backgroundColor={mergedData.map?.colors?.background}>
+                    <SectionBackground backgroundImageUrl={mergedData.map?.backgroundImageUrl} backgroundColor={mergedData.map?.colors?.background} backgroundOverlayEnabled={mergedData.map?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedData.map?.backgroundOverlayOpacity} backgroundOverlayColor={mergedData.map?.backgroundOverlayColor}>
                         <BusinessMap
                             key={key}
                             {...mergedData.map}
@@ -499,7 +499,7 @@ const PageRenderer: React.FC<PageRendererProps> = ({
 
             case 'menu':
                 return (
-                    <SectionBackground backgroundImageUrl={mergedData.menu?.backgroundImageUrl} backgroundColor={mergedData.menu?.colors?.background}>
+                    <SectionBackground backgroundImageUrl={mergedData.menu?.backgroundImageUrl} backgroundColor={mergedData.menu?.colors?.background} backgroundOverlayEnabled={mergedData.menu?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedData.menu?.backgroundOverlayOpacity} backgroundOverlayColor={mergedData.menu?.backgroundOverlayColor}>
                         <Menu
                             key={key}
                             {...mergedData.menu}

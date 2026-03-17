@@ -49,7 +49,7 @@ type BillingCycle = 'monthly' | 'annually';
 // CONSTANTS
 // =============================================================================
 
-const QUIMERA_LOGO = "https://firebasestorage.googleapis.com/v0/b/quimeraai.firebasestorage.app/o/quimera%2Fquimeralogo.png?alt=media&token=82368c1c-0f63-42b7-831f-72780006f032";
+import { QUIMERA_DEFAULT_LOGO } from '../hooks/useAppLogo';
 
 const SOCIAL_ICONS: Record<string, React.ReactNode> = {
     twitter: <Twitter size={18} />,
@@ -263,7 +263,7 @@ const AgencySignup: React.FC = () => {
                         {/* Logo */}
                         <a href="/" className="flex items-center gap-2 sm:gap-3">
                             <img
-                                src={navigation.header.logo?.imageUrl || QUIMERA_LOGO}
+                                src={navigation.header.logo?.imageUrl || QUIMERA_DEFAULT_LOGO}
                                 alt={navigation.header.logo?.text || "Quimera.ai"}
                                 className="w-8 h-8 sm:w-10 sm:h-10"
                             />
@@ -617,7 +617,7 @@ const AgencySignup: React.FC = () => {
                         {/* Logo Column */}
                         <div className="col-span-2 md:col-span-1">
                             <div className="flex items-center gap-2 mb-4">
-                                <img src={QUIMERA_LOGO} alt="Quimera.ai" className="w-8 h-8" />
+                                <img src={QUIMERA_DEFAULT_LOGO} alt="Quimera.ai" className="w-8 h-8" />
                                 <span className="font-bold">
                                     Quimera
                                     <span className="text-yellow-400">.ai</span>

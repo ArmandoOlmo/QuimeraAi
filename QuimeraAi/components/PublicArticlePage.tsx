@@ -24,7 +24,7 @@ import { AppArticleCategory, DEFAULT_APP_NAVIGATION } from '../types/appContent'
 import LanguageSelector from './ui/LanguageSelector';
 
 // --- Brand Assets ---
-const QUIMERA_LOGO = "https://firebasestorage.googleapis.com/v0/b/quimeraai.firebasestorage.app/o/quimera%2Fquimeralogo.png?alt=media&token=82368c1c-0f63-42b7-831f-72780006f032";
+import { QUIMERA_DEFAULT_LOGO } from '../hooks/useAppLogo';
 
 interface PublicArticlePageProps {
   onNavigateBack: () => void;
@@ -188,7 +188,7 @@ const PublicArticlePage: React.FC<PublicArticlePageProps> = ({
               </button>
 
               <div className={`hidden sm:flex items-center gap-2 group transition-opacity duration-500 ${scrolled ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
-                <img src={QUIMERA_LOGO} alt="Quimera.ai" className="w-6 h-6" />
+                <img src={QUIMERA_DEFAULT_LOGO} alt="Quimera.ai" className="w-6 h-6" />
                 <span className="text-sm font-bold tracking-tight text-white line-clamp-1 max-w-[200px] md:max-w-xs lg:max-w-md">
                   {article.title}
                 </span>
@@ -408,7 +408,7 @@ const PublicArticlePage: React.FC<PublicArticlePageProps> = ({
       <footer className="mt-32 py-12 border-t border-white/5 bg-[#050505] text-center">
         <div className="container mx-auto px-4 sm:px-6">
           <button onClick={onNavigateBack} className="flex items-center justify-center gap-3 group mx-auto mb-6">
-            <img src={QUIMERA_LOGO} alt="Quimera.ai" className="w-8 h-8 opacity-50 group-hover:opacity-100 transition-opacity" />
+            <img src={QUIMERA_DEFAULT_LOGO} alt="Quimera.ai" className="w-8 h-8 opacity-50 group-hover:opacity-100 transition-opacity" />
           </button>
           <div className="text-sm text-gray-600 font-medium">
             © {new Date().getFullYear()} Quimera.ai. {t('blog.allRightsReserved', 'Todos los derechos reservados.')}

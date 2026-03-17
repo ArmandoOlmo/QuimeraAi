@@ -15,7 +15,7 @@ import { Eye, EyeOff, ArrowRight, ArrowLeft, Zap, Layout, Palette, CheckCircle, 
 import LanguageSelector from './ui/LanguageSelector';
 
 // --- Brand Assets ---
-const QUIMERA_LOGO = "https://firebasestorage.googleapis.com/v0/b/quimeraai.firebasestorage.app/o/quimera%2Fquimeralogo.png?alt=media&token=82368c1c-0f63-42b7-831f-72780006f032";
+import { QUIMERA_DEFAULT_LOGO } from '../hooks/useAppLogo';
 
 interface ModernAuthProps {
     onVerificationEmailSent: (email: string) => void;
@@ -200,7 +200,7 @@ const ModernAuth: React.FC<ModernAuthProps> = ({ onVerificationEmailSent, initia
                         <div className="flex flex-col items-center mb-12 animate-fade-in-up">
                             <div className="relative w-32 h-32 mb-6">
                                 <img
-                                    src={QUIMERA_LOGO}
+                                    src={QUIMERA_DEFAULT_LOGO}
                                     alt="Quimera AI"
                                     className="relative w-full h-full object-contain drop-shadow-[0_0_30px_rgba(250,204,21,0.6)]"
                                 />

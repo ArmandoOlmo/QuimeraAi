@@ -842,6 +842,7 @@ export interface BannerData {
     buttonUrl?: string;
     showButton?: boolean;
     backgroundImageUrl: string;
+    overlayEnabled?: boolean; // true by default for backward compat
     backgroundOverlayOpacity: number; // 0-100
     height: number; // en px
     textAlignment: TextAlignment;

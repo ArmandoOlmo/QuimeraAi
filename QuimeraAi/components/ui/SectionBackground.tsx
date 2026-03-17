@@ -4,8 +4,12 @@ import { isPendingImage } from '../../utils/imagePlaceholders';
 interface SectionBackgroundProps {
     /** The background image URL set from the editor */
     backgroundImageUrl?: string;
+    /** Whether the overlay is enabled (defaults to true for backward compat) */
+    backgroundOverlayEnabled?: boolean;
     /** Overlay opacity (0-100). Defaults to 60 for readability */
     backgroundOverlayOpacity?: number;
+    /** Custom overlay color (defaults to backgroundColor) */
+    backgroundOverlayColor?: string;
     /** The section's background color (used as overlay base) */
     backgroundColor?: string;
     /** Children (the actual section component) */
@@ -17,7 +21,7 @@ interface SectionBackgroundProps {
  * If no backgroundImageUrl is set, it renders children as-is (zero overhead).
  * When a background image is present, it renders:
  * 1. An absolutely-positioned background image covering the section
- * 2. A color overlay for text readability
+ * 2. A color overlay for text readability (can be toggled off)
  * 3. Children with transparent background so the image shows through
  *
  * KEY: Forces child <section> elements to have transparent backgrounds
@@ -26,7 +30,9 @@ interface SectionBackgroundProps {
  */
 const SectionBackground: React.FC<SectionBackgroundProps> = ({
     backgroundImageUrl,
+    backgroundOverlayEnabled = true,
     backgroundOverlayOpacity = 60,
+    backgroundOverlayColor,
     backgroundColor,
     children,
 }) => {
@@ -35,6 +41,8 @@ const SectionBackground: React.FC<SectionBackgroundProps> = ({
 
     // No background image → render children directly with zero overhead
     if (!hasValidImage) return <>{children}</>;
+
+    const isOverlayActive = backgroundOverlayEnabled !== false;
 
     return (
         <div className="relative overflow-hidden" data-bg-scope={scopeId}>
@@ -58,14 +66,16 @@ const SectionBackground: React.FC<SectionBackgroundProps> = ({
                 }}
             />
             {/* Color Overlay for readability */}
-            <div
-                className="absolute inset-0"
-                style={{
-                    backgroundColor: backgroundColor || '#000000',
-                    opacity: backgroundOverlayOpacity / 100,
-                    zIndex: 1,
-                }}
-            />
+            {isOverlayActive && (
+                <div
+                    className="absolute inset-0"
+                    style={{
+                        backgroundColor: backgroundOverlayColor || backgroundColor || '#000000',
+                        opacity: (backgroundOverlayOpacity ?? 60) / 100,
+                        zIndex: 1,
+                    }}
+                />
+            )}
             {/* Content with z-10 stacking */}
             <div className="relative" style={{ zIndex: 2 }}>
                 {children}

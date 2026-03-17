@@ -62,6 +62,7 @@ const Banner: React.FC<BannerProps> = ({
   buttonUrl = '#',
   showButton = true,
   backgroundImageUrl,
+  overlayEnabled = true,
   backgroundOverlayOpacity = 50,
   height = 400,
   textAlignment = 'center',
@@ -85,10 +86,11 @@ const Banner: React.FC<BannerProps> = ({
 
   const hasValidImage = backgroundImageUrl && !isPendingImage(backgroundImageUrl);
 
-  // Estilo para el overlay
+  // Estilo para el overlay (solo si está habilitado)
+  const isOverlayActive = overlayEnabled !== false;
   const overlayStyle = {
     backgroundColor: actualColors.overlayColor,
-    opacity: backgroundOverlayOpacity / 100,
+    opacity: (backgroundOverlayOpacity ?? 50) / 100,
   };
 
   // Renderizar contenido
@@ -108,7 +110,7 @@ const Banner: React.FC<BannerProps> = ({
         >
           {headline}
         </h2>
-        
+
         <p
           className={`${subheadlineSizeClasses[subheadlineFontSize]} mb-8 max-w-2xl font-body`}
           style={{
@@ -157,10 +159,12 @@ const Banner: React.FC<BannerProps> = ({
             }}
           />
           {/* Overlay */}
-          <div
-            className="absolute inset-0"
-            style={overlayStyle}
-          />
+          {isOverlayActive && (
+            <div
+              className="absolute inset-0"
+              style={overlayStyle}
+            />
+          )}
         </>
       ) : (
         <div className="absolute inset-0">
@@ -170,10 +174,12 @@ const Banner: React.FC<BannerProps> = ({
             className="w-full h-full"
           />
           {/* Still show overlay for placeholder */}
-          <div
-            className="absolute inset-0"
-            style={overlayStyle}
-          />
+          {isOverlayActive && (
+            <div
+              className="absolute inset-0"
+              style={overlayStyle}
+            />
+          )}
         </div>
       )}
 

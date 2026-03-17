@@ -40,7 +40,7 @@ import { doc, getDoc } from '../firebase';
 import { db } from '../firebase';
 
 // --- Brand Assets ---
-const QUIMERA_LOGO = "https://firebasestorage.googleapis.com/v0/b/quimeraai.firebasestorage.app/o/quimera%2Fquimeralogo.png?alt=media&token=82368c1c-0f63-42b7-831f-72780006f032";
+import { QUIMERA_DEFAULT_LOGO } from '../hooks/useAppLogo';
 
 // Types for preview sections
 interface PreviewSection {
@@ -921,7 +921,7 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
                   {/* Logo/Image (Visible in centered/left/right) */}
                   {heroLayout !== 'split' && (
                     <div className={`w-28 h-28 sm:w-36 sm:h-36 md:w-48 md:h-48 mb-6 sm:mb-8 ${heroLayout === 'centered' ? 'mx-auto' : heroLayout === 'right' ? 'ml-auto' : ''}`}>
-                      <img src={currentSectionData?.heroImage || QUIMERA_LOGO} alt="Quimera AI" className="w-full h-full object-contain drop-shadow-[0_0_30px_rgba(250,204,21,0.5)] sm:drop-shadow-[0_0_50px_rgba(250,204,21,0.6)]" />
+                      <img src={currentSectionData?.heroImage || QUIMERA_DEFAULT_LOGO} alt="Quimera AI" className="w-full h-full object-contain drop-shadow-[0_0_30px_rgba(250,204,21,0.5)] sm:drop-shadow-[0_0_50px_rgba(250,204,21,0.6)]" />
                     </div>
                   )}
 
@@ -957,7 +957,7 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
                 {heroLayout === 'split' && (
                   <div className="flex items-center justify-center">
                     <img
-                      src={currentSectionData?.heroImage || QUIMERA_LOGO}
+                      src={currentSectionData?.heroImage || QUIMERA_DEFAULT_LOGO}
                       alt="Hero Visual"
                       className="w-full max-w-md object-contain drop-shadow-[0_20px_50px_rgba(0,0,0,0.3)] transform hover:scale-105 transition-transform duration-700"
                     />
@@ -1006,7 +1006,7 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
                   {!isCentered && (
                     <div className={`flex items-center justify-center relative ${isReversed ? 'lg:order-1' : ''}`}>
                       <div className="absolute inset-0 bg-gradient-to-tr from-primary/20 to-purple-500/20 rounded-full blur-3xl animate-pulse" />
-                      <img src={currentSectionData?.heroImage || QUIMERA_LOGO} alt="Hero Visual" className="relative w-full max-w-md object-contain drop-shadow-[0_20px_50px_rgba(0,0,0,0.5)] transform hover:scale-105 transition-transform duration-700" />
+                      <img src={currentSectionData?.heroImage || QUIMERA_DEFAULT_LOGO} alt="Hero Visual" className="relative w-full max-w-md object-contain drop-shadow-[0_20px_50px_rgba(0,0,0,0.5)] transform hover:scale-105 transition-transform duration-700" />
                     </div>
                   )}
                 </div>
@@ -1801,7 +1801,7 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
             {/* Logo */}
             <a href="/" className="flex items-center gap-2 sm:gap-3">
               <img
-                src={headerPreview?.logoImage || navigation.header.logo?.imageUrl || QUIMERA_LOGO}
+                src={headerPreview?.logoImage || navigation.header.logo?.imageUrl || QUIMERA_DEFAULT_LOGO}
                 alt={navigation.header.logo?.text || "Quimera.ai"}
                 className="w-8 h-8 sm:w-10 sm:h-10"
               />
@@ -1940,7 +1940,7 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
               {/* Logo Column */}
               <div className="col-span-2 md:col-span-1">
                 <div className="flex items-center gap-2 mb-4">
-                  <img src={QUIMERA_LOGO} alt="Quimera.ai" className="w-8 h-8" />
+                  <img src={QUIMERA_DEFAULT_LOGO} alt="Quimera.ai" className="w-8 h-8" />
                   <span className="font-bold" style={{ color: footerTextColor }}>
                     {footerPreview?.companyName || 'Quimera'}
                     <span style={{ color: footerAccentColor }}>.ai</span>

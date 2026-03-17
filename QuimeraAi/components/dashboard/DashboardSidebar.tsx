@@ -15,6 +15,7 @@ import ProgressBar3D from '../ui/ProgressBar3D';
 import { useSafeTenant } from '../../contexts/tenant';
 import { useSafeUpgrade } from '../../contexts/UpgradeContext';
 import { useCreditsUsage } from '../../hooks/useCreditsUsage';
+import { useAppLogo } from '../../hooks/useAppLogo';
 import { usePlanAccess } from '../../hooks/usePlanFeatures';
 import { useServiceAvailability } from '../../hooks/useServiceAvailability';
 import { PlatformServiceId } from '../../types/serviceAvailability';
@@ -91,6 +92,9 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
 
   // Get global service availability control
   const { canAccessService: canAccessGlobalService, isLoading: isLoadingServiceAvailability } = useServiceAvailability();
+
+  // Get global app logo
+  const { logoUrl: appLogoUrl } = useAppLogo();
 
   // Default to expanded on desktop, unless defaultCollapsed is true
   const [isCollapsed, setIsCollapsed] = useState(defaultCollapsed);
@@ -554,7 +558,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
                 </div>
               ) : (
                 <img
-                  src="https://firebasestorage.googleapis.com/v0/b/quimeraai.firebasestorage.app/o/quimera%2Fquimeralogo.png?alt=media&token=82368c1c-0f63-42b7-831f-72780006f032"
+                  src={appLogoUrl}
                   alt="Quimera Logo"
                   className="w-10 h-10 object-contain flex-shrink-0"
                   width={40}

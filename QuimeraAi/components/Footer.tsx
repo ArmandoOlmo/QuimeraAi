@@ -6,7 +6,7 @@ import BusinessHours from './BusinessHours';
 import { db, doc, getDoc } from '../firebase';
 
 // Quimera logo URL for the badge
-const QUIMERA_LOGO = "https://firebasestorage.googleapis.com/v0/b/quimeraai.firebasestorage.app/o/quimera%2Fquimeralogo.png?alt=media&token=82368c1c-0f63-42b7-831f-72780006f032";
+import { useAppLogo } from '../hooks/useAppLogo';
 
 const socialIconComponents: Record<SocialPlatform, React.ReactNode> = {
   twitter: <Twitter className="w-6 h-6" />,
@@ -48,6 +48,9 @@ const Footer: React.FC<FooterData & {
     const actualTitle = title || companyName;
     const actualDescription = description || tagline;
     const actualCopyrightText = copyrightText || copyright;
+
+    // Get global app logo
+    const { logoUrl: quimeraLogoUrl } = useAppLogo();
 
     // Auto-detect White Label branding when hideBranding prop is not explicitly set
     // This handles the PublicWebsitePreview (/preview/) route where tenant context is unavailable
@@ -217,7 +220,7 @@ const Footer: React.FC<FooterData & {
                   >
                     <span>Made with</span>
                     <img
-                      src={QUIMERA_LOGO}
+                      src={quimeraLogoUrl}
                       alt="Quimera"
                       className="w-4 h-4 object-contain"
                     />

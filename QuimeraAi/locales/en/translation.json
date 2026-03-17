@@ -3729,6 +3729,108 @@
     },
     "expenseAboveAvg": "Expense {{percent}}% above average"
   },
+  "accounting": {
+    "dashboard": "Dashboard",
+    "transactions": "Transactions",
+    "invoices": "Invoices",
+    "reports": "Reports",
+    "totalIncome": "Total Income",
+    "totalExpenses": "Total Expenses",
+    "netIncome": "Net Income",
+    "outstanding": "Outstanding",
+    "overdue": "Overdue",
+    "income": "Income",
+    "expense": "Expense",
+    "cashFlowChart": "Cash Flow",
+    "cashFlowHealth": "Cash Flow",
+    "savingsOpps": "Savings",
+    "forecast": "3-Month Forecast",
+    "financialInsights": "AI Financial Insights",
+    "insightsSubtitle": "Powered by AI analysis of your data",
+    "insightsError": "Could not generate insights",
+    "generating": "Generating...",
+    "regenerate": "Regenerate",
+    "generateInsights": "Generate Insights",
+    "noTransactionsForInsights": "Add transactions to unlock AI-powered insights",
+    "clickGenerate": "Click generate to analyze",
+    "overdueInvoices": "Overdue Invoices",
+    "searchTransactions": "Search transactions...",
+    "allTypes": "All Types",
+    "allCategories": "All Categories",
+    "allAccounts": "All Accounts",
+    "aiVerified": "AI Verified",
+    "addTransaction": "Add Transaction",
+    "editTransaction": "Edit Transaction",
+    "newTransaction": "New Transaction",
+    "description": "Description",
+    "amount": "Amount",
+    "date": "Date",
+    "counterparty": "Counterparty",
+    "category": "Category",
+    "categoryOptional": "Category (AI will auto-fill)",
+    "account": "Account",
+    "accountOptional": "Account (AI will auto-fill)",
+    "status": "Status",
+    "actions": "Actions",
+    "pending": "Pending",
+    "delete": "Delete",
+    "saveChanges": "Save Changes",
+    "showingCount": "{{count}} transactions",
+    "noTransactions": "No transactions found",
+    "addFirstTransaction": "Add your first transaction to get started",
+    "deleteTransaction": "Delete Transaction?",
+    "deleteTransactionConfirm": "This action cannot be undone.",
+    "aiCategorizing": "AI categorizing...",
+    "searchInvoices": "Search invoices...",
+    "allStatuses": "All Statuses",
+    "draft": "Draft",
+    "sent": "Sent",
+    "paid": "Paid",
+    "cancelled": "Cancelled",
+    "newInvoice": "New Invoice",
+    "editInvoice": "Edit Invoice",
+    "noInvoices": "No invoices yet",
+    "createFirstInvoice": "Create your first invoice to start billing",
+    "clientInfo": "Client Information",
+    "clientName": "Client Name",
+    "clientEmail": "Client Email",
+    "termsAndDates": "Terms & Dates",
+    "aiOptimize": "IA Optimize",
+    "issueDate": "Issue Date",
+    "dueDate": "Due Date",
+    "due": "Due",
+    "paymentTerms": "Payment Terms",
+    "reminderNote": "Payment Reminder",
+    "reminderPlaceholder": "Friendly payment reminder for the client...",
+    "lineItems": "Line Items",
+    "itemDescription": "Description",
+    "qty": "Qty",
+    "price": "Price",
+    "addLineItem": "Add Line Item",
+    "subtotal": "Subtotal",
+    "tax": "Tax",
+    "total": "Total",
+    "saveDraft": "Save Draft",
+    "saveAndSend": "Save & Send",
+    "markAsSent": "Mark as Sent",
+    "markAsPaid": "Mark as Paid",
+    "deleteInvoice": "Delete Invoice?",
+    "deleteInvoiceConfirm": "This action cannot be undone.",
+    "profitLoss": "Profit & Loss",
+    "balanceSheet": "Balance Sheet",
+    "generateReport": "Generate Report",
+    "noDataForReports": "No data for reports",
+    "addTransactionsFirst": "Add transactions to generate reports",
+    "incomeBreakdown": "Income Breakdown",
+    "expenseBreakdown": "Expense Breakdown",
+    "noIncome": "No income recorded",
+    "noExpenses": "No expenses recorded",
+    "aiNarrative": "AI Narrative",
+    "narrativeSubtitle": "AI explains your results in plain language",
+    "generateNarrative": "Generate Narrative",
+    "clickToGenerateNarrative": "Click \"Generate Narrative\" for an AI-powered executive summary",
+    "insightsPromptLang": "English"
+  },
   "globalStyles": {
     "colors": "Colors",
     "typography": "Typography",
@@ -8250,7 +8352,111 @@
       "updated": "Updated",
       "verificationCode": "verification code",
       "website": "Sitio Web",
-      "yourSiteName": "Name de tu site"
+      "yourSiteName": "Name de tu site",
+      "saveAll": "Save All",
+      "tabs": {
+        "defaults": "Defaults",
+        "templates": "Templates",
+        "verifications": "Verifications",
+        "ai": "AI Optimization"
+      },
+      "defaults": {
+        "title": "Default Settings",
+        "description": "These values will be applied as defaults to all new projects created on the platform.",
+        "language": "Default Language",
+        "robots": "Robots Meta Tag",
+        "robotsOptions": {
+          "indexFollow": "Index, Follow (Recommended)",
+          "noindexFollow": "No Index, Follow",
+          "indexNofollow": "Index, No Follow",
+          "noindexNofollow": "No Index, No Follow"
+        },
+        "schemaType": "Default Schema Type",
+        "aiCrawling": "AI Crawling",
+        "aiCrawlingDesc": "Allow AI bots to crawl and index user websites",
+        "ogType": "Default Open Graph Type",
+        "twitterCard": "Default Twitter Card Type"
+      },
+      "templates": {
+        "title": "SEO Templates",
+        "create": "Create Template",
+        "description": "Predefined SEO templates that users can quickly apply to their projects.",
+        "items": {
+          "ecommerce": {
+            "name": "E-commerce",
+            "desc": "Optimized for online stores with products and categories"
+          },
+          "blog": {
+            "name": "Blog / News",
+            "desc": "Optimized for articles, posts, and editorial content"
+          },
+          "portfolio": {
+            "name": "Portfolio",
+            "desc": "Optimized for showcasing creative work and projects"
+          },
+          "local": {
+            "name": "Local Business",
+            "desc": "Optimized for local businesses with location information"
+          },
+          "saas": {
+            "name": "SaaS / Platform",
+            "desc": "Optimized for software products and digital platforms"
+          }
+        }
+      },
+      "verifications": {
+        "title": "Site Verifications",
+        "description": "Set up verification codes for Google Search Console and Bing Webmaster Tools.",
+        "googleLabel": "Bing Webmaster Tools Verification",
+        "googleHelper": "Enter the meta tag code from Google Search Console",
+        "placeholder": "Enter verification code",
+        "bingHelper": "Enter the meta tag code from Bing Webmaster Tools",
+        "howTo": {
+          "title": "How to get verification codes?",
+          "google": "Google Search Console",
+          "googleStep": "Go to Settings → Ownership verification → HTML tag → Copy the content value",
+          "bing": "Bing Webmaster Tools",
+          "bingStep": "Sign up or log in → Add site → Copy the verification meta tag"
+        },
+        "benefits": {
+          "title": "Verification Benefits",
+          "list": [
+            "Monitor search performance and impressions",
+            "Submit sitemaps for faster indexing",
+            "Identify and fix crawl errors",
+            "See which search queries drive traffic to your site"
+          ]
+        }
+      },
+      "ai": {
+        "bannerTitle": "AI Optimization",
+        "bannerDesc": "Configure how AI-powered search engines like ChatGPT, Perplexity, Claude, and others understand and index websites built with Quimera.ai.",
+        "title": "AI Bot Configuration",
+        "descTemplateLabel": "AI Description Template",
+        "descTemplatePlaceholder": "A description that helps AI understand your site's purpose...",
+        "descTemplateHelper": "This description will be used as a base for AI bots to better understand platform sites.",
+        "topicsLabel": "Default Topics",
+        "topicsPlaceholder": "AI, Website Builder, No-Code",
+        "topicsHelper": "Comma-separated topics that help AI categorize sites",
+        "supportedEngines": "Supported Search Engines",
+        "supportedEnginesDesc": "Websites created with Quimera.ai are optimized for these AI search engines:",
+        "special": {
+          "title": "Special AI Features",
+          "list": [
+            "<strong>Structured Data</strong> — Schema.org automatically generated for every site",
+            "<strong>AI Metadata</strong> — Special meta tags for AI crawlers",
+            "<strong>Semantic Descriptions</strong> — Content optimized for AI understanding",
+            "<strong>Auto Indexing</strong> — XML sitemap automatically generated"
+          ]
+        },
+        "metaTags": {
+          "title": "Generated AI Meta Tags",
+          "description": "These meta tags are automatically added to all published sites to improve AI visibility.",
+          "crawlable": "Allows AI bots to crawl and index the site",
+          "descriptionTag": "Description optimized for AI understanding",
+          "topicsTag": "Main topics for AI categorization"
+        }
+      }
     },
     "userTemplates": {
       "availableTemplates": "Templates disponibles",

@@ -35,7 +35,7 @@ import {
 } from '../types/changelog';
 
 // Brand assets
-const QUIMERA_LOGO = "https://firebasestorage.googleapis.com/v0/b/quimeraai.firebasestorage.app/o/quimera%2Fquimeralogo.png?alt=media&token=82368c1c-0f63-42b7-831f-72780006f032";
+import { QUIMERA_DEFAULT_LOGO } from '../hooks/useAppLogo';
 
 interface ChangelogPageProps {
   onNavigateToHome: () => void;
@@ -400,7 +400,7 @@ const ChangelogPage: React.FC<ChangelogPageProps> = ({
           <div className="flex items-center justify-between">
             {/* Logo */}
             <button onClick={onNavigateToHome} className="flex items-center gap-2 sm:gap-3 hover:opacity-80 transition-opacity">
-              <img src={QUIMERA_LOGO} alt="Quimera.ai" className="w-8 h-8 sm:w-10 sm:h-10" />
+              <img src={QUIMERA_DEFAULT_LOGO} alt="Quimera.ai" className="w-8 h-8 sm:w-10 sm:h-10" />
               <span className="text-lg sm:text-xl font-bold text-white">
                 Quimera<span className="text-yellow-400">.ai</span>
               </span>
@@ -689,7 +689,7 @@ const ChangelogPage: React.FC<ChangelogPageProps> = ({
         <div className="container mx-auto px-4 sm:px-6">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-2">
-              <img src={QUIMERA_LOGO} alt="Quimera.ai" className="w-6 h-6" />
+              <img src={QUIMERA_DEFAULT_LOGO} alt="Quimera.ai" className="w-6 h-6" />
               <span className="text-sm text-gray-500">
                 © {new Date().getFullYear()} Quimera.ai. Todos los derechos reservados.
               </span>
