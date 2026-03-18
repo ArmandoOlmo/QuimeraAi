@@ -643,11 +643,16 @@ const Controls: React.FC = () => {
   };
 
   // Use active page's sections if available, otherwise fall back to componentOrder
+  // Deduplicate: keep only the first occurrence of each section to prevent
+  // duplicated components in the preview and component tree
   const effectiveComponentOrder = useMemo(() => {
-    if (activePage?.sections?.length) {
-      return activePage.sections;
-    }
-    return componentOrder;
+    const raw = activePage?.sections?.length ? activePage.sections : componentOrder;
+    const seen = new Set<PageSection>();
+    return raw.filter(s => {
+      if (seen.has(s)) return false;
+      seen.add(s);
+      return true;
+    });
   }, [activePage, componentOrder]);
 
   // Update section visibility based on active page

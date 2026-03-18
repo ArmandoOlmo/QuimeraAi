@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAI } from '../../../contexts/ai/AIContext';
 import { useProject } from '../../../contexts/project';
+import { useSafeEditor } from '../../../contexts/EditorContext';
 import {
     Palette, MessageSquare,
     Settings as SettingsIcon, Smile, Image as ImageIcon, Zap,
@@ -79,7 +80,7 @@ const ChatCustomizationSettings: React.FC = () => {
 
     const [showEmojiPicker, setShowEmojiPicker] = useState<string | null>(null);
     const [newQuickReply, setNewQuickReply] = useState({ text: '', emoji: '' });
-    const [showImagePicker, setShowImagePicker] = useState(false);
+    const [showImagePicker, setShowImagePicker] = useState<'logo' | 'buttonIcon' | null>(null);
 
     useEffect(() => {
         if (aiAssistantConfig.appearance) {
@@ -87,14 +88,23 @@ const ChatCustomizationSettings: React.FC = () => {
         }
     }, [aiAssistantConfig.appearance]);
 
+    // Also sync to EditorContext so the live ChatbotWidget preview updates
+    const editorContext = useSafeEditor();
+
     // Helper to save config with project ID
     const saveConfig = useCallback((newAppearanceConfig: ChatAppearanceConfig) => {
         if (!activeProject?.id) return;
-        saveAiAssistantConfig({
+        const fullConfig = {
             ...aiAssistantConfig,
             appearance: newAppearanceConfig
-        }, activeProject.id);
-    }, [activeProject?.id, aiAssistantConfig, saveAiAssistantConfig]);
+        };
+        // Save to AIContext + Firestore
+        saveAiAssistantConfig(fullConfig, activeProject.id);
+        // Sync to EditorContext so ChatbotWidget preview updates immediately
+        if (editorContext?.saveAiAssistantConfig) {
+            editorContext.saveAiAssistantConfig(fullConfig);
+        }
+    }, [activeProject?.id, aiAssistantConfig, saveAiAssistantConfig, editorContext]);
 
     const applyPreset = (presetName: keyof typeof THEME_PRESETS) => {
         const newConfig = applyThemePreset(config, presetName);
@@ -146,8 +156,24 @@ const ChatCustomizationSettings: React.FC = () => {
     };
 
     const handleImageSelect = (url: string) => {
-        updateBranding('logoUrl', url);
-        setShowImagePicker(false);
+        if (showImagePicker === 'buttonIcon') {
+            // Set both the URL and the button icon type
+            const newConfig = {
+                ...config,
+                button: { ...config.button, customIconUrl: url, buttonIcon: 'custom-image' as const }
+            };
+            setConfig(newConfig);
+            saveConfig(newConfig);
+        } else {
+            // Set both the URL and the logo type
+            const newConfig = {
+                ...config,
+                branding: { ...config.branding, logoUrl: url, logoType: 'image' as const }
+            };
+            setConfig(newConfig);
+            saveConfig(newConfig);
+        }
+        setShowImagePicker(null);
     };
 
     const updateBehavior = (key: string, value: any) => {
@@ -380,7 +406,7 @@ const ChatCustomizationSettings: React.FC = () => {
 
                                         <div className="flex flex-col items-center gap-2">
                                             <button
-                                                onClick={() => setShowImagePicker(true)}
+                                                onClick={() => setShowImagePicker('logo')}
                                                 className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground text-xs font-medium rounded-lg hover:opacity-90 transition-all"
                                             >
                                                 <ImageIcon size={14} />
@@ -393,11 +419,14 @@ const ChatCustomizationSettings: React.FC = () => {
                                     </div>
 
                                     <EcommerceImagePicker
-                                        isOpen={showImagePicker}
-                                        onClose={() => setShowImagePicker(false)}
+                                        isOpen={!!showImagePicker}
+                                        onClose={() => setShowImagePicker(null)}
                                         onSelect={handleImageSelect}
                                         multiple={false}
-                                        currentImages={config.branding.logoUrl ? [config.branding.logoUrl] : []}
+                                        currentImages={showImagePicker === 'buttonIcon'
+                                            ? (config.button.customIconUrl ? [config.button.customIconUrl] : [])
+                                            : (config.branding.logoUrl ? [config.branding.logoUrl] : [])
+                                        }
                                     />
                                 </div>
                             )}
@@ -612,6 +641,97 @@ const ChatCustomizationSettings: React.FC = () => {
                                     ))}
                                 </div>
                             </div>
+
+                            <div className="border border-border/50 rounded-xl p-4 bg-secondary/5">
+                                <label className="block text-xs font-medium text-muted-foreground mb-3 uppercase tracking-wide">🎨 {t('chatCustomization.buttonIcon', 'Ícono del Botón')}</label>
+                                <div className="grid grid-cols-2 gap-2">
+                                    {([
+                                        { value: 'chat', label: t('chatCustomization.buttonIcons.chat', 'Chat'), icon: '💬' },
+                                        { value: 'help', label: t('chatCustomization.buttonIcons.help', 'Help'), icon: '❓' },
+                                        { value: 'custom-emoji', label: t('chatCustomization.buttonIcons.customEmoji', 'Emoji'), icon: '😊' },
+                                        { value: 'custom-image', label: t('chatCustomization.buttonIcons.customImage', 'Imagen'), icon: '🖼️' },
+                                    ] as const).map(({ value, label, icon }) => (
+                                        <button
+                                            key={value}
+                                            onClick={() => updateButton('buttonIcon', value)}
+                                            className={`py-2.5 px-3 rounded-lg font-medium transition-all text-sm flex flex-col items-center gap-1 ${config.button.buttonIcon === value
+                                                ? 'bg-primary text-primary-foreground shadow-md'
+                                                : 'bg-card border border-border/50 text-muted-foreground hover:border-primary/50 hover:text-foreground'
+                                                }`}
+                                        >
+                                            <span className="text-lg">{icon}</span>
+                                            <span className="text-xs">{label}</span>
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {config.button.buttonIcon === 'custom-emoji' && (
+                                <div>
+                                    <label className="block text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">{t('chatCustomization.customButtonEmoji', 'Custom Emoji')}</label>
+                                    <div className="relative">
+                                        <button
+                                            onClick={() => setShowEmojiPicker(showEmojiPicker === 'button' ? null : 'button')}
+                                            className="w-full px-4 py-5 bg-card border border-border/50 rounded-lg text-3xl text-center hover:border-primary hover:shadow-md transition-all"
+                                        >
+                                            {config.button.customEmoji || '💬'}
+                                        </button>
+                                        {showEmojiPicker === 'button' && (
+                                            <div className="mt-2 bg-card border border-border rounded-xl shadow-2xl p-4 grid grid-cols-8 gap-2 max-h-48 overflow-y-auto">
+                                                {COMMON_EMOJIS.map((emoji) => (
+                                                    <button
+                                                        key={emoji}
+                                                        onClick={() => {
+                                                            updateButton('customEmoji', emoji);
+                                                            setShowEmojiPicker(null);
+                                                        }}
+                                                        className="text-2xl hover:scale-125 transition-transform p-2 hover:bg-secondary/50 rounded-lg"
+                                                    >
+                                                        {emoji}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+
+                            {config.button.buttonIcon === 'custom-image' && (
+                                <div>
+                                    <label className="block text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">{t('chatCustomization.customButtonImage', 'Custom Icon Image')}</label>
+                                    <div className="border border-dashed border-border rounded-xl p-4 flex flex-col items-center gap-3 bg-card/30">
+                                        {config.button.customIconUrl ? (
+                                            <div className="relative group">
+                                                <div className="w-16 h-16 rounded-xl overflow-hidden border border-border shadow-sm bg-white/5">
+                                                    <img
+                                                        src={config.button.customIconUrl}
+                                                        alt={t('chatCustomization.customButtonImageAlt', 'Button icon')}
+                                                        className="w-full h-full object-cover"
+                                                    />
+                                                </div>
+                                                <button
+                                                    onClick={() => updateButton('customIconUrl', '')}
+                                                    className="absolute -top-2 -right-2 p-1.5 bg-destructive text-destructive-foreground rounded-full opacity-0 group-hover:opacity-100 transition-all shadow-md hover:scale-110"
+                                                    title={t('chatCustomization.removeIcon', 'Remove icon')}
+                                                >
+                                                    <X size={12} />
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <div className="w-16 h-16 rounded-xl border border-border bg-secondary/20 flex items-center justify-center text-muted-foreground">
+                                                <ImageIcon size={24} className="opacity-50" />
+                                            </div>
+                                        )}
+                                        <button
+                                            onClick={() => setShowImagePicker('buttonIcon')}
+                                            className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground text-xs font-medium rounded-lg hover:opacity-90 transition-all"
+                                        >
+                                            <ImageIcon size={14} />
+                                            {config.button.customIconUrl ? t('chatCustomization.changeImage') : t('chatCustomization.selectImage')}
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
 
                             <div className="flex items-center justify-between p-4 bg-secondary/10 hover:bg-secondary/20 rounded-lg transition-colors">
                                 <span className="text-sm font-medium text-foreground">{t('chatCustomization.pulseEffect')}</span>

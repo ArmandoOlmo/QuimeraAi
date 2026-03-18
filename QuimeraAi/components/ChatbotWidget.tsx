@@ -36,7 +36,6 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
     standaloneProject,
     hidePoweredBy: propHidePoweredBy = false
 }) => {
-    // Use safe editor context - may be null in public preview
     const editorContext = useSafeEditor();
     const projectContext = useSafeProject();
     const authContext = useSafeAuth();
@@ -45,10 +44,9 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
     const hasWhiteLabelBranding = !!(tenantContext?.currentTenant?.branding?.companyName || tenantContext?.currentTenant?.branding?.logoUrl);
     const { t } = useTranslation();
 
-    // Use standalone config or editor context values
+    // Data source: standaloneConfig (public pages) or editorContext (editor)
     const rawConfig = standaloneConfig || editorContext?.aiAssistantConfig || { isActive: false } as AiAssistantConfig;
 
-    // Ensure enableLiveVoice defaults to true if not explicitly set to false
     const aiAssistantConfig: AiAssistantConfig = {
         ...rawConfig,
         enableLiveVoice: rawConfig.enableLiveVoice !== false
@@ -56,16 +54,24 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
 
     const addLead = editorContext?.addLead;
     const updateLead = editorContext?.updateLead;
-    // Try to get activeProject from EditorContext first, then ProjectContext, then standalone
     const activeProject = editorContext?.activeProject || projectContext?.activeProject || standaloneProject || null;
     const data = editorContext?.data || projectContext?.data || standaloneProject?.data;
     const componentOrder = editorContext?.componentOrder || projectContext?.componentOrder || standaloneProject?.componentOrder || [];
     const sectionVisibility = editorContext?.sectionVisibility || projectContext?.sectionVisibility || standaloneProject?.sectionVisibility || {};
     const view = editorContext?.view || 'preview';
 
-    // Get appearance config with defaults
+    // Deep merge appearance with defaults to ensure all sub-objects exist
     const defaultAppearance = getDefaultAppearanceConfig();
-    const baseAppearance = aiAssistantConfig.appearance || defaultAppearance;
+    const storedAppearance = aiAssistantConfig.appearance;
+    const baseAppearance = storedAppearance ? {
+        ...defaultAppearance,
+        ...storedAppearance,
+        branding: { ...defaultAppearance.branding, ...storedAppearance.branding },
+        colors: { ...defaultAppearance.colors, ...storedAppearance.colors },
+        behavior: { ...defaultAppearance.behavior, ...storedAppearance.behavior },
+        messages: { ...defaultAppearance.messages, ...storedAppearance.messages },
+        button: { ...defaultAppearance.button, ...storedAppearance.button },
+    } : defaultAppearance;
 
     // Check if the user has explicitly configured colors via AI Dashboard
     // (the appearance object exists on the aiAssistantConfig, meaning the user
@@ -564,7 +570,24 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
                     }}
                     title={appearance.button.showTooltip ? appearance.button.tooltipText : undefined}
                 >
-                    {appearance.button.buttonIcon === 'custom-emoji' && appearance.button.customEmoji ? (
+                    {/* Priority: 1) Branding logo image (same as chat header), 2) Branding emoji, 3) Custom button icon, 4) Default */}
+                    {appearance.branding?.logoUrl ? (
+                        <img
+                            src={appearance.branding.logoUrl}
+                            alt="Chat"
+                            className={`${isMobileViewport ? 'w-5 h-5' : 'w-7 h-7'} object-cover rounded-full transition-transform duration-300 ${isOpen ? 'rotate-180 scale-0' : 'scale-100'}`}
+                        />
+                    ) : appearance.branding?.logoType === 'emoji' && appearance.branding?.logoEmoji ? (
+                        <span className={isOpen ? 'rotate-180 scale-0 transition-transform duration-300' : 'scale-100 transition-transform duration-300'}>
+                            {appearance.branding.logoEmoji}
+                        </span>
+                    ) : appearance.button?.customIconUrl ? (
+                        <img
+                            src={appearance.button.customIconUrl}
+                            alt="Chat"
+                            className={`${isMobileViewport ? 'w-5 h-5' : 'w-7 h-7'} object-contain transition-transform duration-300 ${isOpen ? 'rotate-180 scale-0' : 'scale-100'}`}
+                        />
+                    ) : appearance.button?.buttonIcon === 'custom-emoji' && appearance.button?.customEmoji ? (
                         <span className={isOpen ? 'rotate-180 scale-0 transition-transform duration-300' : 'scale-100 transition-transform duration-300'}>
                             {appearance.button.customEmoji}
                         </span>

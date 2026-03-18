@@ -1522,7 +1522,11 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
                 clearTimeout(autoSaveTimerRef.current);
             }
         };
-    }, [data, theme, brandIdentity, componentOrder, sectionVisibility, menus, aiAssistantConfig, activeProjectId, activeProject, user, userDocument]);
+    }, [data, theme, brandIdentity, componentOrder, sectionVisibility, menus, activeProjectId, activeProject, user, userDocument]);
+    // NOTE: aiAssistantConfig is intentionally excluded from this dependency array.
+    // It is saved independently by saveAiAssistantConfig() in both EditorContext and AIContext.
+    // Including it here caused a race condition: loadProject() setting stale cached config
+    // would trigger auto-save and overwrite fresh changes made in the AI Dashboard.
 
     // Reset initial load flag when project changes
     useEffect(() => {
@@ -1828,6 +1832,21 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
                     enableLiveVoice: false,
                     voiceName: 'Zephyr'
                 });
+            }
+
+            // Re-fetch aiAssistantConfig from Firestore to get latest data
+            // (the projects cache may be stale if the user changed branding in the AI Dashboard)
+            if (user) {
+                const freshFetchProjectId = projectId;
+                getDoc(doc(db, 'users', user.uid, 'projects', freshFetchProjectId)).then(snap => {
+                    if (snap.exists()) {
+                        const freshAiConfig = snap.data()?.aiAssistantConfig;
+                        if (freshAiConfig) {
+                            setAiAssistantConfig(freshAiConfig);
+                            aiAssistantConfigRef.current = freshAiConfig;
+                        }
+                    }
+                }).catch(() => { /* silently use cached version */ });
             }
 
             // Load SEO Config if exists, otherwise use defaults

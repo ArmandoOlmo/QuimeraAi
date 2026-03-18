@@ -1189,7 +1189,10 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
   }
 
   // Extract data from project
-  const { data, theme, componentOrder, sectionVisibility, componentStatus, componentStyles } = project;
+  const { data, theme, componentOrder: rawComponentOrder, sectionVisibility, componentStatus, componentStyles } = project;
+
+  // Deduplicate componentOrder to prevent duplicate sections (e.g., 'team' appearing multiple times)
+  const componentOrder = rawComponentOrder?.filter((s: string, i: number, arr: string[]) => arr.indexOf(s) === i);
 
   // Debug: Log component order and ecommerce data availability
   console.log('[PublicWebsitePreview] Project loaded:', {
