@@ -551,7 +551,7 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
                         ${getButtonStyleClasses(appearance.button.buttonStyle)}
                         ${getShadowClasses(appearance.button.shadowSize)}
                         ${appearance.button.pulseEffect && !isOpen ? 'animate-pulse' : ''}
-                        hover:scale-110 transition-all duration-300 flex items-center justify-center group relative mb-2 sm:mb-[55px] pointer-events-auto
+                        hover:scale-110 transition-all duration-300 flex items-center justify-center group relative mb-[55px] pointer-events-auto
                         ${isInEditor ? 'pointer-events-auto cursor-default' : ''}
                     `}
                     style={{
