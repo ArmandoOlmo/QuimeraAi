@@ -12,6 +12,7 @@ import { deriveColorsFromPalette } from '../utils/colorUtils';
 import { AlertTriangle, Loader2 } from 'lucide-react';
 import AdPixelsInjector from './AdPixelsInjector';
 import { getPreviewPrefetch } from '../utils/previewPrefetch';
+import SectionBackground from './ui/SectionBackground';
 
 // Core components — needed immediately for first paint
 import Header from './Header';
@@ -1275,7 +1276,7 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
     }) || []
   };
 
-  // Render component based on key
+  // Render component based on key, wrapped with SectionBackground for background images
   const renderComponent = (key: PageSection) => {
     const compData = mergedData[key as keyof typeof mergedData];
     if (!compData) return null;
@@ -1283,103 +1284,116 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
     const borderRadius = theme?.cardBorderRadius || 'md';
     const buttonBorderRadius = theme?.buttonBorderRadius || 'md';
 
+    // Helper to wrap any section with SectionBackground
+    const withBackground = (element: React.ReactNode) => (
+      <SectionBackground
+        backgroundImageUrl={compData.backgroundImageUrl}
+        backgroundOverlayEnabled={compData.backgroundOverlayEnabled}
+        backgroundOverlayOpacity={compData.backgroundOverlayOpacity}
+        backgroundOverlayColor={compData.backgroundOverlayColor}
+        backgroundColor={compData.colors?.background}
+      >
+        {element}
+      </SectionBackground>
+    );
+
     switch (key) {
       case 'hero':
         {
           const hbr = compData.buttonBorderRadius || buttonBorderRadius;
-          if (compData.heroVariant === 'modern') return <HeroModern {...compData} borderRadius={hbr} onNavigate={handleLinkNavigation} />;
-          if (compData.heroVariant === 'gradient') return <HeroGradient {...compData} borderRadius={hbr} onNavigate={handleLinkNavigation} />;
-          if (compData.heroVariant === 'fitness') return <HeroFitness {...compData} borderRadius={hbr} onNavigate={handleLinkNavigation} />;
-          if (compData.heroVariant === 'editorial') return <HeroEditorial {...compData} borderRadius={hbr} onNavigate={handleLinkNavigation} />;
-          if (compData.heroVariant === 'cinematic') return <HeroCinematic {...compData} borderRadius={hbr} onNavigate={handleLinkNavigation} />;
-          if (compData.heroVariant === 'minimal') return <HeroMinimal {...compData} borderRadius={hbr} onNavigate={handleLinkNavigation} />;
-          if (compData.heroVariant === 'bold') return <HeroBold {...compData} borderRadius={hbr} onNavigate={handleLinkNavigation} />;
-          if (compData.heroVariant === 'overlap') return <HeroOverlap {...compData} borderRadius={hbr} onNavigate={handleLinkNavigation} />;
-          if (compData.heroVariant === 'verticalSplit') return <HeroVerticalSplit {...compData} borderRadius={hbr} onNavigate={handleLinkNavigation} />;
-          if (compData.heroVariant === 'glass') return <HeroGlass {...compData} borderRadius={hbr} onNavigate={handleLinkNavigation} />;
-          if (compData.heroVariant === 'stacked') return <HeroStacked {...compData} borderRadius={hbr} onNavigate={handleLinkNavigation} />;
-          return <Hero {...compData} borderRadius={hbr} onNavigate={handleLinkNavigation} />;
+          if (compData.heroVariant === 'modern') return withBackground(<HeroModern {...compData} borderRadius={hbr} onNavigate={handleLinkNavigation} />);
+          if (compData.heroVariant === 'gradient') return withBackground(<HeroGradient {...compData} borderRadius={hbr} onNavigate={handleLinkNavigation} />);
+          if (compData.heroVariant === 'fitness') return withBackground(<HeroFitness {...compData} borderRadius={hbr} onNavigate={handleLinkNavigation} />);
+          if (compData.heroVariant === 'editorial') return withBackground(<HeroEditorial {...compData} borderRadius={hbr} onNavigate={handleLinkNavigation} />);
+          if (compData.heroVariant === 'cinematic') return withBackground(<HeroCinematic {...compData} borderRadius={hbr} onNavigate={handleLinkNavigation} />);
+          if (compData.heroVariant === 'minimal') return withBackground(<HeroMinimal {...compData} borderRadius={hbr} onNavigate={handleLinkNavigation} />);
+          if (compData.heroVariant === 'bold') return withBackground(<HeroBold {...compData} borderRadius={hbr} onNavigate={handleLinkNavigation} />);
+          if (compData.heroVariant === 'overlap') return withBackground(<HeroOverlap {...compData} borderRadius={hbr} onNavigate={handleLinkNavigation} />);
+          if (compData.heroVariant === 'verticalSplit') return withBackground(<HeroVerticalSplit {...compData} borderRadius={hbr} onNavigate={handleLinkNavigation} />);
+          if (compData.heroVariant === 'glass') return withBackground(<HeroGlass {...compData} borderRadius={hbr} onNavigate={handleLinkNavigation} />);
+          if (compData.heroVariant === 'stacked') return withBackground(<HeroStacked {...compData} borderRadius={hbr} onNavigate={handleLinkNavigation} />);
+          return withBackground(<Hero {...compData} borderRadius={hbr} onNavigate={handleLinkNavigation} />);
         }
       case 'heroSplit':
-        return <HeroSplit {...compData} borderRadius={compData.buttonBorderRadius || buttonBorderRadius} onNavigate={handleLinkNavigation} />;
+        return withBackground(<HeroSplit {...compData} borderRadius={compData.buttonBorderRadius || buttonBorderRadius} onNavigate={handleLinkNavigation} />);
       case 'features':
-        return <Features {...compData} borderRadius={borderRadius} onNavigate={handleLinkNavigation} />;
+        return withBackground(<Features {...compData} borderRadius={borderRadius} onNavigate={handleLinkNavigation} />);
       case 'testimonials':
-        return <Testimonials {...compData} borderRadius={compData.borderRadius || borderRadius} cardShadow={compData.cardShadow} borderStyle={compData.borderStyle} cardPadding={compData.cardPadding} testimonialsVariant={compData.testimonialsVariant} />;
+        return withBackground(<Testimonials {...compData} borderRadius={compData.borderRadius || borderRadius} cardShadow={compData.cardShadow} borderStyle={compData.borderStyle} cardPadding={compData.cardPadding} testimonialsVariant={compData.testimonialsVariant} />);
       case 'slideshow':
-        return <Slideshow {...compData} borderRadius={borderRadius} />;
+        return withBackground(<Slideshow {...compData} borderRadius={borderRadius} />);
       case 'pricing':
-        return <Pricing {...compData} cardBorderRadius={borderRadius} buttonBorderRadius={buttonBorderRadius} />;
+        return withBackground(<Pricing {...compData} cardBorderRadius={borderRadius} buttonBorderRadius={buttonBorderRadius} />);
       case 'faq':
-        return <Faq {...compData} borderRadius={borderRadius} />;
+        return withBackground(<Faq {...compData} borderRadius={borderRadius} />);
       case 'leads':
-        return <Leads {...compData} cardBorderRadius={compData.cardBorderRadius || borderRadius} inputBorderRadius={compData.inputBorderRadius || 'md'} buttonBorderRadius={compData.buttonBorderRadius || buttonBorderRadius} />;
+        return withBackground(<Leads {...compData} cardBorderRadius={compData.cardBorderRadius || borderRadius} inputBorderRadius={compData.inputBorderRadius || 'md'} buttonBorderRadius={compData.buttonBorderRadius || buttonBorderRadius} />);
       case 'newsletter':
-        return <Newsletter {...compData} cardBorderRadius={borderRadius} buttonBorderRadius={buttonBorderRadius} />;
+        return withBackground(<Newsletter {...compData} cardBorderRadius={borderRadius} buttonBorderRadius={buttonBorderRadius} />);
       case 'cta':
-        return <CTASection {...compData} cardBorderRadius={borderRadius} buttonBorderRadius={buttonBorderRadius} onNavigate={handleLinkNavigation} />;
+        return withBackground(<CTASection {...compData} cardBorderRadius={borderRadius} buttonBorderRadius={buttonBorderRadius} onNavigate={handleLinkNavigation} />);
       case 'portfolio':
-        return <Portfolio {...compData} borderRadius={borderRadius} onNavigate={handleLinkNavigation} />;
+        return withBackground(<Portfolio {...compData} borderRadius={borderRadius} onNavigate={handleLinkNavigation} />);
       case 'services':
-        return <Services {...compData} borderRadius={borderRadius} />;
+        return withBackground(<Services {...compData} borderRadius={borderRadius} />);
       case 'team':
-        return <Team {...compData} borderRadius={borderRadius} />;
+        return withBackground(<Team {...compData} borderRadius={borderRadius} />);
       case 'video':
-        return <Video {...compData} borderRadius={borderRadius} />;
+        return withBackground(<Video {...compData} borderRadius={borderRadius} />);
       case 'howItWorks':
-        return <HowItWorks {...compData} borderRadius={borderRadius} />;
+        return withBackground(<HowItWorks {...compData} borderRadius={borderRadius} />);
       case 'map':
-        return <BusinessMap {...compData} apiKey={import.meta.env.VITE_GOOGLE_MAPS_KEY || ''} borderRadius={borderRadius} />;
+        return withBackground(<BusinessMap {...compData} apiKey={import.meta.env.VITE_GOOGLE_MAPS_KEY || ''} borderRadius={borderRadius} />);
       case 'menu':
-        return <MenuComponent {...compData} borderRadius={borderRadius} />;
+        return withBackground(<MenuComponent {...compData} borderRadius={borderRadius} />);
       case 'banner':
-        return <Banner {...compData} buttonBorderRadius={buttonBorderRadius} />;
+        return withBackground(<Banner {...compData} buttonBorderRadius={buttonBorderRadius} />);
       case 'products':
-        return <Products {...compData} primaryColor={compData?.colors?.accent || theme?.globalColors?.primary || '#4f46e5'} />;
+        return withBackground(<Products {...compData} primaryColor={compData?.colors?.accent || theme?.globalColors?.primary || '#4f46e5'} />);
       // Ecommerce section components
       case 'featuredProducts':
-        return compData ? (
+        return compData ? withBackground(
           <FeaturedProducts
             data={compData}
             storeId={storeProjectId || undefined}
           />
         ) : null;
       case 'categoryGrid':
-        return compData ? (
+        return compData ? withBackground(
           <CategoryGrid
             data={compData}
             storeId={storeProjectId || undefined}
           />
         ) : null;
       case 'productHero':
-        return compData ? (
+        return compData ? withBackground(
           <ProductHero
             data={compData}
             storeId={storeProjectId || undefined}
           />
         ) : null;
       case 'saleCountdown':
-        return compData ? (
+        return compData ? withBackground(
           <SaleCountdown
             data={compData}
             storeId={storeProjectId || undefined}
           />
         ) : null;
       case 'trustBadges':
-        return compData ? <TrustBadges data={compData} /> : null;
+        return compData ? withBackground(<TrustBadges data={compData} />) : null;
       case 'recentlyViewed':
-        return compData ? (
+        return compData ? withBackground(
           <RecentlyViewed
             data={compData}
             storeId={storeProjectId || undefined}
           />
         ) : null;
       case 'productReviews':
-        return compData ? <ProductReviews data={compData} /> : null;
+        return compData ? withBackground(<ProductReviews data={compData} />) : null;
       case 'collectionBanner':
-        return compData ? <CollectionBanner data={compData} /> : null;
+        return compData ? withBackground(<CollectionBanner data={compData} />) : null;
       case 'productBundle':
-        return compData ? (
+        return compData ? withBackground(
           <ProductBundle
             data={compData}
             storeId={storeProjectId || undefined}
