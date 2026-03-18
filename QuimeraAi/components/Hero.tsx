@@ -250,10 +250,10 @@ const Hero: React.FC<HeroProps> = (props) => {
     >
       <BackgroundImage />
 
-      {/* Main content container */}
+      {/* Main content container — max-w-7xl + px-6 matches the floating header */}
       <div
-        className={`relative z-10 container mx-auto flex flex-1 ${getVerticalClass()} ${getJustifyClass()}`}
-        style={{ minHeight: heroHeight ? `${heroHeight}vh` : '80vh', paddingLeft: 30, paddingRight: 30 }}
+        className={`relative z-10 w-full max-w-7xl mx-auto px-6 flex flex-1 ${getVerticalClass()} ${getJustifyClass()}`}
+        style={{ minHeight: heroHeight ? `${heroHeight}vh` : '80vh' }}
       >
         <TextContent align={getHorizontalAlign()} />
       </div>
