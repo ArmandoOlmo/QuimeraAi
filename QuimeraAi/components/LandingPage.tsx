@@ -138,16 +138,18 @@ const LandingPageContent: React.FC = () => {
   const tenantContext = useSafeTenant();
   const hasWhiteLabelBranding = !!(tenantContext?.currentTenant?.branding?.companyName || tenantContext?.currentTenant?.branding?.logoUrl);
 
-  // Context resolution: Prefer EditorContext data for real-time updates when in editor
+  // Context resolution: ALWAYS use ProjectContext as primary source of truth.
+  // Controls panel updates ProjectContext.data via useProject().setData,
+  // so LandingPage must read from ProjectContext to reflect edits in the preview.
+  // EditorContext.data is only set once during loadProject and is NOT synced
+  // with subsequent edits, causing stale preview data if preferred.
   const editorContext = useSafeEditor();
   const projectContext = useProject();
 
-  const isEditorMode = editorContext?.view === 'editor' && !!editorContext?.data;
-
-  const data = (isEditorMode ? editorContext!.data : projectContext.data) || projectContext.data;
-  const theme = (isEditorMode ? editorContext!.theme : projectContext.theme) || projectContext.theme;
-  const componentOrder = (isEditorMode ? editorContext!.componentOrder : projectContext.componentOrder) || projectContext.componentOrder;
-  const sectionVisibility = (isEditorMode ? editorContext!.sectionVisibility : projectContext.sectionVisibility) || projectContext.sectionVisibility;
+  const data = projectContext.data || (editorContext?.data ?? null);
+  const theme = projectContext.theme || (editorContext?.theme ?? projectContext.theme);
+  const componentOrder = projectContext.componentOrder || (editorContext?.componentOrder ?? projectContext.componentOrder);
+  const sectionVisibility = projectContext.sectionVisibility || (editorContext?.sectionVisibility ?? projectContext.sectionVisibility);
   const { activeProjectId, pages, activePage } = projectContext;
 
   const { cmsPosts, isLoadingCMS, menus } = useCMS();
