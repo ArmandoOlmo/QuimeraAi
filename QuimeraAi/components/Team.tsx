@@ -12,6 +12,7 @@ interface TeamMemberCardProps {
   imageUrl: string;
   name: string;
   role: string;
+  bio?: string;
   delay?: string;
   variant?: TeamVariant;
   accentColor?: string;
@@ -57,6 +58,7 @@ const TeamMemberCard: React.FC<TeamMemberCardProps> = ({
   imageUrl,
   name,
   role,
+  bio,
   delay = '0s',
   variant = 'classic',
   accentColor = '#4f46e5',
@@ -204,7 +206,7 @@ const TeamMemberCard: React.FC<TeamMemberCardProps> = ({
             <div className="opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 mt-2">
               <div className="w-12 h-1 mb-2" style={{ backgroundColor: accentColor }} />
               <p className="text-sm" style={{ color: roleColor }}>
-                Team Member
+                {bio || role}
               </p>
             </div>
           </div>
@@ -278,6 +280,7 @@ const Team: React.FC<TeamProps> = ({
               imageUrl={member.imageUrl}
               name={member.name}
               role={member.role}
+              bio={member.bio}
               delay={getAnimationDelay(index, 0.15)}
               variant={teamVariant}
               accentColor={colors?.accent || '#4f46e5'}

@@ -588,6 +588,7 @@ export interface TeamMember {
     name: string;
     role: string;
     imageUrl: string;
+    bio?: string;
 }
 
 export interface TeamData {
