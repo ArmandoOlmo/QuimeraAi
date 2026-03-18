@@ -252,8 +252,8 @@ const Hero: React.FC<HeroProps> = (props) => {
 
       {/* Main content container */}
       <div
-        className={`relative z-10 container mx-auto px-8 flex flex-1 ${getVerticalClass()} ${getJustifyClass()}`}
-        style={{ minHeight: heroHeight ? `${heroHeight}vh` : '80vh' }}
+        className={`relative z-10 container mx-auto flex flex-1 ${getVerticalClass()} ${getJustifyClass()}`}
+        style={{ minHeight: heroHeight ? `${heroHeight}vh` : '80vh', paddingLeft: 30, paddingRight: 30 }}
       >
         <TextContent align={getHorizontalAlign()} />
       </div>
