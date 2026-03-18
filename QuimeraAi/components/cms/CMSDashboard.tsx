@@ -11,16 +11,16 @@ import QuimeraLoader from '../ui/QuimeraLoader';
 import ModernCMSEditor from './modern/ModernCMSEditor';
 import ContentCreatorAssistant from './ContentCreatorAssistant';
 import CMSProjectSelectorPage from './CMSProjectSelectorPage';
-import { Menu, Plus, Search, FileText, Edit3, Trash2, Loader2, Calendar, Globe, PenTool, ArrowDown, ArrowUp, Grid, List, Eye, X as XIcon, Copy, Edit2, Download, Sparkles, ArrowLeft, ChevronDown, Check } from 'lucide-react';
+import { Menu, Plus, Search, FileText, Edit3, Trash2, Loader2, Calendar, Globe, PenTool, ArrowDown, ArrowUp, Grid, List, Eye, X as XIcon, Copy, Edit2, Download, Sparkles, ArrowLeft, ChevronDown, Check, Tag, FolderOpen } from 'lucide-react';
 import { useRouter } from '../../hooks/useRouter';
 import { ROUTES } from '../../routes/config';
-import { CMSPost } from '../../types';
+import { CMSPost, CMSCategory } from '../../types';
 import { sanitizeHtml } from '../../utils/sanitize';
 
 const CMSDashboard: React.FC = () => {
     const { t } = useTranslation();
     const { navigate } = useRouter();
-    const { cmsPosts, loadCMSPosts, deleteCMSPost, saveCMSPost, hasActiveProject, activeProjectName } = useCMS();
+    const { cmsPosts, loadCMSPosts, deleteCMSPost, saveCMSPost, hasActiveProject, activeProjectName, categories, saveCategory, deleteCategory } = useCMS();
     const { loadProject } = useProject();
 
     // Project selector state
@@ -47,6 +47,14 @@ const CMSDashboard: React.FC = () => {
 
     // AI Assistant
     const [isAiAssistantOpen, setIsAiAssistantOpen] = useState(false);
+
+    // Category filter & management
+    const [categoryFilter, setCategoryFilter] = useState<string>('all');
+    const [showCategoryManager, setShowCategoryManager] = useState(false);
+    const [editingCategory, setEditingCategory] = useState<CMSCategory | null>(null);
+    const [categoryForm, setCategoryForm] = useState({ name: '', slug: '', description: '' });
+    const [isSavingCategory, setIsSavingCategory] = useState(false);
+    const [deleteCategoryConfirmId, setDeleteCategoryConfirmId] = useState<string | null>(null);
 
     // Delete confirmation modal
     const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
@@ -217,6 +225,15 @@ const CMSDashboard: React.FC = () => {
                 if (dateRange === 'month' && daysDiff > 30) return false;
             }
 
+            // Filtro de categoría
+            if (categoryFilter !== 'all') {
+                if (categoryFilter === 'uncategorized') {
+                    if (post.categoryId) return false;
+                } else if (post.categoryId !== categoryFilter) {
+                    return false;
+                }
+            }
+
             return true;
         });
 
@@ -237,7 +254,7 @@ const CMSDashboard: React.FC = () => {
         });
 
         return result;
-    }, [cmsPosts, searchQuery, statusFilter, sortBy, sortOrder, dateRange]);
+    }, [cmsPosts, searchQuery, statusFilter, sortBy, sortOrder, dateRange, categoryFilter]);
 
     // Métricas
     const metrics = useMemo(() => ({
@@ -495,6 +512,33 @@ const CMSDashboard: React.FC = () => {
                                 </select>
                             </div>
 
+                            {/* Category filter */}
+                            {categories.length > 0 && (
+                                <div className="relative flex-shrink-0 cursor-pointer" title={t('cms.filters.category', 'Categoría')}>
+                                    <Tag size={15} className={`pointer-events-none transition-colors ${categoryFilter !== 'all' ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`} />
+                                    <select
+                                        value={categoryFilter}
+                                        onChange={(e) => setCategoryFilter(e.target.value)}
+                                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                    >
+                                        <option value="all">{t('cms.filters.allCategories', 'Todas')}</option>
+                                        <option value="uncategorized">{t('cms.filters.uncategorized', 'Sin categoría')}</option>
+                                        {categories.map(cat => (
+                                            <option key={cat.id} value={cat.id}>{cat.name}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                            )}
+
+                            {/* Manage Categories button */}
+                            <button
+                                onClick={() => { setShowCategoryManager(true); setEditingCategory(null); setCategoryForm({ name: '', slug: '', description: '' }); }}
+                                className="text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
+                                title={t('cms.manageCategories', 'Gestionar Categorías')}
+                            >
+                                <FolderOpen size={15} />
+                            </button>
+
                             <div className="relative flex-shrink-0 cursor-pointer" title={t('cms.filters.sortByDate', 'Ordenar')}>
                                 <ChevronDown size={15} className="pointer-events-none text-muted-foreground hover:text-foreground transition-colors" />
                                 <select
@@ -508,9 +552,9 @@ const CMSDashboard: React.FC = () => {
                             </div>
 
                             {/* Clear filters */}
-                            {(statusFilter !== 'all' || dateRange !== 'all') && (
+                            {(statusFilter !== 'all' || dateRange !== 'all' || categoryFilter !== 'all') && (
                                 <button
-                                    onClick={() => { setStatusFilter('all'); setDateRange('all'); }}
+                                    onClick={() => { setStatusFilter('all'); setDateRange('all'); setCategoryFilter('all'); }}
                                     className="text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
                                     title={t('common.clear', 'Limpiar filtros')}
                                 >
@@ -855,8 +899,13 @@ const CMSDashboard: React.FC = () => {
                                                 </button>
                                             </div>
 
-                                            {/* Bottom Section: Title and Date */}
+                                            {/* Bottom Section: Title, Category Badge, and Date */}
                                             <div className="absolute bottom-0 left-0 right-0 z-10 p-4 sm:p-6">
+                                                {post.categoryId && categories.find(c => c.id === post.categoryId) && (
+                                                    <span className="inline-block px-2 py-0.5 text-[10px] sm:text-xs font-semibold bg-primary/20 text-primary border border-primary/30 rounded-md mb-2 backdrop-blur-sm">
+                                                        {categories.find(c => c.id === post.categoryId)?.name}
+                                                    </span>
+                                                )}
                                                 <h3 className="font-bold text-lg sm:text-2xl text-white line-clamp-2 mb-2 sm:mb-3 group-hover:text-primary/90 transition-colors" title={post.title}>
                                                     {post.title}
                                                 </h3>
@@ -992,6 +1041,162 @@ const CMSDashboard: React.FC = () => {
                 variant="danger"
                 isLoading={isDeleting}
                 count={selectedPosts.length}
+            />
+
+            {/* Category Manager Modal */}
+            {showCategoryManager && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center sm:p-4" onClick={() => setShowCategoryManager(false)}>
+                    <div
+                        className="bg-card w-full sm:max-w-lg sm:rounded-2xl rounded-t-2xl max-h-[90vh] overflow-hidden flex flex-col animate-slide-up sm:animate-fade-in"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        {/* Header */}
+                        <div className="sticky top-0 bg-card border-b border-border px-5 py-4 flex items-center justify-between z-10 shrink-0">
+                            <div className="sm:hidden absolute top-1.5 left-1/2 -translate-x-1/2 w-10 h-1 bg-border rounded-full" />
+                            <h3 className="font-bold text-lg flex items-center gap-2">
+                                <FolderOpen size={20} className="text-primary" />
+                                {t('cms.categoriesTitle', 'Categorías')}
+                            </h3>
+                            <button onClick={() => setShowCategoryManager(false)} className="p-1.5 hover:bg-secondary rounded-lg transition-colors">
+                                <XIcon size={18} />
+                            </button>
+                        </div>
+
+                        {/* Content */}
+                        <div className="flex-1 overflow-y-auto p-5 space-y-5">
+                            {/* Category Form */}
+                            <div className="space-y-3 p-4 bg-secondary/30 border border-border rounded-xl">
+                                <h4 className="text-sm font-bold text-foreground">
+                                    {editingCategory ? t('cms.editCategory', 'Editar Categoría') : t('cms.newCategory', 'Nueva Categoría')}
+                                </h4>
+                                <input
+                                    value={categoryForm.name}
+                                    onChange={(e) => {
+                                        const name = e.target.value;
+                                        setCategoryForm(prev => ({
+                                            ...prev,
+                                            name,
+                                            slug: editingCategory ? prev.slug : name.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, ''),
+                                        }));
+                                    }}
+                                    placeholder={t('cms.categoryName', 'Nombre de la categoría')}
+                                    className="w-full bg-secondary/50 border border-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-primary outline-none text-foreground"
+                                />
+                                <input
+                                    value={categoryForm.slug}
+                                    onChange={(e) => setCategoryForm(prev => ({ ...prev, slug: e.target.value }))}
+                                    placeholder="slug"
+                                    className="w-full bg-secondary/50 border border-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-primary outline-none text-foreground font-mono"
+                                />
+                                <textarea
+                                    value={categoryForm.description}
+                                    onChange={(e) => setCategoryForm(prev => ({ ...prev, description: e.target.value }))}
+                                    placeholder={t('cms.categoryDescription', 'Descripción (opcional)')}
+                                    rows={2}
+                                    className="w-full bg-secondary/50 border border-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-primary outline-none resize-none text-foreground"
+                                />
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={async () => {
+                                            if (!categoryForm.name.trim()) return;
+                                            setIsSavingCategory(true);
+                                            try {
+                                                const now = new Date().toISOString();
+                                                const cat: CMSCategory = {
+                                                    id: editingCategory?.id || `cat_${Date.now()}`,
+                                                    name: categoryForm.name.trim(),
+                                                    slug: categoryForm.slug.trim() || categoryForm.name.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, ''),
+                                                    description: categoryForm.description.trim() || undefined,
+                                                    createdAt: editingCategory?.createdAt || now,
+                                                    updatedAt: now,
+                                                };
+                                                await saveCategory(cat);
+                                                setCategoryForm({ name: '', slug: '', description: '' });
+                                                setEditingCategory(null);
+                                            } catch (e) {
+                                                console.error('Error saving category:', e);
+                                            } finally {
+                                                setIsSavingCategory(false);
+                                            }
+                                        }}
+                                        disabled={!categoryForm.name.trim() || isSavingCategory}
+                                        className="px-4 py-2 text-sm font-bold bg-primary text-primary-foreground rounded-lg hover:opacity-90 transition-all disabled:opacity-50 flex items-center gap-1.5"
+                                    >
+                                        {isSavingCategory ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />}
+                                        {editingCategory ? t('common.save', 'Guardar') : t('common.create', 'Crear')}
+                                    </button>
+                                    {editingCategory && (
+                                        <button
+                                            onClick={() => { setEditingCategory(null); setCategoryForm({ name: '', slug: '', description: '' }); }}
+                                            className="px-4 py-2 text-sm font-medium bg-secondary text-foreground rounded-lg hover:bg-secondary/80 transition-all"
+                                        >
+                                            {t('common.cancel', 'Cancelar')}
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Category List */}
+                            {categories.length === 0 ? (
+                                <p className="text-sm text-muted-foreground text-center py-6">{t('cms.noCategories', 'No hay categorías creadas.')}</p>
+                            ) : (
+                                <div className="space-y-2">
+                                    {categories.map(cat => {
+                                        const postCount = cmsPosts.filter(p => p.categoryId === cat.id).length;
+                                        return (
+                                            <div key={cat.id} className="flex items-center justify-between p-3 bg-secondary/20 border border-border rounded-xl hover:border-primary/30 transition-colors group">
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex items-center gap-2">
+                                                        <Tag size={14} className="text-primary flex-shrink-0" />
+                                                        <span className="font-semibold text-sm text-foreground truncate">{cat.name}</span>
+                                                        <span className="text-[10px] text-muted-foreground bg-secondary px-1.5 py-0.5 rounded-md flex-shrink-0">
+                                                            {postCount} {postCount === 1 ? 'post' : 'posts'}
+                                                        </span>
+                                                    </div>
+                                                    {cat.description && (
+                                                        <p className="text-xs text-muted-foreground mt-1 line-clamp-1 pl-[22px]">{cat.description}</p>
+                                                    )}
+                                                </div>
+                                                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
+                                                    <button
+                                                        onClick={() => {
+                                                            setEditingCategory(cat);
+                                                            setCategoryForm({ name: cat.name, slug: cat.slug, description: cat.description || '' });
+                                                        }}
+                                                        className="p-1.5 hover:bg-secondary rounded-lg transition-colors text-muted-foreground hover:text-foreground"
+                                                    >
+                                                        <Edit2 size={14} />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => setDeleteCategoryConfirmId(cat.id)}
+                                                        className="p-1.5 hover:bg-red-500/10 rounded-lg transition-colors text-muted-foreground hover:text-red-500"
+                                                    >
+                                                        <Trash2 size={14} />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Category Delete Confirmation Modal — rendered AFTER category manager so it appears on top */}
+            <ConfirmationModal
+                isOpen={!!deleteCategoryConfirmId}
+                onConfirm={async () => {
+                    if (deleteCategoryConfirmId) {
+                        await deleteCategory(deleteCategoryConfirmId);
+                        setDeleteCategoryConfirmId(null);
+                    }
+                }}
+                onCancel={() => setDeleteCategoryConfirmId(null)}
+                title={t('cms.confirmDeleteCategoryTitle', '¿Eliminar categoría?')}
+                message={t('cms.confirmDeleteCategoryMessage', 'Esta acción no se puede deshacer. La categoría será eliminada permanentemente.')}
+                variant="danger"
             />
         </div>
     );

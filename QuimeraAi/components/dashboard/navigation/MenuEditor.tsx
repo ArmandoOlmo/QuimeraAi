@@ -17,7 +17,7 @@ interface MenuEditorProps {
     projectId?: string | null;
 }
 
-type LinkCategory = 'root' | 'sections' | 'policies' | 'articles' | 'store' | 'store-categories' | 'store-products';
+type LinkCategory = 'root' | 'sections' | 'policies' | 'articles' | 'store' | 'store-categories' | 'store-products' | 'blog-categories';
 
 // Section links use anchor format (/#section) for smooth scroll on same page
 // This is the standard approach used by Shopify, Wix, etc.
@@ -41,7 +41,7 @@ const SECTION_LINKS = [
 
 const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onClose, isNew, projectId }) => {
     const { t } = useTranslation();
-    const { saveMenu, deleteMenu, cmsPosts, loadCMSPosts } = useCMS();
+    const { saveMenu, deleteMenu, cmsPosts, loadCMSPosts, categories } = useCMS();
     const { data, activeProjectId } = useProject();
     const [title, setTitle] = useState(menu.title);
     const [handle, setHandle] = useState(menu.handle || '');
@@ -215,8 +215,8 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onClose, isNew, projectId
 
 
     // Link Picker Logic
-    const handleLinkSelect = (item: NavigationMenuItem, value: string) => {
-        updateMenuItem(item.id, { href: value });
+    const handleLinkSelect = (item: NavigationMenuItem, value: string, linkType?: NavigationMenuItem['type']) => {
+        updateMenuItem(item.id, { href: value, ...(linkType ? { type: linkType } : {}) });
         setLinkPickerOpenId(null);
         setPickerCategory('root');
         setArticleSearch('');
@@ -263,6 +263,18 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onClose, isNew, projectId
                         </div>
                         <ChevronRight size={16} className="text-muted-foreground" />
                     </button>
+                    {categories.length > 0 && (
+                        <button
+                            onClick={() => setPickerCategory('blog-categories')}
+                            className="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-secondary/50 flex items-center justify-between group"
+                        >
+                            <div className="flex items-center">
+                                <Tag size={16} className="mr-3 text-muted-foreground group-hover:text-primary" />
+                                Blog Categories
+                            </div>
+                            <ChevronRight size={16} className="text-muted-foreground" />
+                        </button>
+                    )}
                     <button
                         onClick={() => setPickerCategory('policies')}
                         className="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-secondary/50 flex items-center justify-between group"
@@ -360,6 +372,41 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onClose, isNew, projectId
                         <button onClick={() => handleLinkSelect(item, '/privacidad')} className="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-secondary/50">Privacy Policy</button>
                         <button onClick={() => handleLinkSelect(item, '/terminos')} className="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-secondary/50">Terms of Service</button>
                         <button onClick={() => handleLinkSelect(item, '/reembolsos')} className="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-secondary/50">Refund Policy</button>
+                    </div>
+                </div>
+            );
+        }
+
+        // Blog Categories options
+        if (pickerCategory === 'blog-categories') {
+            return (
+                <div>
+                    <div className="px-2 py-2 border-b border-border flex items-center">
+                        <button onClick={() => setPickerCategory('root')} className="p-1 hover:bg-secondary rounded mr-2 text-muted-foreground hover:text-foreground">
+                            <ArrowLeft size={16} />
+                        </button>
+                        <span className="text-sm font-semibold">Blog Categories</span>
+                    </div>
+                    <div className="py-1 max-h-[200px] overflow-y-auto">
+                        {categories.length === 0 ? (
+                            <div className="px-4 py-3 text-xs text-muted-foreground bg-secondary/30">
+                                No categories found. Create categories in the CMS Dashboard.
+                            </div>
+                        ) : (
+                            categories.map(cat => (
+                                <button
+                                    key={cat.id}
+                                    onClick={() => handleLinkSelect(item, `/blog/categoria/${cat.slug}`, 'category')}
+                                    className="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-secondary/50 flex items-center gap-2"
+                                >
+                                    <Tag size={14} className="text-muted-foreground flex-shrink-0" />
+                                    <span className="truncate">{cat.name}</span>
+                                    <span className="text-[10px] text-muted-foreground ml-auto flex-shrink-0">
+                                        {cmsPosts.filter(p => p.categoryId === cat.id).length} posts
+                                    </span>
+                                </button>
+                            ))
+                        )}
                     </div>
                 </div>
             );

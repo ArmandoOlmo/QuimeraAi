@@ -7,7 +7,7 @@
 
 import React, { useState, useEffect, useCallback, lazy, Suspense } from 'react';
 import { db, doc, getDoc, collection, getDocs, query, orderBy, where, limit } from '../firebase';
-import { Project, PageData, ThemeData, PageSection, CMSPost, Menu, FooterData, FontFamily, SEOConfig, SitePage } from '../types';
+import { Project, PageData, ThemeData, PageSection, CMSPost, CMSCategory, Menu, FooterData, FontFamily, SEOConfig, SitePage } from '../types';
 import { deriveColorsFromPalette } from '../utils/colorUtils';
 import { AlertTriangle, Loader2 } from 'lucide-react';
 import AdPixelsInjector from './AdPixelsInjector';
@@ -52,6 +52,7 @@ const Banner = lazy(() => import('./Banner'));
 const BlogPost = lazy(() => import('./BlogPost'));
 const Products = lazy(() => import('./Products'));
 const PageRenderer = lazy(() => import('./PageRenderer'));
+const BlogCategoryPage = lazy(() => import('./BlogCategoryPage'));
 
 // Lazy load StorefrontApp for store views
 const StorefrontApp = lazy(() => import('./ecommerce/StorefrontApp'));
@@ -110,7 +111,7 @@ const fontStacks: Record<FontFamily, string> = {
   lato: "'Lato', sans-serif",
   'slabo-27px': "'Slabo 27px', serif",
   oswald: "'Oswald', sans-serif",
-  'source-sans-pro': "'Source Sans Pro', sans-serif",
+  'source-sans-pro': "'Source Sans 3', 'Source Sans Pro', sans-serif",
   montserrat: "'Montserrat', sans-serif",
   raleway: "'Raleway', sans-serif",
   'pt-sans': "'PT Sans', sans-serif",
@@ -168,12 +169,14 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
   const [error, setError] = useState<string | null>(null);
   const [cmsPosts, setCmsPosts] = useState<CMSPost[]>([]);
   const [menus, setMenus] = useState<Menu[]>([]);
+  const [categories, setCategories] = useState<CMSCategory[]>([]);
   const [hasWhiteLabelBranding, setHasWhiteLabelBranding] = useState(false);
   const [brandingLogoUrl, setBrandingLogoUrl] = useState<string | null>(null);
   const [brandingCompanyName, setBrandingCompanyName] = useState<string | null>(null);
   const [activePost, setActivePost] = useState<CMSPost | null>(null);
   const [storeView, setStoreView] = useState<StoreViewState>({ type: 'none' });
   const [activePage, setActivePage] = useState<SitePage | null>(null);
+  const [activeCategorySlug, setActiveCategorySlug] = useState<string | null>(null);
   const [loadingPost, setLoadingPost] = useState(false);
 
   // Override overflow:hidden from index.html to allow native page scrolling
@@ -315,6 +318,12 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
             setMenus((projectData as any).menus);
           }
 
+          // Load categories from SSR data
+          if ((projectData as any).categories && Array.isArray((projectData as any).categories)) {
+            console.log('[PublicWebsitePreview] ✅ Loaded categories from SSR data:', (projectData as any).categories.length);
+            setCategories((projectData as any).categories);
+          }
+
           // Load CMS posts from SSR data
           // These come from entry-server.tsx as ProjectData.posts (PublicArticle[])
           // Also check for ssrData.posts which may be set directly
@@ -445,6 +454,14 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
           } else {
             setMenus([]);
           }
+
+          // Load categories from project data
+          if ((projectData as any).categories && Array.isArray((projectData as any).categories)) {
+            console.log('[PublicWebsitePreview] ✅ Loaded categories from project data:', (projectData as any).categories.length);
+            setCategories((projectData as any).categories);
+          } else {
+            setCategories([]);
+          }
         } else {
           setError('Project not found');
         }
@@ -478,6 +495,18 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
 
       // Blog article routing: /blog/slug
       if (path.startsWith('/blog/') && path !== '/blog/') {
+        // Blog category routing: /blog/categoria/slug
+        if (path.startsWith('/blog/categoria/')) {
+          const slug = path.replace('/blog/categoria/', '').replace(/\/$/, '');
+          console.log('[PublicWebsitePreview] handleNavigation - Blog category:', slug);
+          setStoreView({ type: 'none' });
+          setActivePage(null);
+          setActivePost(null);
+          setActiveCategorySlug(slug);
+          window.scrollTo(0, 0);
+          return;
+        }
+
         const slug = path.replace('/blog/', '').replace(/\/$/, '');
         console.log('[PublicWebsitePreview] handleNavigation - Looking for blog post:', slug);
 
@@ -671,6 +700,7 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
       setActivePost(null);
       setStoreView({ type: 'none' });
       setActivePage(null);
+      setActiveCategorySlug(null);
       window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
@@ -686,6 +716,7 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
         setActivePost(null);
         setStoreView({ type: 'none' });
         setActivePage(null);
+        setActiveCategorySlug(null);
       }
 
       // Wait for menu close transition (300ms) + DOM re-render before scrolling
@@ -701,6 +732,18 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
       return;
     }
 
+    // Blog category: /blog/categoria/slug
+    if (href.startsWith('/blog/categoria/')) {
+      const slug = href.replace('/blog/categoria/', '').replace(/\/$/, '');
+      console.log('[PublicWebsitePreview] Navigating to blog category:', slug);
+      setStoreView({ type: 'none' });
+      setActivePage(null);
+      setActivePost(null);
+      setActiveCategorySlug(slug);
+      window.scrollTo(0, 0);
+      return;
+    }
+
     // Blog article: /blog/slug
     if (href.startsWith('/blog/')) {
       const slug = href.replace('/blog/', '').replace(/\/$/, '');
@@ -711,6 +754,7 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
         console.log('[PublicWebsitePreview] Found blog post:', post.title);
         setStoreView({ type: 'none' });
         setActivePage(null);
+        setActiveCategorySlug(null);
         setActivePost(post);
         window.scrollTo(0, 0);
       } else if (project?.id) {
@@ -726,6 +770,7 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
             const fetchedPost = { id: snap.docs[0].id, ...snap.docs[0].data() } as CMSPost;
             setStoreView({ type: 'none' });
             setActivePage(null);
+            setActiveCategorySlug(null);
             setActivePost(fetchedPost);
             window.scrollTo(0, 0);
           } else {
@@ -852,7 +897,7 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
     }
   }, [cmsPosts, project, activePost, activePage, storeView]);
 
-  // Inject font CSS variables
+  // Inject font CSS variables AND load Google Fonts dynamically
   useEffect(() => {
     if (project?.theme) {
       const root = document.documentElement;
@@ -871,6 +916,41 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
       root.style.setProperty('--buttons-spacing', project.theme.buttonsAllCaps ? '0.05em' : 'normal');
       root.style.setProperty('--navlinks-transform', project.theme.navLinksAllCaps ? 'uppercase' : 'none');
       root.style.setProperty('--navlinks-spacing', project.theme.navLinksAllCaps ? '0.05em' : 'normal');
+
+      // Dynamic Google Fonts loading (for non-SSR paths like /#preview/)
+      const fontNameOverrides: Record<string, string> = {
+        'pt-sans': 'PT Sans',
+        'pt-serif': 'PT Serif',
+        'amatic-sc': 'Amatic SC',
+        'source-sans-pro': 'Source Sans 3',
+      };
+      const toFontApiName = (f: string) => {
+        if (fontNameOverrides[f]) return fontNameOverrides[f];
+        return f.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+      };
+
+      const fonts = [...new Set([
+        project.theme.fontFamilyHeader,
+        project.theme.fontFamilyBody,
+        project.theme.fontFamilyButton,
+      ].filter(Boolean))];
+
+      if (fonts.length > 0) {
+        const families = fonts.map(f => `family=${toFontApiName(f).replace(/\s/g, '+')}:wght@300;400;500;600;700`).join('&');
+        const googleFontsUrl = `https://fonts.googleapis.com/css2?${families}&display=swap`;
+        
+        const linkId = 'preview-google-fonts';
+        let link = document.getElementById(linkId) as HTMLLinkElement;
+        if (link) {
+          link.href = googleFontsUrl;
+        } else {
+          link = document.createElement('link');
+          link.id = linkId;
+          link.rel = 'stylesheet';
+          link.href = googleFontsUrl;
+          document.head.appendChild(link);
+        }
+      }
     }
   }, [project?.theme]);
 
@@ -1045,6 +1125,7 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
     setActivePost(null);
     setStoreView({ type: 'none' });
     setActivePage(null);
+    setActiveCategorySlug(null);
   }, [propUserId, propProjectId]);
 
   const handleNavigateToStore = useCallback(() => {
@@ -1337,7 +1418,7 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
       case 'services':
         return withBackground(<Services {...compData} borderRadius={borderRadius} />);
       case 'team':
-        return withBackground(<Team {...compData} borderRadius={borderRadius} />);
+        return withBackground(<Team {...compData} borderRadius={borderRadius} onNavigate={handleLinkNavigation} />);
       case 'video':
         return withBackground(<Video {...compData} borderRadius={borderRadius} />);
       case 'howItWorks':
@@ -1452,6 +1533,31 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
               theme: theme, // Context-aware theme
             }}
           />
+        ) : activeCategorySlug ? (
+          /* Category View */
+          (() => {
+            const projectCategories: CMSCategory[] = categories;
+            const category = projectCategories.find(c => c.slug === activeCategorySlug);
+            if (!category) {
+              return (
+                <div className="flex items-center justify-center min-h-[50vh] text-white/50">
+                  <p>Category not found</p>
+                </div>
+              );
+            }
+            const categoryPosts = cmsPosts.filter(p => p.categoryId === category.id);
+            return (
+              <BlogCategoryPage
+                category={category}
+                posts={categoryPosts}
+                onNavigateBack={handleBackToHome}
+                onArticleClick={(slug) => handleLinkNavigation(`/blog/${slug}`)}
+                backgroundColor={pageBackgroundColor}
+                textColor={data?.hero?.colors?.text || '#ffffff'}
+                accentColor={data?.hero?.colors?.primary || '#4f46e5'}
+              />
+            );
+          })()
         ) : activePost ? (
           /* Article View */
           <BlogPost

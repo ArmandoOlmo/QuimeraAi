@@ -3511,6 +3511,48 @@ const Controls: React.FC = () => {
               />
               <Input label={t('editor.controls.common.name')} value={member.name} onChange={(e) => setNestedData(`team.items.${index}.name`, e.target.value)} />
               <Input label={t('editor.controls.team.role')} value={member.role} onChange={(e) => setNestedData(`team.items.${index}.role`, e.target.value)} />
+
+              {/* Link Controls */}
+              <div className="mt-3 pt-3 border-t border-editor-border/50">
+                <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider flex items-center gap-1">
+                  <Link size={12} />
+                  Perfil / Enlace
+                </label>
+                <div className="flex bg-editor-panel-bg rounded-md border border-editor-border p-1 mb-2">
+                  {[
+                    { value: 'manual', label: 'URL' },
+                    { value: 'content', label: 'Contenido' }
+                  ].map((type) => (
+                    <button
+                      key={type.value}
+                      onClick={() => setNestedData(`team.items.${index}.linkType`, type.value)}
+                      className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors ${(member.linkType || 'manual') === type.value
+                        ? 'bg-editor-accent text-editor-bg'
+                        : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-bg'
+                        }`}
+                    >
+                      {type.label}
+                    </button>
+                  ))}
+                </div>
+                {(member.linkType === 'manual' || !member.linkType) && (
+                  <input
+                    placeholder="https://... o /pagina"
+                    value={member.linkUrl || ''}
+                    onChange={(e) => setNestedData(`team.items.${index}.linkUrl`, e.target.value)}
+                    className="w-full bg-editor-panel-bg border border-editor-border rounded px-2 py-1 text-xs text-editor-text-primary focus:outline-none focus:border-editor-accent"
+                  />
+                )}
+                {member.linkType === 'content' && (
+                  <SingleContentSelector
+                    selectedContentPath={member.linkUrl}
+                    onSelect={(path) => {
+                      setNestedData(`team.items.${index}.linkUrl`, path || '');
+                    }}
+                    label="Seleccionar Perfil del CMS"
+                  />
+                )}
+              </div>
             </div>
           ))
           }
@@ -5913,6 +5955,48 @@ const Controls: React.FC = () => {
             <Input label="Name" value={member.name} onChange={(e) => setNestedData(`team.items.${index}.name`, e.target.value)} className="mt-2" />
             <Input label="Role" value={member.role} onChange={(e) => setNestedData(`team.items.${index}.role`, e.target.value)} />
             <Input label="Bio (Overlay)" value={member.bio || ''} onChange={(e) => setNestedData(`team.items.${index}.bio`, e.target.value)} placeholder="Short bio shown on hover" />
+
+            {/* Link Controls */}
+            <div className="mt-3 pt-3 border-t border-editor-border/50">
+              <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider flex items-center gap-1">
+                <Link size={12} />
+                Perfil / Enlace
+              </label>
+              <div className="flex bg-editor-panel-bg rounded-md border border-editor-border p-1 mb-2">
+                {[
+                  { value: 'manual', label: 'URL' },
+                  { value: 'content', label: 'Contenido' }
+                ].map((type) => (
+                  <button
+                    key={type.value}
+                    onClick={() => setNestedData(`team.items.${index}.linkType`, type.value)}
+                    className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors ${(member.linkType || 'manual') === type.value
+                      ? 'bg-editor-accent text-editor-bg'
+                      : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-bg'
+                      }`}
+                  >
+                    {type.label}
+                  </button>
+                ))}
+              </div>
+              {(member.linkType === 'manual' || !member.linkType) && (
+                <input
+                  placeholder="https://... o /pagina"
+                  value={member.linkUrl || ''}
+                  onChange={(e) => setNestedData(`team.items.${index}.linkUrl`, e.target.value)}
+                  className="w-full bg-editor-panel-bg border border-editor-border rounded px-2 py-1 text-xs text-editor-text-primary focus:outline-none focus:border-editor-accent"
+                />
+              )}
+              {member.linkType === 'content' && (
+                <SingleContentSelector
+                  selectedContentPath={member.linkUrl}
+                  onSelect={(path) => {
+                    setNestedData(`team.items.${index}.linkUrl`, path || '');
+                  }}
+                  label="Seleccionar Perfil del CMS"
+                />
+              )}
+            </div>
           </div>
         ))}
         <button

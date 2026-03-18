@@ -6,7 +6,7 @@
  */
 
 import React, { createContext, useState, useContext, useEffect, ReactNode, useCallback } from 'react';
-import { CMSPost, Menu } from '../../types';
+import { CMSPost, CMSCategory, Menu } from '../../types';
 import {
     db,
     doc,
@@ -41,6 +41,11 @@ interface CMSContextType {
     menus: Menu[];
     saveMenu: (menu: Menu) => Promise<void>;
     deleteMenu: (menuId: string) => Promise<void>;
+
+    // Categories
+    categories: CMSCategory[];
+    saveCategory: (category: CMSCategory) => Promise<void>;
+    deleteCategory: (categoryId: string) => Promise<void>;
 }
 
 const CMSContext = createContext<CMSContextType | undefined>(undefined);
@@ -91,6 +96,9 @@ export const CMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     // Menus State - Load from active project
     const [menus, setMenus] = useState<Menu[]>([]);
 
+    // Categories State
+    const [categories, setCategories] = useState<CMSCategory[]>([]);
+
     // Helper to get the posts collection path for the current project
     const getPostsCollectionPath = useCallback(() => {
         if (!user || !activeProject) return null;
@@ -120,10 +128,18 @@ export const CMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
                         console.log('[CMSContext] No menus found in project, using defaults');
                         setMenus(defaultMenus);
                     }
+                    // Load categories
+                    if (projectData.categories && Array.isArray(projectData.categories)) {
+                        console.log('[CMSContext] ✅ Loaded categories from project:', projectData.categories.length);
+                        setCategories(projectData.categories);
+                    } else {
+                        setCategories([]);
+                    }
                 }
             } catch (error) {
-                console.error('[CMSContext] Error loading menus:', error);
+                console.error('[CMSContext] Error loading menus/categories:', error);
                 setMenus(defaultMenus);
+                setCategories([]);
             }
         };
 
@@ -379,6 +395,94 @@ export const CMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         }
     };
 
+    // Save category - persists to Firebase project document & publicStores
+    // Helper: strip undefined values from a category (Firestore rejects undefined)
+    const cleanCategoryForFirestore = (c: CMSCategory) => ({
+        id: c.id,
+        name: c.name || '',
+        slug: c.slug || '',
+        description: c.description ?? '',
+        featuredImage: c.featuredImage ?? '',
+        createdAt: c.createdAt || new Date().toISOString(),
+        updatedAt: c.updatedAt || new Date().toISOString(),
+    });
+
+    const saveCategory = async (category: CMSCategory) => {
+        if (!user || !activeProjectId) {
+            console.error('[CMSContext] Cannot save category: No user or active project');
+            return;
+        }
+
+        try {
+            const cleanCategory = cleanCategoryForFirestore(category);
+            let updatedCategoriesList: CMSCategory[];
+            const currentCategories = [...categories];
+
+            if (currentCategories.some(c => c.id === cleanCategory.id)) {
+                updatedCategoriesList = currentCategories.map(c => c.id === cleanCategory.id ? cleanCategory : c);
+            } else {
+                updatedCategoriesList = [...currentCategories, cleanCategory];
+            }
+
+            // Clean ALL categories for Firestore (existing ones might also have undefined)
+            const firestoreCategories = updatedCategoriesList.map(cleanCategoryForFirestore);
+
+            // 1. Update local state immediately
+            setCategories(firestoreCategories);
+
+            // 2. Persist to Firestore (project document)
+            const pathSegments = getProjectsCollectionPath(user.uid, currentTenantId);
+            const projectDocRef = doc(db, ...pathSegments, activeProjectId);
+            await updateDoc(projectDocRef, { categories: firestoreCategories });
+
+            // 3. Sync to publicStores for public access
+            const publicStoreRef = doc(db, 'publicStores', activeProjectId);
+            try {
+                await updateDoc(publicStoreRef, { categories: firestoreCategories });
+            } catch (e) {
+                console.warn('[CMSContext] Could not sync categories to publicStores (may not exist yet):', e);
+            }
+
+            console.log('[CMSContext] ✅ Category saved successfully');
+        } catch (error) {
+            console.error('[CMSContext] Error saving category:', error);
+            throw error;
+        }
+    };
+
+    // Delete category - persists to Firebase
+    const deleteCategory = async (categoryId: string) => {
+        if (!user || !activeProjectId) {
+            console.error('[CMSContext] Cannot delete category: No user or active project');
+            return;
+        }
+
+        try {
+            const updatedCategoriesList = categories.filter(c => c.id !== categoryId);
+
+            // 1. Update local state immediately
+            setCategories(updatedCategoriesList);
+
+            // 2. Persist to Firestore
+            const pathSegments = getProjectsCollectionPath(user.uid, currentTenantId);
+            const projectDocRef = doc(db, ...pathSegments, activeProjectId);
+            await updateDoc(projectDocRef, { categories: updatedCategoriesList });
+
+            // 3. Sync to publicStores
+            const publicStoreRef = doc(db, 'publicStores', activeProjectId);
+            try {
+                await updateDoc(publicStoreRef, { categories: updatedCategoriesList });
+            } catch (e) {
+                console.warn('[CMSContext] Could not sync category deletion to publicStores:', e);
+            }
+
+            console.log('[CMSContext] ✅ Category deleted successfully');
+        } catch (error) {
+            console.error('[CMSContext] Error deleting category:', error);
+            throw error;
+        }
+    };
+
     const value: CMSContextType = {
         cmsPosts,
         isLoadingCMS,
@@ -390,6 +494,9 @@ export const CMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         menus,
         saveMenu,
         deleteMenu,
+        categories,
+        saveCategory,
+        deleteCategory,
     };
 
     return <CMSContext.Provider value={value}>{children}</CMSContext.Provider>;

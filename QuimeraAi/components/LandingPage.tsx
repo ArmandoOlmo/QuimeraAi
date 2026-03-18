@@ -77,7 +77,7 @@ const fontStacks: Record<FontFamily, string> = {
   lato: "'Lato', sans-serif",
   'slabo-27px': "'Slabo 27px', serif",
   oswald: "'Oswald', sans-serif",
-  'source-sans-pro': "'Source Sans Pro', sans-serif",
+  'source-sans-pro': "'Source Sans 3', 'Source Sans Pro', sans-serif",
   montserrat: "'Montserrat', sans-serif",
   raleway: "'Raleway', sans-serif",
   'pt-sans': "'PT Sans', sans-serif",
@@ -352,6 +352,7 @@ const LandingPageContent: React.FC = () => {
   const handleBackToHome = () => {
     window.history.pushState({}, '', '/');
     setActivePost(null);
+    setActiveCategorySlug(null);
     setStoreView({ type: 'none' });
     window.scrollTo(0, 0);
   };
@@ -752,7 +753,7 @@ const LandingPageContent: React.FC = () => {
     cta: <SectionBackground backgroundImageUrl={mergedCtaData?.backgroundImageUrl} backgroundColor={mergedCtaData?.colors?.background} backgroundOverlayEnabled={mergedCtaData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedCtaData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedCtaData?.backgroundOverlayColor}><CTASection {...mergedCtaData} cardBorderRadius={theme.cardBorderRadius} buttonBorderRadius={theme.buttonBorderRadius} onNavigate={handleLinkNavigation} /></SectionBackground>,
     portfolio: <SectionBackground backgroundImageUrl={mergedPortfolioData?.backgroundImageUrl} backgroundColor={mergedPortfolioData?.colors?.background} backgroundOverlayEnabled={mergedPortfolioData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedPortfolioData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedPortfolioData?.backgroundOverlayColor}><Portfolio {...mergedPortfolioData} borderRadius={theme.cardBorderRadius} /></SectionBackground>,
     services: <SectionBackground backgroundImageUrl={mergedServicesData?.backgroundImageUrl} backgroundColor={mergedServicesData?.colors?.background} backgroundOverlayEnabled={mergedServicesData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedServicesData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedServicesData?.backgroundOverlayColor}><Services {...mergedServicesData} borderRadius={theme.cardBorderRadius} /></SectionBackground>,
-    team: <SectionBackground backgroundImageUrl={mergedTeamData?.backgroundImageUrl} backgroundColor={mergedTeamData?.colors?.background} backgroundOverlayEnabled={mergedTeamData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedTeamData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedTeamData?.backgroundOverlayColor}><Team {...mergedTeamData} borderRadius={theme.cardBorderRadius} /></SectionBackground>,
+    team: <SectionBackground backgroundImageUrl={mergedTeamData?.backgroundImageUrl} backgroundColor={mergedTeamData?.colors?.background} backgroundOverlayEnabled={mergedTeamData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedTeamData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedTeamData?.backgroundOverlayColor}><Team {...mergedTeamData} borderRadius={theme.cardBorderRadius} onNavigate={handleLinkNavigation} /></SectionBackground>,
     video: <SectionBackground backgroundImageUrl={mergedVideoData?.backgroundImageUrl} backgroundColor={mergedVideoData?.colors?.background} backgroundOverlayEnabled={mergedVideoData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedVideoData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedVideoData?.backgroundOverlayColor}><Video {...mergedVideoData} borderRadius={theme.cardBorderRadius} /></SectionBackground>,
     howItWorks: <SectionBackground backgroundImageUrl={mergedHowItWorksData?.backgroundImageUrl} backgroundColor={mergedHowItWorksData?.colors?.background} backgroundOverlayEnabled={mergedHowItWorksData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedHowItWorksData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedHowItWorksData?.backgroundOverlayColor}><HowItWorks {...mergedHowItWorksData} borderRadius={theme.cardBorderRadius} /></SectionBackground>,
     map: <SectionBackground backgroundImageUrl={mergedMapData?.backgroundImageUrl} backgroundColor={mergedMapData?.colors?.background} backgroundOverlayEnabled={mergedMapData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedMapData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedMapData?.backgroundOverlayColor}><BusinessMap {...mergedMapData} apiKey={import.meta.env.VITE_GOOGLE_MAPS_KEY || ''} borderRadius={theme.cardBorderRadius} /></SectionBackground>,

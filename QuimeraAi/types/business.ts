@@ -411,6 +411,16 @@ export interface FileRecord {
 // =============================================================================
 // CMS
 // =============================================================================
+export interface CMSCategory {
+    id: string;
+    name: string;
+    slug: string;
+    description?: string;
+    featuredImage?: string;
+    createdAt: string;
+    updatedAt: string;
+}
+
 export interface CMSPost {
     id: string;
     title: string;
@@ -424,6 +434,7 @@ export interface CMSPost {
     showAuthor?: boolean;    // Toggle author visibility on public page (default: true)
     showDate?: boolean;      // Toggle date visibility on public page (default: true)
     publishedAt?: string;    // Editable publication date
+    categoryId?: string;     // Link to a CMSCategory for grouping
     seoTitle: string;
     seoDescription: string;
     createdAt: string;

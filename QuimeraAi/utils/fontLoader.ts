@@ -12,7 +12,7 @@ export const fontStacks: Record<FontFamily, string> = {
     lato: "'Lato', sans-serif",
     'slabo-27px': "'Slabo 27px', serif",
     oswald: "'Oswald', sans-serif",
-    'source-sans-pro': "'Source Sans Pro', sans-serif",
+    'source-sans-pro': "'Source Sans 3', 'Source Sans Pro', sans-serif",
     montserrat: "'Montserrat', sans-serif",
     raleway: "'Raleway', sans-serif",
     'pt-sans': "'PT Sans', sans-serif",
@@ -59,6 +59,15 @@ export const fontStacks: Record<FontFamily, string> = {
     'amatic-sc': "'Amatic SC', cursive",
 };
 
+// Mapeo de nombres que NO pueden derivarse con simple capitalización
+// Clave = FontFamily key, Valor = nombre exacto en Google Fonts API
+const googleFontNameOverrides: Partial<Record<FontFamily, string>> = {
+    'pt-sans': 'PT Sans',
+    'pt-serif': 'PT Serif',
+    'amatic-sc': 'Amatic SC',
+    'source-sans-pro': 'Source Sans 3',  // Google renombró Source Sans Pro → Source Sans 3
+};
+
 // Lista de fuentes disponibles
 export const fontOptions: FontFamily[] = [
     'roboto', 'open-sans', 'lato', 'slabo-27px', 'oswald', 'source-sans-pro',
@@ -73,11 +82,23 @@ export const fontOptions: FontFamily[] = [
 ];
 
 /**
- * Formatea el nombre de una fuente para mostrar
+ * Formatea el nombre de una fuente para mostrar en la UI
  * @example formatFontName('open-sans') => 'Open Sans'
+ * @example formatFontName('pt-sans') => 'PT Sans'
  */
 export const formatFontName = (font: string): string => {
+    // Primero verificar overrides para nombres especiales
+    const override = googleFontNameOverrides[font as FontFamily];
+    if (override) return override;
     return font.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+};
+
+/**
+ * Obtiene el nombre exacto para la API de Google Fonts
+ * Usa overrides cuando el nombre no se puede derivar automáticamente
+ */
+const getGoogleFontApiName = (font: FontFamily): string => {
+    return googleFontNameOverrides[font] || formatFontName(font);
 };
 
 /**
@@ -93,7 +114,7 @@ export const getFontStack = (font: FontFamily): string => {
 export const getGoogleFontsUrl = (fonts: FontFamily[]): string => {
     const uniqueFonts = [...new Set(fonts)];
     const families = uniqueFonts.map(font => {
-        const fontName = formatFontName(font).replace(/\s/g, '+');
+        const fontName = getGoogleFontApiName(font).replace(/\s/g, '+');
         return `family=${fontName}:wght@300;400;500;600;700`;
     });
     

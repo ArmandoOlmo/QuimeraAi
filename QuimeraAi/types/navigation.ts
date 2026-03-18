@@ -10,7 +10,7 @@ export interface NavigationMenuItem {
     id: string;
     text: string;
     href: string;
-    type: 'custom' | 'section' | 'page';
+    type: 'custom' | 'section' | 'page' | 'category';
 }
 
 /** @deprecated Use NavigationMenuItem instead */

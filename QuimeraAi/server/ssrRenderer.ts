@@ -226,12 +226,42 @@ async function fetchProjectData(projectId: string): Promise<ProjectData | null> 
 }
 
 /**
+ * Convert FontFamily key to Google Fonts API name
+ * Handles special cases where simple capitalization doesn't work
+ */
+const fontNameOverrides: Record<string, string> = {
+    'pt-sans': 'PT Sans',
+    'pt-serif': 'PT Serif',
+    'amatic-sc': 'Amatic SC',
+    'source-sans-pro': 'Source Sans 3',
+};
+
+function formatFontNameForApi(font: string): string {
+    if (fontNameOverrides[font]) return fontNameOverrides[font];
+    // Simple capitalization: 'open-sans' → 'Open Sans'
+    return font.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+}
+
+// CSS font-family stacks (must match fontLoader.ts)
+const ssrFontStacks: Record<string, string> = {
+    'source-sans-pro': "'Source Sans 3', 'Source Sans Pro', sans-serif",
+    'pt-sans': "'PT Sans', sans-serif",
+    'pt-serif': "'PT Serif', serif",
+    'amatic-sc': "'Amatic SC', cursive",
+};
+
+function getFontStackForCss(font: string): string {
+    if (ssrFontStacks[font]) return ssrFontStacks[font];
+    return `'${formatFontNameForApi(font)}', system-ui, sans-serif`;
+}
+
+/**
  * Generate Google Fonts link based on project theme
  */
 function generateFontTags(project: ProjectData): string {
     const theme = project.theme || {};
     
-    // Get font families from theme
+    // Get font families from theme (these are hyphenated keys like 'pt-sans')
     const fonts: string[] = [];
     if (theme.fontFamilyHeader) fonts.push(theme.fontFamilyHeader);
     if (theme.fontFamilyBody) fonts.push(theme.fontFamilyBody);
@@ -240,22 +270,26 @@ function generateFontTags(project: ProjectData): string {
     
     // Remove duplicates and system fonts
     const systemFonts = ['system-ui', 'sans-serif', 'serif', 'monospace', 'Arial', 'Helvetica', 'Times New Roman'];
-    const uniqueFonts = [...new Set(fonts)]
-        .filter(f => f && !systemFonts.includes(f))
-        .map(f => f.replace(/\s+/g, '+'));
+    const uniqueFontKeys = [...new Set(fonts)]
+        .filter(f => f && !systemFonts.includes(f));
     
-    if (uniqueFonts.length === 0) {
+    // Convert hyphenated keys to proper Google Fonts API names
+    const googleFontNames = uniqueFontKeys.map(f => formatFontNameForApi(f));
+    
+    if (googleFontNames.length === 0) {
         // Default fonts if none specified
-        uniqueFonts.push('Inter', 'Plus+Jakarta+Sans');
+        googleFontNames.push('Inter', 'Plus Jakarta Sans');
     }
     
-    // Generate font families string
-    const fontFamilies = uniqueFonts.map(f => `family=${f}:wght@300;400;500;600;700`).join('&');
+    // Generate font families string (URL-encoded names)
+    const fontFamilies = googleFontNames
+        .map(f => `family=${f.replace(/\s/g, '+')}:wght@300;400;500;600;700`)
+        .join('&');
     
-    // Generate CSS for font application
-    const fontHeaderFamily = theme.fontFamilyHeader || 'Plus Jakarta Sans';
-    const fontBodyFamily = theme.fontFamilyBody || 'Inter';
-    const fontButtonFamily = theme.fontFamilyButton || fontBodyFamily;
+    // Generate CSS font-family stacks using proper names
+    const headerStack = theme.fontFamilyHeader ? getFontStackForCss(theme.fontFamilyHeader) : "'Plus Jakarta Sans', system-ui, sans-serif";
+    const bodyStack = theme.fontFamilyBody ? getFontStackForCss(theme.fontFamilyBody) : "'Inter', system-ui, sans-serif";
+    const buttonStack = theme.fontFamilyButton ? getFontStackForCss(theme.fontFamilyButton) : bodyStack;
     const globalColors = theme.globalColors || {};
     const pageBackground = theme.pageBackground || globalColors.background || '#ffffff';
     
@@ -268,9 +302,9 @@ function generateFontTags(project: ProjectData): string {
     <!-- Theme Styles -->
     <style>
         :root {
-            --font-header: '${fontHeaderFamily}', system-ui, sans-serif;
-            --font-body: '${fontBodyFamily}', system-ui, sans-serif;
-            --font-button: '${fontButtonFamily}', system-ui, sans-serif;
+            --font-header: ${headerStack};
+            --font-body: ${bodyStack};
+            --font-button: ${buttonStack};
         }
         body {
             font-family: var(--font-body);

@@ -22,6 +22,8 @@ interface TeamMemberCardProps {
   animationType?: AnimationType;
   enableAnimation?: boolean;
   photoBorderColor?: string;
+  linkUrl?: string;
+  onNavigate?: (href: string) => void;
 }
 
 const paddingYClasses: Record<PaddingSize, string> = {
@@ -67,151 +69,178 @@ const TeamMemberCard: React.FC<TeamMemberCardProps> = ({
   cardBackground = 'transparent',
   animationType = 'fade-in-up',
   enableAnimation = true,
-  photoBorderColor
+  photoBorderColor,
+  linkUrl,
+  onNavigate
 }) => {
   const animationClass = getAnimationClass(animationType, enableAnimation);
 
   // Use photoBorderColor if provided, otherwise fall back to accentColor
   const borderColor = photoBorderColor || accentColor;
 
+  // Link wrapper - makes the entire card clickable when a linkUrl is set
+  const isExternal = linkUrl?.startsWith('http');
+  const LinkWrapper: React.FC<{ children: React.ReactNode; className?: string }> = ({ children, className }) => {
+    if (!linkUrl) return <>{children}</>;
+    return (
+      <a
+        href={isExternal ? linkUrl : undefined}
+        onClick={(!isExternal && onNavigate) ? (e) => { e.preventDefault(); onNavigate(linkUrl); } : undefined}
+        target={isExternal ? '_blank' : undefined}
+        rel={isExternal ? 'noopener noreferrer' : undefined}
+        className={`block cursor-pointer ${className || ''}`}
+      >
+        {children}
+      </a>
+    );
+  };
+
   // Classic variant - simple circular images with text below
   if (variant === 'classic') {
     return (
-      <div className={`text-center ${animationClass}`} style={{ animationDelay: delay }}>
-        {isPendingImage(imageUrl) ? (
-          <div className="w-32 h-32 md:w-40 md:h-40 mx-auto mb-4">
-            <ImagePlaceholder aspectRatio="1:1" showGenerateButton={false} className="rounded-full" />
-          </div>
-        ) : (
-          <img
-            src={imageUrl}
-            alt={name}
-            className="w-32 h-32 md:w-40 md:h-40 rounded-full mx-auto mb-4 object-cover border-4 transform transition-transform duration-300 hover:scale-105"
-            style={{ borderColor: borderColor }}
-            key={imageUrl}
-          />
-        )}
-        <h3 className="text-xl font-bold mb-1 font-header" style={{ color: nameColor, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>{name}</h3>
-        <p className="font-semibold font-body" style={{ color: roleColor }}>{role}</p>
-      </div>
+      <LinkWrapper>
+        <div className={`text-center ${animationClass}`} style={{ animationDelay: delay }}>
+          {isPendingImage(imageUrl) ? (
+            <div className="w-32 h-32 md:w-40 md:h-40 mx-auto mb-4">
+              <ImagePlaceholder aspectRatio="1:1" showGenerateButton={false} className="rounded-full" />
+            </div>
+          ) : (
+            <img
+              src={imageUrl}
+              alt={name}
+              className="w-32 h-32 md:w-40 md:h-40 rounded-full mx-auto mb-4 object-cover border-4 transform transition-transform duration-300 hover:scale-105"
+              style={{ borderColor: borderColor }}
+              key={imageUrl}
+            />
+          )}
+          <h3 className="text-xl font-bold mb-1 font-header" style={{ color: nameColor, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>{name}</h3>
+          <p className="font-semibold font-body" style={{ color: roleColor }}>{role}</p>
+        </div>
+      </LinkWrapper>
     );
   }
 
   // Cards variant - elevated cards with hover effects
   if (variant === 'cards') {
     return (
-      <div
-        className={`rounded-xl overflow-hidden transition-all duration-300 transform hover:-translate-y-2 backdrop-blur-xl border border-white/10 ${animationClass}`}
-        style={{
-          animationDelay: delay,
-          backgroundColor: hexToRgba(cardBackground, 0.35)
-        }}
-      >
-        <div className="relative overflow-hidden">
-          {isPendingImage(imageUrl) ? (
-            <div className="h-64">
-              <ImagePlaceholder aspectRatio="3:4" showGenerateButton={false} className="h-full" />
-            </div>
-          ) : (
-            <img
-              src={imageUrl}
-              alt={name}
-              className="w-full h-64 object-cover transform transition-transform duration-500 hover:scale-110"
-              key={imageUrl}
+      <LinkWrapper>
+        <div
+          className={`rounded-xl overflow-hidden transition-all duration-300 transform hover:-translate-y-2 backdrop-blur-xl border border-white/10 ${animationClass}`}
+          style={{
+            animationDelay: delay,
+            backgroundColor: hexToRgba(cardBackground, 0.35)
+          }}
+        >
+          <div className="relative overflow-hidden">
+            {isPendingImage(imageUrl) ? (
+              <div className="h-64">
+                <ImagePlaceholder aspectRatio="3:4" showGenerateButton={false} className="h-full" />
+              </div>
+            ) : (
+              <img
+                src={imageUrl}
+                alt={name}
+                className="w-full h-64 object-cover transform transition-transform duration-500 hover:scale-110"
+                key={imageUrl}
+              />
+            )}
+            <div
+              className="absolute bottom-0 left-0 right-0 h-1"
+              style={{ backgroundColor: accentColor }}
             />
-          )}
-          <div
-            className="absolute bottom-0 left-0 right-0 h-1"
-            style={{ backgroundColor: accentColor }}
-          />
+          </div>
+          <div className="p-6 text-center">
+            <h3 className="text-xl font-bold mb-2 font-header" style={{ color: nameColor, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>{name}</h3>
+            <p className="font-semibold font-body" style={{ color: roleColor }}>{role}</p>
+          </div>
         </div>
-        <div className="p-6 text-center">
-          <h3 className="text-xl font-bold mb-2 font-header" style={{ color: nameColor, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>{name}</h3>
-          <p className="font-semibold font-body" style={{ color: roleColor }}>{role}</p>
-        </div>
-      </div>
+      </LinkWrapper>
     );
   }
 
   // Minimal variant - clean modern layout with square images
   if (variant === 'minimal') {
     return (
-      <div className={`group ${animationClass}`} style={{ animationDelay: delay }}>
-        <div className="relative overflow-hidden rounded-lg mb-4">
-          {isPendingImage(imageUrl) ? (
-            <ImagePlaceholder aspectRatio="1:1" showGenerateButton={false} />
-          ) : (
-            <img
-              src={imageUrl}
-              alt={name}
-              className="w-full aspect-square object-cover transform transition-all duration-300 group-hover:scale-105 filter grayscale group-hover:grayscale-0"
-              key={imageUrl}
+      <LinkWrapper>
+        <div className={`group ${animationClass}`} style={{ animationDelay: delay }}>
+          <div className="relative overflow-hidden rounded-lg mb-4">
+            {isPendingImage(imageUrl) ? (
+              <ImagePlaceholder aspectRatio="1:1" showGenerateButton={false} />
+            ) : (
+              <img
+                src={imageUrl}
+                alt={name}
+                className="w-full aspect-square object-cover transform transition-all duration-300 group-hover:scale-105 filter grayscale group-hover:grayscale-0"
+                key={imageUrl}
+              />
+            )}
+            <div
+              className="absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity duration-300"
+              style={{ backgroundColor: accentColor }}
             />
-          )}
-          <div
-            className="absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity duration-300"
-            style={{ backgroundColor: accentColor }}
-          />
+          </div>
+          <div className="text-center">
+            <h3 className="text-lg font-bold mb-1 font-header" style={{ color: nameColor, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>{name}</h3>
+            <p
+              className="text-sm font-medium font-body uppercase tracking-wider"
+              style={{ color: roleColor }}
+            >
+              {role}
+            </p>
+          </div>
         </div>
-        <div className="text-center">
-          <h3 className="text-lg font-bold mb-1 font-header" style={{ color: nameColor, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>{name}</h3>
-          <p
-            className="text-sm font-medium font-body uppercase tracking-wider"
-            style={{ color: roleColor }}
-          >
-            {role}
-          </p>
-        </div>
-      </div>
+      </LinkWrapper>
     );
   }
 
   // Overlay variant - text overlays on image hover
   if (variant === 'overlay') {
     return (
-      <div
-        className={`group relative overflow-hidden rounded-2xl cursor-pointer ${animationClass}`}
-        style={{ animationDelay: delay }}
-      >
-        <div className="aspect-[3/4] relative">
-          {isPendingImage(imageUrl) ? (
-            <ImagePlaceholder aspectRatio="3:4" showGenerateButton={false} className="absolute inset-0" />
-          ) : (
-            <img
-              src={imageUrl}
-              alt={name}
-              className="w-full h-full object-cover"
-              key={imageUrl}
-            />
-          )}
-          {/* Dark overlay */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-60 group-hover:opacity-90 transition-opacity duration-300" />
+      <LinkWrapper>
+        <div
+          className={`group relative overflow-hidden rounded-2xl cursor-pointer ${animationClass}`}
+          style={{ animationDelay: delay }}
+        >
+          <div className="aspect-[3/4] relative">
+            {isPendingImage(imageUrl) ? (
+              <ImagePlaceholder aspectRatio="3:4" showGenerateButton={false} className="absolute inset-0" />
+            ) : (
+              <img
+                src={imageUrl}
+                alt={name}
+                className="w-full h-full object-cover"
+                key={imageUrl}
+              />
+            )}
+            {/* Dark overlay - gradient from bottom to top for text contrast */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent opacity-80 group-hover:opacity-95 transition-opacity duration-300" />
 
-          {/* Content */}
-          <div className="absolute inset-0 flex flex-col justify-end p-6 text-white">
-            {/* Role badge - always visible */}
-            <div
-              className="inline-block px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider mb-3 self-start"
-              style={{ backgroundColor: accentColor }}
-            >
-              {role}
-            </div>
+            {/* Content */}
+            <div className="absolute inset-0 flex flex-col justify-end p-6 text-white">
+              {/* Role badge - always visible */}
+              <div
+                className="inline-block px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider mb-3 self-start"
+                style={{ backgroundColor: accentColor }}
+              >
+                {role}
+              </div>
 
-            {/* Name - always visible but moves up on hover */}
-            <h3 className="text-2xl font-bold font-header transform transition-transform duration-300 group-hover:-translate-y-2" style={{ color: nameColor }}>
-              {name}
-            </h3>
+              {/* Name - always visible but moves up on hover */}
+              <h3 className="text-2xl font-bold font-header transform transition-transform duration-300 group-hover:-translate-y-2" style={{ color: nameColor }}>
+                {name}
+              </h3>
 
-            {/* Additional info appears on hover */}
-            <div className="opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 mt-2">
-              <div className="w-12 h-1 mb-2" style={{ backgroundColor: accentColor }} />
-              <p className="text-sm" style={{ color: roleColor }}>
-                {bio || role}
-              </p>
+              {/* Additional info appears on hover */}
+              <div className="opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 mt-2">
+                <div className="w-12 h-1 mb-2" style={{ backgroundColor: accentColor }} />
+                <p className="text-sm" style={{ color: roleColor }}>
+                  {bio || role}
+                </p>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      </LinkWrapper>
     );
   }
 
@@ -221,6 +250,7 @@ const TeamMemberCard: React.FC<TeamMemberCardProps> = ({
 interface TeamProps extends TeamData {
   borderRadius: BorderRadiusSize;
   cornerGradient?: CornerGradientConfig;
+  onNavigate?: (href: string) => void;
 }
 
 const Team: React.FC<TeamProps> = ({
@@ -235,7 +265,8 @@ const Team: React.FC<TeamProps> = ({
   teamVariant = 'classic',
   animationType = 'fade-in-up',
   enableCardAnimation = true,
-  cornerGradient
+  cornerGradient,
+  onNavigate
 }) => {
   // Get design tokens for secondary color (for photo border fallback)
   const { colors: tokenColors } = useDesignTokens();
@@ -290,6 +321,8 @@ const Team: React.FC<TeamProps> = ({
               animationType={animationType}
               enableAnimation={enableCardAnimation}
               photoBorderColor={photoBorderColor}
+              linkUrl={member.linkUrl}
+              onNavigate={onNavigate}
             />
           ))}
         </div>

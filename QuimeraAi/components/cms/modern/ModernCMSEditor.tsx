@@ -18,12 +18,12 @@ import { Highlight } from '@tiptap/extension-highlight';
 
 import { useEditor as useEditorContext } from '../../../contexts/EditorContext';
 import { useCMS } from '../../../contexts/cms';
-import { CMSPost } from '../../../types';
+import { CMSPost, CMSCategory } from '../../../types';
 import {
     ArrowLeft, Save, Globe, Type, Loader2, Sparkles,
     MoreVertical, Calendar, Check, X as XIcon, Link as LinkIcon,
     Monitor, Tablet, Smartphone, Eye, EyeOff, Layout, Menu, RefreshCw, Settings, User,
-    Upload, ExternalLink
+    Upload, ExternalLink, Tag
 } from 'lucide-react';
 
 import EditorMenuBar from './EditorMenuBar';
@@ -75,12 +75,16 @@ interface SettingsSidebarContentProps {
     setSeoDescription: (value: string) => void;
     generateSEO: () => void;
     isAiWorking: boolean;
+    categoryId: string;
+    setCategoryId: (value: string) => void;
+    categories: CMSCategory[];
 }
 
 const SettingsSidebarContent: React.FC<SettingsSidebarContentProps> = ({
     t, slug, setSlug, featuredImage, setFeaturedImage, excerpt, setExcerpt,
     author, setAuthor, showAuthor, setShowAuthor, showDate, setShowDate, publishedAt, setPublishedAt,
-    seoTitle, setSeoTitle, seoDescription, setSeoDescription, generateSEO, isAiWorking
+    seoTitle, setSeoTitle, seoDescription, setSeoDescription, generateSEO, isAiWorking,
+    categoryId, setCategoryId, categories
 }) => (
     <>
         <div className="mb-6">
@@ -103,6 +107,26 @@ const SettingsSidebarContent: React.FC<SettingsSidebarContentProps> = ({
                 <label className="block text-xs font-bold text-muted-foreground uppercase mb-2">{t('cms_editor.excerpt')}</label>
                 <textarea value={excerpt} onChange={(e) => setExcerpt(e.target.value)} rows={4} className="w-full bg-secondary/50 border border-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-primary outline-none resize-none text-foreground" placeholder={t('cms_editor.excerptPlaceholder')} />
             </div>
+
+            {/* Category Selector */}
+            {categories.length > 0 && (
+                <div>
+                    <label className="block text-xs font-bold text-muted-foreground uppercase mb-2 flex items-center gap-1.5">
+                        <Tag size={12} />
+                        {t('cms_editor.category', 'Categoría')}
+                    </label>
+                    <select
+                        value={categoryId}
+                        onChange={(e) => setCategoryId(e.target.value)}
+                        className="w-full bg-secondary/50 border border-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-primary outline-none text-foreground cursor-pointer"
+                    >
+                        <option value="">{t('cms_editor.noCategory', 'Sin categoría')}</option>
+                        {categories.map(cat => (
+                            <option key={cat.id} value={cat.id}>{cat.name}</option>
+                        ))}
+                    </select>
+                </div>
+            )}
 
             {/* Author & Date Controls */}
             <div className="pt-6 border-t border-border">
@@ -186,7 +210,7 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
     const { t } = useTranslation();
     const { navigate } = useRouter();
     // Use CMSContext for posts (scoped to active project)
-    const { saveCMSPost } = useCMS();
+    const { saveCMSPost, categories } = useCMS();
     // Use EditorContext for other utilities
     const { handleApiError, hasApiKey, promptForKeySelection, uploadImageAndGetURL, getPrompt, activeProject, user } = useEditorContext();
     // Responsive viewport detection for Three-Tier strategy
@@ -204,6 +228,7 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
     const [showAuthor, setShowAuthor] = useState(post?.showAuthor !== false);
     const [showDate, setShowDate] = useState(post?.showDate !== false);
     const [publishedAt, setPublishedAt] = useState(post?.publishedAt || '');
+    const [categoryId, setCategoryId] = useState(post?.categoryId || '');
 
     // Editor State
     const [isSidebarOpen, setIsSidebarOpen] = useState(true); // Right sidebar (settings)
@@ -418,6 +443,7 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
                 showAuthor,
                 showDate,
                 ...(publishedAt ? { publishedAt } : {}),
+                ...(categoryId ? { categoryId } : {}),
                 createdAt: post?.createdAt || new Date().toISOString(),
                 updatedAt: new Date().toISOString(),
             };
@@ -979,6 +1005,9 @@ IMPORTANT FORMATTING RULES:
                                 setSeoDescription={setSeoDescription}
                                 generateSEO={generateSEO}
                                 isAiWorking={isAiWorking}
+                                categoryId={categoryId}
+                                setCategoryId={setCategoryId}
+                                categories={categories}
                             />
                         </aside>
                     )}
@@ -1016,6 +1045,9 @@ IMPORTANT FORMATTING RULES:
                             setSeoDescription={setSeoDescription}
                             generateSEO={generateSEO}
                             isAiWorking={isAiWorking}
+                            categoryId={categoryId}
+                            setCategoryId={setCategoryId}
+                            categories={categories}
                         />
                     </div>
                 </TabletSlidePanel>
@@ -1052,6 +1084,9 @@ IMPORTANT FORMATTING RULES:
                             setSeoDescription={setSeoDescription}
                             generateSEO={generateSEO}
                             isAiWorking={isAiWorking}
+                            categoryId={categoryId}
+                            setCategoryId={setCategoryId}
+                            categories={categories}
                         />
                     </div>
                 </MobileBottomSheet>

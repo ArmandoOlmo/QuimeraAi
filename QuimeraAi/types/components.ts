@@ -589,6 +589,8 @@ export interface TeamMember {
     role: string;
     imageUrl: string;
     bio?: string;
+    linkUrl?: string;
+    linkType?: 'manual' | 'content';
 }
 
 export interface TeamData {
