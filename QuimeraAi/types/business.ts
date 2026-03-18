@@ -435,6 +435,7 @@ export interface CMSPost {
     showDate?: boolean;      // Toggle date visibility on public page (default: true)
     publishedAt?: string;    // Editable publication date
     categoryId?: string;     // Link to a CMSCategory for grouping
+    podcastAudioUrl?: string; // URL to a podcast audio file for this article
     seoTitle: string;
     seoDescription: string;
     createdAt: string;

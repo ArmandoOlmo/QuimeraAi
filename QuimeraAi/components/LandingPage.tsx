@@ -29,13 +29,14 @@ import Team from './Team';
 import Video from './Video';
 import HowItWorks from './HowItWorks';
 import BlogPost from './BlogPost';
+import BlogCategoryPage from './BlogCategoryPage';
 import ChatbotWidget from './ChatbotWidget';
 import BusinessMap from './BusinessMap';
 import Menu from './Menu';
 import Banner from './Banner';
 import SectionBackground from './ui/SectionBackground';
 import Products from './Products';
-import { PageSection, FontFamily, CMSPost, FooterData } from '../types';
+import { PageSection, FontFamily, CMSPost, CMSCategory, FooterData } from '../types';
 import { useSafeAuth } from '../contexts/core/AuthContext';
 import { useUI } from '../contexts/core/UIContext';
 import { useProject } from '../contexts/project';
@@ -150,9 +151,10 @@ const LandingPageContent: React.FC = () => {
   const sectionVisibility = (isEditorMode ? editorContext!.sectionVisibility : projectContext.sectionVisibility) || projectContext.sectionVisibility;
   const { activeProjectId, pages, activePage } = projectContext;
 
-  const { cmsPosts, isLoadingCMS, menus } = useCMS();
+  const { cmsPosts, isLoadingCMS, menus, categories } = useCMS();
   const { componentStatus, customComponents, componentStyles } = useAdmin();
   const [activePost, setActivePost] = useState<CMSPost | null>(null);
+  const [activeCategorySlug, setActiveCategorySlug] = useState<string | null>(null);
   const [isRouting, setIsRouting] = useState(false);
 
   // Store view state for ecommerce hash routing
@@ -386,6 +388,7 @@ const LandingPageContent: React.FC = () => {
   const handleLinkNavigation = useCallback((href: string) => {
     // Reset views
     setActivePost(null);
+    setActiveCategorySlug(null);
     setStoreView({ type: 'none' });
 
     // Home page
@@ -403,6 +406,15 @@ const LandingPageContent: React.FC = () => {
           element.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
       }, 100);
+      return;
+    }
+
+    // Blog category: /blog/categoria/slug
+    if (href.startsWith('/blog/categoria/')) {
+      const slug = href.replace('/blog/categoria/', '').replace(/\/$/, '');
+      console.log('[LandingPage] Navigating to blog category:', slug);
+      setActiveCategorySlug(slug);
+      window.scrollTo(0, 0);
       return;
     }
 
@@ -989,6 +1001,31 @@ const LandingPageContent: React.FC = () => {
           />
         )}
 
+        {/* 2.5. Category View */}
+        {!showArticleLoading && !activePost && activeCategorySlug && (() => {
+          const category = categories.find(c => c.slug === activeCategorySlug);
+          if (!category) {
+            return (
+              <div className="min-h-[60vh] flex flex-col items-center justify-center text-center px-4">
+                <h2 className="text-3xl font-bold text-site-heading mb-4">Category not found</h2>
+                <button onClick={handleBackToHome} className="bg-primary text-primary-foreground px-6 py-3 rounded-lg font-bold hover:opacity-90 transition-all">Back to Home</button>
+              </div>
+            );
+          }
+          const categoryPosts = cmsPosts.filter(p => p.categoryId === category.id);
+          return (
+            <BlogCategoryPage
+              category={category}
+              posts={categoryPosts}
+              onNavigateBack={handleBackToHome}
+              onArticleClick={(slug) => handleLinkNavigation(`/blog/${slug}`)}
+              backgroundColor={pageBackgroundColor}
+              textColor={data.hero?.colors?.text || '#ffffff'}
+              accentColor={data.hero?.colors?.primary || '#4f46e5'}
+            />
+          );
+        })()}
+
         {/* 3. 404 State (Article hash but no post found after loading) */}
         {!showArticleLoading && isArticleHash && !activePost && !isLoadingCMS && (
           <div className="min-h-[60vh] flex flex-col items-center justify-center text-center px-4">
@@ -1215,8 +1252,8 @@ const LandingPageContent: React.FC = () => {
           />
         )}
 
-        {/* 7. Home View (Sections) - Only show when not in article or store view */}
-        {!isArticleHash && !activePost && !isStoreViewActive && (
+        {/* 7. Home View (Sections) - Only show when not in article, category, or store view */}
+        {!isArticleHash && !activePost && !activeCategorySlug && !isStoreViewActive && (
           <>
             {effectiveComponentOrder
               .filter(key => {

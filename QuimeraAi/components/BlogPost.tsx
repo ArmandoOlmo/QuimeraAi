@@ -1,7 +1,7 @@
 
 import React, { useMemo, useState, useRef, useEffect } from 'react';
 import { CMSPost, ThemeData } from '../types';
-import { ArrowLeft, Calendar, User, Share2, X, Link2, Check } from 'lucide-react';
+import { ArrowLeft, Calendar, User, Share2, X, Link2, Check, Headphones } from 'lucide-react';
 import { sanitizeHtml } from '../utils/sanitize';
 
 interface BlogPostProps {
@@ -188,6 +188,25 @@ const BlogPost: React.FC<BlogPostProps> = ({ post, theme, onBack, textColor, bac
 
             {/* Content */}
             <div className="container mx-auto px-6 max-w-3xl py-12">
+                {/* Podcast Audio Player */}
+                {post.podcastAudioUrl && (
+                    <div className="mb-10 p-5 rounded-2xl" style={{ backgroundColor: `${accentColor}12`, border: `1px solid ${accentColor}30` }}>
+                        <div className="flex items-center gap-2.5 mb-4">
+                            <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: `${accentColor}20` }}>
+                                <Headphones size={16} style={{ color: accentColor }} />
+                            </div>
+                            <div>
+                                <span className="font-bold text-sm block" style={{ color: textColor }}>Escucha el podcast</span>
+                                <span className="text-xs opacity-60" style={{ color: textColor }}>Audio disponible para este artículo</span>
+                            </div>
+                        </div>
+                        <audio controls className="w-full rounded-lg" style={{ accentColor }}>
+                            <source src={post.podcastAudioUrl} />
+                            Tu navegador no soporta el elemento de audio.
+                        </audio>
+                    </div>
+                )}
+
                 <div
                     className="prose prose-lg max-w-none font-body"
                     style={{

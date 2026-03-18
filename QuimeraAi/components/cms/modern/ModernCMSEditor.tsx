@@ -23,7 +23,7 @@ import {
     ArrowLeft, Save, Globe, Type, Loader2, Sparkles,
     MoreVertical, Calendar, Check, X as XIcon, Link as LinkIcon,
     Monitor, Tablet, Smartphone, Eye, EyeOff, Layout, Menu, RefreshCw, Settings, User,
-    Upload, ExternalLink, Tag
+    Upload, ExternalLink, Tag, Headphones, Trash2
 } from 'lucide-react';
 
 import EditorMenuBar from './EditorMenuBar';
@@ -78,13 +78,20 @@ interface SettingsSidebarContentProps {
     categoryId: string;
     setCategoryId: (value: string) => void;
     categories: CMSCategory[];
+    podcastAudioUrl: string;
+    setPodcastAudioUrl: (value: string) => void;
+    isUploadingAudio: boolean;
+    onAudioFileUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
+    onTriggerAudioUpload: () => void;
+    onAudioFileDrop: (files: FileList) => void;
 }
 
 const SettingsSidebarContent: React.FC<SettingsSidebarContentProps> = ({
     t, slug, setSlug, featuredImage, setFeaturedImage, excerpt, setExcerpt,
     author, setAuthor, showAuthor, setShowAuthor, showDate, setShowDate, publishedAt, setPublishedAt,
     seoTitle, setSeoTitle, seoDescription, setSeoDescription, generateSEO, isAiWorking,
-    categoryId, setCategoryId, categories
+    categoryId, setCategoryId, categories,
+    podcastAudioUrl, setPodcastAudioUrl, isUploadingAudio, onAudioFileUpload, onTriggerAudioUpload, onAudioFileDrop
 }) => (
     <>
         <div className="mb-6">
@@ -127,6 +134,60 @@ const SettingsSidebarContent: React.FC<SettingsSidebarContentProps> = ({
                     </select>
                 </div>
             )}
+
+            {/* Podcast Audio */}
+            <div className="pt-6 border-t border-border">
+                <h4 className="font-bold text-sm flex items-center mb-4"><Headphones size={16} className="mr-2 text-primary" /> Audio del Podcast</h4>
+                {podcastAudioUrl ? (
+                    <div className="space-y-3">
+                        <audio controls className="w-full rounded-lg" style={{ height: '40px' }}>
+                            <source src={podcastAudioUrl} />
+                        </audio>
+                        <div className="flex gap-2">
+                            <button
+                                type="button"
+                                onClick={() => setPodcastAudioUrl('')}
+                                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-red-400 hover:text-red-300 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 rounded-lg transition-colors"
+                            >
+                                <Trash2 size={12} /> Eliminar
+                            </button>
+                        </div>
+                    </div>
+                ) : (
+                    <div className="space-y-3">
+                        <div
+                            onClick={onTriggerAudioUpload}
+                            onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); e.currentTarget.classList.add('border-primary', 'bg-primary/10'); }}
+                            onDragEnter={(e) => { e.preventDefault(); e.stopPropagation(); e.currentTarget.classList.add('border-primary', 'bg-primary/10'); }}
+                            onDragLeave={(e) => { e.preventDefault(); e.stopPropagation(); e.currentTarget.classList.remove('border-primary', 'bg-primary/10'); }}
+                            onDrop={(e) => { e.preventDefault(); e.stopPropagation(); e.currentTarget.classList.remove('border-primary', 'bg-primary/10'); if (e.dataTransfer.files?.length) onAudioFileDrop(e.dataTransfer.files); }}
+                            className={`w-full border-2 border-dashed border-border rounded-xl p-5 flex flex-col items-center gap-2 text-muted-foreground hover:border-primary/50 hover:bg-secondary/20 transition-all cursor-pointer ${isUploadingAudio ? 'opacity-50 cursor-wait' : ''}`}
+                        >
+                            {isUploadingAudio ? (
+                                <>
+                                    <Loader2 size={24} className="animate-spin text-primary" />
+                                    <span className="text-xs font-medium">Subiendo audio...</span>
+                                </>
+                            ) : (
+                                <>
+                                    <Upload size={24} />
+                                    <span className="text-xs font-medium">Subir o arrastrar archivo de audio</span>
+                                    <span className="text-[10px] text-muted-foreground/60">MP3, WAV, OGG, AAC, M4A</span>
+                                </>
+                            )}
+                        </div>
+                        <div className="relative">
+                            <input
+                                type="url"
+                                value={podcastAudioUrl}
+                                onChange={(e) => setPodcastAudioUrl(e.target.value)}
+                                placeholder="O pega una URL de audio..."
+                                className="w-full bg-secondary/50 border border-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-primary outline-none text-foreground placeholder:text-muted-foreground/50"
+                            />
+                        </div>
+                    </div>
+                )}
+            </div>
 
             {/* Author & Date Controls */}
             <div className="pt-6 border-t border-border">
@@ -229,6 +290,8 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
     const [showDate, setShowDate] = useState(post?.showDate !== false);
     const [publishedAt, setPublishedAt] = useState(post?.publishedAt || '');
     const [categoryId, setCategoryId] = useState(post?.categoryId || '');
+    const [podcastAudioUrl, setPodcastAudioUrl] = useState(post?.podcastAudioUrl || '');
+    const [isUploadingAudio, setIsUploadingAudio] = useState(false);
 
     // Editor State
     const [isSidebarOpen, setIsSidebarOpen] = useState(true); // Right sidebar (settings)
@@ -253,6 +316,7 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
     const [saveError, setSaveError] = useState<string | null>(null);
 
     const contentFileInputRef = useRef<HTMLInputElement>(null);
+    const audioFileInputRef = useRef<HTMLInputElement>(null);
     const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
 
     // AI Vision State
@@ -367,6 +431,51 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
         }
     };
 
+    // --- Audio Upload ---
+    const handleAudioFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        setIsUploadingAudio(true);
+        try {
+            const timestamp = Date.now();
+            const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+            const storagePath = `cms_podcast/${user?.uid || 'unknown'}/${activeProject?.id || 'unknown'}/${timestamp}_${safeFileName}`;
+            const url = await uploadImageAndGetURL(file, storagePath);
+            setPodcastAudioUrl(url);
+        } catch (error) {
+            console.error('Audio upload failed', error);
+            alert('Error al subir el audio. Intente de nuevo.');
+        } finally {
+            setIsUploadingAudio(false);
+            // Reset file input
+            if (e.target) e.target.value = '';
+        }
+    };
+
+    // --- Audio Drag & Drop ---
+    const handleAudioFileDrop = async (files: FileList) => {
+        const file = files[0];
+        if (!file || !file.type.startsWith('audio/')) {
+            alert('Por favor arrastra un archivo de audio válido.');
+            return;
+        }
+
+        setIsUploadingAudio(true);
+        try {
+            const timestamp = Date.now();
+            const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+            const storagePath = `cms_podcast/${user?.uid || 'unknown'}/${activeProject?.id || 'unknown'}/${timestamp}_${safeFileName}`;
+            const url = await uploadImageAndGetURL(file, storagePath);
+            setPodcastAudioUrl(url);
+        } catch (error) {
+            console.error('Audio upload failed', error);
+            alert('Error al subir el audio. Intente de nuevo.');
+        } finally {
+            setIsUploadingAudio(false);
+        }
+    };
+
     const triggerImageUpload = () => {
         // Open the ImagePicker modal instead of the file input
         setShowContentImagePicker(true);
@@ -444,6 +553,7 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
                 showDate,
                 ...(publishedAt ? { publishedAt } : {}),
                 ...(categoryId ? { categoryId } : {}),
+                ...(podcastAudioUrl ? { podcastAudioUrl } : {}),
                 createdAt: post?.createdAt || new Date().toISOString(),
                 updatedAt: new Date().toISOString(),
             };
@@ -803,6 +913,14 @@ IMPORTANT FORMATTING RULES:
                     className="hidden"
                     accept="image/*"
                 />
+                {/* Hidden Audio File Input */}
+                <input
+                    type="file"
+                    ref={audioFileInputRef}
+                    onChange={handleAudioFileUpload}
+                    className="hidden"
+                    accept="audio/mpeg,audio/mp3,audio/wav,audio/ogg,audio/aac,audio/m4a,audio/*"
+                />
 
                 {/* AI Vision Modal */}
                 {showVisionModal && (
@@ -1008,6 +1126,12 @@ IMPORTANT FORMATTING RULES:
                                 categoryId={categoryId}
                                 setCategoryId={setCategoryId}
                                 categories={categories}
+                                podcastAudioUrl={podcastAudioUrl}
+                                setPodcastAudioUrl={setPodcastAudioUrl}
+                                isUploadingAudio={isUploadingAudio}
+                                onAudioFileUpload={handleAudioFileUpload}
+                                onTriggerAudioUpload={() => audioFileInputRef.current?.click()}
+                                onAudioFileDrop={handleAudioFileDrop}
                             />
                         </aside>
                     )}
@@ -1048,6 +1172,12 @@ IMPORTANT FORMATTING RULES:
                             categoryId={categoryId}
                             setCategoryId={setCategoryId}
                             categories={categories}
+                            podcastAudioUrl={podcastAudioUrl}
+                            setPodcastAudioUrl={setPodcastAudioUrl}
+                            isUploadingAudio={isUploadingAudio}
+                            onAudioFileUpload={handleAudioFileUpload}
+                            onTriggerAudioUpload={() => audioFileInputRef.current?.click()}
+                            onAudioFileDrop={handleAudioFileDrop}
                         />
                     </div>
                 </TabletSlidePanel>
@@ -1087,6 +1217,12 @@ IMPORTANT FORMATTING RULES:
                             categoryId={categoryId}
                             setCategoryId={setCategoryId}
                             categories={categories}
+                            podcastAudioUrl={podcastAudioUrl}
+                            setPodcastAudioUrl={setPodcastAudioUrl}
+                            isUploadingAudio={isUploadingAudio}
+                            onAudioFileUpload={handleAudioFileUpload}
+                            onTriggerAudioUpload={() => audioFileInputRef.current?.click()}
+                            onAudioFileDrop={handleAudioFileDrop}
                         />
                     </div>
                 </MobileBottomSheet>

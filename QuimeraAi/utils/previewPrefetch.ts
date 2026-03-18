@@ -11,6 +11,7 @@ export interface PrefetchedPreviewData {
     project: any | null;
     posts: any[];
     menus: any[];
+    categories: any[];
     tenantBranding: { logoUrl?: string; companyName?: string } | null;
     userId: string | null;
     projectId: string | null;
@@ -35,7 +36,7 @@ async function doFetch(): Promise<PrefetchedPreviewData> {
     const { userId, projectId } = parsePreviewIds();
 
     if (!projectId) {
-        return { project: null, posts: [], menus: [], tenantBranding: null, userId, projectId, error: 'No projectId' };
+        return { project: null, posts: [], menus: [], categories: [], tenantBranding: null, userId, projectId, error: 'No projectId' };
     }
 
     try {
@@ -62,12 +63,14 @@ async function doFetch(): Promise<PrefetchedPreviewData> {
         let project: any = null;
         let posts: any[] = [];
         let menus: any[] = [];
+        let categories: any[] = [];
         let tenantBranding: { logoUrl?: string; companyName?: string } | null = null;
 
         if (publicStoreSnap.exists()) {
             const rawData = publicStoreSnap.data();
             project = { id: publicStoreSnap.id, ...rawData };
             menus = rawData.menus && Array.isArray(rawData.menus) ? rawData.menus : [];
+            categories = rawData.categories && Array.isArray(rawData.categories) ? rawData.categories : [];
         }
 
         if (publicPostsSnap && !publicPostsSnap.empty) {
@@ -91,6 +94,7 @@ async function doFetch(): Promise<PrefetchedPreviewData> {
                 if (userProjectSnap.exists()) {
                     project = { id: userProjectSnap.id, ...userProjectSnap.data() };
                     menus = project.menus && Array.isArray(project.menus) ? project.menus : [];
+                    categories = project.categories && Array.isArray(project.categories) ? project.categories : [];
                 }
             } catch (_) { /* ignore */ }
         }
@@ -102,13 +106,14 @@ async function doFetch(): Promise<PrefetchedPreviewData> {
                 if (templateSnap.exists()) {
                     project = { id: templateSnap.id, ...templateSnap.data() };
                     menus = project.menus && Array.isArray(project.menus) ? project.menus : [];
+                    categories = project.categories && Array.isArray(project.categories) ? project.categories : [];
                 }
             } catch (_) { /* ignore */ }
         }
 
-        return { project, posts, menus, tenantBranding, userId, projectId, error: project ? null : 'Project not found' };
+        return { project, posts, menus, categories, tenantBranding, userId, projectId, error: project ? null : 'Project not found' };
     } catch (err: any) {
-        return { project: null, posts: [], menus: [], tenantBranding: null, userId, projectId, error: err.message || 'Fetch failed' };
+        return { project: null, posts: [], menus: [], categories: [], tenantBranding: null, userId, projectId, error: err.message || 'Fetch failed' };
     }
 }
 

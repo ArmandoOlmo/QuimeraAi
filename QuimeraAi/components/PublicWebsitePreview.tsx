@@ -285,6 +285,11 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
             projectData = prefetched.project as Project;
             if (prefetched.posts.length > 0) setCmsPosts(prefetched.posts as CMSPost[]);
             if (prefetched.menus.length > 0) setMenus(prefetched.menus as Menu[]);
+            if (prefetched.categories && prefetched.categories.length > 0) {
+              setCategories(prefetched.categories as CMSCategory[]);
+            } else if ((projectData as any).categories && Array.isArray((projectData as any).categories)) {
+              setCategories((projectData as any).categories);
+            }
             if (prefetched.tenantBranding) {
               setHasWhiteLabelBranding(true);
             }
@@ -735,7 +740,7 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
     // Blog category: /blog/categoria/slug
     if (href.startsWith('/blog/categoria/')) {
       const slug = href.replace('/blog/categoria/', '').replace(/\/$/, '');
-      console.log('[PublicWebsitePreview] Navigating to blog category:', slug);
+      console.log('[PublicWebsitePreview] Navigating to blog category:', slug, '| Available categories:', categories.length, categories.map(c => c.slug));
       setStoreView({ type: 'none' });
       setActivePage(null);
       setActivePost(null);
@@ -1536,9 +1541,21 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
         ) : activeCategorySlug ? (
           /* Category View */
           (() => {
-            const projectCategories: CMSCategory[] = categories;
-            const category = projectCategories.find(c => c.slug === activeCategorySlug);
+            // Use categories state, OR fall back to project data directly if state is empty
+            const projectCategories: CMSCategory[] = categories.length > 0 
+              ? categories 
+              : ((project as any)?.categories && Array.isArray((project as any).categories) ? (project as any).categories : []);
+            console.log('[PublicWebsitePreview] 🔍 Category render debug:', {
+              activeCategorySlug,
+              categoriesFromState: categories.length,
+              categoriesFromProject: (project as any)?.categories?.length || 0,
+              finalCategoriesCount: projectCategories.length,
+              categorySlugs: projectCategories.map((c: CMSCategory) => c.slug),
+              cmsPostsCount: cmsPosts.length,
+            });
+            const category = projectCategories.find((c: CMSCategory) => c.slug === activeCategorySlug);
             if (!category) {
+              console.warn('[PublicWebsitePreview] ❌ Category NOT found! Slug:', activeCategorySlug, 'Available slugs:', projectCategories.map((c: CMSCategory) => c.slug));
               return (
                 <div className="flex items-center justify-center min-h-[50vh] text-white/50">
                   <p>Category not found</p>
