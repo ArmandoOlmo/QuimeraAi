@@ -459,11 +459,13 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
     // Apply custom position
     const getPositionStyle = () => {
         const { position, offsetX, offsetY } = appearance.behavior;
+        // On mobile, ensure minimum padding from screen edge
+        const effectiveOffsetX = isMobileViewport ? Math.max(offsetX, 20) : offsetX;
         const positionMap: Record<string, any> = {
-            'bottom-right': { bottom: `${offsetY}px`, right: `${offsetX}px` },
-            'bottom-left': { bottom: `${offsetY}px`, left: `${offsetX}px` },
-            'top-right': { top: `${offsetY}px`, right: `${offsetX}px` },
-            'top-left': { top: `${offsetY}px`, left: `${offsetX}px` }
+            'bottom-right': { bottom: `${offsetY}px`, right: `${effectiveOffsetX}px` },
+            'bottom-left': { bottom: `${offsetY}px`, left: `${effectiveOffsetX}px` },
+            'top-right': { top: `${offsetY}px`, right: `${effectiveOffsetX}px` },
+            'top-left': { top: `${offsetY}px`, left: `${effectiveOffsetX}px` }
         };
         return positionMap[position] || positionMap['bottom-right'];
     };
