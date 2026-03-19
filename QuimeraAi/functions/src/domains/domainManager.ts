@@ -6,13 +6,17 @@
 
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
+import { setupDomainSSL, deleteDomainCertificate, checkCertificateStatus } from './gcpCertificateManager';
 
 const db = admin.firestore();
 
-// Cloud Run configuration - domains point directly to Cloud Run SSR server
+// Cloud Run configuration
+// Load Balancer IP: 130.211.43.242 (quimera-domains-lb)
+// DNS: A record → 130.211.43.242, CNAME www → ghs.googlehosted.com
 const CLOUD_RUN_CONFIG = {
     url: 'quimera-ssr-575386543550.us-central1.run.app',
-    cnameTarget: 'quimera-ssr-575386543550.us-central1.run.app'
+    cnameTarget: 'ghs.googlehosted.com',
+    loadBalancerIp: '130.211.43.242'
 };
 
 /**
@@ -109,11 +113,35 @@ export const addCustomDomain = functions.https.onCall(async (data, context) => {
 
         console.log(`[DomainManager] Created domain mapping: ${normalizedDomain} -> ${projectId}`);
 
+        // === AUTO-PROVISION SSL CERTIFICATE ===
+        // Create Google-managed SSL cert + cert-map entries in quimera-cert-map
+        let sslSetupResult;
+        try {
+            sslSetupResult = await setupDomainSSL(normalizedDomain);
+            if (sslSetupResult.success) {
+                console.log(`[DomainManager] SSL setup initiated for ${normalizedDomain} (state: ${sslSetupResult.state})`);
+                // Update Firestore with cert info
+                const certUpdate = {
+                    sslStatus: 'provisioning',
+                    gcpCertName: sslSetupResult.certName,
+                    gcpCertState: sslSetupResult.state,
+                };
+                await db.collection('customDomains').doc(normalizedDomain).update(certUpdate);
+                await db.collection('users').doc(userId).collection('domains').doc(normalizedDomain).update(certUpdate);
+            } else {
+                console.warn(`[DomainManager] SSL setup failed for ${normalizedDomain}: ${sslSetupResult.error}`);
+            }
+        } catch (sslError: any) {
+            // SSL setup failure should NOT block domain creation
+            console.error(`[DomainManager] SSL setup error (non-blocking): ${sslError.message}`);
+        }
+
         return {
             success: true,
             domain: normalizedDomain,
             dnsRecords: domainData.dnsRecords,
-            verificationToken
+            verificationToken,
+            sslStatus: sslSetupResult?.success ? 'provisioning' : 'pending'
         };
 
     } catch (error: any) {
@@ -155,6 +183,19 @@ export const removeCustomDomain = functions.https.onCall(async (data, context) =
 
         // Delete from user's collection
         await db.collection('users').doc(userId).collection('domains').doc(normalizedDomain).delete();
+
+        // === CLEANUP SSL CERTIFICATE ===
+        try {
+            const certCleanup = await deleteDomainCertificate(normalizedDomain);
+            if (certCleanup.success) {
+                console.log(`[DomainManager] SSL cleanup complete for ${normalizedDomain}`);
+            } else {
+                console.warn(`[DomainManager] SSL cleanup failed: ${certCleanup.error}`);
+            }
+        } catch (sslError: any) {
+            // Cleanup failure should NOT block domain removal
+            console.error(`[DomainManager] SSL cleanup error (non-blocking): ${sslError.message}`);
+        }
 
         console.log(`[DomainManager] Removed domain: ${normalizedDomain}`);
 

@@ -100,7 +100,7 @@ async function checkAndUpdateDomain(domain: string, data: any): Promise<void> {
         const resolve4 = promisify(dns.resolve4);
 
         // Simple A record check
-        const EXPECTED_IPS = ['216.239.32.21', '216.239.34.21', '216.239.36.21', '216.239.38.21'];
+        const EXPECTED_IPS = ['130.211.43.242'];
         
         let verified = false;
         try {

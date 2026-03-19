@@ -4928,6 +4928,17 @@ const Controls: React.FC = () => {
                 <option value="/#faq">FAQ</option>
                 <option value="/#contact">Contact</option>
                 <option value="/#cta">CTA</option>
+                <option value="/#portfolio">Portfolio</option>
+                <option value="/#heroSplit">Hero Split</option>
+                <option value="/#leads">Leads</option>
+                <option value="/#newsletter">Newsletter</option>
+                <option value="/#howItWorks">How It Works</option>
+                <option value="/#video">Video</option>
+                <option value="/#slideshow">Slideshow</option>
+                <option value="/#map">Map</option>
+                <option value="/#menu">Menu</option>
+                <option value="/#banner">Banner</option>
+                <option value="/#products">Products</option>
                 <option value="/tienda">Tienda</option>
               </select>
             </div>
@@ -5046,6 +5057,17 @@ const Controls: React.FC = () => {
                 <option value="/#faq">FAQ</option>
                 <option value="/#contact">Contact</option>
                 <option value="/#cta">CTA</option>
+                <option value="/#portfolio">Portfolio</option>
+                <option value="/#heroSplit">Hero Split</option>
+                <option value="/#leads">Leads</option>
+                <option value="/#newsletter">Newsletter</option>
+                <option value="/#howItWorks">How It Works</option>
+                <option value="/#video">Video</option>
+                <option value="/#slideshow">Slideshow</option>
+                <option value="/#map">Map</option>
+                <option value="/#menu">Menu</option>
+                <option value="/#banner">Banner</option>
+                <option value="/#products">Products</option>
                 <option value="/tienda">Tienda</option>
               </select>
             </div>

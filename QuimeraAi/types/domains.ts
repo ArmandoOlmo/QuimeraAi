@@ -112,19 +112,15 @@ export interface CustomDomainMapping {
 // Cloud Run direct CNAME (works without domain mapping in GCP)
 // =============================================================================
 export const CLOUD_RUN_DNS_CONFIG = {
-    // Direct Cloud Run URL - works without GCP domain mapping
-    // Users should use CNAME records pointing to this
+    // Direct Cloud Run URL
     cloudRunUrl: 'quimera-ssr-575386543550.us-central1.run.app',
 
-    // Legacy: Google's global load balancer IPs (requires GCP domain mapping)
-    // These ONLY work if domain is mapped in Google Cloud Console
+    // Google Load Balancer IP (quimera-domains-lb)
+    // This is the IP users should use for A records
     aRecords: [
-        '216.239.32.21',
-        '216.239.34.21',
-        '216.239.36.21',
-        '216.239.38.21'
+        '130.211.43.242'
     ],
-    // Legacy CNAME target (requires GCP domain mapping)
+    // CNAME target for www subdomain
     cnameTarget: 'ghs.googlehosted.com',
     // TXT record prefix for verification
     txtPrefix: '_quimera-verify'

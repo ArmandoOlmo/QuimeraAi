@@ -396,113 +396,152 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
                             </div>
                             <div>
                                 <h4 className="font-bold text-foreground text-base mb-1">
-                                    {t('domainsDashboard.configureDnsTitle')}
+                                    Configura tu DNS
                                 </h4>
                                 <p className="text-sm text-muted-foreground">
-                                    {t('domainsDashboard.configureDnsDesc')}
+                                    Ve a tu proveedor de dominios (GoDaddy, Namecheap, Google Domains, etc.) y agrega estos registros DNS.
                                 </p>
                             </div>
                         </div>
 
-                        {/* WARNING: If Cloud Run mapping failed due to permissions, warn user */}
-                        {domain.cloudRunMappingStatus === 'error' && (
-                            <div className="mb-4 p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg text-sm text-yellow-600">
-                                ⚠️ <strong>Atención:</strong> La integración directa con Google no pudo completarse.
-                                <div className="mt-1 text-xs opacity-70">
-                                    {domain.cloudRunError ? `Motivo: ${domain.cloudRunError}` : 'Probablemente falten permisos de "Administrador de Cloud Run" o verificación de dominio.'}
+                        {/* Option 1: Nameservers (Preferred if available via Cloudflare) */}
+                        {(domain as any).cloudflareNameservers?.length > 0 && (
+                            <div className="bg-purple-500/10 border border-purple-500/20 rounded-lg p-4 mb-4">
+                                <div className="flex items-center gap-2 mb-3">
+                                    <span className="text-xs font-bold bg-purple-500/20 text-purple-500 px-2 py-0.5 rounded">OPCIÓN RÁPIDA</span>
+                                    <span className="text-sm font-medium text-foreground">Cambiar Nameservers (Cloudflare)</span>
                                 </div>
-                                <div className="mt-2 text-foreground font-medium">
-                                    Por favor utiliza los <strong>Nameservers</strong> a continuación.
-                                </div>
-                            </div>
-                        )}
-
-                        {/* DNS Records Section */}
-                        <div className="bg-card/80 rounded-lg p-4 mb-4 border border-border space-y-3">
-
-                            {/* Option 1: Nameservers (Preferred if available) */}
-                            {(domain as any).cloudflareNameservers?.length > 0 && (
-                                <div className="bg-secondary/30 rounded-lg p-3 mb-3">
-                                    <div className="flex items-center gap-2 mb-2">
-                                        <span className="text-xs font-bold bg-purple-500/20 text-purple-500 px-2 py-0.5 rounded">NAMESERVERS</span>
-                                        <span className="text-xs text-muted-foreground">Recomendado (Cloudflare)</span>
-                                    </div>
-                                    <div className="grid gap-2">
-                                        {(domain as any).cloudflareNameservers.map((ns: string, idx: number) => (
-                                            <div key={idx} className="flex items-center justify-between bg-background p-2 rounded border border-border">
-                                                <code className="font-mono font-bold text-foreground">{ns}</code>
-                                                <button
-                                                    onClick={() => {
-                                                        navigator.clipboard.writeText(ns);
-                                                        alert('Nameserver copiado');
-                                                    }}
-                                                    className="p-1 hover:bg-primary/20 rounded text-primary"
-                                                >
-                                                    <Copy size={14} />
-                                                </button>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Option 2: Records (Only show if mapping didn't fail, or as alternative) */}
-                            {domain.cloudRunMappingStatus !== 'error' && (
-                                <>
-                                    <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2 mt-4">Opción Alternativa (Registros Directos)</div>
-                                    {/* A Record */}
-                                    <div className="bg-secondary/30 rounded-lg p-3">
-                                        <div className="flex items-center gap-2 mb-2">
-                                            <span className="text-xs font-bold bg-blue-500/20 text-blue-500 px-2 py-0.5 rounded">A</span>
-                                            <span className="text-xs text-muted-foreground">{t('domainsDashboard.dnsInstructions.aRecord')}</span>
-                                        </div>
-                                        <div className="flex items-center justify-between bg-background p-2 rounded border border-border">
-                                            <div className="flex flex-col">
-                                                <span className="text-[10px] text-muted-foreground uppercase font-bold">@ (Root)</span>
-                                                <code className="font-mono font-bold text-foreground">130.211.43.242</code>
-                                            </div>
+                                <p className="text-xs text-muted-foreground mb-3">
+                                    Ve a la sección de <strong>Nameservers</strong> de tu proveedor y reemplaza los existentes por estos:
+                                </p>
+                                <div className="grid gap-2">
+                                    {(domain as any).cloudflareNameservers.map((ns: string, idx: number) => (
+                                        <div key={idx} className="flex items-center justify-between bg-background p-2 rounded border border-border">
+                                            <code className="font-mono font-bold text-foreground">{ns}</code>
                                             <button
                                                 onClick={() => {
-                                                    navigator.clipboard.writeText('130.211.43.242');
-                                                    alert(t('domainsDashboard.copied'));
+                                                    navigator.clipboard.writeText(ns);
+                                                    alert('Nameserver copiado');
                                                 }}
                                                 className="p-1 hover:bg-primary/20 rounded text-primary"
                                             >
                                                 <Copy size={14} />
                                             </button>
                                         </div>
-                                    </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
 
-                                    {/* CNAME Record */}
-                                    <div className="bg-secondary/30 rounded-lg p-3">
-                                        <div className="flex items-center gap-2 mb-2">
-                                            <span className="text-xs font-bold bg-green-500/20 text-green-500 px-2 py-0.5 rounded">CNAME</span>
-                                            <span className="text-xs text-muted-foreground">{t('domainsDashboard.subdomain')}</span>
+                        {/* DNS Records - Step by step guide */}
+                        <div className="bg-card/80 rounded-lg p-4 mb-4 border border-border">
+                            {(domain as any).cloudflareNameservers?.length > 0 && (
+                                <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">
+                                    — O usa Registros DNS Directos —
+                                </div>
+                            )}
+                            
+                            <p className="text-sm text-muted-foreground mb-4">
+                                En tu proveedor de dominios, ve a la sección de <strong>DNS</strong> o <strong>Registros DNS</strong> y agrega los siguientes registros:
+                            </p>
+
+                            <div className="space-y-4">
+                                {/* Step 1: A Record */}
+                                <div className="bg-secondary/30 rounded-lg p-4">
+                                    <div className="flex items-center gap-2 mb-3">
+                                        <span className="w-6 h-6 rounded-full bg-blue-500 text-white text-xs font-bold flex items-center justify-center">1</span>
+                                        <span className="text-sm font-bold text-foreground">Registro A</span>
+                                        <span className="text-xs text-muted-foreground ml-1">— Para el dominio principal</span>
+                                    </div>
+                                    <div className="grid grid-cols-3 gap-3 bg-background p-3 rounded border border-border">
+                                        <div>
+                                            <span className="text-[10px] text-muted-foreground uppercase font-bold block mb-1">Tipo</span>
+                                            <code className="font-mono font-bold text-blue-500">A</code>
                                         </div>
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <div>
-                                                <span className="text-xs text-muted-foreground">{t('domainsDashboard.hostLabel')}:</span>
-                                                <code className="block font-mono font-bold text-foreground">www</code>
-                                            </div>
-                                            <div>
-                                                <span className="text-xs text-muted-foreground">{t('domainsDashboard.valueLabel')}:</span>
-                                                <div className="flex items-center gap-2">
-                                                    <code className="font-mono font-bold text-primary text-xs">{domain.name}</code>
-                                                    <button
-                                                        onClick={() => {
-                                                            navigator.clipboard.writeText(domain.name);
-                                                            alert(t('domainsDashboard.cnameCopied'));
-                                                        }}
-                                                        className="p-1 hover:bg-primary/20 rounded text-primary"
-                                                    >
-                                                        <Copy size={14} />
-                                                    </button>
+                                        <div>
+                                            <span className="text-[10px] text-muted-foreground uppercase font-bold block mb-1">Host / Nombre</span>
+                                            <code className="font-mono font-bold text-foreground">@</code>
+                                        </div>
+                                        <div>
+                                            <div className="flex items-center justify-between">
+                                                <div>
+                                                    <span className="text-[10px] text-muted-foreground uppercase font-bold block mb-1">Valor / Apunta a</span>
+                                                    <code className="font-mono font-bold text-primary">130.211.43.242</code>
                                                 </div>
+                                                <button
+                                                    onClick={() => {
+                                                        navigator.clipboard.writeText('130.211.43.242');
+                                                        alert('IP copiada ✓');
+                                                    }}
+                                                    className="p-1 hover:bg-primary/20 rounded text-primary ml-2"
+                                                    title="Copiar IP"
+                                                >
+                                                    <Copy size={14} />
+                                                </button>
                                             </div>
                                         </div>
                                     </div>
-                                </>
-                            )}
+                                </div>
+
+                                {/* Step 2: CNAME Record */}
+                                <div className="bg-secondary/30 rounded-lg p-4">
+                                    <div className="flex items-center gap-2 mb-3">
+                                        <span className="w-6 h-6 rounded-full bg-green-500 text-white text-xs font-bold flex items-center justify-center">2</span>
+                                        <span className="text-sm font-bold text-foreground">Registro CNAME</span>
+                                        <span className="text-xs text-muted-foreground ml-1">— Para www.{domain.name}</span>
+                                    </div>
+                                    <div className="grid grid-cols-3 gap-3 bg-background p-3 rounded border border-border">
+                                        <div>
+                                            <span className="text-[10px] text-muted-foreground uppercase font-bold block mb-1">Tipo</span>
+                                            <code className="font-mono font-bold text-green-500">CNAME</code>
+                                        </div>
+                                        <div>
+                                            <span className="text-[10px] text-muted-foreground uppercase font-bold block mb-1">Host / Nombre</span>
+                                            <code className="font-mono font-bold text-foreground">www</code>
+                                        </div>
+                                        <div>
+                                            <div className="flex items-center justify-between">
+                                                <div>
+                                                    <span className="text-[10px] text-muted-foreground uppercase font-bold block mb-1">Valor / Apunta a</span>
+                                                    <code className="font-mono font-bold text-primary text-xs">ghs.googlehosted.com</code>
+                                                </div>
+                                                <button
+                                                    onClick={() => {
+                                                        navigator.clipboard.writeText('ghs.googlehosted.com');
+                                                        alert('CNAME copiado ✓');
+                                                    }}
+                                                    className="p-1 hover:bg-primary/20 rounded text-primary ml-2"
+                                                    title="Copiar CNAME"
+                                                >
+                                                    <Copy size={14} />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Step 3: Wait & Verify */}
+                                <div className="bg-secondary/30 rounded-lg p-4">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <span className="w-6 h-6 rounded-full bg-amber-500 text-white text-xs font-bold flex items-center justify-center">3</span>
+                                        <span className="text-sm font-bold text-foreground">Guarda y Verifica</span>
+                                    </div>
+                                    <p className="text-xs text-muted-foreground ml-8">
+                                        Guarda los cambios en tu proveedor de DNS. La propagación puede tomar entre <strong>5 minutos y 48 horas</strong>. 
+                                        Luego haz click en "Verificar DNS" abajo.
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* Provider-specific tips */}
+                            <div className="mt-4 p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg">
+                                <p className="text-xs font-bold text-amber-600 dark:text-amber-400 mb-1">💡 Tips para proveedores comunes:</p>
+                                <ul className="text-xs text-muted-foreground space-y-1 list-disc list-inside">
+                                    <li><strong>GoDaddy:</strong> Ve a DNS → Registros DNS. Si ya existe un registro A con @, edítalo en vez de crear uno nuevo.</li>
+                                    <li><strong>Namecheap:</strong> Ve a Advanced DNS → Host Records. Usa @ como Host para el registro A.</li>
+                                    <li><strong>Google Domains:</strong> Ve a DNS → Registros personalizados. Agrega ambos registros.</li>
+                                </ul>
+                            </div>
                         </div>
 
                         {/* Verification message */}
@@ -524,15 +563,15 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
                             className="w-full bg-primary text-primary-foreground font-bold py-3 px-4 rounded-lg transition-colors disabled:opacity-50 flex items-center justify-center gap-2 hover:opacity-90"
                         >
                             {isVerifying ? (
-                                <><Loader2 size={18} className="animate-spin" /> {t('domainsDashboard.verifying')}</>
+                                <><Loader2 size={18} className="animate-spin" /> Verificando...</>
                             ) : (
-                                <><RefreshCw size={18} /> {t('domainsDashboard.verifyDns')}</>
+                                <><RefreshCw size={18} /> Verificar DNS</>
                             )}
                         </button>
 
                         <p className="text-xs text-center text-muted-foreground mt-3 flex items-center justify-center gap-1">
                             <Clock size={12} />
-                            {t('domainsDashboard.propagationNote')}
+                            Los cambios de DNS pueden tardar entre 5 min y 48 horas en propagarse.
                         </p>
                     </div>
                 )}
@@ -577,7 +616,7 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
                         <div className="bg-secondary/20 rounded-xl p-6 border border-border">
                             <h4 className="font-bold text-foreground mb-4 flex items-center">
                                 <Globe size={16} className="mr-2 text-primary" />
-                                {t('domainsDashboard.dnsRecordsTitle')}
+                                Registros DNS requeridos
                             </h4>
 
                             <div className="space-y-3 mb-4">
@@ -586,14 +625,14 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
                                     <div className="flex items-center justify-between">
                                         <div>
                                             <span className="text-xs font-bold bg-blue-500/20 text-blue-500 px-2 py-0.5 rounded mr-2">A</span>
-                                            <span className="text-sm text-muted-foreground">{t('domainsDashboard.hostLabel')}: <code className="font-mono font-bold">@</code></span>
+                                            <span className="text-sm text-muted-foreground">Host: <code className="font-mono font-bold">@</code></span>
                                         </div>
                                         <div className="flex items-center gap-2">
                                             <code className="font-mono font-bold text-primary">{QUIMERA_DNS.IP}</code>
                                             <button
                                                 onClick={() => {
                                                     navigator.clipboard.writeText(QUIMERA_DNS.IP);
-                                                    alert(t('domainsDashboard.ipCopied'));
+                                                    alert('IP copiada ✓');
                                                 }}
                                                 className="p-2 hover:bg-secondary rounded-md text-muted-foreground hover:text-primary transition-colors"
                                             >
@@ -608,14 +647,14 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
                                     <div className="flex items-center justify-between">
                                         <div>
                                             <span className="text-xs font-bold bg-green-500/20 text-green-500 px-2 py-0.5 rounded mr-2">CNAME</span>
-                                            <span className="text-sm text-muted-foreground">{t('domainsDashboard.hostLabel')}: <code className="font-mono font-bold">www</code></span>
+                                            <span className="text-sm text-muted-foreground">Host: <code className="font-mono font-bold">www</code></span>
                                         </div>
                                         <div className="flex items-center gap-2">
-                                            <code className="font-mono font-bold text-primary text-xs">{QUIMERA_DNS.CNAME.substring(0, 20)}...</code>
+                                            <code className="font-mono font-bold text-primary text-xs">{QUIMERA_DNS.CNAME}</code>
                                             <button
                                                 onClick={() => {
                                                     navigator.clipboard.writeText(QUIMERA_DNS.CNAME);
-                                                    alert(t('domainsDashboard.cnameCopied'));
+                                                    alert('CNAME copiado ✓');
                                                 }}
                                                 className="p-2 hover:bg-secondary rounded-md text-muted-foreground hover:text-primary transition-colors"
                                             >
@@ -629,7 +668,7 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
                             <div className="flex items-center gap-2 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
                                 <Clock size={14} className="text-blue-500 flex-shrink-0" />
                                 <p className="text-xs text-muted-foreground">
-                                    {t('domainsDashboard.propagationNote')}
+                                    Los cambios de DNS pueden tardar entre 5 min y 48 horas en propagarse.
                                 </p>
                             </div>
                         </div>

@@ -17,7 +17,7 @@ const resolveCname = promisify(dns.resolveCname);
 const resolveTxt = promisify(dns.resolveTxt);
 
 // Expected DNS values for Cloud Run
-const EXPECTED_A_RECORDS = ['216.239.32.21', '216.239.34.21', '216.239.36.21', '216.239.38.21'];
+const EXPECTED_A_RECORDS = ['130.211.43.242'];
 const EXPECTED_CNAME = 'ghs.googlehosted.com';
 
 interface DNSVerificationResult {
@@ -122,38 +122,48 @@ export const checkDomainSSL = functions.https.onCall(async (data, context) => {
             throw new functions.https.HttpsError('permission-denied', 'Domain not found or not owned by you');
         }
 
-        // In a real implementation, this would check Cloud Run's domain mapping status
-        // For now, we'll simulate SSL provisioning
-        const domainData = domainDoc.data();
-        
-        // SSL provisioning takes some time after DNS verification
-        // Check if DNS was verified recently
-        if (domainData?.status === 'ssl_pending' && domainData?.dnsVerified) {
-            // Simulate SSL becoming active after DNS is verified
-            // In production, you'd call Cloud Run API to check actual status
-            const verifiedAt = domainData.lastVerifiedAt?.toDate?.() || new Date(domainData.lastVerifiedAt);
-            const timeSinceVerification = Date.now() - verifiedAt.getTime();
-            
-            // SSL typically provisions within a few minutes
-            if (timeSinceVerification > 60000) { // 1 minute for demo
-                await db.collection('customDomains').doc(normalizedDomain).update({
-                    status: 'active',
-                    sslStatus: 'active',
-                    updatedAt: admin.firestore.FieldValue.serverTimestamp()
-                });
-                await db.collection('users').doc(userId).collection('domains').doc(normalizedDomain).update({
-                    status: 'active',
-                    sslStatus: 'active',
-                    updatedAt: admin.firestore.FieldValue.serverTimestamp()
-                });
+        // Check real certificate status via GCP Certificate Manager
+        const { checkCertificateStatus } = await import('./gcpCertificateManager');
+        const certStatus = await checkCertificateStatus(normalizedDomain);
 
-                return { sslStatus: 'active', status: 'active' };
+        console.log(`[SSLCheck] ${normalizedDomain}: cert exists=${certStatus.exists}, state=${certStatus.state}`);
+
+        if (certStatus.exists && certStatus.state === 'ACTIVE') {
+            // Certificate is active! Update domain status
+            const updates = {
+                status: 'active',
+                sslStatus: 'active',
+                gcpCertState: 'ACTIVE',
+                updatedAt: admin.firestore.FieldValue.serverTimestamp()
+            };
+            await db.collection('customDomains').doc(normalizedDomain).update(updates);
+            await db.collection('users').doc(userId).collection('domains').doc(normalizedDomain).update(updates);
+
+            return { sslStatus: 'active', status: 'active' };
+        } else if (certStatus.exists && certStatus.state === 'PROVISIONING') {
+            return { sslStatus: 'provisioning', status: 'ssl_pending' };
+        } else if (!certStatus.exists) {
+            // No cert found — try to create one
+            const { setupDomainSSL } = await import('./gcpCertificateManager');
+            const sslResult = await setupDomainSSL(normalizedDomain);
+
+            if (sslResult.success) {
+                const updates = {
+                    sslStatus: 'provisioning',
+                    gcpCertName: sslResult.certName,
+                    gcpCertState: 'PROVISIONING',
+                    updatedAt: admin.firestore.FieldValue.serverTimestamp()
+                };
+                await db.collection('customDomains').doc(normalizedDomain).update(updates);
+                await db.collection('users').doc(userId).collection('domains').doc(normalizedDomain).update(updates);
             }
+
+            return { sslStatus: 'provisioning', status: 'ssl_pending' };
         }
 
         return {
-            sslStatus: domainData?.sslStatus || 'pending',
-            status: domainData?.status || 'pending'
+            sslStatus: 'pending',
+            status: domainDoc.data()?.status || 'pending'
         };
 
     } catch (error: any) {
