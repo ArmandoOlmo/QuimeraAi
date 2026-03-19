@@ -60,7 +60,9 @@ export async function createDomainCertificate(domain: string): Promise<{
             method: 'POST',
             data: {
                 managed: {
-                    domains: [domain, `www.${domain}`],
+                    // Only include root domain — www is handled via CNAME → root
+                    // Including www causes RESOLVED_TO_NOT_SERVING if CNAME doesn't resolve to LB IP
+                    domains: [domain],
                 },
             },
         });
@@ -108,7 +110,6 @@ export async function createCertMapEntries(domain: string, certName: string): Pr
     error?: string;
 }> {
     const rootEntryName = `${domainToResourceName(domain)}-entry`;
-    const wwwEntryName = `${domainToResourceName(domain)}-www-entry`;
     const entries: string[] = [];
 
     try {
@@ -141,31 +142,6 @@ export async function createCertMapEntries(domain: string, certName: string): Pr
             }
         }
 
-        // Create www subdomain entry
-        try {
-            const wwwUrl = `https://certificatemanager.googleapis.com/v1/${mapPath}/certificateMapEntries?certificateMapEntryId=${wwwEntryName}`;
-            const wwwResponse = await authClient.request({
-                url: wwwUrl,
-                method: 'POST',
-                data: {
-                    hostname: `www.${domain}`,
-                    certificates: [certFullName],
-                },
-            });
-
-            const wwwOp = (wwwResponse as any).data;
-            if (wwwOp?.name) await waitForOperation(authClient, wwwOp.name);
-            entries.push(wwwEntryName);
-            console.log(`[CertManager] Created cert map entry for www.${domain}`);
-        } catch (error: any) {
-            if (error?.response?.status === 409) {
-                console.log(`[CertManager] Entry ${wwwEntryName} already exists`);
-                entries.push(wwwEntryName);
-            } else {
-                throw error;
-            }
-        }
-
         return { success: true, entries };
     } catch (error: any) {
         console.error(`[CertManager] Error creating cert map entries:`, error?.response?.data || error.message);
@@ -187,14 +163,13 @@ export async function deleteDomainCertificate(domain: string): Promise<{
 }> {
     const certName = `${domainToResourceName(domain)}-cert`;
     const rootEntryName = `${domainToResourceName(domain)}-entry`;
-    const wwwEntryName = `${domainToResourceName(domain)}-www-entry`;
 
     try {
         const authClient = await getAuthClient();
         const mapPath = `projects/${PROJECT_ID}/locations/${LOCATION}/certificateMaps/${CERT_MAP_NAME}`;
 
         // Delete entries first (must be done before deleting cert)
-        for (const entryName of [rootEntryName, wwwEntryName]) {
+        for (const entryName of [rootEntryName]) {
             try {
                 const deleteUrl = `https://certificatemanager.googleapis.com/v1/${mapPath}/certificateMapEntries/${entryName}`;
                 const deleteResponse = await authClient.request({ url: deleteUrl, method: 'DELETE' });

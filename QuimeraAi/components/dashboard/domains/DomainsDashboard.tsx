@@ -23,7 +23,8 @@ import { CLOUD_RUN_DNS_CONFIG } from '../../../types/domains';
 // Use the centralized Load Balancer IP (same as yooeat.com)
 const QUIMERA_DNS = {
     IP: '130.211.43.242',
-    CNAME: 'ghs.googlehosted.com' // Legacy fallback, but UI should show domain name
+    // www CNAME should point to the root domain itself (e.g. www → tudominio.com)
+    // This ensures it resolves to the same LB IP as the A record
 };
 
 // --- STEP INDICATOR COMPONENT ---
@@ -503,11 +504,11 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
                                             <div className="flex items-center justify-between">
                                                 <div>
                                                     <span className="text-[10px] text-muted-foreground uppercase font-bold block mb-1">Valor / Apunta a</span>
-                                                    <code className="font-mono font-bold text-primary text-xs">ghs.googlehosted.com</code>
+                                                    <code className="font-mono font-bold text-primary text-xs">{domain.name}</code>
                                                 </div>
                                                 <button
                                                     onClick={() => {
-                                                        navigator.clipboard.writeText('ghs.googlehosted.com');
+                                                        navigator.clipboard.writeText(domain.name);
                                                         alert('CNAME copiado ✓');
                                                     }}
                                                     className="p-1 hover:bg-primary/20 rounded text-primary ml-2"
@@ -650,10 +651,10 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
                                             <span className="text-sm text-muted-foreground">Host: <code className="font-mono font-bold">www</code></span>
                                         </div>
                                         <div className="flex items-center gap-2">
-                                            <code className="font-mono font-bold text-primary text-xs">{QUIMERA_DNS.CNAME}</code>
+                                            <code className="font-mono font-bold text-primary text-xs">{domain.name}</code>
                                             <button
                                                 onClick={() => {
-                                                    navigator.clipboard.writeText(QUIMERA_DNS.CNAME);
+                                                    navigator.clipboard.writeText(domain.name);
                                                     alert('CNAME copiado ✓');
                                                 }}
                                                 className="p-2 hover:bg-secondary rounded-md text-muted-foreground hover:text-primary transition-colors"
@@ -1570,7 +1571,7 @@ const DomainsDashboard: React.FC = () => {
                                                     <button
                                                         type="button"
                                                         onClick={() => {
-                                                            navigator.clipboard.writeText(QUIMERA_DNS.CNAME);
+                                                            navigator.clipboard.writeText(connectDomainName || 'tudominio.com');
                                                             alert('¡CNAME copiado!');
                                                         }}
                                                         className="p-1 hover:bg-secondary rounded text-muted-foreground hover:text-primary flex-shrink-0"

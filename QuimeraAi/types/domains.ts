@@ -121,7 +121,9 @@ export const CLOUD_RUN_DNS_CONFIG = {
         '130.211.43.242'
     ],
     // CNAME target for www subdomain
-    cnameTarget: 'ghs.googlehosted.com',
+    // www should CNAME to the root domain (e.g. www.example.com → example.com)
+    // This ensures www resolves to the same LB IP via the A record
+    cnameTarget: 'root-domain', // Dynamic: use the actual domain name
     // TXT record prefix for verification
     txtPrefix: '_quimera-verify'
 } as const;
