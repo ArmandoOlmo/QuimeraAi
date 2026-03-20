@@ -41,6 +41,8 @@ import DashboardSidebar from '../../dashboard/DashboardSidebar';
 import { useRouter } from '../../../hooks/useRouter';
 import { ROUTES } from '../../../routes/config';
 import { logApiCall } from '../../../services/apiLoggingService';
+import { storage } from '../../../firebase';
+import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { useViewportType } from '../../../hooks/use-mobile';
 import MobileBottomSheet from '../../ui/MobileBottomSheet';
 import TabletSlidePanel from '../../ui/TabletSlidePanel';
@@ -504,7 +506,9 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
             const timestamp = Date.now();
             const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
             const storagePath = `cms_podcast/${user?.uid || 'unknown'}/${activeProject?.id || 'unknown'}/${timestamp}_${safeFileName}`;
-            const url = await uploadImageAndGetURL(file, storagePath);
+            const fileRef = storageRef(storage, storagePath);
+            await uploadBytes(fileRef, file);
+            const url = await getDownloadURL(fileRef);
             setPodcastAudioUrl(url);
         } catch (error) {
             console.error('Audio upload failed', error);
@@ -529,7 +533,9 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
             const timestamp = Date.now();
             const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
             const storagePath = `cms_podcast/${user?.uid || 'unknown'}/${activeProject?.id || 'unknown'}/${timestamp}_${safeFileName}`;
-            const url = await uploadImageAndGetURL(file, storagePath);
+            const fileRef = storageRef(storage, storagePath);
+            await uploadBytes(fileRef, file);
+            const url = await getDownloadURL(fileRef);
             setPodcastAudioUrl(url);
         } catch (error) {
             console.error('Audio upload failed', error);
@@ -549,7 +555,9 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
             const timestamp = Date.now();
             const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
             const storagePath = `cms_video/${user?.uid || 'unknown'}/${activeProject?.id || 'unknown'}/${timestamp}_${safeFileName}`;
-            const url = await uploadImageAndGetURL(file, storagePath);
+            const fileRef = storageRef(storage, storagePath);
+            await uploadBytes(fileRef, file);
+            const url = await getDownloadURL(fileRef);
             setPodcastVideoUrl(url);
         } catch (error) {
             console.error('Video upload failed', error);
@@ -573,7 +581,9 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
             const timestamp = Date.now();
             const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
             const storagePath = `cms_video/${user?.uid || 'unknown'}/${activeProject?.id || 'unknown'}/${timestamp}_${safeFileName}`;
-            const url = await uploadImageAndGetURL(file, storagePath);
+            const fileRef = storageRef(storage, storagePath);
+            await uploadBytes(fileRef, file);
+            const url = await getDownloadURL(fileRef);
             setPodcastVideoUrl(url);
         } catch (error) {
             console.error('Video upload failed', error);

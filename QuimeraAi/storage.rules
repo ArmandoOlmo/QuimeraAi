@@ -162,6 +162,30 @@ service firebase.storage {
     }
     
     // ============================================
+    // CMS PODCAST AUDIO
+    // Users can upload audio for their CMS articles
+    // ============================================
+    
+    match /cms_podcast/{userId}/{allPaths=**} {
+      allow read: if true;
+      allow write: if isOwner(userId) 
+        && isValidSize(50 * 1024 * 1024) // 50MB max per audio file
+        && request.resource.contentType.matches('audio/.*');
+    }
+    
+    // ============================================
+    // CMS VIDEO
+    // Users can upload video for their CMS articles
+    // ============================================
+    
+    match /cms_video/{userId}/{allPaths=**} {
+      allow read: if true;
+      allow write: if isOwner(userId) 
+        && isValidSize(500 * 1024 * 1024) // 500MB max per video file
+        && request.resource.contentType.matches('video/.*');
+    }
+    
+    // ============================================
     // DEFAULT: Deny all other paths
     // ============================================
     
