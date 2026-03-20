@@ -207,6 +207,32 @@ const BlogPost: React.FC<BlogPostProps> = ({ post, theme, onBack, textColor, bac
                     </div>
                 )}
 
+                {/* Video Player */}
+                {post.podcastVideoUrl && (
+                    <div className="mb-10 p-5 rounded-2xl" style={{ backgroundColor: `${accentColor}12`, border: `1px solid ${accentColor}30` }}>
+                        <div className="flex items-center gap-2.5 mb-4">
+                            <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: `${accentColor}20` }}>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={accentColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <polygon points="5 3 19 12 5 21 5 3" />
+                                </svg>
+                            </div>
+                            <div>
+                                <span className="font-bold text-sm block" style={{ color: textColor }}>Video del artículo</span>
+                                <span className="text-xs opacity-60" style={{ color: textColor }}>Contenido audiovisual disponible</span>
+                            </div>
+                        </div>
+                        <video
+                            controls
+                            className="w-full rounded-lg"
+                            style={{ maxHeight: '500px', backgroundColor: '#000' }}
+                            preload="metadata"
+                        >
+                            <source src={post.podcastVideoUrl} />
+                            Tu navegador no soporta el elemento de video.
+                        </video>
+                    </div>
+                )}
+
                 <div
                     className="prose prose-lg max-w-none font-body"
                     style={{

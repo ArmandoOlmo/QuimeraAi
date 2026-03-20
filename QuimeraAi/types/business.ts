@@ -436,6 +436,7 @@ export interface CMSPost {
     publishedAt?: string;    // Editable publication date
     categoryId?: string;     // Link to a CMSCategory for grouping
     podcastAudioUrl?: string; // URL to a podcast audio file for this article
+    podcastVideoUrl?: string; // URL to a video file for this article
     seoTitle: string;
     seoDescription: string;
     createdAt: string;
