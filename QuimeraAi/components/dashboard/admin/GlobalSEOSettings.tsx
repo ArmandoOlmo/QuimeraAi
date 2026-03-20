@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { sanitizeHtml } from '../../../utils/sanitize';
 import { useTranslation } from 'react-i18next';
 import { ArrowLeft, Save, Globe, Bot, Shield, FileText, Plus, Edit2, Trash2, Menu } from 'lucide-react';
 import DashboardSidebar from '../DashboardSidebar';
@@ -527,7 +528,7 @@ const GlobalSEOSettings: React.FC<GlobalSEOSettingsProps> = ({ onBack }) => {
                                                 <h3 className="font-medium text-purple-400 mb-2">🚀 {t('superadmin.seo.ai.special.title')}</h3>
                                                 <ul className="text-sm text-editor-text-secondary space-y-2">
                                                     {(() => { const list = t('superadmin.seo.ai.special.list', { returnObjects: true }); return Array.isArray(list) ? list : []; })().map((box: string, i: number) => (
-                                                        <li key={i}>• <span dangerouslySetInnerHTML={{ __html: box }} /></li>
+                                                        <li key={i}>• <span dangerouslySetInnerHTML={{ __html: sanitizeHtml(box) }} /></li>
                                                     ))}
                                                 </ul>
                                             </div>

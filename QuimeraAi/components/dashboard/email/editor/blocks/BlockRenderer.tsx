@@ -4,6 +4,7 @@
  */
 
 import React from 'react';
+import { sanitizeHtml } from '../../../../../utils/sanitize';
 import {
     EmailBlock,
     EmailGlobalStyles,
@@ -136,7 +137,7 @@ const renderTextBlock = (block: EmailBlock, globalStyles: EmailGlobalStyles): Re
         >
             {content.isHtml ? (
                 <div
-                    dangerouslySetInnerHTML={{ __html: content.text }}
+                    dangerouslySetInnerHTML={{ __html: sanitizeHtml(content.text) }}
                     style={{
                         color: styles.textColor || globalStyles.textColor,
                         fontSize: fontSizeMap[styles.fontSize || 'md'],

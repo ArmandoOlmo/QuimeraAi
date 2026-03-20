@@ -6,33 +6,16 @@ service cloud.firestore {
     // HELPER FUNCTIONS
     // ============================================
     
-    // Owner email - This must match VITE_OWNER_EMAIL in .env
-    // This is the only user who can set themselves as 'owner' role  
-    function isOwnerEmail() {
-      return request.auth != null && 
-             request.auth.token.email != null &&
-             (request.auth.token.email == 'armandoolmomiranda@gmail.com' ||
-              request.auth.token.email == 'ARMANDOOLMOMIRANDA@GMAIL.COM' ||
-              request.auth.token.email == 'ArmandoOlmoMiranda@gmail.com');
-    }
-    
-    // Check if user has superadmin or owner role in their user document
-    // Note: Handle both capitalized and lowercase variants
-    function hasAdminRole() {
-      let userDoc = /databases/$(database)/documents/users/$(request.auth.uid);
-      return request.auth != null && 
-             exists(userDoc) && 
-             (get(userDoc).data.get('role', '') == 'superadmin' || 
-              get(userDoc).data.get('role', '') == 'Superadmin' || 
-              get(userDoc).data.get('role', '') == 'SuperAdmin' ||
-              get(userDoc).data.get('role', '') == 'owner' || 
-              get(userDoc).data.get('role', '') == 'Owner');
-    }
-    
+    // SECURITY: Owner/SuperAdmin detection via Firebase Custom Claims
+    // Claims are synced automatically by the onUserRoleChange Cloud Function
+    // (userRoleClaims.ts) whenever a user's role is updated in Firestore.
+    // IMPORTANT: Run batchSyncAllUserClaims before first deploy to ensure
+    // all existing users have their claims synchronized.
     function isSuperAdminOrOwner() {
-      // First check owner by email (fast path, no document read)
-      // Then check role in user document (only if exists)
-      return isOwnerEmail() || hasAdminRole();
+      return request.auth != null && (
+        request.auth.token.role == 'owner' ||
+        request.auth.token.role == 'superadmin'
+      );
     }
     
     function isValidEmail(email) {
@@ -230,8 +213,11 @@ service cloud.firestore {
     // Users can read their own memberships
     // ============================================
     match /tenantMembers/{membershipId} {
-      // Anyone authenticated can read (needed to check membership)
-      allow read: if request.auth != null;
+      // Users can read their own memberships or admins can read all
+      allow read: if request.auth != null && (
+        isSuperAdminOrOwner() ||
+        membershipId.split('_')[1] == request.auth.uid
+      );
       // Only tenant owner/admin or superadmin can create/update/delete memberships
       // Also allow the user to delete their own membership (leave tenant)
       allow create: if request.auth != null && (
@@ -307,7 +293,7 @@ service cloud.firestore {
     
     match /settings/{settingId} {
       allow read: if request.auth != null || settingId == 'landingChatbot';
-      allow write: if request.auth != null && (isSuperAdminOrOwner() || settingId == 'landingChatbot');
+      allow write: if request.auth != null && isSuperAdminOrOwner();
     }
     
     match /subscriptionPlans/{planId} {
@@ -448,7 +434,7 @@ service cloud.firestore {
     // ============================================
     match /agencyActivity/{activityId} {
       allow read: if request.auth != null;
-      allow create: if request.auth != null;
+      allow create: if request.auth != null && isSuperAdminOrOwner();
       allow update, delete: if request.auth != null && isSuperAdminOrOwner();
     }
 
@@ -465,9 +451,9 @@ service cloud.firestore {
       allow write: if false; // Only admin SDK can write
     }
 
-    // Default deny
+    // Default deny — all new collections must have explicit rules
     match /{document=**} {
-      allow read, write: if request.auth != null && isSuperAdminOrOwner();
+      allow read, write: if false;
     }
   }
 }

@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from 'react';
+import { sanitizeHtml } from '../../utils/sanitize';
 import { FeaturesData, PaddingSize, FontSize } from '../../types';
 import { useTranslation } from 'react-i18next';
 import { ArrowUpRight } from 'lucide-react';
@@ -177,13 +178,13 @@ const FeaturesCinematicGym: React.FC<FeaturesCinematicGymProps> = (props) => {
                             <h2
                                 className={`font-black uppercase tracking-tighter leading-[0.85] mb-8 ${fontSizeMap[titleFontSize]}`}
                                 style={{ color: headingColor }}
-                                dangerouslySetInnerHTML={{ __html: title }}
+                                dangerouslySetInnerHTML={{ __html: sanitizeHtml(title) }}
                             />
 
                             <p
                                 className="text-xl md:text-2xl font-medium tracking-tight leading-snug max-w-md opacity-80"
                                 style={{ color: textColor }}
-                                dangerouslySetInnerHTML={{ __html: description }}
+                                dangerouslySetInnerHTML={{ __html: sanitizeHtml(description) }}
                             />
                         </div>
                     </div>
@@ -219,12 +220,12 @@ const FeaturesCinematicGym: React.FC<FeaturesCinematicGymProps> = (props) => {
                                                 <h3
                                                     className="text-3xl lg:text-4xl font-black uppercase tracking-tighter leading-none mb-6 group-hover:translate-x-2 transition-transform duration-300"
                                                     style={{ color: cardHeadingColor }}
-                                                    dangerouslySetInnerHTML={{ __html: item.title }}
+                                                    dangerouslySetInnerHTML={{ __html: sanitizeHtml(item.title) }}
                                                 />
                                                 <p
                                                     className="text-lg leading-relaxed opacity-80 font-medium"
                                                     style={{ color: cardTextColor }}
-                                                    dangerouslySetInnerHTML={{ __html: item.description }}
+                                                    dangerouslySetInnerHTML={{ __html: sanitizeHtml(item.description) }}
                                                 />
                                             </div>
 

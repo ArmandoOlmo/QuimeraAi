@@ -4,6 +4,7 @@ import { useDesignTokens } from '../hooks/useDesignTokens';
 import * as LucideIcons from 'lucide-react';
 import { ArrowRight, Zap } from 'lucide-react';
 import { hexToRgba } from '../utils/colorUtils';
+import { sanitizeHtml } from '../utils/sanitize';
 
 const headlineSizeClasses: Record<FontSize, string> = {
     sm: 'text-5xl md:text-6xl',
@@ -193,7 +194,7 @@ const HeroBold: React.FC<HeroProps> = ({
                             textShadow: `6px 6px 0px ${actualColors.primary}30, 12px 12px 0px rgba(0,0,0,0.2)`,
                             letterSpacing: '-0.04em',
                         }}
-                        dangerouslySetInnerHTML={{ __html: styledHeadline }}
+                        dangerouslySetInnerHTML={{ __html: sanitizeHtml(styledHeadline) }}
                     />
 
                     {/* Subheadline with thick accent bar */}

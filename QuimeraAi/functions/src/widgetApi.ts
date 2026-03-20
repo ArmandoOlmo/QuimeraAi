@@ -194,24 +194,9 @@ async function findProject(fullProjectId: string): Promise<{
         };
     }
 
-    // 3. Fallback: Search in all users' projects (for backwards compatibility)
-    // This is slower but ensures we find projects with the old format
-    if (!userId) {
-        const usersSnapshot = await db.collection('users').get();
-        for (const userDoc of usersSnapshot.docs) {
-            const projectDoc = await db.collection('users').doc(userDoc.id)
-                .collection('projects').doc(projectId).get();
-
-            if (projectDoc.exists) {
-                return {
-                    exists: true,
-                    data: projectDoc.data(),
-                    userId: userDoc.id,
-                    projectId
-                };
-            }
-        }
-    }
+    // User enumeration fallback removed for security
+    // If project is not found via direct lookup or userId_projectId format,
+    // return not found instead of scanning all users
 
     return { exists: false, data: null, userId: null, projectId };
 }
@@ -231,6 +216,7 @@ async function findProject(fullProjectId: string): Promise<{
 export const getWidgetConfig = functions.https.onRequest(async (req, res) => {
     // Enable CORS
     res.set('Access-Control-Allow-Origin', '*');
+    res.set('Vary', 'Origin');
     res.set('Access-Control-Allow-Methods', 'GET, OPTIONS');
     res.set('Access-Control-Allow-Headers', 'Content-Type');
 

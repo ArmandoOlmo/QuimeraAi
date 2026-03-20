@@ -4,6 +4,7 @@ import { useDesignTokens } from '../hooks/useDesignTokens';
 import ImagePlaceholder from './ui/ImagePlaceholder';
 import { isPendingImage } from '../utils/imagePlaceholders';
 import { hexToRgba } from '../utils/colorUtils';
+import { sanitizeHtml } from '../utils/sanitize';
 
 const headlineSizeClasses: Record<FontSize, string> = {
   sm: 'text-2xl md:text-3xl',
@@ -155,7 +156,7 @@ const Hero: React.FC<HeroProps> = (props) => {
               letterSpacing: 'var(--headings-spacing, normal)',
               textShadow: '0 2px 20px rgba(0,0,0,0.3)',
             }}
-            dangerouslySetInnerHTML={{ __html: styledHeadline }}
+            dangerouslySetInnerHTML={{ __html: sanitizeHtml(styledHeadline) }}
           />
         )}
 

@@ -4,6 +4,7 @@ import { useDesignTokens } from '../hooks/useDesignTokens';
 import * as LucideIcons from 'lucide-react';
 import { ArrowRight, ChevronDown } from 'lucide-react';
 import { hexToRgba } from '../utils/colorUtils';
+import { sanitizeHtml } from '../utils/sanitize';
 
 // Ajustamos los tamaños para que sean más impactantes en este diseño full-screen
 const headlineSizeClasses: Record<FontSize, string> = {
@@ -170,7 +171,7 @@ const HeroModern: React.FC<HeroProps> = ({
             textTransform: 'var(--headings-transform, none)' as any,
             letterSpacing: 'var(--headings-spacing, normal)'
           }}
-          dangerouslySetInnerHTML={{ __html: styledHeadline }}
+          dangerouslySetInnerHTML={{ __html: sanitizeHtml(styledHeadline) }}
         />
 
         {/* Subtítulo */}

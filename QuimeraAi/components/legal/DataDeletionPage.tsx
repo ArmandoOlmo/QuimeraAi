@@ -6,6 +6,7 @@
  */
 
 import React, { useEffect, useState } from 'react';
+import { sanitizeHtml } from '../../utils/sanitize';
 import { ArrowLeft, Trash2, Shield, Mail, CheckCircle, AlertTriangle, Clock, FileText, Settings, Loader2, Globe, Database, Eye, Users, Lock } from 'lucide-react';
 import { useSafeAppContent } from '../../contexts/appContent';
 import { LegalPage, DEFAULT_DATA_DELETION } from '../../types/appContent';
@@ -77,7 +78,7 @@ const DataDeletionPage: React.FC = () => {
                         {listItems.map((item, i) => (
                             <li key={i} className="flex items-start gap-3">
                                 <CheckCircle className="text-green-400 mt-0.5 flex-shrink-0" size={18} />
-                                <span dangerouslySetInnerHTML={{ __html: item.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') }} />
+                                <span dangerouslySetInnerHTML={{ __html: sanitizeHtml(item.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')) }} />
                             </li>
                         ))}
                     </ul>
@@ -102,7 +103,7 @@ const DataDeletionPage: React.FC = () => {
                 flushList();
                 elements.push(
                     <p key={index} className="mb-3" dangerouslySetInnerHTML={{ 
-                        __html: trimmed.replace(/\*\*(.*?)\*\*/g, '<strong class="text-white">$1</strong>')
+                        __html: sanitizeHtml(trimmed.replace(/\*\*(.*?)\*\*/g, '<strong class="text-white">$1</strong>'))
                     }} />
                 );
             }

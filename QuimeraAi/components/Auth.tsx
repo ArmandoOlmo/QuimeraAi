@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
+import { sanitizeHtml } from '../utils/sanitize';
 import { useTranslation } from 'react-i18next';
 import {
     auth,
@@ -538,7 +539,7 @@ const Auth: React.FC<AuthProps> = ({ onVerificationEmailSent }) => {
                         <div className="inline-block px-4 py-1 rounded-full border border-purple-500/30 bg-purple-500/10 text-purple-400 text-xs font-bold uppercase tracking-wider mb-6">
                             {t('auth.imageGenTitle')}
                         </div>
-                        <h2 className="text-4xl md:text-5xl font-bold mb-6 text-white" dangerouslySetInnerHTML={{ __html: t('auth.imageGenHeadline').replace('\n', '<br/>') }}></h2>
+                        <h2 className="text-4xl md:text-5xl font-bold mb-6 text-white" dangerouslySetInnerHTML={{ __html: sanitizeHtml(t('auth.imageGenHeadline').replace('\n', '<br/>')) }}></h2>
                         <p className="text-gray-400 text-lg mb-8">
                             {t('auth.imageGenDesc')}
                         </p>

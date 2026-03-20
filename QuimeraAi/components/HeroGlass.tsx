@@ -4,6 +4,7 @@ import { useDesignTokens } from '../hooks/useDesignTokens';
 import * as LucideIcons from 'lucide-react';
 import { ArrowRight, ChevronDown } from 'lucide-react';
 import { hexToRgba } from '../utils/colorUtils';
+import { sanitizeHtml } from '../utils/sanitize';
 
 const headlineSizeClasses: Record<FontSize, string> = {
     sm: 'text-3xl md:text-4xl',
@@ -195,7 +196,7 @@ const HeroGlass: React.FC<HeroProps> = ({
                                     textTransform: 'var(--headings-transform, none)' as any,
                                     letterSpacing: 'var(--headings-spacing, normal)',
                                 }}
-                                dangerouslySetInnerHTML={{ __html: styledHeadline }}
+                                dangerouslySetInnerHTML={{ __html: sanitizeHtml(styledHeadline) }}
                             />
 
                             {/* Subheadline */}

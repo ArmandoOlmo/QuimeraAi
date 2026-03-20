@@ -55,11 +55,22 @@ const ALLOWED_ORIGIN_PATTERNS = [
 
 /**
  * SECURITY: Validate and set CORS headers
- * For a website builder platform, we need to support user's custom domains,
- * so we allow all origins but rely on projectId validation + optional auth.
+ * Validates origin against ALLOWED_ORIGINS and dynamic patterns.
+ * Reflects matched origin back; unrecognized origins get the default origin.
  */
 function setCorsHeaders(req: functions.https.Request, res: functions.Response): boolean {
-    res.set('Access-Control-Allow-Origin', '*');
+    const origin = (req.headers.origin as string) || '';
+    const isAllowed = ALLOWED_ORIGINS.includes(origin) ||
+        ALLOWED_ORIGIN_PATTERNS.some(p => p.test(origin));
+
+    if (isAllowed) {
+        res.set('Access-Control-Allow-Origin', origin);
+    } else {
+        // For unknown origins (e.g. chatbot embeds on custom domains),
+        // still allow the request but set a safe default origin
+        res.set('Access-Control-Allow-Origin', ALLOWED_ORIGINS[0]);
+    }
+    res.set('Vary', 'Origin');
     res.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
     res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
     res.set('Access-Control-Max-Age', '3600');

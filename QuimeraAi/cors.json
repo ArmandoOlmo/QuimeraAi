@@ -1,9 +1,8 @@
 [
   {
-    "origin": ["*"],
+    "origin": ["https://quimera.ai", "https://www.quimera.ai", "https://quimeraai.web.app", "https://quimeraai.firebaseapp.com", "http://localhost:5173", "http://localhost:3000"],
     "method": ["GET", "HEAD"],
     "maxAgeSeconds": 3600,
     "responseHeader": ["Content-Type", "Access-Control-Allow-Origin"]
   }
 ]
-

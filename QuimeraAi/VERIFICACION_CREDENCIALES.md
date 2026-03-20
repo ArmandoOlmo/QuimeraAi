@@ -21,9 +21,9 @@ Tu proyecto tiene credenciales configuradas en **4 UBICACIONES**:
 ```json
 {
   "cloudflare": {
-    "account_id": "ccb57f67da1dab2a06002657d8ea5fb1",
-    "api_token": "TU_CLOUDFLARE_API_TOKEN",  // ⚠️ PLACEHOLDER
-    "workers_token": "k9CPydvzVanjqBQBQMAYg_3cq8O6glfnocbqdYdJ"
+    "account_id": "***REDACTED***",
+    "api_token": "***REDACTED***",
+    "workers_token": "***REDACTED***"
   },
   "stripe": {
     "secret_key": "sk_live_***",
@@ -35,9 +35,9 @@ Tu proyecto tiene credenciales configuradas en **4 UBICACIONES**:
     "environment": "production"
   },
   "meta": {
-    "app_id": "830543529786959",
+    "app_id": "***REDACTED***",
     "app_secret": "***",
-    "redirect_uri": "https://us-central1-quimeraai.cloudfunctions.net/metaOAuth-callback"
+    "redirect_uri": "***REDACTED***"
   }
 }
 ```
@@ -57,7 +57,7 @@ CLOUDFLARE_ACCOUNT_ID=tu_cloudflare_account_id_aqui  # ⚠️ PLACEHOLDER
 VITE_FIREBASE_*=***  # 7 variables de Firebase
 VITE_GOOGLE_CLIENT_ID=***
 VITE_GOOGLE_API_KEY=***
-VITE_CLOUDFLARE_ACCOUNT_ID=ccb57f67da1dab2a06002657d8ea5fb1
+VITE_CLOUDFLARE_ACCOUNT_ID=***REDACTED***
 ```
 
 ### 4️⃣ .env (Root del Proyecto)

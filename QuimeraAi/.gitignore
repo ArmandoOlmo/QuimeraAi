@@ -47,3 +47,6 @@ service-account*.json
 *.sw?
 service-account.json
 functions/.runtimeconfig.json
+
+# Security - credential documentation
+VERIFICACION_CREDENCIALES.md

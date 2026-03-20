@@ -70,7 +70,11 @@ service firebase.storage {
     match /user_uploads/{userId}/{allPaths=**} {
       allow read: if true;
       allow write: if isOwner(userId) 
-        && isValidSize(50 * 1024 * 1024); // 50MB max per file
+        && isValidSize(50 * 1024 * 1024) // 50MB max per file
+        && (isImage() 
+            || request.resource.contentType.matches('video/.*') 
+            || request.resource.contentType.matches('application/pdf')
+            || request.resource.contentType.matches('audio/.*'));
     }
     
     // ============================================
@@ -141,7 +145,8 @@ service firebase.storage {
     match /tenants/{tenantId}/{allPaths=**} {
       allow read: if isAuthenticated();
       allow write: if isAuthenticated() 
-        && isValidSize(50 * 1024 * 1024); // 50MB max
+        && isValidSize(50 * 1024 * 1024) // 50MB max
+        && (isSuperAdminOrOwner() || request.auth.token.tenantId == tenantId);
     }
 
     // ============================================

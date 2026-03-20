@@ -4,6 +4,7 @@
  */
 
 import React, { useEffect, useMemo, useState } from 'react';
+import { sanitizeHtml } from '../utils/sanitize';
 import { useTranslation } from 'react-i18next';
 import {
   ArrowLeft,
@@ -295,7 +296,7 @@ const PublicArticlePage: React.FC<PublicArticlePageProps> = ({
           {/* Article Markdown Body */}
           <div
             className="prose prose-invert prose-lg max-w-none hover:prose-a:text-yellow-300 prose-headings:font-bold prose-h2:text-4xl prose-h2:mt-16 prose-h2:mb-8 prose-h3:text-2xl prose-h3:mt-12 prose-img:rounded-2xl prose-img:shadow-2xl prose-a:text-yellow-400 prose-p:leading-loose prose-p:text-gray-300 prose-li:text-gray-300 prose-hr:border-white/10 prose-blockquote:border-yellow-400 prose-blockquote:bg-yellow-400/5 prose-blockquote:py-2 prose-blockquote:px-6 prose-blockquote:rounded-r-2xl prose-blockquote:text-gray-300 prose-blockquote:not-italic"
-            dangerouslySetInnerHTML={{ __html: articleHtml }}
+            dangerouslySetInnerHTML={{ __html: sanitizeHtml(articleHtml) }}
           />
 
           {/* Tags */}

@@ -5,6 +5,7 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { sanitizeHtml } from '../../../utils/sanitize';
 import { useTranslation } from 'react-i18next';
 import { useAppContent } from '../../../contexts/appContent';
 import { useToast } from '../../../contexts/ToastContext';
@@ -250,7 +251,7 @@ const AppArticleEditor: React.FC<AppArticleEditorProps> = ({ article, onClose })
                             </div>
                             <div 
                                 className="prose prose-lg dark:prose-invert max-w-none"
-                                dangerouslySetInnerHTML={{ __html: content }}
+                                dangerouslySetInnerHTML={{ __html: sanitizeHtml(content) }}
                             />
                         </div>
                     ) : (

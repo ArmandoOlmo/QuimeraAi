@@ -4,6 +4,7 @@ import { useDesignTokens } from '../hooks/useDesignTokens';
 import * as LucideIcons from 'lucide-react';
 import { Play, ArrowRight } from 'lucide-react';
 import { hexToRgba } from '../utils/colorUtils';
+import { sanitizeHtml } from '../utils/sanitize';
 
 const headlineSizeClasses: Record<FontSize, string> = {
     sm: 'text-4xl md:text-5xl',
@@ -177,7 +178,7 @@ const HeroCinematic: React.FC<HeroProps> = ({
                         letterSpacing: 'var(--headings-spacing, -0.03em)',
                         textShadow: `0 0 60px ${actualColors.primary}30, 0 4px 20px rgba(0,0,0,0.5)`,
                     }}
-                    dangerouslySetInnerHTML={{ __html: styledHeadline }}
+                    dangerouslySetInnerHTML={{ __html: sanitizeHtml(styledHeadline) }}
                 />
 
                 {/* Thin horizontal accent */}

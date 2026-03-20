@@ -5,6 +5,7 @@
  */
 
 import React, { useEffect, useState } from 'react';
+import { sanitizeHtml } from '../../utils/sanitize';
 import { ArrowLeft, Shield, Lock, Eye, Database, Users, Mail, Globe, FileText, Settings, Clock, AlertTriangle, Loader2, ScrollText } from 'lucide-react';
 import { useSafeAppContent } from '../../contexts/appContent';
 import { LegalPage, DEFAULT_TERMS_OF_SERVICE } from '../../types/appContent';
@@ -56,7 +57,7 @@ const TermsOfServicePage: React.FC = () => {
                 elements.push(
                     <ul key={`list-${elements.length}`} className="list-disc list-inside space-y-1 ml-4 mb-4">
                         {listItems.map((item, i) => (
-                            <li key={i} dangerouslySetInnerHTML={{ __html: item.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') }} />
+                            <li key={i} dangerouslySetInnerHTML={{ __html: sanitizeHtml(item.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')) }} />
                         ))}
                     </ul>
                 );
@@ -80,7 +81,7 @@ const TermsOfServicePage: React.FC = () => {
                 flushList();
                 elements.push(
                     <p key={index} className="mb-3" dangerouslySetInnerHTML={{ 
-                        __html: trimmed.replace(/\*\*(.*?)\*\*/g, '<strong class="text-white">$1</strong>')
+                        __html: sanitizeHtml(trimmed.replace(/\*\*(.*?)\*\*/g, '<strong class="text-white">$1</strong>'))
                     }} />
                 );
             }
