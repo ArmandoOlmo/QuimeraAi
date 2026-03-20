@@ -221,15 +221,32 @@ const BlogPost: React.FC<BlogPostProps> = ({ post, theme, onBack, textColor, bac
                                 <span className="text-xs opacity-60" style={{ color: textColor }}>Contenido audiovisual disponible</span>
                             </div>
                         </div>
-                        <video
-                            controls
-                            className="w-full rounded-lg"
-                            style={{ maxHeight: '500px', backgroundColor: '#000' }}
-                            preload="metadata"
-                        >
-                            <source src={post.podcastVideoUrl} />
-                            Tu navegador no soporta el elemento de video.
-                        </video>
+                        {(() => {
+                            const ytMatch = post.podcastVideoUrl!.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]+)/);
+                            if (ytMatch) {
+                                return (
+                                    <div style={{ position: 'relative', paddingBottom: '56.25%', height: 0, overflow: 'hidden', borderRadius: '0.5rem' }}>
+                                        <iframe
+                                            src={`https://www.youtube.com/embed/${ytMatch[1]}`}
+                                            style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
+                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                            allowFullScreen
+                                        />
+                                    </div>
+                                );
+                            }
+                            return (
+                                <video
+                                    controls
+                                    className="w-full rounded-lg"
+                                    style={{ maxHeight: '500px', backgroundColor: '#000' }}
+                                    preload="metadata"
+                                >
+                                    <source src={post.podcastVideoUrl} />
+                                    Tu navegador no soporta el elemento de video.
+                                </video>
+                            );
+                        })()}
                     </div>
                 )}
 

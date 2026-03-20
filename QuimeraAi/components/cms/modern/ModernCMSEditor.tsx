@@ -42,7 +42,7 @@ import { useRouter } from '../../../hooks/useRouter';
 import { ROUTES } from '../../../routes/config';
 import { logApiCall } from '../../../services/apiLoggingService';
 import { storage } from '../../../firebase';
-import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { ref as storageRef, uploadBytesResumable, getDownloadURL, uploadBytes } from 'firebase/storage';
 import { useViewportType } from '../../../hooks/use-mobile';
 import MobileBottomSheet from '../../ui/MobileBottomSheet';
 import TabletSlidePanel from '../../ui/TabletSlidePanel';
@@ -89,6 +89,7 @@ interface SettingsSidebarContentProps {
     podcastVideoUrl: string;
     setPodcastVideoUrl: (value: string) => void;
     isUploadingVideo: boolean;
+    uploadProgress: number;
     onTriggerVideoUpload: () => void;
     onVideoFileDrop: (files: FileList) => void;
 }
@@ -99,7 +100,7 @@ const SettingsSidebarContent: React.FC<SettingsSidebarContentProps> = ({
     seoTitle, setSeoTitle, seoDescription, setSeoDescription, generateSEO, isAiWorking,
     categoryId, setCategoryId, categories,
     podcastAudioUrl, setPodcastAudioUrl, isUploadingAudio, onAudioFileUpload, onTriggerAudioUpload, onAudioFileDrop,
-    podcastVideoUrl, setPodcastVideoUrl, isUploadingVideo, onTriggerVideoUpload, onVideoFileDrop
+    podcastVideoUrl, setPodcastVideoUrl, isUploadingVideo, uploadProgress, onTriggerVideoUpload, onVideoFileDrop
 }) => (
     <>
         <div className="mb-6">
@@ -202,10 +203,22 @@ const SettingsSidebarContent: React.FC<SettingsSidebarContentProps> = ({
                 <h4 className="font-bold text-sm flex items-center mb-4"><VideoIcon size={16} className="mr-2 text-primary" /> Video del Artículo</h4>
                 {podcastVideoUrl ? (
                     <div className="space-y-3">
-                        <video controls className="w-full rounded-lg" style={{ maxHeight: '200px' }}>
-                            <source src={podcastVideoUrl} />
-                        </video>
-                        <div className="flex gap-2">
+                        {(() => {
+                            const ytMatch = podcastVideoUrl.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]+)/);
+                            if (ytMatch) {
+                                return (
+                                    <div className="relative rounded-lg overflow-hidden" style={{ paddingBottom: '56.25%', height: 0 }}>
+                                        <iframe src={`https://www.youtube.com/embed/${ytMatch[1]}`} className="absolute top-0 left-0 w-full h-full" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen />
+                                    </div>
+                                );
+                            }
+                            return (
+                                <video controls className="w-full rounded-lg" style={{ maxHeight: '200px' }}>
+                                    <source src={podcastVideoUrl} />
+                                </video>
+                            );
+                        })()}
+                        <div className="flex gap-2 relative z-10">
                             <button
                                 type="button"
                                 onClick={() => setPodcastVideoUrl('')}
@@ -228,7 +241,12 @@ const SettingsSidebarContent: React.FC<SettingsSidebarContentProps> = ({
                             {isUploadingVideo ? (
                                 <>
                                     <Loader2 size={24} className="animate-spin text-primary" />
-                                    <span className="text-xs font-medium">Subiendo video...</span>
+                                    <span className="text-xs font-medium">Subiendo video... {uploadProgress > 0 ? `${uploadProgress}%` : ''}</span>
+                                    {uploadProgress > 0 && (
+                                        <div className="w-full bg-secondary rounded-full h-2 mt-1">
+                                            <div className="bg-primary h-2 rounded-full transition-all duration-300" style={{ width: `${uploadProgress}%` }} />
+                                        </div>
+                                    )}
                                 </>
                             ) : (
                                 <>
@@ -356,6 +374,7 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
     const [isUploadingAudio, setIsUploadingAudio] = useState(false);
     const [podcastVideoUrl, setPodcastVideoUrl] = useState(post?.podcastVideoUrl || '');
     const [isUploadingVideo, setIsUploadingVideo] = useState(false);
+    const [uploadProgress, setUploadProgress] = useState(0);
 
     // Editor State
     const [isSidebarOpen, setIsSidebarOpen] = useState(true); // Right sidebar (settings)
@@ -550,20 +569,45 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
         const file = e.target.files?.[0];
         if (!file) return;
 
+        console.log('[Video Upload] Starting upload:', file.name, 'Size:', (file.size / 1024 / 1024).toFixed(2), 'MB', 'Type:', file.type);
         setIsUploadingVideo(true);
+        setUploadProgress(0);
         try {
             const timestamp = Date.now();
             const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
             const storagePath = `cms_video/${user?.uid || 'unknown'}/${activeProject?.id || 'unknown'}/${timestamp}_${safeFileName}`;
+            console.log('[Video Upload] Storage path:', storagePath);
             const fileRef = storageRef(storage, storagePath);
-            await uploadBytes(fileRef, file);
-            const url = await getDownloadURL(fileRef);
+            
+            const uploadTask = uploadBytesResumable(fileRef, file);
+            
+            const url = await new Promise<string>((resolve, reject) => {
+                uploadTask.on('state_changed',
+                    (snapshot) => {
+                        const progress = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
+                        setUploadProgress(progress);
+                        console.log(`[Video Upload] Progress: ${progress}% (${(snapshot.bytesTransferred / 1024 / 1024).toFixed(1)}/${(snapshot.totalBytes / 1024 / 1024).toFixed(1)} MB)`);
+                    },
+                    (error) => {
+                        console.error('[Video Upload] Upload error:', error.code, error.message);
+                        reject(error);
+                    },
+                    async () => {
+                        console.log('[Video Upload] Upload complete, getting download URL...');
+                        const downloadUrl = await getDownloadURL(uploadTask.snapshot.ref);
+                        console.log('[Video Upload] ✅ Download URL:', downloadUrl.substring(0, 80) + '...');
+                        resolve(downloadUrl);
+                    }
+                );
+            });
+            
             setPodcastVideoUrl(url);
-        } catch (error) {
-            console.error('Video upload failed', error);
-            alert('Error al subir el video. Intente de nuevo.');
+        } catch (error: any) {
+            console.error('[Video Upload] Failed:', error?.code, error?.message, error);
+            alert(`Error al subir el video: ${error?.message || 'Error desconocido'}`);
         } finally {
             setIsUploadingVideo(false);
+            setUploadProgress(0);
             if (e.target) e.target.value = '';
         }
     };
@@ -576,20 +620,44 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
             return;
         }
 
+        console.log('[Video Drop] Starting upload:', file.name, 'Size:', (file.size / 1024 / 1024).toFixed(2), 'MB', 'Type:', file.type);
         setIsUploadingVideo(true);
+        setUploadProgress(0);
         try {
             const timestamp = Date.now();
             const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
             const storagePath = `cms_video/${user?.uid || 'unknown'}/${activeProject?.id || 'unknown'}/${timestamp}_${safeFileName}`;
+            console.log('[Video Drop] Storage path:', storagePath);
             const fileRef = storageRef(storage, storagePath);
-            await uploadBytes(fileRef, file);
-            const url = await getDownloadURL(fileRef);
+            
+            const uploadTask = uploadBytesResumable(fileRef, file);
+            
+            const url = await new Promise<string>((resolve, reject) => {
+                uploadTask.on('state_changed',
+                    (snapshot) => {
+                        const progress = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
+                        setUploadProgress(progress);
+                        console.log(`[Video Drop] Progress: ${progress}%`);
+                    },
+                    (error) => {
+                        console.error('[Video Drop] Upload error:', error.code, error.message);
+                        reject(error);
+                    },
+                    async () => {
+                        const downloadUrl = await getDownloadURL(uploadTask.snapshot.ref);
+                        console.log('[Video Drop] ✅ Done:', downloadUrl.substring(0, 80) + '...');
+                        resolve(downloadUrl);
+                    }
+                );
+            });
+            
             setPodcastVideoUrl(url);
-        } catch (error) {
-            console.error('Video upload failed', error);
-            alert('Error al subir el video. Intente de nuevo.');
+        } catch (error: any) {
+            console.error('[Video Drop] Failed:', error?.code, error?.message, error);
+            alert(`Error al subir el video: ${error?.message || 'Error desconocido'}`);
         } finally {
             setIsUploadingVideo(false);
+            setUploadProgress(0);
         }
     };
 
@@ -1261,6 +1329,7 @@ IMPORTANT FORMATTING RULES:
                                 podcastVideoUrl={podcastVideoUrl}
                                 setPodcastVideoUrl={setPodcastVideoUrl}
                                 isUploadingVideo={isUploadingVideo}
+                                uploadProgress={uploadProgress}
                                 onTriggerVideoUpload={() => videoFileInputRef.current?.click()}
                                 onVideoFileDrop={handleVideoFileDrop}
                             />
@@ -1312,6 +1381,7 @@ IMPORTANT FORMATTING RULES:
                             podcastVideoUrl={podcastVideoUrl}
                             setPodcastVideoUrl={setPodcastVideoUrl}
                             isUploadingVideo={isUploadingVideo}
+                            uploadProgress={uploadProgress}
                             onTriggerVideoUpload={() => videoFileInputRef.current?.click()}
                             onVideoFileDrop={handleVideoFileDrop}
                         />
@@ -1362,6 +1432,7 @@ IMPORTANT FORMATTING RULES:
                             podcastVideoUrl={podcastVideoUrl}
                             setPodcastVideoUrl={setPodcastVideoUrl}
                             isUploadingVideo={isUploadingVideo}
+                            uploadProgress={uploadProgress}
                             onTriggerVideoUpload={() => videoFileInputRef.current?.click()}
                             onVideoFileDrop={handleVideoFileDrop}
                         />
