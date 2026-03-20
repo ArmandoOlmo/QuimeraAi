@@ -6,15 +6,19 @@ service cloud.firestore {
     // HELPER FUNCTIONS
     // ============================================
     
-    // SECURITY: Owner/SuperAdmin detection via Firebase Custom Claims
-    // Claims are synced automatically by the onUserRoleChange Cloud Function
-    // (userRoleClaims.ts) whenever a user's role is updated in Firestore.
-    // IMPORTANT: Run batchSyncAllUserClaims before first deploy to ensure
-    // all existing users have their claims synchronized.
+    // SECURITY: Owner/SuperAdmin detection
+    // Primary: Custom Claims (fast, no document read)
+    // Fallback: Firestore user document role (for users whose Claims haven't been synced yet)
+    // NOTE: Once all users have been synced via batchSyncAllUserClaims,
+    // the Firestore fallback can be removed for better performance.
     function isSuperAdminOrOwner() {
       return request.auth != null && (
+        // Fast path: Custom Claims
         request.auth.token.role == 'owner' ||
-        request.auth.token.role == 'superadmin'
+        request.auth.token.role == 'superadmin' ||
+        // Fallback: Firestore user document
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+         (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('role', '') in ['owner', 'Owner', 'superadmin', 'Superadmin', 'SuperAdmin']))
       );
     }
     
@@ -451,9 +455,38 @@ service cloud.firestore {
       allow write: if false; // Only admin SDK can write
     }
 
-    // Default deny — all new collections must have explicit rules
+    // ============================================
+    // API USAGE & RATE LIMITS
+    // Written by Cloud Functions (Admin SDK), read by admins
+    // ============================================
+    match /apiUsage/{docId} {
+      allow read: if request.auth != null && isSuperAdminOrOwner();
+      allow write: if false; // Only admin SDK
+    }
+    
+    match /rateLimits/{docId} {
+      allow read: if request.auth != null && isSuperAdminOrOwner();
+      allow write: if false; // Only admin SDK
+      match /{allPaths=**} {
+        allow read: if request.auth != null && isSuperAdminOrOwner();
+        allow write: if false;
+      }
+    }
+    
+    match /aiCreditsTransactions/{docId} {
+      allow read: if request.auth != null && isSuperAdminOrOwner();
+      allow write: if false; // Only admin SDK
+    }
+    
+    match /tenantMemberships/{docId} {
+      allow read: if request.auth != null;
+      allow write: if false; // Only admin SDK
+    }
+
+    // Default: admin-only safety net for uncovered collections
+    // New collections SHOULD have explicit rules above
     match /{document=**} {
-      allow read, write: if false;
+      allow read, write: if request.auth != null && isSuperAdminOrOwner();
     }
   }
 }
