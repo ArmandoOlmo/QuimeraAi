@@ -167,22 +167,28 @@ export const removeCustomDomain = functions.https.onCall(async (data, context) =
     const normalizedDomain = normalizeDomain(domain);
 
     try {
-        // Verify ownership
+        // Check ownership (if doc exists)
         const domainDoc = await db.collection('customDomains').doc(normalizedDomain).get();
-        if (!domainDoc.exists) {
-            throw new functions.https.HttpsError('not-found', 'Domain not found');
+        if (domainDoc.exists) {
+            const domainData = domainDoc.data();
+            if (domainData?.userId !== userId) {
+                throw new functions.https.HttpsError('permission-denied', 'You do not own this domain');
+            }
+
+            // Delete from global collection
+            await db.collection('customDomains').doc(normalizedDomain).delete();
+            console.log(`[DomainManager] Deleted customDomains/${normalizedDomain}`);
+        } else {
+            console.log(`[DomainManager] customDomains/${normalizedDomain} not found, skipping`);
         }
 
-        const domainData = domainDoc.data();
-        if (domainData?.userId !== userId) {
-            throw new functions.https.HttpsError('permission-denied', 'You do not own this domain');
+        // Delete from user's collection (always try)
+        try {
+            await db.collection('users').doc(userId).collection('domains').doc(normalizedDomain).delete();
+            console.log(`[DomainManager] Deleted users/${userId}/domains/${normalizedDomain}`);
+        } catch (userDelErr: any) {
+            console.warn(`[DomainManager] User domain delete warning: ${userDelErr.message}`);
         }
-
-        // Delete from global collection
-        await db.collection('customDomains').doc(normalizedDomain).delete();
-
-        // Delete from user's collection
-        await db.collection('users').doc(userId).collection('domains').doc(normalizedDomain).delete();
 
         // === CLEANUP SSL CERTIFICATE ===
         try {
@@ -592,6 +598,94 @@ export const syncDomainMapping = functions.https.onCall(async (data, context) =>
         throw new functions.https.HttpsError('internal', error.message || 'Error syncing domain mapping');
     }
 });
+
+/**
+ * Full domain setup: SSL certificate + cert-map entries + Firestore sync
+ * 
+ * This is the BACKUP callable for when the onDomainCreate trigger
+ * doesn't fire (e.g., domain re-added via setDoc merge).
+ * The frontend (DomainsContext) already calls this automatically.
+ */
+export const setupFullDomainMapping = functions.https.onCall(async (data, context) => {
+    if (!context.auth) {
+        throw new functions.https.HttpsError('unauthenticated', 'Must be logged in');
+    }
+
+    const { domain, projectId } = data;
+    const userId = context.auth.uid;
+
+    if (!domain || typeof domain !== 'string') {
+        throw new functions.https.HttpsError('invalid-argument', 'Domain is required');
+    }
+
+    const normalizedDomain = normalizeDomain(domain);
+    console.log(`[DomainManager] setupFullDomainMapping called for: ${normalizedDomain}`);
+
+    try {
+        // Step 1: Create SSL certificate + cert-map entries
+        let sslResult;
+        try {
+            sslResult = await setupDomainSSL(normalizedDomain);
+            if (sslResult.success) {
+                console.log(`[DomainManager] SSL setup success: cert=${sslResult.certName}, state=${sslResult.state}`);
+            } else {
+                console.warn(`[DomainManager] SSL setup failed: ${sslResult.error}`);
+            }
+        } catch (sslError: any) {
+            console.error(`[DomainManager] SSL setup error: ${sslError.message}`);
+            sslResult = { success: false, certName: '', state: 'ERROR', error: sslError.message };
+        }
+
+        // Step 2: Sync domain to Firestore
+        const domainUpdate: any = {
+            domain: normalizedDomain,
+            projectId: projectId || null,
+            userId,
+            cloudRunTarget: 'quimera-ssr-575386543550.us-central1.run.app',
+            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        };
+
+        if (sslResult?.success) {
+            domainUpdate.sslStatus = 'provisioning';
+            domainUpdate.gcpCertName = sslResult.certName;
+            domainUpdate.gcpCertState = sslResult.state;
+            domainUpdate.sslProvisionedAt = admin.firestore.FieldValue.serverTimestamp();
+        }
+
+        await db.collection('customDomains').doc(normalizedDomain).set(domainUpdate, { merge: true });
+
+        // Also update user's domain collection
+        try {
+            await db.collection('users').doc(userId).collection('domains').doc(normalizedDomain).set(domainUpdate, { merge: true });
+        } catch (e) {
+            // Non-blocking
+        }
+
+        const cloudRunStatus = sslResult?.success ? 'provisioning' : 'pending';
+
+        return {
+            success: true,
+            domain: normalizedDomain,
+            cloudRunStatus,
+            cloudflareConfigured: false,
+            nameservers: null,
+            dnsInstructions: {
+                aRecords: [CLOUD_RUN_CONFIG.loadBalancerIp],
+                cnameTarget: CLOUD_RUN_CONFIG.cnameTarget,
+                message: `Point A record @ to ${CLOUD_RUN_CONFIG.loadBalancerIp} and CNAME www to ${normalizedDomain}`,
+            },
+            message: sslResult?.success
+                ? `SSL certificate created (${sslResult.certName}). Provisioning takes ~15 minutes.`
+                : `Domain saved. SSL setup pending: ${sslResult?.error}`,
+        };
+
+    } catch (error: any) {
+        console.error('[DomainManager] setupFullDomainMapping error:', error);
+        if (error instanceof functions.https.HttpsError) throw error;
+        throw new functions.https.HttpsError('internal', error.message);
+    }
+});
+
 
 
 

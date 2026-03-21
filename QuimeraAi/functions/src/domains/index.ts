@@ -16,7 +16,8 @@ export {
     syncDomainMapping,
     setupExternalDomainWithCloudflare,
     verifyExternalDomainNameservers,
-    migrateToCloudflare
+    migrateToCloudflare,
+    setupFullDomainMapping
 } from './domainManager';
 export { verifyDomainDNS, checkDomainSSL } from './dnsVerification';
 export { onDomainCreate, onDomainDelete, scheduledDNSCheck } from './domainTriggers';

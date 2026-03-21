@@ -148,7 +148,9 @@ import {
     // External domain setup (simplified flow via Cloudflare)
     setupExternalDomainWithCloudflare,
     verifyExternalDomainNameservers,
-    migrateToCloudflare
+    migrateToCloudflare,
+    // Full domain setup (SSL + Firestore sync)
+    setupFullDomainMapping
 } from './domains';
 
 // Social Channels functions
@@ -346,7 +348,9 @@ export const domains = {
     // External domain setup (simplified via Cloudflare)
     setupExternalWithCloudflare: setupExternalDomainWithCloudflare,
     verifyExternalNameservers: verifyExternalDomainNameservers,
-    migrateToCloudflare
+    migrateToCloudflare,
+    // Full domain setup (SSL + Firestore sync)
+    setupFull: setupFullDomainMapping
 };
 
 // Export Social Channels functions
@@ -513,6 +517,8 @@ export {
     getDomainDNSStatus,
     // Domain sync for Cloud Run SSR
     syncDomainMapping,
+    // Full domain setup (SSL + Firestore sync)
+    setupFullDomainMapping,
     // Cloudflare Worker API
     addWorkerDomain,
     // Social Channels exports

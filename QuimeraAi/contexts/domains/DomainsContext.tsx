@@ -289,7 +289,7 @@ export const DomainsProvider: React.FC<{ children: ReactNode }> = ({ children })
         }
     };
 
-    // Delete domain (removes from both user collection and global customDomains)
+    // Delete domain (via Cloud Function - handles both Firestore collections + SSL cleanup)
     const deleteDomain = async (id: string) => {
         if (!user) {
             console.error("❌ [DomainsContext] No user logged in");
@@ -299,36 +299,41 @@ export const DomainsProvider: React.FC<{ children: ReactNode }> = ({ children })
         console.log(`🗑️ [DomainsContext] Deleting domain: ${id}`);
 
         const domain = domains.find(d => d.id === id);
-        const domainName = domain?.name;
-        const normalizedDomain = domainName ? domainName.toLowerCase().trim().replace(/^www\./, '') : null;
-
-        // Simple delete without complex transactions
-        const domainRef = doc(db, 'users', user.uid, 'domains', id);
+        const domainName = domain?.name || id;
+        const normalizedDomain = domainName.toLowerCase().trim().replace(/^www\./, '');
 
         try {
-            // Just delete - simple approach
-            await deleteDoc(domainRef);
-            console.log(`✅ [DomainsContext] deleteDoc executed`);
+            // Use Cloud Function for reliable deletion (admin SDK, bypasses security rules)
+            // Also cleans up SSL certificates in Certificate Manager
+            const { removeCustomDomainFromProject } = await import('../../services/domainService');
+            console.log(`🔐 [DomainsContext] Calling domains-remove for: ${normalizedDomain}`);
+            const result = await removeCustomDomainFromProject(normalizedDomain);
 
-        } catch (firestoreError: any) {
-            console.error("❌ [DomainsContext] Delete failed:", firestoreError);
-
-            // If it's an internal Firestore error, try to clear cache
-            if (firestoreError.message?.includes('INTERNAL ASSERTION')) {
-                console.log("🔧 [DomainsContext] Firestore internal error - cache may be corrupted");
-                throw new Error("Error interno de Firestore. Por favor limpia el cache del navegador (DevTools > Application > Clear site data)");
+            if (!result.success) {
+                console.warn(`⚠️ [DomainsContext] Cloud Function returned error: ${result.error}`);
+                // If Cloud Function fails (e.g., domain not found in customDomains), 
+                // fall back to direct Firestore delete
+                throw new Error(result.error || 'Cloud Function delete failed');
             }
 
-            throw new Error(`Error eliminando: ${firestoreError?.message || 'Error desconocido'}`);
-        }
+            console.log(`✅ [DomainsContext] Cloud Function delete succeeded`);
 
-        // Delete from customDomains
-        if (normalizedDomain) {
+        } catch (cloudFnError: any) {
+            console.warn(`⚠️ [DomainsContext] Cloud Function delete failed, trying direct delete:`, cloudFnError.message);
+
+            // Fallback: direct Firestore delete (in case Cloud Function is down or domain not in customDomains)
+            try {
+                await deleteDoc(doc(db, 'users', user.uid, 'domains', id));
+                console.log(`✅ [DomainsContext] Direct delete from user domains succeeded`);
+            } catch (directErr: any) {
+                console.error(`❌ [DomainsContext] Direct delete also failed:`, directErr.message);
+            }
+
             try {
                 await deleteDoc(doc(db, 'customDomains', normalizedDomain));
-                console.log(`✅ [DomainsContext] Deleted from customDomains`);
+                console.log(`✅ [DomainsContext] Direct delete from customDomains succeeded`);
             } catch (e) {
-                console.warn(`⚠️ [DomainsContext] customDomains delete warning:`, e);
+                // Non-blocking
             }
         }
 
