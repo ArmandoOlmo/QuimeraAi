@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useAI } from '../../contexts/ai';
 import { useFiles } from '../../contexts/files';
 import { useTranslation } from 'react-i18next';
@@ -8,6 +8,7 @@ import {
     ChevronDown, Settings2, Palette, Camera, Sun, Check, CheckCircle2,
     PanelLeftClose
 } from 'lucide-react';
+import ProgressBar3D from './ProgressBar3D';
 
 interface ImageGeneratorPanelProps {
     destination: 'user' | 'global';
@@ -138,6 +139,7 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
     const [depthOfField, setDepthOfField] = useState('None');
     const [showAdvanced, setShowAdvanced] = useState(false);
     const [isGenerating, setIsGenerating] = useState(false);
+    const [generationProgress, setGenerationProgress] = useState(0);
     const [isEnhancing, setIsEnhancing] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [savedToLibrary, setSavedToLibrary] = useState(false);
@@ -292,9 +294,18 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
     const handleGenerate = async () => {
         if (!prompt.trim()) return;
         setIsGenerating(true);
+        setGenerationProgress(0);
         setSavedToLibrary(false);
         setSavedImageUrl(null);
         setShowImageDetail(false);
+
+        // Simulate progress during generation
+        const progressInterval = setInterval(() => {
+            setGenerationProgress(prev => {
+                if (prev >= 90) return prev;
+                return prev + Math.random() * 8 + 2;
+            });
+        }, 500);
 
         try {
             const options = {
@@ -344,7 +355,9 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
             console.error(error);
             alert(t('editor.generationFailed'));
         } finally {
-            setIsGenerating(false);
+            clearInterval(progressInterval);
+            setGenerationProgress(100);
+            setTimeout(() => setIsGenerating(false), 300);
         }
     };
 
@@ -376,22 +389,22 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
     const isVisionPro = true;
 
     return (
-        <div className={`bg-[#2D1854] text-[#FAFAFA] font-sans flex flex-col h-full overflow-hidden ${className}`}>
+        <div className={`bg-editor-bg text-editor-text-primary font-sans flex flex-col h-full overflow-hidden ${className}`}>
             <style>{`
-            .vector-bg-container { background-color: hsl(272, 45%, 14%); background-image: radial-gradient(circle at 50% 50%, hsl(272, 45%, 18%) 0%, hsl(272, 45%, 10%) 100%); position: relative; }
-            .vector-grid { position: absolute; inset: 0; background-image: linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px); background-size: 40px 40px; mask-image: radial-gradient(circle at center, black 40%, transparent 100%); }
-            .vector-glow-points { position: absolute; inset: 0; background-image: radial-gradient(circle at center, rgba(147, 51, 234, 0.15) 0%, transparent 50%); }
-            .vector-lines { position: absolute; inset: 0; background: linear-gradient(135deg, transparent 49.5%, rgba(255, 255, 255, 0.02) 49.5%, rgba(255, 255, 255, 0.02) 50.5%, transparent 50.5%); background-size: 100px 100px; mask-image: radial-gradient(circle at center, black 60%, transparent 100%); }
-            input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; height: 16px; width: 16px; border-radius: 50%; background: #F2B90D; cursor: pointer; margin-top: -6px; }
+            .imggen-vector-bg-container { background-color: var(--editor-bg); background-image: radial-gradient(circle at 50% 50%, var(--editor-panel-bg) 0%, var(--editor-bg) 100%); position: relative; }
+            .imggen-vector-grid { position: absolute; inset: 0; background-image: linear-gradient(var(--editor-border) 1px, transparent 1px), linear-gradient(90deg, var(--editor-border) 1px, transparent 1px); background-size: 40px 40px; opacity: 0.3; mask-image: radial-gradient(circle at center, black 40%, transparent 100%); }
+            .imggen-vector-glow-points { position: absolute; inset: 0; background-image: radial-gradient(circle at center, color-mix(in srgb, var(--editor-accent) 15%, transparent) 0%, transparent 50%); }
+            .imggen-vector-lines { position: absolute; inset: 0; background: linear-gradient(135deg, transparent 49.5%, var(--editor-border) 49.5%, var(--editor-border) 50.5%, transparent 50.5%); background-size: 100px 100px; opacity: 0.15; mask-image: radial-gradient(circle at center, black 60%, transparent 100%); }
+            input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; height: 16px; width: 16px; border-radius: 50%; background: var(--editor-accent); cursor: pointer; margin-top: -6px; }
             `}</style>
 
             {/* Header */}
-            <header className="flex items-center justify-between whitespace-nowrap border-b border-white/10 bg-[#2D1854]/80 backdrop-blur-md px-6 py-3 shrink-0 z-20">
+            <header className="flex items-center justify-between whitespace-nowrap border-b border-editor-border bg-editor-bg/80 backdrop-blur-md px-6 py-3 shrink-0 z-20">
                 <div className="flex items-center gap-4">
-                    <div className="w-6 h-6 text-[#F2B90D] flex items-center justify-center">
+                    <div className="w-6 h-6 text-editor-accent flex items-center justify-center">
                         <Wand2 size={24} />
                     </div>
-                    <h2 className="text-[#FAFAFA] text-lg font-bold leading-tight tracking-[-0.015em]">
+                    <h2 className="text-editor-text-primary text-lg font-bold leading-tight tracking-[-0.015em]">
                         {t('editor.quimeraImageGenerator', { defaultValue: 'Image Generator' })}
                     </h2>
                     {generationContext === 'background' && (
@@ -404,7 +417,7 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
                 {onClose && (
                     <button
                         onClick={onClose}
-                        className="flex items-center justify-center rounded-lg w-10 h-10 hover:bg-[#3A2460] text-white/60 hover:text-white transition-colors"
+                        className="flex items-center justify-center rounded-lg w-10 h-10 hover:bg-editor-panel-bg text-editor-text-secondary hover:text-editor-text-primary transition-colors"
                     >
                         <X size={20} />
                     </button>
@@ -413,19 +426,31 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
 
             <div className="flex flex-col md:flex-row flex-1 overflow-hidden">
                 {/* Main Content Area */}
-                <main className="hidden md:flex flex-1 flex-col relative bg-[#1A0D35] overflow-hidden">
-                    <div className="flex-1 flex flex-col relative w-full h-full vector-bg-container overflow-y-auto">
-                        <div className="vector-grid pointer-events-none"></div>
-                        <div className="vector-lines pointer-events-none"></div>
-                        <div className="vector-glow-points pointer-events-none"></div>
+                <main className="hidden md:flex flex-1 flex-col relative bg-background overflow-hidden">
+                    <div className="flex-1 flex flex-col relative w-full h-full imggen-vector-bg-container overflow-y-auto">
+                        <div className="imggen-vector-grid pointer-events-none"></div>
+                        <div className="imggen-vector-lines pointer-events-none"></div>
+                        <div className="imggen-vector-glow-points pointer-events-none"></div>
 
                         <div className="w-full h-full flex items-center justify-center p-4 md:p-8 lg:p-12 min-h-[300px] md:min-h-[600px] relative z-10">
-                            <div className="relative w-full max-w-4xl aspect-video bg-black/20 shadow-2xl flex flex-col rounded-xl overflow-hidden border border-white/5">
+                            <div className="relative w-full max-w-4xl aspect-video bg-black/20 shadow-2xl flex flex-col rounded-xl overflow-hidden border border-editor-border/30">
                                 {isGenerating ? (
-                                    <div className="w-full h-full flex flex-col items-center justify-center">
-                                        <Loader2 size={48} className="animate-spin text-[#F2B90D] mb-4" />
-                                        <p className="text-white/70 font-medium tracking-wide">
-                                            {t('editor.creatingInResolution', { resolution, defaultValue: `Creating in ${resolution}...` })}
+                                    <div className="w-full h-full flex flex-col items-center justify-center gap-6 p-8">
+                                        <Loader2 size={48} className="animate-spin text-editor-accent" />
+                                        <div className="w-full max-w-sm space-y-3">
+                                            <div className="flex justify-between text-sm">
+                                                <span className="text-editor-text-secondary font-medium">
+                                                    {t('editor.creatingInResolution', { resolution, defaultValue: `Creating in ${resolution}...` })}
+                                                </span>
+                                                <span className="text-editor-text-primary font-medium">{Math.round(generationProgress)}%</span>
+                                            </div>
+                                            <ProgressBar3D
+                                                percentage={generationProgress}
+                                                size="lg"
+                                            />
+                                        </div>
+                                        <p className="text-editor-text-secondary text-xs">
+                                            {t('editor.generatingPleaseWait', { defaultValue: 'This may take a few moments...' })}
                                         </p>
                                     </div>
                                 ) : generatedImage ? (
@@ -434,7 +459,7 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
                                             {onUseImage && (
                                                 <button
                                                     onClick={() => onUseImage(savedImageUrl || generatedImage)}
-                                                    className="flex items-center gap-2 bg-[#F2B90D] hover:bg-[#D9A60C] text-[#2D1854] px-5 py-2.5 rounded-lg font-bold text-sm shadow-lg shadow-[#F2B90D]/20 transition-all hover:-translate-y-0.5"
+                                                    className="flex items-center gap-2 bg-editor-accent hover:bg-editor-accent/80 text-primary-foreground px-5 py-2.5 rounded-lg font-bold text-sm shadow-lg transition-all hover:-translate-y-0.5"
                                                 >
                                                     <Check size={20} />
                                                     <span>{t('editor.useThisImage', { defaultValue: 'Use in Project' })}</span>
@@ -447,7 +472,7 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
                                                     }
                                                 }}
                                                 disabled={referenceImages.length >= 14}
-                                                className="flex items-center gap-2 bg-[#3A2460] hover:bg-[#4C3575] text-white px-5 py-2.5 rounded-lg font-bold text-sm shadow-lg transition-all hover:-translate-y-0.5 disabled:opacity-50"
+                                                className="flex items-center gap-2 bg-editor-panel-bg hover:bg-muted text-editor-text-primary px-5 py-2.5 rounded-lg font-bold text-sm shadow-lg transition-all hover:-translate-y-0.5 disabled:opacity-50"
                                             >
                                                 <ImageIcon size={20} />
                                                 <span>{t('editor.useAsReference', { defaultValue: 'Use as Reference' })}</span>
@@ -455,7 +480,7 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
                                         </div>
                                         <div className="w-full h-full relative group cursor-pointer" onClick={() => setShowImageDetail(true)}>
                                             <img alt="Generated result" className="w-full h-full object-contain" src={generatedImage} />
-                                            <div className="absolute inset-0 bg-gradient-to-t from-[#2D1854]/90 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-6">
+                                            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-6">
                                                 <div className="flex justify-between items-end">
                                                     <div>
                                                         <p className="text-white/80 text-sm font-medium">Prompt: {prompt.substring(0, 50)}...</p>
@@ -485,12 +510,12 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
                                         </div>
                                     </>
                                 ) : (
-                                    <div className="w-full h-full flex flex-col items-center justify-center bg-black/30 backdrop-blur-sm">
-                                        <div className="w-24 h-24 rounded-3xl border border-white/5 bg-white/[0.02] flex items-center justify-center mb-6">
-                                            <ImageIcon size={48} className="text-slate-600" />
+                                    <div className="w-full h-full flex flex-col items-center justify-center bg-black/20 backdrop-blur-sm">
+                                        <div className="w-24 h-24 rounded-3xl border border-editor-border/30 bg-editor-panel-bg/30 flex items-center justify-center mb-6">
+                                            <ImageIcon size={48} className="text-editor-text-secondary/50" />
                                         </div>
-                                        <h3 className="text-2xl font-medium text-white tracking-tight mb-2">Ready to generate</h3>
-                                        <p className="text-slate-500 text-sm max-w-sm text-center">
+                                        <h3 className="text-2xl font-medium text-editor-text-primary tracking-tight mb-2">Ready to generate</h3>
+                                        <p className="text-editor-text-secondary text-sm max-w-sm text-center">
                                             Enter a prompt below and adjust settings in the sidebar to create your image.
                                         </p>
                                     </div>
@@ -500,24 +525,24 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
                     </div>
 
                     {/* Bottom Prompt Bar */}
-                    <div className="w-full p-6 bg-[#2D1854]/60 backdrop-blur-xl border-t border-white/10 shrink-0 z-30">
+                    <div className="w-full p-6 bg-editor-bg/60 backdrop-blur-xl border-t border-editor-border shrink-0 z-30">
                         <div className="max-w-4xl mx-auto w-full">
-                            <div className="flex w-full items-stretch rounded-xl bg-[#3A2460] border border-white/5 transition-all relative">
-                                <div className="pl-4 flex items-center justify-center text-[#F2B90D]">
+                            <div className="flex w-full items-stretch rounded-xl bg-editor-panel-bg border border-editor-border/50 transition-all relative">
+                                <div className="pl-4 flex items-center justify-center text-editor-accent">
                                     <Sparkles size={24} className={isGenerating ? 'animate-pulse' : ''} />
                                 </div>
                                 <input
-                                    className="flex-1 bg-transparent border-none text-[#FAFAFA] placeholder:text-white/30 px-4 py-4 focus:ring-0 text-base font-medium"
+                                    className="flex-1 bg-transparent border-none text-editor-text-primary placeholder:text-editor-text-secondary/40 px-4 py-4 focus:ring-0 text-base font-medium"
                                     placeholder={t('editor.describeImage', { defaultValue: 'Describe your image...' })}
                                     value={prompt}
                                     onChange={(e) => setPrompt(e.target.value)}
                                     onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleGenerate()}
                                 />
-                                <div className="flex items-center pr-2 gap-3 pl-2 border-l border-white/10 my-2">
+                                <div className="flex items-center pr-2 gap-3 pl-2 border-l border-editor-border my-2">
                                     <button
                                         onClick={handleEnhancePrompt}
                                         disabled={isEnhancing || !prompt}
-                                        className="p-2 text-[#F2B90D] bg-transparent transition-colors hover:text-[#D9A60C] relative flex items-center justify-center disabled:opacity-50"
+                                        className="p-2 text-editor-accent bg-transparent transition-colors hover:text-editor-accent/80 relative flex items-center justify-center disabled:opacity-50"
                                         title={t('editor.enhance', { defaultValue: 'Enhance Prompt' })}
                                     >
                                         {isEnhancing ? <Loader2 size={24} className="animate-spin" /> : <Wand2 size={24} />}
@@ -525,7 +550,7 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
                                     <button
                                         onClick={handleGenerate}
                                         disabled={isGenerating || !prompt}
-                                        className="hidden sm:flex items-center justify-center gap-2 bg-[#F2B90D] hover:bg-[#D9A60C] text-[#2D1854] px-6 py-2 rounded-lg font-bold text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed w-[120px]"
+                                        className="hidden sm:flex items-center justify-center gap-2 bg-editor-accent hover:bg-editor-accent/80 text-primary-foreground px-6 py-2 rounded-lg font-bold text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed w-[120px]"
                                     >
                                         {isGenerating ? <Loader2 size={18} className="animate-spin" /> : <><span>Generate</span><Zap size={16} /></>}
                                     </button>
@@ -534,7 +559,7 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
                             <button
                                 onClick={handleGenerate}
                                 disabled={isGenerating || !prompt}
-                                className="sm:hidden mt-3 w-full flex items-center justify-center gap-2 bg-[#F2B90D] hover:bg-[#D9A60C] text-[#2D1854] px-6 py-3 rounded-lg font-bold text-sm transition-all disabled:opacity-50"
+                                className="sm:hidden mt-3 w-full flex items-center justify-center gap-2 bg-editor-accent hover:bg-editor-accent/80 text-primary-foreground px-6 py-3 rounded-lg font-bold text-sm transition-all disabled:opacity-50"
                             >
                                 {isGenerating ? <Loader2 size={18} className="animate-spin" /> : <><span>Generate</span><Zap size={16} /></>}
                             </button>
@@ -545,14 +570,14 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
                 {/* Sidebar Configuration */}
                 {/* Mobile-only generated image preview */}
                 {generatedImage && (
-                    <div className="md:hidden w-full bg-[#1A0D35] p-4 border-b border-white/10 shrink-0">
-                        <div className="relative w-full aspect-video bg-black/20 shadow-lg rounded-xl overflow-hidden border border-white/5">
+                    <div className="md:hidden w-full bg-background p-4 border-b border-editor-border shrink-0">
+                        <div className="relative w-full aspect-video bg-black/20 shadow-lg rounded-xl overflow-hidden border border-editor-border/30">
                             <img alt="Generated result" className="w-full h-full object-contain" src={generatedImage} />
                             <div className="absolute top-2 left-0 w-full flex items-center justify-center gap-2 z-20">
                                 {onUseImage && (
                                     <button
                                         onClick={() => onUseImage(savedImageUrl || generatedImage)}
-                                        className="flex items-center gap-1.5 bg-[#F2B90D] hover:bg-[#D9A60C] text-[#2D1854] px-3 py-1.5 rounded-lg font-bold text-xs shadow-lg shadow-[#F2B90D]/20 transition-all"
+                                        className="flex items-center gap-1.5 bg-editor-accent hover:bg-editor-accent/80 text-primary-foreground px-3 py-1.5 rounded-lg font-bold text-xs shadow-lg transition-all"
                                     >
                                         <Check size={14} />
                                         <span>{t('editor.useThisImage', { defaultValue: 'Use in Project' })}</span>
@@ -565,7 +590,7 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
                                         }
                                     }}
                                     disabled={referenceImages.length >= 14}
-                                    className="flex items-center gap-1.5 bg-[#3A2460] hover:bg-[#4C3575] text-white px-3 py-1.5 rounded-lg font-bold text-xs shadow-lg transition-all disabled:opacity-50"
+                                    className="flex items-center gap-1.5 bg-editor-panel-bg hover:bg-muted text-editor-text-primary px-3 py-1.5 rounded-lg font-bold text-xs shadow-lg transition-all disabled:opacity-50"
                                 >
                                     <ImageIcon size={14} />
                                     <span>{t('editor.useAsReference', { defaultValue: 'Reference' })}</span>
@@ -574,9 +599,9 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
                         </div>
                     </div>
                 )}
-                <aside className="w-full md:w-80 border-t md:border-t-0 md:border-l border-white/10 bg-[#3A2460] flex flex-col shrink-0 overflow-hidden relative z-40 flex-1 md:flex-none">
-                    <div className="flex items-center justify-between p-4 border-b border-white/10">
-                        <h3 className="text-[#FAFAFA] font-bold text-sm uppercase tracking-wider">Configuration</h3>
+                <aside className="w-full md:w-80 border-t md:border-t-0 md:border-l border-editor-border bg-editor-panel-bg flex flex-col shrink-0 overflow-hidden relative z-40 flex-1 md:flex-none">
+                    <div className="flex items-center justify-between p-4 border-b border-editor-border">
+                        <h3 className="text-editor-text-primary font-bold text-sm uppercase tracking-wider">Configuration</h3>
                     </div>
 
                     <div className="flex-1 overflow-y-auto p-4 space-y-8 custom-scrollbar">
@@ -584,8 +609,8 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
                         <div className="space-y-4">
                             <div className="space-y-3">
                                 <div className="flex justify-between items-center">
-                                    <label className="text-xs font-bold text-white/50 uppercase tracking-wide">Reference Image</label>
-                                    <span className="text-xs text-white/50">{referenceImages.length}/14</span>
+                                    <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wide">Reference Image</label>
+                                    <span className="text-xs text-editor-text-secondary">{referenceImages.length}/14</span>
                                 </div>
                                 <input
                                     type="file"
@@ -596,20 +621,20 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
                                     className="hidden"
                                 />
                                 <div
-                                    className={`w-full border-2 border-dashed rounded-xl transition-colors cursor-pointer group p-6 flex flex-col items-center justify-center gap-3 ${isDragging ? 'border-[#F2B90D] bg-[#F2B90D]/10' : 'border-white/10 hover:border-[#F2B90D]/50 bg-[#2D1854]/30'}`}
+                                    className={`w-full border-2 border-dashed rounded-xl transition-colors cursor-pointer group p-6 flex flex-col items-center justify-center gap-3 ${isDragging ? 'border-editor-accent bg-editor-accent/10' : 'border-editor-border hover:border-editor-accent/50 bg-editor-bg/30'}`}
                                     onDragOver={handleDragOver}
                                     onDragLeave={handleDragLeave}
                                     onDrop={handleDrop}
                                     onClick={() => fileInputRef.current?.click()}
                                 >
                                     {isUploading ? (
-                                        <Loader2 size={32} className="animate-spin text-[#F2B90D]" />
+                                        <Loader2 size={32} className="animate-spin text-editor-accent" />
                                     ) : (
                                         <>
-                                            <div className="size-10 rounded-full bg-white/5 group-hover:bg-[#F2B90D]/10 flex items-center justify-center transition-colors">
-                                                <Upload size={20} className="text-white/30 group-hover:text-[#F2B90D] transition-colors" />
+                                            <div className="size-10 rounded-full bg-editor-border/20 group-hover:bg-editor-accent/10 flex items-center justify-center transition-colors">
+                                                <Upload size={20} className="text-editor-text-secondary group-hover:text-editor-accent transition-colors" />
                                             </div>
-                                            <span className="text-xs font-medium text-white/40 group-hover:text-[#F2B90D] transition-colors text-center">Upload Reference Image</span>
+                                            <span className="text-xs font-medium text-editor-text-secondary group-hover:text-editor-accent transition-colors text-center">Upload Reference Image</span>
                                         </>
                                     )}
                                 </div>
@@ -617,7 +642,7 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
                                 {referenceImages.length > 0 && (
                                     <div className="flex flex-wrap gap-2 pt-2">
                                         {referenceImages.map((img, idx) => (
-                                            <div key={idx} className="relative w-12 h-12 rounded-lg overflow-hidden group border border-white/10">
+                                            <div key={idx} className="relative w-12 h-12 rounded-lg overflow-hidden group border border-editor-border">
                                                 <img src={img} alt={`Ref ${idx}`} className="w-full h-full object-cover" />
                                                 <button
                                                     onClick={(e) => { e.stopPropagation(); handleRemoveReferenceImage(idx); }}
@@ -635,15 +660,15 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
                         {/* Aspect Ratio */}
                         <div className="space-y-3">
                             <div className="flex justify-between items-center">
-                                <label className="text-xs font-bold text-white/50 uppercase tracking-wide">Aspect Ratio</label>
-                                <span className="text-xs text-[#F2B90D] font-mono font-bold">{aspectRatio}</span>
+                                <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wide">Aspect Ratio</label>
+                                <span className="text-xs text-editor-accent font-mono font-bold">{aspectRatio}</span>
                             </div>
                             <div className="grid grid-cols-3 gap-2">
                                 {ASPECT_RATIOS.slice(0, 6).map(ratio => (
                                     <button
                                         key={ratio.value}
                                         onClick={() => setAspectRatio(ratio.value)}
-                                        className={`flex flex-col items-center justify-center gap-1.5 p-2.5 rounded-lg border transition-all ${aspectRatio === ratio.value ? 'border-[#F2B90D] bg-[#F2B90D]/10 text-[#F2B90D]' : 'border-white/10 hover:bg-[#2D1854] text-white/40 hover:text-[#F2B90D]'}`}
+                                        className={`flex flex-col items-center justify-center gap-1.5 p-2.5 rounded-lg border transition-all ${aspectRatio === ratio.value ? 'border-editor-accent bg-editor-accent/10 text-editor-accent' : 'border-editor-border hover:bg-editor-bg text-editor-text-secondary hover:text-editor-accent'}`}
                                     >
                                         <span className="text-sm font-bold">{ratio.value}</span>
                                     </button>
@@ -654,15 +679,15 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
                         {/* Resolution */}
                         <div className="space-y-3">
                             <div className="flex justify-between items-center">
-                                <label className="text-xs font-bold text-white/50 uppercase tracking-wide">Resolution</label>
-                                <span className="text-xs text-[#F2B90D] font-mono font-bold">{resolution}</span>
+                                <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wide">Resolution</label>
+                                <span className="text-xs text-editor-accent font-mono font-bold">{resolution}</span>
                             </div>
                             <div className="flex gap-2">
                                 {RESOLUTIONS.map(res => (
                                     <button
                                         key={res.value}
                                         onClick={() => setResolution(res.value as '1K' | '2K' | '4K')}
-                                        className={`flex-1 py-2 rounded-lg text-xs font-bold border transition-all ${resolution === res.value ? 'border-[#F2B90D] bg-[#F2B90D]/10 text-[#F2B90D]' : 'border-white/10 hover:bg-[#2D1854] text-white/40 hover:text-[#FAFAFA]'}`}
+                                        className={`flex-1 py-2 rounded-lg text-xs font-bold border transition-all ${resolution === res.value ? 'border-editor-accent bg-editor-accent/10 text-editor-accent' : 'border-editor-border hover:bg-editor-bg text-editor-text-secondary hover:text-editor-text-primary'}`}
                                     >
                                         {res.label}
                                     </button>
@@ -673,39 +698,39 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
                         {/* Style Presets */}
                         <div className="space-y-3">
                             <div className="flex justify-between items-center">
-                                <label className="text-xs font-bold text-white/50 uppercase tracking-wide">Style</label>
+                                <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wide">Style</label>
                             </div>
                             <div className="relative">
                                 <select
                                     value={style}
                                     onChange={(e) => setStyle(e.target.value)}
-                                    className="w-full bg-[#2D1854]/80 border border-white/10 rounded-xl py-3 px-4 text-sm focus:ring-1 focus:ring-[#F2B90D]/50 focus:border-[#F2B90D]/50 outline-none appearance-none cursor-pointer text-white"
+                                    className="w-full bg-editor-bg/80 border border-editor-border rounded-xl py-3 px-4 text-sm focus:ring-1 focus:ring-editor-accent/50 focus:border-editor-accent/50 outline-none appearance-none cursor-pointer text-editor-text-primary"
                                 >
                                     {STYLES.map(s => (
                                         <option key={s.value} value={s.value}>{s.label}</option>
                                     ))}
                                 </select>
-                                <ChevronDown size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-white/50 pointer-events-none" />
+                                <ChevronDown size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-editor-text-secondary pointer-events-none" />
                             </div>
                         </div>
 
                         {/* Advanced Collapsible */}
-                        <div className="pt-2 border-t border-white/10">
+                        <div className="pt-2 border-t border-editor-border">
                             <details className="group">
-                                <summary className="flex items-center justify-between cursor-pointer list-none text-[#FAFAFA] font-medium text-sm py-2">
+                                <summary className="flex items-center justify-between cursor-pointer list-none text-editor-text-primary font-medium text-sm py-2">
                                     <span className="flex items-center gap-2"><Settings2 size={16} /> Advanced Settings</span>
                                     <ChevronDown size={16} className="transition-transform group-open:rotate-180" />
                                 </summary>
                                 <div className="pt-4 space-y-5">
                                     {/* Nano Banana 2 Thinking Level */}
                                     <div className="space-y-3">
-                                        <label className="text-xs font-bold text-white/50 uppercase tracking-wide">Thinking Level</label>
+                                        <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wide">Thinking Level</label>
                                         <div className="flex gap-1">
                                             {THINKING_LEVELS.map(level => (
                                                 <button
                                                     key={level.value}
                                                     onClick={() => setThinkingLevel(level.value)}
-                                                    className={`flex-1 py-1.5 rounded-lg text-xs font-medium transition-all border ${thinkingLevel === level.value ? 'bg-[#F2B90D] text-[#2D1854] border-transparent' : 'bg-[#2D1854] text-white/60 border-white/5 hover:text-white'}`}
+                                                    className={`flex-1 py-1.5 rounded-lg text-xs font-medium transition-all border ${thinkingLevel === level.value ? 'bg-editor-accent text-primary-foreground border-transparent' : 'bg-editor-bg text-editor-text-secondary border-editor-border/50 hover:text-editor-text-primary'}`}
                                                 >
                                                     {level.label}
                                                 </button>
@@ -715,11 +740,11 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
 
                                     {/* Negative Prompt */}
                                     <div className="space-y-3">
-                                        <label className="text-xs font-bold text-white/50 uppercase tracking-wide">Negative Prompt</label>
+                                        <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wide">Negative Prompt</label>
                                         <textarea
                                             value={negativePrompt}
                                             onChange={(e) => setNegativePrompt(e.target.value)}
-                                            className="w-full bg-[#2D1854] border border-white/10 text-[#FAFAFA] text-xs rounded-lg focus:ring-[#F2B90D] focus:border-[#F2B90D] block p-3 resize-none placeholder:text-white/20"
+                                            className="w-full bg-editor-bg border border-editor-border text-editor-text-primary text-xs rounded-lg focus:ring-editor-accent focus:border-editor-accent block p-3 resize-none placeholder:text-editor-text-secondary/30"
                                             placeholder="Describe what you want to exclude..."
                                             rows={3}
                                         />
@@ -727,35 +752,35 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
 
                                     {/* Lighting */}
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-bold text-white/40 uppercase">Lighting</label>
+                                        <label className="text-[10px] font-bold text-editor-text-secondary uppercase">Lighting</label>
                                         <div className="relative">
                                             <select
                                                 value={lighting}
                                                 onChange={(e) => setLighting(e.target.value)}
-                                                className="w-full bg-[#2D1854] border border-white/5 rounded-lg py-2 px-3 text-xs focus:ring-1 focus:ring-[#F2B90D] focus:border-[#F2B90D] outline-none appearance-none cursor-pointer text-white/80"
+                                                className="w-full bg-editor-bg border border-editor-border/50 rounded-lg py-2 px-3 text-xs focus:ring-1 focus:ring-editor-accent focus:border-editor-accent outline-none appearance-none cursor-pointer text-editor-text-primary"
                                             >
                                                 {LIGHTING_OPTIONS.map(l => (
                                                     <option key={l.value} value={l.value}>{l.label}</option>
                                                 ))}
                                             </select>
-                                            <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 pointer-events-none" />
+                                            <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-editor-text-secondary pointer-events-none" />
                                         </div>
                                     </div>
 
                                     {/* Camera Angle */}
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-bold text-white/40 uppercase">Camera Angle</label>
+                                        <label className="text-[10px] font-bold text-editor-text-secondary uppercase">Camera Angle</label>
                                         <div className="relative">
                                             <select
                                                 value={cameraAngle}
                                                 onChange={(e) => setCameraAngle(e.target.value)}
-                                                className="w-full bg-[#2D1854] border border-white/5 rounded-lg py-2 px-3 text-xs focus:ring-1 focus:ring-[#F2B90D] focus:border-[#F2B90D] outline-none appearance-none cursor-pointer text-white/80"
+                                                className="w-full bg-editor-bg border border-editor-border/50 rounded-lg py-2 px-3 text-xs focus:ring-1 focus:ring-editor-accent focus:border-editor-accent outline-none appearance-none cursor-pointer text-editor-text-primary"
                                             >
                                                 {CAMERA_ANGLES.map(c => (
                                                     <option key={c.value} value={c.value}>{c.label}</option>
                                                 ))}
                                             </select>
-                                            <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 pointer-events-none" />
+                                            <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-editor-text-secondary pointer-events-none" />
                                         </div>
                                     </div>
 
@@ -767,23 +792,23 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
             </div>
 
             {/* Mobile-only bottom prompt bar */}
-            <div className="md:hidden w-full p-3 bg-[#2D1854]/90 backdrop-blur-xl border-t border-white/10 shrink-0 z-50">
-                <div className="flex w-full items-stretch rounded-xl bg-[#3A2460] border border-white/5 transition-all relative">
-                    <div className="pl-3 flex items-center justify-center text-[#F2B90D]">
+            <div className="md:hidden w-full p-3 bg-editor-bg/90 backdrop-blur-xl border-t border-editor-border shrink-0 z-50">
+                <div className="flex w-full items-stretch rounded-xl bg-editor-panel-bg border border-editor-border/50 transition-all relative">
+                    <div className="pl-3 flex items-center justify-center text-editor-accent">
                         <Sparkles size={20} className={isGenerating ? 'animate-pulse' : ''} />
                     </div>
                     <input
-                        className="flex-1 bg-transparent border-none text-[#FAFAFA] placeholder:text-white/30 px-3 py-3 focus:ring-0 text-sm font-medium min-w-0"
+                        className="flex-1 bg-transparent border-none text-editor-text-primary placeholder:text-editor-text-secondary/40 px-3 py-3 focus:ring-0 text-sm font-medium min-w-0"
                         placeholder={t('editor.describeImage', { defaultValue: 'Describe la imagen...' })}
                         value={prompt}
                         onChange={(e) => setPrompt(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleGenerate()}
                     />
-                    <div className="flex items-center pr-2 gap-2 pl-2 border-l border-white/10 my-2">
+                    <div className="flex items-center pr-2 gap-2 pl-2 border-l border-editor-border my-2">
                         <button
                             onClick={handleEnhancePrompt}
                             disabled={isEnhancing || !prompt}
-                            className="p-1.5 text-[#F2B90D] bg-transparent transition-colors hover:text-[#D9A60C] flex items-center justify-center disabled:opacity-50"
+                            className="p-1.5 text-editor-accent bg-transparent transition-colors hover:text-editor-accent/80 flex items-center justify-center disabled:opacity-50"
                             title={t('editor.enhance', { defaultValue: 'Enhance Prompt' })}
                         >
                             {isEnhancing ? <Loader2 size={18} className="animate-spin" /> : <Wand2 size={18} />}
@@ -793,7 +818,7 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
                 <button
                     onClick={handleGenerate}
                     disabled={isGenerating || !prompt}
-                    className="mt-2 w-full flex items-center justify-center gap-2 bg-[#F2B90D] hover:bg-[#D9A60C] text-[#2D1854] px-6 py-3 rounded-lg font-bold text-sm transition-all disabled:opacity-50"
+                    className="mt-2 w-full flex items-center justify-center gap-2 bg-editor-accent hover:bg-editor-accent/80 text-primary-foreground px-6 py-3 rounded-lg font-bold text-sm transition-all disabled:opacity-50"
                 >
                     {isGenerating ? <Loader2 size={18} className="animate-spin" /> : <><span>Generate</span><Zap size={16} /></>}
                 </button>
@@ -806,45 +831,45 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
                     className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in"
                     onClick={() => setShowImageDetail(false)}
                 >
-                    <div className="bg-[#2D1854] border border-white/10 rounded-2xl shadow-2xl max-w-5xl w-full max-h-[90vh] overflow-hidden flex flex-col lg:flex-row relative" onClick={e => e.stopPropagation()}>
+                    <div className="bg-editor-bg border border-editor-border rounded-2xl shadow-2xl max-w-5xl w-full max-h-[90vh] overflow-hidden flex flex-col lg:flex-row relative" onClick={e => e.stopPropagation()}>
                         <button onClick={() => setShowImageDetail(false)} className="absolute top-4 right-4 z-50 p-2 bg-black/50 text-white rounded-full hover:bg-black/70"><X size={20} /></button>
                         <div className="flex-1 bg-black/50 flex items-center justify-center p-6 min-h-[400px]">
                             <img src={generatedImage} className="max-w-full max-h-[80vh] object-contain rounded-lg shadow-xl" />
                         </div>
-                        <div className="w-full lg:w-[380px] p-6 overflow-y-auto bg-[#3A2460]">
-                            <h3 className="font-bold text-lg mb-6 flex items-center gap-2"><Sparkles className="text-[#F2B90D]" /> Details</h3>
+                        <div className="w-full lg:w-[380px] p-6 overflow-y-auto bg-editor-panel-bg">
+                            <h3 className="font-bold text-lg mb-6 flex items-center gap-2"><Sparkles className="text-editor-accent" /> Details</h3>
                             <div className="space-y-6">
                                 <div>
-                                    <h4 className="text-xs text-white/50 uppercase font-bold tracking-wide mb-2">Prompt</h4>
-                                    <p className="text-sm bg-black/20 p-3 rounded-lg border border-white/5">{generatedPrompt || prompt}</p>
+                                    <h4 className="text-xs text-editor-text-secondary uppercase font-bold tracking-wide mb-2">Prompt</h4>
+                                    <p className="text-sm bg-black/20 p-3 rounded-lg border border-editor-border/50">{generatedPrompt || prompt}</p>
                                 </div>
                                 <div>
-                                    <h4 className="text-xs text-white/50 uppercase font-bold tracking-wide mb-2">Settings</h4>
+                                    <h4 className="text-xs text-editor-text-secondary uppercase font-bold tracking-wide mb-2">Settings</h4>
                                     <div className="grid grid-cols-2 gap-3">
-                                        <div className="bg-black/20 p-3 rounded-lg border border-white/5">
-                                            <span className="text-[10px] text-white/40 uppercase block">Model</span>
+                                        <div className="bg-black/20 p-3 rounded-lg border border-editor-border/50">
+                                            <span className="text-[10px] text-editor-text-secondary uppercase block">Model</span>
                                             <span className="text-sm font-medium">{generatedOptions?.model || 'Nano Banana 2'}</span>
                                         </div>
-                                        <div className="bg-black/20 p-3 rounded-lg border border-white/5">
-                                            <span className="text-[10px] text-white/40 uppercase block">Ratio</span>
+                                        <div className="bg-black/20 p-3 rounded-lg border border-editor-border/50">
+                                            <span className="text-[10px] text-editor-text-secondary uppercase block">Ratio</span>
                                             <span className="text-sm font-medium">{generatedOptions?.aspectRatio || aspectRatio}</span>
                                         </div>
-                                        <div className="bg-black/20 p-3 rounded-lg border border-white/5">
-                                            <span className="text-[10px] text-white/40 uppercase block">Resolution</span>
+                                        <div className="bg-black/20 p-3 rounded-lg border border-editor-border/50">
+                                            <span className="text-[10px] text-editor-text-secondary uppercase block">Resolution</span>
                                             <span className="text-sm font-medium">{generatedOptions?.resolution || resolution}</span>
                                         </div>
-                                        <div className="bg-black/20 p-3 rounded-lg border border-white/5">
-                                            <span className="text-[10px] text-white/40 uppercase block">Style</span>
+                                        <div className="bg-black/20 p-3 rounded-lg border border-editor-border/50">
+                                            <span className="text-[10px] text-editor-text-secondary uppercase block">Style</span>
                                             <span className="text-sm font-medium">{generatedOptions?.style || style}</span>
                                         </div>
                                     </div>
                                 </div>
-                                <div className="pt-4 border-t border-white/10 flex flex-col gap-3">
-                                    <a href={savedImageUrl || generatedImage} download={`quimera-${Date.now()}.png`} target="_blank" className="flex items-center justify-center gap-2 w-full py-3 bg-[#F2B90D] text-[#2D1854] rounded-xl text-sm font-bold hover:bg-[#D9A60C] transition-colors">
+                                <div className="pt-4 border-t border-editor-border flex flex-col gap-3">
+                                    <a href={savedImageUrl || generatedImage} download={`quimera-${Date.now()}.png`} target="_blank" className="flex items-center justify-center gap-2 w-full py-3 bg-editor-accent text-primary-foreground rounded-xl text-sm font-bold hover:bg-editor-accent/80 transition-colors">
                                         <Download size={18} /> Download Image
                                     </a>
                                     {onUseImage && (
-                                        <button onClick={() => { onUseImage(savedImageUrl || generatedImage); setShowImageDetail(false); }} className="flex items-center justify-center gap-2 w-full py-3 bg-white/10 text-white rounded-xl text-sm font-bold hover:bg-white/20 transition-colors">
+                                        <button onClick={() => { onUseImage(savedImageUrl || generatedImage); setShowImageDetail(false); }} className="flex items-center justify-center gap-2 w-full py-3 bg-editor-border/30 text-editor-text-primary rounded-xl text-sm font-bold hover:bg-editor-border/50 transition-colors">
                                             <Check size={18} /> Use in Project
                                         </button>
                                     )}
