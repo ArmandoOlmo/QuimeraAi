@@ -359,6 +359,103 @@ export const createCheckoutSession = functions.https.onCall(
 );
 
 // ============================================================================
+// CREATE CREDIT PACKAGE CHECKOUT SESSION
+// ============================================================================
+
+/**
+ * Credit package definitions (must match types/subscription.ts AI_CREDIT_PACKAGES)
+ */
+const CREDIT_PACKAGES: Record<string, { name: string; credits: number; price: number }> = {
+    pack_100: { name: '100 AI Credits', credits: 100, price: 500 },       // $5.00 in cents
+    pack_500: { name: '500 AI Credits', credits: 500, price: 2000 },      // $20.00
+    pack_2000: { name: '2,000 AI Credits', credits: 2000, price: 6000 },  // $60.00
+    pack_5000: { name: '5,000 AI Credits', credits: 5000, price: 12500 }, // $125.00
+    pack_10000: { name: '10,000 AI Credits', credits: 10000, price: 20000 }, // $200.00
+};
+
+/**
+ * Creates a Stripe Checkout Session for purchasing an AI credit package.
+ * Works for both regular users and agencies (agencies purchase for their shared pool).
+ */
+export const createCreditPackageCheckout = functions.https.onCall(
+    async (data: { packageId: string; tenantId: string; successUrl: string; cancelUrl: string }, context) => {
+        // SECURITY: Require authentication
+        if (!context.auth) {
+            throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated');
+        }
+
+        const userId = context.auth.uid;
+        const packageId = sanitizeString(data.packageId, 50);
+        const tenantId = sanitizeString(data.tenantId, 128);
+        const successUrl = sanitizeString(data.successUrl, 500);
+        const cancelUrl = sanitizeString(data.cancelUrl, 500);
+
+        // Validate package
+        const pkg = CREDIT_PACKAGES[packageId];
+        if (!pkg) {
+            throw new functions.https.HttpsError('invalid-argument', `Invalid package: ${packageId}`);
+        }
+
+        if (!tenantId) {
+            throw new functions.https.HttpsError('invalid-argument', 'Missing tenantId');
+        }
+
+        // Validate URLs
+        const urlPattern = /^https?:\/\//;
+        if (!urlPattern.test(successUrl) || !urlPattern.test(cancelUrl)) {
+            throw new functions.https.HttpsError('invalid-argument', 'Invalid URL format');
+        }
+
+        try {
+            const stripe = getStripe();
+
+            // Get user email for Stripe
+            const userDoc = await db.doc(`users/${userId}`).get();
+            const userEmail = userDoc.exists ? userDoc.data()?.email : context.auth.token.email;
+
+            const session = await stripe.checkout.sessions.create({
+                payment_method_types: ['card'],
+                line_items: [{
+                    price_data: {
+                        currency: 'usd',
+                        product_data: {
+                            name: pkg.name,
+                            description: `${pkg.credits.toLocaleString()} créditos de IA para tu cuenta`,
+                        },
+                        unit_amount: pkg.price,
+                    },
+                    quantity: 1,
+                }],
+                mode: 'payment',
+                customer_email: userEmail || undefined,
+                success_url: `${successUrl}${successUrl.includes('?') ? '&' : '?'}credits_purchased=true&package=${packageId}`,
+                cancel_url: cancelUrl,
+                metadata: {
+                    type: 'credit_package',
+                    userId,
+                    tenantId,
+                    packageId,
+                    credits: String(pkg.credits),
+                },
+            });
+
+            console.log(`[Stripe] Credit package checkout created: ${packageId} for tenant ${tenantId}`);
+
+            return {
+                sessionId: session.id,
+                url: session.url,
+            };
+        } catch (error: any) {
+            console.error('[Stripe] Error creating credit package checkout:', error);
+            throw new functions.https.HttpsError(
+                'internal',
+                error.message || 'Failed to create credit package checkout'
+            );
+        }
+    }
+);
+
+// ============================================================================
 // STRIPE WEBHOOK HANDLER
 // ============================================================================
 
@@ -646,6 +743,84 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
         return;
     }
 
+    // Handle credit package purchases
+    if (type === 'credit_package') {
+        const { tenantId: cpTenantId, packageId, credits } = metadata;
+
+        if (!cpTenantId || !packageId || !credits) {
+            console.error('[Stripe Webhook] Missing credit package metadata');
+            return;
+        }
+
+        const creditsAmount = parseInt(credits, 10);
+        console.log(`[Stripe Webhook] Credit package purchased: ${packageId} (${creditsAmount} credits) for tenant ${cpTenantId}`);
+
+        // Add credits to tenant's aiCreditsUsage
+        const usageRef = db.doc(`aiCreditsUsage/${cpTenantId}`);
+        const usageDoc = await usageRef.get();
+        const now = admin.firestore.FieldValue.serverTimestamp();
+
+        if (usageDoc.exists) {
+            const currentData = usageDoc.data()!;
+            const currentRemaining = currentData.creditsRemaining ?? 0;
+            const currentIncluded = currentData.creditsIncluded ?? 0;
+
+            await usageRef.update({
+                creditsRemaining: currentRemaining + creditsAmount,
+                creditsIncluded: currentIncluded + creditsAmount,
+                updatedAt: now,
+            });
+        } else {
+            // Create usage doc with purchased credits
+            await usageRef.set({
+                tenantId: cpTenantId,
+                creditsIncluded: creditsAmount,
+                creditsUsed: 0,
+                creditsRemaining: creditsAmount,
+                creditsOverage: 0,
+                usageByOperation: {},
+                dailyUsage: [],
+                usageByProject: {},
+                periodStart: now,
+                periodEnd: now,
+                lastResetAt: now,
+                createdAt: now,
+                updatedAt: now,
+            });
+        }
+
+        // Record purchase in subscription document
+        const subRef = db.doc(`subscriptions/${cpTenantId}`);
+        const subDoc = await subRef.get();
+        const purchaseRecord = {
+            packageId,
+            credits: creditsAmount,
+            purchasedAt: new Date().toISOString(),
+            stripeSessionId: session.id,
+        };
+
+        if (subDoc.exists) {
+            await subRef.update({
+                creditPackagesPurchased: admin.firestore.FieldValue.arrayUnion(purchaseRecord),
+                updatedAt: now,
+            });
+        }
+
+        // Also record as a credit transaction for history
+        await db.collection('aiCreditsTransactions').add({
+            tenantId: cpTenantId,
+            userId: userId || 'system',
+            operation: 'credit_purchase',
+            creditsUsed: -creditsAmount, // Negative = credits added
+            description: `Purchased ${CREDIT_PACKAGES[packageId]?.name || packageId}`,
+            metadata: { packageId, stripeSessionId: session.id },
+            timestamp: admin.firestore.FieldValue.serverTimestamp(),
+        });
+
+        console.log(`[Stripe Webhook] Added ${creditsAmount} credits to tenant ${cpTenantId}`);
+        return;
+    }
+
     // Handle domain purchases
     if (type === 'domain_purchase') {
         const { domainName, years, orderId } = metadata;
@@ -770,8 +945,13 @@ async function handleInvoicePaid(invoice: Stripe.Invoice) {
         });
 
         // Reset AI credits for new billing period
-        if (planId) {
-            await updateAiCreditsForPlan(tenantId, planId);
+        // Always reset credits on renewal - fallback to subscription/tenant doc for planId
+        const effectivePlanId = planId || await getEffectivePlanId(tenantId);
+        if (effectivePlanId) {
+            await updateAiCreditsForPlan(tenantId, effectivePlanId);
+            console.log(`[Stripe Webhook] Credits reset for tenant ${tenantId} on invoice.paid (plan: ${effectivePlanId}, fromMeta: ${!!planId})`);
+        } else {
+            console.error(`[Stripe Webhook] CRITICAL: Could not determine planId for tenant ${tenantId} - credits NOT reset on renewal`);
         }
 
         console.log(`[Stripe Webhook] Updated subscription for tenant ${tenantId} after invoice payment`);
@@ -1110,7 +1290,39 @@ async function sendSubscriptionUpgradeEmail(tenantId: string, planId: string) {
 }
 
 /**
+ * Helper: Get effective planId from multiple Firestore sources
+ * Used when Stripe subscription metadata is missing planId
+ */
+async function getEffectivePlanId(tenantId: string): Promise<string | null> {
+    try {
+        // 1. Try subscription document
+        const subDoc = await db.doc(`subscriptions/${tenantId}`).get();
+        if (subDoc.exists && subDoc.data()?.planId) {
+            console.log(`[getEffectivePlanId] Found planId in subscriptions/${tenantId}: ${subDoc.data()!.planId}`);
+            return subDoc.data()!.planId;
+        }
+        // 2. Try tenant document
+        const tenantDoc = await db.doc(`tenants/${tenantId}`).get();
+        if (tenantDoc.exists && tenantDoc.data()?.subscriptionPlan) {
+            console.log(`[getEffectivePlanId] Found planId in tenants/${tenantId}: ${tenantDoc.data()!.subscriptionPlan}`);
+            return tenantDoc.data()!.subscriptionPlan;
+        }
+        // 3. Try aiCreditsUsage document
+        const usageDoc = await db.doc(`aiCreditsUsage/${tenantId}`).get();
+        if (usageDoc.exists && usageDoc.data()?.planId) {
+            console.log(`[getEffectivePlanId] Found planId in aiCreditsUsage/${tenantId}: ${usageDoc.data()!.planId}`);
+            return usageDoc.data()!.planId;
+        }
+        return null;
+    } catch (error) {
+        console.error(`[getEffectivePlanId] Error for tenant ${tenantId}:`, error);
+        return null;
+    }
+}
+
+/**
  * Updates AI credits for a tenant based on their plan
+ * Performs a COMPLETE reset: clears usage, overage, per-operation stats, and period dates
  */
 async function updateAiCreditsForPlan(tenantId: string, planId: string) {
     // Define credits per plan (must match types/subscription.ts SUBSCRIPTION_PLANS.limits.maxAiCredits)
@@ -1130,8 +1342,13 @@ async function updateAiCreditsForPlan(tenantId: string, planId: string) {
         const creditsDoc = await creditsRef.get();
         const now = admin.firestore.FieldValue.serverTimestamp();
 
-        // Standardized field names (supporting both for backwards compatibility)
-        const updateData = {
+        // Calculate new period end (1 month from now)
+        const periodEndDate = new Date();
+        periodEndDate.setMonth(periodEndDate.getMonth() + 1);
+        const periodEnd = admin.firestore.Timestamp.fromDate(periodEndDate);
+
+        // COMPLETE reset: all usage fields, overage, per-operation stats, and period dates
+        const updateData: Record<string, any> = {
             tenantId,
             planId,
             // Primary field names (standard)
@@ -1141,13 +1358,21 @@ async function updateAiCreditsForPlan(tenantId: string, planId: string) {
             creditsIncluded: credits,
             creditsUsed: 0,
             creditsRemaining: credits,
+            // Reset overage and usage breakdowns
+            creditsOverage: 0,
+            usageByOperation: {},
+            dailyUsage: [],
+            usageByProject: {},
+            // Period dates
+            periodStart: now,
+            periodEnd: periodEnd,
             // Timestamps
             lastResetAt: now,
             updatedAt: now,
         };
 
         if (creditsDoc.exists) {
-            // Update existing credits - reset to new plan limit
+            // Update existing credits - FULL reset to new plan limit
             await creditsRef.update(updateData);
         } else {
             // Create new credits document
@@ -1157,7 +1382,7 @@ async function updateAiCreditsForPlan(tenantId: string, planId: string) {
             });
         }
 
-        console.log(`[Stripe Webhook] Updated AI credits for tenant ${tenantId}: ${credits} credits (plan: ${planId})`);
+        console.log(`[Stripe Webhook] FULL credits reset for tenant ${tenantId}: ${credits} credits (plan: ${planId})`);
     } catch (error) {
         console.error(`[Stripe Webhook] Error updating AI credits for tenant ${tenantId}:`, error);
     }

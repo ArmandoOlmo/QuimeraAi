@@ -19,6 +19,7 @@ import { outboundCall, outboundCallStatus } from './voice/outboundCall';
 import {
     createPaymentIntent,
     createCheckoutSession,
+    createCreditPackageCheckout,
     stripeWebhook,
     createRefund,
     getPaymentStatus
@@ -241,6 +242,7 @@ export const voice = {
 export const stripe = {
     createPaymentIntent,
     createCheckoutSession,
+    createCreditPackageCheckout,
     webhook: stripeWebhook,
     createRefund,
     getPaymentStatus
@@ -437,6 +439,7 @@ export {
     // Stripe exports
     createPaymentIntent,
     createCheckoutSession,
+    createCreditPackageCheckout,
     stripeWebhook,
     createRefund,
     getPaymentStatus,

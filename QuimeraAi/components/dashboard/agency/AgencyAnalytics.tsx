@@ -12,6 +12,7 @@ import {
     RefreshCw,
     BarChart3,
     TrendingUp,
+    ShoppingCart,
 } from 'lucide-react';
 import { useAgency } from '../../../contexts/agency/AgencyContext';
 import { useTenant } from '../../../contexts/tenant/TenantContext';
@@ -25,6 +26,7 @@ import {
 import { httpsCallable } from 'firebase/functions';
 import { functions } from '../../../firebase';
 import { getAgencyPoolBreakdown } from '../../../services/aiCreditsService';
+import PurchaseCreditsModal from '../../ui/PurchaseCreditsModal';
 
 type DateRange = '7d' | '30d' | '90d' | '12m';
 
@@ -46,6 +48,7 @@ export function AgencyAnalytics() {
 
     const [dateRange, setDateRange] = useState<DateRange>('30d');
     const [isRefreshing, setIsRefreshing] = useState(false);
+    const [showPurchaseModal, setShowPurchaseModal] = useState(false);
     const [billingSummary, setBillingSummary] = useState<BillingSummary | null>(null);
     const [creditsBreakdown, setCreditsBreakdown] = useState<{
         totalCredits: number;
@@ -331,17 +334,29 @@ export function AgencyAnalytics() {
                 />
 
                 {/* AI Credits Pool */}
-                <AICreditsPoolChart
-                    poolTotal={creditsBreakdown?.totalCredits || billingSummary?.poolCredits || 0}
-                    poolUsed={creditsBreakdown?.usedCredits || aggregatedMetrics.aiCreditsUsed}
-                    clientBreakdown={
-                        creditsBreakdown?.subClients.map((c) => ({
-                            name: c.name,
-                            creditsUsed: c.creditsUsed,
-                        })) || []
-                    }
-                    isLoading={loadingClients}
-                />
+                <div className="relative">
+                    <AICreditsPoolChart
+                        poolTotal={creditsBreakdown?.totalCredits || billingSummary?.poolCredits || 0}
+                        poolUsed={creditsBreakdown?.usedCredits || aggregatedMetrics.aiCreditsUsed}
+                        clientBreakdown={
+                            creditsBreakdown?.subClients.map((c) => ({
+                                name: c.name,
+                                creditsUsed: c.creditsUsed,
+                            })) || []
+                        }
+                        isLoading={loadingClients}
+                    />
+                    {/* Buy Credits for Pool */}
+                    <div className="mt-3 flex justify-center">
+                        <button
+                            onClick={() => setShowPurchaseModal(true)}
+                            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-yellow-500 to-orange-500 text-white text-sm font-bold hover:shadow-lg hover:shadow-yellow-500/20 transition-all"
+                        >
+                            <ShoppingCart className="w-4 h-4" />
+                            {t('dashboard.agency.analyticsPage.buyCredits', 'Comprar Créditos para Pool')}
+                        </button>
+                    </div>
+                </div>
 
                 {/* Project Billing Breakdown */}
                 {billingSummary?.isProjectBilling && (
@@ -360,6 +375,12 @@ export function AgencyAnalytics() {
                     isLoading={loadingClients}
                 />
             </div>
+
+            {/* Purchase Credits Modal */}
+            <PurchaseCreditsModal
+                isOpen={showPurchaseModal}
+                onClose={() => setShowPurchaseModal(false)}
+            />
         </div>
     );
 }

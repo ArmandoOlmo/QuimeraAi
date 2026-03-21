@@ -443,6 +443,63 @@ function getCreditCostForModel(model: string): number {
 }
 
 /**
+ * CREDIT GATE: Check if user has credits before allowing API request
+ * Returns { allowed: true } or { allowed: false, creditsRemaining, message }
+ * Owners/superadmins always bypass this check.
+ */
+async function checkCreditsBeforeRequest(
+    userId: string,
+    tenantId?: string
+): Promise<{ allowed: boolean; creditsRemaining?: number; message?: string; tenantId?: string }> {
+    try {
+        // Resolve tenantId
+        const effectiveTenantId = tenantId || await getTenantIdForUser(userId);
+        if (!effectiveTenantId) {
+            // No tenant found — allow (could be public chatbot or system)
+            return { allowed: true };
+        }
+
+        // Bypass for owner/superadmin
+        if (userId && isOwner(userId)) {
+            return { allowed: true, tenantId: effectiveTenantId };
+        }
+        if (userId && userId !== 'unknown' && userId !== 'anonymous' && userId !== 'system') {
+            const userDoc = await db.collection('users').doc(userId).get();
+            const userRole = userDoc.exists ? userDoc.data()?.role : null;
+            if (userRole === 'owner' || userRole === 'superadmin') {
+                return { allowed: true, tenantId: effectiveTenantId };
+            }
+        }
+
+        // Check credits in aiCreditsUsage collection
+        const usageDoc = await db.collection('aiCreditsUsage').doc(effectiveTenantId).get();
+        if (!usageDoc.exists) {
+            // No usage doc yet — allow (first-time user)
+            return { allowed: true, tenantId: effectiveTenantId };
+        }
+
+        const usageData = usageDoc.data()!;
+        const creditsRemaining = usageData.creditsRemaining ?? (usageData.creditsIncluded ?? 0) - (usageData.creditsUsed ?? 0);
+
+        if (creditsRemaining <= 0) {
+            console.warn(`[CREDIT GATE] Blocked request for tenant ${effectiveTenantId}: 0 credits remaining (userId: ${userId})`);
+            return {
+                allowed: false,
+                creditsRemaining: 0,
+                tenantId: effectiveTenantId,
+                message: 'No tienes créditos de IA disponibles. Compra más créditos o actualiza tu plan para continuar.',
+            };
+        }
+
+        return { allowed: true, creditsRemaining, tenantId: effectiveTenantId };
+    } catch (error) {
+        console.error('[CREDIT GATE] Error checking credits:', error);
+        // Fail open to avoid blocking users on transient errors
+        return { allowed: true };
+    }
+}
+
+/**
  * Track API usage for analytics and consume AI credits
  */
 async function trackUsage(
@@ -765,6 +822,17 @@ export const generateContent = functions.https.onRequest(async (req, res) => {
             return;
         }
 
+        // CREDIT GATE: Block if user has no credits remaining
+        const creditCheck = await checkCreditsBeforeRequest(finalUserId);
+        if (!creditCheck.allowed) {
+            res.status(402).json({
+                error: 'CREDITS_EXHAUSTED',
+                message: creditCheck.message,
+                creditsRemaining: creditCheck.creditsRemaining ?? 0,
+            });
+            return;
+        }
+
         // Get API key from environment variable
         const apiKey = GEMINI_CONFIG.apiKey;
 
@@ -944,6 +1012,17 @@ export const streamContent = functions.https.onRequest(async (req, res) => {
             return;
         }
 
+        // CREDIT GATE: Block if user has no credits remaining
+        const creditCheck = await checkCreditsBeforeRequest(finalUserId);
+        if (!creditCheck.allowed) {
+            res.status(402).json({
+                error: 'CREDITS_EXHAUSTED',
+                message: creditCheck.message,
+                creditsRemaining: creditCheck.creditsRemaining ?? 0,
+            });
+            return;
+        }
+
         const apiKey = GEMINI_CONFIG.apiKey;
 
         if (!apiKey) {
@@ -1070,6 +1149,17 @@ export const generateImage = functions.https.onRequest(async (req, res) => {
             res.status(429).json({
                 error: rateLimitCheck.message,
                 resetAt: rateLimitCheck.resetAt
+            });
+            return;
+        }
+
+        // CREDIT GATE: Block if user has no credits remaining
+        const creditCheck = await checkCreditsBeforeRequest(userId);
+        if (!creditCheck.allowed) {
+            res.status(402).json({
+                error: 'CREDITS_EXHAUSTED',
+                message: creditCheck.message,
+                creditsRemaining: creditCheck.creditsRemaining ?? 0,
             });
             return;
         }

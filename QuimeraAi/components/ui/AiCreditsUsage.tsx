@@ -31,6 +31,7 @@ import { useSafeUpgrade } from '../../contexts/UpgradeContext';
 import { useAuth } from '../../contexts/core/AuthContext';
 import ProgressBar3D from './ProgressBar3D';
 import { getCreditsUsageWithPoolDetection } from '../../services/aiCreditsService';
+import PurchaseCreditsModal from './PurchaseCreditsModal';
 
 // =============================================================================
 // TYPES
@@ -195,6 +196,7 @@ export const AiCreditsUsage: React.FC<AiCreditsUsageProps> = ({
 
     const [usageByOperation, setUsageByOperation] = useState<Record<string, { count: number; credits: number }>>({});
     const [isRefreshing, setIsRefreshing] = useState(false);
+    const [showPurchaseModal, setShowPurchaseModal] = useState(false);
 
     // Shared pool info for agency sub-clients
     const [poolInfo, setPoolInfo] = useState<SharedPoolInfo>({
@@ -305,6 +307,7 @@ export const AiCreditsUsage: React.FC<AiCreditsUsageProps> = ({
 
     // Variante full - panel completo
     return (
+    <>
         <div className={`bg-[#1a1a2e]/80 rounded-xl border border-white/10 overflow-hidden ${className}`}>
             {/* Header */}
             <div className="p-4 border-b border-white/10">
@@ -457,15 +460,14 @@ export const AiCreditsUsage: React.FC<AiCreditsUsageProps> = ({
             {showUpgradeButton && (
                 <div className="p-4 border-t border-white/10 bg-white/5">
                     <div className="flex gap-2">
-                        {onBuyCreditsClick && (
-                            <button
-                                onClick={onBuyCreditsClick}
-                                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white text-sm font-medium transition-colors"
-                            >
-                                <Package className="w-4 h-4" />
-                                Comprar Credits
-                            </button>
-                        )}
+                        {/* Buy credits button — always visible now (uses internal modal if no external callback) */}
+                        <button
+                            onClick={onBuyCreditsClick || (() => setShowPurchaseModal(true))}
+                            className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white text-sm font-medium transition-colors"
+                        >
+                            <Package className="w-4 h-4" />
+                            Comprar Credits
+                        </button>
 
                         {/* Show upgrade button if callback provided OR if upgrade context available (and NOT owner) */}
                         {(onUpgradeClick || (upgradeContext && !isOwner)) && (
@@ -482,6 +484,13 @@ export const AiCreditsUsage: React.FC<AiCreditsUsageProps> = ({
                 </div>
             )}
         </div>
+
+        {/* Internal purchase modal (used when no external onBuyCreditsClick provided) */}
+        <PurchaseCreditsModal
+            isOpen={showPurchaseModal}
+            onClose={() => setShowPurchaseModal(false)}
+        />
+    </>
     );
 };
 
@@ -586,6 +595,8 @@ export const InlineCreditIndicator: React.FC<InlineCreditIndicatorProps> = ({
 };
 
 export default AiCreditsUsage;
+
+export { PurchaseCreditsModal };
 
 
 

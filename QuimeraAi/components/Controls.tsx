@@ -50,132 +50,10 @@ import {
   SingleContentSelector
 } from './ui/EcommerceControls';
 
-// --- Helper Components ---
+// --- Helper Components (extracted to shared file) ---
+import { Input, TextArea, Select, ToggleControl, FontSizeSelector, PaddingSelector, BorderRadiusSelector } from './ui/EditorControlPrimitives';
 
-const Input = ({ label, className, ...props }: React.InputHTMLAttributes<HTMLInputElement> & { label?: string }) => (
-  <div className={`mb-3 ${className || ''}`}>
-    {label && <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{label}</label>}
-    <input
-      {...props}
-      className="w-full bg-editor-panel-bg border border-editor-border rounded-md px-3 py-2 text-sm text-editor-text-primary focus:outline-none focus:ring-1 focus:ring-editor-accent transition-all placeholder:text-editor-text-secondary/50"
-    />
-  </div>
-);
 
-const TextArea = ({ label, className, ...props }: React.TextareaHTMLAttributes<HTMLTextAreaElement> & { label?: string }) => (
-  <div className={`mb-3 ${className || ''}`}>
-    {label && <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{label}</label>}
-    <textarea
-      {...props}
-      className="w-full bg-editor-panel-bg border border-editor-border rounded-md px-3 py-2 text-sm text-editor-text-primary focus:outline-none focus:ring-1 focus:ring-editor-accent resize-y min-h-[80px] transition-all placeholder:text-editor-text-secondary/50"
-    />
-  </div>
-);
-
-const Select = ({ label, options, value, onChange, className, ...props }: React.SelectHTMLAttributes<HTMLSelectElement> & { label?: string, options: { value: string, label: string }[], value: string, onChange: (value: string) => void }) => (
-  <div className={`mb-3 ${className || ''}`}>
-    {label && <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{label}</label>}
-    <div className="relative">
-      <select
-        {...props}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="w-full bg-editor-panel-bg border border-editor-border rounded-md px-3 py-2 text-sm text-editor-text-primary focus:outline-none focus:ring-1 focus:ring-editor-accent appearance-none transition-all pr-8"
-      >
-        {options.map((opt) => (
-          <option key={opt.value} value={opt.value}>
-            {opt.label}
-          </option>
-        ))}
-      </select>
-      <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-editor-text-secondary pointer-events-none" size={14} />
-    </div>
-  </div>
-);
-
-const ToggleControl = ({ label, checked, onChange }: { label?: string, checked: boolean, onChange: (checked: boolean) => void }) => (
-  <div className={`flex items-center ${label ? 'justify-between mb-3' : ''}`}>
-    {label && <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{label}</label>}
-    <button
-      type="button"
-      role="switch"
-      aria-checked={checked}
-      onClick={(e) => { e.stopPropagation(); onChange(!checked); }}
-      onMouseDown={(e) => e.stopPropagation()}
-      onDragStart={(e) => e.preventDefault()}
-      draggable={false}
-      className={`${checked ? 'bg-editor-accent' : 'bg-editor-border'} relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-editor-accent focus:ring-offset-2 focus:ring-offset-editor-panel-bg`}
-    >
-      <span
-        aria-hidden="true"
-        className={`${checked ? 'translate-x-4' : 'translate-x-0'} pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out`}
-      />
-    </button>
-  </div>
-);
-
-const FontSizeSelector = ({ label, value, onChange }: { label: string, value: string, onChange: (val: string) => void }) => (
-  <div className="mb-3">
-    <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{label}</label>
-    <div className="flex bg-editor-panel-bg rounded-md border border-editor-border p-1">
-      {['sm', 'md', 'lg', 'xl'].map((size) => (
-        <button
-          key={size}
-          onClick={() => onChange(size)}
-          className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors ${value === size ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-bg'}`}
-        >
-          {size.toUpperCase()}
-        </button>
-      ))}
-    </div>
-  </div>
-);
-
-const PaddingSelector = ({ label, value, onChange, showNone = false, showXl = false }: { label: string, value: string, onChange: (val: string) => void, showNone?: boolean, showXl?: boolean }) => {
-  const options = [
-    ...(showNone ? ['none'] : []),
-    'sm', 'md', 'lg',
-    ...(showXl ? ['xl'] : []),
-  ];
-  return (
-    <div className="mb-3">
-      <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{label}</label>
-      <div className="flex bg-editor-panel-bg rounded-md border border-editor-border p-1">
-        {options.map((size) => (
-          <button
-            key={size}
-            onClick={() => onChange(size)}
-            className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors ${value === size ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-bg'}`}
-          >
-            {size === 'none' ? '0' : size.toUpperCase()}
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-};
-
-const BorderRadiusSelector = ({ label, value, onChange, extended = false }: { label: string, value: string, onChange: (val: string) => void, extended?: boolean }) => {
-  const options = extended
-    ? [{ v: 'none', l: '0' }, { v: 'sm', l: 'SM' }, { v: 'md', l: 'MD' }, { v: 'lg', l: 'LG' }, { v: 'xl', l: 'XL' }, { v: '2xl', l: '2XL' }, { v: 'full', l: 'Full' }]
-    : [{ v: 'none', l: 'None' }, { v: 'md', l: 'Med' }, { v: 'xl', l: 'Lg' }, { v: 'full', l: 'Full' }];
-  return (
-    <div className="mb-3">
-      <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{label}</label>
-      <div className="flex bg-editor-panel-bg rounded-md border border-editor-border p-1">
-        {options.map((opt) => (
-          <button
-            key={opt.v}
-            onClick={() => onChange(opt.v)}
-            className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors ${value === opt.v ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-bg'}`}
-          >
-            {opt.l}
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-};
 
 // Corner Gradient Control - Diagonal gradient overlay from corners
 interface CornerGradientControlProps {
@@ -513,10 +391,7 @@ const Controls: React.FC = () => {
   const { navigate } = useRouter();
 
   const [aiAssistField, setAiAssistField] = useState<{ path: string, value: string, context: string } | null>(null);
-  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const faviconInputRef = useRef<HTMLInputElement>(null);
-  const [isUploadingKnowledge, setIsUploadingKnowledge] = useState(false);
   const [isUploadingFavicon, setIsUploadingFavicon] = useState(false);
   const [isAddComponentOpen, setIsAddComponentOpen] = useState(false);
   const addComponentRef = useRef<HTMLDivElement>(null);
@@ -803,71 +678,6 @@ const Controls: React.FC = () => {
     productBundle: getMergedEcommerceData('productBundle'),
   };
 
-  // Drag and Drop Handlers
-  const handleDragStart = (e: React.DragEvent, sectionKey: PageSection) => {
-    const sections = componentOrder.filter(k => k !== ('footer' as PageSection));
-    setDraggedIndex(sections.indexOf(sectionKey));
-    e.dataTransfer.effectAllowed = "move";
-    e.dataTransfer.setData("text/plain", sectionKey);
-  };
-
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = "move";
-  };
-
-  const handleDrop = (e: React.DragEvent, targetSection: PageSection) => {
-    e.preventDefault();
-
-    if (draggedIndex === null) return;
-
-    const sections = componentOrder.filter(k => k !== ('footer' as PageSection));
-
-    let targetIdx = sections.indexOf(targetSection);
-    if (draggedIndex === targetIdx) return;
-
-    const newOrder = [...sections];
-    const [movedItem] = newOrder.splice(draggedIndex, 1);
-
-    // Adjust target index after removal
-    const finalTargetIdx = targetIdx > draggedIndex ? targetIdx - 1 : targetIdx;
-
-    newOrder.splice(finalTargetIdx, 0, movedItem);
-
-    // Always keep footer at the end if it exists in current setup
-    const finalOrder = [...newOrder, 'footer' as PageSection] as PageSection[];
-    setComponentOrder(finalOrder);
-    setEditorComponentOrder(finalOrder);
-    setDraggedIndex(null);
-  };
-
-  const handleDragEnd = () => {
-    setDraggedIndex(null);
-  };
-
-  const handleKnowledgeUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setIsUploadingKnowledge(true);
-    try {
-      // Read text from file (Basic txt/md support for demo)
-      const text = await file.text();
-
-      // Append to existing knowledge base
-      const currentKB = data?.chatbot?.knowledgeBase || "";
-      const newKB = currentKB + "\n\n" + `--- SOURCE: ${file.name} ---\n` + text;
-
-      setNestedData('chatbot.knowledgeBase', newKB);
-      alert(t('editor.controls.chatbot.trainedSuccess', { fileName: file.name }));
-    } catch (error) {
-      console.error("Failed to read file", error);
-      alert(t('editor.controls.chatbot.fileReadError', "Failed to read file. Please upload a text-based file."));
-    } finally {
-      setIsUploadingKnowledge(false);
-      if (fileInputRef.current) fileInputRef.current.value = '';
-    }
-  };
 
   // --- Background Image Control (reusable for all sections) ---
   const BackgroundImageControl = ({ sectionKey }: { sectionKey: string }) => {
@@ -893,7 +703,7 @@ const Controls: React.FC = () => {
           <div className="mt-4 pt-4 border-t border-editor-border/50 space-y-3 animate-fade-in-up">
             <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Overlay</h5>
             <ToggleControl
-              label="Enable Overlay"
+              label={t('editor.controls.common.enableOverlay')}
               checked={sectionData?.backgroundOverlayEnabled !== false}
               onChange={(v) => setNestedData(`${sectionKey}.backgroundOverlayEnabled`, v)}
             />
@@ -901,7 +711,7 @@ const Controls: React.FC = () => {
             {sectionData?.backgroundOverlayEnabled !== false && (
               <div className="space-y-3 animate-fade-in-up">
                 <ColorControl
-                  label="Overlay Color"
+                  label={t('editor.controls.common.overlayColor')}
                   value={sectionData?.backgroundOverlayColor || sectionData?.colors?.background || '#000000'}
                   onChange={(v) => setNestedData(`${sectionKey}.backgroundOverlayColor`, v)}
                 />
@@ -1816,89 +1626,6 @@ const Controls: React.FC = () => {
     )
   }
 
-  const renderChatbotControls = () => {
-    return (
-      <div className="space-y-4">
-        <div className="bg-gradient-to-br from-purple-600/10 to-blue-600/10 p-6 rounded-xl border border-purple-600/30">
-          <div className="flex items-start gap-3 mb-4">
-            <div className="p-2 bg-purple-600/20 rounded-lg">
-              <MessageSquare size={24} className="text-purple-400" />
-            </div>
-            <div>
-              <h4 className="font-bold text-editor-text-primary text-base mb-1">
-                {t('editor.controls.chatbot.configuration')}
-              </h4>
-              <p className="text-sm text-editor-text-secondary">
-                {t('editor.controls.chatbot.description')}
-              </p>
-            </div>
-          </div>
-
-          <div className="space-y-3 mb-4">
-            <h5 className="text-sm font-semibold text-editor-text-primary">{t('editor.controls.chatbot.availableFeatures')}</h5>
-            <ul className="space-y-2 text-sm text-editor-text-secondary">
-              <li className="flex items-start gap-2">
-                <span className="text-green-400 mt-0.5">✓</span>
-                <span>{t('editor.controls.chatbot.feature1')}</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-green-400 mt-0.5">✓</span>
-                <span>{t('editor.controls.chatbot.feature2')}</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-green-400 mt-0.5">✓</span>
-                <span>{t('editor.controls.chatbot.feature3')}</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-green-400 mt-0.5">✓</span>
-                <span>{t('editor.controls.chatbot.feature4')}</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-green-400 mt-0.5">✓</span>
-                <span>{t('editor.controls.chatbot.feature5')}</span>
-              </li>
-            </ul>
-          </div>
-
-          <button
-            onClick={() => {
-              // Navigate to AI Assistant Dashboard
-              navigate(ROUTES.AI_ASSISTANT);
-            }}
-            className="w-full py-3 px-4 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold rounded-lg transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
-          >
-            <Settings size={18} />
-            {t('editor.controls.chatbot.openDashboard')}
-          </button>
-        </div>
-
-        <div className="bg-yellow-600/10 p-4 rounded-lg border border-yellow-600/30">
-          <p className="text-sm text-yellow-300 flex items-start gap-2">
-            <span className="text-lg">⚠️</span>
-            <span>
-              <strong>{t('editor.controls.common.note') || 'Note'}:</strong> {t('editor.controls.chatbot.legacyNote')}
-            </span>
-          </p>
-        </div>
-
-        {/* Legacy fields kept for backwards compatibility but disabled */}
-        <div className="opacity-50 pointer-events-none space-y-4">
-          <Input label="Welcome Message (Deprecated)" value={data?.chatbot?.welcomeMessage || ''} onChange={() => { }} />
-          <Input label="Placeholder Text (Deprecated)" value={data?.chatbot?.placeholderText || ''} onChange={() => { }} />
-          <TextArea
-            label="Knowledge Base (Deprecated)"
-            value={data?.chatbot?.knowledgeBase || ''}
-            onChange={() => { }}
-            rows={4}
-            placeholder="Use AI Assistant Dashboard instead..."
-          />
-          <ColorControl label="Primary Color (Deprecated)" value={data?.chatbot?.colors?.primary || '#6366f1'} onChange={() => { }} />
-          <ColorControl label="Background (Deprecated)" value={data?.chatbot?.colors?.background || '#ffffff'} onChange={() => { }} />
-          <ColorControl label="Text (Deprecated)" value={data?.chatbot?.colors?.text || '#000000'} onChange={() => { }} />
-        </div>
-      </div>
-    );
-  };
 
   const renderPricingControls = () => {
     if (!data?.pricing) return null;
@@ -2166,9 +1893,9 @@ const Controls: React.FC = () => {
 
         <hr className="border-editor-border/50" />
         <h4 className="font-bold text-editor-text-primary text-sm">Section Colors</h4>
-        <ColorControl label="Background" value={data.testimonials.colors?.background || '#000000'} onChange={(v) => setNestedData('testimonials.colors.background', v)} />
-        <ColorControl label="Title" value={data.testimonials.colors?.heading || '#ffffff'} onChange={(v) => setNestedData('testimonials.colors.heading', v)} />
-        <ColorControl label="Description" value={data.testimonials.colors?.description || '#94a3b8'} onChange={(v) => setNestedData('testimonials.colors.description', v)} />
+        <ColorControl label={t('editor.controls.common.background')} value={data.testimonials.colors?.background || '#000000'} onChange={(v) => setNestedData('testimonials.colors.background', v)} />
+        <ColorControl label={t('editor.controls.common.title')} value={data.testimonials.colors?.heading || '#ffffff'} onChange={(v) => setNestedData('testimonials.colors.heading', v)} />
+        <ColorControl label={t('editor.controls.common.description')} value={data.testimonials.colors?.description || '#94a3b8'} onChange={(v) => setNestedData('testimonials.colors.description', v)} />
         <ColorControl label="Text" value={data.testimonials.colors?.text || '#ffffff'} onChange={(v) => setNestedData('testimonials.colors.text', v)} />
         <ColorControl label="Person Title" value={data.testimonials.colors?.subtitleColor || data.testimonials.colors?.description || '#94a3b8'} onChange={(v) => setNestedData('testimonials.colors.subtitleColor', v)} />
         <ColorControl label="Accent" value={data.testimonials.colors?.accent || '#4f46e5'} onChange={(v) => setNestedData('testimonials.colors.accent', v)} />
@@ -2253,13 +1980,13 @@ const Controls: React.FC = () => {
     if (!data?.slideshow) return null;
     return (
       <div className="space-y-4">
-        <Input label="Title" value={data.slideshow.title} onChange={(e) => setNestedData('slideshow.title', e.target.value)} />
-        <FontSizeSelector label="Title Size" value={data.slideshow.titleFontSize || 'md'} onChange={(v) => setNestedData('slideshow.titleFontSize', v)} />
+        <Input label={t('editor.controls.common.title')} value={data.slideshow.title} onChange={(e) => setNestedData('slideshow.title', e.target.value)} />
+        <FontSizeSelector label={t('editor.controls.common.titleSize')} value={data.slideshow.titleFontSize || 'md'} onChange={(v) => setNestedData('slideshow.titleFontSize', v)} />
 
         <hr className="border-editor-border/50" />
 
         <Select
-          label="Style Variant"
+          label={t('editor.controls.common.styleVariant')}
           value={data.slideshow.slideshowVariant || 'classic'}
           onChange={(v) => setNestedData('slideshow.slideshowVariant', v)}
           options={[
@@ -2271,7 +1998,7 @@ const Controls: React.FC = () => {
         />
 
         <BorderRadiusSelector
-          label="Border Radius"
+          label={t('editor.controls.common.borderRadius')}
           value={data.slideshow.borderRadius || 'xl'}
           onChange={(v) => setNestedData('slideshow.borderRadius', v)}
         />
@@ -2352,9 +2079,9 @@ const Controls: React.FC = () => {
         <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider mb-2">Navigation</label>
 
         <div className="space-y-2">
-          <ToggleControl label="Show Arrows" checked={data.slideshow.showArrows ?? true} onChange={(v) => setNestedData('slideshow.showArrows', v)} />
-          <ToggleControl label="Show Dots" checked={data.slideshow.showDots ?? true} onChange={(v) => setNestedData('slideshow.showDots', v)} />
-          <ToggleControl label="Show Captions" checked={data.slideshow.showCaptions ?? false} onChange={(v) => setNestedData('slideshow.showCaptions', v)} />
+          <ToggleControl label={t('editor.controls.common.showArrows')} checked={data.slideshow.showArrows ?? true} onChange={(v) => setNestedData('slideshow.showArrows', v)} />
+          <ToggleControl label={t('editor.controls.common.showDots')} checked={data.slideshow.showDots ?? true} onChange={(v) => setNestedData('slideshow.showDots', v)} />
+          <ToggleControl label={t('editor.controls.common.showCaptions')} checked={data.slideshow.showCaptions ?? false} onChange={(v) => setNestedData('slideshow.showCaptions', v)} />
         </div>
 
         {(data.slideshow.showArrows ?? true) && (
@@ -2400,8 +2127,8 @@ const Controls: React.FC = () => {
 
         <hr className="border-editor-border/50" />
         <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider mb-2">Colors</label>
-        <ColorControl label="Background" value={data.slideshow.colors?.background} onChange={(v) => setNestedData('slideshow.colors.background', v)} />
-        <ColorControl label="Title" value={data.slideshow.colors?.heading || '#ffffff'} onChange={(v) => setNestedData('slideshow.colors.heading', v)} />
+        <ColorControl label={t('editor.controls.common.background')} value={data.slideshow.colors?.background} onChange={(v) => setNestedData('slideshow.colors.background', v)} />
+        <ColorControl label={t('editor.controls.common.title')} value={data.slideshow.colors?.heading || '#ffffff'} onChange={(v) => setNestedData('slideshow.colors.heading', v)} />
 
         {(data.slideshow.showArrows ?? true) && (
           <>
@@ -2489,11 +2216,11 @@ const Controls: React.FC = () => {
     if (!data?.video) return null;
     return (
       <div className="space-y-4">
-        <Input label="Title" value={data.video.title} onChange={(e) => setNestedData('video.title', e.target.value)} />
-        <FontSizeSelector label="Title Size" value={data.video.titleFontSize || 'md'} onChange={(v) => setNestedData('video.titleFontSize', v)} />
+        <Input label={t('editor.controls.common.title')} value={data.video.title} onChange={(e) => setNestedData('video.title', e.target.value)} />
+        <FontSizeSelector label={t('editor.controls.common.titleSize')} value={data.video.titleFontSize || 'md'} onChange={(v) => setNestedData('video.titleFontSize', v)} />
 
-        <TextArea label="Description" value={data.video.description} onChange={(e) => setNestedData('video.description', e.target.value)} rows={2} />
-        <FontSizeSelector label="Description Size" value={data.video.descriptionFontSize || 'md'} onChange={(v) => setNestedData('video.descriptionFontSize', v)} />
+        <TextArea label={t('editor.controls.common.description')} value={data.video.description} onChange={(e) => setNestedData('video.description', e.target.value)} rows={2} />
+        <FontSizeSelector label={t('editor.controls.common.descriptionSize')} value={data.video.descriptionFontSize || 'md'} onChange={(v) => setNestedData('video.descriptionFontSize', v)} />
 
         <div>
           <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">Source</label>
@@ -2519,8 +2246,8 @@ const Controls: React.FC = () => {
         )}
         <div className="space-y-2">
           <ToggleControl label="Autoplay (Muted)" checked={data.video.autoplay} onChange={(v) => setNestedData('video.autoplay', v)} />
-          <ToggleControl label="Loop" checked={data.video.loop} onChange={(v) => setNestedData('video.loop', v)} />
-          <ToggleControl label="Show Controls" checked={data.video.showControls} onChange={(v) => setNestedData('video.showControls', v)} />
+          <ToggleControl label={t('editor.controls.common.loop')} checked={data.video.loop} onChange={(v) => setNestedData('video.loop', v)} />
+          <ToggleControl label={t('editor.controls.common.showControls')} checked={data.video.showControls} onChange={(v) => setNestedData('video.showControls', v)} />
         </div>
 
         <hr className="border-editor-border/50" />
@@ -2534,8 +2261,8 @@ const Controls: React.FC = () => {
 
         <hr className="border-editor-border/50" />
         <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider mb-2">Colors</label>
-        <ColorControl label="Background" value={data.video.colors?.background} onChange={(v) => setNestedData('video.colors.background', v)} />
-        <ColorControl label="Title" value={data.video.colors?.heading || '#ffffff'} onChange={(v) => setNestedData('video.colors.heading', v)} />
+        <ColorControl label={t('editor.controls.common.background')} value={data.video.colors?.background} onChange={(v) => setNestedData('video.colors.background', v)} />
+        <ColorControl label={t('editor.controls.common.title')} value={data.video.colors?.heading || '#ffffff'} onChange={(v) => setNestedData('video.colors.heading', v)} />
         <ColorControl label="Text" value={data.video.colors?.text} onChange={(v) => setNestedData('video.colors.text', v)} />
 
         <hr className="border-editor-border/30 my-2" />
@@ -2584,19 +2311,19 @@ const Controls: React.FC = () => {
         {/* Logo Image Upload - only shown when logoType is 'image' */}
         {data.footer.logoType === 'image' && (
           <ImagePicker
-            label="Logo Image"
+            label={t('editor.controls.common.logoImage')}
             value={data.footer.logoImageUrl || ''}
             onChange={(url) => setNestedData('footer.logoImageUrl', url)}
           />
         )}
 
-        <Input label="Title" value={data.footer.title} onChange={(e) => setNestedData('footer.title', e.target.value)} />
-        <FontSizeSelector label="Title Size" value={data.footer.titleFontSize || 'sm'} onChange={(v) => setNestedData('footer.titleFontSize', v)} />
+        <Input label={t('editor.controls.common.title')} value={data.footer.title} onChange={(e) => setNestedData('footer.title', e.target.value)} />
+        <FontSizeSelector label={t('editor.controls.common.titleSize')} value={data.footer.titleFontSize || 'sm'} onChange={(v) => setNestedData('footer.titleFontSize', v)} />
 
-        <TextArea label="Description" value={data.footer.description} onChange={(e) => setNestedData('footer.description', e.target.value)} rows={2} />
-        <FontSizeSelector label="Description Size" value={data.footer.descriptionFontSize || 'sm'} onChange={(v) => setNestedData('footer.descriptionFontSize', v)} />
+        <TextArea label={t('editor.controls.common.description')} value={data.footer.description} onChange={(e) => setNestedData('footer.description', e.target.value)} rows={2} />
+        <FontSizeSelector label={t('editor.controls.common.descriptionSize')} value={data.footer.descriptionFontSize || 'sm'} onChange={(v) => setNestedData('footer.descriptionFontSize', v)} />
 
-        <Input label="Copyright" value={data.footer.copyrightText} onChange={(e) => setNestedData('footer.copyrightText', e.target.value)} />
+        <Input label={t('editor.controls.common.copyright')} value={data.footer.copyrightText} onChange={(e) => setNestedData('footer.copyrightText', e.target.value)} />
         <hr className="border-editor-border/50" />
         <div className="space-y-4">
           <h4 className="font-bold text-editor-text-primary text-sm uppercase tracking-wider">Link Columns</h4>
@@ -2671,20 +2398,20 @@ const Controls: React.FC = () => {
             Contact Information
           </h4>
           <Input
-            label="Address"
+            label={t('editor.controls.common.address')}
             value={data.footer.contactInfo?.address || ''}
             onChange={(e) => setNestedData('footer.contactInfo.address', e.target.value)}
             placeholder="123 Main Street"
           />
           <div className="grid grid-cols-2 gap-2">
             <Input
-              label="City"
+              label={t('editor.controls.common.city')}
               value={data.footer.contactInfo?.city || ''}
               onChange={(e) => setNestedData('footer.contactInfo.city', e.target.value)}
               placeholder="City"
             />
             <Input
-              label="State"
+              label={t('editor.controls.common.state')}
               value={data.footer.contactInfo?.state || ''}
               onChange={(e) => setNestedData('footer.contactInfo.state', e.target.value)}
               placeholder="State"
@@ -2692,26 +2419,26 @@ const Controls: React.FC = () => {
           </div>
           <div className="grid grid-cols-2 gap-2">
             <Input
-              label="ZIP Code"
+              label={t('editor.controls.common.zipCode')}
               value={data.footer.contactInfo?.zipCode || ''}
               onChange={(e) => setNestedData('footer.contactInfo.zipCode', e.target.value)}
               placeholder="12345"
             />
             <Input
-              label="Country"
+              label={t('editor.controls.common.country')}
               value={data.footer.contactInfo?.country || ''}
               onChange={(e) => setNestedData('footer.contactInfo.country', e.target.value)}
               placeholder="Country"
             />
           </div>
           <Input
-            label="Phone"
+            label={t('editor.controls.common.phone')}
             value={data.footer.contactInfo?.phone || ''}
             onChange={(e) => setNestedData('footer.contactInfo.phone', e.target.value)}
             placeholder="+1 (555) 123-4567"
           />
           <Input
-            label="Email"
+            label={t('editor.controls.common.email')}
             value={data.footer.contactInfo?.email || ''}
             onChange={(e) => setNestedData('footer.contactInfo.email', e.target.value)}
             placeholder="contact@example.com"
@@ -2828,8 +2555,8 @@ const Controls: React.FC = () => {
 
         <hr className="border-editor-border/50" />
         <div className="space-y-2">
-          <ColorControl label="Background" value={data.footer.colors?.background} onChange={(v) => setNestedData('footer.colors.background', v)} />
-          <ColorControl label="Title" value={data.footer.colors?.heading || '#ffffff'} onChange={(v) => setNestedData('footer.colors.heading', v)} />
+          <ColorControl label={t('editor.controls.common.background')} value={data.footer.colors?.background} onChange={(v) => setNestedData('footer.colors.background', v)} />
+          <ColorControl label={t('editor.controls.common.title')} value={data.footer.colors?.heading || '#ffffff'} onChange={(v) => setNestedData('footer.colors.heading', v)} />
           <ColorControl label="Text" value={data.footer.colors?.text} onChange={(v) => setNestedData('footer.colors.text', v)} />
         </div>
       </div>
@@ -2958,11 +2685,11 @@ const Controls: React.FC = () => {
   const renderMapControls = () => {
     const contentTab = (
       <div className="space-y-4">
-        <Input label="Title" value={data?.map.title} onChange={(e) => setNestedData('map.title', e.target.value)} />
-        <FontSizeSelector label="Title Size" value={data?.map.titleFontSize || 'md'} onChange={(v) => setNestedData('map.titleFontSize', v)} />
+        <Input label={t('editor.controls.common.title')} value={data?.map.title} onChange={(e) => setNestedData('map.title', e.target.value)} />
+        <FontSizeSelector label={t('editor.controls.common.titleSize')} value={data?.map.titleFontSize || 'md'} onChange={(v) => setNestedData('map.titleFontSize', v)} />
 
-        <TextArea label="Description" value={data?.map.description} onChange={(e) => setNestedData('map.description', e.target.value)} rows={2} />
-        <FontSizeSelector label="Description Size" value={data?.map.descriptionFontSize || 'md'} onChange={(v) => setNestedData('map.descriptionFontSize', v)} />
+        <TextArea label={t('editor.controls.common.description')} value={data?.map.description} onChange={(e) => setNestedData('map.description', e.target.value)} rows={2} />
+        <FontSizeSelector label={t('editor.controls.common.descriptionSize')} value={data?.map.descriptionFontSize || 'md'} onChange={(v) => setNestedData('map.descriptionFontSize', v)} />
 
         <hr className="border-editor-border/50" />
 
@@ -3050,7 +2777,7 @@ const Controls: React.FC = () => {
         {/* Map Variant */}
         <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
           <Select
-            label="Map Style"
+            label={t('editor.controls.common.mapStyle')}
             value={data?.map.mapVariant || 'modern'}
             onChange={(v) => setNestedData('map.mapVariant', v)}
             options={[
@@ -3094,8 +2821,8 @@ const Controls: React.FC = () => {
             <Palette size={14} />
             Colors
           </label>
-          <ColorControl label="Background" value={data?.map.colors?.background || '#0f172a'} onChange={(v) => setNestedData('map.colors.background', v)} />
-          <ColorControl label="Title" value={data?.map.colors?.heading || '#F9FAFB'} onChange={(v) => setNestedData('map.colors.heading', v)} />
+          <ColorControl label={t('editor.controls.common.background')} value={data?.map.colors?.background || '#0f172a'} onChange={(v) => setNestedData('map.colors.background', v)} />
+          <ColorControl label={t('editor.controls.common.title')} value={data?.map.colors?.heading || '#F9FAFB'} onChange={(v) => setNestedData('map.colors.heading', v)} />
           <ColorControl label="Text" value={data?.map.colors?.text || '#94a3b8'} onChange={(v) => setNestedData('map.colors.text', v)} />
           <ColorControl label="Marker/Accent" value={data?.map.colors?.accent || '#4f46e5'} onChange={(v) => setNestedData('map.colors.accent', v)} />
           {(data?.map.mapVariant === 'modern' || data?.map.mapVariant === 'card-overlay') && (
@@ -3147,7 +2874,7 @@ const Controls: React.FC = () => {
           </AIFormControl>
           <FontSizeSelector label={t('controls.subheadlineSize')} value={data.heroSplit.subheadlineFontSize || 'md'} onChange={(v) => setNestedData('heroSplit.subheadlineFontSize', v)} />
 
-          <Input label="Button Text" value={data.heroSplit.buttonText} onChange={(e) => setNestedData('heroSplit.buttonText', e.target.value)} />
+          <Input label={t('editor.controls.common.buttonText')} value={data.heroSplit.buttonText} onChange={(e) => setNestedData('heroSplit.buttonText', e.target.value)} />
 
           {/* Link Type Selector */}
           <div className="mb-3">
@@ -3175,7 +2902,7 @@ const Controls: React.FC = () => {
 
           {/* Conditional Inputs based on Link Type */}
           {(data.heroSplit.linkType === 'manual' || !data.heroSplit.linkType) && (
-            <Input label="Button URL" value={data.heroSplit.buttonUrl || '#cta'} onChange={(e) => setNestedData('heroSplit.buttonUrl', e.target.value)} />
+            <Input label={t('editor.controls.common.url')} value={data.heroSplit.buttonUrl || '#cta'} onChange={(e) => setNestedData('heroSplit.buttonUrl', e.target.value)} />
           )}
 
           {data.heroSplit.linkType === 'product' && (
@@ -3189,7 +2916,7 @@ const Controls: React.FC = () => {
                   setNestedData('heroSplit.buttonUrl', '');
                 }
               }}
-              label="Select Product"
+              label={t('editor.controls.common.selectProduct')}
             />
           )}
 
@@ -3207,7 +2934,7 @@ const Controls: React.FC = () => {
                   setNestedData('heroSplit.buttonUrl', '');
                 }
               }}
-              label="Select Collection"
+              label={t('editor.controls.common.selectCollection')}
             />
           )}
         </div>
@@ -3312,7 +3039,7 @@ const Controls: React.FC = () => {
             <p className="text-[10px] text-editor-text-secondary uppercase tracking-wider font-bold">Button</p>
 
             <ColorControl label="Button Background" value={data.heroSplit.colors?.buttonBackground || '#4f46e5'} onChange={(v) => setNestedData('heroSplit.colors.buttonBackground', v)} />
-            <ColorControl label="Button Text" value={data.heroSplit.colors?.buttonText || '#ffffff'} onChange={(v) => setNestedData('heroSplit.colors.buttonText', v)} />
+            <ColorControl label={t('editor.controls.common.buttonText')} value={data.heroSplit.colors?.buttonText || '#ffffff'} onChange={(v) => setNestedData('heroSplit.colors.buttonText', v)} />
 
             <BorderRadiusSelector label="Button Corners" value={data.heroSplit.buttonBorderRadius || 'xl'} onChange={(v) => setNestedData('heroSplit.buttonBorderRadius', v)} />
 
@@ -3344,1385 +3071,29 @@ const Controls: React.FC = () => {
     heroSplit: { label: 'Hero Split', icon: Columns, renderer: renderHeroSplitControls },
     features: { label: 'Features', icon: List, renderer: renderFeaturesControls },
     testimonials: { label: 'Testimonials', icon: Star, renderer: renderTestimonialsControls },
-    services: {
-      label: 'Services', icon: Layout, renderer: () => (
-        <div className="space-y-4">
-          {/* Services Variant Selector */}
-          <div className="bg-editor-panel-bg/50 p-3 rounded-lg border border-editor-border">
-            <Select
-              label="Services Style"
-              value={data?.services?.servicesVariant || 'cards'}
-              onChange={(v) => setNestedData('services.servicesVariant', v)}
-              options={[
-                { value: 'cards', label: 'Cards - Standard centered cards' },
-                { value: 'grid', label: 'Grid - Modern bento-style' },
-                { value: 'minimal', label: 'Minimal - Clean list layout' }
-              ]}
-            />
-          </div>
-
-          <hr className="border-editor-border/50" />
-
-          {/* Colors */}
-          <div className="space-y-2">
-            <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Colors</label>
-            <ColorControl label="Background" value={data?.services?.colors?.background || '#0f172a'} onChange={(v) => setNestedData('services.colors.background', v)} />
-            <ColorControl label="Section Title" value={data?.services?.colors?.heading || '#F9FAFB'} onChange={(v) => setNestedData('services.colors.heading', v)} />
-            <ColorControl label="Section Description" value={data?.services?.colors?.description || '#94a3b8'} onChange={(v) => setNestedData('services.colors.description', v)} />
-            <ColorControl label="Accent" value={data?.services?.colors?.accent || '#4f46e5'} onChange={(v) => setNestedData('services.colors.accent', v)} />
-
-            <hr className="border-editor-border/30 my-2" />
-            <p className="text-[10px] text-editor-text-secondary uppercase tracking-wider font-bold">Card Colors</p>
-
-            <ColorControl label="Card Background" value={data?.services?.colors?.cardBackground || '#1e293b'} onChange={(v) => setNestedData('services.colors.cardBackground', v)} />
-            <ColorControl label="Card Title" value={data?.services?.colors?.cardHeading || '#ffffff'} onChange={(v) => setNestedData('services.colors.cardHeading', v)} />
-            <ColorControl label="Card Text" value={data?.services?.colors?.cardText || '#94a3b8'} onChange={(v) => setNestedData('services.colors.cardText', v)} />
-            <ColorControl label="Border Color" value={data?.services?.colors?.borderColor || '#334155'} onChange={(v) => setNestedData('services.colors.borderColor', v)} />
-
-            <hr className="border-editor-border/30 my-2" />
-
-            {/* Corner Gradient */}
-            <CornerGradientControl
-              enabled={data?.services?.cornerGradient?.enabled || false}
-              position={data?.services?.cornerGradient?.position || 'top-left'}
-              color={data?.services?.cornerGradient?.color || '#4f46e5'}
-              opacity={data?.services?.cornerGradient?.opacity || 30}
-              size={data?.services?.cornerGradient?.size || 50}
-              onEnabledChange={(v) => setNestedData('services.cornerGradient.enabled', v)}
-              onPositionChange={(v) => setNestedData('services.cornerGradient.position', v)}
-              onColorChange={(v) => setNestedData('services.cornerGradient.color', v)}
-              onOpacityChange={(v) => setNestedData('services.cornerGradient.opacity', v)}
-              onSizeChange={(v) => setNestedData('services.cornerGradient.size', v)}
-            />
-          </div>
-
-          <hr className="border-editor-border/50" />
-
-          {/* Padding Controls for Services */}
-          <div className="space-y-2">
-            <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Spacing</label>
-            <div className="grid grid-cols-2 gap-3">
-              <PaddingSelector label="Vertical" value={data?.services?.paddingY || 'md'} onChange={(v) => setNestedData('services.paddingY', v)} />
-              <PaddingSelector label="Horizontal" value={data?.services?.paddingX || 'md'} onChange={(v) => setNestedData('services.paddingX', v)} />
-            </div>
-          </div>
-
-          <hr className="border-editor-border/50" />
-
-          {/* Standard List Controls */}
-          {renderListSectionControls('services', t('editor.controls.services.service'), [
-            { key: 'title', label: t('editor.controls.common.title'), type: 'input' },
-            { key: 'description', label: t('editor.controls.common.description'), type: 'textarea' },
-            { key: 'icon', label: 'Icon', type: 'icon-selector' }
-          ])}
-
-          <hr className="border-editor-border/50" />
-
-          {/* Animation Controls */}
-          <AnimationControls
-            animationType={data?.services?.animationType || 'fade-in-up'}
-            enableCardAnimation={data?.services?.enableCardAnimation !== false}
-            onChangeAnimationType={(type) => setNestedData('services.animationType', type)}
-            onToggleAnimation={(enabled) => setNestedData('services.enableCardAnimation', enabled)}
-            label="Card Animations"
-          />
-        </div>
-      )
-    },
-    team: {
-      label: 'Team', icon: Users, renderer: () => (
-        <div className="space-y-4">
-          {/* Team Variant Selector */}
-          <div className="bg-editor-panel-bg/50 p-3 rounded-lg border border-editor-border">
-            <Select
-              label={t('editor.controls.team.teamStyle')}
-              value={data?.team?.teamVariant || 'classic'}
-              onChange={(v) => setNestedData('team.teamVariant', v)}
-              options={[
-                { value: 'classic', label: t('editor.controls.features.classic') },
-                { value: 'cards', label: t('editor.controls.team.cards') },
-                { value: 'minimal', label: t('editor.controls.team.minimal') },
-                { value: 'overlay', label: t('editor.controls.team.overlay') }
-              ]}
-            />
-          </div>
-
-          <hr className="border-editor-border/50" />
-
-          {/* Content */}
-          <Input label="Title" value={data?.team?.title} onChange={(e) => setNestedData('team.title', e.target.value)} />
-          <FontSizeSelector label="Title Size" value={data?.team?.titleFontSize || 'md'} onChange={(v) => setNestedData('team.titleFontSize', v)} />
-
-          <TextArea label="Description" value={data?.team?.description} onChange={(e) => setNestedData('team.description', e.target.value)} rows={2} />
-          <FontSizeSelector label="Description Size" value={data?.team?.descriptionFontSize || 'md'} onChange={(v) => setNestedData('team.descriptionFontSize', v)} />
-
-          <hr className="border-editor-border/50" />
-
-          {/* Colors */}
-          <h4 className="font-bold text-editor-text-primary text-sm uppercase tracking-wider">Colors</h4>
-          <ColorControl label="Background" value={data?.team?.colors?.background || '#0f172a'} onChange={(v) => setNestedData('team.colors.background', v)} />
-          <ColorControl label="Section Title" value={data?.team?.colors?.heading || '#F9FAFB'} onChange={(v) => setNestedData('team.colors.heading', v)} />
-          <ColorControl label="Section Description" value={data?.team?.colors?.description || '#94a3b8'} onChange={(v) => setNestedData('team.colors.description', v)} />
-          <ColorControl label="Accent" value={data?.team?.colors?.accent || '#4f46e5'} onChange={(v) => setNestedData('team.colors.accent', v)} />
-
-          <hr className="border-editor-border/30 my-2" />
-          <p className="text-[10px] text-editor-text-secondary uppercase tracking-wider font-bold">Card Colors</p>
-
-          <ColorControl label="Card Background" value={data?.team?.colors?.cardBackground || 'rgba(30, 41, 59, 0.5)'} onChange={(v) => setNestedData('team.colors.cardBackground', v)} />
-          <ColorControl label="Card Name" value={data?.team?.colors?.cardHeading || '#ffffff'} onChange={(v) => setNestedData('team.colors.cardHeading', v)} />
-          <ColorControl label="Card Role" value={data?.team?.colors?.cardText || '#94a3b8'} onChange={(v) => setNestedData('team.colors.cardText', v)} />
-          <ColorControl label="Photo Border" value={data?.team?.colors?.photoBorderColor || '#4f46e5'} onChange={(v) => setNestedData('team.colors.photoBorderColor', v)} />
-
-          <hr className="border-editor-border/30 my-2" />
-
-          {/* Corner Gradient */}
-          <CornerGradientControl
-            enabled={data?.team?.cornerGradient?.enabled || false}
-            position={data?.team?.cornerGradient?.position || 'top-left'}
-            color={data?.team?.cornerGradient?.color || '#4f46e5'}
-            opacity={data?.team?.cornerGradient?.opacity || 30}
-            size={data?.team?.cornerGradient?.size || 50}
-            onEnabledChange={(v) => setNestedData('team.cornerGradient.enabled', v)}
-            onPositionChange={(v) => setNestedData('team.cornerGradient.position', v)}
-            onColorChange={(v) => setNestedData('team.cornerGradient.color', v)}
-            onOpacityChange={(v) => setNestedData('team.cornerGradient.opacity', v)}
-            onSizeChange={(v) => setNestedData('team.cornerGradient.size', v)}
-          />
-
-          <hr className="border-editor-border/50" />
-
-          {/* Spacing */}
-          <h4 className="font-bold text-editor-text-primary text-sm uppercase tracking-wider">Spacing</h4>
-          <div className="grid grid-cols-2 gap-3">
-            <PaddingSelector label="Vertical" value={data?.team?.paddingY || 'md'} onChange={(v) => setNestedData('team.paddingY', v)} />
-            <PaddingSelector label="Horizontal" value={data?.team?.paddingX || 'md'} onChange={(v) => setNestedData('team.paddingX', v)} />
-          </div>
-
-          <hr className="border-editor-border/50" />
-
-          {/* Team Members */}
-          <h4 className="font-bold text-editor-text-primary text-sm uppercase tracking-wider">{t('editor.controls.team.teamMembers')}</h4>
-          {(data?.team?.items || []).map((member: any, index: number) => (
-            <div key={index} className="bg-editor-bg p-3 rounded-lg border border-editor-border mb-3">
-              <ImagePicker
-                label={`${t('editor.controls.team.member')} #${index + 1} Photo`}
-                value={member.imageUrl}
-                onChange={(url) => setNestedData(`team.items.${index}.imageUrl`, url)}
-                onRemove={() => {
-                  const newItems = [...(data?.team?.items || [])];
-                  newItems.splice(index, 1);
-                  setNestedData('team.items', newItems);
-                }}
-              />
-              <Input label={t('editor.controls.common.name')} value={member.name} onChange={(e) => setNestedData(`team.items.${index}.name`, e.target.value)} />
-              <Input label={t('editor.controls.team.role')} value={member.role} onChange={(e) => setNestedData(`team.items.${index}.role`, e.target.value)} />
-
-              {/* Link Controls */}
-              <div className="mt-3 pt-3 border-t border-editor-border/50">
-                <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider flex items-center gap-1">
-                  <Link size={12} />
-                  Perfil / Enlace
-                </label>
-                <div className="flex bg-editor-panel-bg rounded-md border border-editor-border p-1 mb-2">
-                  {[
-                    { value: 'manual', label: 'URL' },
-                    { value: 'content', label: 'Contenido' }
-                  ].map((type) => (
-                    <button
-                      key={type.value}
-                      onClick={() => setNestedData(`team.items.${index}.linkType`, type.value)}
-                      className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors ${(member.linkType || 'manual') === type.value
-                        ? 'bg-editor-accent text-editor-bg'
-                        : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-bg'
-                        }`}
-                    >
-                      {type.label}
-                    </button>
-                  ))}
-                </div>
-                {(member.linkType === 'manual' || !member.linkType) && (
-                  <input
-                    placeholder="https://... o /pagina"
-                    value={member.linkUrl || ''}
-                    onChange={(e) => setNestedData(`team.items.${index}.linkUrl`, e.target.value)}
-                    className="w-full bg-editor-panel-bg border border-editor-border rounded px-2 py-1 text-xs text-editor-text-primary focus:outline-none focus:border-editor-accent"
-                  />
-                )}
-                {member.linkType === 'content' && (
-                  <SingleContentSelector
-                    selectedContentPath={member.linkUrl}
-                    onSelect={(path) => {
-                      setNestedData(`team.items.${index}.linkUrl`, path || '');
-                    }}
-                    label="Seleccionar Perfil del CMS"
-                  />
-                )}
-              </div>
-            </div>
-          ))
-          }
-          <button
-            onClick={() => {
-              const newItems = [...(data?.team?.items || []), { name: 'New Member', role: 'Role', imageUrl: '' }];
-              setNestedData('team.items', newItems);
-            }}
-            className="w-full py-2 border border-dashed border-editor-border rounded-lg text-editor-text-secondary hover:text-editor-accent hover:border-editor-accent transition-all flex items-center justify-center gap-2 text-sm font-medium"
-          >
-            <Plus size={14} /> {t('editor.controls.team.addMember')}
-          </button >
-
-          <hr className="border-editor-border/50" />
-
-          {/* Animation Controls */}
-          <AnimationControls
-            animationType={data?.team?.animationType || 'fade-in-up'}
-            enableCardAnimation={data?.team?.enableCardAnimation !== false}
-            onChangeAnimationType={(type) => setNestedData('team.animationType', type)}
-            onToggleAnimation={(enabled) => setNestedData('team.enableCardAnimation', enabled)}
-            label="Card Animations"
-          />
-        </div >
-      )
-    },
+    services: { label: 'Services', icon: Layout, renderer: () => null },
+    team: { label: 'Team', icon: Users, renderer: () => null },
     pricing: { label: 'Pricing', icon: DollarSign, renderer: renderPricingControls },
-    faq: {
-      label: 'FAQ', icon: HelpCircle, renderer: () => (
-        <div className="space-y-4">
-          {/* FAQ Variant Selector */}
-          <div className="bg-editor-panel-bg/50 p-3 rounded-lg border border-editor-border">
-            <Select
-              label="FAQ Style"
-              value={data?.faq?.faqVariant || 'classic'}
-              onChange={(v) => setNestedData('faq.faqVariant', v)}
-              options={[
-                { value: 'classic', label: 'Classic' },
-                { value: 'cards', label: 'Cards' },
-                { value: 'gradient', label: 'Gradient' },
-                { value: 'minimal', label: 'Minimal' }
-              ]}
-            />
-          </div>
-
-          <hr className="border-editor-border/50" />
-
-          {/* Section Colors */}
-          <div className="space-y-2">
-            <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Section Colors</label>
-            <ColorControl label="Background" value={data?.faq?.colors?.background || '#1e293b'} onChange={(v) => setNestedData('faq.colors.background', v)} />
-            <ColorControl label="Section Title" value={data?.faq?.colors?.heading || '#F9FAFB'} onChange={(v) => setNestedData('faq.colors.heading', v)} />
-            <ColorControl label="Section Description" value={data?.faq?.colors?.description || data?.faq?.colors?.text || '#94a3b8'} onChange={(v) => setNestedData('faq.colors.description', v)} />
-            <ColorControl label="Accent" value={data?.faq?.colors?.accent || '#4f46e5'} onChange={(v) => setNestedData('faq.colors.accent', v)} />
-          </div>
-
-          <hr className="border-editor-border/30" />
-
-          {/* Card Colors */}
-          <div className="space-y-2">
-            <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Card Colors</label>
-            <ColorControl label="Card Background" value={data?.faq?.colors?.cardBackground || '#1e293b'} onChange={(v) => setNestedData('faq.colors.cardBackground', v)} />
-            <ColorControl label="Question Text" value={data?.faq?.colors?.text || '#F9FAFB'} onChange={(v) => setNestedData('faq.colors.text', v)} />
-            <ColorControl label="Border Color" value={data?.faq?.colors?.borderColor || '#334155'} onChange={(v) => setNestedData('faq.colors.borderColor', v)} />
-          </div>
-
-          {/* Gradient Colors (for gradient variant) */}
-          {(data?.faq?.faqVariant === 'gradient') && (
-            <>
-              <hr className="border-editor-border/50" />
-              <div className="space-y-2">
-                <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Gradient</label>
-                <ColorControl label="Gradient Start" value={data?.faq?.colors?.gradientStart || '#4f46e5'} onChange={(v) => setNestedData('faq.colors.gradientStart', v)} />
-                <ColorControl label="Gradient End" value={data?.faq?.colors?.gradientEnd || '#7c3aed'} onChange={(v) => setNestedData('faq.colors.gradientEnd', v)} />
-              </div>
-            </>
-          )}
-
-          <hr className="border-editor-border/50" />
-
-          {/* Standard List Controls */}
-          {renderListSectionControls('faq', t('editor.controls.faq.question'), [{ key: 'question', label: t('editor.controls.faq.question'), type: 'input' }, { key: 'answer', label: t('editor.controls.faq.answer'), type: 'textarea' }])}
-        </div>
-      )
-    },
-    portfolio: {
-      label: 'Portfolio', icon: Briefcase, renderer: () => {
-        const currentPortfolioVariant = (data?.portfolio as any)?.portfolioVariant || 'classic';
-        return (
-          <div className="space-y-4">
-            {/* Style Variant */}
-            <div className="mb-4">
-              <Select
-                label={t('editor.controls.portfolio.portfolioStyle')}
-                value={currentPortfolioVariant}
-                onChange={(v) => setNestedData('portfolio.portfolioVariant', v)}
-                options={[
-                  { value: 'classic', label: `${t('editor.controls.features.classic')} - Card-based grid layout` },
-                  { value: 'image-overlay', label: `${t('editor.controls.portfolio.overlay')} - Full-width images` }
-                ]}
-              />
-            </div>
-
-            {/* Overlay-specific controls */}
-            {currentPortfolioVariant === 'image-overlay' && (
-              <>
-                <hr className="border-editor-border/50" />
-                <h4 className="font-bold text-editor-text-primary text-sm">{t('editor.controls.features.overlaySettings')}</h4>
-                <div>
-                  <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{t('editor.controls.portfolio.gridColumns')}</label>
-                  <div className="flex bg-editor-bg p-1 rounded-md border border-editor-border">
-                    {[2, 3, 4].map(cols => (
-                      <button
-                        key={cols}
-                        onClick={() => setNestedData('portfolio.gridColumns', cols)}
-                        className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors ${(data?.portfolio as any)?.gridColumns === cols || (!((data?.portfolio as any)?.gridColumns) && cols === 3) ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:bg-editor-border'}`}
-                      >
-                        {cols}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                <div>
-                  <div className="flex justify-between items-center mb-1">
-                    <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('editor.controls.portfolio.imageHeight')}</label>
-                    <span className="text-xs text-editor-text-primary">{(data?.portfolio as any)?.imageHeight || 300}px</span>
-                  </div>
-                  <input
-                    type="range" min="150" max="600" step="10"
-                    value={(data?.portfolio as any)?.imageHeight || 300}
-                    onChange={e => setNestedData('portfolio.imageHeight', parseInt(e.target.value, 10))}
-                    className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{t('editor.controls.portfolio.textAlignment')}</label>
-                  <div className="flex bg-editor-bg p-1 rounded-md border border-editor-border">
-                    {(['left', 'center', 'right'] as const).map(align => (
-                      <button
-                        key={align}
-                        onClick={() => setNestedData('portfolio.overlayTextAlignment', align)}
-                        className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors capitalize ${(data?.portfolio as any)?.overlayTextAlignment === align || (!((data?.portfolio as any)?.overlayTextAlignment) && align === 'left') ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:bg-editor-border'}`}
-                      >
-                        {align === 'left' ? `⬅️ ${t('editor.controls.portfolio.left')}` : align === 'center' ? `↔️ ${t('editor.controls.portfolio.center')}` : `➡️ ${t('editor.controls.portfolio.right')}`}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                <div className="flex items-center justify-between">
-                  <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('editor.controls.portfolio.showSectionHeader')}</label>
-                  <button
-                    onClick={() => setNestedData('portfolio.showSectionHeader', !((data?.portfolio as any)?.showSectionHeader !== false))}
-                    className={`relative w-10 h-5 rounded-full transition-colors ${(data?.portfolio as any)?.showSectionHeader !== false ? 'bg-editor-accent' : 'bg-editor-border'}`}
-                  >
-                    <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition-transform ${(data?.portfolio as any)?.showSectionHeader !== false ? 'left-5' : 'left-0.5'}`} />
-                  </button>
-                </div>
-              </>
-            )
-            }
-
-            <hr className="border-editor-border/50" />
-
-            {/* Title & Description */}
-            <Input label="Title" value={data?.portfolio?.title} onChange={(e) => setNestedData('portfolio.title', e.target.value)} />
-            <FontSizeSelector label="Title Size" value={data?.portfolio?.titleFontSize || 'md'} onChange={(v) => setNestedData('portfolio.titleFontSize', v)} />
-
-            <TextArea label="Description" value={data?.portfolio?.description} onChange={(e) => setNestedData('portfolio.description', e.target.value)} rows={2} />
-            <FontSizeSelector label="Description Size" value={data?.portfolio?.descriptionFontSize || 'md'} onChange={(v) => setNestedData('portfolio.descriptionFontSize', v)} />
-
-            <hr className="border-editor-border/50" />
-
-            {/* Section Colors */}
-            <div className="space-y-2">
-              <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Section Colors</label>
-              <ColorControl label="Background" value={data?.portfolio?.colors?.background || '#0f172a'} onChange={(v) => setNestedData('portfolio.colors.background', v)} />
-              <ColorControl label="Heading" value={data?.portfolio?.colors?.heading || '#F9FAFB'} onChange={(v) => setNestedData('portfolio.colors.heading', v)} />
-              <ColorControl label="Text" value={data?.portfolio?.colors?.text || '#94a3b8'} onChange={(v) => setNestedData('portfolio.colors.text', v)} />
-              <ColorControl label="Accent" value={data?.portfolio?.colors?.accent || '#4f46e5'} onChange={(v) => setNestedData('portfolio.colors.accent', v)} />
-
-              <hr className="border-editor-border/30 my-2" />
-
-              {/* Corner Gradient */}
-              <CornerGradientControl
-                enabled={data?.portfolio?.cornerGradient?.enabled || false}
-                position={data?.portfolio?.cornerGradient?.position || 'top-left'}
-                color={data?.portfolio?.cornerGradient?.color || '#4f46e5'}
-                opacity={data?.portfolio?.cornerGradient?.opacity || 30}
-                size={data?.portfolio?.cornerGradient?.size || 50}
-                onEnabledChange={(v) => setNestedData('portfolio.cornerGradient.enabled', v)}
-                onPositionChange={(v) => setNestedData('portfolio.cornerGradient.position', v)}
-                onColorChange={(v) => setNestedData('portfolio.cornerGradient.color', v)}
-                onOpacityChange={(v) => setNestedData('portfolio.cornerGradient.opacity', v)}
-                onSizeChange={(v) => setNestedData('portfolio.cornerGradient.size', v)}
-              />
-            </div>
-
-            <hr className="border-editor-border/50" />
-
-            {/* Card Colors */}
-            <div className="space-y-2">
-              <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Card Colors</label>
-              <ColorControl label="Card Background" value={data?.portfolio?.colors?.cardBackground || 'rgba(0,0,0,0.8)'} onChange={(v) => setNestedData('portfolio.colors.cardBackground', v)} />
-              <ColorControl label="Card Title" value={data?.portfolio?.colors?.cardTitleColor || '#ffffff'} onChange={(v) => setNestedData('portfolio.colors.cardTitleColor', v)} />
-              <ColorControl label="Card Text" value={data?.portfolio?.colors?.cardTextColor || 'rgba(255,255,255,0.9)'} onChange={(v) => setNestedData('portfolio.colors.cardTextColor', v)} />
-              <ColorControl label="Border Color" value={data?.portfolio?.colors?.borderColor || '#334155'} onChange={(v) => setNestedData('portfolio.colors.borderColor', v)} />
-            </div>
-
-            <hr className="border-editor-border/50" />
-
-            {/* Card Overlay Gradient */}
-            <div className="space-y-2">
-              <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">{t('editor.controls.portfolio.cardOverlayGradient')}</label>
-              <ColorControl label={t('editor.controls.portfolio.overlayStart')} value={data?.portfolio?.colors?.cardOverlayStart || 'rgba(0,0,0,0.9)'} onChange={(v) => setNestedData('portfolio.colors.cardOverlayStart', v)} />
-              <ColorControl label={t('editor.controls.portfolio.overlayEnd')} value={data?.portfolio?.colors?.cardOverlayEnd || 'rgba(0,0,0,0.2)'} onChange={(v) => setNestedData('portfolio.colors.cardOverlayEnd', v)} />
-            </div>
-
-            <hr className="border-editor-border/50" />
-
-            {/* Spacing */}
-            <div className="space-y-2">
-              <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Spacing</label>
-              <div className="grid grid-cols-2 gap-3">
-                <PaddingSelector label="Vertical" value={data?.portfolio?.paddingY || 'md'} onChange={(v) => setNestedData('portfolio.paddingY', v)} />
-                <PaddingSelector label="Horizontal" value={data?.portfolio?.paddingX || 'md'} onChange={(v) => setNestedData('portfolio.paddingX', v)} />
-              </div>
-            </div>
-
-            <hr className="border-editor-border/50" />
-
-            {/* Animation Controls */}
-            <AnimationControls
-              animationType={data?.portfolio?.animationType || 'fade-in-up'}
-              enableCardAnimation={data?.portfolio?.enableCardAnimation !== false}
-              onChangeAnimationType={(type) => setNestedData('portfolio.animationType', type)}
-              onToggleAnimation={(enabled) => setNestedData('portfolio.enableCardAnimation', enabled)}
-              label="Card Animations"
-            />
-
-            <hr className="border-editor-border/50" />
-
-            {/* Projects */}
-            <h4 className="font-bold text-editor-text-primary text-sm uppercase tracking-wider mb-2">{t('editor.controls.portfolio.projects')}</h4>
-            {
-              (data?.portfolio?.items || []).map((item: any, index: number) => (
-                <div key={index} className="bg-editor-bg p-3 rounded-lg border border-editor-border mb-3 group">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-xs font-bold text-editor-text-secondary">{t('editor.controls.portfolio.project')} #{index + 1}</span>
-                    <button
-                      onClick={() => {
-                        const newItems = (data?.portfolio?.items || []).filter((_: any, i: number) => i !== index);
-                        setNestedData('portfolio.items', newItems);
-                      }}
-                      className="text-editor-text-secondary hover:text-red-400 transition-colors"
-                    >
-                      <Trash2 size={14} />
-                    </button>
-                  </div>
-                  <input
-                    placeholder="Title"
-                    value={item.title}
-                    onChange={(e) => setNestedData(`portfolio.items.${index}.title`, e.target.value)}
-                    className="w-full bg-editor-panel-bg border border-editor-border rounded px-2 py-1 text-xs text-editor-text-primary focus:outline-none focus:border-editor-accent mb-2"
-                  />
-                  <textarea
-                    placeholder="Description"
-                    value={item.description}
-                    onChange={(e) => setNestedData(`portfolio.items.${index}.description`, e.target.value)}
-                    rows={2}
-                    className="w-full bg-editor-panel-bg border border-editor-border rounded px-2 py-1 text-xs text-editor-text-primary focus:outline-none focus:border-editor-accent mb-2"
-                  />
-                  <ImagePicker
-                    label={t('editor.controls.menu.image')}
-                    value={item.imageUrl}
-                    onChange={(url) => setNestedData(`portfolio.items.${index}.imageUrl`, url)}
-                  />
-
-                  {/* Link Controls */}
-                  <div className="mt-3 pt-3 border-t border-editor-border/50">
-                    <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">Link</label>
-                    <input
-                      placeholder="Link Text (e.g. View Project)"
-                      value={item.linkText || ''}
-                      onChange={(e) => setNestedData(`portfolio.items.${index}.linkText`, e.target.value)}
-                      className="w-full bg-editor-panel-bg border border-editor-border rounded px-2 py-1 text-xs text-editor-text-primary focus:outline-none focus:border-editor-accent mb-2"
-                    />
-                    <div className="flex bg-editor-panel-bg rounded-md border border-editor-border p-1 mb-2">
-                      {[
-                        { value: 'manual', label: 'URL' },
-                        { value: 'product', label: 'Product' },
-                        { value: 'collection', label: 'Collection' },
-                        { value: 'content', label: 'Contenido' }
-                      ].map((type) => (
-                        <button
-                          key={type.value}
-                          onClick={() => setNestedData(`portfolio.items.${index}.linkType`, type.value)}
-                          className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors ${(item.linkType || 'manual') === type.value
-                            ? 'bg-editor-accent text-editor-bg'
-                            : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-bg'
-                            }`}
-                        >
-                          {type.label}
-                        </button>
-                      ))}
-                    </div>
-                    {(item.linkType === 'manual' || !item.linkType) && (
-                      <>
-                        <input
-                          placeholder="https://example.com or #section"
-                          value={item.linkUrl || ''}
-                          onChange={(e) => setNestedData(`portfolio.items.${index}.linkUrl`, e.target.value)}
-                          className="w-full bg-editor-panel-bg border border-editor-border rounded px-2 py-1 text-xs text-editor-text-primary focus:outline-none focus:border-editor-accent"
-                        />
-                        <p className="text-xs text-editor-text-secondary mt-1">
-                          Use URLs for external links or # for page sections
-                        </p>
-                      </>
-                    )}
-                    {item.linkType === 'product' && (
-                      <SingleProductSelector
-                        storeId={activeProject?.id || ''}
-                        selectedProductId={item.linkUrl?.startsWith('/tienda/producto/') ? item.linkUrl.split('/tienda/producto/')[1] : item.linkUrl?.startsWith('/product/') ? item.linkUrl.split('/product/')[1] : undefined}
-                        onSelect={(id) => {
-                          if (id) {
-                            setNestedData(`portfolio.items.${index}.linkUrl`, `/tienda/producto/${id}`);
-                          } else {
-                            setNestedData(`portfolio.items.${index}.linkUrl`, '');
-                          }
-                        }}
-                        label="Seleccionar Producto"
-                      />
-                    )}
-                    {item.linkType === 'collection' && (
-                      <SingleCollectionSelector
-                        storeId={activeProject?.id || ''}
-                        gridCategories={data.categoryGrid?.categories || []}
-                        selectedCollectionId={(item as any).collectionId}
-                        onSelect={(id) => {
-                          setNestedData(`portfolio.items.${index}.collectionId`, id || null);
-                          if (id) {
-                            setNestedData(`portfolio.items.${index}.linkUrl`, `/tienda/categoria/${id}`);
-                          } else {
-                            setNestedData(`portfolio.items.${index}.linkUrl`, '');
-                          }
-                        }}
-                        label="Seleccionar Colección"
-                      />
-                    )}
-                    {item.linkType === 'content' && (
-                      <SingleContentSelector
-                        selectedContentPath={item.linkUrl}
-                        onSelect={(path) => {
-                          setNestedData(`portfolio.items.${index}.linkUrl`, path || '');
-                        }}
-                        label="Seleccionar Artículo del CMS"
-                      />
-                    )}
-                  </div>
-                </div>
-              ))
-            }
-            <button
-              onClick={() => {
-                const newItems = [...(data?.portfolio?.items || []), { title: 'New Project', description: 'Project description', imageUrl: 'pending:placeholder' }];
-                setNestedData('portfolio.items', newItems);
-              }}
-              className="w-full px-4 py-2 rounded-md text-xs font-bold border border-dashed border-editor-accent/50 text-editor-accent hover:bg-editor-accent/10 transition-colors"
-            >
-              + {t('editor.controls.portfolio.addProject')}
-            </button>
-          </div >
-        )
-      }
-    },
-    leads: {
-      label: 'Leads Form', icon: Mail, renderer: () => (
-        <div className="space-y-4">
-          {/* Variant Selector */}
-          <div className="mb-4">
-            <label className="block text-xs font-bold text-editor-text-secondary mb-2 uppercase tracking-wider">{t('editor.controls.leads.formStyle')}</label>
-            <div className="grid grid-cols-2 gap-2">
-              {[
-                { value: 'classic', label: t('editor.controls.features.classic') },
-                { value: 'split-gradient', label: t('editor.controls.leads.splitGradient') },
-                { value: 'floating-glass', label: t('editor.controls.leads.floatingGlass') },
-                { value: 'minimal-border', label: t('editor.controls.leads.minimalBorder') }
-              ].map((variant) => (
-                <button
-                  key={variant.value}
-                  onClick={() => setNestedData('leads.leadsVariant', variant.value)}
-                  className={`p-3 text-xs font-medium rounded-md border-2 transition-all ${(data?.leads?.leadsVariant || 'classic') === variant.value
-                    ? 'bg-editor-accent text-editor-bg border-editor-accent'
-                    : 'bg-editor-panel-bg text-editor-text-secondary border-editor-border hover:border-editor-accent'
-                    }`}
-                >
-                  {variant.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <hr className="border-editor-border/50" />
-
-          {/* Content */}
-          <Input label="Title" value={data?.leads.title} onChange={(e) => setNestedData('leads.title', e.target.value)} />
-          <FontSizeSelector label="Title Size" value={data?.leads.titleFontSize || 'md'} onChange={(v) => setNestedData('leads.titleFontSize', v)} />
-
-          <TextArea label="Description" value={data?.leads.description} onChange={(e) => setNestedData('leads.description', e.target.value)} rows={2} />
-          <FontSizeSelector label="Description Size" value={data?.leads.descriptionFontSize || 'md'} onChange={(v) => setNestedData('leads.descriptionFontSize', v)} />
-
-          <Input label={t('editor.controls.leads.buttonText')} value={data?.leads.buttonText} onChange={(e) => setNestedData('leads.buttonText', e.target.value)} />
-
-          <hr className="border-editor-border/50" />
-
-          {/* Form Placeholders */}
-          <div className="space-y-2">
-            <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Form Placeholders</label>
-            <Input label="Name Field" value={data?.leads.namePlaceholder || ''} onChange={(e) => setNestedData('leads.namePlaceholder', e.target.value)} />
-            <Input label="Email Field" value={data?.leads.emailPlaceholder || ''} onChange={(e) => setNestedData('leads.emailPlaceholder', e.target.value)} />
-            <Input label="Company Field" value={data?.leads.companyPlaceholder || ''} onChange={(e) => setNestedData('leads.companyPlaceholder', e.target.value)} />
-            <Input label="Message Field" value={data?.leads.messagePlaceholder || ''} onChange={(e) => setNestedData('leads.messagePlaceholder', e.target.value)} />
-          </div>
-
-          <hr className="border-editor-border/50" />
-
-          {/* Border Radius Controls */}
-          <div className="space-y-2">
-            <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">{t('editor.controls.leads.borderRadius')}</label>
-            <BorderRadiusSelector label={t('editor.controls.leads.cardRadius')} value={data?.leads?.cardBorderRadius || 'xl'} onChange={(v) => setNestedData('leads.cardBorderRadius', v)} />
-            <BorderRadiusSelector label={t('editor.controls.leads.inputRadius')} value={data?.leads?.inputBorderRadius || 'md'} onChange={(v) => setNestedData('leads.inputBorderRadius', v)} />
-            <BorderRadiusSelector label={t('editor.controls.leads.buttonRadius')} value={data?.leads?.buttonBorderRadius || 'md'} onChange={(v) => setNestedData('leads.buttonBorderRadius', v)} />
-          </div>
-
-          <hr className="border-editor-border/50" />
-
-          {/* Spacing */}
-          <div className="space-y-2">
-            <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Spacing</label>
-            <div className="grid grid-cols-2 gap-3">
-              <PaddingSelector label="Vertical" value={data?.leads?.paddingY || 'md'} onChange={(v) => setNestedData('leads.paddingY', v)} />
-              <PaddingSelector label="Horizontal" value={data?.leads?.paddingX || 'md'} onChange={(v) => setNestedData('leads.paddingX', v)} />
-            </div>
-          </div>
-
-          <hr className="border-editor-border/50" />
-
-          {/* Section Colors */}
-          <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider mb-2">{t('editor.controls.common.sectionColors')}</label>
-          <ColorControl label={t('editor.controls.common.background')} value={data?.leads.colors?.background || '#0f172a'} onChange={(v) => setNestedData('leads.colors.background', v)} />
-          <ColorControl label={t('editor.controls.common.title')} value={data?.leads.colors?.heading || '#F9FAFB'} onChange={(v) => setNestedData('leads.colors.heading', v)} />
-          <ColorControl label={t('editor.controls.common.description')} value={data?.leads.colors?.description || '#94a3b8'} onChange={(v) => setNestedData('leads.colors.description', v)} />
-          <ColorControl label={t('editor.controls.common.accent')} value={data?.leads.colors?.accent || '#4f46e5'} onChange={(v) => setNestedData('leads.colors.accent', v)} />
-
-          <hr className="border-editor-border/30 my-2" />
-
-          {/* Corner Gradient */}
-          <CornerGradientControl
-            enabled={data?.leads?.cornerGradient?.enabled || false}
-            position={data?.leads?.cornerGradient?.position || 'top-left'}
-            color={data?.leads?.cornerGradient?.color || '#4f46e5'}
-            opacity={data?.leads?.cornerGradient?.opacity || 30}
-            size={data?.leads?.cornerGradient?.size || 50}
-            onEnabledChange={(v) => setNestedData('leads.cornerGradient.enabled', v)}
-            onPositionChange={(v) => setNestedData('leads.cornerGradient.position', v)}
-            onColorChange={(v) => setNestedData('leads.cornerGradient.color', v)}
-            onOpacityChange={(v) => setNestedData('leads.cornerGradient.opacity', v)}
-            onSizeChange={(v) => setNestedData('leads.cornerGradient.size', v)}
-          />
-
-          <hr className="border-editor-border/50" />
-
-          {/* Card Colors */}
-          <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider mb-2">{t('editor.controls.features.cardColors')}</label>
-          <ColorControl label={t('editor.controls.pricing.cardBackground')} value={data?.leads.colors?.cardBackground || '#1e293b'} onChange={(v) => setNestedData('leads.colors.cardBackground', v)} />
-          <ColorControl label={t('editor.controls.common.text')} value={data?.leads.colors?.text || '#94a3b8'} onChange={(v) => setNestedData('leads.colors.text', v)} />
-          <ColorControl label={t('editor.controls.testimonials.borderColor')} value={data?.leads.colors?.borderColor || '#334155'} onChange={(v) => setNestedData('leads.colors.borderColor', v)} />
-
-          <hr className="border-editor-border/50" />
-
-          {/* Input Colors */}
-          <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider mb-2">{t('editor.controls.leads.inputColors')}</label>
-          <ColorControl label={t('editor.controls.leads.inputBackground')} value={data?.leads.colors?.inputBackground || '#0f172a'} onChange={(v) => setNestedData('leads.colors.inputBackground', v)} />
-          <ColorControl label={t('editor.controls.leads.inputText')} value={data?.leads.colors?.inputText || '#F9FAFB'} onChange={(v) => setNestedData('leads.colors.inputText', v)} />
-          <ColorControl label={t('editor.controls.leads.inputPlaceholder')} value={data?.leads.colors?.inputPlaceholder || '#6b7280'} onChange={(v) => setNestedData('leads.colors.inputPlaceholder', v)} />
-          <ColorControl label={t('editor.controls.leads.inputBorder')} value={data?.leads.colors?.inputBorder || '#334155'} onChange={(v) => setNestedData('leads.colors.inputBorder', v)} />
-
-          <hr className="border-editor-border/50" />
-
-          {/* Button & Gradient Colors */}
-          <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider mb-2">{t('editor.controls.leads.buttonGradient')}</label>
-          <ColorControl label={t('editor.controls.pricing.buttonBackground')} value={data?.leads.colors?.buttonBackground || '#4f46e5'} onChange={(v) => setNestedData('leads.colors.buttonBackground', v)} />
-          <ColorControl label={t('editor.controls.pricing.buttonText')} value={data?.leads.colors?.buttonText || '#ffffff'} onChange={(v) => setNestedData('leads.colors.buttonText', v)} />
-          <ColorControl label={t('editor.controls.pricing.gradientStart')} value={data?.leads.colors?.gradientStart || '#4f46e5'} onChange={(v) => setNestedData('leads.colors.gradientStart', v)} />
-          <ColorControl label={t('editor.controls.pricing.gradientEnd')} value={data?.leads.colors?.gradientEnd || '#10b981'} onChange={(v) => setNestedData('leads.colors.gradientEnd', v)} />
-        </div>
-      )
-    },
-    newsletter: {
-      label: 'Newsletter', icon: Send, renderer: () => (
-        <div className="space-y-4">
-          <Input label="Title" value={data?.newsletter.title} onChange={(e) => setNestedData('newsletter.title', e.target.value)} />
-          <FontSizeSelector label="Title Size" value={data?.newsletter.titleFontSize || 'md'} onChange={(v) => setNestedData('newsletter.titleFontSize', v)} />
-
-          <TextArea label="Description" value={data?.newsletter.description} onChange={(e) => setNestedData('newsletter.description', e.target.value)} rows={2} />
-          <FontSizeSelector label="Description Size" value={data?.newsletter.descriptionFontSize || 'md'} onChange={(v) => setNestedData('newsletter.descriptionFontSize', v)} />
-
-          <Input label="Button Text" value={data?.newsletter.buttonText} onChange={(e) => setNestedData('newsletter.buttonText', e.target.value)} />
-
-          <hr className="border-editor-border/50" />
-          <div className="space-y-2">
-            <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Spacing</label>
-            <div className="grid grid-cols-2 gap-3">
-              <PaddingSelector label="Vertical" value={data?.newsletter?.paddingY || 'md'} onChange={(v) => setNestedData('newsletter.paddingY', v)} />
-              <PaddingSelector label="Horizontal" value={data?.newsletter?.paddingX || 'md'} onChange={(v) => setNestedData('newsletter.paddingX', v)} />
-            </div>
-          </div>
-
-          <hr className="border-editor-border/50" />
-          <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider mb-2">Section Colors</label>
-          <ColorControl label="Background" value={data?.newsletter.colors?.background || '#000000'} onChange={(v) => setNestedData('newsletter.colors.background', v)} />
-          <ColorControl label="Section Title" value={data?.newsletter.colors?.heading || '#F9FAFB'} onChange={(v) => setNestedData('newsletter.colors.heading', v)} />
-          <ColorControl label="Section Description" value={data?.newsletter.colors?.text || '#94a3b8'} onChange={(v) => setNestedData('newsletter.colors.text', v)} />
-
-          <hr className="border-editor-border/50" />
-          <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider mb-2">Card Box</label>
-          <ColorControl label="Card Background" value={data?.newsletter.colors?.cardBackground || 'rgba(79, 70, 229, 0.75)'} onChange={(v) => setNestedData('newsletter.colors.cardBackground', v)} />
-          <ColorControl label="Card Border" value={data?.newsletter.colors?.borderColor || '#374151'} onChange={(v) => setNestedData('newsletter.colors.borderColor', v)} />
-          <ColorControl label="Card Heading" value={data?.newsletter.colors?.cardHeading || '#ffffff'} onChange={(v) => setNestedData('newsletter.colors.cardHeading', v)} />
-          <ColorControl label="Card Text" value={data?.newsletter.colors?.cardText || '#ffffff'} onChange={(v) => setNestedData('newsletter.colors.cardText', v)} />
-
-          <hr className="border-editor-border/50" />
-          <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider mb-2">Input Field</label>
-          <ColorControl label="Input Background" value={data?.newsletter.colors?.inputBackground || '#111827'} onChange={(v) => setNestedData('newsletter.colors.inputBackground', v)} />
-          <ColorControl label="Input Text" value={data?.newsletter.colors?.inputText || '#ffffff'} onChange={(v) => setNestedData('newsletter.colors.inputText', v)} />
-          <ColorControl label="Placeholder" value={data?.newsletter.colors?.inputPlaceholder || '#6b7280'} onChange={(v) => setNestedData('newsletter.colors.inputPlaceholder', v)} />
-          <ColorControl label="Input Border" value={data?.newsletter.colors?.inputBorder || '#374151'} onChange={(v) => setNestedData('newsletter.colors.inputBorder', v)} />
-
-          <hr className="border-editor-border/50" />
-          <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider mb-2">Button</label>
-          <ColorControl label="Button Background" value={data?.newsletter.colors?.buttonBackground || '#4f46e5'} onChange={(v) => setNestedData('newsletter.colors.buttonBackground', v)} />
-          <ColorControl label="Button Text" value={data?.newsletter.colors?.buttonText || '#ffffff'} onChange={(v) => setNestedData('newsletter.colors.buttonText', v)} />
-        </div>
-      )
-    },
-    cta: {
-      label: 'Call to Action', icon: MessageCircle, renderer: () => (
-        <div className="space-y-4">
-          <Input label="Title" value={data?.cta.title} onChange={(e) => setNestedData('cta.title', e.target.value)} />
-          <FontSizeSelector label="Title Size" value={data?.cta.titleFontSize || 'md'} onChange={(v) => setNestedData('cta.titleFontSize', v)} />
-
-          <TextArea label="Description" value={data?.cta.description} onChange={(e) => setNestedData('cta.description', e.target.value)} rows={2} />
-          <FontSizeSelector label="Description Size" value={data?.cta.descriptionFontSize || 'md'} onChange={(v) => setNestedData('cta.descriptionFontSize', v)} />
-
-          <Input label="Button Text" value={data?.cta.buttonText} onChange={(e) => setNestedData('cta.buttonText', e.target.value)} />
-
-          <hr className="border-editor-border/50" />
-          <div className="space-y-2">
-            <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Spacing</label>
-            <div className="grid grid-cols-2 gap-3">
-              <PaddingSelector label="Vertical" value={data?.cta?.paddingY || 'md'} onChange={(v) => setNestedData('cta.paddingY', v)} />
-              <PaddingSelector label="Horizontal" value={data?.cta?.paddingX || 'md'} onChange={(v) => setNestedData('cta.paddingX', v)} />
-            </div>
-          </div>
-
-          <hr className="border-editor-border/50" />
-          <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider mb-2">Colors</label>
-          <ColorControl label="Section Background" value={data?.cta.colors?.background || '#0f172a'} onChange={(v) => setNestedData('cta.colors.background', v)} />
-          <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider mt-3">Card Gradient</h5>
-          <ColorControl label="Gradient Start" value={data?.cta.colors?.gradientStart || '#000'} onChange={(v) => setNestedData('cta.colors.gradientStart', v)} />
-          <ColorControl label="Gradient End" value={data?.cta.colors?.gradientEnd || '#000'} onChange={(v) => setNestedData('cta.colors.gradientEnd', v)} />
-          <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider mt-3">Text & Button</h5>
-          <ColorControl label="Title" value={data?.cta.colors?.heading || '#ffffff'} onChange={(v) => setNestedData('cta.colors.heading', v)} />
-          <ColorControl label="Description" value={data?.cta.colors?.text || '#ffffff'} onChange={(v) => setNestedData('cta.colors.text', v)} />
-          <ColorControl label="Button Background" value={data?.cta.colors?.buttonBackground || '#ffffff'} onChange={(v) => setNestedData('cta.colors.buttonBackground', v)} />
-          <ColorControl label="Button Text" value={data?.cta.colors?.buttonText || '#4f46e5'} onChange={(v) => setNestedData('cta.colors.buttonText', v)} />
-
-          <hr className="border-editor-border/30 my-2" />
-
-          {/* Corner Gradient */}
-          <CornerGradientControl
-            enabled={data?.cta?.cornerGradient?.enabled || false}
-            position={data?.cta?.cornerGradient?.position || 'top-left'}
-            color={data?.cta?.cornerGradient?.color || '#ffffff'}
-            opacity={data?.cta?.cornerGradient?.opacity || 20}
-            size={data?.cta?.cornerGradient?.size || 50}
-            onEnabledChange={(v) => setNestedData('cta.cornerGradient.enabled', v)}
-            onPositionChange={(v) => setNestedData('cta.cornerGradient.position', v)}
-            onColorChange={(v) => setNestedData('cta.cornerGradient.color', v)}
-            onOpacityChange={(v) => setNestedData('cta.cornerGradient.opacity', v)}
-            onSizeChange={(v) => setNestedData('cta.cornerGradient.size', v)}
-          />
-        </div>
-      )
-    },
+    faq: { label: 'FAQ', icon: HelpCircle, renderer: () => null },
+    portfolio: { label: 'Portfolio', icon: Briefcase, renderer: () => null },
+    leads: { label: 'Lead Form', icon: Mail, renderer: () => null },
+    newsletter: { label: 'Newsletter', icon: Send, renderer: () => null },
+    cta: { label: 'Call to Action', icon: MessageCircle, renderer: () => null },
     slideshow: { label: 'Slideshow', icon: PlaySquare, renderer: renderSlideshowControls },
     video: { label: 'Video', icon: MonitorPlay, renderer: renderVideoControls },
-    howItWorks: {
-      label: 'How It Works', icon: Grid, renderer: () => (
-        <div className="space-y-4">
-          {/* Content */}
-          <Input label="Title" value={data?.howItWorks?.title} onChange={(e) => setNestedData('howItWorks.title', e.target.value)} />
-          <FontSizeSelector label="Title Size" value={data?.howItWorks?.titleFontSize || 'md'} onChange={(v) => setNestedData('howItWorks.titleFontSize', v)} />
-
-          <TextArea label="Description" value={data?.howItWorks?.description} onChange={(e) => setNestedData('howItWorks.description', e.target.value)} rows={2} />
-          <FontSizeSelector label="Description Size" value={data?.howItWorks?.descriptionFontSize || 'md'} onChange={(v) => setNestedData('howItWorks.descriptionFontSize', v)} />
-
-          {/* Steps Count */}
-          <div>
-            <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{t('editor.controls.howItWorks.stepsCount')}</label>
-            <select
-              value={data?.howItWorks?.steps || 3}
-              onChange={(e) => setNestedData('howItWorks.steps', parseInt(e.target.value))}
-              className="w-full bg-editor-panel-bg border border-editor-border rounded-md px-3 py-2 text-sm text-editor-text-primary"
-            >
-              <option value={3}>3 {t('editor.controls.list.steps')}</option>
-              <option value={4}>4 {t('editor.controls.list.steps')}</option>
-            </select>
-          </div>
-
-          <hr className="border-editor-border/50" />
-
-          {/* Colors */}
-          <div className="space-y-2">
-            <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">{t('editor.controls.howItWorks.sectionColors')}</label>
-            <ColorControl label={t('editor.controls.common.background')} value={data?.howItWorks?.colors?.background || '#0f172a'} onChange={(v) => setNestedData('howItWorks.colors.background', v)} />
-            <ColorControl label={t('editor.controls.common.title')} value={data?.howItWorks?.colors?.heading || '#ffffff'} onChange={(v) => setNestedData('howItWorks.colors.heading', v)} />
-            <ColorControl label={t('editor.controls.common.description')} value={data?.howItWorks?.colors?.description || '#94a3b8'} onChange={(v) => setNestedData('howItWorks.colors.description', v)} />
-
-            <hr className="border-editor-border/30 my-2" />
-
-            {/* Corner Gradient */}
-            <CornerGradientControl
-              enabled={data?.howItWorks?.cornerGradient?.enabled || false}
-              position={data?.howItWorks?.cornerGradient?.position || 'top-left'}
-              color={data?.howItWorks?.cornerGradient?.color || '#4f46e5'}
-              opacity={data?.howItWorks?.cornerGradient?.opacity || 30}
-              size={data?.howItWorks?.cornerGradient?.size || 50}
-              onEnabledChange={(v) => setNestedData('howItWorks.cornerGradient.enabled', v)}
-              onPositionChange={(v) => setNestedData('howItWorks.cornerGradient.position', v)}
-              onColorChange={(v) => setNestedData('howItWorks.cornerGradient.color', v)}
-              onOpacityChange={(v) => setNestedData('howItWorks.cornerGradient.opacity', v)}
-              onSizeChange={(v) => setNestedData('howItWorks.cornerGradient.size', v)}
-            />
-          </div>
-
-          <hr className="border-editor-border/30" />
-
-          <div className="space-y-2">
-            <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">{t('editor.controls.howItWorks.stepColors')}</label>
-            <ColorControl label={t('editor.controls.howItWorks.circleBackground')} value={data?.howItWorks?.colors?.accent || '#4f46e5'} onChange={(v) => setNestedData('howItWorks.colors.accent', v)} />
-            <ColorControl label={t('editor.controls.howItWorks.iconColor')} value={data?.howItWorks?.colors?.iconColor || '#ffffff'} onChange={(v) => setNestedData('howItWorks.colors.iconColor', v)} />
-            <ColorControl label={t('editor.controls.howItWorks.stepTitle')} value={data?.howItWorks?.colors?.stepTitle || '#ffffff'} onChange={(v) => setNestedData('howItWorks.colors.stepTitle', v)} />
-            <ColorControl label={t('editor.controls.howItWorks.stepDescription')} value={data?.howItWorks?.colors?.text || '#94a3b8'} onChange={(v) => setNestedData('howItWorks.colors.text', v)} />
-          </div>
-
-          <hr className="border-editor-border/50" />
-
-          {/* Spacing */}
-          <div className="space-y-2">
-            <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Spacing</label>
-            <div className="grid grid-cols-2 gap-3">
-              <PaddingSelector label="Vertical" value={data?.howItWorks?.paddingY || 'md'} onChange={(v) => setNestedData('howItWorks.paddingY', v)} />
-              <PaddingSelector label="Horizontal" value={data?.howItWorks?.paddingX || 'md'} onChange={(v) => setNestedData('howItWorks.paddingX', v)} />
-            </div>
-          </div>
-
-          <hr className="border-editor-border/50" />
-
-          {/* Steps Items */}
-          <h4 className="font-bold text-editor-text-primary text-sm uppercase tracking-wider mb-2">Steps</h4>
-          {(data?.howItWorks?.items || []).map((item: any, index: number) => (
-            <div key={index} className="bg-editor-bg p-3 rounded-lg border border-editor-border mb-3 group">
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-xs font-bold text-editor-text-secondary">Step #{index + 1}</span>
-                <button
-                  onClick={() => {
-                    const newItems = (data?.howItWorks?.items || []).filter((_: any, i: number) => i !== index);
-                    setNestedData('howItWorks.items', newItems);
-                  }}
-                  className="text-editor-text-secondary hover:text-red-400 transition-colors"
-                >
-                  <Trash2 size={14} />
-                </button>
-              </div>
-              <input
-                placeholder="Title"
-                value={item.title}
-                onChange={(e) => setNestedData(`howItWorks.items.${index}.title`, e.target.value)}
-                className="w-full bg-editor-panel-bg border border-editor-border rounded px-2 py-1 text-xs text-editor-text-primary focus:outline-none focus:border-editor-accent mb-2"
-              />
-              <textarea
-                placeholder="Description"
-                value={item.description}
-                onChange={(e) => setNestedData(`howItWorks.items.${index}.description`, e.target.value)}
-                rows={2}
-                className="w-full bg-editor-panel-bg border border-editor-border rounded px-2 py-1 text-xs text-editor-text-primary focus:outline-none focus:border-editor-accent mb-2"
-              />
-              <select
-                value={item.icon}
-                onChange={(e) => setNestedData(`howItWorks.items.${index}.icon`, e.target.value)}
-                className="w-full bg-editor-panel-bg border border-editor-border rounded px-2 py-1 text-xs text-editor-text-primary focus:outline-none focus:border-editor-accent"
-              >
-                {['upload', 'process', 'magic-wand', 'download', 'share', 'search'].map(opt => <option key={opt} value={opt}>{opt}</option>)}
-              </select>
-            </div>
-          ))}
-          <button
-            onClick={() => {
-              const newItems = [...(data?.howItWorks?.items || []), { title: 'New Step', description: 'Step description', icon: 'upload' }];
-              setNestedData('howItWorks.items', newItems);
-            }}
-            className="w-full py-2 border-2 border-dashed border-editor-border rounded-lg text-editor-text-secondary hover:border-editor-accent hover:text-editor-accent transition-colors text-sm"
-          >
-            + {t('editor.controls.howItWorks.addStep')}
-          </button>
-        </div>
-      )
-    },
+    howItWorks: { label: 'How It Works', icon: Grid, renderer: () => null },
     map: { label: 'Map', icon: MapIcon, renderer: renderMapControls },
-    menu: {
-      label: 'Restaurant Menu', icon: MenuIcon, renderer: () => (
-        <div className="space-y-4">
-          {/* Menu Variant Selector */}
-          <div className="bg-editor-panel-bg/50 p-3 rounded-lg border border-editor-border">
-            <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2 flex items-center gap-2">
-              <Layout size={14} />
-              Menu Style
-            </label>
-            <div className="grid grid-cols-2 gap-2">
-              {[
-                { value: 'classic', label: '🍽️ Classic' },
-                { value: 'modern-grid', label: '✨ Modern' },
-                { value: 'elegant-list', label: '📋 Elegant' },
-                { value: 'full-image', label: '📷 Full Photo' }
-              ].map((variant) => (
-                <button
-                  key={variant.value}
-                  onClick={() => setNestedData('menu.menuVariant', variant.value)}
-                  className={`px-2 py-2 rounded-md border text-xs transition-all ${(data?.menu?.menuVariant || 'classic') === variant.value
-                    ? 'bg-editor-accent text-editor-bg border-editor-accent shadow-sm font-bold'
-                    : 'bg-editor-panel-bg text-editor-text-primary border-editor-border hover:border-editor-accent'
-                    }`}
-                >
-                  {variant.label}
-                </button>
-              ))}
-            </div>
-            <p className="text-xs text-editor-text-secondary mt-2 italic">
-              {(data?.menu?.menuVariant || 'classic') === 'classic' && '🍽️ Traditional grid cards with images on top.'}
-              {(data?.menu?.menuVariant || 'classic') === 'modern-grid' && '✨ Bento-style grid with dynamic layouts.'}
-              {(data?.menu?.menuVariant || 'classic') === 'elegant-list' && '📋 Magazine-style horizontal list layout.'}
-              {(data?.menu?.menuVariant || 'classic') === 'full-image' && '📷 Full photo cards with text overlay at bottom.'}
-            </p>
-
-            {/* Text Alignment - Only for full-image variant */}
-            {data?.menu?.menuVariant === 'full-image' && (
-              <div className="mt-4 pt-4 border-t border-editor-border/50 animate-fade-in-up">
-                <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">
-                  Text Alignment
-                </label>
-                <div className="flex gap-2">
-                  {[
-                    { value: 'left', icon: '◀', label: 'Left' },
-                    { value: 'center', icon: '●', label: 'Center' },
-                    { value: 'right', icon: '▶', label: 'Right' }
-                  ].map((align) => (
-                    <button
-                      key={align.value}
-                      onClick={() => setNestedData('menu.textAlignment', align.value)}
-                      className={`flex-1 flex items-center justify-center gap-1 px-3 py-2 rounded-md border text-xs transition-all ${(data?.menu?.textAlignment || 'center') === align.value
-                        ? 'bg-editor-accent text-editor-bg border-editor-accent font-bold'
-                        : 'bg-editor-panel-bg text-editor-text-primary border-editor-border hover:border-editor-accent'
-                        }`}
-                      title={align.label}
-                    >
-                      <span>{align.icon}</span>
-                      <span className="hidden sm:inline">{align.label}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-
-          <hr className="border-editor-border/50" />
-
-          {/* Content Controls */}
-          <div className="space-y-3">
-            <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Content</label>
-            <Input label="Title" value={data?.menu?.title || ''} onChange={(e) => setNestedData('menu.title', e.target.value)} />
-            <FontSizeSelector label="Title Size" value={data?.menu?.titleFontSize || 'md'} onChange={(v) => setNestedData('menu.titleFontSize', v)} />
-            <TextArea label="Description" value={data?.menu?.description || ''} onChange={(e) => setNestedData('menu.description', e.target.value)} rows={2} />
-            <FontSizeSelector label="Description Size" value={data?.menu?.descriptionFontSize || 'md'} onChange={(v) => setNestedData('menu.descriptionFontSize', v)} />
-          </div>
-
-          <hr className="border-editor-border/50" />
-
-          {/* Section Icon */}
-          <div className="space-y-3">
-            <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Section Icon</label>
-            <ToggleControl
-              label="Show Section Icon"
-              checked={data?.menu?.showIcon !== false}
-              onChange={(v) => setNestedData('menu.showIcon', v)}
-            />
-            {data?.menu?.showIcon !== false && (
-              <IconSelector
-                label="Icon"
-                value={data?.menu?.icon || 'utensils-crossed'}
-                onChange={(v) => setNestedData('menu.icon', v)}
-              />
-            )}
-          </div>
-
-          <hr className="border-editor-border/50" />
-
-          {/* Padding Controls */}
-          <div className="space-y-2">
-            <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Spacing</label>
-            <div className="grid grid-cols-2 gap-3">
-              <PaddingSelector label="Vertical" value={data?.menu?.paddingY || 'md'} onChange={(v) => setNestedData('menu.paddingY', v)} />
-              <PaddingSelector label="Horizontal" value={data?.menu?.paddingX || 'md'} onChange={(v) => setNestedData('menu.paddingX', v)} />
-            </div>
-          </div>
-
-          <hr className="border-editor-border/50" />
-
-          {/* Colors */}
-          <div className="space-y-3">
-            <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider flex items-center gap-2">
-              <Palette size={14} />
-              Colors
-            </label>
-            <ColorControl label="Background" value={data?.menu?.colors?.background || '#0f172a'} onChange={(v) => setNestedData('menu.colors.background', v)} />
-            <ColorControl label="Section Title" value={data?.menu?.colors?.heading || '#F9FAFB'} onChange={(v) => setNestedData('menu.colors.heading', v)} />
-            <ColorControl label="Section Text" value={data?.menu?.colors?.text || '#94a3b8'} onChange={(v) => setNestedData('menu.colors.text', v)} />
-            <ColorControl label="Accent" value={data?.menu?.colors?.accent || '#4f46e5'} onChange={(v) => setNestedData('menu.colors.accent', v)} />
-
-            <hr className="border-editor-border/30 my-2" />
-            <p className="text-[10px] text-editor-text-secondary uppercase tracking-wider font-bold">Card Colors</p>
-
-            <ColorControl label="Card Background" value={data?.menu?.colors?.cardBackground || '#1e293b'} onChange={(v) => setNestedData('menu.colors.cardBackground', v)} />
-            <ColorControl label="Card Title" value={data?.menu?.colors?.cardTitleColor || '#ffffff'} onChange={(v) => setNestedData('menu.colors.cardTitleColor', v)} />
-            <ColorControl label="Card Text" value={data?.menu?.colors?.cardText || '#94a3b8'} onChange={(v) => setNestedData('menu.colors.cardText', v)} />
-            <ColorControl label="Price Color" value={data?.menu?.colors?.priceColor || '#10b981'} onChange={(v) => setNestedData('menu.colors.priceColor', v)} />
-            <ColorControl label="Border Color" value={data?.menu?.colors?.borderColor || '#334155'} onChange={(v) => setNestedData('menu.colors.borderColor', v)} />
-
-            <hr className="border-editor-border/30 my-2" />
-
-            {/* Corner Gradient */}
-            <CornerGradientControl
-              enabled={data?.menu?.cornerGradient?.enabled || false}
-              position={data?.menu?.cornerGradient?.position || 'top-left'}
-              color={data?.menu?.cornerGradient?.color || '#4f46e5'}
-              opacity={data?.menu?.cornerGradient?.opacity || 30}
-              size={data?.menu?.cornerGradient?.size || 50}
-              onEnabledChange={(v) => setNestedData('menu.cornerGradient.enabled', v)}
-              onPositionChange={(v) => setNestedData('menu.cornerGradient.position', v)}
-              onColorChange={(v) => setNestedData('menu.cornerGradient.color', v)}
-              onOpacityChange={(v) => setNestedData('menu.cornerGradient.opacity', v)}
-              onSizeChange={(v) => setNestedData('menu.cornerGradient.size', v)}
-            />
-          </div>
-
-          <hr className="border-editor-border/50" />
-
-          {/* Menu Items */}
-          {renderListSectionControls('menu', t('editor.controls.menu.dish'), [
-            { key: 'name', label: t('editor.controls.menu.dishName'), type: 'input' },
-            { key: 'description', label: t('editor.controls.common.description'), type: 'textarea' },
-            { key: 'price', label: t('editor.controls.menu.price'), type: 'input' },
-            { key: 'imageUrl', label: t('editor.controls.menu.image'), type: 'image' },
-            { key: 'category', label: t('editor.controls.menu.category'), type: 'input' }
-          ])}
-
-          <hr className="border-editor-border/50" />
-
-          {/* Animation Controls */}
-          <AnimationControls
-            animationType={data?.menu?.animationType || 'fade-in-up'}
-            enableCardAnimation={data?.menu?.enableCardAnimation !== false}
-            onChangeAnimationType={(type) => setNestedData('menu.animationType', type)}
-            onToggleAnimation={(enabled) => setNestedData('menu.enableCardAnimation', enabled)}
-            label="Card Animations"
-          />
-        </div>
-      )
-    },
+    menu: { label: 'Restaurant Menu', icon: MenuIcon, renderer: () => null },
     // chatbot removed - deprecated, now using AI Assistant Dashboard
     footer: { label: 'Footer', icon: Type, renderer: renderFooterControls },
     header: { label: 'Navigation Bar', icon: AlignJustify, renderer: renderHeaderControls },
     colors: { label: 'Colores', icon: Palette, renderer: () => <GlobalStylesControl mode="colors" /> },
     typography: { label: 'Tipografía', icon: Type, renderer: () => <GlobalStylesControl mode="typography" /> },
-    banner: {
-      label: 'Banner', icon: Image, renderer: () => (
-        <div className="space-y-4">
-          {/* Content */}
-          <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-            <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
-              <Type size={14} />
-              Content
-            </label>
-
-            <Input label="Headline" value={data?.banner?.headline || ''} onChange={(e) => setNestedData('banner.headline', e.target.value)} />
-            <FontSizeSelector label="Headline Size" value={data?.banner?.headlineFontSize || 'lg'} onChange={(v) => setNestedData('banner.headlineFontSize', v)} />
-
-            <TextArea label="Subheadline" value={data?.banner?.subheadline || ''} onChange={(e) => setNestedData('banner.subheadline', e.target.value)} rows={2} />
-            <FontSizeSelector label="Subheadline Size" value={data?.banner?.subheadlineFontSize || 'md'} onChange={(v) => setNestedData('banner.subheadlineFontSize', v)} />
-
-            <hr className="border-editor-border/50 my-3" />
-
-            <ToggleControl label="Show Button" checked={data?.banner?.showButton !== false} onChange={(v) => setNestedData('banner.showButton', v)} />
-            {data?.banner?.showButton !== false && (
-              <div className="space-y-3 animate-fade-in-up">
-                <Input label="Button Text" value={data?.banner?.buttonText || 'Get Started'} onChange={(e) => setNestedData('banner.buttonText', e.target.value)} />
-                <Input label="Button URL" value={data?.banner?.buttonUrl || '#'} onChange={(e) => setNestedData('banner.buttonUrl', e.target.value)} />
-              </div>
-            )}
-          </div>
-
-          {/* Background Image */}
-          <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-            <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
-              <Image size={14} />
-              Background Image
-            </label>
-            <ImagePicker
-              label="Background Image"
-              value={data?.banner?.backgroundImageUrl || ''}
-              onChange={(url) => setNestedData('banner.backgroundImageUrl', url)}
-              generationContext="background"
-            />
-          </div>
-
-          {/* Layout & Size */}
-          <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-            <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
-              <Layout size={14} />
-              Layout & Size
-            </label>
-
-            <div className="mb-4">
-              <div className="flex justify-between items-center mb-1">
-                <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Banner Height</label>
-                <span className="text-xs text-editor-text-primary">{data?.banner?.height || 400}px</span>
-              </div>
-              <input
-                type="range" min="200" max="800" step="50"
-                value={data?.banner?.height || 400}
-                onChange={(e) => setNestedData('banner.height', parseInt(e.target.value))}
-                className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
-              />
-            </div>
-
-            <div className="mb-4">
-              <label className="block text-xs font-bold text-editor-text-secondary mb-2 uppercase tracking-wider">Text Alignment</label>
-              <div className="flex bg-editor-bg p-1 rounded-md border border-editor-border">
-                {(['left', 'center', 'right'] as const).map((align) => (
-                  <button
-                    key={align}
-                    onClick={() => setNestedData('banner.textAlignment', align)}
-                    className={`flex-1 py-2 text-xs font-medium rounded-sm transition-colors capitalize ${(data?.banner?.textAlignment || 'center') === align
-                      ? 'bg-editor-accent text-editor-bg'
-                      : 'text-editor-text-secondary hover:text-editor-text-primary'
-                      }`}
-                  >
-                    {align}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <PaddingSelector label="Vertical Padding" value={data?.banner?.paddingY || 'md'} onChange={(v) => setNestedData('banner.paddingY', v)} />
-              <PaddingSelector label="Horizontal Padding" value={data?.banner?.paddingX || 'md'} onChange={(v) => setNestedData('banner.paddingX', v)} />
-            </div>
-          </div>
-
-          {/* Colors */}
-          <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-            <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
-              <Palette size={14} />
-              Colors
-            </label>
-
-            <ColorControl label="Background Color" value={data?.banner?.colors?.background || '#0f172a'} onChange={(v) => setNestedData('banner.colors.background', v)} />
-
-            <hr className="border-editor-border/50 my-3" />
-            <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">Overlay</h5>
-            <ToggleControl label="Enable Overlay" checked={data?.banner?.overlayEnabled !== false} onChange={(v) => setNestedData('banner.overlayEnabled', v)} />
-
-            {data?.banner?.overlayEnabled !== false && (
-              <div className="space-y-3 animate-fade-in-up mt-3">
-                <ColorControl label="Overlay Color" value={data?.banner?.colors?.overlayColor || '#000000'} onChange={(v) => setNestedData('banner.colors.overlayColor', v)} />
-
-                <div>
-                  <div className="flex justify-between items-center mb-1">
-                    <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Overlay Opacity</label>
-                    <span className="text-xs text-editor-text-primary">{data?.banner?.backgroundOverlayOpacity ?? 50}%</span>
-                  </div>
-                  <input
-                    type="range" min="0" max="100" step="5"
-                    value={data?.banner?.backgroundOverlayOpacity ?? 50}
-                    onChange={(e) => setNestedData('banner.backgroundOverlayOpacity', parseInt(e.target.value))}
-                    className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
-                  />
-                </div>
-              </div>
-            )}
-
-            <hr className="border-editor-border/50 my-3" />
-            <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">Text</h5>
-            <ColorControl label="Headline Color" value={data?.banner?.colors?.heading || '#ffffff'} onChange={(v) => setNestedData('banner.colors.heading', v)} />
-            <ColorControl label="Subheadline Color" value={data?.banner?.colors?.text || '#ffffff'} onChange={(v) => setNestedData('banner.colors.text', v)} />
-
-            {data?.banner?.showButton !== false && (
-              <>
-                <hr className="border-editor-border/50 my-3" />
-                <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">Button</h5>
-                <ColorControl label="Button Background" value={data?.banner?.colors?.buttonBackground || '#4f46e5'} onChange={(v) => setNestedData('banner.colors.buttonBackground', v)} />
-                <ColorControl label="Button Text" value={data?.banner?.colors?.buttonText || '#ffffff'} onChange={(v) => setNestedData('banner.colors.buttonText', v)} />
-              </>
-            )}
-          </div>
-        </div>
-      )
-    },
-    products: {
-      label: 'Products', icon: ShoppingBag, renderer: () => (
-        <div className="space-y-4">
-          {/* Content */}
-          <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-            <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
-              <Type size={14} />
-              Content
-            </label>
-            <Input label="Title" value={data?.products?.title || 'Nuestros Productos'} onChange={(e) => setNestedData('products.title', e.target.value)} />
-            <FontSizeSelector label="Title Size" value={data?.products?.titleFontSize || 'lg'} onChange={(v) => setNestedData('products.titleFontSize', v)} />
-            <TextArea label="Subtitle" value={data?.products?.subtitle || ''} onChange={(e) => setNestedData('products.subtitle', e.target.value)} rows={2} />
-          </div>
-
-          {/* Layout */}
-          <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-            <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
-              <Layout size={14} />
-              Layout
-            </label>
-
-            <div className="space-y-3">
-              <div>
-                <label className="block text-xs text-editor-text-secondary mb-1">Style</label>
-                <select
-                  value={data?.products?.style || 'modern'}
-                  onChange={(e) => setNestedData('products.style', e.target.value)}
-                  className="w-full bg-editor-panel-bg border border-editor-border rounded px-2 py-1.5 text-xs text-editor-text-primary"
-                >
-                  <option value="minimal">Minimal</option>
-                  <option value="modern">Modern</option>
-                  <option value="elegant">Elegant</option>
-                  <option value="dark">Dark</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-xs text-editor-text-secondary mb-1">Columns</label>
-                <select
-                  value={data?.products?.columns || 4}
-                  onChange={(e) => setNestedData('products.columns', parseInt(e.target.value))}
-                  className="w-full bg-editor-panel-bg border border-editor-border rounded px-2 py-1.5 text-xs text-editor-text-primary"
-                >
-                  <option value={2}>2 Columns</option>
-                  <option value={3}>3 Columns</option>
-                  <option value={4}>4 Columns</option>
-                  <option value={5}>5 Columns</option>
-                  <option value={6}>6 Columns</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-xs text-editor-text-secondary mb-1">Products Per Page</label>
-                <select
-                  value={data?.products?.productsPerPage || 12}
-                  onChange={(e) => setNestedData('products.productsPerPage', parseInt(e.target.value))}
-                  className="w-full bg-editor-panel-bg border border-editor-border rounded px-2 py-1.5 text-xs text-editor-text-primary"
-                >
-                  <option value={8}>8</option>
-                  <option value={12}>12</option>
-                  <option value={16}>16</option>
-                  <option value={24}>24</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
-          {/* Features */}
-          <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-            <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
-              <Settings size={14} />
-              Features
-            </label>
-
-            <div className="space-y-2">
-              <ToggleControl
-                label="Show Search"
-                checked={data?.products?.showSearch !== false}
-                onChange={(v) => setNestedData('products.showSearch', v)}
-              />
-              <ToggleControl
-                label="Show Filters"
-                checked={data?.products?.showFilters !== false}
-                onChange={(v) => setNestedData('products.showFilters', v)}
-              />
-              <ToggleControl
-                label="Show Pagination"
-                checked={data?.products?.showPagination !== false}
-                onChange={(v) => setNestedData('products.showPagination', v)}
-              />
-              <ToggleControl
-                label="Show Add to Cart"
-                checked={data?.products?.showAddToCart !== false}
-                onChange={(v) => setNestedData('products.showAddToCart', v)}
-              />
-              <ToggleControl
-                label="Show Quick View"
-                checked={data?.products?.showQuickView === true}
-                onChange={(v) => setNestedData('products.showQuickView', v)}
-              />
-              <ToggleControl
-                label="Show Wishlist"
-                checked={data?.products?.showWishlist === true}
-                onChange={(v) => setNestedData('products.showWishlist', v)}
-              />
-            </div>
-          </div>
-
-          {/* Colors */}
-          <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-            <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
-              <Palette size={14} />
-              Colors
-            </label>
-
-            <ColorControl label="Background" value={data?.products?.colors?.background || '#0f172a'} onChange={(v) => setNestedData('products.colors.background', v)} />
-            <ColorControl label="Heading" value={data?.products?.colors?.heading || '#F9FAFB'} onChange={(v) => setNestedData('products.colors.heading', v)} />
-            <ColorControl label="Text" value={data?.products?.colors?.text || '#94a3b8'} onChange={(v) => setNestedData('products.colors.text', v)} />
-            <ColorControl label="Accent" value={data?.products?.colors?.accent || '#4f46e5'} onChange={(v) => setNestedData('products.colors.accent', v)} />
-            <ColorControl label="Card Background" value={data?.products?.colors?.cardBackground || '#1e293b'} onChange={(v) => setNestedData('products.colors.cardBackground', v)} />
-            <ColorControl label="Card Text" value={data?.products?.colors?.cardText || '#F9FAFB'} onChange={(v) => setNestedData('products.colors.cardText', v)} />
-            <ColorControl label="Button Background" value={data?.products?.colors?.buttonBackground || '#4f46e5'} onChange={(v) => setNestedData('products.colors.buttonBackground', v)} />
-            <ColorControl label="Button Text" value={data?.products?.colors?.buttonText || '#ffffff'} onChange={(v) => setNestedData('products.colors.buttonText', v)} />
-          </div>
-
-          {/* Info */}
-          <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4">
-            <p className="text-xs text-blue-400 flex items-start gap-2">
-              <Info size={14} className="mt-0.5 flex-shrink-0" />
-              <span>Products are loaded from your Ecommerce store. Go to the Ecommerce Dashboard to add and manage products.</span>
-            </p>
-          </div>
-        </div>
-      )
-    },
-    // Store Settings - controls for the product search page (uses hook from EcommerceControls)
+    banner: { label: 'Banner', icon: Image, renderer: () => null },
+    products: { label: 'Products', icon: ShoppingBag, renderer: () => null },
     storeSettings: { label: 'Store Settings', icon: Store, renderer: () => null },
     // Ecommerce section components - use separate controls file
+
     featuredProducts: { label: 'Featured Products', icon: ShoppingBag, renderer: () => null },
     categoryGrid: { label: 'Category Grid', icon: Grid, renderer: () => null },
     productHero: { label: 'Product Hero', icon: Image, renderer: () => null },
@@ -4969,7 +3340,7 @@ const Controls: React.FC = () => {
                   setNestedData('hero.primaryCtaLink', '');
                 }
               }}
-              label="Seleccionar Producto"
+              label={t('editor.controls.common.selectProduct')}
             />
           )}
 
@@ -4999,7 +3370,7 @@ const Controls: React.FC = () => {
               onSelect={(path) => {
                 setNestedData('hero.primaryCtaLink', path || '');
               }}
-              label="Seleccionar Contenido"
+              label={t('editor.controls.common.selectContent')}
             />
           )}
         </div>
@@ -5098,7 +3469,7 @@ const Controls: React.FC = () => {
                   setNestedData('hero.secondaryCtaLink', '');
                 }
               }}
-              label="Seleccionar Producto"
+              label={t('editor.controls.common.selectProduct')}
             />
           )}
 
@@ -5128,7 +3499,7 @@ const Controls: React.FC = () => {
               onSelect={(path) => {
                 setNestedData('hero.secondaryCtaLink', path || '');
               }}
-              label="Seleccionar Contenido"
+              label={t('editor.controls.common.selectContent')}
             />
           )}
         </div>
@@ -5231,7 +3602,7 @@ const Controls: React.FC = () => {
 
         {/* ========== COLORS ========== */}
         <h4 className="font-bold text-editor-text-primary text-sm">Colors</h4>
-        <ColorControl label="Background" value={data.hero.colors?.background} onChange={(v) => setNestedData('hero.colors.background', v)} />
+        <ColorControl label={t('editor.controls.common.background')} value={data.hero.colors?.background} onChange={(v) => setNestedData('hero.colors.background', v)} />
         <ColorControl label="Primary Color" value={data.hero.colors?.primary || '#4f46e5'} onChange={(v) => setNestedData('hero.colors.primary', v)} />
         <ColorControl label="Secondary Color" value={data.hero.colors?.secondary || '#10b981'} onChange={(v) => setNestedData('hero.colors.secondary', v)} />
         <ColorControl label="Heading" value={data.hero.colors?.heading} onChange={(v) => setNestedData('hero.colors.heading', v)} />
@@ -5301,10 +3672,10 @@ const Controls: React.FC = () => {
             <FileText size={14} />
             Section Header
           </label>
-          <Input label="Title" value={data.features.title} onChange={(e) => setNestedData('features.title', e.target.value)} />
-          <FontSizeSelector label="Title Size" value={data.features.titleFontSize || 'md'} onChange={(v) => setNestedData('features.titleFontSize', v)} />
-          <TextArea label="Description" value={data.features.description} onChange={(e) => setNestedData('features.description', e.target.value)} rows={2} />
-          <FontSizeSelector label="Description Size" value={data.features.descriptionFontSize || 'md'} onChange={(v) => setNestedData('features.descriptionFontSize', v)} />
+          <Input label={t('editor.controls.common.title')} value={data.features.title} onChange={(e) => setNestedData('features.title', e.target.value)} />
+          <FontSizeSelector label={t('editor.controls.common.titleSize')} value={data.features.titleFontSize || 'md'} onChange={(v) => setNestedData('features.titleFontSize', v)} />
+          <TextArea label={t('editor.controls.common.description')} value={data.features.description} onChange={(e) => setNestedData('features.description', e.target.value)} rows={2} />
+          <FontSizeSelector label={t('editor.controls.common.descriptionSize')} value={data.features.descriptionFontSize || 'md'} onChange={(v) => setNestedData('features.descriptionFontSize', v)} />
         </div>
 
         {/* Features Items */}
@@ -5340,7 +3711,7 @@ const Controls: React.FC = () => {
                 className="w-full bg-editor-panel-bg border border-editor-border rounded px-2 py-1 text-xs text-editor-text-primary focus:outline-none focus:border-editor-accent mb-2"
               />
               <ImagePicker
-                label="Image"
+                label={t('editor.controls.common.image')}
                 value={item.imageUrl}
                 onChange={(url) => setNestedData(`features.items.${index}.imageUrl`, url)}
               />
@@ -5397,7 +3768,7 @@ const Controls: React.FC = () => {
                         setNestedData(`features.items.${index}.linkUrl`, '');
                       }
                     }}
-                    label="Select Product"
+                    label={t('editor.controls.common.selectProduct')}
                   />
                 )}
                 {item.linkType === 'collection' && (
@@ -5411,7 +3782,7 @@ const Controls: React.FC = () => {
                         setNestedData(`features.items.${index}.linkUrl`, '');
                       }
                     }}
-                    label="Select Collection"
+                    label={t('editor.controls.common.selectCollection')}
                   />
                 )}
                 {item.linkType === 'content' && (
@@ -5420,7 +3791,7 @@ const Controls: React.FC = () => {
                     onSelect={(path) => {
                       setNestedData(`features.items.${index}.linkUrl`, path || '');
                     }}
-                    label="Seleccionar Contenido"
+                    label={t('editor.controls.common.selectContent')}
                   />
                 )}
               </div>
@@ -5598,7 +3969,7 @@ const Controls: React.FC = () => {
             <Palette size={14} />
             Colors
           </label>
-          <ColorControl label="Background" value={data.features.colors?.background || '#000000'} onChange={(v) => setNestedData('features.colors.background', v)} />
+          <ColorControl label={t('editor.controls.common.background')} value={data.features.colors?.background || '#000000'} onChange={(v) => setNestedData('features.colors.background', v)} />
           <ColorControl label="Section Title" value={data.features.colors?.heading || '#ffffff'} onChange={(v) => setNestedData('features.colors.heading', v)} />
           <ColorControl label="Section Description" value={data.features.colors?.description || '#94a3b8'} onChange={(v) => setNestedData('features.colors.description', v)} />
           <ColorControl label="Accent" value={data.features.colors?.accent || '#4f46e5'} onChange={(v) => setNestedData('features.colors.accent', v)} />
@@ -5637,10 +4008,10 @@ const Controls: React.FC = () => {
             <FileText size={14} />
             Section Header
           </label>
-          <Input label="Title" value={data.testimonials.title} onChange={(e) => setNestedData('testimonials.title', e.target.value)} />
-          <FontSizeSelector label="Title Size" value={data.testimonials.titleFontSize || 'md'} onChange={(v) => setNestedData('testimonials.titleFontSize', v)} />
-          <TextArea label="Description" value={data.testimonials.description} onChange={(e) => setNestedData('testimonials.description', e.target.value)} rows={2} />
-          <FontSizeSelector label="Description Size" value={data.testimonials.descriptionFontSize || 'md'} onChange={(v) => setNestedData('testimonials.descriptionFontSize', v)} />
+          <Input label={t('editor.controls.common.title')} value={data.testimonials.title} onChange={(e) => setNestedData('testimonials.title', e.target.value)} />
+          <FontSizeSelector label={t('editor.controls.common.titleSize')} value={data.testimonials.titleFontSize || 'md'} onChange={(v) => setNestedData('testimonials.titleFontSize', v)} />
+          <TextArea label={t('editor.controls.common.description')} value={data.testimonials.description} onChange={(e) => setNestedData('testimonials.description', e.target.value)} rows={2} />
+          <FontSizeSelector label={t('editor.controls.common.descriptionSize')} value={data.testimonials.descriptionFontSize || 'md'} onChange={(v) => setNestedData('testimonials.descriptionFontSize', v)} />
         </div>
 
         {/* Testimonials Items */}
@@ -5776,9 +4147,9 @@ const Controls: React.FC = () => {
             <Palette size={14} />
             Section Colors
           </label>
-          <ColorControl label="Background" value={data.testimonials.colors?.background || '#000000'} onChange={(v) => setNestedData('testimonials.colors.background', v)} />
-          <ColorControl label="Title" value={data.testimonials.colors?.heading || '#ffffff'} onChange={(v) => setNestedData('testimonials.colors.heading', v)} />
-          <ColorControl label="Description" value={data.testimonials.colors?.description || '#94a3b8'} onChange={(v) => setNestedData('testimonials.colors.description', v)} />
+          <ColorControl label={t('editor.controls.common.background')} value={data.testimonials.colors?.background || '#000000'} onChange={(v) => setNestedData('testimonials.colors.background', v)} />
+          <ColorControl label={t('editor.controls.common.title')} value={data.testimonials.colors?.heading || '#ffffff'} onChange={(v) => setNestedData('testimonials.colors.heading', v)} />
+          <ColorControl label={t('editor.controls.common.description')} value={data.testimonials.colors?.description || '#94a3b8'} onChange={(v) => setNestedData('testimonials.colors.description', v)} />
           <ColorControl label="Text" value={data.testimonials.colors?.text || '#ffffff'} onChange={(v) => setNestedData('testimonials.colors.text', v)} />
           <ColorControl label="Person Title" value={data.testimonials.colors?.subtitleColor || data.testimonials.colors?.description || '#94a3b8'} onChange={(v) => setNestedData('testimonials.colors.subtitleColor', v)} />
           <ColorControl label="Accent" value={data.testimonials.colors?.accent || '#4f46e5'} onChange={(v) => setNestedData('testimonials.colors.accent', v)} />
@@ -5806,7 +4177,7 @@ const Controls: React.FC = () => {
           enableCardAnimation={data.testimonials.enableCardAnimation !== false}
           onChangeAnimationType={(type) => setNestedData('testimonials.animationType', type)}
           onToggleAnimation={(enabled) => setNestedData('testimonials.enableCardAnimation', enabled)}
-          label="Card Animations"
+          label={t('editor.controls.common.cardAnimations')}
         />
       </div>
     );
@@ -5864,7 +4235,7 @@ const Controls: React.FC = () => {
         {/* Section Colors */}
         <div className="space-y-2">
           <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Section Colors</label>
-          <ColorControl label="Background" value={data?.services?.colors?.background || '#0f172a'} onChange={(v) => setNestedData('services.colors.background', v)} />
+          <ColorControl label={t('editor.controls.common.background')} value={data?.services?.colors?.background || '#0f172a'} onChange={(v) => setNestedData('services.colors.background', v)} />
           <ColorControl label="Section Title" value={data?.services?.colors?.heading || '#F9FAFB'} onChange={(v) => setNestedData('services.colors.heading', v)} />
           <ColorControl label="Section Description" value={data?.services?.colors?.description || '#94a3b8'} onChange={(v) => setNestedData('services.colors.description', v)} />
           <ColorControl label="Accent" value={data?.services?.colors?.accent || '#4f46e5'} onChange={(v) => setNestedData('services.colors.accent', v)} />
@@ -5916,7 +4287,7 @@ const Controls: React.FC = () => {
           enableCardAnimation={data?.services?.enableCardAnimation !== false}
           onChangeAnimationType={(type) => setNestedData('services.animationType', type)}
           onToggleAnimation={(enabled) => setNestedData('services.enableCardAnimation', enabled)}
-          label="Card Animations"
+          label={t('editor.controls.common.cardAnimations')}
         />
       </div>
     );
@@ -5957,11 +4328,11 @@ const Controls: React.FC = () => {
         <hr className="border-editor-border/50" />
 
         {/* Content */}
-        <Input label="Title" value={data?.team?.title} onChange={(e) => setNestedData('team.title', e.target.value)} />
-        <FontSizeSelector label="Title Size" value={data?.team?.titleFontSize || 'md'} onChange={(v) => setNestedData('team.titleFontSize', v)} />
+        <Input label={t('editor.controls.common.title')} value={data?.team?.title} onChange={(e) => setNestedData('team.title', e.target.value)} />
+        <FontSizeSelector label={t('editor.controls.common.titleSize')} value={data?.team?.titleFontSize || 'md'} onChange={(v) => setNestedData('team.titleFontSize', v)} />
 
-        <TextArea label="Description" value={data?.team?.description} onChange={(e) => setNestedData('team.description', e.target.value)} rows={2} />
-        <FontSizeSelector label="Description Size" value={data?.team?.descriptionFontSize || 'md'} onChange={(v) => setNestedData('team.descriptionFontSize', v)} />
+        <TextArea label={t('editor.controls.common.description')} value={data?.team?.description} onChange={(e) => setNestedData('team.description', e.target.value)} rows={2} />
+        <FontSizeSelector label={t('editor.controls.common.descriptionSize')} value={data?.team?.descriptionFontSize || 'md'} onChange={(v) => setNestedData('team.descriptionFontSize', v)} />
 
         <hr className="border-editor-border/50" />
 
@@ -6020,7 +4391,7 @@ const Controls: React.FC = () => {
                   onSelect={(path) => {
                     setNestedData(`team.items.${index}.linkUrl`, path || '');
                   }}
-                  label="Seleccionar Perfil del CMS"
+                  label={t('editor.controls.common.selectContent')}
                 />
               )}
             </div>
@@ -6045,7 +4416,7 @@ const Controls: React.FC = () => {
         {/* Section Colors */}
         <div className="space-y-2">
           <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Section Colors</label>
-          <ColorControl label="Background" value={data?.team?.colors?.background || '#0f172a'} onChange={(v) => setNestedData('team.colors.background', v)} />
+          <ColorControl label={t('editor.controls.common.background')} value={data?.team?.colors?.background || '#0f172a'} onChange={(v) => setNestedData('team.colors.background', v)} />
           <ColorControl label="Section Title" value={data?.team?.colors?.heading || '#F9FAFB'} onChange={(v) => setNestedData('team.colors.heading', v)} />
           <ColorControl label="Section Description" value={data?.team?.colors?.description || '#94a3b8'} onChange={(v) => setNestedData('team.colors.description', v)} />
           <ColorControl label="Accent" value={data?.team?.colors?.accent || '#4f46e5'} onChange={(v) => setNestedData('team.colors.accent', v)} />
@@ -6097,7 +4468,7 @@ const Controls: React.FC = () => {
           enableCardAnimation={data?.team?.enableCardAnimation !== false}
           onChangeAnimationType={(type) => setNestedData('team.animationType', type)}
           onToggleAnimation={(enabled) => setNestedData('team.enableCardAnimation', enabled)}
-          label="Card Animations"
+          label={t('editor.controls.common.cardAnimations')}
         />
       </div>
     );
@@ -6146,7 +4517,7 @@ const Controls: React.FC = () => {
         {/* Section Colors */}
         <div className="space-y-2">
           <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Section Colors</label>
-          <ColorControl label="Background" value={data?.faq?.colors?.background || '#1e293b'} onChange={(v) => setNestedData('faq.colors.background', v)} />
+          <ColorControl label={t('editor.controls.common.background')} value={data?.faq?.colors?.background || '#1e293b'} onChange={(v) => setNestedData('faq.colors.background', v)} />
           <ColorControl label="Section Title" value={data?.faq?.colors?.heading || '#F9FAFB'} onChange={(v) => setNestedData('faq.colors.heading', v)} />
           <ColorControl label="Section Description" value={data?.faq?.colors?.description || data?.faq?.colors?.text || '#94a3b8'} onChange={(v) => setNestedData('faq.colors.description', v)} />
           <ColorControl label="Accent" value={data?.faq?.colors?.accent || '#4f46e5'} onChange={(v) => setNestedData('faq.colors.accent', v)} />
@@ -6270,11 +4641,11 @@ const Controls: React.FC = () => {
         <hr className="border-editor-border/50" />
 
         {/* Title & Description */}
-        <Input label="Title" value={data?.portfolio?.title} onChange={(e) => setNestedData('portfolio.title', e.target.value)} />
-        <FontSizeSelector label="Title Size" value={data?.portfolio?.titleFontSize || 'md'} onChange={(v) => setNestedData('portfolio.titleFontSize', v)} />
+        <Input label={t('editor.controls.common.title')} value={data?.portfolio?.title} onChange={(e) => setNestedData('portfolio.title', e.target.value)} />
+        <FontSizeSelector label={t('editor.controls.common.titleSize')} value={data?.portfolio?.titleFontSize || 'md'} onChange={(v) => setNestedData('portfolio.titleFontSize', v)} />
 
-        <TextArea label="Description" value={data?.portfolio?.description} onChange={(e) => setNestedData('portfolio.description', e.target.value)} rows={2} />
-        <FontSizeSelector label="Description Size" value={data?.portfolio?.descriptionFontSize || 'md'} onChange={(v) => setNestedData('portfolio.descriptionFontSize', v)} />
+        <TextArea label={t('editor.controls.common.description')} value={data?.portfolio?.description} onChange={(e) => setNestedData('portfolio.description', e.target.value)} rows={2} />
+        <FontSizeSelector label={t('editor.controls.common.descriptionSize')} value={data?.portfolio?.descriptionFontSize || 'md'} onChange={(v) => setNestedData('portfolio.descriptionFontSize', v)} />
 
         <hr className="border-editor-border/50" />
 
@@ -6308,7 +4679,7 @@ const Controls: React.FC = () => {
               className="w-full bg-editor-panel-bg border border-editor-border rounded px-2 py-1 text-xs text-editor-text-primary focus:outline-none focus:border-editor-accent mb-2"
             />
             <ImagePicker
-              label="Image"
+              label={t('editor.controls.common.image')}
               value={item.imageUrl}
               onChange={(url) => setNestedData(`portfolio.items.${index}.imageUrl`, url)}
             />
@@ -6365,7 +4736,7 @@ const Controls: React.FC = () => {
                       setNestedData(`portfolio.items.${index}.linkUrl`, '');
                     }
                   }}
-                  label="Select Product"
+                  label={t('editor.controls.common.selectProduct')}
                 />
               )}
               {item.linkType === 'collection' && (
@@ -6379,7 +4750,7 @@ const Controls: React.FC = () => {
                       setNestedData(`portfolio.items.${index}.linkUrl`, '');
                     }
                   }}
-                  label="Select Collection"
+                  label={t('editor.controls.common.selectCollection')}
                 />
               )}
               {item.linkType === 'content' && (
@@ -6388,7 +4759,7 @@ const Controls: React.FC = () => {
                   onSelect={(path) => {
                     setNestedData(`portfolio.items.${index}.linkUrl`, path || '');
                   }}
-                  label="Seleccionar Contenido"
+                  label={t('editor.controls.common.selectContent')}
                 />
               )}
             </div>
@@ -6413,7 +4784,7 @@ const Controls: React.FC = () => {
         {/* Section Colors */}
         <div className="space-y-2">
           <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Section Colors</label>
-          <ColorControl label="Background" value={data?.portfolio?.colors?.background || '#0f172a'} onChange={(v) => setNestedData('portfolio.colors.background', v)} />
+          <ColorControl label={t('editor.controls.common.background')} value={data?.portfolio?.colors?.background || '#0f172a'} onChange={(v) => setNestedData('portfolio.colors.background', v)} />
           <ColorControl label="Heading" value={data?.portfolio?.colors?.heading || '#F9FAFB'} onChange={(v) => setNestedData('portfolio.colors.heading', v)} />
           <ColorControl label="Text" value={data?.portfolio?.colors?.text || '#94a3b8'} onChange={(v) => setNestedData('portfolio.colors.text', v)} />
           <ColorControl label="Accent" value={data?.portfolio?.colors?.accent || '#4f46e5'} onChange={(v) => setNestedData('portfolio.colors.accent', v)} />
@@ -6474,7 +4845,7 @@ const Controls: React.FC = () => {
           enableCardAnimation={data?.portfolio?.enableCardAnimation !== false}
           onChangeAnimationType={(type) => setNestedData('portfolio.animationType', type)}
           onToggleAnimation={(enabled) => setNestedData('portfolio.enableCardAnimation', enabled)}
-          label="Card Animations"
+          label={t('editor.controls.common.cardAnimations')}
         />
       </div>
     );
@@ -6515,13 +4886,13 @@ const Controls: React.FC = () => {
         <hr className="border-editor-border/50" />
 
         {/* Content */}
-        <Input label="Title" value={data?.leads.title} onChange={(e) => setNestedData('leads.title', e.target.value)} />
-        <FontSizeSelector label="Title Size" value={data?.leads.titleFontSize || 'md'} onChange={(v) => setNestedData('leads.titleFontSize', v)} />
+        <Input label={t('editor.controls.common.title')} value={data?.leads.title} onChange={(e) => setNestedData('leads.title', e.target.value)} />
+        <FontSizeSelector label={t('editor.controls.common.titleSize')} value={data?.leads.titleFontSize || 'md'} onChange={(v) => setNestedData('leads.titleFontSize', v)} />
 
-        <TextArea label="Description" value={data?.leads.description} onChange={(e) => setNestedData('leads.description', e.target.value)} rows={2} />
-        <FontSizeSelector label="Description Size" value={data?.leads.descriptionFontSize || 'md'} onChange={(v) => setNestedData('leads.descriptionFontSize', v)} />
+        <TextArea label={t('editor.controls.common.description')} value={data?.leads.description} onChange={(e) => setNestedData('leads.description', e.target.value)} rows={2} />
+        <FontSizeSelector label={t('editor.controls.common.descriptionSize')} value={data?.leads.descriptionFontSize || 'md'} onChange={(v) => setNestedData('leads.descriptionFontSize', v)} />
 
-        <Input label="Button Text" value={data?.leads.buttonText} onChange={(e) => setNestedData('leads.buttonText', e.target.value)} />
+        <Input label={t('editor.controls.common.buttonText')} value={data?.leads.buttonText} onChange={(e) => setNestedData('leads.buttonText', e.target.value)} />
       </div>
     );
 
@@ -6553,9 +4924,9 @@ const Controls: React.FC = () => {
         {/* Section Colors */}
         <div className="space-y-2">
           <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Section Colors</label>
-          <ColorControl label="Background" value={data?.leads.colors?.background || '#0f172a'} onChange={(v) => setNestedData('leads.colors.background', v)} />
-          <ColorControl label="Title" value={data?.leads.colors?.heading || '#F9FAFB'} onChange={(v) => setNestedData('leads.colors.heading', v)} />
-          <ColorControl label="Subtitle" value={data?.leads.colors?.description || '#94a3b8'} onChange={(v) => setNestedData('leads.colors.description', v)} />
+          <ColorControl label={t('editor.controls.common.background')} value={data?.leads.colors?.background || '#0f172a'} onChange={(v) => setNestedData('leads.colors.background', v)} />
+          <ColorControl label={t('editor.controls.common.title')} value={data?.leads.colors?.heading || '#F9FAFB'} onChange={(v) => setNestedData('leads.colors.heading', v)} />
+          <ColorControl label={t('editor.controls.common.subtitle')} value={data?.leads.colors?.description || '#94a3b8'} onChange={(v) => setNestedData('leads.colors.description', v)} />
           <ColorControl label="Accent" value={data?.leads.colors?.accent || '#4f46e5'} onChange={(v) => setNestedData('leads.colors.accent', v)} />
 
           <hr className="border-editor-border/30 my-2" />
@@ -6602,7 +4973,7 @@ const Controls: React.FC = () => {
         <div className="space-y-2">
           <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Button & Gradient</label>
           <ColorControl label="Button Background" value={data?.leads.colors?.buttonBackground || '#4f46e5'} onChange={(v) => setNestedData('leads.colors.buttonBackground', v)} />
-          <ColorControl label="Button Text" value={data?.leads.colors?.buttonText || '#ffffff'} onChange={(v) => setNestedData('leads.colors.buttonText', v)} />
+          <ColorControl label={t('editor.controls.common.buttonText')} value={data?.leads.colors?.buttonText || '#ffffff'} onChange={(v) => setNestedData('leads.colors.buttonText', v)} />
           <ColorControl label="Gradient Start" value={data?.leads.colors?.gradientStart || '#4f46e5'} onChange={(v) => setNestedData('leads.colors.gradientStart', v)} />
           <ColorControl label="Gradient End" value={data?.leads.colors?.gradientEnd || '#10b981'} onChange={(v) => setNestedData('leads.colors.gradientEnd', v)} />
         </div>
@@ -6618,13 +4989,13 @@ const Controls: React.FC = () => {
 
     const contentTab = (
       <div className="space-y-4">
-        <Input label="Title" value={data?.newsletter.title} onChange={(e) => setNestedData('newsletter.title', e.target.value)} />
-        <FontSizeSelector label="Title Size" value={data?.newsletter.titleFontSize || 'md'} onChange={(v) => setNestedData('newsletter.titleFontSize', v)} />
+        <Input label={t('editor.controls.common.title')} value={data?.newsletter.title} onChange={(e) => setNestedData('newsletter.title', e.target.value)} />
+        <FontSizeSelector label={t('editor.controls.common.titleSize')} value={data?.newsletter.titleFontSize || 'md'} onChange={(v) => setNestedData('newsletter.titleFontSize', v)} />
 
-        <TextArea label="Description" value={data?.newsletter.description} onChange={(e) => setNestedData('newsletter.description', e.target.value)} rows={2} />
-        <FontSizeSelector label="Description Size" value={data?.newsletter.descriptionFontSize || 'md'} onChange={(v) => setNestedData('newsletter.descriptionFontSize', v)} />
+        <TextArea label={t('editor.controls.common.description')} value={data?.newsletter.description} onChange={(e) => setNestedData('newsletter.description', e.target.value)} rows={2} />
+        <FontSizeSelector label={t('editor.controls.common.descriptionSize')} value={data?.newsletter.descriptionFontSize || 'md'} onChange={(v) => setNestedData('newsletter.descriptionFontSize', v)} />
 
-        <Input label="Button Text" value={data?.newsletter.buttonText} onChange={(e) => setNestedData('newsletter.buttonText', e.target.value)} />
+        <Input label={t('editor.controls.common.buttonText')} value={data?.newsletter.buttonText} onChange={(e) => setNestedData('newsletter.buttonText', e.target.value)} />
       </div>
     );
 
@@ -6646,7 +5017,7 @@ const Controls: React.FC = () => {
         {/* Section Colors */}
         <div className="space-y-2">
           <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Section Colors</label>
-          <ColorControl label="Background" value={data?.newsletter.colors?.background || '#000000'} onChange={(v) => setNestedData('newsletter.colors.background', v)} />
+          <ColorControl label={t('editor.controls.common.background')} value={data?.newsletter.colors?.background || '#000000'} onChange={(v) => setNestedData('newsletter.colors.background', v)} />
           <ColorControl label="Section Title" value={data?.newsletter.colors?.heading || '#F9FAFB'} onChange={(v) => setNestedData('newsletter.colors.heading', v)} />
           <ColorControl label="Section Description" value={data?.newsletter.colors?.text || '#94a3b8'} onChange={(v) => setNestedData('newsletter.colors.text', v)} />
         </div>
@@ -6679,7 +5050,7 @@ const Controls: React.FC = () => {
         <div className="space-y-2">
           <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Button</label>
           <ColorControl label="Button Background" value={data?.newsletter.colors?.buttonBackground || '#4f46e5'} onChange={(v) => setNestedData('newsletter.colors.buttonBackground', v)} />
-          <ColorControl label="Button Text" value={data?.newsletter.colors?.buttonText || '#ffffff'} onChange={(v) => setNestedData('newsletter.colors.buttonText', v)} />
+          <ColorControl label={t('editor.controls.common.buttonText')} value={data?.newsletter.colors?.buttonText || '#ffffff'} onChange={(v) => setNestedData('newsletter.colors.buttonText', v)} />
         </div>
       </div>
     );
@@ -6693,13 +5064,13 @@ const Controls: React.FC = () => {
 
     const contentTab = (
       <div className="space-y-4">
-        <Input label="Title" value={data?.cta.title} onChange={(e) => setNestedData('cta.title', e.target.value)} />
-        <FontSizeSelector label="Title Size" value={data?.cta.titleFontSize || 'md'} onChange={(v) => setNestedData('cta.titleFontSize', v)} />
+        <Input label={t('editor.controls.common.title')} value={data?.cta.title} onChange={(e) => setNestedData('cta.title', e.target.value)} />
+        <FontSizeSelector label={t('editor.controls.common.titleSize')} value={data?.cta.titleFontSize || 'md'} onChange={(v) => setNestedData('cta.titleFontSize', v)} />
 
-        <TextArea label="Description" value={data?.cta.description} onChange={(e) => setNestedData('cta.description', e.target.value)} rows={2} />
-        <FontSizeSelector label="Description Size" value={data?.cta.descriptionFontSize || 'md'} onChange={(v) => setNestedData('cta.descriptionFontSize', v)} />
+        <TextArea label={t('editor.controls.common.description')} value={data?.cta.description} onChange={(e) => setNestedData('cta.description', e.target.value)} rows={2} />
+        <FontSizeSelector label={t('editor.controls.common.descriptionSize')} value={data?.cta.descriptionFontSize || 'md'} onChange={(v) => setNestedData('cta.descriptionFontSize', v)} />
 
-        <Input label="Button Text" value={data?.cta.buttonText} onChange={(e) => setNestedData('cta.buttonText', e.target.value)} />
+        <Input label={t('editor.controls.common.buttonText')} value={data?.cta.buttonText} onChange={(e) => setNestedData('cta.buttonText', e.target.value)} />
 
         {/* Link Type Selector */}
         <div className="mb-3">
@@ -6728,7 +5099,7 @@ const Controls: React.FC = () => {
         {(data?.cta.linkType === 'manual' || !data?.cta.linkType) && (
           <>
             <Input
-              label="Button Link"
+              label={t('editor.controls.common.buttonLink')}
               value={data?.cta.buttonUrl || ''}
               onChange={(e) => setNestedData('cta.buttonUrl', e.target.value)}
               placeholder="https://example.com or #section"
@@ -6750,7 +5121,7 @@ const Controls: React.FC = () => {
                 setNestedData('cta.buttonUrl', '');
               }
             }}
-            label="Select Product"
+            label={t('editor.controls.common.selectProduct')}
           />
         )}
 
@@ -6765,7 +5136,7 @@ const Controls: React.FC = () => {
                 setNestedData('cta.buttonUrl', '');
               }
             }}
-            label="Select Collection"
+            label={t('editor.controls.common.selectCollection')}
           />
         )}
 
@@ -6775,7 +5146,7 @@ const Controls: React.FC = () => {
             onSelect={(path) => {
               setNestedData('cta.buttonUrl', path || '');
             }}
-            label="Seleccionar Contenido"
+            label={t('editor.controls.common.selectContent')}
           />
         )}
       </div>
@@ -6816,10 +5187,10 @@ const Controls: React.FC = () => {
         {/* Text & Button */}
         <div className="space-y-2">
           <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Text & Button</label>
-          <ColorControl label="Title" value={data?.cta.colors?.heading || '#ffffff'} onChange={(v) => setNestedData('cta.colors.heading', v)} />
-          <ColorControl label="Description" value={data?.cta.colors?.text || '#ffffff'} onChange={(v) => setNestedData('cta.colors.text', v)} />
+          <ColorControl label={t('editor.controls.common.title')} value={data?.cta.colors?.heading || '#ffffff'} onChange={(v) => setNestedData('cta.colors.heading', v)} />
+          <ColorControl label={t('editor.controls.common.description')} value={data?.cta.colors?.text || '#ffffff'} onChange={(v) => setNestedData('cta.colors.text', v)} />
           <ColorControl label="Button Background" value={data?.cta.colors?.buttonBackground || '#ffffff'} onChange={(v) => setNestedData('cta.colors.buttonBackground', v)} />
-          <ColorControl label="Button Text" value={data?.cta.colors?.buttonText || '#4f46e5'} onChange={(v) => setNestedData('cta.colors.buttonText', v)} />
+          <ColorControl label={t('editor.controls.common.buttonText')} value={data?.cta.colors?.buttonText || '#4f46e5'} onChange={(v) => setNestedData('cta.colors.buttonText', v)} />
         </div>
 
         <hr className="border-editor-border/50" />
@@ -6850,11 +5221,11 @@ const Controls: React.FC = () => {
     const contentTab = (
       <div className="space-y-4">
         {/* Content */}
-        <Input label="Title" value={data?.howItWorks?.title} onChange={(e) => setNestedData('howItWorks.title', e.target.value)} />
-        <FontSizeSelector label="Title Size" value={data?.howItWorks?.titleFontSize || 'md'} onChange={(v) => setNestedData('howItWorks.titleFontSize', v)} />
+        <Input label={t('editor.controls.common.title')} value={data?.howItWorks?.title} onChange={(e) => setNestedData('howItWorks.title', e.target.value)} />
+        <FontSizeSelector label={t('editor.controls.common.titleSize')} value={data?.howItWorks?.titleFontSize || 'md'} onChange={(v) => setNestedData('howItWorks.titleFontSize', v)} />
 
-        <TextArea label="Description" value={data?.howItWorks?.description} onChange={(e) => setNestedData('howItWorks.description', e.target.value)} rows={2} />
-        <FontSizeSelector label="Description Size" value={data?.howItWorks?.descriptionFontSize || 'md'} onChange={(v) => setNestedData('howItWorks.descriptionFontSize', v)} />
+        <TextArea label={t('editor.controls.common.description')} value={data?.howItWorks?.description} onChange={(e) => setNestedData('howItWorks.description', e.target.value)} rows={2} />
+        <FontSizeSelector label={t('editor.controls.common.descriptionSize')} value={data?.howItWorks?.descriptionFontSize || 'md'} onChange={(v) => setNestedData('howItWorks.descriptionFontSize', v)} />
 
         {/* Steps Count */}
         <div>
@@ -6928,7 +5299,7 @@ const Controls: React.FC = () => {
         {/* Section Colors */}
         <div className="space-y-2">
           <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Section Colors</label>
-          <ColorControl label="Background" value={data?.howItWorks?.colors?.background || '#0f172a'} onChange={(v) => setNestedData('howItWorks.colors.background', v)} />
+          <ColorControl label={t('editor.controls.common.background')} value={data?.howItWorks?.colors?.background || '#0f172a'} onChange={(v) => setNestedData('howItWorks.colors.background', v)} />
           <ColorControl label="Section Title" value={data?.howItWorks?.colors?.heading || '#ffffff'} onChange={(v) => setNestedData('howItWorks.colors.heading', v)} />
           <ColorControl label="Section Description" value={data?.howItWorks?.colors?.description || '#94a3b8'} onChange={(v) => setNestedData('howItWorks.colors.description', v)} />
         </div>
@@ -7049,10 +5420,10 @@ const Controls: React.FC = () => {
         {/* Content Controls */}
         <div className="space-y-3">
           <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Content</label>
-          <Input label="Title" value={data?.menu?.title || ''} onChange={(e) => setNestedData('menu.title', e.target.value)} />
-          <FontSizeSelector label="Title Size" value={data?.menu?.titleFontSize || 'md'} onChange={(v) => setNestedData('menu.titleFontSize', v)} />
-          <TextArea label="Description" value={data?.menu?.description || ''} onChange={(e) => setNestedData('menu.description', e.target.value)} rows={2} />
-          <FontSizeSelector label="Description Size" value={data?.menu?.descriptionFontSize || 'md'} onChange={(v) => setNestedData('menu.descriptionFontSize', v)} />
+          <Input label={t('editor.controls.common.title')} value={data?.menu?.title || ''} onChange={(e) => setNestedData('menu.title', e.target.value)} />
+          <FontSizeSelector label={t('editor.controls.common.titleSize')} value={data?.menu?.titleFontSize || 'md'} onChange={(v) => setNestedData('menu.titleFontSize', v)} />
+          <TextArea label={t('editor.controls.common.description')} value={data?.menu?.description || ''} onChange={(e) => setNestedData('menu.description', e.target.value)} rows={2} />
+          <FontSizeSelector label={t('editor.controls.common.descriptionSize')} value={data?.menu?.descriptionFontSize || 'md'} onChange={(v) => setNestedData('menu.descriptionFontSize', v)} />
         </div>
 
         <hr className="border-editor-border/50" />
@@ -7061,13 +5432,13 @@ const Controls: React.FC = () => {
         <div className="space-y-3">
           <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Section Icon</label>
           <ToggleControl
-            label="Show Section Icon"
+            label={t('editor.controls.common.showSectionIcon')}
             checked={data?.menu?.showIcon !== false}
             onChange={(v) => setNestedData('menu.showIcon', v)}
           />
           {data?.menu?.showIcon !== false && (
             <IconSelector
-              label="Icon"
+              label={t('editor.controls.common.icon')}
               value={data?.menu?.icon || 'utensils-crossed'}
               onChange={(v) => setNestedData('menu.icon', v)}
             />
@@ -7094,7 +5465,7 @@ const Controls: React.FC = () => {
         {/* Section Colors */}
         <div className="space-y-3">
           <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Section Colors</label>
-          <ColorControl label="Background" value={data?.menu?.colors?.background || '#0f172a'} onChange={(v) => setNestedData('menu.colors.background', v)} />
+          <ColorControl label={t('editor.controls.common.background')} value={data?.menu?.colors?.background || '#0f172a'} onChange={(v) => setNestedData('menu.colors.background', v)} />
           <ColorControl label="Section Title" value={data?.menu?.colors?.heading || '#F9FAFB'} onChange={(v) => setNestedData('menu.colors.heading', v)} />
           <ColorControl label="Section Text" value={data?.menu?.colors?.text || '#94a3b8'} onChange={(v) => setNestedData('menu.colors.text', v)} />
           <ColorControl label="Accent" value={data?.menu?.colors?.accent || '#4f46e5'} onChange={(v) => setNestedData('menu.colors.accent', v)} />
@@ -7147,7 +5518,7 @@ const Controls: React.FC = () => {
           enableCardAnimation={data?.menu?.enableCardAnimation !== false}
           onChangeAnimationType={(type) => setNestedData('menu.animationType', type)}
           onToggleAnimation={(enabled) => setNestedData('menu.enableCardAnimation', enabled)}
-          label="Card Animations"
+          label={t('editor.controls.common.cardAnimations')}
         />
       </div>
     );
@@ -7168,22 +5539,22 @@ const Controls: React.FC = () => {
             Content
           </label>
 
-          <AIFormControl label="Headline" onAssistClick={() => setAiAssistField({ path: 'banner.headline', value: data?.banner?.headline || '', context: 'Banner Headline' })}>
+          <AIFormControl label={t('editor.controls.common.headline')} onAssistClick={() => setAiAssistField({ path: 'banner.headline', value: data?.banner?.headline || '', context: 'Banner Headline' })}>
             <Input value={data?.banner?.headline || ''} onChange={(e) => setNestedData('banner.headline', e.target.value)} />
           </AIFormControl>
           <FontSizeSelector label="Headline Size" value={data?.banner?.headlineFontSize || 'lg'} onChange={(v) => setNestedData('banner.headlineFontSize', v)} />
 
-          <AIFormControl label="Subheadline" onAssistClick={() => setAiAssistField({ path: 'banner.subheadline', value: data?.banner?.subheadline || '', context: 'Banner Subheadline' })}>
+          <AIFormControl label={t('editor.controls.common.subheadline')} onAssistClick={() => setAiAssistField({ path: 'banner.subheadline', value: data?.banner?.subheadline || '', context: 'Banner Subheadline' })}>
             <TextArea value={data?.banner?.subheadline || ''} onChange={(e) => setNestedData('banner.subheadline', e.target.value)} rows={2} />
           </AIFormControl>
           <FontSizeSelector label="Subheadline Size" value={data?.banner?.subheadlineFontSize || 'md'} onChange={(v) => setNestedData('banner.subheadlineFontSize', v)} />
 
           <hr className="border-editor-border/50 my-3" />
 
-          <ToggleControl label="Show Button" checked={data?.banner?.showButton !== false} onChange={(v) => setNestedData('banner.showButton', v)} />
+          <ToggleControl label={t('editor.controls.common.showButton')} checked={data?.banner?.showButton !== false} onChange={(v) => setNestedData('banner.showButton', v)} />
           {data?.banner?.showButton !== false && (
             <div className="space-y-3 animate-fade-in-up">
-              <AIFormControl label="Button Text" onAssistClick={() => setAiAssistField({ path: 'banner.buttonText', value: data?.banner?.buttonText || 'Get Started', context: 'Banner Button' })}>
+              <AIFormControl label={t('editor.controls.common.buttonText')} onAssistClick={() => setAiAssistField({ path: 'banner.buttonText', value: data?.banner?.buttonText || 'Get Started', context: 'Banner Button' })}>
                 <Input value={data?.banner?.buttonText || 'Get Started'} onChange={(e) => setNestedData('banner.buttonText', e.target.value)} />
               </AIFormControl>
 
@@ -7213,7 +5584,7 @@ const Controls: React.FC = () => {
               {/* Conditional Inputs based on Link Type */}
               {(data?.banner?.linkType === 'manual' || !data?.banner?.linkType) && (
                 <Input
-                  label="Button URL"
+                  label={t('editor.controls.common.url')}
                   value={data?.banner?.buttonUrl || '#'}
                   onChange={(e) => setNestedData('banner.buttonUrl', e.target.value)}
                   placeholder="https://example.com"
@@ -7241,7 +5612,7 @@ const Controls: React.FC = () => {
                       setNestedData('banner.buttonUrl', '');
                     }
                   }}
-                  label="Select Product"
+                  label={t('editor.controls.common.selectProduct')}
                 />
               )}
 
@@ -7261,7 +5632,7 @@ const Controls: React.FC = () => {
                       setNestedData('banner.buttonUrl', '');
                     }
                   }}
-                  label="Select Collection"
+                  label={t('editor.controls.common.selectCollection')}
                 />
               )}
             </div>
@@ -7275,7 +5646,7 @@ const Controls: React.FC = () => {
             Background Image
           </label>
           <ImagePicker
-            label="Background Image"
+            label={t('editor.controls.common.backgroundImage')}
             value={data?.banner?.backgroundImageUrl || ''}
             onChange={(url) => setNestedData('banner.backgroundImageUrl', url)}
             generationContext="background"
@@ -7343,11 +5714,11 @@ const Controls: React.FC = () => {
 
           <hr className="border-editor-border/50 my-3" />
           <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">Overlay</h5>
-          <ToggleControl label="Enable Overlay" checked={data?.banner?.overlayEnabled !== false} onChange={(v) => setNestedData('banner.overlayEnabled', v)} />
+          <ToggleControl label={t('editor.controls.common.enableOverlay')} checked={data?.banner?.overlayEnabled !== false} onChange={(v) => setNestedData('banner.overlayEnabled', v)} />
 
           {data?.banner?.overlayEnabled !== false && (
             <div className="space-y-3 animate-fade-in-up mt-3">
-              <ColorControl label="Overlay Color" value={data?.banner?.colors?.overlayColor || '#000000'} onChange={(v) => setNestedData('banner.colors.overlayColor', v)} />
+              <ColorControl label={t('editor.controls.common.overlayColor')} value={data?.banner?.colors?.overlayColor || '#000000'} onChange={(v) => setNestedData('banner.colors.overlayColor', v)} />
 
               <div>
                 <div className="flex justify-between items-center mb-1">
@@ -7374,7 +5745,7 @@ const Controls: React.FC = () => {
               <hr className="border-editor-border/50 my-3" />
               <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">Button</h5>
               <ColorControl label="Button Background" value={data?.banner?.colors?.buttonBackground || '#4f46e5'} onChange={(v) => setNestedData('banner.colors.buttonBackground', v)} />
-              <ColorControl label="Button Text" value={data?.banner?.colors?.buttonText || '#ffffff'} onChange={(v) => setNestedData('banner.colors.buttonText', v)} />
+              <ColorControl label={t('editor.controls.common.buttonText')} value={data?.banner?.colors?.buttonText || '#ffffff'} onChange={(v) => setNestedData('banner.colors.buttonText', v)} />
             </>
           )}
         </div>
@@ -7425,11 +5796,11 @@ const Controls: React.FC = () => {
 
         <hr className="border-editor-border/50" />
 
-        <Input label="Title" value={data.pricing.title} onChange={(e) => setNestedData('pricing.title', e.target.value)} />
-        <FontSizeSelector label="Title Size" value={data.pricing.titleFontSize || 'md'} onChange={(v) => setNestedData('pricing.titleFontSize', v)} />
+        <Input label={t('editor.controls.common.title')} value={data.pricing.title} onChange={(e) => setNestedData('pricing.title', e.target.value)} />
+        <FontSizeSelector label={t('editor.controls.common.titleSize')} value={data.pricing.titleFontSize || 'md'} onChange={(v) => setNestedData('pricing.titleFontSize', v)} />
 
-        <TextArea label="Description" value={data.pricing.description} onChange={(e) => setNestedData('pricing.description', e.target.value)} rows={2} />
-        <FontSizeSelector label="Description Size" value={data.pricing.descriptionFontSize || 'md'} onChange={(v) => setNestedData('pricing.descriptionFontSize', v)} />
+        <TextArea label={t('editor.controls.common.description')} value={data.pricing.description} onChange={(e) => setNestedData('pricing.description', e.target.value)} rows={2} />
+        <FontSizeSelector label={t('editor.controls.common.descriptionSize')} value={data.pricing.descriptionFontSize || 'md'} onChange={(v) => setNestedData('pricing.descriptionFontSize', v)} />
 
         <hr className="border-editor-border/50" />
 
@@ -7532,9 +5903,9 @@ const Controls: React.FC = () => {
         {/* Section Colors */}
         <div className="space-y-2">
           <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Section Colors</label>
-          <ColorControl label="Background" value={data.pricing.colors?.background} onChange={(v) => setNestedData('pricing.colors.background', v)} />
-          <ColorControl label="Title" value={data.pricing.colors?.heading || '#ffffff'} onChange={(v) => setNestedData('pricing.colors.heading', v)} />
-          <ColorControl label="Description" value={data.pricing.colors?.description || data.pricing.colors?.text} onChange={(v) => setNestedData('pricing.colors.description', v)} />
+          <ColorControl label={t('editor.controls.common.background')} value={data.pricing.colors?.background} onChange={(v) => setNestedData('pricing.colors.background', v)} />
+          <ColorControl label={t('editor.controls.common.title')} value={data.pricing.colors?.heading || '#ffffff'} onChange={(v) => setNestedData('pricing.colors.heading', v)} />
+          <ColorControl label={t('editor.controls.common.description')} value={data.pricing.colors?.description || data.pricing.colors?.text} onChange={(v) => setNestedData('pricing.colors.description', v)} />
           <ColorControl label="Text" value={data.pricing.colors?.text} onChange={(v) => setNestedData('pricing.colors.text', v)} />
         </div>
 
@@ -7558,7 +5929,7 @@ const Controls: React.FC = () => {
         <div className="space-y-2">
           <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Button Colors</label>
           <div className="grid grid-cols-2 gap-3">
-            <ColorControl label="Background" value={data.pricing.colors?.buttonBackground || '#4f46e5'} onChange={(v) => setNestedData('pricing.colors.buttonBackground', v)} />
+            <ColorControl label={t('editor.controls.common.background')} value={data.pricing.colors?.buttonBackground || '#4f46e5'} onChange={(v) => setNestedData('pricing.colors.buttonBackground', v)} />
             <ColorControl label="Text" value={data.pricing.colors?.buttonText || '#ffffff'} onChange={(v) => setNestedData('pricing.colors.buttonText', v)} />
           </div>
         </div>
@@ -7609,7 +5980,7 @@ const Controls: React.FC = () => {
           enableCardAnimation={data.pricing.enableCardAnimation !== false}
           onChangeAnimationType={(type) => setNestedData('pricing.animationType', type)}
           onToggleAnimation={(enabled) => setNestedData('pricing.enableCardAnimation', enabled)}
-          label="Card Animations"
+          label={t('editor.controls.common.cardAnimations')}
         />
       </div>
     );
@@ -7623,8 +5994,8 @@ const Controls: React.FC = () => {
 
     const contentTab = (
       <div className="space-y-4">
-        <Input label="Title" value={data.slideshow.title} onChange={(e) => setNestedData('slideshow.title', e.target.value)} />
-        <FontSizeSelector label="Title Size" value={data.slideshow.titleFontSize || 'md'} onChange={(v) => setNestedData('slideshow.titleFontSize', v)} />
+        <Input label={t('editor.controls.common.title')} value={data.slideshow.title} onChange={(e) => setNestedData('slideshow.title', e.target.value)} />
+        <FontSizeSelector label={t('editor.controls.common.titleSize')} value={data.slideshow.titleFontSize || 'md'} onChange={(v) => setNestedData('slideshow.titleFontSize', v)} />
 
         <hr className="border-editor-border/50" />
 
@@ -7691,7 +6062,7 @@ const Controls: React.FC = () => {
         <hr className="border-editor-border/50" />
         {/* Border Radius */}
         <BorderRadiusSelector
-          label="Border Radius"
+          label={t('editor.controls.common.borderRadius')}
           value={data.slideshow.borderRadius || 'xl'}
           onChange={(v) => setNestedData('slideshow.borderRadius', v)}
         />
@@ -7777,9 +6148,9 @@ const Controls: React.FC = () => {
         {/* Navigation */}
         <div className="space-y-2">
           <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Navigation</label>
-          <ToggleControl label="Show Arrows" checked={data.slideshow.showArrows ?? true} onChange={(v) => setNestedData('slideshow.showArrows', v)} />
-          <ToggleControl label="Show Dots" checked={data.slideshow.showDots ?? true} onChange={(v) => setNestedData('slideshow.showDots', v)} />
-          <ToggleControl label="Show Captions" checked={data.slideshow.showCaptions ?? false} onChange={(v) => setNestedData('slideshow.showCaptions', v)} />
+          <ToggleControl label={t('editor.controls.common.showArrows')} checked={data.slideshow.showArrows ?? true} onChange={(v) => setNestedData('slideshow.showArrows', v)} />
+          <ToggleControl label={t('editor.controls.common.showDots')} checked={data.slideshow.showDots ?? true} onChange={(v) => setNestedData('slideshow.showDots', v)} />
+          <ToggleControl label={t('editor.controls.common.showCaptions')} checked={data.slideshow.showCaptions ?? false} onChange={(v) => setNestedData('slideshow.showCaptions', v)} />
         </div>
 
         {(data.slideshow.showArrows ?? true) && (
@@ -7830,8 +6201,8 @@ const Controls: React.FC = () => {
         {/* Colors */}
         <div className="space-y-2">
           <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Colors</label>
-          <ColorControl label="Background" value={data.slideshow.colors?.background} onChange={(v) => setNestedData('slideshow.colors.background', v)} />
-          <ColorControl label="Title" value={data.slideshow.colors?.heading || '#ffffff'} onChange={(v) => setNestedData('slideshow.colors.heading', v)} />
+          <ColorControl label={t('editor.controls.common.background')} value={data.slideshow.colors?.background} onChange={(v) => setNestedData('slideshow.colors.background', v)} />
+          <ColorControl label={t('editor.controls.common.title')} value={data.slideshow.colors?.heading || '#ffffff'} onChange={(v) => setNestedData('slideshow.colors.heading', v)} />
         </div>
 
         {(data.slideshow.showArrows ?? true) && (
@@ -7885,11 +6256,11 @@ const Controls: React.FC = () => {
 
     const contentTab = (
       <div className="space-y-4">
-        <Input label="Title" value={data.video.title} onChange={(e) => setNestedData('video.title', e.target.value)} />
-        <FontSizeSelector label="Title Size" value={data.video.titleFontSize || 'md'} onChange={(v) => setNestedData('video.titleFontSize', v)} />
+        <Input label={t('editor.controls.common.title')} value={data.video.title} onChange={(e) => setNestedData('video.title', e.target.value)} />
+        <FontSizeSelector label={t('editor.controls.common.titleSize')} value={data.video.titleFontSize || 'md'} onChange={(v) => setNestedData('video.titleFontSize', v)} />
 
-        <TextArea label="Description" value={data.video.description} onChange={(e) => setNestedData('video.description', e.target.value)} rows={2} />
-        <FontSizeSelector label="Description Size" value={data.video.descriptionFontSize || 'md'} onChange={(v) => setNestedData('video.descriptionFontSize', v)} />
+        <TextArea label={t('editor.controls.common.description')} value={data.video.description} onChange={(e) => setNestedData('video.description', e.target.value)} rows={2} />
+        <FontSizeSelector label={t('editor.controls.common.descriptionSize')} value={data.video.descriptionFontSize || 'md'} onChange={(v) => setNestedData('video.descriptionFontSize', v)} />
 
         <hr className="border-editor-border/50" />
 
@@ -7921,8 +6292,8 @@ const Controls: React.FC = () => {
         <div className="space-y-2">
           <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Playback Options</label>
           <ToggleControl label="Autoplay (Muted)" checked={data.video.autoplay} onChange={(v) => setNestedData('video.autoplay', v)} />
-          <ToggleControl label="Loop" checked={data.video.loop} onChange={(v) => setNestedData('video.loop', v)} />
-          <ToggleControl label="Show Controls" checked={data.video.showControls} onChange={(v) => setNestedData('video.showControls', v)} />
+          <ToggleControl label={t('editor.controls.common.loop')} checked={data.video.loop} onChange={(v) => setNestedData('video.loop', v)} />
+          <ToggleControl label={t('editor.controls.common.showControls')} checked={data.video.showControls} onChange={(v) => setNestedData('video.showControls', v)} />
         </div>
       </div>
     );
@@ -7945,8 +6316,8 @@ const Controls: React.FC = () => {
         {/* Colors */}
         <div className="space-y-2">
           <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Colors</label>
-          <ColorControl label="Background" value={data.video.colors?.background} onChange={(v) => setNestedData('video.colors.background', v)} />
-          <ColorControl label="Title" value={data.video.colors?.heading || '#ffffff'} onChange={(v) => setNestedData('video.colors.heading', v)} />
+          <ColorControl label={t('editor.controls.common.background')} value={data.video.colors?.background} onChange={(v) => setNestedData('video.colors.background', v)} />
+          <ColorControl label={t('editor.controls.common.title')} value={data.video.colors?.heading || '#ffffff'} onChange={(v) => setNestedData('video.colors.heading', v)} />
           <ColorControl label="Text" value={data.video.colors?.text} onChange={(v) => setNestedData('video.colors.text', v)} />
         </div>
 
@@ -7972,6 +6343,729 @@ const Controls: React.FC = () => {
   };
 
   // Render controls for active section with tabs
+  // --- Header controls organized into Content/Style tabs ---
+  const renderHeaderControlsWithTabs = () => {
+    if (!data?.header) return null;
+    const activeMenuId = data.header.menuId || '';
+
+    const contentTab = (
+      <div className="space-y-4">
+        {/* Logo */}
+        <div>
+          <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">Logo Type</label>
+          <div className="flex bg-editor-bg p-1 rounded-md border border-editor-border mb-3">
+            {['text', 'image', 'both'].map(type => (
+              <button
+                key={type}
+                onClick={() => setNestedData('header.logoType', type)}
+                className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors capitalize ${data.header.logoType === type ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary'}`}
+              >
+                {type}
+              </button>
+            ))}
+          </div>
+
+          {(data.header.logoType === 'text' || data.header.logoType === 'both') && (
+            <Input label={t('editor.controls.header.logoText')} value={data.header.logoText} onChange={(e) => setNestedData('header.logoText', e.target.value)} />
+          )}
+
+          {(data.header.logoType === 'image' || data.header.logoType === 'both') && (
+            <div className="space-y-3 mt-3">
+              <ImagePicker
+                label={t('editor.controls.header.logoImage')}
+                value={data.header.logoImageUrl}
+                onChange={(url) => {
+                  setNestedData('header.logoImageUrl', url);
+                  if (data.header.logoType === 'text') {
+                    setNestedData('header.logoType', 'image');
+                  }
+                }}
+              />
+              <div>
+                <div className="flex justify-between items-center mb-1">
+                  <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('editor.controls.header.logoWidth')}</label>
+                  <span className="text-xs text-editor-text-primary">{data.header.logoWidth}px</span>
+                </div>
+                <input
+                  type="range" min="40" max="300" step="5"
+                  value={data.header.logoWidth}
+                  onChange={(e) => setNestedData('header.logoWidth', parseInt(e.target.value))}
+                  className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer"
+                />
+              </div>
+            </div>
+          )}
+        </div>
+
+        <hr className="border-editor-border/50" />
+
+        {/* Favicon */}
+        <div className="space-y-3">
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('editor.controls.header.favicon')}</label>
+          <p className="text-xs text-editor-text-secondary">{t('editor.controls.header.uploadFavicon')}</p>
+
+          <div className="flex items-center gap-4">
+            {activeProject?.faviconUrl ? (
+              <div className="relative">
+                <img
+                  src={activeProject.faviconUrl}
+                  alt="Favicon"
+                  className="w-12 h-12 rounded-lg border border-editor-border object-contain bg-editor-bg p-1"
+                />
+                <button
+                  onClick={async () => {
+                    if (activeProject) {
+                      try {
+                        await updateProjectFavicon(activeProject.id, null as any);
+                      } catch (error) {
+                        console.error('Failed to remove favicon:', error);
+                      }
+                    }
+                  }}
+                  className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white rounded-full flex items-center justify-center text-xs hover:bg-red-600"
+                  title="Remove favicon"
+                >
+                  ×
+                </button>
+              </div>
+            ) : (
+              <div className="w-12 h-12 rounded-lg border-2 border-dashed border-editor-border flex items-center justify-center bg-editor-bg">
+                <Upload size={16} className="text-editor-text-secondary" />
+              </div>
+            )}
+
+            <input
+              ref={faviconInputRef}
+              type="file"
+              accept=".ico,.png,.svg,image/png,image/svg+xml,image/x-icon"
+              className="hidden"
+              onChange={async (e) => {
+                const file = e.target.files?.[0];
+                if (file && activeProject) {
+                  setIsUploadingFavicon(true);
+                  try {
+                    await updateProjectFavicon(activeProject.id, file);
+                  } catch (error) {
+                    console.error('Failed to upload favicon:', error);
+                  } finally {
+                    setIsUploadingFavicon(false);
+                  }
+                }
+                e.target.value = '';
+              }}
+            />
+
+            <button
+              onClick={() => faviconInputRef.current?.click()}
+              disabled={isUploadingFavicon}
+              className="flex items-center gap-2 px-3 py-2 bg-editor-bg border border-editor-border rounded-lg text-sm text-editor-text-primary hover:bg-editor-panel-bg transition-colors disabled:opacity-50"
+            >
+              {isUploadingFavicon ? (
+                <>
+                  <span className="w-4 h-4 border-2 border-editor-accent border-t-transparent rounded-full animate-spin" />
+                  Uploading...
+                </>
+              ) : (
+                <>
+                  <Upload size={14} />
+                  {activeProject?.faviconUrl ? t('editor.controls.header.change') : t('editor.controls.header.upload')}
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+
+        <hr className="border-editor-border/50" />
+
+        {/* Login Button */}
+        <div className="space-y-3">
+          <ToggleControl label={t('editor.controls.navigation.showLogin')} checked={data.header.showLogin !== false} onChange={(v) => setNestedData('header.showLogin', v)} />
+          {data.header.showLogin !== false && (
+            <div className="grid grid-cols-2 gap-3 animate-fade-in-up">
+              <Input label={t('editor.controls.common.text')} value={data.header.loginText || 'Login'} onChange={(e) => setNestedData('header.loginText', e.target.value)} className="mb-0" />
+              <Input label={t('editor.controls.common.url')} value={data.header.loginUrl || '#'} onChange={(e) => setNestedData('header.loginUrl', e.target.value)} className="mb-0" />
+            </div>
+          )}
+        </div>
+
+        <hr className="border-editor-border/50" />
+
+        {/* Search */}
+        <div className="space-y-3">
+          <ToggleControl label={t('editor.controls.navigation.showSearch')} checked={data.header.showSearch === true} onChange={(v) => setNestedData('header.showSearch', v)} />
+          {data.header.showSearch === true && (
+            <div className="animate-fade-in-up">
+              <Input label={t('editor.controls.navigation.placeholder')} value={data.header.searchPlaceholder || `${t('editor.controls.common.search')}...`} onChange={(e) => setNestedData('header.searchPlaceholder', e.target.value)} className="mb-0" />
+            </div>
+          )}
+        </div>
+
+        <hr className="border-editor-border/50" />
+
+        {/* Navigation Links */}
+        <div className="space-y-2">
+          <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{t('editor.controls.navigation.source')}</label>
+          <div className="flex gap-2 mb-3">
+            <select
+              value={activeMenuId}
+              onChange={(e) => {
+                const val = e.target.value;
+                setNestedData('header.menuId', val === '' ? undefined : val);
+              }}
+              className="w-full bg-editor-panel-bg border border-editor-border rounded-md px-2 py-2 text-sm text-editor-text-primary focus:ring-1 focus:ring-editor-accent focus:outline-none"
+            >
+              <option value="">{t('editor.controls.navigation.manual')}</option>
+              {menus.map(menu => (
+                <option key={menu.id} value={menu.id}>{menu.title}</option>
+              ))}
+            </select>
+            <button
+              onClick={() => navigate(ROUTES.NAVIGATION)}
+              className="p-2 bg-editor-bg border border-editor-border rounded text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-panel-bg"
+              title="Manage Menus"
+            >
+              <Settings size={16} />
+            </button>
+          </div>
+
+          {activeMenuId ? (
+            <div className="p-3 bg-editor-accent/10 border border-editor-accent/20 rounded text-xs text-editor-text-primary mb-2">
+              Links are currently being pulled from the <strong>{menus.find(m => m.id === activeMenuId)?.title || 'selected'}</strong> menu.
+            </div>
+          ) : (
+            <>
+              <h4 className="font-bold text-editor-text-primary text-sm uppercase tracking-wider mb-2">{t('editor.controls.navigation.customLinks')}</h4>
+              {(data.header.links || []).map((link, i) => (
+                <div key={i} className="flex gap-2 mb-2">
+                  <input className="flex-1 bg-editor-bg border border-editor-border rounded px-2 py-1 text-sm text-editor-text-primary" value={link.text} onChange={(e) => setNestedData(`header.links.${i}.text`, e.target.value)} />
+                  <input className="flex-1 bg-editor-bg border border-editor-border rounded px-2 py-1 text-sm text-editor-text-primary" value={link.href} onChange={(e) => setNestedData(`header.links.${i}.href`, e.target.value)} />
+                  <button
+                    onClick={() => {
+                      const newLinks = data.header.links.filter((_, idx) => idx !== i);
+                      setNestedData('header.links', newLinks);
+                    }}
+                    className="text-editor-text-secondary hover:text-red-400"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              ))}
+              <button
+                onClick={() => setNestedData('header.links', [...(data.header.links || []), { text: 'New Link', href: '#' }])}
+                className="text-xs text-editor-accent hover:underline flex items-center mt-1"
+              >
+                <Plus size={12} className="mr-1" /> {t('editor.controls.navigation.addLink')}
+              </button>
+            </>
+          )}
+        </div>
+
+        <hr className="border-editor-border/50" />
+
+        {/* CTA Button */}
+        <h4 className="font-bold text-editor-text-primary text-sm">{t('editor.controls.navigation.ctaButton')}</h4>
+        <ToggleControl label={t('editor.controls.navigation.showCta')} checked={data.header.showCta !== false} onChange={(v) => setNestedData('header.showCta', v)} />
+
+        {data.header.showCta !== false && (
+          <div className="space-y-3 animate-fade-in-up">
+            <Input label={t('editor.controls.navigation.buttonText')} value={data.header.ctaText || 'Get Started'} onChange={(e) => setNestedData('header.ctaText', e.target.value)} />
+          </div>
+        )}
+      </div>
+    );
+
+    const styleTab = (
+      <div className="space-y-4">
+        {/* Layout & Style */}
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{t('editor.controls.header.layout')}</label>
+            <select
+              value={data.header.layout}
+              onChange={(e) => setNestedData('header.layout', e.target.value)}
+              className="w-full bg-editor-panel-bg border border-editor-border rounded-md px-2 py-2 text-sm text-editor-text-primary"
+            >
+              <option value="minimal">{t('editor.controls.header.minimal')}</option>
+              <option value="classic">Classic</option>
+              <option value="center">Center</option>
+              <option value="stack">Stack</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{t('editor.controls.header.style')}</label>
+            <select
+              value={data.header.style}
+              onChange={(e) => setNestedData('header.style', e.target.value)}
+              className="w-full bg-editor-panel-bg border border-editor-border rounded-md px-2 py-2 text-sm text-editor-text-primary"
+            >
+              <optgroup label={`── ${t('editor.controls.header.classic')} ──`}>
+                <option value="sticky-solid">Solid</option>
+                <option value="sticky-transparent">Transparent</option>
+                <option value="floating">Floating</option>
+              </optgroup>
+              <optgroup label="── Edge-to-Edge ──">
+                <option value="edge-solid">Edge Solid</option>
+                <option value="edge-minimal">Edge Minimal</option>
+                <option value="edge-bordered">Edge Bordered</option>
+              </optgroup>
+              <optgroup label="── Floating ──">
+                <option value="floating-pill">Floating Pill</option>
+                <option value="floating-glass">{t('editor.controls.header.glass')}</option>
+                <option value="floating-shadow">Floating Shadow</option>
+              </optgroup>
+              <optgroup label="── Transparent ──">
+                <option value="transparent-blur">Transparent Blur</option>
+                <option value="transparent-bordered">Transparent Bordered</option>
+                <option value="transparent-gradient">Transparent Gradient</option>
+              </optgroup>
+            </select>
+          </div>
+        </div>
+
+        <hr className="border-editor-border/50" />
+
+        {/* Sticky & Glass */}
+        <div className="grid grid-cols-2 gap-4">
+          <ToggleControl label={t('editor.controls.header.sticky')} checked={data.header.isSticky} onChange={(v) => setNestedData('header.isSticky', v)} />
+          <ToggleControl label={t('editor.controls.header.glass')} checked={data.header.glassEffect} onChange={(v) => setNestedData('header.glassEffect', v)} />
+        </div>
+
+        <hr className="border-editor-border/50" />
+
+        {/* Height & Hover */}
+        <h4 className="font-bold text-editor-text-primary text-sm">Height & Hover</h4>
+        <div>
+          <div className="flex justify-between items-center mb-1">
+            <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('editor.controls.navigation.height')}</label>
+            <span className="text-xs text-editor-text-primary">{data.header.height || 70}px</span>
+          </div>
+          <input
+            type="range" min="50" max="120" step="5"
+            value={data.header.height || 70}
+            onChange={(e) => setNestedData('header.height', parseInt(e.target.value))}
+            className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
+          />
+        </div>
+
+        <div>
+          <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{t('editor.controls.navigation.hoverStyle')}</label>
+          <div className="grid grid-cols-2 gap-2">
+            {[
+              { value: 'simple', label: 'Simple' },
+              { value: 'underline', label: 'Underline' },
+              { value: 'bracket', label: 'Bracket' },
+              { value: 'highlight', label: 'Highlight' },
+              { value: 'glow', label: 'Glow' }
+            ].map(style => (
+              <button
+                key={style.value}
+                onClick={() => setNestedData('header.hoverStyle', style.value)}
+                className={`py-2 px-3 text-xs font-medium rounded-sm transition-colors ${data.header.hoverStyle === style.value ? 'bg-editor-accent text-editor-bg' : 'bg-editor-bg text-editor-text-secondary hover:bg-editor-border border border-editor-border'}`}
+              >
+                {style.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <div className="flex justify-between items-center mb-1">
+            <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('editor.controls.navigation.linkFontSize')}</label>
+            <span className="text-xs text-editor-text-primary">{data.header.linkFontSize || 14}px</span>
+          </div>
+          <input
+            type="range" min="10" max="24" step="1"
+            value={data.header.linkFontSize || 14}
+            onChange={(e) => setNestedData('header.linkFontSize', parseInt(e.target.value))}
+            className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer"
+          />
+        </div>
+
+        <hr className="border-editor-border/50" />
+
+        {/* CTA Button Style */}
+        {data.header.showCta !== false && (
+          <div>
+            <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{t('editor.controls.navigation.buttonRadius')}</label>
+            <div className="flex bg-editor-bg p-1 rounded-md border border-editor-border">
+              {[{ v: 'none', l: 'None' }, { v: 'md', l: 'Med' }, { v: 'xl', l: 'Lg' }, { v: 'full', l: 'Full' }].map((opt) => (
+                <button
+                  key={opt.v}
+                  onClick={() => setNestedData('header.buttonBorderRadius', opt.v)}
+                  className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors ${data.header.buttonBorderRadius === opt.v ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:bg-editor-border'}`}
+                >
+                  {opt.l}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <hr className="border-editor-border/50" />
+
+        {/* Colors */}
+        <h4 className="font-bold text-editor-text-primary text-sm">{t('editor.controls.common.colors')}</h4>
+        <ColorControl label={t('editor.controls.common.background')} value={data.header.colors?.background} onChange={(v) => setNestedData('header.colors.background', v)} />
+        <ColorControl label={t('editor.controls.common.text')} value={data.header.colors?.text} onChange={(v) => setNestedData('header.colors.text', v)} />
+        <ColorControl label={t('editor.controls.common.accent')} value={data.header.colors?.accent || '#4f46e5'} onChange={(v) => setNestedData('header.colors.accent', v)} />
+      </div>
+    );
+
+    return <TabbedControls contentTab={contentTab} styleTab={styleTab} />;
+  };
+
+  // --- Footer controls organized into Content/Style tabs ---
+  const renderFooterControlsWithTabs = () => {
+    if (!data?.footer) return null;
+
+    const contentTab = (
+      <div className="space-y-4">
+        {/* Logo */}
+        <div>
+          <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">Logo Type</label>
+          <div className="flex bg-editor-bg p-1 rounded-md border border-editor-border">
+            {['text', 'image'].map(type => (
+              <button
+                key={type}
+                onClick={() => setNestedData('footer.logoType', type)}
+                className={`flex-1 py-1.5 text-xs font-medium rounded-sm capitalize transition-colors ${(data.footer.logoType || 'text') === type
+                  ? 'bg-editor-accent text-editor-bg'
+                  : 'text-editor-text-secondary hover:bg-editor-border'
+                  }`}
+              >
+                {type}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {data.footer.logoType === 'image' && (
+          <ImagePicker
+            label={t('editor.controls.common.logoImage')}
+            value={data.footer.logoImageUrl || ''}
+            onChange={(url) => setNestedData('footer.logoImageUrl', url)}
+          />
+        )}
+
+        <Input label={t('editor.controls.common.title')} value={data.footer.title} onChange={(e) => setNestedData('footer.title', e.target.value)} />
+        <TextArea label={t('editor.controls.common.description')} value={data.footer.description} onChange={(e) => setNestedData('footer.description', e.target.value)} rows={2} />
+        <Input label={t('editor.controls.common.copyright')} value={data.footer.copyrightText} onChange={(e) => setNestedData('footer.copyrightText', e.target.value)} />
+
+        <hr className="border-editor-border/50" />
+
+        {/* Link Columns */}
+        <div className="space-y-4">
+          <h4 className="font-bold text-editor-text-primary text-sm uppercase tracking-wider">Link Columns</h4>
+          {(data.footer.linkColumns || []).map((col, colIndex) => (
+            <div key={colIndex} className="bg-editor-bg p-3 rounded border border-editor-border space-y-2">
+              <div className="flex items-center gap-2 mb-2">
+                <input placeholder="Column Title" value={col.title} onChange={(e) => setNestedData(`footer.linkColumns.${colIndex}.title`, e.target.value)} className="bg-transparent border-b border-editor-border focus:border-editor-accent flex-1 text-sm font-bold text-editor-text-primary px-1 min-w-0 focus:outline-none" />
+                <button onClick={() => {
+                  const newCols = (data.footer.linkColumns || []).filter((_, i) => i !== colIndex);
+                  setNestedData('footer.linkColumns', newCols);
+                }} className="text-red-400 hover:text-red-500 flex-shrink-0 hover:bg-red-500/10 rounded p-1 transition-colors"><Trash2 size={14} /></button>
+              </div>
+
+              <select
+                value={col.menuId || ''}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setNestedData(`footer.linkColumns.${colIndex}.menuId`, val === '' ? undefined : val);
+                }}
+                className="w-full bg-editor-panel-bg border border-editor-border rounded px-2 py-1 text-xs text-editor-text-primary mb-2"
+              >
+                <option value="">Manual Links</option>
+                {menus.map(menu => (
+                  <option key={menu.id} value={menu.id}>{menu.title}</option>
+                ))}
+              </select>
+
+              {col.menuId ? (
+                <p className="text-[10px] text-editor-text-secondary italic">Using links from menu: {menus.find(m => m.id === col.menuId)?.title}</p>
+              ) : (
+                <>
+                  {(col.links || []).map((link, linkIndex) => (
+                    <div key={linkIndex} className="flex gap-2 items-center mb-1">
+                      <input placeholder="Text" value={link.text} onChange={(e) => setNestedData(`footer.linkColumns.${colIndex}.links.${linkIndex}.text`, e.target.value)} className="flex-1 bg-editor-panel-bg border border-editor-border rounded px-2 py-1 text-xs text-editor-text-primary min-w-0 focus:outline-none focus:ring-1 focus:ring-editor-accent" />
+                      <input placeholder="Href" value={link.href} onChange={(e) => setNestedData(`footer.linkColumns.${colIndex}.links.${linkIndex}.href`, e.target.value)} className="flex-1 bg-editor-panel-bg border border-editor-border rounded px-2 py-1 text-xs text-editor-text-primary min-w-0 focus:outline-none focus:ring-1 focus:ring-editor-accent" />
+                      <button onClick={() => {
+                        const newLinks = (col.links || []).filter((_, i) => i !== linkIndex);
+                        setNestedData(`footer.linkColumns.${colIndex}.links`, newLinks);
+                      }} className="text-editor-text-secondary hover:text-red-400 flex-shrink-0"><Trash2 size={12} /></button>
+                    </div>
+                  ))}
+                  <button onClick={() => {
+                    const newLinks = [...(col.links || []), { text: 'New Link', href: '#' }];
+                    setNestedData(`footer.linkColumns.${colIndex}.links`, newLinks);
+                  }} className="text-xs text-editor-accent hover:underline mt-1">+ Add Link</button>
+                </>
+              )}
+            </div>
+          ))}
+          <button onClick={() => setNestedData('footer.linkColumns', [...(data.footer.linkColumns || []), { title: 'New Column', links: [] }])} className="w-full py-2 border border-dashed border-editor-border rounded-lg text-editor-text-secondary hover:text-editor-accent transition-all flex items-center justify-center gap-2 text-sm font-medium"><Plus size={14} /> Add Column</button>
+        </div>
+
+        <hr className="border-editor-border/50" />
+
+        {/* Social Links */}
+        <div className="space-y-4">
+          <h4 className="font-bold text-editor-text-primary text-sm uppercase tracking-wider">Social Links</h4>
+          {Array.isArray(data.footer.socialLinks) ? data.footer.socialLinks.map((link, index) => (
+            <div key={index} className="flex items-center gap-2 mb-2">
+              <span className="text-xs uppercase w-20 text-editor-text-secondary font-mono flex-shrink-0">{link.platform}</span>
+              <Input value={link.href} onChange={(e) => setNestedData(`footer.socialLinks.${index}.href`, e.target.value)} className="mb-0 flex-1" />
+            </div>
+          )) : (
+            <p className="text-xs text-editor-text-secondary">No social links configured</p>
+          )}
+        </div>
+
+        <hr className="border-editor-border/50" />
+
+        {/* Contact Information */}
+        <div className="space-y-4">
+          <h4 className="font-bold text-editor-text-primary text-sm uppercase tracking-wider flex items-center gap-2">
+            <MapPin size={14} className="text-editor-accent" />
+            Contact Information
+          </h4>
+          <Input label={t('editor.controls.common.address')} value={data.footer.contactInfo?.address || ''} onChange={(e) => setNestedData('footer.contactInfo.address', e.target.value)} placeholder="123 Main Street" />
+          <div className="grid grid-cols-2 gap-2">
+            <Input label={t('editor.controls.common.city')} value={data.footer.contactInfo?.city || ''} onChange={(e) => setNestedData('footer.contactInfo.city', e.target.value)} placeholder="City" />
+            <Input label={t('editor.controls.common.state')} value={data.footer.contactInfo?.state || ''} onChange={(e) => setNestedData('footer.contactInfo.state', e.target.value)} placeholder="State" />
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <Input label={t('editor.controls.common.zipCode')} value={data.footer.contactInfo?.zipCode || ''} onChange={(e) => setNestedData('footer.contactInfo.zipCode', e.target.value)} placeholder="12345" />
+            <Input label={t('editor.controls.common.country')} value={data.footer.contactInfo?.country || ''} onChange={(e) => setNestedData('footer.contactInfo.country', e.target.value)} placeholder="Country" />
+          </div>
+          <Input label={t('editor.controls.common.phone')} value={data.footer.contactInfo?.phone || ''} onChange={(e) => setNestedData('footer.contactInfo.phone', e.target.value)} placeholder="+1 (555) 123-4567" />
+          <Input label={t('editor.controls.common.email')} value={data.footer.contactInfo?.email || ''} onChange={(e) => setNestedData('footer.contactInfo.email', e.target.value)} placeholder="contact@example.com" />
+        </div>
+
+        <hr className="border-editor-border/50" />
+
+        {/* Business Hours */}
+        <div className="space-y-4">
+          <h4 className="font-bold text-editor-text-primary text-sm uppercase tracking-wider flex items-center gap-2">
+            <Clock size={14} className="text-editor-accent" />
+            Business Hours
+          </h4>
+          <div className="flex gap-2 flex-wrap">
+            <button
+              onClick={() => {
+                const businessHours = data.footer.contactInfo?.businessHours || {};
+                const monHours = businessHours.monday || { isOpen: true, openTime: '09:00', closeTime: '17:00' };
+                const newHours: any = {};
+                ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'].forEach(day => {
+                  newHours[day] = { ...monHours };
+                });
+                setNestedData('footer.contactInfo.businessHours', { ...businessHours, ...newHours });
+              }}
+              className="text-xs px-2 py-1 bg-editor-accent/20 text-editor-accent rounded hover:bg-editor-accent/30 transition-colors"
+            >
+              Copy Mon → Weekdays
+            </button>
+            <button
+              onClick={() => {
+                const businessHours = data.footer.contactInfo?.businessHours || {};
+                const monHours = businessHours.monday || { isOpen: true, openTime: '09:00', closeTime: '17:00' };
+                const newHours: any = {};
+                ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].forEach(day => {
+                  newHours[day] = { ...monHours };
+                });
+                setNestedData('footer.contactInfo.businessHours', newHours);
+              }}
+              className="text-xs px-2 py-1 bg-editor-accent/20 text-editor-accent rounded hover:bg-editor-accent/30 transition-colors"
+            >
+              Copy Mon → All Days
+            </button>
+          </div>
+
+          <div className="space-y-2 bg-editor-bg p-3 rounded-lg border border-editor-border">
+            {[
+              { key: 'monday', label: 'Mon' },
+              { key: 'tuesday', label: 'Tue' },
+              { key: 'wednesday', label: 'Wed' },
+              { key: 'thursday', label: 'Thu' },
+              { key: 'friday', label: 'Fri' },
+              { key: 'saturday', label: 'Sat' },
+              { key: 'sunday', label: 'Sun' },
+            ].map(({ key, label }) => {
+              const contactInfo = data.footer.contactInfo || {};
+              const businessHours = contactInfo.businessHours || {};
+              const dayHours = businessHours[key as keyof typeof businessHours] || { isOpen: false, openTime: '09:00', closeTime: '17:00' };
+
+              return (
+                <div key={key} className="flex items-center gap-2">
+                  <span className="w-10 text-xs font-medium text-editor-text-secondary">{label}</span>
+                  <button
+                    onClick={() => {
+                      if (!dayHours.isOpen) {
+                        setNestedData(`footer.contactInfo.businessHours.${key}`, {
+                          isOpen: true,
+                          openTime: dayHours.openTime || '09:00',
+                          closeTime: dayHours.closeTime || '17:00'
+                        });
+                      } else {
+                        setNestedData(`footer.contactInfo.businessHours.${key}.isOpen`, false);
+                      }
+                    }}
+                    className={`w-10 h-5 rounded-full transition-colors flex-shrink-0 relative ${dayHours.isOpen ? 'bg-green-500' : 'bg-editor-border'}`}
+                  >
+                    <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform ${dayHours.isOpen ? 'left-5' : 'left-0.5'}`} />
+                  </button>
+                  {dayHours.isOpen ? (
+                    <div className="flex items-center gap-1 flex-1">
+                      <input type="time" value={dayHours.openTime || '09:00'} onChange={(e) => setNestedData(`footer.contactInfo.businessHours.${key}.openTime`, e.target.value)} className="w-[90px] bg-editor-panel-bg border border-editor-border rounded px-1.5 py-0.5 text-xs text-editor-text-primary" />
+                      <span className="text-editor-text-secondary text-xs">-</span>
+                      <input type="time" value={dayHours.closeTime || '17:00'} onChange={(e) => setNestedData(`footer.contactInfo.businessHours.${key}.closeTime`, e.target.value)} className="w-[90px] bg-editor-panel-bg border border-editor-border rounded px-1.5 py-0.5 text-xs text-editor-text-primary" />
+                    </div>
+                  ) : (
+                    <span className="text-xs text-editor-text-secondary italic">Closed</span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    );
+
+    const styleTab = (
+      <div className="space-y-4">
+        {/* Font Sizes */}
+        <FontSizeSelector label={t('editor.controls.common.titleSize')} value={data.footer.titleFontSize || 'sm'} onChange={(v) => setNestedData('footer.titleFontSize', v)} />
+        <FontSizeSelector label={t('editor.controls.common.descriptionSize')} value={data.footer.descriptionFontSize || 'sm'} onChange={(v) => setNestedData('footer.descriptionFontSize', v)} />
+
+        <hr className="border-editor-border/50" />
+
+        {/* Colors */}
+        <h4 className="font-bold text-editor-text-primary text-sm">{t('editor.controls.common.colors')}</h4>
+        <div className="space-y-2">
+          <ColorControl label={t('editor.controls.common.background')} value={data.footer.colors?.background} onChange={(v) => setNestedData('footer.colors.background', v)} />
+          <ColorControl label={t('editor.controls.common.title')} value={data.footer.colors?.heading || '#ffffff'} onChange={(v) => setNestedData('footer.colors.heading', v)} />
+          <ColorControl label="Text" value={data.footer.colors?.text} onChange={(v) => setNestedData('footer.colors.text', v)} />
+        </div>
+      </div>
+    );
+
+    return <TabbedControls contentTab={contentTab} styleTab={styleTab} />;
+  };
+
+  // --- Products controls organized into Content/Style tabs ---
+  const renderProductsControlsWithTabs = () => {
+    if (!data?.products) return null;
+
+    const contentTab = (
+      <div className="space-y-4">
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+            <Type size={14} />
+            Content
+          </label>
+          <Input label={t('editor.controls.common.title')} value={data?.products?.title || 'Nuestros Productos'} onChange={(e) => setNestedData('products.title', e.target.value)} />
+          <FontSizeSelector label={t('editor.controls.common.titleSize')} value={data?.products?.titleFontSize || 'lg'} onChange={(v) => setNestedData('products.titleFontSize', v)} />
+          <TextArea label={t('editor.controls.common.subtitle')} value={data?.products?.subtitle || ''} onChange={(e) => setNestedData('products.subtitle', e.target.value)} rows={2} />
+        </div>
+
+        {/* Info */}
+        <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4">
+          <p className="text-xs text-blue-400 flex items-start gap-2">
+            <Info size={14} className="mt-0.5 flex-shrink-0" />
+            <span>Products are loaded from your Ecommerce store. Go to the Ecommerce Dashboard to add and manage products.</span>
+          </p>
+        </div>
+      </div>
+    );
+
+    const styleTab = (
+      <div className="space-y-4">
+        {/* Layout */}
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+            <Layout size={14} />
+            Layout
+          </label>
+          <div className="space-y-3">
+            <div>
+              <label className="block text-xs text-editor-text-secondary mb-1">Style</label>
+              <select
+                value={data?.products?.style || 'modern'}
+                onChange={(e) => setNestedData('products.style', e.target.value)}
+                className="w-full bg-editor-panel-bg border border-editor-border rounded px-2 py-1.5 text-xs text-editor-text-primary"
+              >
+                <option value="minimal">Minimal</option>
+                <option value="modern">Modern</option>
+                <option value="elegant">Elegant</option>
+                <option value="dark">Dark</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs text-editor-text-secondary mb-1">Columns</label>
+              <select
+                value={data?.products?.columns || 4}
+                onChange={(e) => setNestedData('products.columns', parseInt(e.target.value))}
+                className="w-full bg-editor-panel-bg border border-editor-border rounded px-2 py-1.5 text-xs text-editor-text-primary"
+              >
+                <option value={2}>2 Columns</option>
+                <option value={3}>3 Columns</option>
+                <option value={4}>4 Columns</option>
+                <option value={5}>5 Columns</option>
+                <option value={6}>6 Columns</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs text-editor-text-secondary mb-1">Products Per Page</label>
+              <select
+                value={data?.products?.productsPerPage || 12}
+                onChange={(e) => setNestedData('products.productsPerPage', parseInt(e.target.value))}
+                className="w-full bg-editor-panel-bg border border-editor-border rounded px-2 py-1.5 text-xs text-editor-text-primary"
+              >
+                <option value={8}>8</option>
+                <option value={12}>12</option>
+                <option value={16}>16</option>
+                <option value={24}>24</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        {/* Features */}
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+            <Settings size={14} />
+            Features
+          </label>
+          <div className="space-y-2">
+            <ToggleControl label={t('editor.controls.common.showSearch')} checked={data?.products?.showSearch !== false} onChange={(v) => setNestedData('products.showSearch', v)} />
+            <ToggleControl label={t('editor.controls.common.showFilters')} checked={data?.products?.showFilters !== false} onChange={(v) => setNestedData('products.showFilters', v)} />
+            <ToggleControl label={t('editor.controls.common.showPagination')} checked={data?.products?.showPagination !== false} onChange={(v) => setNestedData('products.showPagination', v)} />
+            <ToggleControl label={t('editor.controls.common.showAddToCart')} checked={data?.products?.showAddToCart !== false} onChange={(v) => setNestedData('products.showAddToCart', v)} />
+            <ToggleControl label={t('editor.controls.common.showQuickView')} checked={data?.products?.showQuickView === true} onChange={(v) => setNestedData('products.showQuickView', v)} />
+            <ToggleControl label={t('editor.controls.common.showWishlist')} checked={data?.products?.showWishlist === true} onChange={(v) => setNestedData('products.showWishlist', v)} />
+          </div>
+        </div>
+
+        {/* Colors */}
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+            <Palette size={14} />
+            Colors
+          </label>
+          <ColorControl label={t('editor.controls.common.background')} value={data?.products?.colors?.background || '#0f172a'} onChange={(v) => setNestedData('products.colors.background', v)} />
+          <ColorControl label="Heading" value={data?.products?.colors?.heading || '#F9FAFB'} onChange={(v) => setNestedData('products.colors.heading', v)} />
+          <ColorControl label="Text" value={data?.products?.colors?.text || '#94a3b8'} onChange={(v) => setNestedData('products.colors.text', v)} />
+          <ColorControl label="Accent" value={data?.products?.colors?.accent || '#4f46e5'} onChange={(v) => setNestedData('products.colors.accent', v)} />
+          <ColorControl label="Card Background" value={data?.products?.colors?.cardBackground || '#1e293b'} onChange={(v) => setNestedData('products.colors.cardBackground', v)} />
+          <ColorControl label="Card Text" value={data?.products?.colors?.cardText || '#F9FAFB'} onChange={(v) => setNestedData('products.colors.cardText', v)} />
+          <ColorControl label="Button Background" value={data?.products?.colors?.buttonBackground || '#4f46e5'} onChange={(v) => setNestedData('products.colors.buttonBackground', v)} />
+          <ColorControl label={t('editor.controls.common.buttonText')} value={data?.products?.colors?.buttonText || '#ffffff'} onChange={(v) => setNestedData('products.colors.buttonText', v)} />
+        </div>
+      </div>
+    );
+
+    return <TabbedControls contentTab={contentTab} styleTab={styleTab} />;
+  };
+
   const renderActiveSectionControls = () => {
     if (!activeSection) return null;
 
@@ -8012,6 +7106,16 @@ const Controls: React.FC = () => {
         return renderSlideshowControlsWithTabs();
       case 'video':
         return renderVideoControlsWithTabs();
+      case 'header':
+        return renderHeaderControlsWithTabs();
+      case 'footer':
+        return renderFooterControlsWithTabs();
+      case 'products':
+        return renderProductsControlsWithTabs();
+      case 'heroSplit':
+        return renderHeroSplitControls();
+      case 'map':
+        return renderMapControls();
       // Ecommerce components - use pre-computed results from hooks called at component top level
       // These hooks return { contentTab, styleTab } objects that must be wrapped in TabbedControls
       case 'featuredProducts':

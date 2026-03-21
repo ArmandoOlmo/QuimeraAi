@@ -13,6 +13,7 @@ import { useSafeTenant } from '../contexts/tenant/TenantContext';
 // Core components - imported synchronously (always needed)
 import DashboardSidebar from './dashboard/DashboardSidebar';
 import QuimeraLoader from './ui/QuimeraLoader';
+import NoCreditsGlobalBanner from './ui/NoCreditsGlobalBanner';
 
 // Loading fallback for lazy components — uses tenant branding when available
 const ViewLoading = ({ logoUrl }: { logoUrl?: string }) => (
@@ -120,9 +121,14 @@ const ViewRouter: React.FC<ViewRouterProps> = ({
     const ViewComponent = VIEW_COMPONENTS[view];
     if (ViewComponent) {
         return (
-            <Suspense fallback={<ViewLoading logoUrl={agencyLogoUrl} />}>
-                <ViewComponent />
-            </Suspense>
+            <div className="flex flex-col h-screen">
+                <NoCreditsGlobalBanner />
+                <div className="flex-1 min-h-0">
+                    <Suspense fallback={<ViewLoading logoUrl={agencyLogoUrl} />}>
+                        <ViewComponent />
+                    </Suspense>
+                </div>
+            </div>
         );
     }
 
@@ -174,9 +180,14 @@ const ViewRouter: React.FC<ViewRouterProps> = ({
 
     // Dashboard Views (websites, dashboard, or no project selected)
     return (
-        <Suspense fallback={<ViewLoading logoUrl={agencyLogoUrl} />}>
-            <Dashboard />
-        </Suspense>
+        <div className="flex flex-col h-screen">
+            <NoCreditsGlobalBanner />
+            <div className="flex-1 min-h-0">
+                <Suspense fallback={<ViewLoading logoUrl={agencyLogoUrl} />}>
+                    <Dashboard />
+                </Suspense>
+            </div>
+        </div>
     );
 };
 
