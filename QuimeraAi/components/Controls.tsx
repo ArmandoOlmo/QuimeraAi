@@ -92,10 +92,10 @@ const CornerGradientControl: React.FC<CornerGradientControlProps> = ({
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <h4 className="font-bold text-editor-text-primary text-sm flex items-center gap-2">
+        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2 flex items-center gap-2">
           <Palette size={14} />
           {t('editor.controls.cornerGradient')}
-        </h4>
+        </label>
         <ToggleControl
           checked={enabled}
           onChange={onEnabledChange}
@@ -1052,7 +1052,7 @@ const Controls: React.FC = () => {
             </div>
           ) : (
             <>
-              <h4 className="font-bold text-editor-text-primary text-sm uppercase tracking-wider mb-2">{t('editor.controls.navigation.customLinks')}</h4>
+              <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">{t('editor.controls.navigation.customLinks')}</label>
               {(data.header.links || []).map((link, i) => (
                 <div key={i} className="flex gap-2 mb-2">
                   <input className="flex-1 bg-editor-bg border border-editor-border rounded px-2 py-1 text-sm text-editor-text-primary" value={link.text} onChange={(e) => setNestedData(`header.links.${i}.text`, e.target.value)} />
@@ -1079,7 +1079,7 @@ const Controls: React.FC = () => {
         </div>
 
         <hr className="border-editor-border/50" />
-        <h4 className="font-bold text-editor-text-primary text-sm">Height & Hover</h4>
+        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">Height & Hover</label>
         <div>
           <div className="flex justify-between items-center mb-1">
             <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('editor.controls.navigation.height')}</label>
@@ -1131,7 +1131,7 @@ const Controls: React.FC = () => {
         </div>
 
         <hr className="border-editor-border/50" />
-        <h4 className="font-bold text-editor-text-primary text-sm">{t('editor.controls.navigation.ctaButton')}</h4>
+        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">{t('editor.controls.navigation.ctaButton')}</label>
         <ToggleControl label={t('editor.controls.navigation.showCta')} checked={data.header.showCta !== false} onChange={(v) => setNestedData('header.showCta', v)} />
 
         {data.header.showCta !== false && (
@@ -1155,7 +1155,7 @@ const Controls: React.FC = () => {
         )}
 
         <hr className="border-editor-border/50" />
-        <h4 className="font-bold text-editor-text-primary text-sm">{t('editor.controls.common.colors')}</h4>
+        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">{t('editor.controls.common.colors')}</label>
         <ColorControl label={t('editor.controls.common.background')} value={data.header.colors?.background} onChange={(v) => setNestedData('header.colors.background', v)} />
         <ColorControl label={t('editor.controls.common.text')} value={data.header.colors?.text} onChange={(v) => setNestedData('header.colors.text', v)} />
         <ColorControl label={t('editor.controls.common.accent')} value={data.header.colors?.accent || '#4f46e5'} onChange={(v) => setNestedData('header.colors.accent', v)} />
@@ -1485,7 +1485,7 @@ const Controls: React.FC = () => {
         <FontSizeSelector label={`${t('editor.controls.common.description')} ${t('editor.controls.common.size')}`} value={data.features.descriptionFontSize || 'md'} onChange={(v) => setNestedData('features.descriptionFontSize', v)} />
 
         <hr className="border-editor-border/50" />
-        <h4 className="font-bold text-editor-text-primary text-sm">{t('editor.controls.features.sectionStyle')}</h4>
+        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">{t('editor.controls.features.sectionStyle')}</label>
         <div>
           <div className="grid grid-cols-4 gap-1 bg-editor-bg p-1 rounded-md border border-editor-border">
             <button
@@ -1534,7 +1534,7 @@ const Controls: React.FC = () => {
         {currentVariant === 'image-overlay' && (
           <>
             <hr className="border-editor-border/50" />
-            <h4 className="font-bold text-editor-text-primary text-sm">{t('editor.controls.features.overlaySettings')}</h4>
+            <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">{t('editor.controls.features.overlaySettings')}</label>
             <div>
               <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{t('editor.controls.features.textAlignment')}</label>
               <div className="flex bg-editor-bg p-1 rounded-md border border-editor-border">
@@ -1562,7 +1562,7 @@ const Controls: React.FC = () => {
         )}
 
         <hr className="border-editor-border/50" />
-        <h4 className="font-bold text-editor-text-primary text-sm">{t('editor.controls.features.gridLayout')}</h4>
+        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">{t('editor.controls.features.gridLayout')}</label>
         <div>
           <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{t('editor.controls.features.columnsDesktop')}</label>
           <div className="flex bg-editor-bg p-1 rounded-md border border-editor-border">
@@ -1579,7 +1579,7 @@ const Controls: React.FC = () => {
         </div>
 
         <hr className="border-editor-border/50" />
-        <h4 className="font-bold text-editor-text-primary text-sm">{t('editor.controls.features.cardImage')}</h4>
+        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">{t('editor.controls.features.cardImage')}</label>
         <div>
           <div className="flex justify-between items-center mb-1">
             <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('editor.controls.features.imageHeight')}</label>
@@ -1618,7 +1618,7 @@ const Controls: React.FC = () => {
         </div>
 
         <hr className="border-editor-border/50" />
-        <h4 className="font-bold text-editor-text-primary text-sm">{t('editor.controls.common.colors')}</h4>
+        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">{t('editor.controls.common.colors')}</label>
         <ColorControl label={t('editor.controls.common.background')} value={data.features.colors?.background || '#000000'} onChange={(v) => setNestedData('features.colors.background', v)} />
         <ColorControl label={t('editor.controls.features.showSectionHeader')} value={data.features.colors?.heading || '#ffffff'} onChange={(v) => setNestedData('features.colors.heading', v)} />
         <ColorControl label={t('editor.controls.common.description')} value={data.features.colors?.description || '#94a3b8'} onChange={(v) => setNestedData('features.colors.description', v)} />
@@ -1633,7 +1633,7 @@ const Controls: React.FC = () => {
         <ColorControl label={t('editor.controls.hero.borderColor')} value={data.features.colors?.borderColor || 'transparent'} onChange={(v) => setNestedData('features.colors.borderColor', v)} />
 
         <hr className="border-editor-border/50" />
-        <h4 className="font-bold text-editor-text-primary text-sm uppercase tracking-wider mb-2">{t('editor.controls.features.featureList')}</h4>
+        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">{t('editor.controls.features.featureList')}</label>
         {(data.features.items || []).map((item, index) => (
           <div key={index} className="bg-editor-bg p-3 rounded-lg border border-editor-border mb-3 group">
             <ImagePicker
@@ -1730,7 +1730,7 @@ const Controls: React.FC = () => {
           </>
         )}
 
-        <h4 className="font-bold text-editor-text-primary text-sm uppercase tracking-wider mb-2">{getListTitle(sectionKey, itemLabel)}</h4>
+        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">{getListTitle(sectionKey, itemLabel)}</label>
         {(sectionData.items || []).map((item: any, index: number) => (
           <div
             key={index}
@@ -1853,7 +1853,7 @@ const Controls: React.FC = () => {
         <BorderRadiusSelector label={t('editor.controls.pricing.cardCorners')} value={data.pricing.cardBorderRadius || 'xl'} onChange={(v) => setNestedData('pricing.cardBorderRadius', v)} />
 
         <hr className="border-editor-border/50" />
-        <h4 className="font-bold text-editor-text-primary text-sm">{t('editor.controls.pricing.sectionColors')}</h4>
+        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">{t('editor.controls.pricing.sectionColors')}</label>
         <ColorControl label={t('editor.controls.common.background')} value={data.pricing.colors?.background} onChange={(v) => setNestedData('pricing.colors.background', v)} />
         <ColorControl label={t('editor.controls.common.title')} value={data.pricing.colors?.heading || '#ffffff'} onChange={(v) => setNestedData('pricing.colors.heading', v)} />
         <ColorControl label={t('editor.controls.common.description')} value={data.pricing.colors?.description || data.pricing.colors?.text} onChange={(v) => setNestedData('pricing.colors.description', v)} />
@@ -1879,10 +1879,10 @@ const Controls: React.FC = () => {
         {currentVariant === 'gradient' && (
           <>
             <hr className="border-editor-border/50" />
-            <h4 className="font-bold text-editor-text-primary text-sm flex items-center gap-2">
+            <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2 flex items-center gap-2">
               <Sparkles size={14} className="text-editor-accent" />
               {t('editor.controls.pricing.gradientColors')}
-            </h4>
+            </label>
             <div className="grid grid-cols-2 gap-3">
               <ColorControl label={t('editor.controls.pricing.gradientStart')} value={data.pricing.colors?.gradientStart || '#4f46e5'} onChange={(v) => setNestedData('pricing.colors.gradientStart', v)} />
               <ColorControl label={t('editor.controls.pricing.gradientEnd')} value={data.pricing.colors?.gradientEnd || '#10b981'} onChange={(v) => setNestedData('pricing.colors.gradientEnd', v)} />
@@ -1896,7 +1896,7 @@ const Controls: React.FC = () => {
         )}
 
         <hr className="border-editor-border/50" />
-        <h4 className="font-bold text-editor-text-primary text-sm">{t('editor.controls.pricing.cardColors')}</h4>
+        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">{t('editor.controls.pricing.cardColors')}</label>
         <ColorControl label={t('editor.controls.pricing.cardBackground')} value={data.pricing.colors?.cardBackground || '#1f2937'} onChange={(v) => setNestedData('pricing.colors.cardBackground', v)} />
         <ColorControl label={t('editor.controls.pricing.cardTitle')} value={data.pricing.colors?.cardHeading || '#ffffff'} onChange={(v) => setNestedData('pricing.colors.cardHeading', v)} />
         <ColorControl label={t('editor.controls.pricing.cardText')} value={data.pricing.colors?.cardText || '#94a3b8'} onChange={(v) => setNestedData('pricing.colors.cardText', v)} />
@@ -1906,14 +1906,14 @@ const Controls: React.FC = () => {
         <ColorControl label={t('editor.controls.pricing.checkmarkIcon')} value={data.pricing.colors?.checkmarkColor || '#10b981'} onChange={(v) => setNestedData('pricing.colors.checkmarkColor', v)} />
 
         <hr className="border-editor-border/50" />
-        <h4 className="font-bold text-editor-text-primary text-sm">{t('editor.controls.pricing.defaultButtonColors')}</h4>
+        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">{t('editor.controls.pricing.defaultButtonColors')}</label>
         <div className="grid grid-cols-2 gap-3">
           <ColorControl label={t('editor.controls.common.background')} value={data.pricing.colors?.buttonBackground || '#4f46e5'} onChange={(v) => setNestedData('pricing.colors.buttonBackground', v)} />
           <ColorControl label={t('editor.controls.common.text')} value={data.pricing.colors?.buttonText || '#ffffff'} onChange={(v) => setNestedData('pricing.colors.buttonText', v)} />
         </div>
 
         <hr className="border-editor-border/50" />
-        <h4 className="font-bold text-editor-text-primary text-sm uppercase tracking-wider mb-2">{t('editor.controls.pricing.pricingTiers')}</h4>
+        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">{t('editor.controls.pricing.pricingTiers')}</label>
         {(data.pricing.tiers || []).map((tier, index) => (
           <div key={index} className="bg-editor-bg p-4 rounded-lg border border-editor-border mb-3 group">
             <div className="flex justify-between items-center mb-3">
@@ -2010,7 +2010,7 @@ const Controls: React.FC = () => {
         <FontSizeSelector label={`${t('editor.controls.common.description')} ${t('editor.controls.common.size')}`} value={data.testimonials.descriptionFontSize || 'md'} onChange={(v) => setNestedData('testimonials.descriptionFontSize', v)} />
 
         <hr className="border-editor-border/50" />
-        <h4 className="font-bold text-editor-text-primary text-sm">{t('editor.controls.testimonials.cardStyling')}</h4>
+        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">{t('editor.controls.testimonials.cardStyling')}</label>
 
         <ColorControl label={t('editor.controls.testimonials.cardBackground')} value={data.testimonials.colors?.cardBackground || '#1f2937'} onChange={(v) => setNestedData('testimonials.colors.cardBackground', v)} />
 
@@ -2076,7 +2076,7 @@ const Controls: React.FC = () => {
         </div>
 
         <hr className="border-editor-border/50" />
-        <h4 className="font-bold text-editor-text-primary text-sm">Section Colors</h4>
+        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">Section Colors</label>
         <ColorControl label={t('editor.controls.common.background')} value={data.testimonials.colors?.background || '#000000'} onChange={(v) => setNestedData('testimonials.colors.background', v)} />
         <ColorControl label={t('editor.controls.common.title')} value={data.testimonials.colors?.heading || '#ffffff'} onChange={(v) => setNestedData('testimonials.colors.heading', v)} />
         <ColorControl label={t('editor.controls.common.description')} value={data.testimonials.colors?.description || '#94a3b8'} onChange={(v) => setNestedData('testimonials.colors.description', v)} />
@@ -2101,7 +2101,7 @@ const Controls: React.FC = () => {
         />
 
         <hr className="border-editor-border/50" />
-        <h4 className="font-bold text-editor-text-primary text-sm uppercase tracking-wider mb-2">Testimonials</h4>
+        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">Testimonials</label>
         {(data.testimonials.items || []).map((item: any, index: number) => (
           <div
             key={index}
@@ -2355,7 +2355,7 @@ const Controls: React.FC = () => {
         />
 
         <hr className="border-editor-border/50" />
-        <h4 className="font-bold text-editor-text-primary text-sm uppercase tracking-wider mb-2">Slides</h4>
+        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">Slides</label>
         {(data.slideshow.items || []).map((item: any, index: number) => (
           <div key={index} className="bg-editor-bg p-3 rounded-lg border border-editor-border mb-3 group">
             <ImagePicker
@@ -2510,7 +2510,7 @@ const Controls: React.FC = () => {
         <Input label={t('editor.controls.common.copyright')} value={data.footer.copyrightText} onChange={(e) => setNestedData('footer.copyrightText', e.target.value)} />
         <hr className="border-editor-border/50" />
         <div className="space-y-4">
-          <h4 className="font-bold text-editor-text-primary text-sm uppercase tracking-wider">Link Columns</h4>
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">Link Columns</label>
           {(data.footer.linkColumns || []).map((col, colIndex) => (
             <div key={colIndex} className="bg-editor-bg p-3 rounded border border-editor-border space-y-2">
               <div className="flex items-center gap-2 mb-2">
@@ -2562,7 +2562,7 @@ const Controls: React.FC = () => {
           <button onClick={() => setNestedData('footer.linkColumns', [...(data.footer.linkColumns || []), { title: 'New Column', links: [] }])} className="w-full py-2 border border-dashed border-editor-border rounded-lg text-editor-text-secondary hover:text-editor-accent transition-all flex items-center justify-center gap-2 text-sm font-medium"><Plus size={14} /> Add Column</button>
         </div>
         <div className="space-y-4">
-          <h4 className="font-bold text-editor-text-primary text-sm uppercase tracking-wider">Social Links</h4>
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">Social Links</label>
           {Array.isArray(data.footer.socialLinks) ? data.footer.socialLinks.map((link, index) => (
             <div key={index} className="flex items-center gap-2 mb-2">
               <span className="text-xs uppercase w-20 text-editor-text-secondary font-mono flex-shrink-0">{link.platform}</span>
@@ -2577,10 +2577,10 @@ const Controls: React.FC = () => {
 
         {/* Contact Information */}
         <div className="space-y-4">
-          <h4 className="font-bold text-editor-text-primary text-sm uppercase tracking-wider flex items-center gap-2">
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2 flex items-center gap-2">
             <MapPin size={14} className="text-editor-accent" />
             Contact Information
-          </h4>
+          </label>
           <Input
             label={t('editor.controls.common.address')}
             value={data.footer.contactInfo?.address || ''}
@@ -2633,10 +2633,10 @@ const Controls: React.FC = () => {
 
         {/* Business Hours */}
         <div className="space-y-4">
-          <h4 className="font-bold text-editor-text-primary text-sm uppercase tracking-wider flex items-center gap-2">
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2 flex items-center gap-2">
             <Clock size={14} className="text-editor-accent" />
             Business Hours
-          </h4>
+          </label>
 
           {/* Quick copy buttons */}
           <div className="flex gap-2 flex-wrap">
@@ -3043,10 +3043,10 @@ const Controls: React.FC = () => {
       <div className="space-y-4">
         {/* Content Section */}
         <div>
-          <h4 className="font-bold text-editor-text-primary text-sm mb-3 flex items-center gap-2">
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
             <Type size={14} />
             {t('controls.content')}
-          </h4>
+          </label>
 
           <AIFormControl label={t('controls.headline')} onAssistClick={() => setAiAssistField({ path: 'heroSplit.headline', value: data.heroSplit.headline, context: 'Hero Split Headline' })}>
             <TextArea value={data.heroSplit.headline} onChange={(e) => setNestedData('heroSplit.headline', e.target.value)} rows={2} />
@@ -3127,10 +3127,10 @@ const Controls: React.FC = () => {
 
         {/* Image */}
         <div>
-          <h4 className="font-bold text-editor-text-primary text-sm mb-3 flex items-center gap-2">
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
             <Image size={14} />
             Image
-          </h4>
+          </label>
           <ImagePicker label={t('editor.controls.hero.image')} value={data.heroSplit.imageUrl} onChange={(url) => setNestedData('heroSplit.imageUrl', url)} />
         </div>
       </div>
@@ -3388,10 +3388,10 @@ const Controls: React.FC = () => {
     const contentTab = (
       <div className="space-y-4">
         {/* Content */}
-        <h4 className="font-bold text-editor-text-primary text-sm flex items-center gap-2">
+        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2 flex items-center gap-2">
           <Type size={14} />
           {t('controls.content')}
-        </h4>
+        </label>
 
         <AIFormControl label={t('controls.headline')} onAssistClick={() => setAiAssistField({ path: 'hero.headline', value: data.hero.headline, context: 'Hero Headline' })}>
           <TextArea value={data.hero.headline} onChange={(e) => setNestedData('hero.headline', e.target.value)} rows={2} />
@@ -3993,10 +3993,10 @@ const Controls: React.FC = () => {
 
         {/* Features Items */}
         <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-          <h4 className="font-bold text-editor-text-primary text-sm uppercase tracking-wider mb-3 flex items-center gap-2">
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
             <List size={14} />
             Features List
-          </h4>
+          </label>
           {(data.features.items || []).map((item, index) => (
             <div
               key={index}
@@ -4329,10 +4329,10 @@ const Controls: React.FC = () => {
 
         {/* Testimonials Items */}
         <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-          <h4 className="font-bold text-editor-text-primary text-sm uppercase tracking-wider mb-3 flex items-center gap-2">
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
             <MessageSquare size={14} />
             Testimonials List
-          </h4>
+          </label>
           {(data.testimonials.items || []).map((item: any, index: number) => (
             <div key={index} className="bg-editor-bg p-3 rounded-lg border border-editor-border mb-3 group">
               <div className="flex justify-between items-center mb-2">
@@ -4650,7 +4650,7 @@ const Controls: React.FC = () => {
         <hr className="border-editor-border/50" />
 
         {/* Team Members */}
-        <h4 className="font-bold text-editor-text-primary text-sm uppercase tracking-wider">Team Members</h4>
+        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">Team Members</label>
         {(data?.team?.items || []).map((member: any, index: number) => (
           <div key={index} className="bg-editor-bg p-3 rounded-lg border border-editor-border mb-3">
             <ImagePicker
@@ -4898,7 +4898,7 @@ const Controls: React.FC = () => {
         {currentPortfolioVariant === 'image-overlay' && (
           <>
             <hr className="border-editor-border/50" />
-            <h4 className="font-bold text-editor-text-primary text-sm">Overlay Settings</h4>
+            <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">Overlay Settings</label>
             <div>
               <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">Grid Columns</label>
               <div className="flex bg-editor-bg p-1 rounded-md border border-editor-border">
@@ -4963,7 +4963,7 @@ const Controls: React.FC = () => {
         <hr className="border-editor-border/50" />
 
         {/* Projects */}
-        <h4 className="font-bold text-editor-text-primary text-sm uppercase tracking-wider mb-2">Projects</h4>
+        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">Projects</label>
         {(data?.portfolio?.items || []).map((item: any, index: number) => (
           <div key={index} className="bg-editor-bg p-3 rounded-lg border border-editor-border mb-3 group">
             <div className="flex justify-between items-center mb-2">
@@ -5556,7 +5556,7 @@ const Controls: React.FC = () => {
         <hr className="border-editor-border/50" />
 
         {/* Steps Items */}
-        <h4 className="font-bold text-editor-text-primary text-sm uppercase tracking-wider mb-2">Steps</h4>
+        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">Steps</label>
         {(data?.howItWorks?.items || []).map((item: any, index: number) => (
           <div key={index} className="bg-editor-bg p-3 rounded-lg border border-editor-border mb-3 group">
             <div className="flex justify-between items-center mb-2">
@@ -6118,7 +6118,7 @@ const Controls: React.FC = () => {
         <hr className="border-editor-border/50" />
 
         {/* Pricing Tiers */}
-        <h4 className="font-bold text-editor-text-primary text-sm uppercase tracking-wider mb-2">Pricing Tiers</h4>
+        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">Pricing Tiers</label>
         {(data.pricing.tiers || []).map((tier: any, index: number) => (
           <div
             key={index}
@@ -6329,7 +6329,7 @@ const Controls: React.FC = () => {
         <hr className="border-editor-border/50" />
 
         {/* Slides */}
-        <h4 className="font-bold text-editor-text-primary text-sm uppercase tracking-wider mb-2">Slides</h4>
+        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">Slides</label>
         {(data.slideshow.items || []).map((item: any, index: number) => (
           <div key={index} className="bg-editor-bg p-3 rounded-lg border border-editor-border mb-3 group">
             <ImagePicker
@@ -6847,7 +6847,7 @@ const Controls: React.FC = () => {
             </div>
           ) : (
             <>
-              <h4 className="font-bold text-editor-text-primary text-sm uppercase tracking-wider mb-2">{t('editor.controls.navigation.customLinks')}</h4>
+              <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">{t('editor.controls.navigation.customLinks')}</label>
               {(data.header.links || []).map((link, i) => (
                 <div key={i} className="flex gap-2 mb-2">
                   <input className="flex-1 bg-editor-bg border border-editor-border rounded px-2 py-1 text-sm text-editor-text-primary" value={link.text} onChange={(e) => setNestedData(`header.links.${i}.text`, e.target.value)} />
@@ -6876,7 +6876,7 @@ const Controls: React.FC = () => {
         <hr className="border-editor-border/50" />
 
         {/* CTA Button */}
-        <h4 className="font-bold text-editor-text-primary text-sm">{t('editor.controls.navigation.ctaButton')}</h4>
+        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">{t('editor.controls.navigation.ctaButton')}</label>
         <ToggleControl label={t('editor.controls.navigation.showCta')} checked={data.header.showCta !== false} onChange={(v) => setNestedData('header.showCta', v)} />
 
         {data.header.showCta !== false && (
@@ -6946,7 +6946,7 @@ const Controls: React.FC = () => {
         <hr className="border-editor-border/50" />
 
         {/* Height & Hover */}
-        <h4 className="font-bold text-editor-text-primary text-sm">Height & Hover</h4>
+        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">Height & Hover</label>
         <div>
           <div className="flex justify-between items-center mb-1">
             <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('editor.controls.navigation.height')}</label>
@@ -7017,7 +7017,7 @@ const Controls: React.FC = () => {
         <hr className="border-editor-border/50" />
 
         {/* Colors */}
-        <h4 className="font-bold text-editor-text-primary text-sm">{t('editor.controls.common.colors')}</h4>
+        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">{t('editor.controls.common.colors')}</label>
         <ColorControl label={t('editor.controls.common.background')} value={data.header.colors?.background} onChange={(v) => setNestedData('header.colors.background', v)} />
         <ColorControl label={t('editor.controls.common.text')} value={data.header.colors?.text} onChange={(v) => setNestedData('header.colors.text', v)} />
         <ColorControl label={t('editor.controls.common.accent')} value={data.header.colors?.accent || '#4f46e5'} onChange={(v) => setNestedData('header.colors.accent', v)} />
@@ -7068,7 +7068,7 @@ const Controls: React.FC = () => {
 
         {/* Link Columns */}
         <div className="space-y-4">
-          <h4 className="font-bold text-editor-text-primary text-sm uppercase tracking-wider">Link Columns</h4>
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">Link Columns</label>
           {(data.footer.linkColumns || []).map((col, colIndex) => (
             <div key={colIndex} className="bg-editor-bg p-3 rounded border border-editor-border space-y-2">
               <div className="flex items-center gap-2 mb-2">
@@ -7122,7 +7122,7 @@ const Controls: React.FC = () => {
 
         {/* Social Links */}
         <div className="space-y-4">
-          <h4 className="font-bold text-editor-text-primary text-sm uppercase tracking-wider">Social Links</h4>
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">Social Links</label>
           {Array.isArray(data.footer.socialLinks) ? data.footer.socialLinks.map((link, index) => (
             <div key={index} className="flex items-center gap-2 mb-2">
               <span className="text-xs uppercase w-20 text-editor-text-secondary font-mono flex-shrink-0">{link.platform}</span>
@@ -7137,10 +7137,10 @@ const Controls: React.FC = () => {
 
         {/* Contact Information */}
         <div className="space-y-4">
-          <h4 className="font-bold text-editor-text-primary text-sm uppercase tracking-wider flex items-center gap-2">
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2 flex items-center gap-2">
             <MapPin size={14} className="text-editor-accent" />
             Contact Information
-          </h4>
+          </label>
           <Input label={t('editor.controls.common.address')} value={data.footer.contactInfo?.address || ''} onChange={(e) => setNestedData('footer.contactInfo.address', e.target.value)} placeholder="123 Main Street" />
           <div className="grid grid-cols-2 gap-2">
             <Input label={t('editor.controls.common.city')} value={data.footer.contactInfo?.city || ''} onChange={(e) => setNestedData('footer.contactInfo.city', e.target.value)} placeholder="City" />
@@ -7158,10 +7158,10 @@ const Controls: React.FC = () => {
 
         {/* Business Hours */}
         <div className="space-y-4">
-          <h4 className="font-bold text-editor-text-primary text-sm uppercase tracking-wider flex items-center gap-2">
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2 flex items-center gap-2">
             <Clock size={14} className="text-editor-accent" />
             Business Hours
-          </h4>
+          </label>
           <div className="flex gap-2 flex-wrap">
             <button
               onClick={() => {
@@ -7252,7 +7252,7 @@ const Controls: React.FC = () => {
         <hr className="border-editor-border/50" />
 
         {/* Colors */}
-        <h4 className="font-bold text-editor-text-primary text-sm">{t('editor.controls.common.colors')}</h4>
+        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">{t('editor.controls.common.colors')}</label>
         <div className="space-y-2">
           <ColorControl label={t('editor.controls.common.background')} value={data.footer.colors?.background} onChange={(v) => setNestedData('footer.colors.background', v)} />
           <ColorControl label={t('editor.controls.common.title')} value={data.footer.colors?.heading || '#ffffff'} onChange={(v) => setNestedData('footer.colors.heading', v)} />
