@@ -1173,60 +1173,59 @@ const Controls: React.FC = () => {
         <hr className="border-editor-border/50" />
 
         {/* ========== BACKGROUND IMAGE ========== */}
-        <div>
-          <h4 className="font-bold text-editor-text-primary text-sm mb-3 flex items-center gap-2">
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
             <Image size={14} />
             Imagen de Fondo
-          </h4>
+          </label>
           <ImagePicker label="Imagen de Fondo" value={data.hero.imageUrl} onChange={(url) => setNestedData('hero.imageUrl', url)} />
 
           {/* Overlay Opacity */}
-          <div className="mt-4">
-            <div className="flex justify-between items-center mb-1">
-              <label className="text-xs font-medium text-editor-text-secondary">Oscurecimiento del Overlay</label>
-              <span className="text-xs text-editor-text-primary font-mono">{data.hero.overlayOpacity ?? 50}%</span>
+          <div className="mt-4 bg-editor-bg/50 p-3 rounded-lg">
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-xs font-medium text-editor-text-secondary">Oscurecimiento</span>
+              <span className="text-[10px] text-editor-accent font-mono bg-editor-accent/10 px-2 py-0.5 rounded-full">{data.hero.overlayOpacity ?? 50}%</span>
             </div>
             <input
               type="range" min="0" max="100" step="5"
               value={data.hero.overlayOpacity ?? 50}
               onChange={(e) => setNestedData('hero.overlayOpacity', parseInt(e.target.value))}
-              className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
+              className="w-full h-1.5 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
             />
-            <p className="text-xs text-editor-text-secondary mt-1">
-              Controla el nivel de oscurecimiento sobre la imagen de fondo para mejorar la legibilidad del texto.
-            </p>
+            <div className="flex justify-between mt-1">
+              <span className="text-[9px] text-editor-text-secondary/50">Claro</span>
+              <span className="text-[9px] text-editor-text-secondary/50">Oscuro</span>
+            </div>
           </div>
         </div>
 
         <hr className="border-editor-border/50" />
 
         {/* ========== HERO HEIGHT ========== */}
-        <div>
-          <h4 className="font-bold text-editor-text-primary text-sm mb-3 flex items-center gap-2">
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
             <AlignJustify size={14} />
             {t('controls.heroHeight')}
-          </h4>
-          <div className="space-y-3 bg-editor-bg/50 p-3 rounded-lg">
-            <div>
-              <div className="flex justify-between items-center mb-1">
-                <label className="text-xs font-medium text-editor-text-secondary">{t('controls.sectionHeight')}</label>
-                <span className="text-xs text-editor-text-primary font-mono">
-                  {data.hero.heroHeight ? `${data.hero.heroHeight}vh` : t('controls.auto')}
-                </span>
-              </div>
-              <input
-                type="range" min="0" max="100" step="5"
-                value={data.hero.heroHeight ?? 0}
-                onChange={(e) => {
-                  const val = parseInt(e.target.value);
-                  setNestedData('hero.heroHeight', val === 0 ? undefined : val);
-                }}
-                className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
-              />
-              <div className="flex justify-between mt-1">
-                <span className="text-[9px] text-editor-text-secondary">{t('controls.auto')}</span>
-                <span className="text-[9px] text-editor-text-secondary">100vh</span>
-              </div>
+          </label>
+          <div className="bg-editor-bg/50 p-3 rounded-lg">
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-xs font-medium text-editor-text-secondary">{t('controls.sectionHeight')}</span>
+              <span className="text-[10px] text-editor-accent font-mono bg-editor-accent/10 px-2 py-0.5 rounded-full">
+                {data.hero.heroHeight ? `${data.hero.heroHeight}vh` : t('controls.auto')}
+              </span>
+            </div>
+            <input
+              type="range" min="0" max="100" step="5"
+              value={data.hero.heroHeight ?? 0}
+              onChange={(e) => {
+                const val = parseInt(e.target.value);
+                setNestedData('hero.heroHeight', val === 0 ? undefined : val);
+              }}
+              className="w-full h-1.5 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
+            />
+            <div className="flex justify-between mt-1">
+              <span className="text-[9px] text-editor-text-secondary/50">{t('controls.auto')}</span>
+              <span className="text-[9px] text-editor-text-secondary/50">100vh</span>
             </div>
           </div>
         </div>
@@ -3628,28 +3627,29 @@ const Controls: React.FC = () => {
         <hr className="border-editor-border/50" />
 
         {/* ========== BACKGROUND IMAGE ========== */}
-        <div>
-          <h4 className="font-bold text-editor-text-primary text-sm mb-3 flex items-center gap-2">
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
             <Image size={14} />
             Imagen de Fondo
-          </h4>
+          </label>
           <ImagePicker label="Imagen de Fondo" value={data.hero.imageUrl} onChange={(url) => setNestedData('hero.imageUrl', url)} />
 
           {/* Overlay Opacity */}
-          <div className="mt-4">
-            <div className="flex justify-between items-center mb-1">
-              <label className="text-xs font-medium text-editor-text-secondary">Oscurecimiento del Overlay</label>
-              <span className="text-xs text-editor-text-primary font-mono">{data.hero.overlayOpacity ?? 50}%</span>
+          <div className="mt-4 bg-editor-bg/50 p-3 rounded-lg">
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-xs font-medium text-editor-text-secondary">Oscurecimiento</span>
+              <span className="text-[10px] text-editor-accent font-mono bg-editor-accent/10 px-2 py-0.5 rounded-full">{data.hero.overlayOpacity ?? 50}%</span>
             </div>
             <input
               type="range" min="0" max="100" step="5"
               value={data.hero.overlayOpacity ?? 50}
               onChange={(e) => setNestedData('hero.overlayOpacity', parseInt(e.target.value))}
-              className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
+              className="w-full h-1.5 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
             />
-            <p className="text-xs text-editor-text-secondary mt-1">
-              Controla el nivel de oscurecimiento sobre la imagen de fondo para mejorar la legibilidad del texto.
-            </p>
+            <div className="flex justify-between mt-1">
+              <span className="text-[9px] text-editor-text-secondary/50">Claro</span>
+              <span className="text-[9px] text-editor-text-secondary/50">Oscuro</span>
+            </div>
           </div>
         </div>
 
