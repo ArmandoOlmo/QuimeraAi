@@ -82,7 +82,7 @@ const HeroModern: React.FC<HeroProps> = ({
   badgeColor, badgeBackgroundColor,
   secondaryButtonStyle = 'outline',
   secondaryButtonOpacity = 100,
-  gradientOpacity = 70,
+  overlayOpacity, gradientOpacity = 70,
   heroHeight,
   primaryCtaLink = '/#cta',
   secondaryCtaLink = '/#features',
@@ -141,7 +141,7 @@ const HeroModern: React.FC<HeroProps> = ({
           <div
             className="absolute inset-0 bg-gradient-to-b from-black via-black to-black"
             style={{
-              background: `linear-gradient(to bottom, rgba(0,0,0,${gradientOpacity * 0.3 / 100}), rgba(0,0,0,${gradientOpacity * 0.7 / 100}), rgba(0,0,0,${gradientOpacity / 100}))`
+              background: `linear-gradient(to bottom, rgba(0,0,0,${(overlayOpacity ?? gradientOpacity) * 0.3 / 100}), rgba(0,0,0,${(overlayOpacity ?? gradientOpacity) * 0.7 / 100}), rgba(0,0,0,${(overlayOpacity ?? gradientOpacity) / 100}))`
             }}
           ></div>
           <div className="absolute inset-0 bg-gradient-to-r from-indigo-900/20 via-transparent to-emerald-900/20"></div>

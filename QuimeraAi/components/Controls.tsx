@@ -1262,7 +1262,7 @@ const Controls: React.FC = () => {
               type="range" min="0" max="100" step="5"
               value={data.hero.overlayOpacity ?? 50}
               onChange={(e) => setNestedData('hero.overlayOpacity', parseInt(e.target.value))}
-              className="w-full h-1.5 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
+              className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
             />
             <div className="flex justify-between mt-1">
               <span className="text-[9px] text-editor-text-secondary/50">Claro</span>
@@ -1293,7 +1293,7 @@ const Controls: React.FC = () => {
                 const val = parseInt(e.target.value);
                 setNestedData('hero.heroHeight', val === 0 ? undefined : val);
               }}
-              className="w-full h-1.5 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
+              className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
             />
             <div className="flex justify-between mt-1">
               <span className="text-[9px] text-editor-text-secondary/50">{t('controls.auto')}</span>
@@ -3783,7 +3783,7 @@ const Controls: React.FC = () => {
               type="range" min="0" max="100" step="5"
               value={data.hero.overlayOpacity ?? 50}
               onChange={(e) => setNestedData('hero.overlayOpacity', parseInt(e.target.value))}
-              className="w-full h-1.5 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
+              className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
             />
             <div className="flex justify-between mt-1">
               <span className="text-[9px] text-editor-text-secondary/50">Claro</span>

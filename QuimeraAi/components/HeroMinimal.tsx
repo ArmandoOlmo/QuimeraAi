@@ -83,7 +83,7 @@ const HeroMinimal: React.FC<HeroProps> = ({
     badgeColor, badgeBackgroundColor,
     secondaryButtonStyle = 'outline',
     secondaryButtonOpacity = 100,
-    gradientOpacity = 70,
+    overlayOpacity, gradientOpacity = 70,
     heroHeight,
     primaryCtaLink = '/#cta',
     secondaryCtaLink = '/#features',
@@ -124,7 +124,7 @@ const HeroMinimal: React.FC<HeroProps> = ({
                     <div
                         className="absolute inset-0"
                         style={{
-                            background: `rgba(0,0,0,${gradientOpacity / 100})`
+                            background: `rgba(0,0,0,${(overlayOpacity ?? gradientOpacity) / 100})`
                         }}
                     />
                     {/* Subtle radial vignette */}

@@ -84,7 +84,7 @@ const HeroBold: React.FC<HeroProps> = ({
     badgeColor, badgeBackgroundColor,
     secondaryButtonStyle = 'outline',
     secondaryButtonOpacity = 100,
-    gradientOpacity = 70,
+    overlayOpacity, gradientOpacity = 70,
     heroHeight,
     primaryCtaLink = '/#cta',
     secondaryCtaLink = '/#features',
@@ -123,7 +123,7 @@ const HeroBold: React.FC<HeroProps> = ({
                     />
                     {/* Heavy color overlay tint from primary */}
                     <div className="absolute inset-0" style={{
-                        background: `linear-gradient(135deg, ${actualColors.primary}${Math.round(gradientOpacity * 2.55).toString(16).padStart(2, '0')} 0%, rgba(0,0,0,${gradientOpacity / 100}) 50%, ${actualColors.secondary}${Math.round(gradientOpacity * 0.5 * 2.55).toString(16).padStart(2, '0')} 100%)`
+                        background: `linear-gradient(135deg, ${actualColors.primary}${Math.round(gradientOpacity * 2.55).toString(16).padStart(2, '0')} 0%, rgba(0,0,0,${(overlayOpacity ?? gradientOpacity) / 100}) 50%, ${actualColors.secondary}${Math.round(gradientOpacity * 0.5 * 2.55).toString(16).padStart(2, '0')} 100%)`
                     }} />
                 </div>
             )}

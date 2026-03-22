@@ -84,7 +84,7 @@ const HeroOverlap: React.FC<HeroProps> = ({
     badgeColor, badgeBackgroundColor,
     secondaryButtonStyle = 'outline',
     secondaryButtonOpacity = 100,
-    gradientOpacity = 40,
+    overlayOpacity, gradientOpacity = 40,
     heroHeight,
     primaryCtaLink = '/#cta',
     secondaryCtaLink = '/#features',
@@ -124,7 +124,7 @@ const HeroOverlap: React.FC<HeroProps> = ({
                         />
                         {/* Multi-layer gradient for smooth transition to card area */}
                         <div className="absolute inset-0" style={{
-                            background: `linear-gradient(to bottom, rgba(0,0,0,${gradientOpacity * 0.3 / 100}) 0%, rgba(0,0,0,${gradientOpacity * 0.1 / 100}) 40%, ${actualColors.background}dd 85%, ${actualColors.background} 100%)`
+                            background: `linear-gradient(to bottom, rgba(0,0,0,${(overlayOpacity ?? gradientOpacity) * 0.3 / 100}) 0%, rgba(0,0,0,${(overlayOpacity ?? gradientOpacity) * 0.1 / 100}) 40%, ${actualColors.background}dd 85%, ${actualColors.background} 100%)`
                         }} />
                         {/* Side color tints */}
                         <div className="absolute inset-0" style={{

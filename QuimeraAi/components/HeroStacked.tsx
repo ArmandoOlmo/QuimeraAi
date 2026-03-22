@@ -84,7 +84,7 @@ const HeroStacked: React.FC<HeroProps> = ({
     badgeColor, badgeBackgroundColor,
     secondaryButtonStyle = 'outline',
     secondaryButtonOpacity = 100,
-    gradientOpacity = 50,
+    overlayOpacity, gradientOpacity = 50,
     heroHeight,
     primaryCtaLink = '/#cta',
     secondaryCtaLink = '/#features',
@@ -124,7 +124,7 @@ const HeroStacked: React.FC<HeroProps> = ({
                         />
                         {/* Gradient overlay — blends into content background */}
                         <div className="absolute inset-0" style={{
-                            background: `linear-gradient(to bottom, rgba(0,0,0,${gradientOpacity * 0.2 / 100}) 0%, rgba(0,0,0,${gradientOpacity * 0.1 / 100}) 50%, ${actualColors.background}ee 90%, ${actualColors.background} 100%)`
+                            background: `linear-gradient(to bottom, rgba(0,0,0,${(overlayOpacity ?? gradientOpacity) * 0.2 / 100}) 0%, rgba(0,0,0,${(overlayOpacity ?? gradientOpacity) * 0.1 / 100}) 50%, ${actualColors.background}ee 90%, ${actualColors.background} 100%)`
                         }} />
                         {/* Color tint */}
                         <div className="absolute inset-0 opacity-20" style={{

@@ -84,7 +84,7 @@ const HeroGlass: React.FC<HeroProps> = ({
     badgeColor, badgeBackgroundColor,
     secondaryButtonStyle = 'outline',
     secondaryButtonOpacity = 100,
-    gradientOpacity = 30,
+    overlayOpacity, gradientOpacity = 30,
     heroHeight,
     primaryCtaLink = '/#cta',
     secondaryCtaLink = '/#features',
@@ -119,7 +119,7 @@ const HeroGlass: React.FC<HeroProps> = ({
                 <div className="absolute inset-0 z-0 transform-gpu">
                     <img src={imageUrl} alt="Hero Background" className="w-full h-full object-cover glass-img" />
                     {/* Darkening for glass card to pop */}
-                    <div className="absolute inset-0" style={{ backgroundColor: `rgba(0,0,0,${gradientOpacity / 100})` }} />
+                    <div className="absolute inset-0" style={{ backgroundColor: `rgba(0,0,0,${(overlayOpacity ?? gradientOpacity) / 100})` }} />
                 </div>
             )}
 

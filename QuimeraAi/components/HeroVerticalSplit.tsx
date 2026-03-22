@@ -84,7 +84,7 @@ const HeroVerticalSplit: React.FC<HeroProps> = ({
     badgeColor, badgeBackgroundColor,
     secondaryButtonStyle = 'outline',
     secondaryButtonOpacity = 100,
-    gradientOpacity = 70,
+    overlayOpacity, gradientOpacity = 70,
     heroHeight,
     primaryCtaLink = '/#cta',
     secondaryCtaLink = '/#features',

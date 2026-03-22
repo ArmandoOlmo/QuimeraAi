@@ -83,7 +83,7 @@ const HeroEditorial: React.FC<HeroProps> = ({
     badgeColor, badgeBackgroundColor,
     secondaryButtonStyle = 'outline',
     secondaryButtonOpacity = 100,
-    gradientOpacity = 70,
+    overlayOpacity, gradientOpacity = 70,
     heroHeight,
     primaryCtaLink = '/#cta',
     secondaryCtaLink = '/#features',
@@ -125,7 +125,7 @@ const HeroEditorial: React.FC<HeroProps> = ({
                     <div
                         className="absolute inset-0"
                         style={{
-                            background: `linear-gradient(to top, rgba(0,0,0,${gradientOpacity / 100}) 0%, rgba(0,0,0,${gradientOpacity * 0.6 / 100}) 30%, rgba(0,0,0,${gradientOpacity * 0.15 / 100}) 60%, rgba(0,0,0,${gradientOpacity * 0.3 / 100}) 100%)`
+                            background: `linear-gradient(to top, rgba(0,0,0,${(overlayOpacity ?? gradientOpacity) / 100}) 0%, rgba(0,0,0,${(overlayOpacity ?? gradientOpacity) * 0.6 / 100}) 30%, rgba(0,0,0,${(overlayOpacity ?? gradientOpacity) * 0.15 / 100}) 60%, rgba(0,0,0,${(overlayOpacity ?? gradientOpacity) * 0.3 / 100}) 100%)`
                         }}
                     />
                     {/* Warm vignette from primary color */}
