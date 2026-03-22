@@ -82,8 +82,8 @@ export const getDefaultAppearanceConfig = (): ChatAppearanceConfig => ({
     },
     behavior: {
         position: 'bottom-right',
-        offsetX: 16,
-        offsetY: -28,
+        offsetX: 26,
+        offsetY: 32,
         width: 'md',
         height: 'lg',
         autoOpen: false,

@@ -1375,11 +1375,11 @@ const Controls: React.FC = () => {
         <hr className="border-editor-border/50" />
 
         {/* ========== CONTENT ========== */}
-        <div>
-          <h4 className="font-bold text-editor-text-primary text-sm mb-3 flex items-center gap-2">
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
             <Type size={14} />
             {t('controls.content')}
-          </h4>
+          </label>
 
           <AIFormControl label={t('editor.controls.hero.headline')} onAssistClick={() => setAiAssistField({ path: 'hero.headline', value: data.hero.headline, context: 'Hero Headline' })}>
             <TextArea value={data.hero.headline} onChange={(e) => setNestedData('hero.headline', e.target.value)} rows={2} />
@@ -1400,13 +1400,13 @@ const Controls: React.FC = () => {
         <hr className="border-editor-border/50" />
 
         {/* ========== COLORS ========== */}
-        <div>
-          <h4 className="font-bold text-editor-text-primary text-sm mb-3 flex items-center gap-2">
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
             <Settings size={14} />
             {t('editor.controls.common.colors')}
-          </h4>
+          </label>
 
-          <div className="space-y-3 bg-editor-bg/50 p-3 rounded-lg">
+          <div className="space-y-3">
             <ColorControl label={t('editor.controls.common.background')} value={data.hero.colors?.background} onChange={(v) => setNestedData('hero.colors.background', v)} />
             <ColorControl label={t('editor.controls.common.title')} value={data.hero.colors?.heading || '#ffffff'} onChange={(v) => setNestedData('hero.colors.heading', v)} />
             <ColorControl label={t('editor.controls.common.text')} value={data.hero.colors?.text} onChange={(v) => setNestedData('hero.colors.text', v)} />
@@ -1450,9 +1450,9 @@ const Controls: React.FC = () => {
               {/* Opacity Slider - only for solid style */}
               {(data.hero.secondaryButtonStyle || 'solid') === 'solid' && (
                 <div className="mt-3">
-                  <div className="flex justify-between items-center mb-1">
+                  <div className="flex justify-between items-center mb-2">
                     <label className="text-xs font-medium text-editor-text-secondary">Opacity</label>
-                    <span className="text-xs text-editor-text-primary">{data.hero.secondaryButtonOpacity ?? 100}%</span>
+                    <span className="text-[10px] text-editor-accent font-mono bg-editor-accent/10 px-2 py-0.5 rounded-full">{data.hero.secondaryButtonOpacity ?? 100}%</span>
                   </div>
                   <input
                     type="range" min="0" max="100" step="5"
@@ -3896,58 +3896,76 @@ const Controls: React.FC = () => {
         <hr className="border-editor-border/50" />
 
         {/* ========== COLORS ========== */}
-        <h4 className="font-bold text-editor-text-primary text-sm">Colors</h4>
-        <ColorControl label={t('editor.controls.common.background')} value={data.hero.colors?.background} onChange={(v) => setNestedData('hero.colors.background', v)} />
-        <ColorControl label="Primary Color" value={data.hero.colors?.primary || '#4f46e5'} onChange={(v) => setNestedData('hero.colors.primary', v)} />
-        <ColorControl label="Secondary Color" value={data.hero.colors?.secondary || '#10b981'} onChange={(v) => setNestedData('hero.colors.secondary', v)} />
-        <ColorControl label="Heading" value={data.hero.colors?.heading} onChange={(v) => setNestedData('hero.colors.heading', v)} />
-        <ColorControl label="Text" value={data.hero.colors?.text} onChange={(v) => setNestedData('hero.colors.text', v)} />
-
-        <hr className="border-editor-border/50" />
-        <h4 className="font-bold text-editor-text-primary text-sm">Button Colors</h4>
-        <ColorControl label="Primary Button BG" value={data.hero.colors?.buttonBackground} onChange={(v) => setNestedData('hero.colors.buttonBackground', v)} />
-        <ColorControl label="Primary Button Text" value={data.hero.colors?.buttonText} onChange={(v) => setNestedData('hero.colors.buttonText', v)} />
-        <ColorControl label="Secondary Button BG" value={data.hero.colors?.secondaryButtonBackground} onChange={(v) => setNestedData('hero.colors.secondaryButtonBackground', v)} />
-        <ColorControl label="Secondary Button Text" value={data.hero.colors?.secondaryButtonText} onChange={(v) => setNestedData('hero.colors.secondaryButtonText', v)} />
-
-        {/* Secondary Button Style */}
-        <div className="mt-2">
-          <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">Secondary Button Style</label>
-          <div className="flex bg-editor-bg p-1 rounded-md border border-editor-border">
-            {['solid', 'outline', 'ghost'].map(style => (
-              <button
-                key={style}
-                onClick={() => setNestedData('hero.secondaryButtonStyle', style)}
-                className={`flex-1 py-1.5 text-xs font-medium rounded-sm capitalize ${(data.hero.secondaryButtonStyle || 'solid') === style
-                  ? 'bg-editor-accent text-editor-bg'
-                  : 'text-editor-text-secondary hover:bg-editor-border'
-                  }`}
-              >
-                {style}
-              </button>
-            ))}
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+            <Palette size={14} />
+            Colors
+          </label>
+          <div className="space-y-3">
+            <ColorControl label={t('editor.controls.common.background')} value={data.hero.colors?.background} onChange={(v) => setNestedData('hero.colors.background', v)} />
+            <ColorControl label="Primary Color" value={data.hero.colors?.primary || '#4f46e5'} onChange={(v) => setNestedData('hero.colors.primary', v)} />
+            <ColorControl label="Secondary Color" value={data.hero.colors?.secondary || '#10b981'} onChange={(v) => setNestedData('hero.colors.secondary', v)} />
+            <ColorControl label="Heading" value={data.hero.colors?.heading} onChange={(v) => setNestedData('hero.colors.heading', v)} />
+            <ColorControl label="Text" value={data.hero.colors?.text} onChange={(v) => setNestedData('hero.colors.text', v)} />
           </div>
         </div>
 
-        {/* Opacity Slider - only for solid style */}
-        {(data.hero.secondaryButtonStyle || 'solid') === 'solid' && (
-          <div className="mt-2">
-            <div className="flex justify-between items-center mb-1">
-              <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Opacity</label>
-              <span className="text-xs text-editor-text-primary">{data.hero.secondaryButtonOpacity ?? 100}%</span>
-            </div>
-            <input
-              type="range" min="0" max="100" step="5"
-              value={data.hero.secondaryButtonOpacity ?? 100}
-              onChange={(e) => setNestedData('hero.secondaryButtonOpacity', parseInt(e.target.value))}
-              className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
-            />
-          </div>
-        )}
-
         <hr className="border-editor-border/50" />
-        <h4 className="font-bold text-editor-text-primary text-sm">Button Style</h4>
-        <BorderRadiusSelector label="Button Radius" value={data.hero.buttonBorderRadius || 'md'} onChange={(v) => setNestedData('hero.buttonBorderRadius', v)} />
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+            <MousePointerClick size={14} />
+            Button Colors
+          </label>
+          <div className="space-y-3">
+            <ColorControl label="Primary Button BG" value={data.hero.colors?.buttonBackground} onChange={(v) => setNestedData('hero.colors.buttonBackground', v)} />
+            <ColorControl label="Primary Button Text" value={data.hero.colors?.buttonText} onChange={(v) => setNestedData('hero.colors.buttonText', v)} />
+            <ColorControl label="Secondary Button BG" value={data.hero.colors?.secondaryButtonBackground} onChange={(v) => setNestedData('hero.colors.secondaryButtonBackground', v)} />
+            <ColorControl label="Secondary Button Text" value={data.hero.colors?.secondaryButtonText} onChange={(v) => setNestedData('hero.colors.secondaryButtonText', v)} />
+          </div>
+
+          {/* Secondary Button Style */}
+          <div className="mt-4 pt-3 border-t border-editor-border/50">
+            <label className="block text-xs font-medium text-editor-text-secondary mb-2">Secondary Button Style</label>
+            <div className="flex bg-editor-bg p-1 rounded-md border border-editor-border">
+              {['solid', 'outline', 'ghost'].map(style => (
+                <button
+                  key={style}
+                  onClick={() => setNestedData('hero.secondaryButtonStyle', style)}
+                  className={`flex-1 py-1.5 text-xs font-medium rounded-sm capitalize transition-colors ${(data.hero.secondaryButtonStyle || 'solid') === style
+                    ? 'bg-editor-accent text-editor-bg'
+                    : 'text-editor-text-secondary hover:bg-editor-border'
+                    }`}
+                >
+                  {style}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Opacity Slider - only for solid style */}
+          {(data.hero.secondaryButtonStyle || 'solid') === 'solid' && (
+            <div className="mt-3">
+              <div className="flex justify-between items-center mb-2">
+                <label className="text-xs font-medium text-editor-text-secondary">Opacity</label>
+                <span className="text-[10px] text-editor-accent font-mono bg-editor-accent/10 px-2 py-0.5 rounded-full">{data.hero.secondaryButtonOpacity ?? 100}%</span>
+              </div>
+              <input
+                type="range" min="0" max="100" step="5"
+                value={data.hero.secondaryButtonOpacity ?? 100}
+                onChange={(e) => setNestedData('hero.secondaryButtonOpacity', parseInt(e.target.value))}
+                className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
+              />
+            </div>
+          )}
+        </div>
+
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+            <SlidersHorizontal size={14} />
+            Button Style
+          </label>
+          <BorderRadiusSelector label="Button Radius" value={data.hero.buttonBorderRadius || 'md'} onChange={(v) => setNestedData('hero.buttonBorderRadius', v)} />
+        </div>
       </div>
     );
 
