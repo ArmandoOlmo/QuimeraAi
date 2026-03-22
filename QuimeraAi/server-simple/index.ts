@@ -488,13 +488,13 @@ function generateFullHtml(
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="preconnect" href="https://firebasestorage.googleapis.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=${encodeURIComponent(theme.fontFamilyHeader || 'Poppins')}:wght@400;500;600;700&family=${encodeURIComponent(theme.fontFamilyBody || 'Mulish')}:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=${encodeURIComponent(theme.fontFamilyHeader || 'Poppins')}:wght@400;500;600;700&family=${encodeURIComponent(theme.fontFamilyBody || 'Inter')}:wght@400;500;600&display=swap" rel="stylesheet">
     
     <!-- Critical CSS - prevent flash of unstyled content -->
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { 
-            font-family: '${theme.fontFamilyBody || 'Mulish'}', system-ui, sans-serif;
+            font-family: '${theme.fontFamilyBody || 'Inter'}', system-ui, sans-serif;
             background: ${backgroundColor};
             color: ${textColor};
             line-height: 1.6;

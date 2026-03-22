@@ -8,6 +8,7 @@
 import React, { useState, useEffect, useCallback, lazy, Suspense } from 'react';
 import { db, doc, getDoc, collection, getDocs, query, orderBy, where, limit } from '../firebase';
 import { Project, PageData, ThemeData, PageSection, CMSPost, CMSCategory, Menu, FooterData, FontFamily, SEOConfig, SitePage } from '../types';
+import { fontStacks, getGoogleFontsUrl, resolveFontFamily } from '../utils/fontLoader';
 import { deriveColorsFromPalette } from '../utils/colorUtils';
 import { AlertTriangle, Loader2 } from 'lucide-react';
 import AdPixelsInjector from './AdPixelsInjector';
@@ -104,59 +105,7 @@ type StoreViewState =
   | { type: 'category'; slug: string }
   | { type: 'product'; slug: string };
 
-// Font stacks for CSS injection
-const fontStacks: Record<FontFamily, string> = {
-  roboto: "'Roboto', sans-serif",
-  'open-sans': "'Open Sans', sans-serif",
-  lato: "'Lato', sans-serif",
-  'slabo-27px': "'Slabo 27px', serif",
-  oswald: "'Oswald', sans-serif",
-  'source-sans-pro': "'Source Sans 3', 'Source Sans Pro', sans-serif",
-  montserrat: "'Montserrat', sans-serif",
-  raleway: "'Raleway', sans-serif",
-  'pt-sans': "'PT Sans', sans-serif",
-  merriweather: "'Merriweather', serif",
-  lora: "'Lora', serif",
-  ubuntu: "'Ubuntu', sans-serif",
-  'playfair-display': "'Playfair Display', serif",
-  'crimson-text': "'Crimson Text', serif",
-  poppins: "'Poppins', sans-serif",
-  arvo: "'Arvo', serif",
-  mulish: "'Mulish', sans-serif",
-  'noto-sans': "'Noto Sans', sans-serif",
-  'noto-serif': "'Noto Serif', serif",
-  inconsolata: "'Inconsolata', monospace",
-  'indie-flower': "'Indie Flower', cursive",
-  cabin: "'Cabin', sans-serif",
-  'fira-sans': "'Fira Sans', sans-serif",
-  pacifico: "'Pacifico', cursive",
-  'josefin-sans': "'Josefin Sans', sans-serif",
-  anton: "'Anton', sans-serif",
-  'yanone-kaffeesatz': "'Yanone Kaffeesatz', sans-serif",
-  arimo: "'Arimo', sans-serif",
-  lobster: "'Lobster', cursive",
-  'bree-serif': "'Bree Serif', serif",
-  vollkorn: "'Vollkorn', serif",
-  abel: "'Abel', sans-serif",
-  'archivo-narrow': "'Archivo Narrow', sans-serif",
-  'francois-one': "'Francois One', sans-serif",
-  signika: "'Signika', sans-serif",
-  oxygen: "'Oxygen', sans-serif",
-  quicksand: "'Quicksand', sans-serif",
-  'pt-serif': "'PT Serif', serif",
-  bitter: "'Bitter', serif",
-  'exo-2': "'Exo 2', sans-serif",
-  'varela-round': "'Varela Round', sans-serif",
-  dosis: "'Dosis', sans-serif",
-  'noticia-text': "'Noticia Text', serif",
-  'titillium-web': "'Titillium Web', sans-serif",
-  nobile: "'Nobile', sans-serif",
-  cardo: "'Cardo', serif",
-  asap: "'Asap', sans-serif",
-  questrial: "'Questrial', sans-serif",
-  'dancing-script': "'Dancing Script', cursive",
-  'amatic-sc': "'Amatic SC', cursive",
-};
+// fontStacks imported from utils/fontLoader.ts (single source of truth)
 
 interface PublicWebsitePreviewProps {
   projectId?: string;
@@ -906,13 +855,25 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
   useEffect(() => {
     if (project?.theme) {
       const root = document.documentElement;
-      const headerFont = fontStacks[project.theme.fontFamilyHeader] || fontStacks['roboto'];
-      const bodyFont = fontStacks[project.theme.fontFamilyBody] || fontStacks['roboto'];
-      const buttonFont = fontStacks[project.theme.fontFamilyButton] || fontStacks['roboto'];
+      const resolvedHeader = resolveFontFamily(project.theme.fontFamilyHeader);
+      const resolvedBody = resolveFontFamily(project.theme.fontFamilyBody);
+      const resolvedButton = resolveFontFamily(project.theme.fontFamilyButton);
+
+      const headerFont = fontStacks[resolvedHeader];
+      const bodyFont = fontStacks[resolvedBody];
+      const buttonFont = fontStacks[resolvedButton];
 
       root.style.setProperty('--font-header', headerFont);
       root.style.setProperty('--font-body', bodyFont);
       root.style.setProperty('--font-button', buttonFont);
+
+      // Font weight & style variables
+      root.style.setProperty('--font-weight-header', String(project.theme.fontWeightHeader ?? 700));
+      root.style.setProperty('--font-weight-body', String(project.theme.fontWeightBody ?? 400));
+      root.style.setProperty('--font-weight-button', String(project.theme.fontWeightButton ?? 600));
+      root.style.setProperty('--font-style-header', project.theme.fontStyleHeader ?? 'normal');
+      root.style.setProperty('--font-style-body', project.theme.fontStyleBody ?? 'normal');
+      root.style.setProperty('--font-style-button', project.theme.fontStyleButton ?? 'normal');
 
       // All Caps variables
       root.style.setProperty('--headings-transform', project.theme.headingsAllCaps ? 'uppercase' : 'none');
@@ -922,27 +883,10 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
       root.style.setProperty('--navlinks-transform', project.theme.navLinksAllCaps ? 'uppercase' : 'none');
       root.style.setProperty('--navlinks-spacing', project.theme.navLinksAllCaps ? '0.05em' : 'normal');
 
-      // Dynamic Google Fonts loading (for non-SSR paths like /#preview/)
-      const fontNameOverrides: Record<string, string> = {
-        'pt-sans': 'PT Sans',
-        'pt-serif': 'PT Serif',
-        'amatic-sc': 'Amatic SC',
-        'source-sans-pro': 'Source Sans 3',
-      };
-      const toFontApiName = (f: string) => {
-        if (fontNameOverrides[f]) return fontNameOverrides[f];
-        return f.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
-      };
-
-      const fonts = [...new Set([
-        project.theme.fontFamilyHeader,
-        project.theme.fontFamilyBody,
-        project.theme.fontFamilyButton,
-      ].filter(Boolean))];
-
-      if (fonts.length > 0) {
-        const families = fonts.map(f => `family=${toFontApiName(f).replace(/\s/g, '+')}:wght@300;400;500;600;700`).join('&');
-        const googleFontsUrl = `https://fonts.googleapis.com/css2?${families}&display=swap`;
+      // Dynamic Google Fonts loading — uses resolved font keys
+      const fontsToLoad = [...new Set([resolvedHeader, resolvedBody, resolvedButton])];
+      if (fontsToLoad.length > 0) {
+        const googleFontsUrl = getGoogleFontsUrl(fontsToLoad);
         
         const linkId = 'preview-google-fonts';
         let link = document.getElementById(linkId) as HTMLLinkElement;

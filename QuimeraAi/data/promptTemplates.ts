@@ -648,10 +648,10 @@ HIDE SECTION (all mean: hide section):
 - WITH TYPOS: "oculatar la seccion", "esconder los presios"
 
 CHANGE FONT (all mean: change font family):
-- "cambia la fuente a roboto" / "change font to roboto"
-- "pon la letra en roboto" / "put font in roboto"
-- "usa la fuente roboto" / "use roboto font"
-- "fuente roboto" / "font roboto"
+- "cambia la fuente a inter" / "change font to inter"
+- "pon la letra en inter" / "put font in inter"
+- "usa la fuente inter" / "use inter font"
+- "fuente inter" / "font inter"
 - WITH TYPOS: "cambiar la funte", "fuenta roboto"
 
 KEY INSIGHT: If the user's intent is about EDITING, CHANGING, MODIFYING, UPDATING something → extract WHAT and TO WHAT, then execute.

@@ -37,6 +37,7 @@ import Banner from './Banner';
 import SectionBackground from './ui/SectionBackground';
 import Products from './Products';
 import { PageSection, FontFamily, CMSPost, CMSCategory, FooterData } from '../types';
+import { fontStacks, loadGoogleFonts, loadGoogleFontsSync, resolveFontFamily } from '../utils/fontLoader';
 import { useSafeAuth } from '../contexts/core/AuthContext';
 import { useUI } from '../contexts/core/UIContext';
 import { useProject } from '../contexts/project';
@@ -72,58 +73,7 @@ type StoreView =
   | { type: 'product'; slug: string }
   | { type: 'checkout' };
 
-const fontStacks: Record<FontFamily, string> = {
-  roboto: "'Roboto', sans-serif",
-  'open-sans': "'Open Sans', sans-serif",
-  lato: "'Lato', sans-serif",
-  'slabo-27px': "'Slabo 27px', serif",
-  oswald: "'Oswald', sans-serif",
-  'source-sans-pro': "'Source Sans 3', 'Source Sans Pro', sans-serif",
-  montserrat: "'Montserrat', sans-serif",
-  raleway: "'Raleway', sans-serif",
-  'pt-sans': "'PT Sans', sans-serif",
-  merriweather: "'Merriweather', serif",
-  lora: "'Lora', serif",
-  ubuntu: "'Ubuntu', sans-serif",
-  'playfair-display': "'Playfair Display', serif",
-  'crimson-text': "'Crimson Text', serif",
-  poppins: "'Poppins', sans-serif",
-  arvo: "'Arvo', serif",
-  mulish: "'Mulish', sans-serif",
-  'noto-sans': "'Noto Sans', sans-serif",
-  'noto-serif': "'Noto Serif', serif",
-  inconsolata: "'Inconsolata', monospace",
-  'indie-flower': "'Indie Flower', cursive",
-  cabin: "'Cabin', sans-serif",
-  'fira-sans': "'Fira Sans', sans-serif",
-  pacifico: "'Pacifico', cursive",
-  'josefin-sans': "'Josefin Sans', sans-serif",
-  anton: "'Anton', sans-serif",
-  'yanone-kaffeesatz': "'Yanone Kaffeesatz', sans-serif",
-  arimo: "'Arimo', sans-serif",
-  lobster: "'Lobster', cursive",
-  'bree-serif': "'Bree Serif', serif",
-  vollkorn: "'Vollkorn', serif",
-  abel: "'Abel', sans-serif",
-  'archivo-narrow': "'Archivo Narrow', sans-serif",
-  'francois-one': "'Francois One', sans-serif",
-  signika: "'Signika', sans-serif",
-  oxygen: "'Oxygen', sans-serif",
-  quicksand: "'Quicksand', sans-serif",
-  'pt-serif': "'PT Serif', serif",
-  bitter: "'Bitter', serif",
-  'exo-2': "'Exo 2', sans-serif",
-  'varela-round': "'Varela Round', sans-serif",
-  dosis: "'Dosis', sans-serif",
-  'noticia-text': "'Noticia Text', serif",
-  'titillium-web': "'Titillium Web', sans-serif",
-  nobile: "'Nobile', sans-serif",
-  cardo: "'Cardo', serif",
-  asap: "'Asap', sans-serif",
-  questrial: "'Questrial', sans-serif",
-  'dancing-script': "'Dancing Script', cursive",
-  'amatic-sc': "'Amatic SC', cursive",
-};
+// fontStacks imported from utils/fontLoader.ts (single source of truth)
 
 // Import useSafeEditor
 import { useSafeEditor } from '../contexts/EditorContext';
@@ -192,13 +142,27 @@ const LandingPageContent: React.FC = () => {
   // Inject font variables into :root for Tailwind to use
   useEffect(() => {
     const root = document.documentElement;
-    const headerFont = fontStacks[theme.fontFamilyHeader];
-    const bodyFont = fontStacks[theme.fontFamilyBody];
-    const buttonFont = fontStacks[theme.fontFamilyButton];
+    // Resolve font keys — migrates old/removed fonts to new equivalents
+    const resolvedHeader = resolveFontFamily(theme.fontFamilyHeader);
+    const resolvedBody = resolveFontFamily(theme.fontFamilyBody);
+    const resolvedButton = resolveFontFamily(theme.fontFamilyButton);
 
+    const headerFont = fontStacks[resolvedHeader];
+    const bodyFont = fontStacks[resolvedBody];
+    const buttonFont = fontStacks[resolvedButton];
+
+    // Set CSS variables immediately so layout uses the correct font stack
     root.style.setProperty('--font-header', headerFont);
     root.style.setProperty('--font-body', bodyFont);
     root.style.setProperty('--font-button', buttonFont);
+
+    // Font weight & style variables
+    root.style.setProperty('--font-weight-header', String(theme.fontWeightHeader ?? 700));
+    root.style.setProperty('--font-weight-body', String(theme.fontWeightBody ?? 400));
+    root.style.setProperty('--font-weight-button', String(theme.fontWeightButton ?? 600));
+    root.style.setProperty('--font-style-header', theme.fontStyleHeader ?? 'normal');
+    root.style.setProperty('--font-style-body', theme.fontStyleBody ?? 'normal');
+    root.style.setProperty('--font-style-button', theme.fontStyleButton ?? 'normal');
 
     // All Caps variables
     root.style.setProperty('--headings-transform', theme.headingsAllCaps ? 'uppercase' : 'none');
@@ -207,7 +171,11 @@ const LandingPageContent: React.FC = () => {
     root.style.setProperty('--buttons-spacing', theme.buttonsAllCaps ? '0.05em' : 'normal');
     root.style.setProperty('--navlinks-transform', theme.navLinksAllCaps ? 'uppercase' : 'none');
     root.style.setProperty('--navlinks-spacing', theme.navLinksAllCaps ? '0.05em' : 'normal');
-  }, [theme.fontFamilyHeader, theme.fontFamilyBody, theme.fontFamilyButton, theme.headingsAllCaps, theme.buttonsAllCaps, theme.navLinksAllCaps]);
+
+    // Load Google Fonts: inject <link> synchronously, browser handles swap via font-display: swap
+    const fontsToLoad = [...new Set([resolvedHeader, resolvedBody, resolvedButton])];
+    loadGoogleFontsSync(fontsToLoad, 'editor-preview-fonts');
+  }, [theme.fontFamilyHeader, theme.fontFamilyBody, theme.fontFamilyButton, theme.fontWeightHeader, theme.fontWeightBody, theme.fontWeightButton, theme.fontStyleHeader, theme.fontStyleBody, theme.fontStyleButton, theme.headingsAllCaps, theme.buttonsAllCaps, theme.navLinksAllCaps]);
 
   // Handle routing for Articles, Store and Sections
   // Supports both real paths (/tienda, /blog/slug) and anchor scrolling (/#features)

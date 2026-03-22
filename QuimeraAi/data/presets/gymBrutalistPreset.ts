@@ -717,9 +717,9 @@ export const gymPageData: PageData = {
 export const gymTheme: ThemeData = {
     cardBorderRadius: 'none',
     buttonBorderRadius: 'none',
-    fontFamilyHeader: 'oswald',
-    fontFamilyBody: 'mulish',
-    fontFamilyButton: 'oswald',
+    fontFamilyHeader: 'montserrat',
+    fontFamilyBody: 'inter',
+    fontFamilyButton: 'montserrat',
     headingsAllCaps: true,
     buttonsAllCaps: true,
     navLinksAllCaps: true,

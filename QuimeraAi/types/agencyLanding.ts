@@ -244,7 +244,7 @@ export const DEFAULT_AGENCY_THEME: AgencyLandingConfig['theme'] = {
     cardBorderRadius: 'lg',
     buttonBorderRadius: 'lg',
     fontFamilyHeader: 'poppins',
-    fontFamilyBody: 'mulish',
+    fontFamilyBody: 'inter',
     fontFamilyButton: 'poppins',
     headingsAllCaps: false,
     buttonsAllCaps: false,

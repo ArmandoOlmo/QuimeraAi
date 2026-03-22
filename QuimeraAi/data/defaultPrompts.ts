@@ -42,11 +42,11 @@ Choose components that best fit the {{industry}} and {{summary}}. Consider:
 - Footer is ALWAYS required and will be added automatically
 
 **Available Font Stacks (Pick the best match for {{aesthetic}}):**
-- 'inter', 'plus-jakarta-sans', 'outfit' (Modern/Tech)
-- 'playfair-display', 'merriweather', 'lora' (Elegant/Editorial)
-- 'oswald', 'anton', 'bebas-neue' (Bold/Loud)
-- 'lato', 'open-sans', 'roboto' (Neutral/Corporate)
-- 'space-grotesk', 'syne' (Futuristic)
+- 'inter', 'dm-sans', 'outfit', 'urbanist', 'figtree' (Modern/Tech)
+- 'playfair-display', 'instrument-serif', 'eb-garamond', 'newsreader', 'libre-baskerville' (Elegant/Editorial)
+- 'montserrat', 'syne', 'unbounded', 'barlow-condensed' (Bold/Display)
+- 'open-sans', 'work-sans', 'ibm-plex-sans', 'public-sans', 'libre-franklin' (Neutral/Corporate)
+- 'space-grotesk', 'bricolage-grotesque', 'sora' (Futuristic)
 
 **Available Component Settings (use these EXACT values):**
 - cardBorderRadius: 'none' | 'md' | 'xl' | 'full'

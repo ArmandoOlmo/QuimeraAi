@@ -3,23 +3,21 @@ import React from 'react';
 import { useProject } from '../../contexts/project';
 import { FontFamily } from '../../types';
 import ColorControl from './ColorControl';
-import { ChevronDown, Image } from 'lucide-react';
+import { ChevronDown, Image, Italic } from 'lucide-react';
+import { fontOptions, formatFontName } from '../../utils/fontLoader';
 
-const fontOptions: FontFamily[] = [
-  'roboto', 'open-sans', 'lato', 'slabo-27px', 'oswald', 'source-sans-pro',
-  'montserrat', 'raleway', 'pt-sans', 'merriweather', 'lora', 'ubuntu',
-  'playfair-display', 'crimson-text', 'poppins', 'arvo', 'mulish',
-  'noto-sans', 'noto-serif', 'inconsolata', 'indie-flower', 'cabin',
-  'fira-sans', 'pacifico', 'josefin-sans', 'anton', 'yanone-kaffeesatz',
-  'arimo', 'lobster', 'bree-serif', 'vollkorn', 'abel', 'archivo-narrow',
-  'francois-one', 'signika', 'oxygen', 'quicksand', 'pt-serif', 'bitter',
-  'exo-2', 'varela-round', 'dosis', 'noticia-text', 'titillium-web',
-  'nobile', 'cardo', 'asap', 'questrial', 'dancing-script', 'amatic-sc'
+// Available font weights with human-readable labels
+const fontWeightOptions = [
+    { value: 100, label: 'Thin (100)' },
+    { value: 200, label: 'Extra Light (200)' },
+    { value: 300, label: 'Light (300)' },
+    { value: 400, label: 'Regular (400)' },
+    { value: 500, label: 'Medium (500)' },
+    { value: 600, label: 'SemiBold (600)' },
+    { value: 700, label: 'Bold (700)' },
+    { value: 800, label: 'Extra Bold (800)' },
+    { value: 900, label: 'Black (900)' },
 ];
-
-const formatFontName = (font: string) => {
-    return font.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
-};
 
 const FontManager: React.FC = () => {
     const { theme, setTheme } = useProject();
@@ -28,28 +26,78 @@ const FontManager: React.FC = () => {
         setTheme(prev => ({ ...prev, [key]: value }));
     };
 
+    const handleWeightChange = (key: string, value: number) => {
+        setTheme(prev => ({ ...prev, [key]: value }));
+    };
+
+    const handleStyleToggle = (key: string) => {
+        const currentValue = (theme as any)[key] || 'normal';
+        setTheme(prev => ({ ...prev, [key]: currentValue === 'normal' ? 'italic' : 'normal' }));
+    };
+
     const handleColorChange = (color: string) => {
         setTheme(prev => ({ ...prev, pageBackground: color }));
     };
 
-    const renderSelect = (label: string, key: keyof typeof theme) => (
-        <div className="mb-4 last:mb-0">
+    const renderFontGroup = (
+        label: string,
+        familyKey: keyof typeof theme,
+        weightKey: string,
+        styleKey: string,
+        defaultWeight: number
+    ) => (
+        <div className="mb-5 last:mb-0">
             <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{label}</label>
-            <div className="relative">
+            
+            {/* Font Family Select */}
+            <div className="relative mb-2">
                 <select
-                    value={theme[key] as string}
-                    onChange={(e) => handleChange(key, e.target.value as FontFamily)}
+                    value={theme[familyKey] as string}
+                    onChange={(e) => handleChange(familyKey, e.target.value as FontFamily)}
                     className="w-full bg-editor-panel-bg border border-editor-border rounded-md px-3 py-2 text-sm text-editor-text-primary focus:outline-none focus:ring-1 focus:ring-editor-accent transition-all appearance-none cursor-pointer hover:border-editor-accent/50"
+                    style={{ fontFamily: formatFontName(theme[familyKey] as string) }}
                 >
                     {fontOptions.map(font => (
-                        <option key={font} value={font} className="bg-editor-panel-bg text-editor-text-primary py-1">
+                        <option key={font} value={font} className="bg-editor-panel-bg text-editor-text-primary py-1" style={{ fontFamily: formatFontName(font) }}>
                             {formatFontName(font)}
                         </option>
                     ))}
                 </select>
-                 <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-editor-text-secondary">
+                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-editor-text-secondary">
                     <ChevronDown className="h-4 w-4" />
                 </div>
+            </div>
+            
+            {/* Weight + Italic row */}
+            <div className="flex gap-2">
+                {/* Weight Select */}
+                <div className="relative flex-1">
+                    <select
+                        value={(theme as any)[weightKey] || defaultWeight}
+                        onChange={(e) => handleWeightChange(weightKey, Number(e.target.value))}
+                        className="w-full bg-editor-panel-bg border border-editor-border rounded-md px-3 py-1.5 text-xs text-editor-text-primary focus:outline-none focus:ring-1 focus:ring-editor-accent transition-all appearance-none cursor-pointer hover:border-editor-accent/50"
+                    >
+                        {fontWeightOptions.map(opt => (
+                            <option key={opt.value} value={opt.value}>{opt.label}</option>
+                        ))}
+                    </select>
+                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-editor-text-secondary">
+                        <ChevronDown className="h-3 w-3" />
+                    </div>
+                </div>
+                
+                {/* Italic Toggle */}
+                <button
+                    onClick={() => handleStyleToggle(styleKey)}
+                    className={`flex items-center justify-center w-8 h-8 rounded-md border transition-all cursor-pointer ${
+                        (theme as any)[styleKey] === 'italic'
+                            ? 'bg-editor-accent/20 border-editor-accent text-editor-accent'
+                            : 'bg-editor-panel-bg border-editor-border text-editor-text-secondary hover:border-editor-accent/50'
+                    }`}
+                    title="Italic"
+                >
+                    <Italic className="h-3.5 w-3.5" />
+                </button>
             </div>
         </div>
     );
@@ -84,9 +132,9 @@ const FontManager: React.FC = () => {
                 <label className="block text-xs font-bold text-editor-text-secondary mb-3 uppercase tracking-wider">
                     Fuentes / Fonts
                 </label>
-                {renderSelect("Headings Font", 'fontFamilyHeader')}
-                {renderSelect("Body Text Font", 'fontFamilyBody')}
-                {renderSelect("Buttons & UI Font", 'fontFamilyButton')}
+                {renderFontGroup("Headings Font", 'fontFamilyHeader', 'fontWeightHeader', 'fontStyleHeader', 700)}
+                {renderFontGroup("Body Text Font", 'fontFamilyBody', 'fontWeightBody', 'fontStyleBody', 400)}
+                {renderFontGroup("Buttons & UI Font", 'fontFamilyButton', 'fontWeightButton', 'fontStyleButton', 600)}
             </div>
         </div>
     );

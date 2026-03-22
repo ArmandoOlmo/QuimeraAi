@@ -1185,7 +1185,7 @@ const theme: ThemeData = {
     cardBorderRadius: 'xl',
     buttonBorderRadius: 'xl',
     fontFamilyHeader: 'poppins',
-    fontFamilyBody: 'mulish',
+    fontFamilyBody: 'inter',
     fontFamilyButton: 'poppins',
     headingsAllCaps: false,
     buttonsAllCaps: false,

@@ -40,6 +40,7 @@ import BusinessMap from './BusinessMap';
 import Menu from './Menu';
 import Banner from './Banner';
 import { FontFamily } from '../types';
+import { fontStacks, loadGoogleFontsSync, resolveFontFamily } from '../utils/fontLoader';
 import {
     AgencyLandingSection,
     AgencyLandingConfig,
@@ -47,59 +48,7 @@ import {
     DEFAULT_AGENCY_SECTIONS,
 } from '../types/agencyLanding';
 
-// Font stacks for CSS variables
-const fontStacks: Record<FontFamily, string> = {
-    roboto: "'Roboto', sans-serif",
-    'open-sans': "'Open Sans', sans-serif",
-    lato: "'Lato', sans-serif",
-    'slabo-27px': "'Slabo 27px', serif",
-    oswald: "'Oswald', sans-serif",
-    'source-sans-pro': "'Source Sans Pro', sans-serif",
-    montserrat: "'Montserrat', sans-serif",
-    raleway: "'Raleway', sans-serif",
-    'pt-sans': "'PT Sans', sans-serif",
-    merriweather: "'Merriweather', serif",
-    lora: "'Lora', serif",
-    ubuntu: "'Ubuntu', sans-serif",
-    'playfair-display': "'Playfair Display', serif",
-    'crimson-text': "'Crimson Text', serif",
-    poppins: "'Poppins', sans-serif",
-    arvo: "'Arvo', serif",
-    mulish: "'Mulish', sans-serif",
-    'noto-sans': "'Noto Sans', sans-serif",
-    'noto-serif': "'Noto Serif', serif",
-    inconsolata: "'Inconsolata', monospace",
-    'indie-flower': "'Indie Flower', cursive",
-    cabin: "'Cabin', sans-serif",
-    'fira-sans': "'Fira Sans', sans-serif",
-    pacifico: "'Pacifico', cursive",
-    'josefin-sans': "'Josefin Sans', sans-serif",
-    anton: "'Anton', sans-serif",
-    'yanone-kaffeesatz': "'Yanone Kaffeesatz', sans-serif",
-    arimo: "'Arimo', sans-serif",
-    lobster: "'Lobster', cursive",
-    'bree-serif': "'Bree Serif', serif",
-    vollkorn: "'Vollkorn', serif",
-    abel: "'Abel', sans-serif",
-    'archivo-narrow': "'Archivo Narrow', sans-serif",
-    'francois-one': "'Francois One', sans-serif",
-    signika: "'Signika', sans-serif",
-    oxygen: "'Oxygen', sans-serif",
-    quicksand: "'Quicksand', sans-serif",
-    'pt-serif': "'PT Serif', serif",
-    bitter: "'Bitter', serif",
-    'exo-2': "'Exo 2', sans-serif",
-    'varela-round': "'Varela Round', sans-serif",
-    dosis: "'Dosis', sans-serif",
-    'noticia-text': "'Noticia Text', serif",
-    'titillium-web': "'Titillium Web', sans-serif",
-    nobile: "'Nobile', sans-serif",
-    cardo: "'Cardo', serif",
-    asap: "'Asap', sans-serif",
-    questrial: "'Questrial', sans-serif",
-    'dancing-script': "'Dancing Script', cursive",
-    'amatic-sc': "'Amatic SC', cursive",
-};
+// fontStacks imported from utils/fontLoader.ts (single source of truth)
 
 // Default section data
 const DEFAULT_SECTION_DATA: Record<string, any> = {
@@ -441,19 +390,33 @@ export function AgencyLandingPreview() {
     // Inject font variables into :root
     useEffect(() => {
         const root = document.documentElement;
-        const headerFont = fontStacks[theme.fontFamilyHeader] || fontStacks.poppins;
-        const bodyFont = fontStacks[theme.fontFamilyBody] || fontStacks.mulish;
-        const buttonFont = fontStacks[theme.fontFamilyButton] || fontStacks.poppins;
+        const resolvedHeader = resolveFontFamily(theme.fontFamilyHeader);
+        const resolvedBody = resolveFontFamily(theme.fontFamilyBody);
+        const resolvedButton = resolveFontFamily(theme.fontFamilyButton);
+
+        const headerFont = fontStacks[resolvedHeader];
+        const bodyFont = fontStacks[resolvedBody];
+        const buttonFont = fontStacks[resolvedButton];
 
         root.style.setProperty('--font-header', headerFont);
         root.style.setProperty('--font-body', bodyFont);
         root.style.setProperty('--font-button', buttonFont);
+        root.style.setProperty('--font-weight-header', String((theme as any).fontWeightHeader ?? 700));
+        root.style.setProperty('--font-weight-body', String((theme as any).fontWeightBody ?? 400));
+        root.style.setProperty('--font-weight-button', String((theme as any).fontWeightButton ?? 600));
+        root.style.setProperty('--font-style-header', (theme as any).fontStyleHeader ?? 'normal');
+        root.style.setProperty('--font-style-body', (theme as any).fontStyleBody ?? 'normal');
+        root.style.setProperty('--font-style-button', (theme as any).fontStyleButton ?? 'normal');
         root.style.setProperty('--headings-transform', theme.headingsAllCaps ? 'uppercase' : 'none');
         root.style.setProperty('--headings-spacing', theme.headingsAllCaps ? '0.05em' : 'normal');
         root.style.setProperty('--buttons-transform', theme.buttonsAllCaps ? 'uppercase' : 'none');
         root.style.setProperty('--buttons-spacing', theme.buttonsAllCaps ? '0.05em' : 'normal');
         root.style.setProperty('--navlinks-transform', theme.navLinksAllCaps ? 'uppercase' : 'none');
         root.style.setProperty('--navlinks-spacing', theme.navLinksAllCaps ? '0.05em' : 'normal');
+
+        // Dynamically load Google Fonts for the selected font families
+        const fontsToLoad = [...new Set([resolvedHeader, resolvedBody, resolvedButton])];
+        loadGoogleFontsSync(fontsToLoad, 'agency-preview-fonts');
     }, [theme]);
 
     // Get enabled sections sorted by order

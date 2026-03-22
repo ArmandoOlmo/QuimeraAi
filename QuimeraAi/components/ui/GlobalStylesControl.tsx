@@ -6,7 +6,7 @@
  * Luego el usuario puede personalizar colores individualmente por componente.
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAdmin } from '../../contexts/admin/AdminContext';
 import { useProject } from '../../contexts/project/ProjectContext';
@@ -15,84 +15,12 @@ import ColorControl from './ColorControl';
 import CoolorsImporter from './CoolorsImporter';
 import { colorPalettes, ColorPalette, getDefaultGlobalColors } from '../../data/colorPalettes';
 import { hexToRgba } from '../../utils/colorUtils';
+import { fontOptions, fontStacks, formatFontName, getFontStack, loadAllFonts, resolveFontFamily } from '../../utils/fontLoader';
 import { Type, Palette, Check, Sparkles, Grid, RotateCcw, Info, Loader2, Upload, ChevronDown } from 'lucide-react';
 
 export type GlobalStylesMode = 'colors' | 'typography' | 'both';
 
-const fontOptions: FontFamily[] = [
-    'roboto', 'open-sans', 'lato', 'slabo-27px', 'oswald', 'source-sans-pro',
-    'montserrat', 'raleway', 'pt-sans', 'merriweather', 'lora', 'ubuntu',
-    'playfair-display', 'crimson-text', 'poppins', 'arvo', 'mulish',
-    'noto-sans', 'noto-serif', 'inconsolata', 'indie-flower', 'cabin',
-    'fira-sans', 'pacifico', 'josefin-sans', 'anton', 'yanone-kaffeesatz',
-    'arimo', 'lobster', 'bree-serif', 'vollkorn', 'abel', 'archivo-narrow',
-    'francois-one', 'signika', 'oxygen', 'quicksand', 'pt-serif', 'bitter',
-    'exo-2', 'varela-round', 'dosis', 'noticia-text', 'titillium-web',
-    'nobile', 'cardo', 'asap', 'questrial', 'dancing-script', 'amatic-sc'
-];
 
-// Font stacks for CSS font-family property
-const fontStacks: Record<FontFamily, string> = {
-    roboto: "'Roboto', sans-serif",
-    'open-sans': "'Open Sans', sans-serif",
-    lato: "'Lato', sans-serif",
-    'slabo-27px': "'Slabo 27px', serif",
-    oswald: "'Oswald', sans-serif",
-    'source-sans-pro': "'Source Sans Pro', sans-serif",
-    montserrat: "'Montserrat', sans-serif",
-    raleway: "'Raleway', sans-serif",
-    'pt-sans': "'PT Sans', sans-serif",
-    merriweather: "'Merriweather', serif",
-    lora: "'Lora', serif",
-    ubuntu: "'Ubuntu', sans-serif",
-    'playfair-display': "'Playfair Display', serif",
-    'crimson-text': "'Crimson Text', serif",
-    poppins: "'Poppins', sans-serif",
-    arvo: "'Arvo', serif",
-    mulish: "'Mulish', sans-serif",
-    'noto-sans': "'Noto Sans', sans-serif",
-    'noto-serif': "'Noto Serif', serif",
-    inconsolata: "'Inconsolata', monospace",
-    'indie-flower': "'Indie Flower', cursive",
-    cabin: "'Cabin', sans-serif",
-    'fira-sans': "'Fira Sans', sans-serif",
-    pacifico: "'Pacifico', cursive",
-    'josefin-sans': "'Josefin Sans', sans-serif",
-    anton: "'Anton', sans-serif",
-    'yanone-kaffeesatz': "'Yanone Kaffeesatz', sans-serif",
-    arimo: "'Arimo', sans-serif",
-    lobster: "'Lobster', cursive",
-    'bree-serif': "'Bree Serif', serif",
-    vollkorn: "'Vollkorn', serif",
-    abel: "'Abel', sans-serif",
-    'archivo-narrow': "'Archivo Narrow', sans-serif",
-    'francois-one': "'Francois One', sans-serif",
-    signika: "'Signika', sans-serif",
-    oxygen: "'Oxygen', sans-serif",
-    quicksand: "'Quicksand', sans-serif",
-    'pt-serif': "'PT Serif', serif",
-    bitter: "'Bitter', serif",
-    'exo-2': "'Exo 2', sans-serif",
-    'varela-round': "'Varela Round', sans-serif",
-    dosis: "'Dosis', sans-serif",
-    'noticia-text': "'Noticia Text', serif",
-    'titillium-web': "'Titillium Web', sans-serif",
-    nobile: "'Nobile', sans-serif",
-    cardo: "'Cardo', serif",
-    asap: "'Asap', sans-serif",
-    questrial: "'Questrial', sans-serif",
-    'dancing-script': "'Dancing Script', cursive",
-    'amatic-sc': "'Amatic SC', cursive",
-};
-
-const formatFontName = (font: string) => {
-    return font.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
-};
-
-// Get the CSS font-family value for a font
-const getFontStack = (font: FontFamily): string => {
-    return fontStacks[font] || "'Poppins', sans-serif";
-};
 
 type Tab = 'typography' | 'colors';
 
@@ -506,6 +434,32 @@ const GlobalStylesControl: React.FC<GlobalStylesControlProps> = ({ mode = 'both'
     const showTypography = mode === 'typography' || mode === 'both';
     const showTabs = mode === 'both';
 
+    // Preload ALL fonts when typography controls are visible
+    useEffect(() => {
+        if (showTypography || (showTabs && activeTab === 'typography')) {
+            loadAllFonts();
+        }
+    }, [showTypography, showTabs, activeTab]);
+
+    // Auto-migrate old/removed font keys to new equivalents
+    useEffect(() => {
+        const resolvedHeader = resolveFontFamily(theme.fontFamilyHeader);
+        const resolvedBody = resolveFontFamily(theme.fontFamilyBody);
+        const resolvedButton = resolveFontFamily(theme.fontFamilyButton);
+        const needsMigration = 
+            resolvedHeader !== theme.fontFamilyHeader ||
+            resolvedBody !== theme.fontFamilyBody ||
+            resolvedButton !== theme.fontFamilyButton;
+        if (needsMigration) {
+            setTheme(prev => ({
+                ...prev,
+                fontFamilyHeader: resolvedHeader,
+                fontFamilyBody: resolvedBody,
+                fontFamilyButton: resolvedButton,
+            }));
+        }
+    }, []); // Run once on mount
+
     const handleFontChange = (key: 'fontFamilyHeader' | 'fontFamilyBody' | 'fontFamilyButton', value: FontFamily) => {
         setTheme(prev => ({ ...prev, [key]: value }));
     };
@@ -649,13 +603,41 @@ const GlobalStylesControl: React.FC<GlobalStylesControlProps> = ({ mode = 'both'
         }
     };
 
-    const renderFontSelect = (label: string, key: 'fontFamilyHeader' | 'fontFamilyBody' | 'fontFamilyButton') => (
-        <div className="mb-4 last:mb-0">
+    const fontWeightOptions = [
+        { value: 100, label: 'Thin (100)' },
+        { value: 200, label: 'Extra Light (200)' },
+        { value: 300, label: 'Light (300)' },
+        { value: 400, label: 'Regular (400)' },
+        { value: 500, label: 'Medium (500)' },
+        { value: 600, label: 'SemiBold (600)' },
+        { value: 700, label: 'Bold (700)' },
+        { value: 800, label: 'Extra Bold (800)' },
+        { value: 900, label: 'Black (900)' },
+    ];
+
+    const handleWeightChange = (key: string, value: number) => {
+        setTheme(prev => ({ ...prev, [key]: value }));
+    };
+
+    const handleStyleToggle = (key: string) => {
+        const currentValue = (theme as any)[key] || 'normal';
+        setTheme(prev => ({ ...prev, [key]: currentValue === 'normal' ? 'italic' : 'normal' }));
+    };
+
+    const renderFontSelect = (
+        label: string,
+        familyKey: 'fontFamilyHeader' | 'fontFamilyBody' | 'fontFamilyButton',
+        weightKey: string = '',
+        styleKey: string = '',
+        defaultWeight: number = 400
+    ) => (
+        <div className="mb-5 last:mb-0">
             <label className="block text-xs font-bold text-editor-text-secondary mb-1.5 uppercase tracking-wider">{label}</label>
-            <div className="relative">
+            {/* Font Family Select */}
+            <div className="relative mb-2">
                 <select
-                    value={theme[key] as string}
-                    onChange={(e) => handleFontChange(key, e.target.value as FontFamily)}
+                    value={theme[familyKey] as string}
+                    onChange={(e) => handleFontChange(familyKey, e.target.value as FontFamily)}
                     className="w-full bg-editor-panel-bg border border-editor-border rounded-md px-3 py-2.5 text-sm text-editor-text-primary focus:outline-none focus:ring-1 focus:ring-editor-accent transition-all appearance-none cursor-pointer hover:border-editor-accent/50"
                 >
                     {fontOptions.map(font => (
@@ -668,6 +650,38 @@ const GlobalStylesControl: React.FC<GlobalStylesControlProps> = ({ mode = 'both'
                     <ChevronDown className="h-4 w-4" />
                 </div>
             </div>
+            {/* Weight + Italic row */}
+            {weightKey && (
+                <div className="flex gap-2">
+                    <div className="relative flex-1">
+                        <select
+                            value={(theme as any)[weightKey] || defaultWeight}
+                            onChange={(e) => handleWeightChange(weightKey, Number(e.target.value))}
+                            className="w-full bg-editor-panel-bg border border-editor-border rounded-md px-3 py-1.5 text-xs text-editor-text-primary focus:outline-none focus:ring-1 focus:ring-editor-accent transition-all appearance-none cursor-pointer hover:border-editor-accent/50"
+                        >
+                            {fontWeightOptions.map(opt => (
+                                <option key={opt.value} value={opt.value}>{opt.label}</option>
+                            ))}
+                        </select>
+                        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-editor-text-secondary">
+                            <ChevronDown className="h-3 w-3" />
+                        </div>
+                    </div>
+                    {styleKey && (
+                        <button
+                            onClick={() => handleStyleToggle(styleKey)}
+                            className={`flex items-center justify-center w-8 h-8 rounded-md border transition-all cursor-pointer ${
+                                (theme as any)[styleKey] === 'italic'
+                                    ? 'bg-editor-accent/20 border-editor-accent text-editor-accent'
+                                    : 'bg-editor-panel-bg border-editor-border text-editor-text-secondary hover:border-editor-accent/50'
+                            }`}
+                            title="Italic"
+                        >
+                            <span className="text-sm font-serif italic">I</span>
+                        </button>
+                    )}
+                </div>
+            )}
         </div>
     );
 
@@ -932,9 +946,9 @@ const GlobalStylesControl: React.FC<GlobalStylesControlProps> = ({ mode = 'both'
                             <Type size={14} />
                             {t('editor.controls.globalStyles.globalFonts', 'Global Fonts')}
                         </label>
-                        {renderFontSelect(t('editor.controls.globalStyles.headingsFont', 'Headings'), 'fontFamilyHeader')}
-                        {renderFontSelect(t('editor.controls.globalStyles.bodyFont', 'Body'), 'fontFamilyBody')}
-                        {renderFontSelect(t('editor.controls.globalStyles.buttonsFont', 'Buttons'), 'fontFamilyButton')}
+                        {renderFontSelect(t('editor.controls.globalStyles.headingsFont', 'Headings'), 'fontFamilyHeader', 'fontWeightHeader', 'fontStyleHeader', 700)}
+                        {renderFontSelect(t('editor.controls.globalStyles.bodyFont', 'Body'), 'fontFamilyBody', 'fontWeightBody', 'fontStyleBody', 400)}
+                        {renderFontSelect(t('editor.controls.globalStyles.buttonsFont', 'Buttons'), 'fontFamilyButton', 'fontWeightButton', 'fontStyleButton', 600)}
 
                         {/* All Caps Toggles Section */}
                         <div className="mt-4 pt-4 border-t border-editor-border/50 space-y-4">

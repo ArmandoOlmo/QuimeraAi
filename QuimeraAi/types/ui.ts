@@ -24,17 +24,18 @@ export type ImageStyle = 'default' | 'rounded-full' | 'glow' | 'float' | 'hexago
 // Animation Types
 export type AnimationType = 'none' | 'fade-in' | 'fade-in-up' | 'fade-in-down' | 'slide-up' | 'slide-down' | 'scale-in' | 'bounce-in';
 
-// Font Families
+// Font Families — Curated 2026 Google Fonts catalog (43 fonts)
 export type FontFamily =
-    'roboto' | 'open-sans' | 'lato' | 'slabo-27px' | 'oswald' | 'source-sans-pro' |
-    'montserrat' | 'raleway' | 'pt-sans' | 'merriweather' | 'lora' | 'ubuntu' |
-    'playfair-display' | 'crimson-text' | 'poppins' | 'arvo' | 'mulish' |
-    'noto-sans' | 'noto-serif' | 'inconsolata' | 'indie-flower' | 'cabin' |
-    'fira-sans' | 'pacifico' | 'josefin-sans' | 'anton' | 'yanone-kaffeesatz' |
-    'arimo' | 'lobster' | 'bree-serif' | 'vollkorn' | 'abel' | 'archivo-narrow' |
-    'francois-one' | 'signika' | 'oxygen' | 'quicksand' | 'pt-serif' | 'bitter' |
-    'exo-2' | 'varela-round' | 'dosis' | 'noticia-text' | 'titillium-web' |
-    'nobile' | 'cardo' | 'asap' | 'questrial' | 'dancing-script' | 'amatic-sc';
+    'archivo-narrow' | 'barlow-condensed' | 'biorhyme' | 'bree-serif' |
+    'bricolage-grotesque' | 'dm-mono' | 'dm-sans' | 'dm-serif-text' |
+    'eb-garamond' | 'eczar' | 'figtree' | 'fira-sans' | 'fraunces' |
+    'ibm-plex-sans' | 'inknut-antiqua' | 'instrument-sans' | 'instrument-serif' |
+    'inter' | 'inter-tight' | 'libre-baskerville' | 'libre-franklin' |
+    'manrope' | 'marcellus' | 'merriweather' | 'montserrat' | 'neuton' |
+    'newsreader' | 'noto-sans-mono' | 'open-sans' | 'outfit' |
+    'playfair-display' | 'poppins' | 'public-sans' | 'raleway' |
+    'red-hat-display' | 'sora' | 'space-grotesk' | 'space-mono' | 'syne' |
+    'ubuntu' | 'unbounded' | 'urbanist' | 'work-sans';
 
 export type View = 'editor' | 'dashboard' | 'websites' | 'superadmin' | 'assets' | 'cms' | 'navigation' | 'ai-assistant' | 'leads' | 'domains' | 'seo' | 'finance' | 'templates' | 'appointments' | 'ecommerce' | 'email' | 'settings' | 'agency' | 'biopage';
 export type AdminView = 'main' | 'admins' | 'tenants' | 'languages' | 'prompts' | 'chatbot-prompts' | 'stats' | 'subscriptions' | 'templates' | 'components' | 'images' | 'admin-assets' | 'global-assistant' | 'landing-chatbot' | 'design-tokens' | 'analytics' | 'global-seo' | 'app-info' | 'content' | 'landing-navigation' | 'global-tracking-pixels' | 'changelog' | 'execution-mode' | 'news' | 'landing-editor' | 'service-availability' | 'finances';
@@ -85,6 +86,13 @@ export interface ThemeData {
     fontFamilyBody: FontFamily;
     fontFamilyButton: FontFamily;
     fontFamily?: string;         // Legacy: general font family
+    // Font Variants (weight & style per tier)
+    fontWeightHeader?: number;   // 100-900, default 700 for headings
+    fontWeightBody?: number;     // 100-900, default 400 for body
+    fontWeightButton?: number;   // 100-900, default 600 for buttons
+    fontStyleHeader?: 'normal' | 'italic';
+    fontStyleBody?: 'normal' | 'italic';
+    fontStyleButton?: 'normal' | 'italic';
     // All Caps options (uppercase transform)
     headingsAllCaps?: boolean;   // Apply to section titles/headings
     buttonsAllCaps?: boolean;    // Apply to buttons

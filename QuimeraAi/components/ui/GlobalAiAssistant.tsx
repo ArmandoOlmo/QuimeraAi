@@ -1093,7 +1093,7 @@ const GlobalAiAssistant: React.FC = () => {
         if (!designPrompt) throw new Error("Design prompt not found");
 
         try {
-            const designContent = designPrompt.template.replace('{{businessName}}', businessName).replace('{{industry}}', industry).replace('{{tone}}', tone || 'Professional').replace('{{goal}}', 'Generate Leads').replace('{{summary}}', description).replace('{{availableFonts}}', "Roboto, Open Sans, Lato, Montserrat, Playfair Display").replace('{{allSections}}', "hero, features, testimonials, footer, cta");
+            const designContent = designPrompt.template.replace('{{businessName}}', businessName).replace('{{industry}}', industry).replace('{{tone}}', tone || 'Professional').replace('{{goal}}', 'Generate Leads').replace('{{summary}}', description).replace('{{availableFonts}}', "Inter, DM Sans, Outfit, Montserrat, Playfair Display").replace('{{allSections}}', "hero, features, testimonials, footer, cta");
 
             const projectId = activeProject?.id || 'headless-generation';
             const designResponse = await generateContentViaProxy(projectId, designContent, designPrompt.model, {}, user?.uid);

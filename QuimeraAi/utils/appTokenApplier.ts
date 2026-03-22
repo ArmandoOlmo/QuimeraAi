@@ -52,7 +52,7 @@ export const defaultAppTokens: AppTokens = {
         fontFamily: {
             sans: 'ubuntu',
             header: 'poppins',
-            mono: 'inconsolata',
+            mono: 'space-mono',
         },
         fontSize: {
             xs: '0.75rem',
@@ -138,9 +138,9 @@ const applyTypographyTokens = (typography: AppTypography): void => {
     const root = document.documentElement;
     
     // Font families
-    const sansFontStack = fontStacks[typography.fontFamily.sans as FontFamily] || fontStacks.ubuntu;
-    const headerFontStack = fontStacks[typography.fontFamily.header as FontFamily] || fontStacks.poppins;
-    const monoFontStack = fontStacks[typography.fontFamily.mono as FontFamily] || fontStacks.inconsolata;
+    const sansFontStack = fontStacks[typography.fontFamily.sans as FontFamily] || fontStacks['ubuntu'];
+    const headerFontStack = fontStacks[typography.fontFamily.header as FontFamily] || fontStacks['poppins'];
+    const monoFontStack = fontStacks[typography.fontFamily.mono as FontFamily] || fontStacks['space-mono'];
     
     root.style.setProperty('--font-sans', sansFontStack);
     root.style.setProperty('--font-header', headerFontStack);

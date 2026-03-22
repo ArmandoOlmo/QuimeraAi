@@ -378,11 +378,12 @@ html.palette-rose-coral .theme-btn-active {
   --radius-md: calc(var(--radius) - 2px);
   --radius-sm: calc(var(--radius) - 4px);
 
-  /* Fonts */
+  /* Fonts — defined as theme tokens so Tailwind utilities like font-header work.
+     Defaults only; JavaScript overrides these at runtime via style.setProperty. */
   --font-sans: 'Ubuntu', 'Plus Jakarta Sans', sans-serif;
-  --font-header: 'Plus Jakarta Sans', sans-serif;
-  --font-body: 'Ubuntu', sans-serif;
-  --font-button: 'Ubuntu', sans-serif;
+  --font-header: 'Inter', sans-serif;
+  --font-body: 'Inter', sans-serif;
+  --font-button: 'Inter', sans-serif;
 
   /* All Caps - default values */
   --headings-transform: none;
@@ -391,6 +392,14 @@ html.palette-rose-coral .theme-btn-active {
   --buttons-spacing: normal;
   --navlinks-transform: none;
   --navlinks-spacing: normal;
+
+  /* Font Weight & Style - default values */
+  --font-weight-header: 700;
+  --font-weight-body: 400;
+  --font-weight-button: 600;
+  --font-style-header: normal;
+  --font-style-body: normal;
+  --font-style-button: normal;
 }
 
 /* ============================================
@@ -475,6 +484,28 @@ body {
 .navlink-caps {
   text-transform: var(--navlinks-transform, none);
   letter-spacing: var(--navlinks-spacing, normal);
+}
+
+/* Font Weight & Style - applied via font-{tier} utility classes */
+/* These allow users to control weight/style per font tier from the editor */
+.font-header {
+  font-family: var(--font-header) !important;
+  font-weight: var(--font-weight-header, 700) !important;
+  font-style: var(--font-style-header, normal);
+}
+
+.font-body {
+  font-family: var(--font-body) !important;
+  font-weight: var(--font-weight-body, 400) !important;
+  font-style: var(--font-style-body, normal);
+}
+
+.font-button {
+  font-family: var(--font-button) !important;
+  font-weight: var(--font-weight-button, 600) !important;
+  font-style: var(--font-style-button, normal);
+  text-transform: var(--buttons-transform, none);
+  letter-spacing: var(--buttons-spacing, normal);
 }
 
 /* Drag & Drop */
