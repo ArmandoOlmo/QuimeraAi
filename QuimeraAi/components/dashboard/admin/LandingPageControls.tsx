@@ -1574,7 +1574,7 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                 <>
                     {/* Section Colors */}
                     <div className="space-y-3">
-                        <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                        <label className="block text-xs font-bold text-muted-foreground uppercase tracking-wider">
                             {t('landingEditor.sectionColors', 'Colores de Sección')}
                         </label>
                         <ColorControl
@@ -1605,7 +1605,7 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
 
                     {/* Card Colors */}
                     <div className="space-y-3 pt-3 border-t border-border">
-                        <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                        <label className="block text-xs font-bold text-muted-foreground uppercase tracking-wider">
                             {t('landingEditor.cardColors', 'Colores de Tarjeta')}
                         </label>
                         <ColorControl
@@ -1631,7 +1631,7 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                     {/* Gradient Colors (for gradient variant) */}
                     {data.faqVariant === 'gradient' && (
                         <div className="space-y-3 pt-3 border-t border-border">
-                            <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                            <label className="block text-xs font-bold text-muted-foreground uppercase tracking-wider">
                                 {t('landingEditor.gradientColors', 'Colores de Gradiente')}
                             </label>
                             <ColorControl
@@ -1795,7 +1795,7 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                 <>
                     {/* Spacing */}
                     <div className="space-y-3">
-                        <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                        <label className="block text-xs font-bold text-muted-foreground uppercase tracking-wider">
                             {t('landingEditor.spacing', 'Espaciado')}
                         </label>
                         <SelectControl
@@ -1826,7 +1826,7 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
 
                     {/* Section Background */}
                     <div className="space-y-3 pt-3 border-t border-border">
-                        <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                        <label className="block text-xs font-bold text-muted-foreground uppercase tracking-wider">
                             {t('landingEditor.sectionColors', 'Colores de Sección')}
                         </label>
                         <ColorControl
@@ -1843,7 +1843,7 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
 
                     {/* Card Gradient */}
                     <div className="space-y-3 pt-3 border-t border-border">
-                        <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                        <label className="block text-xs font-bold text-muted-foreground uppercase tracking-wider">
                             {t('landingEditor.cardGradient', 'Gradiente de Tarjeta')}
                         </label>
                         <ColorControl
@@ -1871,7 +1871,7 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
 
                     {/* Text & Button Colors */}
                     <div className="space-y-3 pt-3 border-t border-border">
-                        <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                        <label className="block text-xs font-bold text-muted-foreground uppercase tracking-wider">
                             {t('landingEditor.textAndButtonColors', 'Texto y Botón')}
                         </label>
                         <ColorControl
@@ -1909,7 +1909,7 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
 
                     {/* Corner Gradient */}
                     <div className="space-y-3 pt-3 border-t border-border">
-                        <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                        <label className="block text-xs font-bold text-muted-foreground uppercase tracking-wider">
                             {t('landingEditor.cornerGradient', 'Gradiente de Esquina')}
                         </label>
                         <Toggle
@@ -3673,7 +3673,6 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                         </div>
                     </div>
 
-                    <hr className="border-border" />
 
                     {/* Content */}
                     <ControlGroup label={t('landingEditor.sectionTitle', 'Título de Sección')}>
@@ -3773,7 +3772,6 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                         </ControlGroup>
                     </div>
 
-                    <hr className="border-border" />
 
                     {/* Spacing */}
                     <div className="space-y-3">
@@ -3807,7 +3805,6 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                         </div>
                     </div>
 
-                    <hr className="border-border" />
 
                     {/* Section Colors */}
                     <div className="space-y-3">
@@ -3840,7 +3837,6 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                         </ControlGroup>
                     </div>
 
-                    <hr className="border-border" />
 
                     {/* Corner Gradient */}
                     <div className="space-y-3">
@@ -3898,7 +3894,6 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                         )}
                     </div>
 
-                    <hr className="border-border" />
 
                     {/* Card Colors */}
                     <div className="space-y-3">
@@ -3925,7 +3920,6 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                         </ControlGroup>
                     </div>
 
-                    <hr className="border-border" />
 
                     {/* Input Colors */}
                     <div className="space-y-3">
@@ -3958,7 +3952,6 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                         </ControlGroup>
                     </div>
 
-                    <hr className="border-border" />
 
                     {/* Button & Gradient Colors */}
                     <div className="space-y-3">

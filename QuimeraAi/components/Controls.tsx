@@ -1017,7 +1017,7 @@ const Controls: React.FC = () => {
 
 
         {/* Navigation Menu Selector */}
-        <div className="space-y-2">
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
           <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{t('editor.controls.navigation.source')}</label>
           <div className="flex gap-2 mb-3">
             <select
@@ -1593,8 +1593,8 @@ const Controls: React.FC = () => {
           </div>
         </div>
 
-        <div className="space-y-2">
-          <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">{t('editor.controls.common.spacing')}</label>
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('editor.controls.common.spacing')}</label>
           <div className="grid grid-cols-2 gap-3">
             <PaddingSelector label={t('editor.controls.common.vertical')} value={data.features.paddingY || 'md'} onChange={(v) => setNestedData('features.paddingY', v)} />
             <PaddingSelector label={t('editor.controls.common.horizontal')} value={data.features.paddingX || 'md'} onChange={(v) => setNestedData('features.paddingX', v)} />
@@ -1699,8 +1699,8 @@ const Controls: React.FC = () => {
         {/* Padding Controls */}
         {sectionData.paddingY !== undefined && sectionData.paddingX !== undefined && (
           <>
-            <div className="space-y-2">
-              <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">{t('editor.controls.common.spacing')}</label>
+            <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
+              <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('editor.controls.common.spacing')}</label>
               <div className="grid grid-cols-2 gap-3">
                 <PaddingSelector label={t('editor.controls.common.vertical')} value={sectionData.paddingY || 'md'} onChange={(v) => setNestedData(`${sectionKey}.paddingY`, v)} />
                 <PaddingSelector label={t('editor.controls.common.horizontal')} value={sectionData.paddingX || 'md'} onChange={(v) => setNestedData(`${sectionKey}.paddingX`, v)} />
@@ -1818,8 +1818,8 @@ const Controls: React.FC = () => {
         <TextArea label={t('editor.controls.common.description')} value={data.pricing.description} onChange={(e) => setNestedData('pricing.description', e.target.value)} rows={2} />
         <FontSizeSelector label={`${t('editor.controls.common.description')} ${t('editor.controls.common.size')}`} value={data.pricing.descriptionFontSize || 'md'} onChange={(v) => setNestedData('pricing.descriptionFontSize', v)} />
 
-        <div className="space-y-2">
-          <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">{t('editor.controls.common.spacing')}</label>
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('editor.controls.common.spacing')}</label>
           <div className="grid grid-cols-2 gap-3">
             <PaddingSelector label={t('editor.controls.common.vertical')} value={data.pricing.paddingY || 'md'} onChange={(v) => setNestedData('pricing.paddingY', v)} />
             <PaddingSelector label={t('editor.controls.common.horizontal')} value={data.pricing.paddingX || 'md'} onChange={(v) => setNestedData('pricing.paddingX', v)} />
@@ -2034,8 +2034,8 @@ const Controls: React.FC = () => {
           />
         </div>
 
-        <div className="space-y-2">
-          <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Spacing</label>
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Spacing</label>
           <div className="grid grid-cols-2 gap-3">
             <PaddingSelector label="Vertical" value={data.testimonials.paddingY || 'md'} onChange={(v) => setNestedData('testimonials.paddingY', v)} />
             <PaddingSelector label="Horizontal" value={data.testimonials.paddingX || 'md'} onChange={(v) => setNestedData('testimonials.paddingX', v)} />
@@ -2150,7 +2150,7 @@ const Controls: React.FC = () => {
           onChange={(v) => setNestedData('slideshow.borderRadius', v)}
         />
 
-        <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider mb-2">Animation</label>
+        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">Animation</label>
 
         <div>
           <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">Transition Effect</label>
@@ -2221,9 +2221,9 @@ const Controls: React.FC = () => {
           </div>
         )}
 
-        <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider mb-2">Navigation</label>
+        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">Navigation</label>
 
-        <div className="space-y-2">
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
           <ToggleControl label={t('editor.controls.common.showArrows')} checked={data.slideshow.showArrows ?? true} onChange={(v) => setNestedData('slideshow.showArrows', v)} />
           <ToggleControl label={t('editor.controls.common.showDots')} checked={data.slideshow.showDots ?? true} onChange={(v) => setNestedData('slideshow.showDots', v)} />
           <ToggleControl label={t('editor.controls.common.showCaptions')} checked={data.slideshow.showCaptions ?? false} onChange={(v) => setNestedData('slideshow.showCaptions', v)} />
@@ -2261,15 +2261,15 @@ const Controls: React.FC = () => {
           </div>
         )}
 
-        <div className="space-y-2">
-          <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Spacing</label>
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Spacing</label>
           <div className="grid grid-cols-2 gap-3">
             <PaddingSelector label="Vertical" value={data.slideshow.paddingY || 'md'} onChange={(v) => setNestedData('slideshow.paddingY', v)} />
             <PaddingSelector label="Horizontal" value={data.slideshow.paddingX || 'md'} onChange={(v) => setNestedData('slideshow.paddingX', v)} />
           </div>
         </div>
 
-        <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider mb-2">Colors</label>
+        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">Colors</label>
         <ColorControl label={t('editor.controls.common.background')} value={data.slideshow.colors?.background} onChange={(v) => setNestedData('slideshow.colors.background', v)} />
         <ColorControl label={t('editor.controls.common.title')} value={data.slideshow.colors?.heading || '#ffffff'} onChange={(v) => setNestedData('slideshow.colors.heading', v)} />
 
@@ -2385,21 +2385,21 @@ const Controls: React.FC = () => {
             placeholder={data.video.source === 'youtube' ? 'https://www.youtube.com/watch?v=... or dQw4w9WgXcQ' : 'https://vimeo.com/123456789 or 123456789'}
           />
         )}
-        <div className="space-y-2">
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
           <ToggleControl label="Autoplay (Muted)" checked={data.video.autoplay} onChange={(v) => setNestedData('video.autoplay', v)} />
           <ToggleControl label={t('editor.controls.common.loop')} checked={data.video.loop} onChange={(v) => setNestedData('video.loop', v)} />
           <ToggleControl label={t('editor.controls.common.showControls')} checked={data.video.showControls} onChange={(v) => setNestedData('video.showControls', v)} />
         </div>
 
-        <div className="space-y-2">
-          <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Spacing</label>
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Spacing</label>
           <div className="grid grid-cols-2 gap-3">
             <PaddingSelector label="Vertical" value={data.video.paddingY || 'md'} onChange={(v) => setNestedData('video.paddingY', v)} />
             <PaddingSelector label="Horizontal" value={data.video.paddingX || 'md'} onChange={(v) => setNestedData('video.paddingX', v)} />
           </div>
         </div>
 
-        <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider mb-2">Colors</label>
+        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">Colors</label>
         <ColorControl label={t('editor.controls.common.background')} value={data.video.colors?.background} onChange={(v) => setNestedData('video.colors.background', v)} />
         <ColorControl label={t('editor.controls.common.title')} value={data.video.colors?.heading || '#ffffff'} onChange={(v) => setNestedData('video.colors.heading', v)} />
         <ColorControl label="Text" value={data.video.colors?.text} onChange={(v) => setNestedData('video.colors.text', v)} />
@@ -2682,7 +2682,7 @@ const Controls: React.FC = () => {
           </div>
         </div>
 
-        <div className="space-y-2">
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
           <ColorControl label={t('editor.controls.common.background')} value={data.footer.colors?.background} onChange={(v) => setNestedData('footer.colors.background', v)} />
           <ColorControl label={t('editor.controls.common.title')} value={data.footer.colors?.heading || '#ffffff'} onChange={(v) => setNestedData('footer.colors.heading', v)} />
           <ColorControl label="Text" value={data.footer.colors?.text} onChange={(v) => setNestedData('footer.colors.text', v)} />
@@ -2826,7 +2826,7 @@ const Controls: React.FC = () => {
         </label>
 
         {/* Address input with search button */}
-        <div className="space-y-2">
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
           <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">Address</label>
           <div className="flex gap-2">
             <input
@@ -3805,7 +3805,7 @@ const Controls: React.FC = () => {
             <AlignJustify size={14} />
             Altura de Sección
           </label>
-          <div className="space-y-2">
+          <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
             <div className="flex justify-between items-center mb-1">
               <span className="text-xs font-medium text-editor-text-secondary">Altura</span>
               <span className="text-xs text-editor-text-primary font-mono">
@@ -4397,7 +4397,6 @@ const Controls: React.FC = () => {
           <ColorControl label="Person Title" value={data.testimonials.colors?.subtitleColor || data.testimonials.colors?.description || '#94a3b8'} onChange={(v) => setNestedData('testimonials.colors.subtitleColor', v)} />
           <ColorControl label="Accent" value={data.testimonials.colors?.accent || '#4f46e5'} onChange={(v) => setNestedData('testimonials.colors.accent', v)} />
 
-          <hr className="border-editor-border/50 my-3" />
 
           {/* Corner Gradient */}
           <CornerGradientControl
@@ -4435,7 +4434,7 @@ const Controls: React.FC = () => {
     const contentTab = (
       <div className="space-y-4">
         {/* Services Variant Selector */}
-        <div className="bg-editor-panel-bg/50 p-3 rounded-lg border border-editor-border">
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
           <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">
             Services Style
           </label>
@@ -4474,19 +4473,18 @@ const Controls: React.FC = () => {
       <div className="space-y-4">
         <BackgroundImageControl sectionKey="services" />
         {/* Section Colors */}
-        <div className="space-y-2">
-          <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Section Colors</label>
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Section Colors</label>
           <ColorControl label={t('editor.controls.common.background')} value={data?.services?.colors?.background || '#0f172a'} onChange={(v) => setNestedData('services.colors.background', v)} />
           <ColorControl label="Section Title" value={data?.services?.colors?.heading || '#F9FAFB'} onChange={(v) => setNestedData('services.colors.heading', v)} />
           <ColorControl label="Section Description" value={data?.services?.colors?.description || '#94a3b8'} onChange={(v) => setNestedData('services.colors.description', v)} />
           <ColorControl label="Accent" value={data?.services?.colors?.accent || '#4f46e5'} onChange={(v) => setNestedData('services.colors.accent', v)} />
         </div>
 
-        <hr className="border-editor-border/30" />
 
         {/* Card Colors */}
-        <div className="space-y-2">
-          <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Card Colors</label>
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Card Colors</label>
           <ColorControl label="Card Background" value={data?.services?.colors?.cardBackground || '#1e293b'} onChange={(v) => setNestedData('services.colors.cardBackground', v)} />
           <ColorControl label="Card Title" value={data?.services?.colors?.cardHeading || '#ffffff'} onChange={(v) => setNestedData('services.colors.cardHeading', v)} />
           <ColorControl label="Card Text" value={data?.services?.colors?.cardText || '#94a3b8'} onChange={(v) => setNestedData('services.colors.cardText', v)} />
@@ -4495,8 +4493,8 @@ const Controls: React.FC = () => {
 
 
         {/* Spacing */}
-        <div className="space-y-2">
-          <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Spacing</label>
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Spacing</label>
           <div className="grid grid-cols-2 gap-3">
             <PaddingSelector label="Vertical" value={data?.services?.paddingY || 'md'} onChange={(v) => setNestedData('services.paddingY', v)} />
             <PaddingSelector label="Horizontal" value={data?.services?.paddingX || 'md'} onChange={(v) => setNestedData('services.paddingX', v)} />
@@ -4540,7 +4538,7 @@ const Controls: React.FC = () => {
     const contentTab = (
       <div className="space-y-4">
         {/* Team Variant Selector */}
-        <div className="bg-editor-panel-bg/50 p-3 rounded-lg border border-editor-border">
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
           <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">Team Style</label>
           <div className="grid grid-cols-2 gap-2">
             {[
@@ -4649,19 +4647,18 @@ const Controls: React.FC = () => {
       <div className="space-y-4">
         <BackgroundImageControl sectionKey="team" />
         {/* Section Colors */}
-        <div className="space-y-2">
-          <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Section Colors</label>
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Section Colors</label>
           <ColorControl label={t('editor.controls.common.background')} value={data?.team?.colors?.background || '#0f172a'} onChange={(v) => setNestedData('team.colors.background', v)} />
           <ColorControl label="Section Title" value={data?.team?.colors?.heading || '#F9FAFB'} onChange={(v) => setNestedData('team.colors.heading', v)} />
           <ColorControl label="Section Description" value={data?.team?.colors?.description || '#94a3b8'} onChange={(v) => setNestedData('team.colors.description', v)} />
           <ColorControl label="Accent" value={data?.team?.colors?.accent || '#4f46e5'} onChange={(v) => setNestedData('team.colors.accent', v)} />
         </div>
 
-        <hr className="border-editor-border/30" />
 
         {/* Card Colors */}
-        <div className="space-y-2">
-          <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Card Colors</label>
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Card Colors</label>
           <ColorControl label="Card Background" value={data?.team?.colors?.cardBackground || 'rgba(30, 41, 59, 0.5)'} onChange={(v) => setNestedData('team.colors.cardBackground', v)} />
           <ColorControl label="Card Name" value={data?.team?.colors?.cardHeading || '#ffffff'} onChange={(v) => setNestedData('team.colors.cardHeading', v)} />
           <ColorControl label="Card Role" value={data?.team?.colors?.cardText || '#94a3b8'} onChange={(v) => setNestedData('team.colors.cardText', v)} />
@@ -4670,8 +4667,8 @@ const Controls: React.FC = () => {
 
 
         {/* Spacing */}
-        <div className="space-y-2">
-          <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Spacing</label>
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Spacing</label>
           <div className="grid grid-cols-2 gap-3">
             <PaddingSelector label="Vertical" value={data?.team?.paddingY || 'md'} onChange={(v) => setNestedData('team.paddingY', v)} />
             <PaddingSelector label="Horizontal" value={data?.team?.paddingX || 'md'} onChange={(v) => setNestedData('team.paddingX', v)} />
@@ -4715,7 +4712,7 @@ const Controls: React.FC = () => {
     const contentTab = (
       <div className="space-y-4">
         {/* FAQ Variant Selector */}
-        <div className="bg-editor-panel-bg/50 p-3 rounded-lg border border-editor-border">
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
           <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">
             FAQ Style
           </label>
@@ -4745,19 +4742,18 @@ const Controls: React.FC = () => {
       <div className="space-y-4">
         <BackgroundImageControl sectionKey="faq" />
         {/* Section Colors */}
-        <div className="space-y-2">
-          <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Section Colors</label>
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Section Colors</label>
           <ColorControl label={t('editor.controls.common.background')} value={data?.faq?.colors?.background || '#1e293b'} onChange={(v) => setNestedData('faq.colors.background', v)} />
           <ColorControl label="Section Title" value={data?.faq?.colors?.heading || '#F9FAFB'} onChange={(v) => setNestedData('faq.colors.heading', v)} />
           <ColorControl label="Section Description" value={data?.faq?.colors?.description || data?.faq?.colors?.text || '#94a3b8'} onChange={(v) => setNestedData('faq.colors.description', v)} />
           <ColorControl label="Accent" value={data?.faq?.colors?.accent || '#4f46e5'} onChange={(v) => setNestedData('faq.colors.accent', v)} />
         </div>
 
-        <hr className="border-editor-border/30" />
 
         {/* Card Colors */}
-        <div className="space-y-2">
-          <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Card Colors</label>
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Card Colors</label>
           <ColorControl label="Card Background" value={data?.faq?.colors?.cardBackground || '#1e293b'} onChange={(v) => setNestedData('faq.colors.cardBackground', v)} />
           <ColorControl label="Question Text" value={data?.faq?.colors?.text || '#F9FAFB'} onChange={(v) => setNestedData('faq.colors.text', v)} />
           <ColorControl label="Border Color" value={data?.faq?.colors?.borderColor || '#334155'} onChange={(v) => setNestedData('faq.colors.borderColor', v)} />
@@ -4766,8 +4762,8 @@ const Controls: React.FC = () => {
         {/* Gradient Colors (for gradient variant) */}
         {(data?.faq?.faqVariant === 'gradient') && (
           <>
-            <div className="space-y-2">
-              <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Gradient</label>
+            <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
+              <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Gradient</label>
               <ColorControl label="Gradient Start" value={data?.faq?.colors?.gradientStart || '#4f46e5'} onChange={(v) => setNestedData('faq.colors.gradientStart', v)} />
               <ColorControl label="Gradient End" value={data?.faq?.colors?.gradientEnd || '#7c3aed'} onChange={(v) => setNestedData('faq.colors.gradientEnd', v)} />
             </div>
@@ -5007,8 +5003,8 @@ const Controls: React.FC = () => {
       <div className="space-y-4">
         <BackgroundImageControl sectionKey="portfolio" />
         {/* Section Colors */}
-        <div className="space-y-2">
-          <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Section Colors</label>
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Section Colors</label>
           <ColorControl label={t('editor.controls.common.background')} value={data?.portfolio?.colors?.background || '#0f172a'} onChange={(v) => setNestedData('portfolio.colors.background', v)} />
           <ColorControl label="Heading" value={data?.portfolio?.colors?.heading || '#F9FAFB'} onChange={(v) => setNestedData('portfolio.colors.heading', v)} />
           <ColorControl label="Text" value={data?.portfolio?.colors?.text || '#94a3b8'} onChange={(v) => setNestedData('portfolio.colors.text', v)} />
@@ -5017,8 +5013,8 @@ const Controls: React.FC = () => {
 
 
         {/* Card Colors */}
-        <div className="space-y-2">
-          <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Card Colors</label>
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Card Colors</label>
           <ColorControl label="Card Background" value={data?.portfolio?.colors?.cardBackground || 'rgba(0,0,0,0.8)'} onChange={(v) => setNestedData('portfolio.colors.cardBackground', v)} />
           <ColorControl label="Card Title" value={data?.portfolio?.colors?.cardTitleColor || '#ffffff'} onChange={(v) => setNestedData('portfolio.colors.cardTitleColor', v)} />
           <ColorControl label="Card Text" value={data?.portfolio?.colors?.cardTextColor || 'rgba(255,255,255,0.9)'} onChange={(v) => setNestedData('portfolio.colors.cardTextColor', v)} />
@@ -5027,16 +5023,16 @@ const Controls: React.FC = () => {
 
 
         {/* Card Overlay Gradient */}
-        <div className="space-y-2">
-          <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Card Overlay Gradient</label>
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Card Overlay Gradient</label>
           <ColorControl label="Overlay Start (Bottom)" value={data?.portfolio?.colors?.cardOverlayStart || 'rgba(0,0,0,0.9)'} onChange={(v) => setNestedData('portfolio.colors.cardOverlayStart', v)} />
           <ColorControl label="Overlay End (Top)" value={data?.portfolio?.colors?.cardOverlayEnd || 'rgba(0,0,0,0.2)'} onChange={(v) => setNestedData('portfolio.colors.cardOverlayEnd', v)} />
         </div>
 
 
         {/* Spacing */}
-        <div className="space-y-2">
-          <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Spacing</label>
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Spacing</label>
           <div className="grid grid-cols-2 gap-3">
             <PaddingSelector label="Vertical" value={data?.portfolio?.paddingY || 'md'} onChange={(v) => setNestedData('portfolio.paddingY', v)} />
             <PaddingSelector label="Horizontal" value={data?.portfolio?.paddingX || 'md'} onChange={(v) => setNestedData('portfolio.paddingX', v)} />
@@ -5080,8 +5076,11 @@ const Controls: React.FC = () => {
     const contentTab = (
       <div className="space-y-4">
         {/* Variant Selector */}
-        <div className="mb-4">
-          <label className="block text-xs font-bold text-editor-text-secondary mb-2 uppercase tracking-wider">Estilo de Formulario</label>
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
+            <Layout size={14} />
+            Estilo de Formulario
+          </label>
           <div className="grid grid-cols-2 gap-2">
             {[
               { value: 'classic', label: 'Clásico' },
@@ -5103,15 +5102,18 @@ const Controls: React.FC = () => {
           </div>
         </div>
 
-
         {/* Content */}
-        <Input label={t('editor.controls.common.title')} value={data?.leads.title} onChange={(e) => setNestedData('leads.title', e.target.value)} />
-        <FontSizeSelector label={t('editor.controls.common.titleSize')} value={data?.leads.titleFontSize || 'md'} onChange={(v) => setNestedData('leads.titleFontSize', v)} />
-
-        <TextArea label={t('editor.controls.common.description')} value={data?.leads.description} onChange={(e) => setNestedData('leads.description', e.target.value)} rows={2} />
-        <FontSizeSelector label={t('editor.controls.common.descriptionSize')} value={data?.leads.descriptionFontSize || 'md'} onChange={(v) => setNestedData('leads.descriptionFontSize', v)} />
-
-        <Input label={t('editor.controls.common.buttonText')} value={data?.leads.buttonText} onChange={(e) => setNestedData('leads.buttonText', e.target.value)} />
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
+            <FileText size={14} />
+            {t('controls.content')}
+          </label>
+          <Input label={t('editor.controls.common.title')} value={data?.leads.title} onChange={(e) => setNestedData('leads.title', e.target.value)} />
+          <FontSizeSelector label={t('editor.controls.common.titleSize')} value={data?.leads.titleFontSize || 'md'} onChange={(v) => setNestedData('leads.titleFontSize', v)} />
+          <TextArea label={t('editor.controls.common.description')} value={data?.leads.description} onChange={(e) => setNestedData('leads.description', e.target.value)} rows={2} />
+          <FontSizeSelector label={t('editor.controls.common.descriptionSize')} value={data?.leads.descriptionFontSize || 'md'} onChange={(v) => setNestedData('leads.descriptionFontSize', v)} />
+          <Input label={t('editor.controls.common.buttonText')} value={data?.leads.buttonText} onChange={(e) => setNestedData('leads.buttonText', e.target.value)} />
+        </div>
       </div>
     );
 
@@ -5119,8 +5121,8 @@ const Controls: React.FC = () => {
       <div className="space-y-4">
         <BackgroundImageControl sectionKey="leads" />
         {/* Border Radius Controls */}
-        <div className="space-y-2">
-          <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Border Radius</label>
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Border Radius</label>
           <BorderRadiusSelector label="Card Radius" value={data?.leads?.cardBorderRadius || 'xl'} onChange={(v) => setNestedData('leads.cardBorderRadius', v)} />
           <BorderRadiusSelector label="Input Radius" value={data?.leads?.inputBorderRadius || 'md'} onChange={(v) => setNestedData('leads.inputBorderRadius', v)} />
           <BorderRadiusSelector label="Button Radius" value={data?.leads?.buttonBorderRadius || 'md'} onChange={(v) => setNestedData('leads.buttonBorderRadius', v)} />
@@ -5128,8 +5130,8 @@ const Controls: React.FC = () => {
 
 
         {/* Spacing */}
-        <div className="space-y-2">
-          <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Spacing</label>
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Spacing</label>
           <div className="grid grid-cols-2 gap-3">
             <PaddingSelector label="Vertical" value={data?.leads?.paddingY || 'md'} onChange={(v) => setNestedData('leads.paddingY', v)} />
             <PaddingSelector label="Horizontal" value={data?.leads?.paddingX || 'md'} onChange={(v) => setNestedData('leads.paddingX', v)} />
@@ -5138,8 +5140,8 @@ const Controls: React.FC = () => {
 
 
         {/* Section Colors */}
-        <div className="space-y-2">
-          <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Section Colors</label>
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Section Colors</label>
           <ColorControl label={t('editor.controls.common.background')} value={data?.leads.colors?.background || '#0f172a'} onChange={(v) => setNestedData('leads.colors.background', v)} />
           <ColorControl label={t('editor.controls.common.title')} value={data?.leads.colors?.heading || '#F9FAFB'} onChange={(v) => setNestedData('leads.colors.heading', v)} />
           <ColorControl label={t('editor.controls.common.subtitle')} value={data?.leads.colors?.description || '#94a3b8'} onChange={(v) => setNestedData('leads.colors.description', v)} />
@@ -5163,8 +5165,8 @@ const Controls: React.FC = () => {
 
 
         {/* Card Colors */}
-        <div className="space-y-2">
-          <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Card Colors</label>
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Card Colors</label>
           <ColorControl label="Card Background" value={data?.leads.colors?.cardBackground || '#1e293b'} onChange={(v) => setNestedData('leads.colors.cardBackground', v)} />
           <ColorControl label="Label Text" value={data?.leads.colors?.text || '#94a3b8'} onChange={(v) => setNestedData('leads.colors.text', v)} />
           <ColorControl label="Border Color" value={data?.leads.colors?.borderColor || '#334155'} onChange={(v) => setNestedData('leads.colors.borderColor', v)} />
@@ -5172,8 +5174,8 @@ const Controls: React.FC = () => {
 
 
         {/* Input Colors */}
-        <div className="space-y-2">
-          <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Input Colors</label>
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Input Colors</label>
           <ColorControl label="Input Background" value={data?.leads.colors?.inputBackground || '#0f172a'} onChange={(v) => setNestedData('leads.colors.inputBackground', v)} />
           <ColorControl label="Input Text" value={data?.leads.colors?.inputText || '#F9FAFB'} onChange={(v) => setNestedData('leads.colors.inputText', v)} />
           <ColorControl label="Placeholder" value={data?.leads.colors?.inputPlaceholder || '#6b7280'} onChange={(v) => setNestedData('leads.colors.inputPlaceholder', v)} />
@@ -5182,8 +5184,8 @@ const Controls: React.FC = () => {
 
 
         {/* Button & Gradient Colors */}
-        <div className="space-y-2">
-          <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Button & Gradient</label>
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Button & Gradient</label>
           <ColorControl label="Button Background" value={data?.leads.colors?.buttonBackground || '#4f46e5'} onChange={(v) => setNestedData('leads.colors.buttonBackground', v)} />
           <ColorControl label={t('editor.controls.common.buttonText')} value={data?.leads.colors?.buttonText || '#ffffff'} onChange={(v) => setNestedData('leads.colors.buttonText', v)} />
           <ColorControl label="Gradient Start" value={data?.leads.colors?.gradientStart || '#4f46e5'} onChange={(v) => setNestedData('leads.colors.gradientStart', v)} />
@@ -5201,13 +5203,17 @@ const Controls: React.FC = () => {
 
     const contentTab = (
       <div className="space-y-4">
-        <Input label={t('editor.controls.common.title')} value={data?.newsletter.title} onChange={(e) => setNestedData('newsletter.title', e.target.value)} />
-        <FontSizeSelector label={t('editor.controls.common.titleSize')} value={data?.newsletter.titleFontSize || 'md'} onChange={(v) => setNestedData('newsletter.titleFontSize', v)} />
-
-        <TextArea label={t('editor.controls.common.description')} value={data?.newsletter.description} onChange={(e) => setNestedData('newsletter.description', e.target.value)} rows={2} />
-        <FontSizeSelector label={t('editor.controls.common.descriptionSize')} value={data?.newsletter.descriptionFontSize || 'md'} onChange={(v) => setNestedData('newsletter.descriptionFontSize', v)} />
-
-        <Input label={t('editor.controls.common.buttonText')} value={data?.newsletter.buttonText} onChange={(e) => setNestedData('newsletter.buttonText', e.target.value)} />
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
+            <FileText size={14} />
+            {t('controls.content')}
+          </label>
+          <Input label={t('editor.controls.common.title')} value={data?.newsletter.title} onChange={(e) => setNestedData('newsletter.title', e.target.value)} />
+          <FontSizeSelector label={t('editor.controls.common.titleSize')} value={data?.newsletter.titleFontSize || 'md'} onChange={(v) => setNestedData('newsletter.titleFontSize', v)} />
+          <TextArea label={t('editor.controls.common.description')} value={data?.newsletter.description} onChange={(e) => setNestedData('newsletter.description', e.target.value)} rows={2} />
+          <FontSizeSelector label={t('editor.controls.common.descriptionSize')} value={data?.newsletter.descriptionFontSize || 'md'} onChange={(v) => setNestedData('newsletter.descriptionFontSize', v)} />
+          <Input label={t('editor.controls.common.buttonText')} value={data?.newsletter.buttonText} onChange={(e) => setNestedData('newsletter.buttonText', e.target.value)} />
+        </div>
       </div>
     );
 
@@ -5215,8 +5221,8 @@ const Controls: React.FC = () => {
       <div className="space-y-4">
         <BackgroundImageControl sectionKey="newsletter" />
         {/* Spacing */}
-        <div className="space-y-2">
-          <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Spacing</label>
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Spacing</label>
           <div className="grid grid-cols-2 gap-3">
             <PaddingSelector label="Vertical" value={data?.newsletter?.paddingY || 'md'} onChange={(v) => setNestedData('newsletter.paddingY', v)} />
             <PaddingSelector label="Horizontal" value={data?.newsletter?.paddingX || 'md'} onChange={(v) => setNestedData('newsletter.paddingX', v)} />
@@ -5225,8 +5231,8 @@ const Controls: React.FC = () => {
 
 
         {/* Section Colors */}
-        <div className="space-y-2">
-          <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Section Colors</label>
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Section Colors</label>
           <ColorControl label={t('editor.controls.common.background')} value={data?.newsletter.colors?.background || '#000000'} onChange={(v) => setNestedData('newsletter.colors.background', v)} />
           <ColorControl label="Section Title" value={data?.newsletter.colors?.heading || '#F9FAFB'} onChange={(v) => setNestedData('newsletter.colors.heading', v)} />
           <ColorControl label="Section Description" value={data?.newsletter.colors?.text || '#94a3b8'} onChange={(v) => setNestedData('newsletter.colors.text', v)} />
@@ -5234,8 +5240,8 @@ const Controls: React.FC = () => {
 
 
         {/* Card Box */}
-        <div className="space-y-2">
-          <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Card Box</label>
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Card Box</label>
           <ColorControl label="Card Background" value={data?.newsletter.colors?.cardBackground || 'rgba(79, 70, 229, 0.75)'} onChange={(v) => setNestedData('newsletter.colors.cardBackground', v)} />
           <ColorControl label="Card Border" value={data?.newsletter.colors?.borderColor || '#374151'} onChange={(v) => setNestedData('newsletter.colors.borderColor', v)} />
           <ColorControl label="Card Heading" value={data?.newsletter.colors?.cardHeading || '#ffffff'} onChange={(v) => setNestedData('newsletter.colors.cardHeading', v)} />
@@ -5244,8 +5250,8 @@ const Controls: React.FC = () => {
 
 
         {/* Input Field */}
-        <div className="space-y-2">
-          <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Input Field</label>
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Input Field</label>
           <ColorControl label="Input Background" value={data?.newsletter.colors?.inputBackground || '#111827'} onChange={(v) => setNestedData('newsletter.colors.inputBackground', v)} />
           <ColorControl label="Input Text" value={data?.newsletter.colors?.inputText || '#ffffff'} onChange={(v) => setNestedData('newsletter.colors.inputText', v)} />
           <ColorControl label="Placeholder" value={data?.newsletter.colors?.inputPlaceholder || '#6b7280'} onChange={(v) => setNestedData('newsletter.colors.inputPlaceholder', v)} />
@@ -5254,8 +5260,8 @@ const Controls: React.FC = () => {
 
 
         {/* Button */}
-        <div className="space-y-2">
-          <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Button</label>
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Button</label>
           <ColorControl label="Button Background" value={data?.newsletter.colors?.buttonBackground || '#4f46e5'} onChange={(v) => setNestedData('newsletter.colors.buttonBackground', v)} />
           <ColorControl label={t('editor.controls.common.buttonText')} value={data?.newsletter.colors?.buttonText || '#ffffff'} onChange={(v) => setNestedData('newsletter.colors.buttonText', v)} />
         </div>
@@ -5271,17 +5277,23 @@ const Controls: React.FC = () => {
 
     const contentTab = (
       <div className="space-y-4">
-        <Input label={t('editor.controls.common.title')} value={data?.cta.title} onChange={(e) => setNestedData('cta.title', e.target.value)} />
-        <FontSizeSelector label={t('editor.controls.common.titleSize')} value={data?.cta.titleFontSize || 'md'} onChange={(v) => setNestedData('cta.titleFontSize', v)} />
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
+            <FileText size={14} />
+            {t('controls.content')}
+          </label>
+          <Input label={t('editor.controls.common.title')} value={data?.cta.title} onChange={(e) => setNestedData('cta.title', e.target.value)} />
+          <FontSizeSelector label={t('editor.controls.common.titleSize')} value={data?.cta.titleFontSize || 'md'} onChange={(v) => setNestedData('cta.titleFontSize', v)} />
+          <TextArea label={t('editor.controls.common.description')} value={data?.cta.description} onChange={(e) => setNestedData('cta.description', e.target.value)} rows={2} />
+          <FontSizeSelector label={t('editor.controls.common.descriptionSize')} value={data?.cta.descriptionFontSize || 'md'} onChange={(v) => setNestedData('cta.descriptionFontSize', v)} />
+          <Input label={t('editor.controls.common.buttonText')} value={data?.cta.buttonText} onChange={(e) => setNestedData('cta.buttonText', e.target.value)} />
+        </div>
 
-        <TextArea label={t('editor.controls.common.description')} value={data?.cta.description} onChange={(e) => setNestedData('cta.description', e.target.value)} rows={2} />
-        <FontSizeSelector label={t('editor.controls.common.descriptionSize')} value={data?.cta.descriptionFontSize || 'md'} onChange={(v) => setNestedData('cta.descriptionFontSize', v)} />
-
-        <Input label={t('editor.controls.common.buttonText')} value={data?.cta.buttonText} onChange={(e) => setNestedData('cta.buttonText', e.target.value)} />
-
-        {/* Link Type Selector */}
-        <div className="mb-3">
-          <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">Link Type</label>
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
+            <Link size={14} />
+            Link Type
+          </label>
           <div className="flex bg-editor-panel-bg rounded-md border border-editor-border p-1">
             {[
               { value: 'manual', label: 'Manual URL' },
@@ -5363,8 +5375,8 @@ const Controls: React.FC = () => {
       <div className="space-y-4">
         <BackgroundImageControl sectionKey="cta" />
         {/* Spacing */}
-        <div className="space-y-2">
-          <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Spacing</label>
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Spacing</label>
           <div className="grid grid-cols-2 gap-3">
             <PaddingSelector label="Vertical" value={data?.cta?.paddingY || 'md'} onChange={(v) => setNestedData('cta.paddingY', v)} />
             <PaddingSelector label="Horizontal" value={data?.cta?.paddingX || 'md'} onChange={(v) => setNestedData('cta.paddingX', v)} />
@@ -5373,25 +5385,23 @@ const Controls: React.FC = () => {
 
 
         {/* Colors */}
-        <div className="space-y-2">
-          <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Colors</label>
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Colors</label>
           <ColorControl label="Section Background" value={data?.cta.colors?.background || '#0f172a'} onChange={(v) => setNestedData('cta.colors.background', v)} />
         </div>
 
-        <hr className="border-editor-border/30" />
 
         {/* Card Gradient */}
-        <div className="space-y-2">
-          <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Card Gradient</label>
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Card Gradient</label>
           <ColorControl label="Gradient Start" value={data?.cta.colors?.gradientStart || '#000'} onChange={(v) => setNestedData('cta.colors.gradientStart', v)} />
           <ColorControl label="Gradient End" value={data?.cta.colors?.gradientEnd || '#000'} onChange={(v) => setNestedData('cta.colors.gradientEnd', v)} />
         </div>
 
-        <hr className="border-editor-border/30" />
 
         {/* Text & Button */}
-        <div className="space-y-2">
-          <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Text & Button</label>
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Text & Button</label>
           <ColorControl label={t('editor.controls.common.title')} value={data?.cta.colors?.heading || '#ffffff'} onChange={(v) => setNestedData('cta.colors.heading', v)} />
           <ColorControl label={t('editor.controls.common.description')} value={data?.cta.colors?.text || '#ffffff'} onChange={(v) => setNestedData('cta.colors.text', v)} />
           <ColorControl label="Button Background" value={data?.cta.colors?.buttonBackground || '#ffffff'} onChange={(v) => setNestedData('cta.colors.buttonBackground', v)} />
@@ -5425,28 +5435,35 @@ const Controls: React.FC = () => {
     const contentTab = (
       <div className="space-y-4">
         {/* Content */}
-        <Input label={t('editor.controls.common.title')} value={data?.howItWorks?.title} onChange={(e) => setNestedData('howItWorks.title', e.target.value)} />
-        <FontSizeSelector label={t('editor.controls.common.titleSize')} value={data?.howItWorks?.titleFontSize || 'md'} onChange={(v) => setNestedData('howItWorks.titleFontSize', v)} />
-
-        <TextArea label={t('editor.controls.common.description')} value={data?.howItWorks?.description} onChange={(e) => setNestedData('howItWorks.description', e.target.value)} rows={2} />
-        <FontSizeSelector label={t('editor.controls.common.descriptionSize')} value={data?.howItWorks?.descriptionFontSize || 'md'} onChange={(v) => setNestedData('howItWorks.descriptionFontSize', v)} />
-
-        {/* Steps Count */}
-        <div>
-          <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">Steps Count</label>
-          <select
-            value={data?.howItWorks?.steps || 3}
-            onChange={(e) => setNestedData('howItWorks.steps', parseInt(e.target.value))}
-            className="w-full bg-editor-panel-bg border border-editor-border rounded-md px-3 py-2 text-sm text-editor-text-primary"
-          >
-            <option value={3}>3 Steps</option>
-            <option value={4}>4 Steps</option>
-          </select>
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
+            <FileText size={14} />
+            {t('controls.content')}
+          </label>
+          <Input label={t('editor.controls.common.title')} value={data?.howItWorks?.title} onChange={(e) => setNestedData('howItWorks.title', e.target.value)} />
+          <FontSizeSelector label={t('editor.controls.common.titleSize')} value={data?.howItWorks?.titleFontSize || 'md'} onChange={(v) => setNestedData('howItWorks.titleFontSize', v)} />
+          <TextArea label={t('editor.controls.common.description')} value={data?.howItWorks?.description} onChange={(e) => setNestedData('howItWorks.description', e.target.value)} rows={2} />
+          <FontSizeSelector label={t('editor.controls.common.descriptionSize')} value={data?.howItWorks?.descriptionFontSize || 'md'} onChange={(v) => setNestedData('howItWorks.descriptionFontSize', v)} />
         </div>
 
-
-        {/* Steps Items */}
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">Steps</label>
+        {/* Steps */}
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
+            <SlidersHorizontal size={14} />
+            Steps
+          </label>
+          {/* Steps Count */}
+          <div className="mb-3">
+            <label className="block text-xs font-medium text-editor-text-secondary mb-1">Steps Count</label>
+            <select
+              value={data?.howItWorks?.steps || 3}
+              onChange={(e) => setNestedData('howItWorks.steps', parseInt(e.target.value))}
+              className="w-full bg-editor-panel-bg border border-editor-border rounded-md px-3 py-2 text-sm text-editor-text-primary"
+            >
+              <option value={3}>3 Steps</option>
+              <option value={4}>4 Steps</option>
+            </select>
+          </div>
         {(data?.howItWorks?.items || []).map((item: any, index: number) => (
           <div key={index} className="bg-editor-bg p-3 rounded-lg border border-editor-border mb-3 group">
             <div className="flex justify-between items-center mb-2">
@@ -5492,6 +5509,7 @@ const Controls: React.FC = () => {
         >
           + Add Step
         </button>
+        </div>
       </div>
     );
 
@@ -5499,18 +5517,17 @@ const Controls: React.FC = () => {
       <div className="space-y-4">
         <BackgroundImageControl sectionKey="howItWorks" />
         {/* Section Colors */}
-        <div className="space-y-2">
-          <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Section Colors</label>
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Section Colors</label>
           <ColorControl label={t('editor.controls.common.background')} value={data?.howItWorks?.colors?.background || '#0f172a'} onChange={(v) => setNestedData('howItWorks.colors.background', v)} />
           <ColorControl label="Section Title" value={data?.howItWorks?.colors?.heading || '#ffffff'} onChange={(v) => setNestedData('howItWorks.colors.heading', v)} />
           <ColorControl label="Section Description" value={data?.howItWorks?.colors?.description || '#94a3b8'} onChange={(v) => setNestedData('howItWorks.colors.description', v)} />
         </div>
 
-        <hr className="border-editor-border/30" />
 
         {/* Step Colors */}
-        <div className="space-y-2">
-          <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Step Colors</label>
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Step Colors</label>
           <ColorControl label="Circle Background" value={data?.howItWorks?.colors?.accent || '#4f46e5'} onChange={(v) => setNestedData('howItWorks.colors.accent', v)} />
           <ColorControl label="Icon Color" value={data?.howItWorks?.colors?.iconColor || '#ffffff'} onChange={(v) => setNestedData('howItWorks.colors.iconColor', v)} />
           <ColorControl label="Step Title" value={data?.howItWorks?.colors?.stepTitle || '#ffffff'} onChange={(v) => setNestedData('howItWorks.colors.stepTitle', v)} />
@@ -5519,8 +5536,8 @@ const Controls: React.FC = () => {
 
 
         {/* Spacing */}
-        <div className="space-y-2">
-          <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Spacing</label>
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Spacing</label>
           <div className="grid grid-cols-2 gap-3">
             <PaddingSelector label="Vertical" value={data?.howItWorks?.paddingY || 'md'} onChange={(v) => setNestedData('howItWorks.paddingY', v)} />
             <PaddingSelector label="Horizontal" value={data?.howItWorks?.paddingX || 'md'} onChange={(v) => setNestedData('howItWorks.paddingX', v)} />
@@ -5554,7 +5571,7 @@ const Controls: React.FC = () => {
     const contentTab = (
       <div className="space-y-4">
         {/* Menu Variant Selector */}
-        <div className="bg-editor-panel-bg/50 p-3 rounded-lg border border-editor-border">
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
           <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2 flex items-center gap-2">
             <Layout size={14} />
             Menu Style
@@ -5618,7 +5635,7 @@ const Controls: React.FC = () => {
 
         {/* Content Controls */}
         <div className="space-y-3">
-          <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Content</label>
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Content</label>
           <Input label={t('editor.controls.common.title')} value={data?.menu?.title || ''} onChange={(e) => setNestedData('menu.title', e.target.value)} />
           <FontSizeSelector label={t('editor.controls.common.titleSize')} value={data?.menu?.titleFontSize || 'md'} onChange={(v) => setNestedData('menu.titleFontSize', v)} />
           <TextArea label={t('editor.controls.common.description')} value={data?.menu?.description || ''} onChange={(e) => setNestedData('menu.description', e.target.value)} rows={2} />
@@ -5628,7 +5645,7 @@ const Controls: React.FC = () => {
 
         {/* Section Icon */}
         <div className="space-y-3">
-          <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Section Icon</label>
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Section Icon</label>
           <ToggleControl
             label={t('editor.controls.common.showSectionIcon')}
             checked={data?.menu?.showIcon !== false}
@@ -5660,18 +5677,17 @@ const Controls: React.FC = () => {
         <BackgroundImageControl sectionKey="menu" />
         {/* Section Colors */}
         <div className="space-y-3">
-          <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Section Colors</label>
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Section Colors</label>
           <ColorControl label={t('editor.controls.common.background')} value={data?.menu?.colors?.background || '#0f172a'} onChange={(v) => setNestedData('menu.colors.background', v)} />
           <ColorControl label="Section Title" value={data?.menu?.colors?.heading || '#F9FAFB'} onChange={(v) => setNestedData('menu.colors.heading', v)} />
           <ColorControl label="Section Text" value={data?.menu?.colors?.text || '#94a3b8'} onChange={(v) => setNestedData('menu.colors.text', v)} />
           <ColorControl label="Accent" value={data?.menu?.colors?.accent || '#4f46e5'} onChange={(v) => setNestedData('menu.colors.accent', v)} />
         </div>
 
-        <hr className="border-editor-border/30" />
 
         {/* Card Colors */}
         <div className="space-y-3">
-          <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Card Colors</label>
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Card Colors</label>
           <ColorControl label="Card Background" value={data?.menu?.colors?.cardBackground || '#1e293b'} onChange={(v) => setNestedData('menu.colors.cardBackground', v)} />
           <ColorControl label="Card Title" value={data?.menu?.colors?.cardTitleColor || '#ffffff'} onChange={(v) => setNestedData('menu.colors.cardTitleColor', v)} />
           <ColorControl label="Card Text" value={data?.menu?.colors?.cardText || '#94a3b8'} onChange={(v) => setNestedData('menu.colors.cardText', v)} />
@@ -5681,8 +5697,8 @@ const Controls: React.FC = () => {
 
 
         {/* Spacing */}
-        <div className="space-y-2">
-          <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Spacing</label>
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Spacing</label>
           <div className="grid grid-cols-2 gap-3">
             <PaddingSelector label="Vertical" value={data?.menu?.paddingY || 'md'} onChange={(v) => setNestedData('menu.paddingY', v)} />
             <PaddingSelector label="Horizontal" value={data?.menu?.paddingX || 'md'} onChange={(v) => setNestedData('menu.paddingX', v)} />
@@ -5742,7 +5758,6 @@ const Controls: React.FC = () => {
           </AIFormControl>
           <FontSizeSelector label="Subheadline Size" value={data?.banner?.subheadlineFontSize || 'md'} onChange={(v) => setNestedData('banner.subheadlineFontSize', v)} />
 
-          <hr className="border-editor-border/50 my-3" />
 
           <ToggleControl label={t('editor.controls.common.showButton')} checked={data?.banner?.showButton !== false} onChange={(v) => setNestedData('banner.showButton', v)} />
           {data?.banner?.showButton !== false && (
@@ -5904,7 +5919,6 @@ const Controls: React.FC = () => {
 
           <ColorControl label="Background Color" value={data?.banner?.colors?.background || '#0f172a'} onChange={(v) => setNestedData('banner.colors.background', v)} />
 
-          <hr className="border-editor-border/50 my-3" />
           <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">Overlay</h5>
           <ToggleControl label={t('editor.controls.common.enableOverlay')} checked={data?.banner?.overlayEnabled !== false} onChange={(v) => setNestedData('banner.overlayEnabled', v)} />
 
@@ -5927,14 +5941,12 @@ const Controls: React.FC = () => {
             </div>
           )}
 
-          <hr className="border-editor-border/50 my-3" />
           <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">Text</h5>
           <ColorControl label="Headline Color" value={data?.banner?.colors?.heading || '#ffffff'} onChange={(v) => setNestedData('banner.colors.heading', v)} />
           <ColorControl label="Subheadline Color" value={data?.banner?.colors?.text || '#ffffff'} onChange={(v) => setNestedData('banner.colors.text', v)} />
 
           {data?.banner?.showButton !== false && (
             <>
-              <hr className="border-editor-border/50 my-3" />
               <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">Button</h5>
               <ColorControl label="Button Background" value={data?.banner?.colors?.buttonBackground || '#4f46e5'} onChange={(v) => setNestedData('banner.colors.buttonBackground', v)} />
               <ColorControl label={t('editor.controls.common.buttonText')} value={data?.banner?.colors?.buttonText || '#ffffff'} onChange={(v) => setNestedData('banner.colors.buttonText', v)} />
@@ -6077,8 +6089,8 @@ const Controls: React.FC = () => {
       <div className="space-y-4">
         <BackgroundImageControl sectionKey="pricing" />
         {/* Spacing */}
-        <div className="space-y-2">
-          <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Spacing</label>
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Spacing</label>
           <div className="grid grid-cols-2 gap-3">
             <PaddingSelector label="Vertical" value={data.pricing.paddingY || 'md'} onChange={(v) => setNestedData('pricing.paddingY', v)} />
             <PaddingSelector label="Horizontal" value={data.pricing.paddingX || 'md'} onChange={(v) => setNestedData('pricing.paddingX', v)} />
@@ -6089,8 +6101,8 @@ const Controls: React.FC = () => {
 
 
         {/* Section Colors */}
-        <div className="space-y-2">
-          <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Section Colors</label>
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Section Colors</label>
           <ColorControl label={t('editor.controls.common.background')} value={data.pricing.colors?.background} onChange={(v) => setNestedData('pricing.colors.background', v)} />
           <ColorControl label={t('editor.controls.common.title')} value={data.pricing.colors?.heading || '#ffffff'} onChange={(v) => setNestedData('pricing.colors.heading', v)} />
           <ColorControl label={t('editor.controls.common.description')} value={data.pricing.colors?.description || data.pricing.colors?.text} onChange={(v) => setNestedData('pricing.colors.description', v)} />
@@ -6099,8 +6111,8 @@ const Controls: React.FC = () => {
 
 
         {/* Card Colors */}
-        <div className="space-y-2">
-          <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Card Colors</label>
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Card Colors</label>
           <ColorControl label="Card Background" value={data.pricing.colors?.cardBackground || '#1f2937'} onChange={(v) => setNestedData('pricing.colors.cardBackground', v)} />
           <ColorControl label="Card Title" value={data.pricing.colors?.cardHeading || '#ffffff'} onChange={(v) => setNestedData('pricing.colors.cardHeading', v)} />
           <ColorControl label="Card Text" value={data.pricing.colors?.cardText || '#94a3b8'} onChange={(v) => setNestedData('pricing.colors.cardText', v)} />
@@ -6112,8 +6124,8 @@ const Controls: React.FC = () => {
 
 
         {/* Button Colors */}
-        <div className="space-y-2">
-          <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Button Colors</label>
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Button Colors</label>
           <div className="grid grid-cols-2 gap-3">
             <ColorControl label={t('editor.controls.common.background')} value={data.pricing.colors?.buttonBackground || '#4f46e5'} onChange={(v) => setNestedData('pricing.colors.buttonBackground', v)} />
             <ColorControl label="Text" value={data.pricing.colors?.buttonText || '#ffffff'} onChange={(v) => setNestedData('pricing.colors.buttonText', v)} />
@@ -6123,8 +6135,8 @@ const Controls: React.FC = () => {
         {/* Gradient Colors - Only for gradient variant */}
         {currentVariant === 'gradient' && (
           <>
-            <div className="space-y-2">
-              <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider flex items-center gap-2">
+            <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
+              <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider flex items-center gap-2">
                 <Sparkles size={14} className="text-editor-accent" />
                 Gradient Colors
               </label>
@@ -6250,7 +6262,7 @@ const Controls: React.FC = () => {
 
         {/* Animation Settings */}
         <div className="space-y-3">
-          <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Animation</label>
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Animation</label>
 
           <div>
             <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">Transition Effect</label>
@@ -6324,8 +6336,8 @@ const Controls: React.FC = () => {
 
 
         {/* Navigation */}
-        <div className="space-y-2">
-          <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Navigation</label>
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Navigation</label>
           <ToggleControl label={t('editor.controls.common.showArrows')} checked={data.slideshow.showArrows ?? true} onChange={(v) => setNestedData('slideshow.showArrows', v)} />
           <ToggleControl label={t('editor.controls.common.showDots')} checked={data.slideshow.showDots ?? true} onChange={(v) => setNestedData('slideshow.showDots', v)} />
           <ToggleControl label={t('editor.controls.common.showCaptions')} checked={data.slideshow.showCaptions ?? false} onChange={(v) => setNestedData('slideshow.showCaptions', v)} />
@@ -6365,8 +6377,8 @@ const Controls: React.FC = () => {
 
 
         {/* Spacing */}
-        <div className="space-y-2">
-          <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Spacing</label>
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Spacing</label>
           <div className="grid grid-cols-2 gap-3">
             <PaddingSelector label="Vertical" value={data.slideshow.paddingY || 'md'} onChange={(v) => setNestedData('slideshow.paddingY', v)} />
             <PaddingSelector label="Horizontal" value={data.slideshow.paddingX || 'md'} onChange={(v) => setNestedData('slideshow.paddingX', v)} />
@@ -6375,31 +6387,31 @@ const Controls: React.FC = () => {
 
 
         {/* Colors */}
-        <div className="space-y-2">
-          <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Colors</label>
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Colors</label>
           <ColorControl label={t('editor.controls.common.background')} value={data.slideshow.colors?.background} onChange={(v) => setNestedData('slideshow.colors.background', v)} />
           <ColorControl label={t('editor.controls.common.title')} value={data.slideshow.colors?.heading || '#ffffff'} onChange={(v) => setNestedData('slideshow.colors.heading', v)} />
         </div>
 
         {(data.slideshow.showArrows ?? true) && (
-          <div className="space-y-2">
-            <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Arrow Colors</label>
+          <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
+            <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Arrow Colors</label>
             <ColorControl label="Arrow Background" value={data.slideshow.colors?.arrowBackground || 'rgba(0, 0, 0, 0.5)'} onChange={(v) => setNestedData('slideshow.colors.arrowBackground', v)} />
             <ColorControl label="Arrow Icon" value={data.slideshow.colors?.arrowText || '#ffffff'} onChange={(v) => setNestedData('slideshow.colors.arrowText', v)} />
           </div>
         )}
 
         {(data.slideshow.showDots ?? true) && (
-          <div className="space-y-2">
-            <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Dot Colors</label>
+          <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
+            <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Dot Colors</label>
             <ColorControl label="Active Dot" value={data.slideshow.colors?.dotActive || '#ffffff'} onChange={(v) => setNestedData('slideshow.colors.dotActive', v)} />
             <ColorControl label="Inactive Dot" value={data.slideshow.colors?.dotInactive || 'rgba(255, 255, 255, 0.5)'} onChange={(v) => setNestedData('slideshow.colors.dotInactive', v)} />
           </div>
         )}
 
         {(data.slideshow.showCaptions ?? false) && (
-          <div className="space-y-2">
-            <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Caption Colors</label>
+          <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
+            <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Caption Colors</label>
             <ColorControl label="Caption Background" value={data.slideshow.colors?.captionBackground || 'rgba(0, 0, 0, 0.7)'} onChange={(v) => setNestedData('slideshow.colors.captionBackground', v)} />
             <ColorControl label="Caption Text" value={data.slideshow.colors?.captionText || '#ffffff'} onChange={(v) => setNestedData('slideshow.colors.captionText', v)} />
           </div>
@@ -6462,8 +6474,8 @@ const Controls: React.FC = () => {
         )}
 
 
-        <div className="space-y-2">
-          <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Playback Options</label>
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Playback Options</label>
           <ToggleControl label="Autoplay (Muted)" checked={data.video.autoplay} onChange={(v) => setNestedData('video.autoplay', v)} />
           <ToggleControl label={t('editor.controls.common.loop')} checked={data.video.loop} onChange={(v) => setNestedData('video.loop', v)} />
           <ToggleControl label={t('editor.controls.common.showControls')} checked={data.video.showControls} onChange={(v) => setNestedData('video.showControls', v)} />
@@ -6475,8 +6487,8 @@ const Controls: React.FC = () => {
       <div className="space-y-4">
         <BackgroundImageControl sectionKey="video" />
         {/* Spacing */}
-        <div className="space-y-2">
-          <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Spacing</label>
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Spacing</label>
           <div className="grid grid-cols-2 gap-3">
             <PaddingSelector label="Vertical" value={data.video.paddingY || 'md'} onChange={(v) => setNestedData('video.paddingY', v)} />
             <PaddingSelector label="Horizontal" value={data.video.paddingX || 'md'} onChange={(v) => setNestedData('video.paddingX', v)} />
@@ -6485,8 +6497,8 @@ const Controls: React.FC = () => {
 
 
         {/* Colors */}
-        <div className="space-y-2">
-          <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Colors</label>
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Colors</label>
           <ColorControl label={t('editor.controls.common.background')} value={data.video.colors?.background} onChange={(v) => setNestedData('video.colors.background', v)} />
           <ColorControl label={t('editor.controls.common.title')} value={data.video.colors?.heading || '#ffffff'} onChange={(v) => setNestedData('video.colors.heading', v)} />
           <ColorControl label="Text" value={data.video.colors?.text} onChange={(v) => setNestedData('video.colors.text', v)} />
@@ -6669,7 +6681,7 @@ const Controls: React.FC = () => {
 
 
         {/* Navigation Links */}
-        <div className="space-y-2">
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
           <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{t('editor.controls.navigation.source')}</label>
           <div className="flex gap-2 mb-3">
             <select
@@ -7090,7 +7102,7 @@ const Controls: React.FC = () => {
 
         {/* Colors */}
         <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">{t('editor.controls.common.colors')}</label>
-        <div className="space-y-2">
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
           <ColorControl label={t('editor.controls.common.background')} value={data.footer.colors?.background} onChange={(v) => setNestedData('footer.colors.background', v)} />
           <ColorControl label={t('editor.controls.common.title')} value={data.footer.colors?.heading || '#ffffff'} onChange={(v) => setNestedData('footer.colors.heading', v)} />
           <ColorControl label="Text" value={data.footer.colors?.text} onChange={(v) => setNestedData('footer.colors.text', v)} />
@@ -7185,7 +7197,7 @@ const Controls: React.FC = () => {
             <Settings size={14} />
             Features
           </label>
-          <div className="space-y-2">
+          <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
             <ToggleControl label={t('editor.controls.common.showSearch')} checked={data?.products?.showSearch !== false} onChange={(v) => setNestedData('products.showSearch', v)} />
             <ToggleControl label={t('editor.controls.common.showFilters')} checked={data?.products?.showFilters !== false} onChange={(v) => setNestedData('products.showFilters', v)} />
             <ToggleControl label={t('editor.controls.common.showPagination')} checked={data?.products?.showPagination !== false} onChange={(v) => setNestedData('products.showPagination', v)} />

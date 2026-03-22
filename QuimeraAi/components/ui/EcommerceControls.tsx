@@ -773,7 +773,6 @@ export const useFeaturedProductsControls = ({ data, setNestedData, storeId = '' 
             <FontSizeSelector label={t('editor.controls.ecommerce.titleSize', 'Title Size')} value={d.titleFontSize || 'lg'} onChange={(v) => setNestedData('featuredProducts.titleFontSize', v)} />
             <TextArea label={t('editor.controls.ecommerce.description', 'Description')} value={d.description || ''} onChange={(e) => setNestedData('featuredProducts.description', e.target.value)} rows={2} />
 
-            <hr className="border-editor-border/50" />
 
             <SelectControl
                 label={t('editor.controls.ecommerce.variant', 'Variant')}
@@ -885,7 +884,6 @@ export const useFeaturedProductsControls = ({ data, setNestedData, storeId = '' 
                 />
             </div>
 
-            <hr className="border-editor-border/50" />
 
             {/* Card Colors */}
             <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
@@ -905,7 +903,6 @@ export const useFeaturedProductsControls = ({ data, setNestedData, storeId = '' 
                 />
             </div>
 
-            <hr className="border-editor-border/50" />
 
             {/* Button Colors */}
             <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
@@ -925,7 +922,6 @@ export const useFeaturedProductsControls = ({ data, setNestedData, storeId = '' 
                 />
             </div>
 
-            <hr className="border-editor-border/50" />
 
             {/* Badge Colors */}
             <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
@@ -945,7 +941,6 @@ export const useFeaturedProductsControls = ({ data, setNestedData, storeId = '' 
                 />
             </div>
 
-            <hr className="border-editor-border/50" />
 
             {/* Price Colors */}
             <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
@@ -965,7 +960,6 @@ export const useFeaturedProductsControls = ({ data, setNestedData, storeId = '' 
                 />
             </div>
 
-            <hr className="border-editor-border/50" />
 
             {/* Border Color */}
             <ColorControl
@@ -974,7 +968,6 @@ export const useFeaturedProductsControls = ({ data, setNestedData, storeId = '' 
                 onChange={(c) => setNestedData('featuredProducts.colors?.borderColor', c)}
             />
 
-            <hr className="border-editor-border/50" />
 
             {/* Padding Controls */}
             <div className="grid grid-cols-2 gap-2">
@@ -1080,7 +1073,6 @@ export const useCategoryGridControls = ({ data, setNestedData, storeId = '' }: E
                 />
             </div>
 
-            <hr className="border-editor-border/50" />
 
             {/* Card Colors */}
             <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
@@ -1100,7 +1092,6 @@ export const useCategoryGridControls = ({ data, setNestedData, storeId = '' }: E
                 />
             </div>
 
-            <hr className="border-editor-border/50" />
 
             {/* Overlay Colors */}
             <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
@@ -1120,7 +1111,6 @@ export const useCategoryGridControls = ({ data, setNestedData, storeId = '' }: E
                 />
             </div>
 
-            <hr className="border-editor-border/50" />
 
             {/* Border Color */}
             <ColorControl
@@ -1129,7 +1119,6 @@ export const useCategoryGridControls = ({ data, setNestedData, storeId = '' }: E
                 onChange={(c) => setNestedData('categoryGrid.colors?.borderColor', c)}
             />
 
-            <hr className="border-editor-border/50" />
 
             {/* Layout */}
             <div className="grid grid-cols-2 gap-2">
@@ -1245,7 +1234,6 @@ export const useProductHeroControls = ({ data, setNestedData, storeId = '' }: Ec
                 />
             </div>
 
-            <hr className="border-editor-border/50" />
 
             {/* Text Colors */}
             <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
@@ -1270,7 +1258,6 @@ export const useProductHeroControls = ({ data, setNestedData, storeId = '' }: Ec
                 />
             </div>
 
-            <hr className="border-editor-border/50" />
 
             {/* Button Colors */}
             <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
@@ -1290,7 +1277,6 @@ export const useProductHeroControls = ({ data, setNestedData, storeId = '' }: Ec
                 />
             </div>
 
-            <hr className="border-editor-border/50" />
 
             {/* Badge Colors */}
             <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
@@ -1310,7 +1296,6 @@ export const useProductHeroControls = ({ data, setNestedData, storeId = '' }: Ec
                 />
             </div>
 
-            <hr className="border-editor-border/50" />
 
             {/* Padding */}
             <div className="grid grid-cols-2 gap-2">
@@ -1405,7 +1390,6 @@ export const useTrustBadgesControls = ({ data, setNestedData }: EcommerceControl
                 />
             </div>
 
-            <hr className="border-editor-border/50" />
 
             {/* Border Color */}
             <ColorControl
@@ -1414,7 +1398,6 @@ export const useTrustBadgesControls = ({ data, setNestedData }: EcommerceControl
                 onChange={(c) => setNestedData('trustBadges.colors?.borderColor', c)}
             />
 
-            <hr className="border-editor-border/50" />
 
             {/* Padding */}
             <div className="grid grid-cols-2 gap-2">
@@ -1541,7 +1524,6 @@ export const useSaleCountdownControls = ({ data, setNestedData, storeId = '' }: 
                 />
             </div>
 
-            <hr className="border-editor-border/50" />
 
             {/* Countdown Colors */}
             <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
@@ -1561,7 +1543,6 @@ export const useSaleCountdownControls = ({ data, setNestedData, storeId = '' }: 
                 />
             </div>
 
-            <hr className="border-editor-border/50" />
 
             {/* Button Colors */}
             <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
@@ -1581,7 +1562,6 @@ export const useSaleCountdownControls = ({ data, setNestedData, storeId = '' }: 
                 />
             </div>
 
-            <hr className="border-editor-border/50" />
 
             {/* Badge Colors */}
             <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
@@ -1601,7 +1581,6 @@ export const useSaleCountdownControls = ({ data, setNestedData, storeId = '' }: 
                 />
             </div>
 
-            <hr className="border-editor-border/50" />
 
             {/* Padding */}
             <div className="grid grid-cols-2 gap-2">
@@ -1675,7 +1654,6 @@ export const AnnouncementMessageEditor = ({ data, setNestedData }: AnnouncementM
                         />
                     )}
 
-                    <hr className="border-editor-border/50" />
 
                     <ColorControl
                         label={t('editor.controls.ecommerce.backgroundColor', 'Background Color')}
@@ -1763,7 +1741,6 @@ export const useAnnouncementBarControls = ({ data, setNestedData, storeId = '' }
                 onChange={(v) => setNestedData('announcementBar.variant', v)}
             />
 
-            <hr className="border-editor-border/50" />
 
             {/* Messages */}
             <h5 className="text-xs font-bold text-editor-accent uppercase tracking-wider flex items-center gap-2">
@@ -1843,7 +1820,6 @@ export const useAnnouncementBarControls = ({ data, setNestedData, storeId = '' }
                 {t('editor.controls.ecommerce.addMessage', 'Add Message')}
             </button>
 
-            <hr className="border-editor-border/50" />
 
             {/* Display Options */}
             <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
@@ -1930,7 +1906,6 @@ export const useAnnouncementBarControls = ({ data, setNestedData, storeId = '' }
                 />
             </div>
 
-            <hr className="border-editor-border/50" />
 
             {/* Size & Spacing */}
             <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
@@ -2013,7 +1988,6 @@ export const useCollectionBannerControls = ({ data, setNestedData, storeId = '' 
                 rows={3}
             />
 
-            <hr className="border-editor-border/50" />
 
             {/* Button Configuration */}
             <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
@@ -2076,7 +2050,6 @@ export const useCollectionBannerControls = ({ data, setNestedData, storeId = '' 
                 />
             </div>
 
-            <hr className="border-editor-border/50" />
 
             {/* Text Colors */}
             <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
@@ -2101,7 +2074,6 @@ export const useCollectionBannerControls = ({ data, setNestedData, storeId = '' 
                 />
             </div>
 
-            <hr className="border-editor-border/50" />
 
             {/* Button Colors */}
             <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
@@ -2121,7 +2093,6 @@ export const useCollectionBannerControls = ({ data, setNestedData, storeId = '' 
                 />
             </div>
 
-            <hr className="border-editor-border/50" />
 
             {/* Padding */}
             <div className="grid grid-cols-2 gap-2">
@@ -2208,7 +2179,6 @@ export const useRecentlyViewedControls = ({ data, setNestedData }: EcommerceCont
                 />
             </div>
 
-            <hr className="border-editor-border/50" />
 
             {/* Card Colors */}
             <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
@@ -2228,7 +2198,6 @@ export const useRecentlyViewedControls = ({ data, setNestedData }: EcommerceCont
                 />
             </div>
 
-            <hr className="border-editor-border/50" />
 
             {/* Padding */}
             <div className="grid grid-cols-2 gap-2">
@@ -2309,7 +2278,6 @@ export const useProductReviewsControls = ({ data, setNestedData }: EcommerceCont
                 />
             </div>
 
-            <hr className="border-editor-border/50" />
 
             {/* Card Colors */}
             <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
@@ -2329,7 +2297,6 @@ export const useProductReviewsControls = ({ data, setNestedData }: EcommerceCont
                 />
             </div>
 
-            <hr className="border-editor-border/50" />
 
             {/* Review Colors */}
             <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
@@ -2349,7 +2316,6 @@ export const useProductReviewsControls = ({ data, setNestedData }: EcommerceCont
                 />
             </div>
 
-            <hr className="border-editor-border/50" />
 
             {/* Padding */}
             <div className="grid grid-cols-2 gap-2">
@@ -2436,7 +2402,6 @@ export const useProductBundleControls = ({ data, setNestedData, storeId = '' }: 
                 />
             </div>
 
-            <hr className="border-editor-border/50" />
 
             {/* Card Colors */}
             <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
@@ -2456,7 +2421,6 @@ export const useProductBundleControls = ({ data, setNestedData, storeId = '' }: 
                 />
             </div>
 
-            <hr className="border-editor-border/50" />
 
             {/* Price Colors */}
             <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
@@ -2476,7 +2440,6 @@ export const useProductBundleControls = ({ data, setNestedData, storeId = '' }: 
                 />
             </div>
 
-            <hr className="border-editor-border/50" />
 
             {/* Button Colors */}
             <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
@@ -2496,7 +2459,6 @@ export const useProductBundleControls = ({ data, setNestedData, storeId = '' }: 
                 />
             </div>
 
-            <hr className="border-editor-border/50" />
 
             {/* Badge Colors */}
             <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
@@ -2516,7 +2478,6 @@ export const useProductBundleControls = ({ data, setNestedData, storeId = '' }: 
                 />
             </div>
 
-            <hr className="border-editor-border/50" />
 
             {/* Padding */}
             <div className="grid grid-cols-2 gap-2">
@@ -2602,7 +2563,6 @@ export const useStoreSettingsControls = ({ data, setNestedData }: EcommerceContr
                 />
             </div>
 
-            <hr className="border-editor-border/50" />
 
             {/* Card Colors */}
             <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
@@ -2622,7 +2582,6 @@ export const useStoreSettingsControls = ({ data, setNestedData }: EcommerceContr
                 />
             </div>
 
-            <hr className="border-editor-border/50" />
 
             {/* Button Colors */}
             <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
@@ -2642,7 +2601,6 @@ export const useStoreSettingsControls = ({ data, setNestedData }: EcommerceContr
                 />
             </div>
 
-            <hr className="border-editor-border/50" />
 
             {/* Price & Badge Colors */}
             <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
@@ -2672,7 +2630,6 @@ export const useStoreSettingsControls = ({ data, setNestedData }: EcommerceContr
                 />
             </div>
 
-            <hr className="border-editor-border/50" />
 
             {/* Border & Star Colors */}
             <div className="grid grid-cols-2 gap-3">

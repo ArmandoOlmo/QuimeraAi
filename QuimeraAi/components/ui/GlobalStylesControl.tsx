@@ -822,7 +822,6 @@ const GlobalStylesControl: React.FC<GlobalStylesControlProps> = ({ mode = 'both'
                     </div>
 
                     {/* Divider */}
-                    <hr className="border-editor-border/50" />
 
                     {/* Custom Colors Section */}
                     <div>
