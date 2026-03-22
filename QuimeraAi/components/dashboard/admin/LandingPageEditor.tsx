@@ -945,13 +945,13 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
 
                     {/* Right Panel - Component Controls - Only visible when a section is selected */}
                     {(currentStructureSection || currentSection) && (
-                        <div className={`${isControlsPanelOpen ? (isPreviewVisible ? 'w-80 lg:w-96' : 'flex-1 max-w-2xl mx-auto') : 'w-0 overflow-hidden'} border-l border-border bg-card/50 flex flex-col overflow-hidden transition-all duration-300`}>
+                        <div className={`${isControlsPanelOpen ? (isPreviewVisible ? 'w-80 lg:w-96' : 'flex-1 max-w-2xl mx-auto') : 'w-0 overflow-hidden'} editor-theme border-l border-editor-border bg-editor-bg flex flex-col overflow-hidden transition-all duration-300`}>
                             {/* Structure Item Controls (Colores, Tipografía, etc.) */}
                             {currentStructureSection ? (
                                 <>
-                                    <div className="p-4 border-b border-border">
-                                        <h2 className="font-semibold text-sm flex items-center gap-2">
-                                            <Settings size={16} className="text-primary" />
+                                    <div className="p-4 border-b border-editor-border">
+                                        <h2 className="font-semibold text-sm flex items-center gap-2 text-editor-text-primary">
+                                            <Settings size={16} className="text-editor-accent" />
                                             {t('landingEditor.edit', 'Editar')}: <span className="capitalize">
                                                 {currentStructureLabel}
                                             </span>
@@ -968,9 +968,9 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
                                 </>
                             ) : (
                                 <>
-                                    <div className="p-4 border-b border-border">
-                                        <h2 className="font-semibold text-sm flex items-center gap-2">
-                                            <Settings size={16} className="text-primary" />
+                                    <div className="p-4 border-b border-editor-border">
+                                        <h2 className="font-semibold text-sm flex items-center gap-2 text-editor-text-primary">
+                                            <Settings size={16} className="text-editor-accent" />
                                             {t('landingEditor.editSection', 'Editar')}: <span className="capitalize">{currentSection!.type}</span>
                                         </h2>
                                     </div>

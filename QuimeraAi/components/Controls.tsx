@@ -1050,15 +1050,15 @@ const Controls: React.FC = () => {
             <>
               <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">{t('editor.controls.navigation.customLinks')}</label>
               {(data.header.links || []).map((link, i) => (
-                <div key={i} className="flex gap-2 mb-2">
-                  <input className="flex-1 bg-editor-bg border border-editor-border rounded px-2 py-1 text-sm text-editor-text-primary" value={link.text} onChange={(e) => setNestedData(`header.links.${i}.text`, e.target.value)} />
-                  <input className="flex-1 bg-editor-bg border border-editor-border rounded px-2 py-1 text-sm text-editor-text-primary" value={link.href} onChange={(e) => setNestedData(`header.links.${i}.href`, e.target.value)} />
+                <div key={i} className="flex gap-2 mb-2 overflow-hidden">
+                  <input className="flex-1 min-w-0 bg-editor-bg border border-editor-border rounded px-2 py-1 text-sm text-editor-text-primary" value={link.text} onChange={(e) => setNestedData(`header.links.${i}.text`, e.target.value)} />
+                  <input className="flex-1 min-w-0 bg-editor-bg border border-editor-border rounded px-2 py-1 text-sm text-editor-text-primary" value={link.href} onChange={(e) => setNestedData(`header.links.${i}.href`, e.target.value)} />
                   <button
                     onClick={() => {
                       const newLinks = data.header.links.filter((_, idx) => idx !== i);
                       setNestedData('header.links', newLinks);
                     }}
-                    className="text-editor-text-secondary hover:text-red-400"
+                    className="flex-shrink-0 text-editor-text-secondary hover:text-red-400"
                   >
                     <Trash2 size={14} />
                   </button>
@@ -6714,15 +6714,15 @@ const Controls: React.FC = () => {
             <>
               <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">{t('editor.controls.navigation.customLinks')}</label>
               {(data.header.links || []).map((link, i) => (
-                <div key={i} className="flex gap-2 mb-2">
-                  <input className="flex-1 bg-editor-bg border border-editor-border rounded px-2 py-1 text-sm text-editor-text-primary" value={link.text} onChange={(e) => setNestedData(`header.links.${i}.text`, e.target.value)} />
-                  <input className="flex-1 bg-editor-bg border border-editor-border rounded px-2 py-1 text-sm text-editor-text-primary" value={link.href} onChange={(e) => setNestedData(`header.links.${i}.href`, e.target.value)} />
+                <div key={i} className="flex gap-2 mb-2 overflow-hidden">
+                  <input className="flex-1 min-w-0 bg-editor-bg border border-editor-border rounded px-2 py-1 text-sm text-editor-text-primary" value={link.text} onChange={(e) => setNestedData(`header.links.${i}.text`, e.target.value)} />
+                  <input className="flex-1 min-w-0 bg-editor-bg border border-editor-border rounded px-2 py-1 text-sm text-editor-text-primary" value={link.href} onChange={(e) => setNestedData(`header.links.${i}.href`, e.target.value)} />
                   <button
                     onClick={() => {
                       const newLinks = data.header.links.filter((_, idx) => idx !== i);
                       setNestedData('header.links', newLinks);
                     }}
-                    className="text-editor-text-secondary hover:text-red-400"
+                    className="flex-shrink-0 text-editor-text-secondary hover:text-red-400"
                   >
                     <Trash2 size={14} />
                   </button>

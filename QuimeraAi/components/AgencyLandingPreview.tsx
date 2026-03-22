@@ -388,11 +388,22 @@ export function AgencyLandingPreview() {
     }, [articles]);
 
     // Inject font variables into :root
+    // Reads from BOTH theme AND typography section data (section data takes priority)
     useEffect(() => {
         const root = document.documentElement;
-        const resolvedHeader = resolveFontFamily(theme.fontFamilyHeader);
-        const resolvedBody = resolveFontFamily(theme.fontFamilyBody);
-        const resolvedButton = resolveFontFamily(theme.fontFamilyButton);
+
+        // Find typography section data (the editor saves fonts there via updateData)
+        const typoSection = sections.find(s => s.type === 'typography');
+        const typoData = typoSection?.data || {};
+
+        // Typography section data takes priority over theme values
+        const headerFontKey = typoData.headingFont || theme.fontFamilyHeader;
+        const bodyFontKey = typoData.bodyFont || theme.fontFamilyBody;
+        const buttonFontKey = typoData.buttonFont || theme.fontFamilyButton;
+
+        const resolvedHeader = resolveFontFamily(headerFontKey);
+        const resolvedBody = resolveFontFamily(bodyFontKey);
+        const resolvedButton = resolveFontFamily(buttonFontKey);
 
         const headerFont = fontStacks[resolvedHeader];
         const bodyFont = fontStacks[resolvedBody];
@@ -401,23 +412,23 @@ export function AgencyLandingPreview() {
         root.style.setProperty('--font-header', headerFont);
         root.style.setProperty('--font-body', bodyFont);
         root.style.setProperty('--font-button', buttonFont);
-        root.style.setProperty('--font-weight-header', String((theme as any).fontWeightHeader ?? 700));
-        root.style.setProperty('--font-weight-body', String((theme as any).fontWeightBody ?? 400));
-        root.style.setProperty('--font-weight-button', String((theme as any).fontWeightButton ?? 600));
-        root.style.setProperty('--font-style-header', (theme as any).fontStyleHeader ?? 'normal');
-        root.style.setProperty('--font-style-body', (theme as any).fontStyleBody ?? 'normal');
-        root.style.setProperty('--font-style-button', (theme as any).fontStyleButton ?? 'normal');
-        root.style.setProperty('--headings-transform', theme.headingsAllCaps ? 'uppercase' : 'none');
-        root.style.setProperty('--headings-spacing', theme.headingsAllCaps ? '0.05em' : 'normal');
-        root.style.setProperty('--buttons-transform', theme.buttonsAllCaps ? 'uppercase' : 'none');
-        root.style.setProperty('--buttons-spacing', theme.buttonsAllCaps ? '0.05em' : 'normal');
-        root.style.setProperty('--navlinks-transform', theme.navLinksAllCaps ? 'uppercase' : 'none');
-        root.style.setProperty('--navlinks-spacing', theme.navLinksAllCaps ? '0.05em' : 'normal');
+        root.style.setProperty('--font-weight-header', String(typoData.headingFontWeight ?? (theme as any).fontWeightHeader ?? 700));
+        root.style.setProperty('--font-weight-body', String(typoData.bodyFontWeight ?? (theme as any).fontWeightBody ?? 400));
+        root.style.setProperty('--font-weight-button', String(typoData.buttonFontWeight ?? (theme as any).fontWeightButton ?? 600));
+        root.style.setProperty('--font-style-header', typoData.headingFontStyle ?? (theme as any).fontStyleHeader ?? 'normal');
+        root.style.setProperty('--font-style-body', typoData.bodyFontStyle ?? (theme as any).fontStyleBody ?? 'normal');
+        root.style.setProperty('--font-style-button', typoData.buttonFontStyle ?? (theme as any).fontStyleButton ?? 'normal');
+        root.style.setProperty('--headings-transform', (typoData.headingsCaps ?? theme.headingsAllCaps) ? 'uppercase' : 'none');
+        root.style.setProperty('--headings-spacing', (typoData.headingsCaps ?? theme.headingsAllCaps) ? '0.05em' : 'normal');
+        root.style.setProperty('--buttons-transform', (typoData.buttonsCaps ?? theme.buttonsAllCaps) ? 'uppercase' : 'none');
+        root.style.setProperty('--buttons-spacing', (typoData.buttonsCaps ?? theme.buttonsAllCaps) ? '0.05em' : 'normal');
+        root.style.setProperty('--navlinks-transform', (typoData.navLinksCaps ?? theme.navLinksAllCaps) ? 'uppercase' : 'none');
+        root.style.setProperty('--navlinks-spacing', (typoData.navLinksCaps ?? theme.navLinksAllCaps) ? '0.05em' : 'normal');
 
         // Dynamically load Google Fonts for the selected font families
         const fontsToLoad = [...new Set([resolvedHeader, resolvedBody, resolvedButton])];
         loadGoogleFontsSync(fontsToLoad, 'agency-preview-fonts');
-    }, [theme]);
+    }, [theme, sections]);
 
     // Get enabled sections sorted by order
     const enabledSections = useMemo(() => {

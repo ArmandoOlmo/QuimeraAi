@@ -930,7 +930,7 @@ export function AgencyLandingEditor({ onBack }: AgencyLandingEditorProps) {
                 {/* Main Content - Three Panel Layout */}
                 <main className="flex-1 flex overflow-hidden relative">
                     {/* Left Panel - Component List */}
-                    <div className="w-64 lg:w-72 border-r border-border bg-card/50 flex flex-col overflow-hidden">
+                    <div className="w-80 lg:w-96 border-r border-border bg-card/50 flex flex-col overflow-hidden">
                         <div className="p-4 border-b border-border flex items-center justify-between">
                             <h2 className="font-semibold text-sm">{t('dashboard.agency.landing.pageStructure', 'ESTRUCTURA DE PÁGINA')}</h2>
                             <button
@@ -1064,7 +1064,7 @@ export function AgencyLandingEditor({ onBack }: AgencyLandingEditorProps) {
                         <button
                             onClick={() => setIsControlsPanelOpen(!isControlsPanelOpen)}
                             className={`absolute top-1/2 -translate-y-1/2 z-30 p-2 bg-card border border-border shadow-lg hover:bg-accent transition-all duration-300 overflow-hidden rounded-lg ${isControlsPanelOpen
-                                ? (isPreviewVisible ? 'right-[calc(16rem-18px)] lg:right-[calc(18rem-18px)]' : 'right-[calc(42rem-18px)]')
+                                ? (isPreviewVisible ? 'right-[calc(20rem-18px)] lg:right-[calc(24rem-18px)]' : 'right-[calc(42rem-18px)]')
                                 : 'right-0 rounded-l-lg rounded-r-none'
                                 }`}
                             title={isControlsPanelOpen ? t('dashboard.agency.landing.hideControls', 'Ocultar controles') : t('dashboard.agency.landing.showControls', 'Mostrar controles')}
@@ -1075,12 +1075,12 @@ export function AgencyLandingEditor({ onBack }: AgencyLandingEditorProps) {
 
                     {/* Right Panel - Controls - Only visible when a section is selected */}
                     {(selectedStructureItem || currentSection) && (
-                        <div className={`${isControlsPanelOpen ? (isPreviewVisible ? 'w-64 lg:w-72' : 'flex-1 max-w-2xl mx-auto') : 'w-0 overflow-hidden'} border-l border-border bg-card/50 flex flex-col overflow-hidden transition-all duration-300`}>
+                        <div className={`${isControlsPanelOpen ? (isPreviewVisible ? 'w-80 lg:w-96' : 'flex-1 max-w-2xl mx-auto') : 'w-0 overflow-hidden'} editor-theme border-l border-editor-border bg-editor-bg flex flex-col overflow-hidden transition-all duration-300`}>
                             {selectedStructureItem ? (
                                 <>
-                                    <div className="p-4 border-b border-border">
-                                        <h2 className="font-semibold text-sm flex items-center gap-2">
-                                            <Settings size={16} className="text-primary" />
+                                    <div className="p-4 border-b border-editor-border">
+                                        <h2 className="font-semibold text-sm flex items-center gap-2 text-editor-text-primary">
+                                            <Settings size={16} className="text-editor-accent" />
                                             {t('dashboard.agency.landing.edit', 'Editar')}: <span className="capitalize">
                                                 {structureItemsWithIcons.find(i => i.id === selectedStructureItem)?.label || selectedStructureItem}
                                             </span>
@@ -1108,9 +1108,9 @@ export function AgencyLandingEditor({ onBack }: AgencyLandingEditorProps) {
                                 </>
                             ) : (
                                 <>
-                                    <div className="p-4 border-b border-border">
-                                        <h2 className="font-semibold text-sm flex items-center gap-2">
-                                            <Settings size={16} className="text-primary" />
+                                    <div className="p-4 border-b border-editor-border">
+                                        <h2 className="font-semibold text-sm flex items-center gap-2 text-editor-text-primary">
+                                            <Settings size={16} className="text-editor-accent" />
                                             {t('dashboard.agency.landing.edit', 'Editar')}: <span className="capitalize">{currentSection!.type}</span>
                                         </h2>
                                     </div>
