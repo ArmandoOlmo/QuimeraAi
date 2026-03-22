@@ -5,6 +5,8 @@ import * as LucideIcons from 'lucide-react';
 import { ArrowRight, ChevronDown } from 'lucide-react';
 import { hexToRgba } from '../utils/colorUtils';
 import { sanitizeHtml } from '../utils/sanitize';
+import { getHeroLayoutClasses } from '../utils/heroLayout';
+import { HeroTextLayout } from '../types';
 
 // Ajustamos los tamaños para que sean más impactantes en este diseño full-screen
 const headlineSizeClasses: Record<FontSize, string> = {
@@ -71,6 +73,7 @@ interface HeroProps extends HeroData {
 }
 
 const HeroModern: React.FC<HeroProps> = ({
+  textLayout = 'center',
   headline, subheadline, primaryCta, secondaryCta, imageUrl,
   colors, borderRadius,
   paddingY = 'md', paddingX = 'md',
@@ -85,6 +88,7 @@ const HeroModern: React.FC<HeroProps> = ({
   secondaryCtaLink = '/#features',
   onNavigate,
 }) => {
+  const layout = getHeroLayoutClasses(textLayout as HeroTextLayout);
   const { getColor } = useDesignTokens();
 
   // Component colors take priority - user colors override defaults
@@ -109,8 +113,8 @@ const HeroModern: React.FC<HeroProps> = ({
   );
 
   return (
-    <section className="relative w-full flex items-center justify-center overflow-hidden"
-      style={{ minHeight: heroHeight ? `${heroHeight}vh` : undefined }}>
+    <section className="relative w-full flex flex-col overflow-hidden"
+      style={{ minHeight: heroHeight ? `${heroHeight}vh` : '80vh' }}>
       {/* === ANIMATED MESH GRADIENT BACKGROUND === */}
       <div className="absolute inset-0 z-0">
         {/* Radial gradient overlay */}
@@ -148,8 +152,11 @@ const HeroModern: React.FC<HeroProps> = ({
         </div>
       )}
 
-      {/* Contenido - pt-24 adds space for sticky header on mobile */}
-      <div className={`relative z-10 container mx-auto ${paddingXClasses[paddingX]} ${paddingYClasses[paddingY]} pt-24 md:pt-16 text-center max-w-5xl flex flex-col items-center`}>
+      {/* Contenido - positioned by textLayout */}
+      <div className={`relative z-10 w-full max-w-7xl mx-auto ${paddingXClasses[paddingX]} flex flex-1 ${layout.containerClass}`}
+        style={{ minHeight: heroHeight ? `${heroHeight}vh` : '80vh' }}
+      >
+        <div className={`flex flex-col gap-5 w-full max-w-2xl ${layout.textAlignClass} ${layout.itemsAlignClass}`}>
 
         {/* Badge Flotante Premium */}
         {showBadge && badgeText && (
@@ -176,14 +183,14 @@ const HeroModern: React.FC<HeroProps> = ({
 
         {/* Subtítulo */}
         <p
-          className={`${subheadlineSizeClasses[subheadlineFontSize]} mb-12 opacity-90 max-w-2xl mx-auto font-light leading-relaxed animate-fade-in-up font-body`}
+          className={`${subheadlineSizeClasses[subheadlineFontSize]} mb-12 opacity-90 max-w-2xl font-light leading-relaxed animate-fade-in-up font-body`}
           style={{ animationDelay: '0.2s', color: actualColors.text }}
         >
           {subheadline}
         </p>
 
         {/* Botones de Acción Premium */}
-        <div className="flex flex-col sm:flex-row justify-center gap-5 mb-16 w-full sm:w-auto animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
+        <div className={`flex flex-col sm:flex-row ${layout.horizontalAlign === 'center' ? 'justify-center' : layout.horizontalAlign === 'right' ? 'justify-end' : 'justify-start'} gap-5 mb-16 w-full sm:w-auto animate-fade-in-up`} style={{ animationDelay: '0.3s' }}>
           <a
             href={primaryCtaLink || '/#cta'}
             onClick={(e) => {
@@ -240,6 +247,7 @@ const HeroModern: React.FC<HeroProps> = ({
           </a>
         </div>
 
+        </div>
       </div>
     </section>
   );

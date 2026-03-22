@@ -1,5 +1,7 @@
 import React from 'react';
 import { HeroData, BorderRadiusSize, FontSize, PaddingSize, ServiceIcon } from '../types';
+import { HeroTextLayout } from '../types';
+import { getHeroLayoutClasses } from '../utils/heroLayout';
 import { useDesignTokens } from '../hooks/useDesignTokens';
 import * as LucideIcons from 'lucide-react';
 import { ArrowRight, ChevronDown } from 'lucide-react';
@@ -72,6 +74,7 @@ interface HeroProps extends HeroData {
  * dot-grid pattern, smooth scale-in entrance, and refined micro-interactions.
  */
 const HeroMinimal: React.FC<HeroProps> = ({
+    textLayout = 'center',
     headline, subheadline, primaryCta, secondaryCta, imageUrl,
     colors, borderRadius,
     paddingY = 'md', paddingX = 'md',
@@ -86,6 +89,7 @@ const HeroMinimal: React.FC<HeroProps> = ({
     secondaryCtaLink = '/#features',
     onNavigate,
 }) => {
+    const layout = getHeroLayoutClasses(textLayout as HeroTextLayout);
     const { getColor } = useDesignTokens();
 
     const actualColors = {
@@ -107,8 +111,8 @@ const HeroMinimal: React.FC<HeroProps> = ({
     );
 
     return (
-        <section className="relative w-full flex items-center justify-center overflow-hidden"
-            style={{ minHeight: heroHeight ? `${heroHeight}vh` : undefined }}>            {/* Background image with subtle darkening */}
+        <section className="relative w-full flex flex-col overflow-hidden"
+            style={{ minHeight: heroHeight ? `${heroHeight}vh` : '80vh' }}>            {/* Background image with subtle darkening */}
             {imageUrl && (
                 <div className="absolute inset-0 z-0 transform-gpu">
                     <img
@@ -143,8 +147,11 @@ const HeroMinimal: React.FC<HeroProps> = ({
                 }} />
             </div>
 
-            {/* Content — generous whitespace, centered, thin type */}
-            <div className={`relative z-10 container mx-auto ${paddingXClasses[paddingX]} ${paddingYClasses[paddingY]} text-center max-w-4xl flex flex-col items-center`}>
+            {/* Content — positioned by textLayout */}
+            <div className={`relative z-10 w-full max-w-7xl mx-auto ${paddingXClasses[paddingX]} flex flex-1 ${layout.containerClass}`}
+                style={{ minHeight: heroHeight ? `${heroHeight}vh` : '80vh' }}
+            >
+              <div className={`flex flex-col gap-5 w-full max-w-2xl ${layout.textAlignClass} ${layout.itemsAlignClass}`}>
 
                 {/* Minimalist badge */}
                 {showBadge && badgeText && (
@@ -170,14 +177,14 @@ const HeroMinimal: React.FC<HeroProps> = ({
 
                 {/* Subheadline — light and airy */}
                 <p
-                    className={`${subheadlineSizeClasses[subheadlineFontSize]} mb-12 opacity-60 max-w-xl mx-auto font-light leading-relaxed font-body minimal-sub`}
+                    className={`${subheadlineSizeClasses[subheadlineFontSize]} mb-12 opacity-60 max-w-xl font-light leading-relaxed font-body minimal-sub`}
                     style={{ color: actualColors.text }}
                 >
                     {subheadline}
                 </p>
 
                 {/* CTAs — clean and understated */}
-                <div className="flex flex-col sm:flex-row justify-center gap-4 minimal-ctas">
+                <div className={`flex flex-col sm:flex-row ${layout.horizontalAlign === 'center' ? 'justify-center' : layout.horizontalAlign === 'right' ? 'justify-end' : 'justify-start'} gap-4 minimal-ctas`}>
                     <a
                         href={primaryCtaLink || '/#cta'}
                         onClick={(e) => {
@@ -233,6 +240,7 @@ const HeroMinimal: React.FC<HeroProps> = ({
                         <div className="w-1 h-2 rounded-full bg-white/40 minimal-scroll-dot" />
                     </div>
                 </div>
+              </div>
             </div>
 
             {/* Custom Animations */}

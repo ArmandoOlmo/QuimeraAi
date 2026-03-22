@@ -1,5 +1,7 @@
 import React from 'react';
 import { HeroData, BorderRadiusSize, FontSize, PaddingSize, ServiceIcon } from '../types';
+import { HeroTextLayout } from '../types';
+import { getHeroLayoutClasses } from '../utils/heroLayout';
 import { useDesignTokens } from '../hooks/useDesignTokens';
 import * as LucideIcons from 'lucide-react';
 import { Play, ArrowRight } from 'lucide-react';
@@ -72,6 +74,7 @@ interface HeroProps extends HeroData {
  * lens flare orbs, gradient headline text, and staggered entrance animations.
  */
 const HeroCinematic: React.FC<HeroProps> = ({
+    textLayout = 'center',
     headline, subheadline, primaryCta, secondaryCta, imageUrl,
     colors, borderRadius,
     paddingY = 'md', paddingX = 'md',
@@ -86,6 +89,7 @@ const HeroCinematic: React.FC<HeroProps> = ({
     secondaryCtaLink = '/#features',
     onNavigate,
 }) => {
+    const layout = getHeroLayoutClasses(textLayout as HeroTextLayout);
     const { getColor } = useDesignTokens();
 
     const actualColors = {
@@ -107,8 +111,8 @@ const HeroCinematic: React.FC<HeroProps> = ({
     );
 
     return (
-        <section className="relative w-full flex items-center justify-center overflow-hidden"
-            style={{ minHeight: heroHeight ? `${heroHeight}vh` : undefined }}>
+        <section className="relative w-full flex flex-col overflow-hidden"
+            style={{ minHeight: heroHeight ? `${heroHeight}vh` : '80vh' }}>
             {/* Full-bleed background with dramatic overlay */}
             {imageUrl && (
                 <div className="absolute inset-0 z-0 transform-gpu">
@@ -155,8 +159,11 @@ const HeroCinematic: React.FC<HeroProps> = ({
                 <div className="absolute top-0 left-0 right-0 h-px cinematic-bar-glow" style={{ background: `linear-gradient(90deg, transparent 10%, ${actualColors.primary}60 50%, transparent 90%)` }} />
             </div>
 
-            {/* Content — centered and dramatic */}
-            <div className={`relative z-10 container mx-auto ${paddingXClasses[paddingX]} ${paddingYClasses[paddingY]} pt-24 md:pt-16 text-center max-w-5xl flex flex-col items-center`}>
+            {/* Content — positioned by textLayout */}
+            <div className={`relative z-10 w-full max-w-7xl mx-auto ${paddingXClasses[paddingX]} flex flex-1 ${layout.containerClass}`}
+                style={{ minHeight: heroHeight ? `${heroHeight}vh` : '80vh' }}
+            >
+              <div className={`flex flex-col gap-5 w-full max-w-2xl ${layout.textAlignClass} ${layout.itemsAlignClass}`}>
 
                 {/* Badge */}
                 {showBadge && badgeText && (
@@ -190,14 +197,14 @@ const HeroCinematic: React.FC<HeroProps> = ({
 
                 {/* Subheadline */}
                 <p
-                    className={`${subheadlineSizeClasses[subheadlineFontSize]} mb-12 opacity-80 max-w-2xl mx-auto font-light leading-relaxed font-body cinematic-sub`}
+                    className={`${subheadlineSizeClasses[subheadlineFontSize]} mb-12 opacity-80 max-w-2xl font-light leading-relaxed font-body cinematic-sub`}
                     style={{ color: actualColors.text }}
                 >
                     {subheadline}
                 </p>
 
                 {/* CTAs — premium with fill-reveal hover */}
-                <div className="flex flex-col sm:flex-row justify-center gap-5 mb-16 w-full sm:w-auto cinematic-ctas">
+                <div className={`flex flex-col sm:flex-row ${layout.horizontalAlign === 'center' ? 'justify-center' : layout.horizontalAlign === 'right' ? 'justify-end' : 'justify-start'} gap-5 mb-16 w-full sm:w-auto cinematic-ctas`}>
                     <a
                         href={primaryCtaLink || '/#cta'}
                         onClick={(e) => {
@@ -252,6 +259,7 @@ const HeroCinematic: React.FC<HeroProps> = ({
                         </span>
                     </a>
                 </div>
+              </div>
             </div>
 
             {/* Custom Animations */}

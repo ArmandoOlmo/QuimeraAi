@@ -4,6 +4,8 @@ import { useDesignTokens } from '../hooks/useDesignTokens';
 import * as LucideIcons from 'lucide-react';
 import { hexToRgba } from '../utils/colorUtils';
 import { sanitizeHtml } from '../utils/sanitize';
+import { getHeroLayoutClasses } from '../utils/heroLayout';
+import { HeroTextLayout } from '../types';
 
 const headlineSizeClasses: Record<FontSize, string> = {
     sm: 'text-3xl md:text-5xl',
@@ -69,6 +71,7 @@ interface HeroProps extends HeroData {
 }
 
 const HeroGradient: React.FC<HeroProps> = ({
+    textLayout = 'left-top',
     headline, subheadline, primaryCta, secondaryCta, imageUrl,
     colors, borderRadius,
     paddingY = 'md', paddingX = 'md',
@@ -82,6 +85,7 @@ const HeroGradient: React.FC<HeroProps> = ({
     secondaryCtaLink = '/#features',
     onNavigate,
 }) => {
+    const layout = getHeroLayoutClasses(textLayout as HeroTextLayout);
     const { getColor } = useDesignTokens();
 
     // Component colors take priority over Design Tokens
@@ -147,7 +151,7 @@ const HeroGradient: React.FC<HeroProps> = ({
                 <div className={`grid md:grid-cols-2 gap-12 items-center w-full`}>
 
                     {/* Left Column - Content */}
-                    <div className="space-y-8 animate-fade-in-up">
+                    <div className={`space-y-8 animate-fade-in-up ${layout.textAlignClass}`}>
 
                         {/* Badge */}
                         {showBadge && badgeText && (

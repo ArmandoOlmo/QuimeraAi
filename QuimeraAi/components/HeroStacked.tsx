@@ -5,6 +5,8 @@ import * as LucideIcons from 'lucide-react';
 import { ArrowRight, ChevronDown } from 'lucide-react';
 import { hexToRgba } from '../utils/colorUtils';
 import { sanitizeHtml } from '../utils/sanitize';
+import { getHeroLayoutClasses } from '../utils/heroLayout';
+import { HeroTextLayout } from '../types';
 
 const headlineSizeClasses: Record<FontSize, string> = {
     sm: 'text-4xl md:text-5xl',
@@ -73,6 +75,7 @@ interface HeroProps extends HeroData {
  * decorative accent lines, and premium CTA effects.
  */
 const HeroStacked: React.FC<HeroProps> = ({
+    textLayout = 'center',
     headline, subheadline, primaryCta, secondaryCta, imageUrl,
     colors, borderRadius,
     paddingY = 'md', paddingX = 'md',
@@ -87,6 +90,7 @@ const HeroStacked: React.FC<HeroProps> = ({
     secondaryCtaLink = '/#features',
     onNavigate,
 }) => {
+    const layout = getHeroLayoutClasses(textLayout as HeroTextLayout);
     const { getColor } = useDesignTokens();
 
     const actualColors = {
@@ -143,7 +147,7 @@ const HeroStacked: React.FC<HeroProps> = ({
 
             {/* === CONTENT SECTION === */}
             <div className={`relative z-10 ${paddingXClasses[paddingX]} ${paddingYClasses[paddingY]}`}>
-                <div className="container mx-auto max-w-4xl text-center">
+                <div className={`container mx-auto max-w-4xl ${layout.textAlignClass}`}>
                     {/* Dot pattern behind content */}
                     <div className="absolute inset-0 opacity-[0.02]" style={{
                         backgroundImage: `radial-gradient(circle, ${actualColors.text} 1px, transparent 1px)`,
@@ -178,7 +182,7 @@ const HeroStacked: React.FC<HeroProps> = ({
                     />
 
                     {/* Decorative accent dots */}
-                    <div className="flex items-center justify-center gap-2 mb-6 stacked-dots">
+                    <div className={`flex ${layout.horizontalAlign === 'center' ? 'items-center justify-center' : layout.horizontalAlign === 'right' ? 'items-center justify-end' : 'items-center justify-start'} gap-2 mb-6 stacked-dots`}>
                         <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: actualColors.primary }} />
                         <div className="w-1 h-1 rounded-full opacity-60" style={{ backgroundColor: actualColors.secondary }} />
                         <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: actualColors.primary }} />
@@ -186,14 +190,14 @@ const HeroStacked: React.FC<HeroProps> = ({
 
                     {/* Subheadline */}
                     <p
-                        className={`${subheadlineSizeClasses[subheadlineFontSize]} mb-10 font-light leading-relaxed max-w-2xl mx-auto font-body stacked-sub relative z-10`}
+                        className={`${subheadlineSizeClasses[subheadlineFontSize]} mb-10 font-light leading-relaxed max-w-2xl font-body stacked-sub relative z-10`}
                         style={{ color: actualColors.text, opacity: 0.75 }}
                     >
                         {subheadline}
                     </p>
 
                     {/* CTAs */}
-                    <div className="flex flex-col sm:flex-row justify-center gap-4 stacked-ctas relative z-10">
+                    <div className={`flex flex-col sm:flex-row ${layout.horizontalAlign === 'center' ? 'justify-center' : layout.horizontalAlign === 'right' ? 'justify-end' : 'justify-start'} gap-4 stacked-ctas relative z-10`}>
                         <a
                             href={primaryCtaLink || '/#cta'}
                             onClick={(e) => {

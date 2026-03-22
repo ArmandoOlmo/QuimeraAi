@@ -5,6 +5,8 @@ import * as LucideIcons from 'lucide-react';
 import { ArrowRight, ChevronDown } from 'lucide-react';
 import { hexToRgba } from '../utils/colorUtils';
 import { sanitizeHtml } from '../utils/sanitize';
+import { getHeroLayoutClasses } from '../utils/heroLayout';
+import { HeroTextLayout } from '../types';
 
 const headlineSizeClasses: Record<FontSize, string> = {
     sm: 'text-4xl md:text-5xl',
@@ -72,6 +74,7 @@ interface HeroProps extends HeroData {
  * film-grain texture overlay, decorative frame corners, and staggered entrance animations.
  */
 const HeroEditorial: React.FC<HeroProps> = ({
+    textLayout = 'left-top',
     headline, subheadline, primaryCta, secondaryCta, imageUrl,
     colors, borderRadius,
     paddingY = 'md', paddingX = 'md',
@@ -86,6 +89,7 @@ const HeroEditorial: React.FC<HeroProps> = ({
     secondaryCtaLink = '/#features',
     onNavigate,
 }) => {
+    const layout = getHeroLayoutClasses(textLayout as HeroTextLayout);
     const { getColor } = useDesignTokens();
 
     const actualColors = {

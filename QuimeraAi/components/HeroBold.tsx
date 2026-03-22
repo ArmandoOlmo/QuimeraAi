@@ -5,6 +5,8 @@ import * as LucideIcons from 'lucide-react';
 import { ArrowRight, Zap } from 'lucide-react';
 import { hexToRgba } from '../utils/colorUtils';
 import { sanitizeHtml } from '../utils/sanitize';
+import { getHeroLayoutClasses } from '../utils/heroLayout';
+import { HeroTextLayout } from '../types';
 
 const headlineSizeClasses: Record<FontSize, string> = {
     sm: 'text-5xl md:text-6xl',
@@ -73,6 +75,7 @@ interface HeroProps extends HeroData {
  * energy burst radial glows, skew badge, and aggressive animations.
  */
 const HeroBold: React.FC<HeroProps> = ({
+    textLayout = 'left-top',
     headline, subheadline, primaryCta, secondaryCta, imageUrl,
     colors, borderRadius,
     paddingY = 'md', paddingX = 'md',
@@ -87,6 +90,7 @@ const HeroBold: React.FC<HeroProps> = ({
     secondaryCtaLink = '/#features',
     onNavigate,
 }) => {
+    const layout = getHeroLayoutClasses(textLayout as HeroTextLayout);
     const { getColor } = useDesignTokens();
 
     const actualColors = {

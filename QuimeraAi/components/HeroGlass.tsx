@@ -5,6 +5,8 @@ import * as LucideIcons from 'lucide-react';
 import { ArrowRight, ChevronDown } from 'lucide-react';
 import { hexToRgba } from '../utils/colorUtils';
 import { sanitizeHtml } from '../utils/sanitize';
+import { getHeroLayoutClasses } from '../utils/heroLayout';
+import { HeroTextLayout } from '../types';
 
 const headlineSizeClasses: Record<FontSize, string> = {
     sm: 'text-3xl md:text-4xl',
@@ -73,6 +75,7 @@ interface HeroProps extends HeroData {
  * particle-like dots, card float animation, and staggered content entrance.
  */
 const HeroGlass: React.FC<HeroProps> = ({
+    textLayout = 'center',
     headline, subheadline, primaryCta, secondaryCta, imageUrl,
     colors, borderRadius,
     paddingY = 'lg', paddingX = 'md',
@@ -87,6 +90,7 @@ const HeroGlass: React.FC<HeroProps> = ({
     secondaryCtaLink = '/#features',
     onNavigate,
 }) => {
+    const layout = getHeroLayoutClasses(textLayout as HeroTextLayout);
     const { getColor } = useDesignTokens();
 
     const actualColors = {
@@ -108,8 +112,8 @@ const HeroGlass: React.FC<HeroProps> = ({
     );
 
     return (
-        <section className="relative w-full flex items-center justify-center overflow-hidden"
-            style={{ minHeight: heroHeight ? `${heroHeight}vh` : undefined }}>
+        <section className="relative w-full flex flex-col overflow-hidden"
+            style={{ minHeight: heroHeight ? `${heroHeight}vh` : '80vh' }}>
             {/* Full background photo */}
             {imageUrl && (
                 <div className="absolute inset-0 z-0 transform-gpu">
@@ -151,9 +155,11 @@ const HeroGlass: React.FC<HeroProps> = ({
                 ))}
             </div>
 
-            {/* Floating glass card */}
-            <div className={`relative z-10 w-full ${paddingXClasses[paddingX]} ${paddingYClasses[paddingY]} pt-24 md:pt-16`}>
-                <div className="container mx-auto max-w-3xl">
+            {/* Floating glass card - positioned by textLayout */}
+            <div className={`relative z-10 w-full max-w-7xl mx-auto ${paddingXClasses[paddingX]} flex flex-1 ${layout.containerClass}`}
+                style={{ minHeight: heroHeight ? `${heroHeight}vh` : '80vh' }}
+            >
+                <div className="w-full max-w-3xl">
                     {/* Rainbow shimmer border wrapper */}
                     <div className="relative glass-card-entrance">
                         {/* Shimmer gradient border */}
@@ -164,7 +170,7 @@ const HeroGlass: React.FC<HeroProps> = ({
 
                         {/* Glass card */}
                         <div
-                            className="relative rounded-3xl p-8 md:p-14 text-center glass-float"
+                            className={`relative rounded-3xl p-8 md:p-14 ${layout.textAlignClass} glass-float`}
                             style={{
                                 background: 'rgba(255,255,255,0.06)',
                                 backdropFilter: 'blur(24px)',
@@ -201,14 +207,14 @@ const HeroGlass: React.FC<HeroProps> = ({
 
                             {/* Subheadline */}
                             <p
-                                className={`${subheadlineSizeClasses[subheadlineFontSize]} mb-10 opacity-70 max-w-xl mx-auto font-light leading-relaxed font-body glass-sub`}
+                                className={`${subheadlineSizeClasses[subheadlineFontSize]} mb-10 opacity-70 max-w-xl font-light leading-relaxed font-body glass-sub`}
                                 style={{ color: actualColors.text }}
                             >
                                 {subheadline}
                             </p>
 
                             {/* CTAs */}
-                            <div className="flex flex-col sm:flex-row justify-center gap-4 glass-ctas">
+                            <div className={`flex flex-col sm:flex-row ${layout.horizontalAlign === 'center' ? 'justify-center' : layout.horizontalAlign === 'right' ? 'justify-end' : 'justify-start'} gap-4 glass-ctas`}>
                                 <a
                                     href={primaryCtaLink || '/#cta'}
                                     onClick={(e) => {
