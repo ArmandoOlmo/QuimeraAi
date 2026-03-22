@@ -684,6 +684,7 @@ const Controls: React.FC = () => {
   const BackgroundImageControl = ({ sectionKey }: { sectionKey: string }) => {
     const sectionData = (data as any)?.[sectionKey];
     const hasImage = !!sectionData?.backgroundImageUrl;
+    const [showPicker, setShowPicker] = useState(false);
 
     return (
       <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
@@ -691,13 +692,78 @@ const Controls: React.FC = () => {
           <Image size={14} />
           {t('editor.controls.common.backgroundImage', 'Background Image')}
         </label>
-        <ImagePicker
-          label={t('editor.controls.common.backgroundImage', 'Background Image')}
-          value={sectionData?.backgroundImageUrl || ''}
-          onChange={(url) => setNestedData(`${sectionKey}.backgroundImageUrl`, url)}
-          onRemove={() => setNestedData(`${sectionKey}.backgroundImageUrl`, '')}
-          generationContext="background"
-        />
+
+        {/* Prominent Image Preview with overlaid controls */}
+        <div className="relative rounded-lg overflow-hidden border border-editor-border group">
+          {hasImage ? (
+            <>
+              <div className="aspect-video">
+                <img src={sectionData.backgroundImageUrl} alt="Background" className="w-full h-full object-cover" />
+              </div>
+              {/* Bottom gradient for contrast behind controls */}
+              <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/80 via-black/30 to-transparent pointer-events-none" />
+              {/* Overlaid action buttons at bottom-right */}
+              <div className="absolute bottom-2.5 right-2.5 flex gap-1.5">
+                <button
+                  onClick={() => setShowPicker(true)}
+                  className="p-2 rounded-lg bg-white/15 backdrop-blur-md border border-white/20 text-white hover:bg-white/25 transition-all duration-200"
+                  title={t('dashboard.imagePicker.openLibrary')}
+                >
+                  <Grid size={14} />
+                </button>
+                <button
+                  onClick={() => setShowPicker(true)}
+                  className="p-2 rounded-lg bg-editor-accent/80 backdrop-blur-md border border-editor-accent/40 text-white hover:bg-editor-accent transition-all duration-200"
+                  title={t('dashboard.imagePicker.generateWithAI')}
+                >
+                  <Zap size={14} />
+                </button>
+                <button
+                  onClick={() => setNestedData(`${sectionKey}.backgroundImageUrl`, '')}
+                  className="p-2 rounded-lg bg-red-500/60 backdrop-blur-md border border-red-500/30 text-white hover:bg-red-500/80 transition-all duration-200"
+                  title={t('common.remove')}
+                >
+                  <X size={14} />
+                </button>
+              </div>
+            </>
+          ) : (
+            <div className="aspect-video flex flex-col items-center justify-center bg-editor-bg text-editor-text-secondary gap-2">
+              <Image size={32} className="opacity-30" />
+              <span className="text-[10px] uppercase tracking-wider opacity-50">Sin imagen</span>
+            </div>
+          )}
+        </div>
+
+        {/* ImagePicker rendered with defaultOpen when triggered */}
+        {showPicker && (
+          <ImagePicker
+            label=""
+            value={sectionData?.backgroundImageUrl || ''}
+            onChange={(url) => setNestedData(`${sectionKey}.backgroundImageUrl`, url)}
+            generationContext="background"
+            defaultOpen
+            onClose={() => setShowPicker(false)}
+          />
+        )}
+
+        {/* Action buttons when no image */}
+        {!hasImage && (
+          <div className="flex gap-2 mt-3">
+            <button
+              onClick={() => setShowPicker(true)}
+              className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-editor-bg border border-editor-border text-editor-text-secondary hover:text-editor-text-primary hover:border-editor-accent/30 transition-all text-xs font-medium"
+            >
+              <Grid size={12} /> Librería
+            </button>
+            <button
+              onClick={() => setShowPicker(true)}
+              className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-editor-accent/10 border border-editor-accent/20 text-editor-accent hover:bg-editor-accent/20 transition-all text-xs font-medium"
+            >
+              <Zap size={12} /> Generar IA
+            </button>
+          </div>
+        )}
 
         {/* Overlay Controls - only shown when background image is set */}
         {hasImage && (
@@ -717,9 +783,9 @@ const Controls: React.FC = () => {
                   onChange={(v) => setNestedData(`${sectionKey}.backgroundOverlayColor`, v)}
                 />
                 <div>
-                  <div className="flex justify-between items-center mb-1">
-                    <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Overlay Opacity</label>
-                    <span className="text-xs text-editor-text-primary">{sectionData?.backgroundOverlayOpacity ?? 60}%</span>
+                  <div className="flex justify-between items-center mb-2">
+                    <label className="text-xs font-medium text-editor-text-secondary">Overlay Opacity</label>
+                    <span className="text-[10px] text-editor-accent font-mono bg-editor-accent/10 px-2 py-0.5 rounded-full">{sectionData?.backgroundOverlayOpacity ?? 60}%</span>
                   </div>
                   <input
                     type="range" min="0" max="100" step="5"
@@ -727,6 +793,10 @@ const Controls: React.FC = () => {
                     onChange={(e) => setNestedData(`${sectionKey}.backgroundOverlayOpacity`, parseInt(e.target.value))}
                     className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
                   />
+                  <div className="flex justify-between mt-1">
+                    <span className="text-[9px] text-editor-text-secondary/50">Claro</span>
+                    <span className="text-[9px] text-editor-text-secondary/50">Oscuro</span>
+                  </div>
                 </div>
               </div>
             )}

@@ -120,71 +120,88 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
                             <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{label}</label>
                         </div>
                     )}
-                    <div className="flex items-center gap-2">
-                        {/* Thumbnail Preview */}
-                        <div
-                            className="w-10 h-10 shrink-0 rounded-lg overflow-hidden bg-editor-panel-bg border border-editor-border relative group cursor-pointer"
-                            onClick={() => {
-                                if (value) {
-                                    // Preview logic
+
+                    {/* Prominent Image Preview with overlaid controls */}
+                    <div className="relative rounded-lg overflow-hidden border border-editor-border group">
+                        {value ? (
+                            <>
+                                <div className="aspect-video cursor-pointer" onClick={() => {
                                     const file = files.find(f => f.downloadURL === value);
                                     if (file) setPreviewFile(file);
                                     else setPreviewFile({
                                         id: 'temp', name: label || 'Preview', downloadURL: value, storagePath: '', size: 0, type: 'image/jpeg',
                                         createdAt: new Date().toISOString(), projectId: activeProjectId || ''
                                     });
-                                }
-                            }}
-                        >
-                            {value ? (
-                                <img src={value} alt="Preview" className="w-full h-full object-cover" />
-                            ) : (
-                                <div className="w-full h-full flex items-center justify-center text-editor-text-secondary">
-                                    <Image size={16} />
+                                }}>
+                                    <img src={value} alt="Preview" className="w-full h-full object-cover" />
                                 </div>
-                            )}
-                        </div>
-
-                        {/* URL Input */}
-                        {!hideUrlInput && (
-                            <div className="flex-1 min-w-0">
-                                <input
-                                    type="text"
-                                    value={value}
-                                    onChange={(e) => onChange(e.target.value)}
-                                    placeholder="https://..."
-                                    className="w-full bg-editor-panel-bg border border-editor-border rounded-lg px-3 py-2 text-xs text-editor-text-primary focus:outline-none focus:ring-1 focus:ring-editor-accent placeholder:text-editor-text-secondary/50 truncate font-mono"
-                                />
+                                {/* Bottom gradient for contrast */}
+                                <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/80 via-black/30 to-transparent pointer-events-none" />
+                                {/* Overlaid action buttons at bottom-right */}
+                                <div className="absolute bottom-2.5 right-2.5 flex gap-1.5">
+                                    <button
+                                        onClick={() => { setIsLibraryOpen(true); setActiveTab('library'); }}
+                                        className="p-2 rounded-lg bg-white/15 backdrop-blur-md border border-white/20 text-white hover:bg-white/25 transition-all duration-200"
+                                        title={t('dashboard.imagePicker.openLibrary')}
+                                    >
+                                        <Grid size={14} />
+                                    </button>
+                                    <button
+                                        onClick={() => { setIsLibraryOpen(true); setActiveTab('generate'); }}
+                                        className="p-2 rounded-lg bg-editor-accent/80 backdrop-blur-md border border-editor-accent/40 text-white hover:bg-editor-accent transition-all duration-200"
+                                        title={t('dashboard.imagePicker.generateWithAI')}
+                                    >
+                                        <Zap size={14} />
+                                    </button>
+                                    {onRemove && (
+                                        <button
+                                            onClick={onRemove}
+                                            className="p-2 rounded-lg bg-red-500/60 backdrop-blur-md border border-red-500/30 text-white hover:bg-red-500/80 transition-all duration-200"
+                                            title={t('common.remove')}
+                                        >
+                                            <Trash2 size={14} />
+                                        </button>
+                                    )}
+                                </div>
+                            </>
+                        ) : (
+                            <div className="aspect-video flex flex-col items-center justify-center bg-editor-bg text-editor-text-secondary gap-2">
+                                <Image size={32} className="opacity-30" />
+                                <span className="text-[10px] uppercase tracking-wider opacity-50">Sin imagen</span>
                             </div>
                         )}
-
-                        {/* Action Buttons */}
-                        <button
-                            onClick={() => { setIsLibraryOpen(true); setActiveTab('library'); }}
-                            className="shrink-0 p-2 rounded-lg bg-editor-panel-bg border border-editor-border text-editor-text-secondary hover:text-editor-text-primary hover:border-editor-primary transition-colors"
-                            title={t('dashboard.imagePicker.openLibrary')}
-                        >
-                            <Grid size={16} />
-                        </button>
-                        <button
-                            onClick={() => { setIsLibraryOpen(true); setActiveTab('generate'); }}
-                            className="shrink-0 p-2 rounded-lg bg-editor-accent/10 border border-editor-accent/20 text-editor-accent hover:bg-editor-accent/20 transition-colors"
-                            title={t('dashboard.imagePicker.generateWithAI')}
-                        >
-                            <Zap size={16} />
-                        </button>
-
-                        {/* Optional Remove Button */}
-                        {onRemove && (
-                            <button
-                                onClick={onRemove}
-                                className="shrink-0 p-2 rounded-lg bg-red-500/10 border border-red-500/20 text-red-500 hover:bg-red-500/20 transition-colors"
-                                title={t('common.remove')}
-                            >
-                                <Trash2 size={16} />
-                            </button>
-                        )}
                     </div>
+
+                    {/* URL Input — only if not hidden */}
+                    {!hideUrlInput && (
+                        <div className="mt-2">
+                            <input
+                                type="text"
+                                value={value}
+                                onChange={(e) => onChange(e.target.value)}
+                                placeholder="https://..."
+                                className="w-full bg-editor-panel-bg border border-editor-border rounded-lg px-3 py-2 text-xs text-editor-text-primary focus:outline-none focus:ring-1 focus:ring-editor-accent placeholder:text-editor-text-secondary/50 truncate font-mono"
+                            />
+                        </div>
+                    )}
+
+                    {/* Action buttons when no image */}
+                    {!value && (
+                        <div className="flex gap-2 mt-3">
+                            <button
+                                onClick={() => { setIsLibraryOpen(true); setActiveTab('library'); }}
+                                className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-editor-bg border border-editor-border text-editor-text-secondary hover:text-editor-text-primary hover:border-editor-accent/30 transition-all text-xs font-medium"
+                            >
+                                <Grid size={12} /> Librería
+                            </button>
+                            <button
+                                onClick={() => { setIsLibraryOpen(true); setActiveTab('generate'); }}
+                                className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-editor-accent/10 border border-editor-accent/20 text-editor-accent hover:bg-editor-accent/20 transition-all text-xs font-medium"
+                            >
+                                <Zap size={12} /> Generar IA
+                            </button>
+                        </div>
+                    )}
                 </div>
             )}
 
