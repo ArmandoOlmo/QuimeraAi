@@ -133,10 +133,10 @@ const RangeControl: React.FC<{
     unit?: string;
     onChange: (value: number) => void;
 }> = ({ label, value, min, max, step = 1, unit = '', onChange }) => (
-    <div className="space-y-2">
+    <div className="bg-muted/30 p-4 rounded-lg border border-border space-y-2">
         <div className="flex items-center justify-between">
             <span className="text-sm text-foreground">{label}</span>
-            <span className="text-xs font-mono text-muted-foreground">{value}{unit}</span>
+            <span className="text-[10px] text-primary font-mono bg-primary/10 px-2 py-0.5 rounded-full">{value}{unit}</span>
         </div>
         <input
             type="range"
@@ -145,10 +145,63 @@ const RangeControl: React.FC<{
             max={max}
             step={step}
             onChange={(e) => onChange(Number(e.target.value))}
-            className="w-full accent-primary"
+            className="w-full h-2 bg-border rounded-lg appearance-none cursor-pointer accent-primary"
         />
     </div>
 );
+
+// Font size segmented selector (dashboard theme)
+const FontSizeSelector: React.FC<{
+    label: string;
+    value: string;
+    onChange: (val: string) => void;
+}> = ({ label, value, onChange }) => (
+    <div className="mb-3">
+        <label className="block text-xs font-bold text-muted-foreground mb-1 uppercase tracking-wider">{label}</label>
+        <div className="flex bg-muted p-1 rounded-md border border-border">
+            {['sm', 'md', 'lg', 'xl'].map((size) => (
+                <button
+                    key={size}
+                    onClick={() => onChange(size)}
+                    className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors ${value === size ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-muted-foreground/10'}`}
+                >
+                    {size.toUpperCase()}
+                </button>
+            ))}
+        </div>
+    </div>
+);
+
+// Padding segmented selector (dashboard theme)
+const PaddingSelector: React.FC<{
+    label: string;
+    value: string;
+    onChange: (val: string) => void;
+    showNone?: boolean;
+    showXl?: boolean;
+}> = ({ label, value, onChange, showNone = false, showXl = false }) => {
+    const options = [
+        ...(showNone ? ['none'] : []),
+        'sm', 'md', 'lg',
+        ...(showXl ? ['xl'] : []),
+    ];
+    return (
+        <div className="mb-3">
+            <label className="block text-xs font-bold text-muted-foreground mb-1 uppercase tracking-wider">{label}</label>
+            <div className="flex bg-muted p-1 rounded-md border border-border">
+                {options.map((size) => (
+                    <button
+                        key={size}
+                        onClick={() => onChange(size)}
+                        className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors ${value === size ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-muted-foreground/10'}`}
+                    >
+                        {size === 'none' ? '0' : size.toUpperCase()}
+                    </button>
+                ))}
+            </div>
+        </div>
+    );
+};
 
 // ============================================================================
 // SECTION CONTROLS
@@ -328,6 +381,11 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                             onChange={(v) => updateData('headline', v)}
                             placeholder="Ej: Crea tu Sitio Web con IA"
                         />
+                        <FontSizeSelector
+                            label={t('landingEditor.titleSize', 'Tamaño del Título')}
+                            value={data.headlineFontSize || 'lg'}
+                            onChange={(v) => updateData('headlineFontSize', v)}
+                        />
                     </ControlGroup>
 
                     <ControlGroup label={t('landingEditor.heroSubtitle', 'Subtítulo')}>
@@ -336,6 +394,11 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                             onChange={(v) => updateData('subheadline', v)}
                             placeholder="Ej: La forma más rápida de crear sitios web profesionales"
                             multiline
+                        />
+                        <FontSizeSelector
+                            label={t('landingEditor.subtitleSize', 'Tamaño del Subtítulo')}
+                            value={data.subheadlineFontSize || 'md'}
+                            onChange={(v) => updateData('subheadlineFontSize', v)}
                         />
                     </ControlGroup>
 
@@ -348,7 +411,7 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                         <TextInput
                             value={data.primaryCtaLink || ''}
                             onChange={(v) => updateData('primaryCtaLink', v)}
-                            placeholder="/register"
+                            placeholder="/register o https://..."
                         />
                     </ControlGroup>
 
@@ -365,54 +428,27 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                                     onChange={(v) => updateData('secondaryCta', v)}
                                     placeholder="Ej: Ver Demo"
                                 />
+                                <TextInput
+                                    value={data.secondaryCtaLink || ''}
+                                    onChange={(v) => updateData('secondaryCtaLink', v)}
+                                    placeholder="/demo o https://..."
+                                />
                             </>
                         )}
                     </ControlGroup>
 
-                    <ControlGroup label={t('landingEditor.heroImage', 'Imagen')}>
-                        <div className="p-3 bg-muted/50 rounded-lg border border-border space-y-2">
-                            <div className="flex items-center justify-between gap-2">
-                                <div className="relative w-16 h-10 bg-muted rounded overflow-hidden flex-shrink-0 border border-border">
-                                    {data.imageUrl ? (
-                                        <img src={data.imageUrl} alt="" className="w-full h-full object-cover" />
-                                    ) : (
-                                        <div className="w-full h-full flex items-center justify-center text-muted-foreground"><ImageIcon size={12} /></div>
-                                    )}
-                                </div>
-
-                                <div className="flex gap-1">
-                                    <button
-                                        onClick={() => { setImageTargetField('imageUrl'); setIsImagePickerOpen(true); }}
-                                        className="shrink-0 p-2 rounded-lg bg-muted hover:bg-muted-foreground/20 transition-colors"
-                                        title={t('landingEditor.selectFromLibrary', 'Seleccionar de librería')}
-                                    >
-                                        <Image size={16} />
-                                    </button>
-                                    <button
-                                        onClick={() => { setImageTargetField('imageUrl'); setIsAIGeneratorOpen(true); }}
-                                        className="shrink-0 p-2 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
-                                        title={t('landingEditor.generateWithAI', 'Generar con IA')}
-                                    >
-                                        <Sparkles size={16} />
-                                    </button>
-                                    {data.imageUrl && (
-                                        <button
-                                            onClick={() => updateData('imageUrl', '')}
-                                            className="p-2 text-destructive hover:bg-destructive/10 rounded"
-                                            title={t('landingEditor.removeImage', 'Eliminar imagen')}
-                                        >
-                                            <Trash2 size={16} />
-                                        </button>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
+                    <ControlGroup label={t('landingEditor.heroImage', 'Imagen de Fondo')}>
+                        <ImagePicker
+                            label="Hero Image"
+                            value={data.imageUrl || ''}
+                            onChange={(url) => updateData('imageUrl', url)}
+                        />
                     </ControlGroup>
                 </>
             )}
             {activeTab === 'style' && (
                 <>
-                    <div className="space-y-4">
+                    <div className="bg-muted/30 p-4 rounded-lg border border-border space-y-4">
                         <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider block">
                             {t('landingEditor.layout', 'DISEÑO Y ESTRUCTURA')}
                         </label>
@@ -438,28 +474,33 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                         </div>
                     </div>
 
-                    <ColorControl
-                        label={t('landingEditor.backgroundColor', 'Fondo')}
-                        value={data.backgroundColor || '#000000'}
-                        onChange={(v) => updateData('backgroundColor', v)}
-                        paletteColors={getSelectedPaletteColors()}
-                    />
+                    <div className="bg-muted/30 p-4 rounded-lg border border-border space-y-3">
+                        <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider block">Colores</label>
+                        <ColorControl
+                            label={t('landingEditor.backgroundColor', 'Fondo')}
+                            value={data.backgroundColor || '#000000'}
+                            onChange={(v) => updateData('backgroundColor', v)}
+                            paletteColors={getSelectedPaletteColors()}
+                        />
+                        <ColorControl
+                            label={t('landingEditor.textColor', 'Texto')}
+                            value={data.textColor || '#ffffff'}
+                            onChange={(v) => updateData('textColor', v)}
+                            paletteColors={getSelectedPaletteColors()}
+                        />
+                    </div>
 
-                    <ColorControl
-                        label={t('landingEditor.textColor', 'Texto')}
-                        value={data.textColor || '#ffffff'}
-                        onChange={(v) => updateData('textColor', v)}
-                        paletteColors={getSelectedPaletteColors()}
-                    />
-
-                    <RangeControl
-                        label={t('landingEditor.padding', 'Espaciado')}
-                        value={data.padding || 80}
-                        min={20}
-                        max={200}
-                        unit="px"
-                        onChange={(v) => updateData('padding', v)}
-                    />
+                    <div className="bg-muted/30 p-4 rounded-lg border border-border space-y-3">
+                        <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider block">Espaciado</label>
+                        <RangeControl
+                            label={t('landingEditor.padding', 'Padding')}
+                            value={data.padding || 80}
+                            min={20}
+                            max={200}
+                            unit="px"
+                            onChange={(v) => updateData('padding', v)}
+                        />
+                    </div>
 
                     <div className="bg-muted/30 p-4 rounded-lg border border-border">
                         <Toggle
@@ -503,7 +544,7 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                             {t('landingEditor.overlay', 'SUPERPOSICIÓN (OVERLAY)')}
                         </label>
                         <div className="space-y-4">
-                            <div className="space-y-2">
+                            <div className="bg-muted/30 p-4 rounded-lg border border-border space-y-2">
                                 <div className="flex justify-between text-xs">
                                     <span className="text-muted-foreground">Opacidad</span>
                                     <span className="font-mono">{((data.overlayOpacity ?? 0) * 100).toFixed(0)}%</span>
@@ -549,6 +590,11 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                                 onChange={(v) => updateData('title', v)}
                                 placeholder="Ej: Características"
                             />
+                        <FontSizeSelector
+                            label="Tamaño del Título"
+                            value={data.titleFontSize || 'md'}
+                            onChange={(v) => updateData('titleFontSize', v)}
+                        />
                         </ControlGroup>
 
                         <ControlGroup label={t('landingEditor.sectionSubtitle', 'Descripción')}>
@@ -558,6 +604,11 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                                 placeholder="Ej: Todo lo que necesitas para tener éxito"
                                 multiline
                             />
+                        <FontSizeSelector
+                            label="Tamaño de Descripción"
+                            value={data.descriptionFontSize || 'md'}
+                            onChange={(v) => updateData('descriptionFontSize', v)}
+                        />
                         </ControlGroup>
 
                         <ControlGroup label={t('landingEditor.features', 'Características')}>
@@ -645,7 +696,7 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                 {activeTab === 'style' && (
                     <>
                         {/* === VARIANT SELECTOR === */}
-                        <div className="space-y-2">
+                        <div className="bg-muted/30 p-4 rounded-lg border border-border space-y-2">
                             <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
                                 {t('landingEditor.featuresStyle', 'Estilo de Features')}
                             </label>
@@ -685,7 +736,7 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                                 </div>
 
                                 {/* Text Alignment */}
-                                <div className="space-y-2">
+                                <div className="bg-muted/30 p-4 rounded-lg border border-border space-y-2">
                                     <label className="text-xs text-muted-foreground">{t('landingEditor.textAlignment', 'Alineación de texto')}</label>
                                     <div className="flex bg-muted p-1 rounded-lg gap-1">
                                         {[
@@ -717,7 +768,7 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                         )}
 
                         {/* === GRID LAYOUT === */}
-                        <div className="space-y-2">
+                        <div className="bg-muted/30 p-4 rounded-lg border border-border space-y-2">
                             <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
                                 <LayoutGrid size={12} />
                                 {t('landingEditor.gridLayout', 'Grid Layout')}
@@ -918,6 +969,11 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                                 onChange={(v) => updateData('title', v)}
                                 placeholder="Ej: Planes y Precios"
                             />
+                        <FontSizeSelector
+                            label="Tamaño del Título"
+                            value={data.titleFontSize || 'md'}
+                            onChange={(v) => updateData('titleFontSize', v)}
+                        />
                         </ControlGroup>
 
                         <ControlGroup label={t('landingEditor.sectionSubtitle', 'Descripción')}>
@@ -1087,7 +1143,7 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                 {activeTab === 'style' && (
                     <>
                         {/* Variant Selector */}
-                        <div className="space-y-2">
+                        <div className="bg-muted/30 p-4 rounded-lg border border-border space-y-2">
                             <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
                                 {t('landingEditor.pricingStyle', 'Estilo de Pricing')}
                             </label>
@@ -1356,6 +1412,11 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                             onChange={(v) => updateData('title', v)}
                             placeholder="Ej: Lo que dicen nuestros clientes"
                         />
+                        <FontSizeSelector
+                            label="Tamaño del Título"
+                            value={data.titleFontSize || 'md'}
+                            onChange={(v) => updateData('titleFontSize', v)}
+                        />
                     </ControlGroup>
 
                     <ControlGroup label={t('landingEditor.testimonials', 'Testimonios')}>
@@ -1506,6 +1567,11 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                             onChange={(v) => updateData('title', v)}
                             placeholder="Ej: Preguntas Frecuentes"
                         />
+                        <FontSizeSelector
+                            label="Tamaño del Título"
+                            value={data.titleFontSize || 'md'}
+                            onChange={(v) => updateData('titleFontSize', v)}
+                        />
                     </ControlGroup>
 
                     <ControlGroup label={t('landingEditor.sectionDescription', 'Descripción')}>
@@ -1514,6 +1580,11 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                             onChange={(v) => updateData('description', v)}
                             placeholder="Ej: Respuestas a las dudas más comunes"
                             multiline
+                        />
+                        <FontSizeSelector
+                            label="Tamaño de Descripción"
+                            value={data.descriptionFontSize || 'md'}
+                            onChange={(v) => updateData('descriptionFontSize', v)}
                         />
                     </ControlGroup>
 
@@ -1717,6 +1788,11 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                             onChange={(v) => updateData('description', v)}
                             placeholder="Ej: Crea tu sitio web en minutos"
                             multiline
+                        />
+                        <FontSizeSelector
+                            label="Tamaño de Descripción"
+                            value={data.descriptionFontSize || 'md'}
+                            onChange={(v) => updateData('descriptionFontSize', v)}
                         />
                     </ControlGroup>
 
@@ -2275,6 +2351,11 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                                 onChange={(v) => updateData('title', v)}
                                 placeholder="Ej: Nuestra Galería"
                             />
+                        <FontSizeSelector
+                            label="Tamaño del Título"
+                            value={data.titleFontSize || 'md'}
+                            onChange={(v) => updateData('titleFontSize', v)}
+                        />
                         </ControlGroup>
 
                         <ControlGroup label={t('landingEditor.sectionSubtitle', 'Descripción')}>
@@ -2284,6 +2365,11 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                                 placeholder="Ej: Un vistazo a nuestros proyectos"
                                 multiline
                             />
+                        <FontSizeSelector
+                            label="Tamaño de Descripción"
+                            value={data.subtitleFontSize || 'md'}
+                            onChange={(v) => updateData('subtitleFontSize', v)}
+                        />
                         </ControlGroup>
 
                         <SelectControl
@@ -2956,6 +3042,11 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                             onChange={(v) => updateData('title', v)}
                             placeholder={t('landingEditor.titlePlaceholder', 'Nuestros Servicios')}
                         />
+                        <FontSizeSelector
+                            label="Tamaño del Título"
+                            value={data.titleFontSize || 'md'}
+                            onChange={(v) => updateData('titleFontSize', v)}
+                        />
                     </ControlGroup>
                     <ControlGroup label={t('landingEditor.description', 'Descripción')}>
                         <TextInput
@@ -2963,6 +3054,11 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                             onChange={(v) => updateData('description', v)}
                             placeholder={t('landingEditor.descriptionPlaceholder', 'Servicios que ofrecemos')}
                             multiline
+                        />
+                        <FontSizeSelector
+                            label="Tamaño de Descripción"
+                            value={data.descriptionFontSize || 'md'}
+                            onChange={(v) => updateData('descriptionFontSize', v)}
                         />
                     </ControlGroup>
                     <ControlGroup label={t('landingEditor.variant', 'Variante')}>
@@ -3010,7 +3106,7 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                                             <Trash2 size={14} />
                                         </button>
                                     </div>
-                                    <div className="space-y-2">
+                                    <div className="bg-muted/30 p-4 rounded-lg border border-border space-y-2">
                                         <TextInput
                                             value={item.title || ''}
                                             onChange={(v) => {
@@ -3160,6 +3256,11 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                                 onChange={(v) => updateData('title', v)}
                                 placeholder={t('landingEditor.portfolioTitle', 'Nuestro Portfolio')}
                             />
+                        <FontSizeSelector
+                            label="Tamaño del Título"
+                            value={data.titleFontSize || 'md'}
+                            onChange={(v) => updateData('titleFontSize', v)}
+                        />
                         </ControlGroup>
                         <ControlGroup label={t('landingEditor.titleSize', 'Tamaño del Título')}>
                             <SelectControl
@@ -3181,6 +3282,11 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                                 placeholder={t('landingEditor.portfolioDesc', 'Proyectos destacados')}
                                 multiline
                             />
+                        <FontSizeSelector
+                            label="Tamaño de Descripción"
+                            value={data.descriptionFontSize || 'md'}
+                            onChange={(v) => updateData('descriptionFontSize', v)}
+                        />
                         </ControlGroup>
                         <ControlGroup label={t('landingEditor.descriptionSize', 'Tamaño de Descripción')}>
                             <SelectControl
@@ -3587,6 +3693,11 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                             onChange={(v) => updateData('title', v)}
                             placeholder={t('landingEditor.teamTitle', 'Nuestro Equipo')}
                         />
+                        <FontSizeSelector
+                            label="Tamaño del Título"
+                            value={data.titleFontSize || 'md'}
+                            onChange={(v) => updateData('titleFontSize', v)}
+                        />
                     </ControlGroup>
                     <ControlGroup label={t('landingEditor.description', 'Descripción')}>
                         <TextInput
@@ -3594,6 +3705,11 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                             onChange={(v) => updateData('description', v)}
                             placeholder={t('landingEditor.teamDesc', 'Conoce al equipo')}
                             multiline
+                        />
+                        <FontSizeSelector
+                            label="Tamaño de Descripción"
+                            value={data.descriptionFontSize || 'md'}
+                            onChange={(v) => updateData('descriptionFontSize', v)}
                         />
                     </ControlGroup>
                     <ControlGroup label={t('landingEditor.variant', 'Variante')}>
@@ -3681,6 +3797,11 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                             onChange={(v) => updateData('title', v)}
                             placeholder={t('landingEditor.leadsTitle', 'Contáctanos')}
                         />
+                        <FontSizeSelector
+                            label="Tamaño del Título"
+                            value={data.titleFontSize || 'md'}
+                            onChange={(v) => updateData('titleFontSize', v)}
+                        />
                     </ControlGroup>
                     <ControlGroup label={t('landingEditor.titleSize', 'Tamaño del Título')}>
                         <SelectControl
@@ -3701,6 +3822,11 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                             onChange={(v) => updateData('description', v)}
                             placeholder={t('landingEditor.leadsDesc', 'Estamos aquí para ayudarte')}
                             multiline
+                        />
+                        <FontSizeSelector
+                            label="Tamaño de Descripción"
+                            value={data.descriptionFontSize || 'md'}
+                            onChange={(v) => updateData('descriptionFontSize', v)}
                         />
                     </ControlGroup>
                     <ControlGroup label={t('landingEditor.descriptionSize', 'Tamaño de Descripción')}>
@@ -4001,6 +4127,11 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                             onChange={(v) => updateData('title', v)}
                             placeholder={t('landingEditor.newsletterTitle', 'Suscríbete')}
                         />
+                        <FontSizeSelector
+                            label="Tamaño del Título"
+                            value={data.titleFontSize || 'md'}
+                            onChange={(v) => updateData('titleFontSize', v)}
+                        />
                     </ControlGroup>
                     <ControlGroup label={t('landingEditor.description', 'Descripción')}>
                         <TextInput
@@ -4008,6 +4139,11 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                             onChange={(v) => updateData('description', v)}
                             placeholder={t('landingEditor.newsletterDesc', 'Recibe noticias y actualizaciones')}
                             multiline
+                        />
+                        <FontSizeSelector
+                            label="Tamaño de Descripción"
+                            value={data.descriptionFontSize || 'md'}
+                            onChange={(v) => updateData('descriptionFontSize', v)}
                         />
                     </ControlGroup>
                     <ControlGroup label={t('landingEditor.buttonText', 'Texto del Botón')}>
@@ -4062,6 +4198,11 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                             onChange={(v) => updateData('title', v)}
                             placeholder={t('landingEditor.videoTitle', 'Video')}
                         />
+                        <FontSizeSelector
+                            label="Tamaño del Título"
+                            value={data.titleFontSize || 'md'}
+                            onChange={(v) => updateData('titleFontSize', v)}
+                        />
                     </ControlGroup>
                     <ControlGroup label={t('landingEditor.videoUrl', 'URL del Video')}>
                         <TextInput
@@ -4076,6 +4217,11 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                             onChange={(v) => updateData('description', v)}
                             placeholder={t('landingEditor.videoDesc', 'Descripción del video')}
                             multiline
+                        />
+                        <FontSizeSelector
+                            label="Tamaño de Descripción"
+                            value={data.descriptionFontSize || 'md'}
+                            onChange={(v) => updateData('descriptionFontSize', v)}
                         />
                     </ControlGroup>
                 </>
@@ -4116,6 +4262,11 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                             value={data.title || ''}
                             onChange={(v) => updateData('title', v)}
                             placeholder={t('landingEditor.slideshowTitle', 'Galería')}
+                        />
+                        <FontSizeSelector
+                            label="Tamaño del Título"
+                            value={data.titleFontSize || 'md'}
+                            onChange={(v) => updateData('titleFontSize', v)}
                         />
                     </ControlGroup>
                     <ControlGroup label={t('landingEditor.variant', 'Variante')}>
@@ -4188,6 +4339,11 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                             onChange={(v) => updateData('title', v)}
                             placeholder={t('landingEditor.howItWorksTitle', '¿Cómo Funciona?')}
                         />
+                        <FontSizeSelector
+                            label="Tamaño del Título"
+                            value={data.titleFontSize || 'md'}
+                            onChange={(v) => updateData('titleFontSize', v)}
+                        />
                     </ControlGroup>
                     <ControlGroup label={t('landingEditor.description', 'Descripción')}>
                         <TextInput
@@ -4195,6 +4351,11 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                             onChange={(v) => updateData('description', v)}
                             placeholder={t('landingEditor.howItWorksDesc', 'Pasos simples')}
                             multiline
+                        />
+                        <FontSizeSelector
+                            label="Tamaño de Descripción"
+                            value={data.descriptionFontSize || 'md'}
+                            onChange={(v) => updateData('descriptionFontSize', v)}
                         />
                     </ControlGroup>
                 </>
@@ -4241,6 +4402,11 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                             value={data.title || ''}
                             onChange={(v) => updateData('title', v)}
                             placeholder={t('landingEditor.mapTitle', 'Ubicación')}
+                        />
+                        <FontSizeSelector
+                            label="Tamaño del Título"
+                            value={data.titleFontSize || 'md'}
+                            onChange={(v) => updateData('titleFontSize', v)}
                         />
                     </ControlGroup>
                     <ControlGroup label={t('landingEditor.address', 'Dirección')}>
@@ -4315,6 +4481,11 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                             onChange={(v) => updateData('title', v)}
                             placeholder={t('landingEditor.menuTitle', 'Nuestro Menú')}
                         />
+                        <FontSizeSelector
+                            label="Tamaño del Título"
+                            value={data.titleFontSize || 'md'}
+                            onChange={(v) => updateData('titleFontSize', v)}
+                        />
                     </ControlGroup>
                     <ControlGroup label={t('landingEditor.description', 'Descripción')}>
                         <TextInput
@@ -4322,6 +4493,11 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                             onChange={(v) => updateData('description', v)}
                             placeholder={t('landingEditor.menuDesc', 'Descubre nuestras opciones')}
                             multiline
+                        />
+                        <FontSizeSelector
+                            label="Tamaño de Descripción"
+                            value={data.descriptionFontSize || 'md'}
+                            onChange={(v) => updateData('descriptionFontSize', v)}
                         />
                     </ControlGroup>
                     <ControlGroup label={t('landingEditor.variant', 'Variante')}>
@@ -4512,6 +4688,11 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                     onChange={(v) => updateData('title', v)}
                     placeholder="Título"
                 />
+                        <FontSizeSelector
+                            label="Tamaño del Título"
+                            value={data.titleFontSize || 'md'}
+                            onChange={(v) => updateData('titleFontSize', v)}
+                        />
             </ControlGroup>
 
             <ControlGroup label={t('landingEditor.content', 'Contenido')}>
