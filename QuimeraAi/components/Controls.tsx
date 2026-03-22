@@ -9,7 +9,7 @@ import { useCMS } from '../contexts/cms';
 import { useAdmin } from '../contexts/admin';
 import { useRouter } from '../hooks/useRouter';
 import { ROUTES } from '../routes/config';
-import { PageSection, PricingTier, ServiceIcon, SitePage } from '../types';
+import { PageSection, PricingTier, ServiceIcon, SitePage, SocialPlatform } from '../types';
 import PageSelector from './dashboard/PageSelector';
 import PageSettings from './dashboard/PageSettings';
 import { PageTemplateId, PAGE_TEMPLATES } from '../types/onboarding';
@@ -25,7 +25,8 @@ import {
   Trash2, Plus, ChevronDown, ChevronRight, ChevronLeft, ChevronUp, ArrowLeft, HelpCircle,
   Layout, Image, List, Star, PlaySquare, Users, DollarSign,
   Briefcase, MessageCircle, Mail, Send, Type, MousePointerClick,
-  Settings, AlignJustify, MonitorPlay, Grid, GripVertical, Upload, Menu as MenuIcon, MessageSquare, FileText, PlusCircle, X, Palette, AlertCircle, TrendingUp, Sparkles, MapPin, Map as MapIcon, Columns, Search, Loader2, ShoppingBag, Info, Store, SlidersHorizontal, LayoutGrid, Check, Link, FolderOpen, Maximize2, Clock, PanelRightClose, PanelRightOpen, Zap
+  Settings, AlignJustify, MonitorPlay, Grid, GripVertical, Upload, Menu as MenuIcon, MessageSquare, FileText, PlusCircle, X, Palette, AlertCircle, TrendingUp, Sparkles, MapPin, Map as MapIcon, Columns, Search, Loader2, ShoppingBag, Info, Store, SlidersHorizontal, LayoutGrid, Check, Link, FolderOpen, Maximize2, Clock, PanelRightClose, PanelRightOpen, Zap,
+  Twitter, Facebook, Instagram, Linkedin, Github, Youtube, Music, Pin, Ghost, Gamepad2, AtSign, Share2
 } from 'lucide-react';
 import { usePublicProducts } from '../hooks/usePublicProducts';
 import AIFormControl from './ui/AIFormControl';
@@ -860,7 +861,7 @@ const Controls: React.FC = () => {
           </div>
         </div>
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
 
         <div>
           <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">Logo Type</label>
@@ -912,7 +913,7 @@ const Controls: React.FC = () => {
           )}
         </div>
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
 
         {/* Favicon Upload Section */}
         <div className="space-y-3">
@@ -985,14 +986,14 @@ const Controls: React.FC = () => {
           </div>
         </div>
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
 
         <div className="grid grid-cols-2 gap-4">
           <ToggleControl label={t('editor.controls.header.sticky')} checked={data.header.isSticky} onChange={(v) => setNestedData('header.isSticky', v)} />
           <ToggleControl label={t('editor.controls.header.glass')} checked={data.header.glassEffect} onChange={(v) => setNestedData('header.glassEffect', v)} />
         </div>
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
 
         <div className="space-y-3">
           <ToggleControl label={t('editor.controls.navigation.showLogin')} checked={data.header.showLogin !== false} onChange={(v) => setNestedData('header.showLogin', v)} />
@@ -1005,7 +1006,7 @@ const Controls: React.FC = () => {
           )}
         </div>
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
 
         {/* Search Controls */}
         <div className="space-y-3">
@@ -1018,7 +1019,7 @@ const Controls: React.FC = () => {
           )}
         </div>
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
 
         {/* Navigation Menu Selector */}
         <div className="space-y-2">
@@ -1078,7 +1079,7 @@ const Controls: React.FC = () => {
           )}
         </div>
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
         <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">Height & Hover</label>
         <div>
           <div className="flex justify-between items-center mb-1">
@@ -1130,7 +1131,7 @@ const Controls: React.FC = () => {
           />
         </div>
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
         <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">{t('editor.controls.navigation.ctaButton')}</label>
         <ToggleControl label={t('editor.controls.navigation.showCta')} checked={data.header.showCta !== false} onChange={(v) => setNestedData('header.showCta', v)} />
 
@@ -1154,7 +1155,7 @@ const Controls: React.FC = () => {
           </div>
         )}
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
         <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">{t('editor.controls.common.colors')}</label>
         <ColorControl label={t('editor.controls.common.background')} value={data.header.colors?.background} onChange={(v) => setNestedData('header.colors.background', v)} />
         <ColorControl label={t('editor.controls.common.text')} value={data.header.colors?.text} onChange={(v) => setNestedData('header.colors.text', v)} />
@@ -1241,7 +1242,7 @@ const Controls: React.FC = () => {
           </div>
         </div>
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
 
         {/* ========== BACKGROUND IMAGE ========== */}
         <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
@@ -1341,7 +1342,7 @@ const Controls: React.FC = () => {
           </div>
         </div>
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
 
         {/* ========== HERO HEIGHT ========== */}
         <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
@@ -1372,7 +1373,7 @@ const Controls: React.FC = () => {
           </div>
         </div>
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
 
         {/* ========== CONTENT ========== */}
         <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
@@ -1397,7 +1398,7 @@ const Controls: React.FC = () => {
           </div>
         </div>
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
 
         {/* ========== COLORS ========== */}
         <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
@@ -1484,7 +1485,7 @@ const Controls: React.FC = () => {
         <TextArea label={t('editor.controls.common.description')} value={data.features.description} onChange={(e) => setNestedData('features.description', e.target.value)} rows={2} />
         <FontSizeSelector label={`${t('editor.controls.common.description')} ${t('editor.controls.common.size')}`} value={data.features.descriptionFontSize || 'md'} onChange={(v) => setNestedData('features.descriptionFontSize', v)} />
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
         <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">{t('editor.controls.features.sectionStyle')}</label>
         <div>
           <div className="grid grid-cols-4 gap-1 bg-editor-bg p-1 rounded-md border border-editor-border">
@@ -1533,7 +1534,7 @@ const Controls: React.FC = () => {
         {/* Overlay-specific controls */}
         {currentVariant === 'image-overlay' && (
           <>
-            <hr className="border-editor-border/50" />
+            <div className="border-t border-editor-border/30 my-1" />
             <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">{t('editor.controls.features.overlaySettings')}</label>
             <div>
               <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{t('editor.controls.features.textAlignment')}</label>
@@ -1561,7 +1562,7 @@ const Controls: React.FC = () => {
           </>
         )}
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
         <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">{t('editor.controls.features.gridLayout')}</label>
         <div>
           <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{t('editor.controls.features.columnsDesktop')}</label>
@@ -1578,7 +1579,7 @@ const Controls: React.FC = () => {
           </div>
         </div>
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
         <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">{t('editor.controls.features.cardImage')}</label>
         <div>
           <div className="flex justify-between items-center mb-1">
@@ -1608,7 +1609,7 @@ const Controls: React.FC = () => {
           </div>
         </div>
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
         <div className="space-y-2">
           <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">{t('editor.controls.common.spacing')}</label>
           <div className="grid grid-cols-2 gap-3">
@@ -1617,14 +1618,14 @@ const Controls: React.FC = () => {
           </div>
         </div>
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
         <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">{t('editor.controls.common.colors')}</label>
         <ColorControl label={t('editor.controls.common.background')} value={data.features.colors?.background || '#000000'} onChange={(v) => setNestedData('features.colors.background', v)} />
         <ColorControl label={t('editor.controls.features.showSectionHeader')} value={data.features.colors?.heading || '#ffffff'} onChange={(v) => setNestedData('features.colors.heading', v)} />
         <ColorControl label={t('editor.controls.common.description')} value={data.features.colors?.description || '#94a3b8'} onChange={(v) => setNestedData('features.colors.description', v)} />
         <ColorControl label={t('editor.controls.common.accent')} value={data.features.colors?.accent || '#4f46e5'} onChange={(v) => setNestedData('features.colors.accent', v)} />
 
-        <hr className="border-editor-border/30 my-2" />
+        <div className="border-t border-editor-border/30 my-1" />
         <p className="text-[10px] text-editor-text-secondary uppercase tracking-wider font-bold">{t('editor.controls.features.cardColors')}</p>
 
         <ColorControl label={`${t('editor.controls.features.cardImage')} ${t('editor.controls.common.background')}`} value={data.features.colors?.cardBackground || '#1a1a2e'} onChange={(v) => setNestedData('features.colors.cardBackground', v)} />
@@ -1632,7 +1633,7 @@ const Controls: React.FC = () => {
         <ColorControl label={`${t('editor.controls.features.cardImage')} ${t('editor.controls.common.text')}`} value={(data.features.colors as any)?.cardText || '#94a3b8'} onChange={(v) => setNestedData('features.colors.cardText', v)} />
         <ColorControl label={t('editor.controls.hero.borderColor')} value={data.features.colors?.borderColor || 'transparent'} onChange={(v) => setNestedData('features.colors.borderColor', v)} />
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
         <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">{t('editor.controls.features.featureList')}</label>
         {(data.features.items || []).map((item, index) => (
           <div key={index} className="bg-editor-bg p-3 rounded-lg border border-editor-border mb-3 group">
@@ -1714,7 +1715,7 @@ const Controls: React.FC = () => {
           </div>
         )}
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
 
         {/* Padding Controls */}
         {sectionData.paddingY !== undefined && sectionData.paddingX !== undefined && (
@@ -1726,7 +1727,7 @@ const Controls: React.FC = () => {
                 <PaddingSelector label={t('editor.controls.common.horizontal')} value={sectionData.paddingX || 'md'} onChange={(v) => setNestedData(`${sectionKey}.paddingX`, v)} />
               </div>
             </div>
-            <hr className="border-editor-border/50" />
+            <div className="border-t border-editor-border/30 my-1" />
           </>
         )}
 
@@ -1802,7 +1803,7 @@ const Controls: React.FC = () => {
           <Plus size={14} /> {t('editor.controls.list.add')} {itemLabel}
         </button>
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
         {sectionData.colors?.background && <ColorControl label={t('editor.controls.common.background')} value={sectionData.colors?.background} onChange={(v) => setNestedData(`${sectionKey}.colors?.background`, v)} />}
         {sectionData.colors?.heading && <ColorControl label={t('editor.controls.common.title')} value={sectionData.colors?.heading} onChange={(v) => setNestedData(`${sectionKey}.colors?.heading`, v)} />}
         {sectionData.colors?.text && <ColorControl label={t('editor.controls.common.text')} value={sectionData.colors?.text} onChange={(v) => setNestedData(`${sectionKey}.colors?.text`, v)} />}
@@ -1833,7 +1834,7 @@ const Controls: React.FC = () => {
           />
         </div>
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
 
         <Input label={t('editor.controls.common.title')} value={data.pricing.title} onChange={(e) => setNestedData('pricing.title', e.target.value)} />
         <FontSizeSelector label={`${t('editor.controls.common.title')} ${t('editor.controls.common.size')}`} value={data.pricing.titleFontSize || 'md'} onChange={(v) => setNestedData('pricing.titleFontSize', v)} />
@@ -1841,7 +1842,7 @@ const Controls: React.FC = () => {
         <TextArea label={t('editor.controls.common.description')} value={data.pricing.description} onChange={(e) => setNestedData('pricing.description', e.target.value)} rows={2} />
         <FontSizeSelector label={`${t('editor.controls.common.description')} ${t('editor.controls.common.size')}`} value={data.pricing.descriptionFontSize || 'md'} onChange={(v) => setNestedData('pricing.descriptionFontSize', v)} />
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
         <div className="space-y-2">
           <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">{t('editor.controls.common.spacing')}</label>
           <div className="grid grid-cols-2 gap-3">
@@ -1852,14 +1853,14 @@ const Controls: React.FC = () => {
 
         <BorderRadiusSelector label={t('editor.controls.pricing.cardCorners')} value={data.pricing.cardBorderRadius || 'xl'} onChange={(v) => setNestedData('pricing.cardBorderRadius', v)} />
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
         <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">{t('editor.controls.pricing.sectionColors')}</label>
         <ColorControl label={t('editor.controls.common.background')} value={data.pricing.colors?.background} onChange={(v) => setNestedData('pricing.colors.background', v)} />
         <ColorControl label={t('editor.controls.common.title')} value={data.pricing.colors?.heading || '#ffffff'} onChange={(v) => setNestedData('pricing.colors.heading', v)} />
         <ColorControl label={t('editor.controls.common.description')} value={data.pricing.colors?.description || data.pricing.colors?.text} onChange={(v) => setNestedData('pricing.colors.description', v)} />
         <ColorControl label={t('editor.controls.common.text')} value={data.pricing.colors?.text} onChange={(v) => setNestedData('pricing.colors.text', v)} />
 
-        <hr className="border-editor-border/30 my-2" />
+        <div className="border-t border-editor-border/30 my-1" />
 
         {/* Corner Gradient */}
         <CornerGradientControl
@@ -1878,7 +1879,7 @@ const Controls: React.FC = () => {
         {/* Gradient Colors - Only for gradient variant */}
         {currentVariant === 'gradient' && (
           <>
-            <hr className="border-editor-border/50" />
+            <div className="border-t border-editor-border/30 my-1" />
             <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2 flex items-center gap-2">
               <Sparkles size={14} className="text-editor-accent" />
               {t('editor.controls.pricing.gradientColors')}
@@ -1895,7 +1896,7 @@ const Controls: React.FC = () => {
           </>
         )}
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
         <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">{t('editor.controls.pricing.cardColors')}</label>
         <ColorControl label={t('editor.controls.pricing.cardBackground')} value={data.pricing.colors?.cardBackground || '#1f2937'} onChange={(v) => setNestedData('pricing.colors.cardBackground', v)} />
         <ColorControl label={t('editor.controls.pricing.cardTitle')} value={data.pricing.colors?.cardHeading || '#ffffff'} onChange={(v) => setNestedData('pricing.colors.cardHeading', v)} />
@@ -1905,14 +1906,14 @@ const Controls: React.FC = () => {
         <ColorControl label={t('editor.controls.pricing.featuredAccent')} value={data.pricing.colors?.accent || '#4f46e5'} onChange={(v) => setNestedData('pricing.colors.accent', v)} />
         <ColorControl label={t('editor.controls.pricing.checkmarkIcon')} value={data.pricing.colors?.checkmarkColor || '#10b981'} onChange={(v) => setNestedData('pricing.colors.checkmarkColor', v)} />
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
         <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">{t('editor.controls.pricing.defaultButtonColors')}</label>
         <div className="grid grid-cols-2 gap-3">
           <ColorControl label={t('editor.controls.common.background')} value={data.pricing.colors?.buttonBackground || '#4f46e5'} onChange={(v) => setNestedData('pricing.colors.buttonBackground', v)} />
           <ColorControl label={t('editor.controls.common.text')} value={data.pricing.colors?.buttonText || '#ffffff'} onChange={(v) => setNestedData('pricing.colors.buttonText', v)} />
         </div>
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
         <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">{t('editor.controls.pricing.pricingTiers')}</label>
         {(data.pricing.tiers || []).map((tier, index) => (
           <div key={index} className="bg-editor-bg p-4 rounded-lg border border-editor-border mb-3 group">
@@ -1985,7 +1986,7 @@ const Controls: React.FC = () => {
           <Plus size={14} /> {t('editor.controls.pricing.addTier')}
         </button>
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
 
         {/* Animation Controls */}
         <AnimationControls
@@ -2009,7 +2010,7 @@ const Controls: React.FC = () => {
         <TextArea label={t('editor.controls.common.description')} value={data.testimonials.description} onChange={(e) => setNestedData('testimonials.description', e.target.value)} rows={2} />
         <FontSizeSelector label={`${t('editor.controls.common.description')} ${t('editor.controls.common.size')}`} value={data.testimonials.descriptionFontSize || 'md'} onChange={(v) => setNestedData('testimonials.descriptionFontSize', v)} />
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
         <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">{t('editor.controls.testimonials.cardStyling')}</label>
 
         <ColorControl label={t('editor.controls.testimonials.cardBackground')} value={data.testimonials.colors?.cardBackground || '#1f2937'} onChange={(v) => setNestedData('testimonials.colors.cardBackground', v)} />
@@ -2066,7 +2067,7 @@ const Controls: React.FC = () => {
           />
         </div>
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
         <div className="space-y-2">
           <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Spacing</label>
           <div className="grid grid-cols-2 gap-3">
@@ -2075,7 +2076,7 @@ const Controls: React.FC = () => {
           </div>
         </div>
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
         <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">Section Colors</label>
         <ColorControl label={t('editor.controls.common.background')} value={data.testimonials.colors?.background || '#000000'} onChange={(v) => setNestedData('testimonials.colors.background', v)} />
         <ColorControl label={t('editor.controls.common.title')} value={data.testimonials.colors?.heading || '#ffffff'} onChange={(v) => setNestedData('testimonials.colors.heading', v)} />
@@ -2084,7 +2085,7 @@ const Controls: React.FC = () => {
         <ColorControl label="Person Title" value={data.testimonials.colors?.subtitleColor || data.testimonials.colors?.description || '#94a3b8'} onChange={(v) => setNestedData('testimonials.colors.subtitleColor', v)} />
         <ColorControl label="Accent" value={data.testimonials.colors?.accent || '#4f46e5'} onChange={(v) => setNestedData('testimonials.colors.accent', v)} />
 
-        <hr className="border-editor-border/30 my-2" />
+        <div className="border-t border-editor-border/30 my-1" />
 
         {/* Corner Gradient */}
         <CornerGradientControl
@@ -2100,7 +2101,7 @@ const Controls: React.FC = () => {
           onSizeChange={(v) => setNestedData('testimonials.cornerGradient.size', v)}
         />
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
         <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">Testimonials</label>
         {(data.testimonials.items || []).map((item: any, index: number) => (
           <div
@@ -2167,7 +2168,7 @@ const Controls: React.FC = () => {
         <Input label={t('editor.controls.common.title')} value={data.slideshow.title} onChange={(e) => setNestedData('slideshow.title', e.target.value)} />
         <FontSizeSelector label={t('editor.controls.common.titleSize')} value={data.slideshow.titleFontSize || 'md'} onChange={(v) => setNestedData('slideshow.titleFontSize', v)} />
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
 
         <Select
           label={t('editor.controls.common.styleVariant')}
@@ -2187,7 +2188,7 @@ const Controls: React.FC = () => {
           onChange={(v) => setNestedData('slideshow.borderRadius', v)}
         />
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
         <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider mb-2">Animation</label>
 
         <div>
@@ -2259,7 +2260,7 @@ const Controls: React.FC = () => {
           </div>
         )}
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
         <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider mb-2">Navigation</label>
 
         <div className="space-y-2">
@@ -2300,7 +2301,7 @@ const Controls: React.FC = () => {
           </div>
         )}
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
         <div className="space-y-2">
           <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Spacing</label>
           <div className="grid grid-cols-2 gap-3">
@@ -2309,7 +2310,7 @@ const Controls: React.FC = () => {
           </div>
         </div>
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
         <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider mb-2">Colors</label>
         <ColorControl label={t('editor.controls.common.background')} value={data.slideshow.colors?.background} onChange={(v) => setNestedData('slideshow.colors.background', v)} />
         <ColorControl label={t('editor.controls.common.title')} value={data.slideshow.colors?.heading || '#ffffff'} onChange={(v) => setNestedData('slideshow.colors.heading', v)} />
@@ -2338,7 +2339,7 @@ const Controls: React.FC = () => {
           </>
         )}
 
-        <hr className="border-editor-border/30 my-2" />
+        <div className="border-t border-editor-border/30 my-1" />
 
         {/* Corner Gradient */}
         <CornerGradientControl
@@ -2354,7 +2355,7 @@ const Controls: React.FC = () => {
           onSizeChange={(v) => setNestedData('slideshow.cornerGradient.size', v)}
         />
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
         <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">Slides</label>
         {(data.slideshow.items || []).map((item: any, index: number) => (
           <div key={index} className="bg-editor-bg p-3 rounded-lg border border-editor-border mb-3 group">
@@ -2434,7 +2435,7 @@ const Controls: React.FC = () => {
           <ToggleControl label={t('editor.controls.common.showControls')} checked={data.video.showControls} onChange={(v) => setNestedData('video.showControls', v)} />
         </div>
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
         <div className="space-y-2">
           <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Spacing</label>
           <div className="grid grid-cols-2 gap-3">
@@ -2443,13 +2444,13 @@ const Controls: React.FC = () => {
           </div>
         </div>
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
         <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider mb-2">Colors</label>
         <ColorControl label={t('editor.controls.common.background')} value={data.video.colors?.background} onChange={(v) => setNestedData('video.colors.background', v)} />
         <ColorControl label={t('editor.controls.common.title')} value={data.video.colors?.heading || '#ffffff'} onChange={(v) => setNestedData('video.colors.heading', v)} />
         <ColorControl label="Text" value={data.video.colors?.text} onChange={(v) => setNestedData('video.colors.text', v)} />
 
-        <hr className="border-editor-border/30 my-2" />
+        <div className="border-t border-editor-border/30 my-1" />
 
         {/* Corner Gradient */}
         <CornerGradientControl
@@ -2508,7 +2509,7 @@ const Controls: React.FC = () => {
         <FontSizeSelector label={t('editor.controls.common.descriptionSize')} value={data.footer.descriptionFontSize || 'sm'} onChange={(v) => setNestedData('footer.descriptionFontSize', v)} />
 
         <Input label={t('editor.controls.common.copyright')} value={data.footer.copyrightText} onChange={(e) => setNestedData('footer.copyrightText', e.target.value)} />
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
         <div className="space-y-4">
           <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">Link Columns</label>
           {(data.footer.linkColumns || []).map((col, colIndex) => (
@@ -2573,7 +2574,7 @@ const Controls: React.FC = () => {
           )}
         </div>
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
 
         {/* Contact Information */}
         <div className="space-y-4">
@@ -2629,7 +2630,7 @@ const Controls: React.FC = () => {
           />
         </div>
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
 
         {/* Business Hours */}
         <div className="space-y-4">
@@ -2737,7 +2738,7 @@ const Controls: React.FC = () => {
           </div>
         </div>
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
         <div className="space-y-2">
           <ColorControl label={t('editor.controls.common.background')} value={data.footer.colors?.background} onChange={(v) => setNestedData('footer.colors.background', v)} />
           <ColorControl label={t('editor.controls.common.title')} value={data.footer.colors?.heading || '#ffffff'} onChange={(v) => setNestedData('footer.colors.heading', v)} />
@@ -2875,7 +2876,7 @@ const Controls: React.FC = () => {
         <TextArea label={t('editor.controls.common.description')} value={data?.map.description} onChange={(e) => setNestedData('map.description', e.target.value)} rows={2} />
         <FontSizeSelector label={t('editor.controls.common.descriptionSize')} value={data?.map.descriptionFontSize || 'md'} onChange={(v) => setNestedData('map.descriptionFontSize', v)} />
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
 
         <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
           <MapPin size={14} />
@@ -2957,7 +2958,7 @@ const Controls: React.FC = () => {
     const styleTab = (
       <div className="space-y-4">
         <BackgroundImageControl sectionKey="map" />
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
         {/* Map Variant */}
         <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
           <Select
@@ -3013,7 +3014,7 @@ const Controls: React.FC = () => {
             <ColorControl label="Card Background" value={data?.map.colors?.cardBackground || '#1e293b'} onChange={(v) => setNestedData('map.colors.cardBackground', v)} />
           )}
 
-          <hr className="border-editor-border/30 my-2" />
+          <div className="border-t border-editor-border/30 my-1" />
 
           {/* Corner Gradient */}
           <CornerGradientControl
@@ -3123,7 +3124,7 @@ const Controls: React.FC = () => {
           )}
         </div>
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
 
         {/* Image */}
         <div>
@@ -3139,7 +3140,7 @@ const Controls: React.FC = () => {
     const styleTab = (
       <div className="space-y-4">
         <BackgroundImageControl sectionKey="heroSplit" />
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
         {/* Layout */}
         <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
           <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
@@ -3201,7 +3202,7 @@ const Controls: React.FC = () => {
           </div>
         </div>
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
 
         {/* Colors */}
         <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
@@ -3214,12 +3215,12 @@ const Controls: React.FC = () => {
             <ColorControl label="Text Side Background" value={data.heroSplit.colors?.textBackground || '#ffffff'} onChange={(v) => setNestedData('heroSplit.colors.textBackground', v)} />
             <ColorControl label="Image Side Background" value={data.heroSplit.colors?.imageBackground || '#000000'} onChange={(v) => setNestedData('heroSplit.colors.imageBackground', v)} />
 
-            <hr className="border-editor-border/30 my-2" />
+            <div className="border-t border-editor-border/30 my-1" />
 
             <ColorControl label="Headline Color" value={data.heroSplit.colors?.heading || '#111827'} onChange={(v) => setNestedData('heroSplit.colors.heading', v)} />
             <ColorControl label="Text Color" value={data.heroSplit.colors?.text || '#4b5563'} onChange={(v) => setNestedData('heroSplit.colors.text', v)} />
 
-            <hr className="border-editor-border/30 my-2" />
+            <div className="border-t border-editor-border/30 my-1" />
             <p className="text-[10px] text-editor-text-secondary uppercase tracking-wider font-bold">Button</p>
 
             <ColorControl label="Button Background" value={data.heroSplit.colors?.buttonBackground || '#4f46e5'} onChange={(v) => setNestedData('heroSplit.colors.buttonBackground', v)} />
@@ -3227,7 +3228,7 @@ const Controls: React.FC = () => {
 
             <BorderRadiusSelector label="Button Corners" value={data.heroSplit.buttonBorderRadius || 'xl'} onChange={(v) => setNestedData('heroSplit.buttonBorderRadius', v)} />
 
-            <hr className="border-editor-border/30 my-2" />
+            <div className="border-t border-editor-border/30 my-1" />
 
             {/* Corner Gradient */}
             <CornerGradientControl
@@ -3766,7 +3767,7 @@ const Controls: React.FC = () => {
           </div>
         </div>
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
 
         {/* ========== BACKGROUND IMAGE ========== */}
         <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
@@ -3862,7 +3863,7 @@ const Controls: React.FC = () => {
           </div>
         </div>
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
 
         {/* ========== HERO HEIGHT ========== */}
         <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
@@ -3893,7 +3894,7 @@ const Controls: React.FC = () => {
           </div>
         </div>
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
 
         {/* ========== COLORS ========== */}
         <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
@@ -3910,7 +3911,7 @@ const Controls: React.FC = () => {
           </div>
         </div>
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
         <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
           <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
             <MousePointerClick size={14} />
@@ -4125,7 +4126,7 @@ const Controls: React.FC = () => {
     const styleTab = (
       <div className="space-y-4">
         <BackgroundImageControl sectionKey="features" />
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
         {/* Section Style */}
         <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
           <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
@@ -4287,7 +4288,7 @@ const Controls: React.FC = () => {
           <ColorControl label="Section Description" value={data.features.colors?.description || '#94a3b8'} onChange={(v) => setNestedData('features.colors.description', v)} />
           <ColorControl label="Accent" value={data.features.colors?.accent || '#4f46e5'} onChange={(v) => setNestedData('features.colors.accent', v)} />
 
-          <hr className="border-editor-border/30 my-2" />
+          <div className="border-t border-editor-border/30 my-1" />
           <p className="text-[10px] text-editor-text-secondary uppercase tracking-wider font-bold">Card Colors</p>
 
           <ColorControl label="Card Background" value={data.features.colors?.cardBackground || '#1a1a2e'} onChange={(v) => setNestedData('features.colors.cardBackground', v)} />
@@ -4379,7 +4380,7 @@ const Controls: React.FC = () => {
     const styleTab = (
       <div className="space-y-4">
         <BackgroundImageControl sectionKey="testimonials" />
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
         {/* Card Styling */}
         <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
           <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
@@ -4530,7 +4531,7 @@ const Controls: React.FC = () => {
           </p>
         </div>
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
 
         {/* Service Items */}
         {renderListSectionControls('services', 'Service', [
@@ -4544,7 +4545,7 @@ const Controls: React.FC = () => {
     const styleTab = (
       <div className="space-y-4">
         <BackgroundImageControl sectionKey="services" />
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
         {/* Section Colors */}
         <div className="space-y-2">
           <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Section Colors</label>
@@ -4565,7 +4566,7 @@ const Controls: React.FC = () => {
           <ColorControl label="Border Color" value={data?.services?.colors?.borderColor || '#334155'} onChange={(v) => setNestedData('services.colors.borderColor', v)} />
         </div>
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
 
         {/* Spacing */}
         <div className="space-y-2">
@@ -4576,7 +4577,7 @@ const Controls: React.FC = () => {
           </div>
         </div>
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
 
         {/* Corner Gradient */}
         <CornerGradientControl
@@ -4592,7 +4593,7 @@ const Controls: React.FC = () => {
           onSizeChange={(v) => setNestedData('services.cornerGradient.size', v)}
         />
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
 
         {/* Animation Controls */}
         <AnimationControls
@@ -4638,7 +4639,7 @@ const Controls: React.FC = () => {
           </div>
         </div>
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
 
         {/* Content */}
         <Input label={t('editor.controls.common.title')} value={data?.team?.title} onChange={(e) => setNestedData('team.title', e.target.value)} />
@@ -4647,7 +4648,7 @@ const Controls: React.FC = () => {
         <TextArea label={t('editor.controls.common.description')} value={data?.team?.description} onChange={(e) => setNestedData('team.description', e.target.value)} rows={2} />
         <FontSizeSelector label={t('editor.controls.common.descriptionSize')} value={data?.team?.descriptionFontSize || 'md'} onChange={(v) => setNestedData('team.descriptionFontSize', v)} />
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
 
         {/* Team Members */}
         <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">Team Members</label>
@@ -4725,7 +4726,7 @@ const Controls: React.FC = () => {
     const styleTab = (
       <div className="space-y-4">
         <BackgroundImageControl sectionKey="team" />
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
         {/* Section Colors */}
         <div className="space-y-2">
           <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Section Colors</label>
@@ -4746,7 +4747,7 @@ const Controls: React.FC = () => {
           <ColorControl label="Photo Border" value={data?.team?.colors?.photoBorderColor || '#4f46e5'} onChange={(v) => setNestedData('team.colors.photoBorderColor', v)} />
         </div>
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
 
         {/* Spacing */}
         <div className="space-y-2">
@@ -4757,7 +4758,7 @@ const Controls: React.FC = () => {
           </div>
         </div>
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
 
         {/* Corner Gradient */}
         <CornerGradientControl
@@ -4773,7 +4774,7 @@ const Controls: React.FC = () => {
           onSizeChange={(v) => setNestedData('team.cornerGradient.size', v)}
         />
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
 
         {/* Animation Controls */}
         <AnimationControls
@@ -4816,7 +4817,7 @@ const Controls: React.FC = () => {
           </div>
         </div>
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
 
         {/* FAQ Items */}
         {renderListSectionControls('faq', 'Question', [{ key: 'question', label: 'Question', type: 'input' }, { key: 'answer', label: 'Answer', type: 'textarea' }])}
@@ -4826,7 +4827,7 @@ const Controls: React.FC = () => {
     const styleTab = (
       <div className="space-y-4">
         <BackgroundImageControl sectionKey="faq" />
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
         {/* Section Colors */}
         <div className="space-y-2">
           <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Section Colors</label>
@@ -4849,7 +4850,7 @@ const Controls: React.FC = () => {
         {/* Gradient Colors (for gradient variant) */}
         {(data?.faq?.faqVariant === 'gradient') && (
           <>
-            <hr className="border-editor-border/50" />
+            <div className="border-t border-editor-border/30 my-1" />
             <div className="space-y-2">
               <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Gradient</label>
               <ColorControl label="Gradient Start" value={data?.faq?.colors?.gradientStart || '#4f46e5'} onChange={(v) => setNestedData('faq.colors.gradientStart', v)} />
@@ -4897,7 +4898,7 @@ const Controls: React.FC = () => {
         {/* Overlay-specific controls */}
         {currentPortfolioVariant === 'image-overlay' && (
           <>
-            <hr className="border-editor-border/50" />
+            <div className="border-t border-editor-border/30 my-1" />
             <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">Overlay Settings</label>
             <div>
               <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">Grid Columns</label>
@@ -4951,7 +4952,7 @@ const Controls: React.FC = () => {
           </>
         )}
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
 
         {/* Title & Description */}
         <Input label={t('editor.controls.common.title')} value={data?.portfolio?.title} onChange={(e) => setNestedData('portfolio.title', e.target.value)} />
@@ -4960,7 +4961,7 @@ const Controls: React.FC = () => {
         <TextArea label={t('editor.controls.common.description')} value={data?.portfolio?.description} onChange={(e) => setNestedData('portfolio.description', e.target.value)} rows={2} />
         <FontSizeSelector label={t('editor.controls.common.descriptionSize')} value={data?.portfolio?.descriptionFontSize || 'md'} onChange={(v) => setNestedData('portfolio.descriptionFontSize', v)} />
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
 
         {/* Projects */}
         <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">Projects</label>
@@ -5093,7 +5094,7 @@ const Controls: React.FC = () => {
     const styleTab = (
       <div className="space-y-4">
         <BackgroundImageControl sectionKey="portfolio" />
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
         {/* Section Colors */}
         <div className="space-y-2">
           <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Section Colors</label>
@@ -5103,7 +5104,7 @@ const Controls: React.FC = () => {
           <ColorControl label="Accent" value={data?.portfolio?.colors?.accent || '#4f46e5'} onChange={(v) => setNestedData('portfolio.colors.accent', v)} />
         </div>
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
 
         {/* Card Colors */}
         <div className="space-y-2">
@@ -5114,7 +5115,7 @@ const Controls: React.FC = () => {
           <ColorControl label="Border Color" value={data?.portfolio?.colors?.borderColor || '#334155'} onChange={(v) => setNestedData('portfolio.colors.borderColor', v)} />
         </div>
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
 
         {/* Card Overlay Gradient */}
         <div className="space-y-2">
@@ -5123,7 +5124,7 @@ const Controls: React.FC = () => {
           <ColorControl label="Overlay End (Top)" value={data?.portfolio?.colors?.cardOverlayEnd || 'rgba(0,0,0,0.2)'} onChange={(v) => setNestedData('portfolio.colors.cardOverlayEnd', v)} />
         </div>
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
 
         {/* Spacing */}
         <div className="space-y-2">
@@ -5134,7 +5135,7 @@ const Controls: React.FC = () => {
           </div>
         </div>
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
 
         {/* Corner Gradient */}
         <CornerGradientControl
@@ -5150,7 +5151,7 @@ const Controls: React.FC = () => {
           onSizeChange={(v) => setNestedData('portfolio.cornerGradient.size', v)}
         />
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
 
         {/* Animation Controls */}
         <AnimationControls
@@ -5196,7 +5197,7 @@ const Controls: React.FC = () => {
           </div>
         </div>
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
 
         {/* Content */}
         <Input label={t('editor.controls.common.title')} value={data?.leads.title} onChange={(e) => setNestedData('leads.title', e.target.value)} />
@@ -5212,7 +5213,7 @@ const Controls: React.FC = () => {
     const styleTab = (
       <div className="space-y-4">
         <BackgroundImageControl sectionKey="leads" />
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
         {/* Border Radius Controls */}
         <div className="space-y-2">
           <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Border Radius</label>
@@ -5221,7 +5222,7 @@ const Controls: React.FC = () => {
           <BorderRadiusSelector label="Button Radius" value={data?.leads?.buttonBorderRadius || 'md'} onChange={(v) => setNestedData('leads.buttonBorderRadius', v)} />
         </div>
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
 
         {/* Spacing */}
         <div className="space-y-2">
@@ -5232,7 +5233,7 @@ const Controls: React.FC = () => {
           </div>
         </div>
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
 
         {/* Section Colors */}
         <div className="space-y-2">
@@ -5242,7 +5243,7 @@ const Controls: React.FC = () => {
           <ColorControl label={t('editor.controls.common.subtitle')} value={data?.leads.colors?.description || '#94a3b8'} onChange={(v) => setNestedData('leads.colors.description', v)} />
           <ColorControl label="Accent" value={data?.leads.colors?.accent || '#4f46e5'} onChange={(v) => setNestedData('leads.colors.accent', v)} />
 
-          <hr className="border-editor-border/30 my-2" />
+          <div className="border-t border-editor-border/30 my-1" />
 
           {/* Corner Gradient */}
           <CornerGradientControl
@@ -5259,7 +5260,7 @@ const Controls: React.FC = () => {
           />
         </div>
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
 
         {/* Card Colors */}
         <div className="space-y-2">
@@ -5269,7 +5270,7 @@ const Controls: React.FC = () => {
           <ColorControl label="Border Color" value={data?.leads.colors?.borderColor || '#334155'} onChange={(v) => setNestedData('leads.colors.borderColor', v)} />
         </div>
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
 
         {/* Input Colors */}
         <div className="space-y-2">
@@ -5280,7 +5281,7 @@ const Controls: React.FC = () => {
           <ColorControl label="Input Border" value={data?.leads.colors?.inputBorder || '#334155'} onChange={(v) => setNestedData('leads.colors.inputBorder', v)} />
         </div>
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
 
         {/* Button & Gradient Colors */}
         <div className="space-y-2">
@@ -5315,7 +5316,7 @@ const Controls: React.FC = () => {
     const styleTab = (
       <div className="space-y-4">
         <BackgroundImageControl sectionKey="newsletter" />
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
         {/* Spacing */}
         <div className="space-y-2">
           <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Spacing</label>
@@ -5325,7 +5326,7 @@ const Controls: React.FC = () => {
           </div>
         </div>
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
 
         {/* Section Colors */}
         <div className="space-y-2">
@@ -5335,7 +5336,7 @@ const Controls: React.FC = () => {
           <ColorControl label="Section Description" value={data?.newsletter.colors?.text || '#94a3b8'} onChange={(v) => setNestedData('newsletter.colors.text', v)} />
         </div>
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
 
         {/* Card Box */}
         <div className="space-y-2">
@@ -5346,7 +5347,7 @@ const Controls: React.FC = () => {
           <ColorControl label="Card Text" value={data?.newsletter.colors?.cardText || '#ffffff'} onChange={(v) => setNestedData('newsletter.colors.cardText', v)} />
         </div>
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
 
         {/* Input Field */}
         <div className="space-y-2">
@@ -5357,7 +5358,7 @@ const Controls: React.FC = () => {
           <ColorControl label="Input Border" value={data?.newsletter.colors?.inputBorder || '#374151'} onChange={(v) => setNestedData('newsletter.colors.inputBorder', v)} />
         </div>
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
 
         {/* Button */}
         <div className="space-y-2">
@@ -5468,7 +5469,7 @@ const Controls: React.FC = () => {
     const styleTab = (
       <div className="space-y-4">
         <BackgroundImageControl sectionKey="cta" />
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
         {/* Spacing */}
         <div className="space-y-2">
           <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Spacing</label>
@@ -5478,7 +5479,7 @@ const Controls: React.FC = () => {
           </div>
         </div>
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
 
         {/* Colors */}
         <div className="space-y-2">
@@ -5506,7 +5507,7 @@ const Controls: React.FC = () => {
           <ColorControl label={t('editor.controls.common.buttonText')} value={data?.cta.colors?.buttonText || '#4f46e5'} onChange={(v) => setNestedData('cta.colors.buttonText', v)} />
         </div>
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
 
         {/* Corner Gradient */}
         <CornerGradientControl
@@ -5553,7 +5554,7 @@ const Controls: React.FC = () => {
           </select>
         </div>
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
 
         {/* Steps Items */}
         <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">Steps</label>
@@ -5608,7 +5609,7 @@ const Controls: React.FC = () => {
     const styleTab = (
       <div className="space-y-4">
         <BackgroundImageControl sectionKey="howItWorks" />
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
         {/* Section Colors */}
         <div className="space-y-2">
           <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Section Colors</label>
@@ -5628,7 +5629,7 @@ const Controls: React.FC = () => {
           <ColorControl label="Step Description" value={data?.howItWorks?.colors?.text || '#94a3b8'} onChange={(v) => setNestedData('howItWorks.colors.text', v)} />
         </div>
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
 
         {/* Spacing */}
         <div className="space-y-2">
@@ -5639,7 +5640,7 @@ const Controls: React.FC = () => {
           </div>
         </div>
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
 
         {/* Corner Gradient */}
         <CornerGradientControl
@@ -5728,7 +5729,7 @@ const Controls: React.FC = () => {
           )}
         </div>
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
 
         {/* Content Controls */}
         <div className="space-y-3">
@@ -5739,7 +5740,7 @@ const Controls: React.FC = () => {
           <FontSizeSelector label={t('editor.controls.common.descriptionSize')} value={data?.menu?.descriptionFontSize || 'md'} onChange={(v) => setNestedData('menu.descriptionFontSize', v)} />
         </div>
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
 
         {/* Section Icon */}
         <div className="space-y-3">
@@ -5758,7 +5759,7 @@ const Controls: React.FC = () => {
           )}
         </div>
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
 
         {/* Menu Items */}
         {renderListSectionControls('menu', 'Dish', [
@@ -5774,7 +5775,7 @@ const Controls: React.FC = () => {
     const styleTab = (
       <div className="space-y-4">
         <BackgroundImageControl sectionKey="menu" />
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
         {/* Section Colors */}
         <div className="space-y-3">
           <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Section Colors</label>
@@ -5796,7 +5797,7 @@ const Controls: React.FC = () => {
           <ColorControl label="Border Color" value={data?.menu?.colors?.borderColor || '#334155'} onChange={(v) => setNestedData('menu.colors.borderColor', v)} />
         </div>
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
 
         {/* Spacing */}
         <div className="space-y-2">
@@ -5807,7 +5808,7 @@ const Controls: React.FC = () => {
           </div>
         </div>
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
 
         {/* Corner Gradient */}
         <CornerGradientControl
@@ -5823,7 +5824,7 @@ const Controls: React.FC = () => {
           onSizeChange={(v) => setNestedData('menu.cornerGradient.size', v)}
         />
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
 
         {/* Animation Controls */}
         <AnimationControls
@@ -5971,7 +5972,7 @@ const Controls: React.FC = () => {
     const styleTab = (
       <div className="space-y-4">
         <BackgroundImageControl sectionKey="banner" />
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
         {/* Layout & Size */}
         <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
           <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
@@ -6107,7 +6108,7 @@ const Controls: React.FC = () => {
           </div>
         </div>
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
 
         <Input label={t('editor.controls.common.title')} value={data.pricing.title} onChange={(e) => setNestedData('pricing.title', e.target.value)} />
         <FontSizeSelector label={t('editor.controls.common.titleSize')} value={data.pricing.titleFontSize || 'md'} onChange={(v) => setNestedData('pricing.titleFontSize', v)} />
@@ -6115,7 +6116,7 @@ const Controls: React.FC = () => {
         <TextArea label={t('editor.controls.common.description')} value={data.pricing.description} onChange={(e) => setNestedData('pricing.description', e.target.value)} rows={2} />
         <FontSizeSelector label={t('editor.controls.common.descriptionSize')} value={data.pricing.descriptionFontSize || 'md'} onChange={(v) => setNestedData('pricing.descriptionFontSize', v)} />
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
 
         {/* Pricing Tiers */}
         <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">Pricing Tiers</label>
@@ -6199,7 +6200,7 @@ const Controls: React.FC = () => {
     const styleTab = (
       <div className="space-y-4">
         <BackgroundImageControl sectionKey="pricing" />
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
         {/* Spacing */}
         <div className="space-y-2">
           <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Spacing</label>
@@ -6211,7 +6212,7 @@ const Controls: React.FC = () => {
 
         <BorderRadiusSelector label="Card Corners" value={data.pricing.cardBorderRadius || 'xl'} onChange={(v) => setNestedData('pricing.cardBorderRadius', v)} />
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
 
         {/* Section Colors */}
         <div className="space-y-2">
@@ -6222,7 +6223,7 @@ const Controls: React.FC = () => {
           <ColorControl label="Text" value={data.pricing.colors?.text} onChange={(v) => setNestedData('pricing.colors.text', v)} />
         </div>
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
 
         {/* Card Colors */}
         <div className="space-y-2">
@@ -6236,7 +6237,7 @@ const Controls: React.FC = () => {
           <ColorControl label="Checkmark Icon" value={data.pricing.colors?.checkmarkColor || '#10b981'} onChange={(v) => setNestedData('pricing.colors.checkmarkColor', v)} />
         </div>
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
 
         {/* Button Colors */}
         <div className="space-y-2">
@@ -6250,7 +6251,7 @@ const Controls: React.FC = () => {
         {/* Gradient Colors - Only for gradient variant */}
         {currentVariant === 'gradient' && (
           <>
-            <hr className="border-editor-border/50" />
+            <div className="border-t border-editor-border/30 my-1" />
             <div className="space-y-2">
               <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider flex items-center gap-2">
                 <Sparkles size={14} className="text-editor-accent" />
@@ -6269,7 +6270,7 @@ const Controls: React.FC = () => {
           </>
         )}
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
 
         {/* Corner Gradient */}
         <CornerGradientControl
@@ -6285,7 +6286,7 @@ const Controls: React.FC = () => {
           onSizeChange={(v) => setNestedData('pricing.cornerGradient.size', v)}
         />
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
 
         {/* Animation Controls */}
         <AnimationControls
@@ -6310,7 +6311,7 @@ const Controls: React.FC = () => {
         <Input label={t('editor.controls.common.title')} value={data.slideshow.title} onChange={(e) => setNestedData('slideshow.title', e.target.value)} />
         <FontSizeSelector label={t('editor.controls.common.titleSize')} value={data.slideshow.titleFontSize || 'md'} onChange={(v) => setNestedData('slideshow.titleFontSize', v)} />
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
 
         <div>
           <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">Style Variant</label>
@@ -6326,7 +6327,7 @@ const Controls: React.FC = () => {
           </select>
         </div>
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
 
         {/* Slides */}
         <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">Slides</label>
@@ -6372,7 +6373,7 @@ const Controls: React.FC = () => {
     const styleTab = (
       <div className="space-y-4">
         <BackgroundImageControl sectionKey="slideshow" />
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
         {/* Border Radius */}
         <BorderRadiusSelector
           label={t('editor.controls.common.borderRadius')}
@@ -6380,7 +6381,7 @@ const Controls: React.FC = () => {
           onChange={(v) => setNestedData('slideshow.borderRadius', v)}
         />
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
 
         {/* Animation Settings */}
         <div className="space-y-3">
@@ -6456,7 +6457,7 @@ const Controls: React.FC = () => {
           )}
         </div>
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
 
         {/* Navigation */}
         <div className="space-y-2">
@@ -6498,7 +6499,7 @@ const Controls: React.FC = () => {
           </div>
         )}
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
 
         {/* Spacing */}
         <div className="space-y-2">
@@ -6509,7 +6510,7 @@ const Controls: React.FC = () => {
           </div>
         </div>
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
 
         {/* Colors */}
         <div className="space-y-2">
@@ -6542,7 +6543,7 @@ const Controls: React.FC = () => {
           </div>
         )}
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
 
         {/* Corner Gradient */}
         <CornerGradientControl
@@ -6575,7 +6576,7 @@ const Controls: React.FC = () => {
         <TextArea label={t('editor.controls.common.description')} value={data.video.description} onChange={(e) => setNestedData('video.description', e.target.value)} rows={2} />
         <FontSizeSelector label={t('editor.controls.common.descriptionSize')} value={data.video.descriptionFontSize || 'md'} onChange={(v) => setNestedData('video.descriptionFontSize', v)} />
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
 
         <div>
           <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">Source</label>
@@ -6600,7 +6601,7 @@ const Controls: React.FC = () => {
           />
         )}
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
 
         <div className="space-y-2">
           <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Playback Options</label>
@@ -6614,7 +6615,7 @@ const Controls: React.FC = () => {
     const styleTab = (
       <div className="space-y-4">
         <BackgroundImageControl sectionKey="video" />
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
         {/* Spacing */}
         <div className="space-y-2">
           <label className="block text-xs font-semibold text-editor-text-secondary uppercase tracking-wider">Spacing</label>
@@ -6624,7 +6625,7 @@ const Controls: React.FC = () => {
           </div>
         </div>
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
 
         {/* Colors */}
         <div className="space-y-2">
@@ -6634,7 +6635,7 @@ const Controls: React.FC = () => {
           <ColorControl label="Text" value={data.video.colors?.text} onChange={(v) => setNestedData('video.colors.text', v)} />
         </div>
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
 
         {/* Corner Gradient */}
         <CornerGradientControl
@@ -6710,7 +6711,7 @@ const Controls: React.FC = () => {
           )}
         </div>
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
 
         {/* Favicon */}
         <div className="space-y-3">
@@ -6788,7 +6789,7 @@ const Controls: React.FC = () => {
           </div>
         </div>
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
 
         {/* Login Button */}
         <div className="space-y-3">
@@ -6801,7 +6802,7 @@ const Controls: React.FC = () => {
           )}
         </div>
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
 
         {/* Search */}
         <div className="space-y-3">
@@ -6813,7 +6814,7 @@ const Controls: React.FC = () => {
           )}
         </div>
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
 
         {/* Navigation Links */}
         <div className="space-y-2">
@@ -6873,7 +6874,7 @@ const Controls: React.FC = () => {
           )}
         </div>
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
 
         {/* CTA Button */}
         <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">{t('editor.controls.navigation.ctaButton')}</label>
@@ -6935,7 +6936,7 @@ const Controls: React.FC = () => {
           </div>
         </div>
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
 
         {/* Sticky & Glass */}
         <div className="grid grid-cols-2 gap-4">
@@ -6943,7 +6944,7 @@ const Controls: React.FC = () => {
           <ToggleControl label={t('editor.controls.header.glass')} checked={data.header.glassEffect} onChange={(v) => setNestedData('header.glassEffect', v)} />
         </div>
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
 
         {/* Height & Hover */}
         <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">Height & Hover</label>
@@ -6994,7 +6995,7 @@ const Controls: React.FC = () => {
           />
         </div>
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
 
         {/* CTA Button Style */}
         {data.header.showCta !== false && (
@@ -7014,7 +7015,7 @@ const Controls: React.FC = () => {
           </div>
         )}
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
 
         {/* Colors */}
         <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">{t('editor.controls.common.colors')}</label>
@@ -7064,7 +7065,7 @@ const Controls: React.FC = () => {
         <TextArea label={t('editor.controls.common.description')} value={data.footer.description} onChange={(e) => setNestedData('footer.description', e.target.value)} rows={2} />
         <Input label={t('editor.controls.common.copyright')} value={data.footer.copyrightText} onChange={(e) => setNestedData('footer.copyrightText', e.target.value)} />
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
 
         {/* Link Columns */}
         <div className="space-y-4">
@@ -7118,7 +7119,7 @@ const Controls: React.FC = () => {
           <button onClick={() => setNestedData('footer.linkColumns', [...(data.footer.linkColumns || []), { title: 'New Column', links: [] }])} className="w-full py-2 border border-dashed border-editor-border rounded-lg text-editor-text-secondary hover:text-editor-accent transition-all flex items-center justify-center gap-2 text-sm font-medium"><Plus size={14} /> Add Column</button>
         </div>
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
 
         {/* Social Links */}
         <div className="space-y-4">
@@ -7133,7 +7134,7 @@ const Controls: React.FC = () => {
           )}
         </div>
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
 
         {/* Contact Information */}
         <div className="space-y-4">
@@ -7154,7 +7155,7 @@ const Controls: React.FC = () => {
           <Input label={t('editor.controls.common.email')} value={data.footer.contactInfo?.email || ''} onChange={(e) => setNestedData('footer.contactInfo.email', e.target.value)} placeholder="contact@example.com" />
         </div>
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
 
         {/* Business Hours */}
         <div className="space-y-4">
@@ -7249,7 +7250,7 @@ const Controls: React.FC = () => {
         <FontSizeSelector label={t('editor.controls.common.titleSize')} value={data.footer.titleFontSize || 'sm'} onChange={(v) => setNestedData('footer.titleFontSize', v)} />
         <FontSizeSelector label={t('editor.controls.common.descriptionSize')} value={data.footer.descriptionFontSize || 'sm'} onChange={(v) => setNestedData('footer.descriptionFontSize', v)} />
 
-        <hr className="border-editor-border/50" />
+        <div className="border-t border-editor-border/30 my-1" />
 
         {/* Colors */}
         <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">{t('editor.controls.common.colors')}</label>

@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { FooterData, SocialPlatform, FontSize } from '../types';
-import { Twitter, Github, Facebook, Instagram, Linkedin, MapPin, Phone, Mail } from 'lucide-react';
+import { Twitter, Github, Facebook, Instagram, Linkedin, MapPin, Phone, Mail, Youtube, Music, Pin, MessageCircle, Send, Ghost, Gamepad2, AtSign } from 'lucide-react';
 import BusinessHours from './BusinessHours';
 import { db, doc, getDoc } from '../firebase';
 
@@ -10,10 +10,19 @@ import { useAppLogo } from '../hooks/useAppLogo';
 
 const socialIconComponents: Record<SocialPlatform, React.ReactNode> = {
   twitter: <Twitter className="w-6 h-6" />,
+  x: <Twitter className="w-6 h-6" />,
   github: <Github className="w-6 h-6" />,
   facebook: <Facebook className="w-6 h-6" />,
   instagram: <Instagram className="w-6 h-6" />,
   linkedin: <Linkedin className="w-6 h-6" />,
+  youtube: <Youtube className="w-6 h-6" />,
+  tiktok: <Music className="w-6 h-6" />,
+  pinterest: <Pin className="w-6 h-6" />,
+  whatsapp: <MessageCircle className="w-6 h-6" />,
+  telegram: <Send className="w-6 h-6" />,
+  snapchat: <Ghost className="w-6 h-6" />,
+  discord: <Gamepad2 className="w-6 h-6" />,
+  threads: <AtSign className="w-6 h-6" />,
 };
 
 const titleSizeClasses: Record<FontSize, string> = {

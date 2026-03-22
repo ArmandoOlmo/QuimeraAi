@@ -694,7 +694,7 @@ export interface ChatbotData {
 // =============================================================================
 // FOOTER
 // =============================================================================
-export type SocialPlatform = 'twitter' | 'github' | 'facebook' | 'instagram' | 'linkedin';
+export type SocialPlatform = 'twitter' | 'x' | 'github' | 'facebook' | 'instagram' | 'linkedin' | 'youtube' | 'tiktok' | 'pinterest' | 'whatsapp' | 'telegram' | 'snapchat' | 'discord' | 'threads';
 
 export interface FooterLink {
     text: string;
