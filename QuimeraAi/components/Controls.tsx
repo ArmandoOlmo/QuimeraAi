@@ -1103,27 +1103,70 @@ const Controls: React.FC = () => {
             <Layout size={14} />
             Ubicación del Texto
           </label>
-          <div className="grid grid-cols-3 gap-2">
-            {([
-              { value: 'left-top', label: '↖️ Izq. Arriba' },
-              { value: 'center-top', label: '⬆️ Centro Arriba' },
-              { value: 'right-top', label: '↗️ Der. Arriba' },
-              { value: 'left-bottom', label: '↙️ Izq. Abajo' },
-              { value: 'center', label: '↔️ Centrado' },
-              { value: 'right-bottom', label: '↘️ Der. Abajo' },
-              { value: 'center-bottom', label: '⬇️ Centro Abajo' },
-            ] as const).map(opt => (
-              <button
-                key={opt.value}
-                onClick={() => setNestedData('hero.textLayout', opt.value)}
-                className={`py-2 px-3 text-xs font-semibold rounded-md transition-all ${(data.hero.textLayout || 'left-top') === opt.value
-                  ? 'bg-editor-accent text-editor-bg ring-2 ring-editor-accent/30'
-                  : 'bg-editor-bg text-editor-text-secondary hover:bg-editor-border border border-editor-border'
-                  }`}
-              >
-                {opt.label}
-              </button>
-            ))}
+          {/* Visual 3x3 position grid */}
+          <div className="relative bg-editor-bg rounded-lg border border-editor-border p-3">
+            {/* Preview area with position indicator */}
+            <div className="relative aspect-video bg-gradient-to-br from-editor-panel-bg to-editor-bg rounded-md border border-editor-border/50 overflow-hidden mb-2">
+              {/* Decorative lines representing text */}
+              {(() => {
+                const tl = data.hero.textLayout || 'left-top';
+                const isLeft = tl.startsWith('left');
+                const isRight = tl.startsWith('right');
+                const isTop = tl.endsWith('-top') || tl === 'center-top';
+                const isBottom = tl.endsWith('-bottom') || tl === 'center-bottom';
+                const hPos = isLeft ? 'left-3' : isRight ? 'right-3' : 'left-1/2 -translate-x-1/2';
+                const vPos = isTop ? 'top-2.5' : isBottom ? 'bottom-2.5' : 'top-1/2 -translate-y-1/2';
+                const textAlign = isLeft ? 'items-start' : isRight ? 'items-end' : 'items-center';
+                return (
+                  <div className={`absolute ${hPos} ${vPos} flex flex-col gap-1 ${textAlign} transition-all duration-300 ease-out`}>
+                    <div className="h-1.5 w-14 rounded-full bg-editor-accent/80" />
+                    <div className="h-1 w-10 rounded-full bg-editor-accent/40" />
+                    <div className="h-1 w-8 rounded-full bg-editor-accent/25" />
+                  </div>
+                );
+              })()}
+            </div>
+            {/* 3x3 clickable grid */}
+            <div className="grid grid-cols-3 gap-1">
+              {([
+                { value: 'left-top',      row: 0, col: 0 },
+                { value: 'center-top',    row: 0, col: 1 },
+                { value: 'right-top',     row: 0, col: 2 },
+                { value: 'center',        row: 1, col: 1 },
+                { value: 'left-bottom',   row: 2, col: 0 },
+                { value: 'center-bottom', row: 2, col: 1 },
+                { value: 'right-bottom',  row: 2, col: 2 },
+              ] as const).map(pos => {
+                const isSelected = (data.hero.textLayout || 'left-top') === pos.value;
+                const labels: Record<string, string> = {
+                  'left-top': 'Arriba Izquierda', 'center-top': 'Arriba Centro', 'right-top': 'Arriba Derecha',
+                  'center': 'Centro',
+                  'left-bottom': 'Abajo Izquierda', 'center-bottom': 'Abajo Centro', 'right-bottom': 'Abajo Derecha',
+                };
+                return (
+                  <button
+                    key={pos.value}
+                    title={labels[pos.value]}
+                    onClick={() => setNestedData('hero.textLayout', pos.value)}
+                    className={`flex items-center justify-center h-7 rounded transition-all duration-200 ${
+                      isSelected
+                        ? 'bg-editor-accent/20 border border-editor-accent/50'
+                        : 'bg-editor-panel-bg/50 border border-transparent hover:bg-editor-border/50 hover:border-editor-border'
+                    }`}
+                    style={{ gridRow: pos.row + 1, gridColumn: pos.col + 1 }}
+                  >
+                    <div className={`rounded-full transition-all duration-200 ${
+                      isSelected
+                        ? 'w-2.5 h-2.5 bg-editor-accent shadow-[0_0_8px_var(--editor-accent)]'
+                        : 'w-1.5 h-1.5 bg-editor-text-secondary/40'
+                    }`} />
+                  </button>
+                );
+              })}
+              {/* Empty cells for middle row left/right (no left-center or right-center options) */}
+              <div className="h-7" style={{ gridRow: 2, gridColumn: 1 }} />
+              <div className="h-7" style={{ gridRow: 2, gridColumn: 3 }} />
+            </div>
           </div>
         </div>
 
@@ -3515,27 +3558,70 @@ const Controls: React.FC = () => {
             <Layout size={14} />
             Ubicación del Texto
           </label>
-          <div className="grid grid-cols-3 gap-2">
-            {([
-              { value: 'left-top', label: '↖️ Izq. Arriba' },
-              { value: 'center-top', label: '⬆️ Centro Arriba' },
-              { value: 'right-top', label: '↗️ Der. Arriba' },
-              { value: 'left-bottom', label: '↙️ Izq. Abajo' },
-              { value: 'center', label: '↔️ Centrado' },
-              { value: 'right-bottom', label: '↘️ Der. Abajo' },
-              { value: 'center-bottom', label: '⬇️ Centro Abajo' },
-            ] as const).map(opt => (
-              <button
-                key={opt.value}
-                onClick={() => setNestedData('hero.textLayout', opt.value)}
-                className={`py-2 px-3 text-xs font-semibold rounded-md transition-all ${(data.hero.textLayout || 'left-top') === opt.value
-                  ? 'bg-editor-accent text-editor-bg ring-2 ring-editor-accent/30'
-                  : 'bg-editor-bg text-editor-text-secondary hover:bg-editor-border border border-editor-border'
-                  }`}
-              >
-                {opt.label}
-              </button>
-            ))}
+          {/* Visual 3x3 position grid */}
+          <div className="relative bg-editor-bg rounded-lg border border-editor-border p-3">
+            {/* Preview area with position indicator */}
+            <div className="relative aspect-video bg-gradient-to-br from-editor-panel-bg to-editor-bg rounded-md border border-editor-border/50 overflow-hidden mb-2">
+              {/* Decorative lines representing text */}
+              {(() => {
+                const tl = data.hero.textLayout || 'left-top';
+                const isLeft = tl.startsWith('left');
+                const isRight = tl.startsWith('right');
+                const isTop = tl.endsWith('-top') || tl === 'center-top';
+                const isBottom = tl.endsWith('-bottom') || tl === 'center-bottom';
+                const hPos = isLeft ? 'left-3' : isRight ? 'right-3' : 'left-1/2 -translate-x-1/2';
+                const vPos = isTop ? 'top-2.5' : isBottom ? 'bottom-2.5' : 'top-1/2 -translate-y-1/2';
+                const textAlign = isLeft ? 'items-start' : isRight ? 'items-end' : 'items-center';
+                return (
+                  <div className={`absolute ${hPos} ${vPos} flex flex-col gap-1 ${textAlign} transition-all duration-300 ease-out`}>
+                    <div className="h-1.5 w-14 rounded-full bg-editor-accent/80" />
+                    <div className="h-1 w-10 rounded-full bg-editor-accent/40" />
+                    <div className="h-1 w-8 rounded-full bg-editor-accent/25" />
+                  </div>
+                );
+              })()}
+            </div>
+            {/* 3x3 clickable grid */}
+            <div className="grid grid-cols-3 gap-1">
+              {([
+                { value: 'left-top',      row: 0, col: 0 },
+                { value: 'center-top',    row: 0, col: 1 },
+                { value: 'right-top',     row: 0, col: 2 },
+                { value: 'center',        row: 1, col: 1 },
+                { value: 'left-bottom',   row: 2, col: 0 },
+                { value: 'center-bottom', row: 2, col: 1 },
+                { value: 'right-bottom',  row: 2, col: 2 },
+              ] as const).map(pos => {
+                const isSelected = (data.hero.textLayout || 'left-top') === pos.value;
+                const labels: Record<string, string> = {
+                  'left-top': 'Arriba Izquierda', 'center-top': 'Arriba Centro', 'right-top': 'Arriba Derecha',
+                  'center': 'Centro',
+                  'left-bottom': 'Abajo Izquierda', 'center-bottom': 'Abajo Centro', 'right-bottom': 'Abajo Derecha',
+                };
+                return (
+                  <button
+                    key={pos.value}
+                    title={labels[pos.value]}
+                    onClick={() => setNestedData('hero.textLayout', pos.value)}
+                    className={`flex items-center justify-center h-7 rounded transition-all duration-200 ${
+                      isSelected
+                        ? 'bg-editor-accent/20 border border-editor-accent/50'
+                        : 'bg-editor-panel-bg/50 border border-transparent hover:bg-editor-border/50 hover:border-editor-border'
+                    }`}
+                    style={{ gridRow: pos.row + 1, gridColumn: pos.col + 1 }}
+                  >
+                    <div className={`rounded-full transition-all duration-200 ${
+                      isSelected
+                        ? 'w-2.5 h-2.5 bg-editor-accent shadow-[0_0_8px_var(--editor-accent)]'
+                        : 'w-1.5 h-1.5 bg-editor-text-secondary/40'
+                    }`} />
+                  </button>
+                );
+              })}
+              {/* Empty cells for middle row left/right (no left-center or right-center options) */}
+              <div className="h-7" style={{ gridRow: 2, gridColumn: 1 }} />
+              <div className="h-7" style={{ gridRow: 2, gridColumn: 3 }} />
+            </div>
           </div>
         </div>
 
