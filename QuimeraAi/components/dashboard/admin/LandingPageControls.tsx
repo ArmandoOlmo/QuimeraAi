@@ -41,8 +41,8 @@ interface LandingPageControlsProps {
 
 // Reusable control components
 const ControlGroup: React.FC<{ label: string; children: React.ReactNode }> = ({ label, children }) => (
-    <div className="space-y-2">
-        <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{label}</label>
+    <div className="bg-muted/30 p-4 rounded-lg border border-border space-y-2">
+        <label className="block text-xs font-bold text-muted-foreground uppercase tracking-wider">{label}</label>
         {children}
     </div>
 );
@@ -461,7 +461,7 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                         onChange={(v) => updateData('padding', v)}
                     />
 
-                    <div className="border-t border-border pt-4">
+                    <div className="bg-muted/30 p-4 rounded-lg border border-border">
                         <Toggle
                             label={t('landingEditor.gradient', 'Mostrar Gradiente')}
                             checked={data.showGradient || false}
@@ -498,7 +498,7 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                         )}
                     </div>
 
-                    <div className="border-t border-border pt-4">
+                    <div className="bg-muted/30 p-4 rounded-lg border border-border">
                         <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2 block">
                             {t('landingEditor.overlay', 'SUPERPOSICIÓN (OVERLAY)')}
                         </label>
@@ -765,7 +765,7 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                         </div>
 
                         {/* === LAYOUT & PADDING === */}
-                        <div className="space-y-3 pt-2 border-t border-border">
+                        <div className="bg-muted/30 p-4 rounded-lg border border-border space-y-3">
                             <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
                                 {t('landingEditor.layout', 'Espaciado')}
                             </label>
@@ -798,7 +798,7 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                         </div>
 
                         {/* === SECTION COLORS === */}
-                        <div className="space-y-3 pt-2 border-t border-border">
+                        <div className="bg-muted/30 p-4 rounded-lg border border-border space-y-3">
                             <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
                                 {t('landingEditor.sectionColors', 'Colores de Sección')}
                             </label>
@@ -833,7 +833,7 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                         </div>
 
                         {/* === CARD COLORS === */}
-                        <div className="space-y-3 pt-2 border-t border-border">
+                        <div className="bg-muted/30 p-4 rounded-lg border border-border space-y-3">
                             <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
                                 {t('landingEditor.cardColors', 'Colores de Tarjeta')}
                             </label>
@@ -868,7 +868,7 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                         </div>
 
                         {/* === ANIMATIONS === */}
-                        <div className="space-y-3 pt-2 border-t border-border">
+                        <div className="bg-muted/30 p-4 rounded-lg border border-border space-y-3">
                             <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
                                 {t('landingEditor.animations', 'Animaciones')}
                             </label>
@@ -933,7 +933,7 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                         </ControlGroup>
 
                         {/* Pricing Tiers Management */}
-                        <div className="space-y-3 pt-2 border-t border-border">
+                        <div className="bg-muted/30 p-4 rounded-lg border border-border space-y-3">
                             <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
                                 {t('landingEditor.pricingTiers', 'Planes de Precio')}
                             </label>
@@ -1118,7 +1118,7 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                         </div>
 
                         {/* Spacing Controls */}
-                        <div className="space-y-3 pt-2 border-t border-border">
+                        <div className="bg-muted/30 p-4 rounded-lg border border-border space-y-3">
                             <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
                                 {t('landingEditor.spacing', 'Espaciado')}
                             </label>
@@ -1166,7 +1166,7 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                         />
 
                         {/* Section Colors */}
-                        <div className="space-y-3 pt-2 border-t border-border">
+                        <div className="bg-muted/30 p-4 rounded-lg border border-border space-y-3">
                             <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
                                 {t('landingEditor.sectionColors', 'Colores de Sección')}
                             </label>
@@ -1201,7 +1201,7 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                         </div>
 
                         {/* Card Colors */}
-                        <div className="space-y-3 pt-2 border-t border-border">
+                        <div className="bg-muted/30 p-4 rounded-lg border border-border space-y-3">
                             <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
                                 {t('landingEditor.cardColors', 'Colores de Tarjeta')}
                             </label>
@@ -1256,7 +1256,7 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                         </div>
 
                         {/* Button Colors */}
-                        <div className="space-y-3 pt-2 border-t border-border">
+                        <div className="bg-muted/30 p-4 rounded-lg border border-border space-y-3">
                             <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
                                 {t('landingEditor.buttonColors', 'Colores de Botón')}
                             </label>
@@ -1278,7 +1278,7 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
 
                         {/* Gradient Colors (only for gradient variant) */}
                         {currentVariant === 'gradient' && (
-                            <div className="space-y-3 pt-2 border-t border-border">
+                            <div className="bg-muted/30 p-4 rounded-lg border border-border space-y-3">
                                 <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
                                     <span>✨</span>
                                     {t('landingEditor.gradientColors', 'Colores de Degradado')}
@@ -1311,7 +1311,7 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                         )}
 
                         {/* Animations */}
-                        <div className="space-y-3 pt-2 border-t border-border">
+                        <div className="bg-muted/30 p-4 rounded-lg border border-border space-y-3">
                             <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
                                 {t('landingEditor.animations', 'Animaciones')}
                             </label>
@@ -2852,7 +2852,7 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
             </ControlGroup>
 
             {/* Caps Options */}
-            <div className="border-t border-border pt-4">
+            <div className="bg-muted/30 p-4 rounded-lg border border-border">
                 <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3 block">
                     {t('landingEditor.allCaps', 'MAYÚSCULAS (ALL CAPS)')}
                 </label>
@@ -3195,7 +3195,7 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                         </ControlGroup>
 
                         {/* Variant Selector */}
-                        <div className="border-t border-border pt-4">
+                        <div className="bg-muted/30 p-4 rounded-lg border border-border">
                             <ControlGroup label={t('landingEditor.portfolioStyle', 'Estilo de Portfolio')}>
                                 <div className="grid grid-cols-2 gap-2">
                                     <button
@@ -3291,7 +3291,7 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                         )}
 
                         {/* Projects List */}
-                        <div className="border-t border-border pt-4">
+                        <div className="bg-muted/30 p-4 rounded-lg border border-border">
                             <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">
                                 {t('landingEditor.projects', 'Proyectos')} ({(data.items || []).length})
                             </h4>

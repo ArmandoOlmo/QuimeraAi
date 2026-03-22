@@ -165,9 +165,46 @@ const AgencyDashboardMain: React.FC = () => {
                 onClose={() => setIsMobileMenuOpen(false)}
             />
 
+            {/* Section Navigation Panel — Desktop only (mirrors Web Editor Controls pattern) */}
+            <div className="hidden md:flex flex-col w-56 lg:w-64 border-r border-border bg-card/50 flex-shrink-0 overflow-hidden">
+                {/* Panel Header */}
+                <div className="h-14 px-4 border-b border-border flex items-center gap-2 flex-shrink-0">
+                    <Building2 size={20} className="text-primary" />
+                    <h2 className="text-sm font-bold text-foreground truncate">
+                        {t('agency.title', 'Agency Dashboard')}
+                    </h2>
+                </div>
+
+                {/* Section List */}
+                <nav className="flex-1 overflow-y-auto py-2 px-2">
+                    <div className="space-y-0.5">
+                        {tabs.map((tab) => {
+                            const Icon = tab.icon;
+                            const isActive = activeTab === tab.id;
+                            return (
+                                <button
+                                    key={tab.id}
+                                    onClick={() => handleTabChange(tab.id)}
+                                    className={`
+                                        w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200
+                                        ${isActive
+                                            ? 'bg-primary/10 text-primary shadow-sm'
+                                            : 'text-muted-foreground hover:text-foreground hover:bg-secondary/50'
+                                        }
+                                    `}
+                                >
+                                    <Icon size={18} className={`flex-shrink-0 ${isActive ? 'text-primary' : ''}`} />
+                                    <span className="truncate">{tab.label}</span>
+                                </button>
+                            );
+                        })}
+                    </div>
+                </nav>
+            </div>
+
             {/* Main Content */}
             <div className="flex-1 flex flex-col overflow-hidden">
-                {/* Header */}
+                {/* Header — Title + Back button (tabs moved to sidebar panel) */}
                 <header className="h-14 px-2 sm:px-6 border-b border-border flex items-center bg-background z-20 sticky top-0">
                     {/* Left Section - Menu Button & Title */}
                     <div className="flex items-center gap-1 sm:gap-4 flex-shrink-0">
@@ -186,33 +223,7 @@ const AgencyDashboardMain: React.FC = () => {
                         </div>
                     </div>
 
-                    {/* Center Section - Tabs */}
-                    <div className="flex-1 flex justify-center px-4">
-                        <div className="hidden md:flex items-center gap-1">
-                            {tabs.map((tab) => {
-                                const Icon = tab.icon;
-                                const isActive = activeTab === tab.id;
-                                return (
-                                    <button
-                                        key={tab.id}
-                                        onClick={() => handleTabChange(tab.id)}
-                                        className={`
-                                            flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors
-                                            ${isActive
-                                                ? 'bg-primary/10 text-primary'
-                                                : 'text-muted-foreground hover:text-foreground hover:bg-secondary/50'
-                                            }
-                                        `}
-                                    >
-                                        <Icon size={16} />
-                                        <span>{tab.label}</span>
-                                    </button>
-                                );
-                            })}
-                        </div>
-                    </div>
-
-                    {/* Right Section - Back Button (solo icono) */}
+                    {/* Right Section - Back Button */}
                     <div className="flex items-center justify-end flex-shrink-0 ml-auto">
                         <button
                             onClick={() => navigate(ROUTES.DASHBOARD)}
