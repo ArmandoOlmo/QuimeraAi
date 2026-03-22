@@ -33,6 +33,7 @@ import AIFormControl from './ui/AIFormControl';
 import AIContentAssistant from './ui/AIContentAssistant';
 import ComponentTree from './ui/ComponentTree';
 import TabbedControls from './ui/TabbedControls';
+import SocialLinksEditor from './ui/SocialLinksEditor';
 import AnimationControls from './ui/AnimationControls';
 import {
   useFeaturedProductsControls,
@@ -2562,17 +2563,11 @@ const Controls: React.FC = () => {
           ))}
           <button onClick={() => setNestedData('footer.linkColumns', [...(data.footer.linkColumns || []), { title: 'New Column', links: [] }])} className="w-full py-2 border border-dashed border-editor-border rounded-lg text-editor-text-secondary hover:text-editor-accent transition-all flex items-center justify-center gap-2 text-sm font-medium"><Plus size={14} /> Add Column</button>
         </div>
-        <div className="space-y-4">
-          <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">Social Links</label>
-          {Array.isArray(data.footer.socialLinks) ? data.footer.socialLinks.map((link, index) => (
-            <div key={index} className="flex items-center gap-2 mb-2">
-              <span className="text-xs uppercase w-20 text-editor-text-secondary font-mono flex-shrink-0">{link.platform}</span>
-              <Input value={link.href} onChange={(e) => setNestedData(`footer.socialLinks.${index}.href`, e.target.value)} className="mb-0 flex-1" />
-            </div>
-          )) : (
-            <p className="text-xs text-editor-text-secondary">No social links configured</p>
-          )}
-        </div>
+        <SocialLinksEditor
+          socialLinks={data.footer.socialLinks}
+          onUpdate={(newLinks) => setNestedData('footer.socialLinks', newLinks)}
+          onUpdateHref={(index, href) => setNestedData(`footer.socialLinks.${index}.href`, href)}
+        />
 
         <div className="border-t border-editor-border/30 my-1" />
 
@@ -3389,19 +3384,31 @@ const Controls: React.FC = () => {
     const contentTab = (
       <div className="space-y-4">
         {/* Content */}
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2 flex items-center gap-2">
-          <Type size={14} />
-          {t('controls.content')}
-        </label>
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
+            <Type size={14} />
+            {t('controls.content')}
+          </label>
 
-        <AIFormControl label={t('controls.headline')} onAssistClick={() => setAiAssistField({ path: 'hero.headline', value: data.hero.headline, context: 'Hero Headline' })}>
-          <TextArea value={data.hero.headline} onChange={(e) => setNestedData('hero.headline', e.target.value)} rows={2} />
-        </AIFormControl>
-        <FontSizeSelector label={t('controls.headlineSize')} value={data.hero.headlineFontSize || 'lg'} onChange={(v) => setNestedData('hero.headlineFontSize', v)} />
+          <AIFormControl label={t('controls.headline')} onAssistClick={() => setAiAssistField({ path: 'hero.headline', value: data.hero.headline, context: 'Hero Headline' })}>
+            <TextArea value={data.hero.headline} onChange={(e) => setNestedData('hero.headline', e.target.value)} rows={2} />
+          </AIFormControl>
+          <FontSizeSelector label={t('controls.headlineSize')} value={data.hero.headlineFontSize || 'lg'} onChange={(v) => setNestedData('hero.headlineFontSize', v)} />
+
+          <AIFormControl label={t('controls.subheadline')} onAssistClick={() => setAiAssistField({ path: 'hero.subheadline', value: data.hero.subheadline, context: 'Hero Subheadline' })}>
+            <TextArea value={data.hero.subheadline} onChange={(e) => setNestedData('hero.subheadline', e.target.value)} rows={3} />
+          </AIFormControl>
+          <FontSizeSelector label={t('controls.subheadlineSize')} value={data.hero.subheadlineFontSize || 'lg'} onChange={(v) => setNestedData('hero.subheadlineFontSize', v)} />
+
+          <div className="grid grid-cols-2 gap-4">
+            <Input label={t('controls.primaryCTA')} value={data.hero.primaryCta} onChange={(e) => setNestedData('hero.primaryCta', e.target.value)} />
+            <Input label={t('controls.secondaryCTA')} value={data.hero.secondaryCta} onChange={(e) => setNestedData('hero.secondaryCta', e.target.value)} />
+          </div>
+        </div>
 
         {/* Logo / Headline Image — optional override */}
-        <div className="bg-editor-panel-bg/50 p-3 rounded-lg border border-editor-border">
-          <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-2 flex items-center gap-2">
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
             <Image size={14} />
             Logo / Imagen del Título (opcional)
           </label>
@@ -3421,18 +3428,8 @@ const Controls: React.FC = () => {
           )}
         </div>
 
-        <AIFormControl label={t('controls.subheadline')} onAssistClick={() => setAiAssistField({ path: 'hero.subheadline', value: data.hero.subheadline, context: 'Hero Subheadline' })}>
-          <TextArea value={data.hero.subheadline} onChange={(e) => setNestedData('hero.subheadline', e.target.value)} rows={3} />
-        </AIFormControl>
-        <FontSizeSelector label={t('controls.subheadlineSize')} value={data.hero.subheadlineFontSize || 'lg'} onChange={(v) => setNestedData('hero.subheadlineFontSize', v)} />
-
-        <div className="grid grid-cols-2 gap-4">
-          <Input label={t('controls.primaryCTA')} value={data.hero.primaryCta} onChange={(e) => setNestedData('hero.primaryCta', e.target.value)} />
-          <Input label={t('controls.secondaryCTA')} value={data.hero.secondaryCta} onChange={(e) => setNestedData('hero.secondaryCta', e.target.value)} />
-        </div>
-
         {/* Primary CTA Link */}
-        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border mt-4">
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
           <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
             <Link size={14} />
             Enlace Botón Principal
@@ -3561,7 +3558,7 @@ const Controls: React.FC = () => {
         </div>
 
         {/* Secondary CTA Link */}
-        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border mt-4">
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
           <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
             <Link size={14} />
             Enlace Botón Secundario
@@ -7122,17 +7119,11 @@ const Controls: React.FC = () => {
         <div className="border-t border-editor-border/30 my-1" />
 
         {/* Social Links */}
-        <div className="space-y-4">
-          <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">Social Links</label>
-          {Array.isArray(data.footer.socialLinks) ? data.footer.socialLinks.map((link, index) => (
-            <div key={index} className="flex items-center gap-2 mb-2">
-              <span className="text-xs uppercase w-20 text-editor-text-secondary font-mono flex-shrink-0">{link.platform}</span>
-              <Input value={link.href} onChange={(e) => setNestedData(`footer.socialLinks.${index}.href`, e.target.value)} className="mb-0 flex-1" />
-            </div>
-          )) : (
-            <p className="text-xs text-editor-text-secondary">No social links configured</p>
-          )}
-        </div>
+        <SocialLinksEditor
+          socialLinks={data.footer.socialLinks}
+          onUpdate={(newLinks) => setNestedData('footer.socialLinks', newLinks)}
+          onUpdateHref={(index, href) => setNestedData(`footer.socialLinks.${index}.href`, href)}
+        />
 
         <div className="border-t border-editor-border/30 my-1" />
 
