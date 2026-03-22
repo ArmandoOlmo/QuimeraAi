@@ -25,7 +25,7 @@ import {
   Trash2, Plus, ChevronDown, ChevronRight, ChevronLeft, ChevronUp, ArrowLeft, HelpCircle,
   Layout, Image, List, Star, PlaySquare, Users, DollarSign,
   Briefcase, MessageCircle, Mail, Send, Type, MousePointerClick,
-  Settings, AlignJustify, MonitorPlay, Grid, GripVertical, Upload, Menu as MenuIcon, MessageSquare, FileText, PlusCircle, X, Palette, AlertCircle, TrendingUp, Sparkles, MapPin, Map as MapIcon, Columns, Search, Loader2, ShoppingBag, Info, Store, SlidersHorizontal, LayoutGrid, Check, Link, FolderOpen, Maximize2, Clock, PanelRightClose, PanelRightOpen
+  Settings, AlignJustify, MonitorPlay, Grid, GripVertical, Upload, Menu as MenuIcon, MessageSquare, FileText, PlusCircle, X, Palette, AlertCircle, TrendingUp, Sparkles, MapPin, Map as MapIcon, Columns, Search, Loader2, ShoppingBag, Info, Store, SlidersHorizontal, LayoutGrid, Check, Link, FolderOpen, Maximize2, Clock, PanelRightClose, PanelRightOpen, Zap
 } from 'lucide-react';
 import { usePublicProducts } from '../hooks/usePublicProducts';
 import AIFormControl from './ui/AIFormControl';
@@ -413,6 +413,7 @@ const Controls: React.FC = () => {
   const [showHeroPrimaryCollectionPicker, setShowHeroPrimaryCollectionPicker] = useState(false);
   const [showHeroSecondaryCollectionPicker, setShowHeroSecondaryCollectionPicker] = useState(false);
   const [heroProductSearch, setHeroProductSearch] = useState('');
+  const [showHeroImagePicker, setShowHeroImagePicker] = useState(false);
 
   // Load products for Hero CTA pickers
   const { products: heroProducts, categories: heroCategories, isLoading: isLoadingHeroProducts } = usePublicProducts(activeProject?.id || null, { limitCount: 100 });
@@ -1178,10 +1179,81 @@ const Controls: React.FC = () => {
             <Image size={14} />
             Imagen de Fondo
           </label>
-          <ImagePicker label="Imagen de Fondo" value={data.hero.imageUrl} onChange={(url) => setNestedData('hero.imageUrl', url)} />
+
+          {/* Prominent Image Preview with overlaid controls */}
+          <div className="relative rounded-lg overflow-hidden border border-editor-border group">
+            {data.hero.imageUrl ? (
+              <>
+                <div className="aspect-video">
+                  <img src={data.hero.imageUrl} alt="Hero Background" className="w-full h-full object-cover" />
+                </div>
+                {/* Bottom gradient for contrast behind controls */}
+                <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/80 via-black/30 to-transparent pointer-events-none" />
+                {/* Overlaid action buttons at bottom-right */}
+                <div className="absolute bottom-2.5 right-2.5 flex gap-1.5">
+                  <button
+                    onClick={() => setShowHeroImagePicker(true)}
+                    className="p-2 rounded-lg bg-white/15 backdrop-blur-md border border-white/20 text-white hover:bg-white/25 transition-all duration-200"
+                    title="Librería de Imágenes"
+                  >
+                    <Grid size={14} />
+                  </button>
+                  <button
+                    onClick={() => setShowHeroImagePicker(true)}
+                    className="p-2 rounded-lg bg-editor-accent/80 backdrop-blur-md border border-editor-accent/40 text-white hover:bg-editor-accent transition-all duration-200"
+                    title="Generar con IA"
+                  >
+                    <Zap size={14} />
+                  </button>
+                  <button
+                    onClick={() => setNestedData('hero.imageUrl', '')}
+                    className="p-2 rounded-lg bg-red-500/60 backdrop-blur-md border border-red-500/30 text-white hover:bg-red-500/80 transition-all duration-200"
+                    title="Eliminar imagen"
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
+              </>
+            ) : (
+              <div className="aspect-video flex flex-col items-center justify-center bg-editor-bg text-editor-text-secondary gap-2">
+                <Image size={32} className="opacity-30" />
+                <span className="text-[10px] uppercase tracking-wider opacity-50">Sin imagen</span>
+              </div>
+            )}
+          </div>
+
+          {/* ImagePicker rendered with defaultOpen when triggered */}
+          {showHeroImagePicker && (
+            <ImagePicker
+              label=""
+              value={data.hero.imageUrl}
+              onChange={(url) => setNestedData('hero.imageUrl', url)}
+              generationContext="background"
+              defaultOpen
+              onClose={() => setShowHeroImagePicker(false)}
+            />
+          )}
+
+          {/* Action row when no image */}
+          {!data.hero.imageUrl && (
+            <div className="flex gap-2 mt-3">
+              <button
+                onClick={() => setShowHeroImagePicker(true)}
+                className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-editor-bg border border-editor-border text-editor-text-secondary hover:text-editor-text-primary hover:border-editor-accent/30 transition-all text-xs font-medium"
+              >
+                <Grid size={12} /> Librería
+              </button>
+              <button
+                onClick={() => setShowHeroImagePicker(true)}
+                className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-editor-accent/10 border border-editor-accent/20 text-editor-accent hover:bg-editor-accent/20 transition-all text-xs font-medium"
+              >
+                <Zap size={12} /> Generar IA
+              </button>
+            </div>
+          )}
 
           {/* Overlay Opacity */}
-          <div className="mt-4 bg-editor-bg/50 p-3 rounded-lg">
+          <div className="mt-4">
             <div className="flex justify-between items-center mb-2">
               <span className="text-xs font-medium text-editor-text-secondary">Oscurecimiento</span>
               <span className="text-[10px] text-editor-accent font-mono bg-editor-accent/10 px-2 py-0.5 rounded-full">{data.hero.overlayOpacity ?? 50}%</span>
@@ -3632,10 +3704,77 @@ const Controls: React.FC = () => {
             <Image size={14} />
             Imagen de Fondo
           </label>
-          <ImagePicker label="Imagen de Fondo" value={data.hero.imageUrl} onChange={(url) => setNestedData('hero.imageUrl', url)} />
+
+          {/* Prominent Image Preview with overlaid controls */}
+          <div className="relative rounded-lg overflow-hidden border border-editor-border group">
+            {data.hero.imageUrl ? (
+              <>
+                <div className="aspect-video">
+                  <img src={data.hero.imageUrl} alt="Hero Background" className="w-full h-full object-cover" />
+                </div>
+                <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/80 via-black/30 to-transparent pointer-events-none" />
+                <div className="absolute bottom-2.5 right-2.5 flex gap-1.5">
+                  <button
+                    onClick={() => setShowHeroImagePicker(true)}
+                    className="p-2 rounded-lg bg-white/15 backdrop-blur-md border border-white/20 text-white hover:bg-white/25 transition-all duration-200"
+                    title="Librería de Imágenes"
+                  >
+                    <Grid size={14} />
+                  </button>
+                  <button
+                    onClick={() => setShowHeroImagePicker(true)}
+                    className="p-2 rounded-lg bg-editor-accent/80 backdrop-blur-md border border-editor-accent/40 text-white hover:bg-editor-accent transition-all duration-200"
+                    title="Generar con IA"
+                  >
+                    <Zap size={14} />
+                  </button>
+                  <button
+                    onClick={() => setNestedData('hero.imageUrl', '')}
+                    className="p-2 rounded-lg bg-red-500/60 backdrop-blur-md border border-red-500/30 text-white hover:bg-red-500/80 transition-all duration-200"
+                    title="Eliminar imagen"
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
+              </>
+            ) : (
+              <div className="aspect-video flex flex-col items-center justify-center bg-editor-bg text-editor-text-secondary gap-2">
+                <Image size={32} className="opacity-30" />
+                <span className="text-[10px] uppercase tracking-wider opacity-50">Sin imagen</span>
+              </div>
+            )}
+          </div>
+
+          {showHeroImagePicker && (
+            <ImagePicker
+              label=""
+              value={data.hero.imageUrl}
+              onChange={(url) => setNestedData('hero.imageUrl', url)}
+              generationContext="background"
+              defaultOpen
+              onClose={() => setShowHeroImagePicker(false)}
+            />
+          )}
+
+          {!data.hero.imageUrl && (
+            <div className="flex gap-2 mt-3">
+              <button
+                onClick={() => setShowHeroImagePicker(true)}
+                className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-editor-bg border border-editor-border text-editor-text-secondary hover:text-editor-text-primary hover:border-editor-accent/30 transition-all text-xs font-medium"
+              >
+                <Grid size={12} /> Librería
+              </button>
+              <button
+                onClick={() => setShowHeroImagePicker(true)}
+                className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-editor-accent/10 border border-editor-accent/20 text-editor-accent hover:bg-editor-accent/20 transition-all text-xs font-medium"
+              >
+                <Zap size={12} /> Generar IA
+              </button>
+            </div>
+          )}
 
           {/* Overlay Opacity */}
-          <div className="mt-4 bg-editor-bg/50 p-3 rounded-lg">
+          <div className="mt-4">
             <div className="flex justify-between items-center mb-2">
               <span className="text-xs font-medium text-editor-text-secondary">Oscurecimiento</span>
               <span className="text-[10px] text-editor-accent font-mono bg-editor-accent/10 px-2 py-0.5 rounded-full">{data.hero.overlayOpacity ?? 50}%</span>
