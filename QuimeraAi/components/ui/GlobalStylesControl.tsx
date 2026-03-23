@@ -880,10 +880,9 @@ const GlobalStylesControl: React.FC<GlobalStylesControlProps> = ({ mode = 'both'
                                 </div>
                             </div>
 
-                            {/* Text Colors */}
                             <div className="bg-editor-panel-bg/30 p-3 rounded-lg border border-editor-border/50">
                                 <p className="text-xs font-semibold text-editor-text-primary mb-3">{t('editor.controls.globalStyles.textColors', 'Text')}</p>
-                                <div className="grid grid-cols-2 gap-3">
+                                <div className="space-y-1">
                                     <ColorControl
                                         label={t('editor.controls.globalStyles.text', 'Text')}
                                         value={globalColors.text}
@@ -896,8 +895,6 @@ const GlobalStylesControl: React.FC<GlobalStylesControlProps> = ({ mode = 'both'
                                         onChange={(v) => handleColorChange('heading', v)}
                                         paletteColors={allPaletteColors}
                                     />
-                                </div>
-                                <div className="mt-3">
                                     <ColorControl
                                         label={t('editor.controls.globalStyles.textSecondary', 'Secondary Text')}
                                         value={globalColors.textMuted}
@@ -910,7 +907,7 @@ const GlobalStylesControl: React.FC<GlobalStylesControlProps> = ({ mode = 'both'
                             {/* Border & Status Colors */}
                             <div className="bg-editor-panel-bg/30 p-3 rounded-lg border border-editor-border/50">
                                 <p className="text-xs font-semibold text-editor-text-primary mb-3">{t('editor.controls.globalStyles.bordersStates', 'Borders & States')}</p>
-                                <div className="grid grid-cols-3 gap-3">
+                                <div className="space-y-1">
                                     <ColorControl
                                         label={t('editor.controls.globalStyles.borders', 'Borders')}
                                         value={globalColors.border}

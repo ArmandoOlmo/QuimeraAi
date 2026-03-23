@@ -6,12 +6,12 @@ import { useSafeProject } from '../../contexts/project';
 const Input: React.FC<React.InputHTMLAttributes<HTMLInputElement>> = (props) => (
     <input
         {...props}
-        className="w-full bg-editor-border text-editor-text-primary p-2 rounded border border-transparent focus:ring-2 focus:ring-editor-accent focus:outline-none transition-all"
+        className="w-full bg-editor-bg text-editor-text-primary p-2 rounded-md border border-editor-border focus:ring-2 focus:ring-editor-accent/50 focus:border-editor-accent focus:outline-none transition-all text-xs font-mono"
     />
 );
 
 const Label: React.FC<{ children: ReactNode, htmlFor?: string }> = ({ children, htmlFor }) => (
-    <label htmlFor={htmlFor} className="block text-sm font-medium text-editor-text-secondary mb-1">{children}</label>
+    <label htmlFor={htmlFor} className="block text-[10px] font-bold text-editor-text-secondary mb-1.5 uppercase tracking-wider flex items-center gap-1">{children}</label>
 );
 
 const PRESET_COLORS = [
@@ -347,7 +347,7 @@ const ColorControl: React.FC<ColorControlProps> = ({ label, value, onChange, pal
         <div
             ref={popoverRef}
             style={popoverStyle}
-            className="z-[9999] bg-editor-panel-bg border border-editor-border rounded-lg shadow-xl p-3 overflow-y-auto max-h-[85vh]"
+            className="z-[9999] bg-editor-panel-bg border border-editor-border rounded-xl shadow-2xl shadow-black/30 p-3.5 overflow-y-auto max-h-[85vh]"
         >
             {/* Custom Saturation Area */}
             <div
@@ -389,7 +389,7 @@ const ColorControl: React.FC<ColorControlProps> = ({ label, value, onChange, pal
                     max="360"
                     value={localHsv.h}
                     onChange={handleHueChange}
-                    className="w-full h-2 rounded-lg appearance-none cursor-pointer"
+                    className="w-full h-2.5 rounded-full appearance-none cursor-pointer"
                     style={{
                         background: 'linear-gradient(to right, #f00 0%, #ff0 17%, #0f0 33%, #0ff 50%, #00f 67%, #f0f 83%, #f00 100%)'
                     }}
@@ -406,7 +406,10 @@ const ColorControl: React.FC<ColorControlProps> = ({ label, value, onChange, pal
                     step="0.01"
                     value={alpha}
                     onChange={(e) => handleColorChange(formatColor({ hex, alpha: parseFloat(e.target.value) }))}
-                    className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer"
+                    className="w-full h-2.5 rounded-full appearance-none cursor-pointer"
+                    style={{
+                        background: `linear-gradient(to right, transparent, ${hex})`
+                    }}
                 />
             </div>
 
@@ -441,10 +444,10 @@ const ColorControl: React.FC<ColorControlProps> = ({ label, value, onChange, pal
             {/* RGB Inputs */}
             <div className="mb-3">
                 <Label>RGB</Label>
-                <div className="grid grid-cols-3 gap-2">
+                <div className="space-y-1.5">
                     {(['r', 'g', 'b'] as const).map((k) => (
-                        <div key={k} className="flex flex-col items-center">
-                            <span className="text-[10px] text-editor-text-secondary uppercase mb-1">{k}</span>
+                        <div key={k} className="flex items-center gap-2">
+                            <span className="text-[10px] text-editor-text-secondary uppercase font-bold w-4 text-center flex-shrink-0">{k}</span>
                             <input
                                 type="number"
                                 min="0"
@@ -465,7 +468,7 @@ const ColorControl: React.FC<ColorControlProps> = ({ label, value, onChange, pal
                                     const newHex = `#${newRgb.r.toString(16).padStart(2, '0')}${newRgb.g.toString(16).padStart(2, '0')}${newRgb.b.toString(16).padStart(2, '0')}`;
                                     handleColorChange(formatColor({ hex: newHex, alpha }));
                                 }}
-                                className="w-full bg-editor-border text-editor-text-primary p-1.5 rounded border border-transparent focus:ring-1 focus:ring-editor-accent focus:outline-none text-center text-xs"
+                                className="flex-1 bg-editor-bg text-editor-text-primary p-1.5 rounded-md border border-editor-border focus:ring-1 focus:ring-editor-accent/50 focus:border-editor-accent focus:outline-none text-xs font-mono"
                             />
                         </div>
                     ))}
@@ -554,19 +557,19 @@ const ColorControl: React.FC<ColorControlProps> = ({ label, value, onChange, pal
     );
 
     return (
-        <div className="mb-3">
-            {label && <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{label}</label>}
+        <div className="mb-2">
+            {label && <label className="block text-[10px] font-bold text-editor-text-secondary mb-1.5 uppercase tracking-wider">{label}</label>}
             <div className="relative">
                 <button
                     ref={triggerRef}
                     onClick={() => setIsOpen(!isOpen)}
-                    className="w-full flex items-center gap-2 bg-editor-panel-bg border border-editor-border rounded-md px-2 py-1.5 text-sm text-editor-text-primary hover:border-editor-accent transition-colors group"
+                    className="w-full flex items-center gap-2.5 bg-editor-bg border border-editor-border rounded-lg px-2.5 py-2 text-sm text-editor-text-primary hover:border-editor-accent/60 hover:shadow-sm transition-all group"
                 >
-                    <div className="w-6 h-6 rounded border border-editor-border shadow-sm flex items-center justify-center overflow-hidden bg-checkered">
-                        <div className="w-full h-full" style={{ backgroundColor: safeValue }} />
+                    <div className="w-7 h-7 rounded-md border border-editor-border/80 shadow-inner flex items-center justify-center overflow-hidden bg-checkered flex-shrink-0">
+                        <div className="w-full h-full rounded-[3px]" style={{ backgroundColor: safeValue }} />
                     </div>
-                    <span className="flex-1 text-left font-mono text-xs">{safeValue.toUpperCase()}</span>
-                    <ChevronDown size={14} className="text-editor-text-secondary group-hover:text-editor-text-primary" />
+                    <span className="flex-1 text-left font-mono text-xs text-editor-text-primary/80">{safeValue.toUpperCase()}</span>
+                    <ChevronDown size={14} className={`text-editor-text-secondary group-hover:text-editor-text-primary transition-transform ${isOpen ? 'rotate-180' : ''}`} />
                 </button>
                 {isOpen && portalContainer && createPortal(PopoverContent, portalContainer)}
             </div>
