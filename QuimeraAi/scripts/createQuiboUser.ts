@@ -53,7 +53,7 @@ const QUIBO_USER = {
     email: 'quibobot@gmail.com',
     password: QUIBO_PASSWORD,
     displayName: 'Quibo Bot',
-    role: 'super-admin' as const,
+    role: 'superadmin' as const,
 };
 
 async function createQuiboUser() {

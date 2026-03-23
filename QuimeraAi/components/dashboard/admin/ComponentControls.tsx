@@ -788,11 +788,11 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                             role="switch"
                             aria-checked={(s as any).enableCardAnimation !== false}
                             onClick={() => handleStyleChange('enableCardAnimation', !(s as any).enableCardAnimation !== false)}
-                            className={`${(s as any).enableCardAnimation !== false ? 'bg-editor-accent' : 'bg-editor-border'} relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out`}
+                            className={`${(s as any).enableCardAnimation !== false ? 'bg-editor-accent' : 'bg-editor-border'} relative inline-flex h-[22px] w-10 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out`}
                         >
                             <span
                                 aria-hidden="true"
-                                className={`${(s as any).enableCardAnimation !== false ? 'translate-x-4' : 'translate-x-0'} pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out`}
+                                className={`${(s as any).enableCardAnimation !== false ? 'translate-x-[18px]' : 'translate-x-0'} pointer-events-none inline-block h-[18px] w-[18px] transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out`}
                             />
                         </button>
                     </div>

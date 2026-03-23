@@ -523,61 +523,212 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
     /**
      * Mapeo de colores globales a cada tipo de sección del landing page
      */
-    const generateLandingSectionColorMappings = (colors: GlobalColors): Record<string, Record<string, string>> => ({
+    const generateLandingSectionColorMappings = (colors: GlobalColors): Record<string, any> => ({
         hero: {
-            backgroundColor: colors.background,
-            textColor: colors.text,
-            accentColor: colors.primary,
+            colors: {
+                primary: colors.primary,
+                secondary: colors.secondary,
+                background: colors.background,
+                text: colors.text,
+                heading: colors.heading,
+                buttonBackground: colors.primary,
+                buttonText: '#ffffff',
+            }
         },
         heroModern: {
-            backgroundColor: colors.background,
-            textColor: colors.text,
-            accentColor: colors.primary,
+            colors: {
+                primary: colors.primary,
+                secondary: colors.secondary,
+                background: colors.background,
+                text: colors.text,
+                heading: colors.heading,
+                buttonBackground: colors.primary,
+                buttonText: '#ffffff',
+            }
         },
         heroGradient: {
-            backgroundColor: colors.background,
-            textColor: colors.text,
-            accentColor: colors.primary,
+            colors: {
+                primary: colors.primary,
+                secondary: colors.secondary,
+                background: colors.background,
+                text: colors.text,
+                heading: colors.heading,
+                buttonBackground: colors.primary,
+                buttonText: '#ffffff',
+            }
         },
         features: {
-            backgroundColor: colors.surface,
-            textColor: colors.text,
-            accentColor: colors.primary,
+            colors: {
+                background: colors.surface,
+                accent: colors.primary,
+                borderColor: colors.border,
+                text: colors.text,
+                heading: colors.heading,
+            }
         },
         pricing: {
-            backgroundColor: colors.background,
-            textColor: colors.text,
-            accentColor: colors.primary,
+            colors: {
+                background: colors.background,
+                accent: colors.primary,
+                borderColor: colors.border,
+                text: colors.text,
+                heading: colors.heading,
+            }
         },
         testimonials: {
-            backgroundColor: colors.surface,
-            textColor: colors.text,
-            accentColor: colors.secondary,
+            colors: {
+                background: colors.surface,
+                accent: colors.secondary,
+                borderColor: colors.border,
+                text: colors.text,
+                heading: colors.heading,
+            }
         },
         faq: {
-            backgroundColor: colors.background,
-            textColor: colors.text,
-            accentColor: colors.primary,
+            colors: {
+                background: colors.background,
+                accent: colors.primary,
+                borderColor: colors.border,
+                text: colors.text,
+                heading: colors.heading,
+            }
         },
         cta: {
-            backgroundColor: colors.primary,
-            textColor: '#ffffff',
-            accentColor: colors.secondary,
+            colors: {
+                gradientStart: colors.primary,
+                gradientEnd: colors.secondary,
+                text: '#ffffff',
+                heading: '#ffffff',
+                buttonBackground: '#ffffff',
+                buttonText: colors.primary,
+            }
         },
         footer: {
-            backgroundColor: colors.surface,
-            textColor: colors.textMuted,
-            accentColor: colors.primary,
+            colors: {
+                background: colors.surface,
+                border: colors.border,
+                text: colors.textMuted,
+                linkHover: colors.primary,
+                heading: colors.heading,
+            }
         },
         header: {
-            backgroundColor: colors.background,
-            textColor: colors.text,
-            accentColor: colors.primary,
+            colors: {
+                background: colors.background,
+                text: colors.text,
+                accent: colors.primary,
+                border: colors.border,
+            }
         },
         screenshotCarousel: {
-            backgroundColor: colors.background,
-            textColor: colors.text,
-            accentColor: colors.primary,
+            colors: {
+                background: colors.background,
+                text: colors.text,
+                accent: colors.primary,
+            }
+        },
+        newsletter: {
+            colors: {
+                background: colors.primary,
+                heading: '#ffffff',
+                text: '#ffffff',
+                cardBackground: colors.surface,
+                cardHeading: colors.heading,
+                cardText: colors.text,
+                borderColor: colors.border,
+                inputBackground: colors.background,
+                inputText: colors.text,
+                inputPlaceholder: colors.textMuted,
+                inputBorder: colors.border,
+                buttonBackground: colors.secondary,
+                buttonText: '#ffffff',
+                accent: colors.secondary,
+            },
+        },
+        leads: {
+            colors: {
+                background: colors.surface,
+                accent: colors.primary,
+                borderColor: colors.border,
+                text: colors.text,
+                heading: colors.heading,
+                buttonBackground: colors.primary,
+                buttonText: '#ffffff',
+            }
+        },
+        services: {
+            colors: {
+                background: colors.background,
+                accent: colors.primary,
+                borderColor: colors.border,
+                text: colors.text,
+                heading: colors.heading,
+            }
+        },
+        team: {
+            colors: {
+                background: colors.surface,
+                accent: colors.primary,
+                borderColor: colors.border,
+                text: colors.text,
+                heading: colors.heading,
+            }
+        },
+        howItWorks: {
+            colors: {
+                background: colors.surface,
+                accent: colors.primary,
+                text: colors.text,
+                heading: colors.heading,
+            }
+        },
+        video: {
+            colors: {
+                background: colors.background,
+                accent: colors.primary,
+                text: colors.text,
+                heading: colors.heading,
+            }
+        },
+        slideshow: {
+            colors: {
+                background: colors.background,
+                accent: colors.primary,
+                text: colors.text,
+                heading: colors.heading,
+            }
+        },
+        banner: {
+            colors: {
+                background: colors.primary,
+                text: '#ffffff',
+                accent: colors.secondary,
+            }
+        },
+        map: {
+            colors: {
+                background: colors.surface,
+                accent: colors.primary,
+                text: colors.text,
+                heading: colors.heading,
+            }
+        },
+        menu: {
+            colors: {
+                background: colors.background,
+                accent: colors.primary,
+                text: colors.text,
+                heading: colors.heading,
+            }
+        },
+        portfolio: {
+            colors: {
+                background: colors.background,
+                accent: colors.primary,
+                borderColor: colors.border,
+                text: colors.text,
+                heading: colors.heading,
+            }
         },
     });
 
@@ -590,12 +741,16 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
         setSections(prev => prev.map(section => {
             const sectionColors = colorMappings[section.type];
             if (sectionColors) {
+                const mergedData = {
+                    ...section.data,
+                    ...sectionColors
+                };
+                if (section.type === 'newsletter') {
+                    console.log('[applyGlobalColors] Newsletter merged data:', mergedData);
+                }
                 return {
                     ...section,
-                    data: {
-                        ...section.data,
-                        ...sectionColors
-                    }
+                    data: mergedData
                 };
             }
             return section;

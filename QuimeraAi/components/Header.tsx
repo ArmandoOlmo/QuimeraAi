@@ -164,7 +164,7 @@ const Header: React.FC<HeaderData & {
   style = 'sticky-solid', layout, isSticky, glassEffect, height,
   logoType, logoText, logoImageUrl, logoWidth,
   links = [], hoverStyle,
-  ctaText, showCta, buttonBorderRadius,
+  ctaText, showCta, ctaUrl, buttonBorderRadius,
   showLogin, loginText, loginUrl,
   showSearch = false,
   searchPlaceholder,
@@ -312,7 +312,7 @@ const Header: React.FC<HeaderData & {
         case 'floating-glass':
           return `${isPreviewMode ? 'absolute' : 'fixed'} top-6 left-6 right-6 rounded-xl border border-white/20 max-w-7xl mx-auto`;
         case 'floating-shadow':
-          return `${isPreviewMode ? 'absolute' : 'fixed'} top-6 left-8 right-8 rounded-none shadow-2xl shadow-black/30 max-w-6xl mx-auto`;
+          return `${isPreviewMode ? 'absolute' : 'fixed'} top-6 left-8 right-8 rounded-none shadow-[0_8px_40px_rgba(0,0,0,0.45)] max-w-6xl mx-auto`;
 
         // --- TRANSPARENTES ---
         case 'sticky-transparent':
@@ -322,6 +322,8 @@ const Header: React.FC<HeaderData & {
         case 'transparent-bordered':
           return 'w-full rounded-none border-b';
         case 'transparent-gradient':
+          return 'w-full rounded-none';
+        case 'transparent-gradient-dark':
           return 'w-full rounded-none';
 
         default:
@@ -366,20 +368,26 @@ const Header: React.FC<HeaderData & {
           return { backgroundColor: isTransparent ? 'transparent' : actualColors.background };
         case 'transparent-blur':
           return {
-            backgroundColor: isScrolled ? `${actualColors.background}cc` : 'transparent',
-            backdropFilter: isScrolled ? 'blur(12px)' : 'none'
+            backgroundColor: actualColors.background,
+            backdropFilter: 'blur(12px)'
           };
         case 'transparent-bordered':
           return {
-            backgroundColor: isScrolled ? `${actualColors.background}e0` : 'transparent',
-            borderColor: isScrolled ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.1)'
+            backgroundColor: `${actualColors.background}e0`,
+            borderColor: 'rgba(255,255,255,0.2)'
           };
-        case 'transparent-gradient':
+        case 'transparent-gradient': {
+          const edgeColor = colors?.gradientFadeColor || actualColors.text;
           return {
-            background: isScrolled
-              ? actualColors.background
-              : `linear-gradient(180deg, ${actualColors.background}80 0%, transparent 100%)`
+            background: `linear-gradient(180deg, ${edgeColor} 0%, ${actualColors.background} 30%, ${actualColors.background} 70%, ${edgeColor} 100%)`
           };
+        }
+        case 'transparent-gradient-dark': {
+          const edgeColor = colors?.gradientDarkColor || '#000000';
+          return {
+            background: `linear-gradient(180deg, ${edgeColor} 0%, ${actualColors.background} 30%, ${actualColors.background} 70%, ${edgeColor} 100%)`
+          };
+        }
 
         default:
           return { backgroundColor: actualColors.background };
@@ -388,15 +396,29 @@ const Header: React.FC<HeaderData & {
 
     const containerClasses = getContainerClasses();
 
+    const borderRadiusMap: Record<string, string> = { none: '0px', sm: '4px', md: '8px', lg: '12px', xl: '16px', '2xl': '24px', full: '9999px' };
+    const ctaBorderRadius = borderRadiusMap[buttonBorderRadius || 'md'] || '8px';
+
     const CtaButton = ({ fullWidth = false }: { fullWidth?: boolean }) => (
-      <a href="#cta" className={`
-        inline-flex items-center justify-center font-semibold transition-all duration-300 hover:opacity-70 font-button
-        ${fullWidth ? 'w-full py-2' : ''}
+      <a href={ctaUrl || '#cta'}
+        onClick={(e) => {
+          if (ctaUrl?.startsWith('#') && onNavigate) {
+            e.preventDefault();
+            onNavigate(ctaUrl);
+          }
+        }}
+        className={`
+        inline-flex items-center justify-center font-semibold transition-all duration-300 hover:opacity-85 hover:scale-[1.02] font-button
+        px-5 py-2 text-sm shadow-sm
+        ${fullWidth ? 'w-full' : ''}
     `}
-        style={{ color: actualColors.accent }}
+        style={{
+          backgroundColor: colors?.buttonBackground || actualColors.accent,
+          color: colors?.buttonText || '#ffffff',
+          borderRadius: ctaBorderRadius
+        }}
       >
         {actualCtaText}
-        <ArrowRight size={16} className="ml-2" />
       </a>
     );
 
@@ -581,7 +603,7 @@ const Header: React.FC<HeaderData & {
               <div className="hidden nav:flex flex-1 justify-start items-center">
                 <NavLinks links={allLinks} textColor={finalTextColor} accentColor={colors?.accent} hoverStyle={hoverStyle} className="flex items-center gap-8" linkFontSize={linkFontSize} onNavigate={onNavigate} />
               </div>
-              <div className="flex-shrink-0 nav:mx-auto absolute left-1/2 -translate-x-1/2 nav:static nav:translate-x-0">
+              <div className="flex-shrink-0 nav:mx-auto absolute left-1/2 -translate-x-1/2 nav:static nav:translate-x-0 px-4">
                 <Logo logoType={logoType} logoText={logoText} logoImageUrl={actualLogoImageUrl} logoWidth={logoWidth} textColor={finalTextColor} onNavigate={onNavigate} />
               </div>
               <div className="hidden nav:flex flex-1 justify-end items-center gap-4">
@@ -680,13 +702,16 @@ const Header: React.FC<HeaderData & {
         return isPreviewMode ? 'absolute' : 'fixed';
       }
 
-      // Transparent styles - comportamiento especial
+      // Transparent styles - sticky depends on toggle
       if (style.startsWith('transparent') || style === 'sticky-transparent') {
-        return isScrolled ? 'sticky' : 'absolute';
+        if (actualIsSticky) {
+          return isScrolled ? 'sticky' : 'absolute';
+        }
+        return 'absolute';
       }
 
       if (actualIsSticky) {
-        return isPreviewMode ? 'relative' : 'sticky';
+        return 'sticky';
       }
       return 'relative';
     };
@@ -698,7 +723,7 @@ const Header: React.FC<HeaderData & {
     // When forceSolid is true, always take space (the header is solid and visible)
     const shouldNotTakeSpace = !forceSolid && (
       style.startsWith('floating') ||
-      ((style.startsWith('transparent') || style === 'sticky-transparent') && !isScrolled)
+      ((style.startsWith('transparent') || style === 'sticky-transparent') && !isScrolled && style !== 'transparent-blur' && style !== 'transparent-bordered' && style !== 'transparent-gradient' && style !== 'transparent-gradient-dark')
     );
 
     return (
@@ -718,8 +743,8 @@ const Header: React.FC<HeaderData & {
           />
 
           <div
-            className={`transition-all duration-500 ease-out ${containerClasses} ${glassEffect && !style.includes('transparent') && !style.includes('glass') ? glassClasses : ''
-              } ${!style.startsWith('floating') && !style.includes('transparent') ? shadowClasses : ''}`}
+            className={`transition-all duration-500 ease-out ${containerClasses} ${glassEffect ? glassClasses : ''
+              } ${!style.startsWith('floating') && !style.includes('transparent') && !glassEffect ? shadowClasses : ''}`}
             style={{
               ...backgroundStyle,
               height: style.startsWith('floating') ? 'auto' : computedHeight,
@@ -769,6 +794,52 @@ const Header: React.FC<HeaderData & {
 
             </div>
           </div>
+
+
+          {/* === GRADIENT FADE STRIP below transparent-blur === */}
+          {style === 'transparent-blur' && (
+            <div
+              className="absolute left-0 right-0 h-16 pointer-events-none"
+              style={{
+                top: '100%',
+                background: `linear-gradient(to bottom, ${actualColors.background} 0%, transparent 100%)`
+              }}
+            />
+          )}
+
+          {/* === GRADIENT BORDERED: bar + gradient fade === */}
+          {style === 'transparent-bordered' && (
+            <>
+              {/* 5px separator bar at 75% opacity */}
+              <div
+                className="absolute left-0 right-0 pointer-events-none"
+                style={{
+                  top: '100%',
+                  height: '2.5px',
+                  backgroundColor: actualColors.text
+                }}
+              />
+              {/* Gradient fade below the bar - black gradient */}
+              <div
+                className="absolute left-0 right-0 h-16 pointer-events-none"
+                style={{
+                  top: 'calc(100% + 2px)',
+                  background: 'linear-gradient(to bottom, rgba(0,0,0,0.6) 0%, transparent 100%)'
+                }}
+              />
+            </>
+          )}
+
+          {/* === GRADIENT FADE: black gradient below === */}
+          {(style === 'transparent-gradient' || style === 'transparent-gradient-dark') && (
+            <div
+              className="absolute left-0 right-0 h-16 pointer-events-none"
+              style={{
+                top: '100%',
+                background: 'linear-gradient(to bottom, rgba(0,0,0,0.6) 0%, transparent 100%)'
+              }}
+            />
+          )}
 
         </header>
 

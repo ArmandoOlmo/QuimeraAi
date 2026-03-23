@@ -66,7 +66,7 @@ export const useEditorCompat = () => {
         setVerificationEmail: auth.setVerificationEmail,
         userPermissions: auth.userPermissions,
         canPerform: auth.canPerform,
-        isUserOwner: auth.userDocument?.role === 'owner',
+        isUserOwner: auth.userDocument?.role === 'owner' || auth.userDocument?.role === 'superadmin' || auth.isUserOwner,
 
         // UI
         isSidebarOpen: ui.isSidebarOpen,

@@ -853,10 +853,11 @@ const Controls: React.FC = () => {
                 <option value="floating-glass">{t('editor.controls.header.glass')}</option>
                 <option value="floating-shadow">Floating Shadow</option>
               </optgroup>
-              <optgroup label="── Transparent ──">
-                <option value="transparent-blur">Transparent Blur</option>
-                <option value="transparent-bordered">Transparent Bordered</option>
-                <option value="transparent-gradient">Transparent Gradient</option>
+              <optgroup label="── Gradient ──">
+                <option value="transparent-blur">Gradient Blur</option>
+                <option value="transparent-bordered">Gradient Bordered</option>
+                <option value="transparent-gradient">Gradient Fade</option>
+                <option value="transparent-gradient-dark">Gradient Dark</option>
               </optgroup>
             </select>
           </div>
@@ -917,32 +918,37 @@ const Controls: React.FC = () => {
         {/* Favicon Upload Section */}
         <div className="space-y-3">
           <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('editor.controls.header.favicon')}</label>
-          <p className="text-xs text-editor-text-secondary">{t('editor.controls.header.uploadFavicon')}</p>
 
-          <div className="flex items-center gap-4">
-            {activeProject?.faviconUrl ? (
-              <div className="relative">
-                <img
-                  src={activeProject.faviconUrl}
-                  alt="Favicon"
-                  className="w-12 h-12 rounded-lg border border-editor-border object-contain bg-editor-bg p-1"
-                />
-                <button
-                  onClick={() => {
-                    // TODO: Implement removeFavicon functionality
-                    // When implemented, use ConfirmationModal instead of window.confirm
-                  }}
-                  className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white rounded-full flex items-center justify-center text-xs hover:bg-red-600"
-                  title="Remove favicon"
-                >
-                  ×
-                </button>
-              </div>
-            ) : (
-              <div className="w-12 h-12 rounded-lg border-2 border-dashed border-editor-border flex items-center justify-center bg-editor-bg">
-                <Upload size={16} className="text-editor-text-secondary" />
-              </div>
-            )}
+          <div className="flex flex-col items-center gap-3 p-4 rounded-xl border border-editor-border bg-editor-bg/50">
+            {/* Preview */}
+            <div className="relative group">
+              {activeProject?.faviconUrl ? (
+                <div className="relative">
+                  <div className="w-16 h-16 rounded-xl border-2 border-editor-border overflow-hidden flex items-center justify-center"
+                    style={{ backgroundImage: 'linear-gradient(45deg, #808080 25%, transparent 25%), linear-gradient(-45deg, #808080 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #808080 75%), linear-gradient(-45deg, transparent 75%, #808080 75%)', backgroundSize: '8px 8px', backgroundPosition: '0 0, 0 4px, 4px -4px, -4px 0px' }}>
+                    <img
+                      src={activeProject.faviconUrl}
+                      alt="Favicon"
+                      className="w-full h-full object-contain p-1"
+                    />
+                  </div>
+                  <button
+                    onClick={() => {
+                      // TODO: Implement removeFavicon functionality
+                    }}
+                    className="absolute -top-2 -right-2 w-5 h-5 bg-red-500/90 text-white rounded-full flex items-center justify-center text-xs hover:bg-red-500 transition-colors shadow-lg opacity-0 group-hover:opacity-100"
+                    title="Eliminar favicon"
+                  >
+                    ×
+                  </button>
+                </div>
+              ) : (
+                <div className="w-16 h-16 rounded-xl border-2 border-dashed border-editor-border/60 flex flex-col items-center justify-center bg-editor-bg gap-1">
+                  <Star size={18} className="text-editor-text-secondary/40" />
+                  <span className="text-[9px] text-editor-text-secondary/40 font-medium">ICO / PNG</span>
+                </div>
+              )}
+            </div>
 
             <input
               ref={faviconInputRef}
@@ -968,16 +974,16 @@ const Controls: React.FC = () => {
             <button
               onClick={() => faviconInputRef.current?.click()}
               disabled={isUploadingFavicon}
-              className="flex items-center gap-2 px-3 py-2 bg-editor-bg border border-editor-border rounded-lg text-sm text-editor-text-primary hover:bg-editor-panel-bg transition-colors disabled:opacity-50"
+              className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all duration-200 disabled:opacity-50 bg-editor-accent/10 text-editor-accent hover:bg-editor-accent/20 border border-editor-accent/20"
             >
               {isUploadingFavicon ? (
                 <>
-                  <span className="w-4 h-4 border-2 border-editor-accent border-t-transparent rounded-full animate-spin" />
-                  Uploading...
+                  <span className="w-3.5 h-3.5 border-2 border-editor-accent border-t-transparent rounded-full animate-spin" />
+                  Subiendo...
                 </>
               ) : (
                 <>
-                  <Upload size={14} />
+                  <Upload size={13} />
                   {activeProject?.faviconUrl ? t('editor.controls.header.change') : t('editor.controls.header.upload')}
                 </>
               )}
@@ -986,10 +992,6 @@ const Controls: React.FC = () => {
         </div>
 
 
-        <div className="grid grid-cols-2 gap-4">
-          <ToggleControl label={t('editor.controls.header.sticky')} checked={data.header.isSticky} onChange={(v) => setNestedData('header.isSticky', v)} />
-          <ToggleControl label={t('editor.controls.header.glass')} checked={data.header.glassEffect} onChange={(v) => setNestedData('header.glassEffect', v)} />
-        </div>
 
 
         <div className="space-y-3">
@@ -1145,6 +1147,55 @@ const Controls: React.FC = () => {
                 ))}
               </div>
             </div>
+            <ColorControl label="Fondo Botón" value={data.header.colors?.buttonBackground || data.header.colors?.accent || '#4f46e5'} onChange={(v) => setNestedData('header.colors.buttonBackground', v)} />
+            <ColorControl label="Texto Botón" value={data.header.colors?.buttonText || '#ffffff'} onChange={(v) => setNestedData('header.colors.buttonText', v)} />
+
+            <div>
+              <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">Enlace del Botón</label>
+              <div className="grid grid-cols-4 gap-1 bg-editor-bg p-1 rounded-md border border-editor-border">
+                {[{ value: 'manual', label: 'URL' }, { value: 'product', label: 'Producto' }, { value: 'collection', label: 'Colección' }, { value: 'content', label: 'Contenido' }].map((type) => (
+                  <button
+                    key={type.value}
+                    onClick={() => {
+                      setNestedData('header.ctaLinkType', type.value);
+                      if (type.value === 'section') setNestedData('header.ctaUrl', '#cta');
+                      else setNestedData('header.ctaUrl', '');
+                    }}
+                    className={`py-1.5 px-1 text-[10px] font-medium rounded-sm transition-colors text-center ${(data.header.ctaLinkType || 'manual') === type.value ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:bg-editor-border'}`}
+                  >
+                    {type.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {(data.header.ctaLinkType === 'manual' || !data.header.ctaLinkType) && (
+              <Input label="URL" value={data.header.ctaUrl || ''} onChange={(e) => setNestedData('header.ctaUrl', e.target.value)} placeholder="https://example.com o #seccion" />
+            )}
+            {data.header.ctaLinkType === 'product' && (
+              <SingleProductSelector
+                storeId={activeProject?.id || ''}
+                selectedProductId={data.header.ctaUrl?.startsWith('/product/') ? data.header.ctaUrl.split('/product/')[1] : undefined}
+                onSelect={(id) => setNestedData('header.ctaUrl', id ? `/product/${id}` : '')}
+                label={t('editor.controls.common.selectProduct')}
+              />
+            )}
+            {data.header.ctaLinkType === 'collection' && (
+              <SingleCollectionSelector
+                storeId={activeProject?.id || ''}
+                gridCategories={data.categoryGrid?.categories || []}
+                selectedCollectionId={data.header.ctaUrl?.includes('collection/') ? data.header.ctaUrl.split('/').pop() : undefined}
+                onSelect={(id) => setNestedData('header.ctaUrl', id ? `/collection/${id}` : '')}
+                label={t('editor.controls.common.selectCollection')}
+              />
+            )}
+            {data.header.ctaLinkType === 'content' && (
+              <SingleContentSelector
+                selectedContentPath={data.header.ctaUrl}
+                onSelect={(path) => setNestedData('header.ctaUrl', path || '')}
+                label={t('editor.controls.common.selectContent')}
+              />
+            )}
           </div>
         )}
 
@@ -1152,6 +1203,12 @@ const Controls: React.FC = () => {
         <ColorControl label={t('editor.controls.common.background')} value={data.header.colors?.background} onChange={(v) => setNestedData('header.colors.background', v)} />
         <ColorControl label={t('editor.controls.common.text')} value={data.header.colors?.text} onChange={(v) => setNestedData('header.colors.text', v)} />
         <ColorControl label={t('editor.controls.common.accent')} value={data.header.colors?.accent || '#4f46e5'} onChange={(v) => setNestedData('header.colors.accent', v)} />
+        {data.header.style === 'transparent-gradient' && (
+          <ColorControl label="Color Gradiente" value={data.header.colors?.gradientFadeColor || data.header.colors?.text || '#ffffff'} onChange={(v) => setNestedData('header.colors.gradientFadeColor', v)} />
+        )}
+        {data.header.style === 'transparent-gradient-dark' && (
+          <ColorControl label="Color Gradiente" value={data.header.colors?.gradientDarkColor || '#000000'} onChange={(v) => setNestedData('header.colors.gradientDarkColor', v)} />
+        )}
       </div>
     )
   }
@@ -3630,80 +3687,6 @@ const Controls: React.FC = () => {
 
     const styleTab = (
       <div className="space-y-4">
-        {/* ========== TEXT LAYOUT ========== */}
-        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-          <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
-            <Layout size={14} />
-            Ubicación del Texto
-          </label>
-          {/* Visual 3x3 position grid */}
-          <div className="relative bg-editor-bg rounded-lg border border-editor-border p-3">
-            {/* Preview area with position indicator */}
-            <div className="relative aspect-video bg-gradient-to-br from-editor-panel-bg to-editor-bg rounded-md border border-editor-border/50 overflow-hidden mb-2">
-              {/* Decorative lines representing text */}
-              {(() => {
-                const tl = data.hero.textLayout || 'left-top';
-                const isLeft = tl.startsWith('left');
-                const isRight = tl.startsWith('right');
-                const isTop = tl.endsWith('-top') || tl === 'center-top';
-                const isBottom = tl.endsWith('-bottom') || tl === 'center-bottom';
-                const hPos = isLeft ? 'left-3' : isRight ? 'right-3' : 'left-1/2 -translate-x-1/2';
-                const vPos = isTop ? 'top-2.5' : isBottom ? 'bottom-2.5' : 'top-1/2 -translate-y-1/2';
-                const textAlign = isLeft ? 'items-start' : isRight ? 'items-end' : 'items-center';
-                return (
-                  <div className={`absolute ${hPos} ${vPos} flex flex-col gap-1 ${textAlign} transition-all duration-300 ease-out`}>
-                    <div className="h-1.5 w-14 rounded-full bg-editor-accent/80" />
-                    <div className="h-1 w-10 rounded-full bg-editor-accent/40" />
-                    <div className="h-1 w-8 rounded-full bg-editor-accent/25" />
-                  </div>
-                );
-              })()}
-            </div>
-            {/* 3x3 clickable grid */}
-            <div className="grid grid-cols-3 gap-1">
-              {([
-                { value: 'left-top',      row: 0, col: 0 },
-                { value: 'center-top',    row: 0, col: 1 },
-                { value: 'right-top',     row: 0, col: 2 },
-                { value: 'center',        row: 1, col: 1 },
-                { value: 'left-bottom',   row: 2, col: 0 },
-                { value: 'center-bottom', row: 2, col: 1 },
-                { value: 'right-bottom',  row: 2, col: 2 },
-              ] as const).map(pos => {
-                const isSelected = (data.hero.textLayout || 'left-top') === pos.value;
-                const labels: Record<string, string> = {
-                  'left-top': 'Arriba Izquierda', 'center-top': 'Arriba Centro', 'right-top': 'Arriba Derecha',
-                  'center': 'Centro',
-                  'left-bottom': 'Abajo Izquierda', 'center-bottom': 'Abajo Centro', 'right-bottom': 'Abajo Derecha',
-                };
-                return (
-                  <button
-                    key={pos.value}
-                    title={labels[pos.value]}
-                    onClick={() => setNestedData('hero.textLayout', pos.value)}
-                    className={`flex items-center justify-center h-7 rounded transition-all duration-200 ${
-                      isSelected
-                        ? 'bg-editor-accent/20 border border-editor-accent/50'
-                        : 'bg-editor-panel-bg/50 border border-transparent hover:bg-editor-border/50 hover:border-editor-border'
-                    }`}
-                    style={{ gridRow: pos.row + 1, gridColumn: pos.col + 1 }}
-                  >
-                    <div className={`rounded-full transition-all duration-200 ${
-                      isSelected
-                        ? 'w-2.5 h-2.5 bg-editor-accent shadow-[0_0_8px_var(--editor-accent)]'
-                        : 'w-1.5 h-1.5 bg-editor-text-secondary/40'
-                    }`} />
-                  </button>
-                );
-              })}
-              {/* Empty cells for middle row left/right (no left-center or right-center options) */}
-              <div className="h-7" style={{ gridRow: 2, gridColumn: 1 }} />
-              <div className="h-7" style={{ gridRow: 2, gridColumn: 3 }} />
-            </div>
-          </div>
-        </div>
-
-
         {/* ========== BACKGROUND IMAGE ========== */}
         <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
           <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
@@ -3794,6 +3777,80 @@ const Controls: React.FC = () => {
             <div className="flex justify-between mt-1">
               <span className="text-[9px] text-editor-text-secondary/50">Claro</span>
               <span className="text-[9px] text-editor-text-secondary/50">Oscuro</span>
+            </div>
+          </div>
+        </div>
+
+
+        {/* ========== TEXT LAYOUT ========== */}
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+            <Layout size={14} />
+            Ubicación del Texto
+          </label>
+          {/* Visual 3x3 position grid */}
+          <div className="relative bg-editor-bg rounded-lg border border-editor-border p-3">
+            {/* Preview area with position indicator */}
+            <div className="relative aspect-video bg-gradient-to-br from-editor-panel-bg to-editor-bg rounded-md border border-editor-border/50 overflow-hidden mb-2">
+              {/* Decorative lines representing text */}
+              {(() => {
+                const tl = data.hero.textLayout || 'left-top';
+                const isLeft = tl.startsWith('left');
+                const isRight = tl.startsWith('right');
+                const isTop = tl.endsWith('-top') || tl === 'center-top';
+                const isBottom = tl.endsWith('-bottom') || tl === 'center-bottom';
+                const hPos = isLeft ? 'left-3' : isRight ? 'right-3' : 'left-1/2 -translate-x-1/2';
+                const vPos = isTop ? 'top-2.5' : isBottom ? 'bottom-2.5' : 'top-1/2 -translate-y-1/2';
+                const textAlign = isLeft ? 'items-start' : isRight ? 'items-end' : 'items-center';
+                return (
+                  <div className={`absolute ${hPos} ${vPos} flex flex-col gap-1 ${textAlign} transition-all duration-300 ease-out`}>
+                    <div className="h-1.5 w-14 rounded-full bg-editor-accent/80" />
+                    <div className="h-1 w-10 rounded-full bg-editor-accent/40" />
+                    <div className="h-1 w-8 rounded-full bg-editor-accent/25" />
+                  </div>
+                );
+              })()}
+            </div>
+            {/* 3x3 clickable grid */}
+            <div className="grid grid-cols-3 gap-1">
+              {([
+                { value: 'left-top',      row: 0, col: 0 },
+                { value: 'center-top',    row: 0, col: 1 },
+                { value: 'right-top',     row: 0, col: 2 },
+                { value: 'center',        row: 1, col: 1 },
+                { value: 'left-bottom',   row: 2, col: 0 },
+                { value: 'center-bottom', row: 2, col: 1 },
+                { value: 'right-bottom',  row: 2, col: 2 },
+              ] as const).map(pos => {
+                const isSelected = (data.hero.textLayout || 'left-top') === pos.value;
+                const labels: Record<string, string> = {
+                  'left-top': 'Arriba Izquierda', 'center-top': 'Arriba Centro', 'right-top': 'Arriba Derecha',
+                  'center': 'Centro',
+                  'left-bottom': 'Abajo Izquierda', 'center-bottom': 'Abajo Centro', 'right-bottom': 'Abajo Derecha',
+                };
+                return (
+                  <button
+                    key={pos.value}
+                    title={labels[pos.value]}
+                    onClick={() => setNestedData('hero.textLayout', pos.value)}
+                    className={`flex items-center justify-center h-7 rounded transition-all duration-200 ${
+                      isSelected
+                        ? 'bg-editor-accent/20 border border-editor-accent/50'
+                        : 'bg-editor-panel-bg/50 border border-transparent hover:bg-editor-border/50 hover:border-editor-border'
+                    }`}
+                    style={{ gridRow: pos.row + 1, gridColumn: pos.col + 1 }}
+                  >
+                    <div className={`rounded-full transition-all duration-200 ${
+                      isSelected
+                        ? 'w-2.5 h-2.5 bg-editor-accent shadow-[0_0_8px_var(--editor-accent)]'
+                        : 'w-1.5 h-1.5 bg-editor-text-secondary/40'
+                    }`} />
+                  </button>
+                );
+              })}
+              {/* Empty cells for middle row left/right (no left-center or right-center options) */}
+              <div className="h-7" style={{ gridRow: 2, gridColumn: 1 }} />
+              <div className="h-7" style={{ gridRow: 2, gridColumn: 3 }} />
             </div>
           </div>
         </div>
@@ -6591,37 +6648,43 @@ const Controls: React.FC = () => {
             <Star size={14} />
             {t('editor.controls.header.favicon')}
           </label>
-          <p className="text-xs text-editor-text-secondary mb-3">{t('editor.controls.header.uploadFavicon')}</p>
 
-          <div className="flex items-center gap-4">
-            {activeProject?.faviconUrl ? (
-              <div className="relative">
-                <img
-                  src={activeProject.faviconUrl}
-                  alt="Favicon"
-                  className="w-12 h-12 rounded-lg border border-editor-border object-contain bg-editor-bg p-1"
-                />
-                <button
-                  onClick={async () => {
-                    if (activeProject) {
-                      try {
-                        await updateProjectFavicon(activeProject.id, null as any);
-                      } catch (error) {
-                        console.error('Failed to remove favicon:', error);
+          <div className="flex flex-col items-center gap-3 p-4 rounded-xl border border-editor-border bg-editor-bg/50">
+            {/* Preview */}
+            <div className="relative group">
+              {activeProject?.faviconUrl ? (
+                <div className="relative">
+                  <div className="w-16 h-16 rounded-xl border-2 border-editor-border overflow-hidden flex items-center justify-center"
+                    style={{ backgroundImage: 'linear-gradient(45deg, #808080 25%, transparent 25%), linear-gradient(-45deg, #808080 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #808080 75%), linear-gradient(-45deg, transparent 75%, #808080 75%)', backgroundSize: '8px 8px', backgroundPosition: '0 0, 0 4px, 4px -4px, -4px 0px' }}>
+                    <img
+                      src={activeProject.faviconUrl}
+                      alt="Favicon"
+                      className="w-full h-full object-contain p-1"
+                    />
+                  </div>
+                  <button
+                    onClick={async () => {
+                      if (activeProject) {
+                        try {
+                          await updateProjectFavicon(activeProject.id, null as any);
+                        } catch (error) {
+                          console.error('Failed to remove favicon:', error);
+                        }
                       }
-                    }
-                  }}
-                  className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white rounded-full flex items-center justify-center text-xs hover:bg-red-600"
-                  title="Remove favicon"
-                >
-                  ×
-                </button>
-              </div>
-            ) : (
-              <div className="w-12 h-12 rounded-lg border-2 border-dashed border-editor-border flex items-center justify-center bg-editor-bg">
-                <Upload size={16} className="text-editor-text-secondary" />
-              </div>
-            )}
+                    }}
+                    className="absolute -top-2 -right-2 w-5 h-5 bg-red-500/90 text-white rounded-full flex items-center justify-center text-xs hover:bg-red-500 transition-colors shadow-lg opacity-0 group-hover:opacity-100"
+                    title="Eliminar favicon"
+                  >
+                    ×
+                  </button>
+                </div>
+              ) : (
+                <div className="w-16 h-16 rounded-xl border-2 border-dashed border-editor-border/60 flex flex-col items-center justify-center bg-editor-bg gap-1">
+                  <Star size={18} className="text-editor-text-secondary/40" />
+                  <span className="text-[9px] text-editor-text-secondary/40 font-medium">ICO / PNG</span>
+                </div>
+              )}
+            </div>
 
             <input
               ref={faviconInputRef}
@@ -6647,16 +6710,16 @@ const Controls: React.FC = () => {
             <button
               onClick={() => faviconInputRef.current?.click()}
               disabled={isUploadingFavicon}
-              className="flex items-center gap-2 px-3 py-2 bg-editor-bg border border-editor-border rounded-lg text-sm text-editor-text-primary hover:bg-editor-panel-bg transition-colors disabled:opacity-50"
+              className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all duration-200 disabled:opacity-50 bg-editor-accent/10 text-editor-accent hover:bg-editor-accent/20 border border-editor-accent/20"
             >
               {isUploadingFavicon ? (
                 <>
-                  <span className="w-4 h-4 border-2 border-editor-accent border-t-transparent rounded-full animate-spin" />
-                  Uploading...
+                  <span className="w-3.5 h-3.5 border-2 border-editor-accent border-t-transparent rounded-full animate-spin" />
+                  Subiendo...
                 </>
               ) : (
                 <>
-                  <Upload size={14} />
+                  <Upload size={13} />
                   {activeProject?.faviconUrl ? t('editor.controls.header.change') : t('editor.controls.header.upload')}
                 </>
               )}
@@ -6771,6 +6834,53 @@ const Controls: React.FC = () => {
           {data.header.showCta !== false && (
             <div className="space-y-3 animate-fade-in-up mt-3">
               <Input label={t('editor.controls.navigation.buttonText')} value={data.header.ctaText || 'Get Started'} onChange={(e) => setNestedData('header.ctaText', e.target.value)} />
+
+              <div>
+                <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">Enlace del Botón</label>
+                <div className="grid grid-cols-4 gap-1 bg-editor-bg p-1 rounded-md border border-editor-border">
+                  {[{ value: 'manual', label: 'URL' }, { value: 'product', label: 'Producto' }, { value: 'collection', label: 'Colección' }, { value: 'content', label: 'Contenido' }].map((type) => (
+                    <button
+                      key={type.value}
+                      onClick={() => {
+                        setNestedData('header.ctaLinkType', type.value);
+                        if (type.value === 'section') setNestedData('header.ctaUrl', '#cta');
+                        else setNestedData('header.ctaUrl', '');
+                      }}
+                      className={`py-1.5 px-1 text-[10px] font-medium rounded-sm transition-colors text-center ${(data.header.ctaLinkType || 'manual') === type.value ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:bg-editor-border'}`}
+                    >
+                      {type.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {(data.header.ctaLinkType === 'manual' || !data.header.ctaLinkType) && (
+                <Input label="URL" value={data.header.ctaUrl || ''} onChange={(e) => setNestedData('header.ctaUrl', e.target.value)} placeholder="https://example.com o #seccion" />
+              )}
+              {data.header.ctaLinkType === 'product' && (
+                <SingleProductSelector
+                  storeId={activeProject?.id || ''}
+                  selectedProductId={data.header.ctaUrl?.startsWith('/product/') ? data.header.ctaUrl.split('/product/')[1] : undefined}
+                  onSelect={(id) => setNestedData('header.ctaUrl', id ? `/product/${id}` : '')}
+                  label={t('editor.controls.common.selectProduct')}
+                />
+              )}
+              {data.header.ctaLinkType === 'collection' && (
+                <SingleCollectionSelector
+                  storeId={activeProject?.id || ''}
+                  gridCategories={data.categoryGrid?.categories || []}
+                  selectedCollectionId={data.header.ctaUrl?.includes('collection/') ? data.header.ctaUrl.split('/').pop() : undefined}
+                  onSelect={(id) => setNestedData('header.ctaUrl', id ? `/collection/${id}` : '')}
+                  label={t('editor.controls.common.selectCollection')}
+                />
+              )}
+              {data.header.ctaLinkType === 'content' && (
+                <SingleContentSelector
+                  selectedContentPath={data.header.ctaUrl}
+                  onSelect={(path) => setNestedData('header.ctaUrl', path || '')}
+                  label={t('editor.controls.common.selectContent')}
+                />
+              )}
             </div>
           )}
         </div>
@@ -6821,10 +6931,11 @@ const Controls: React.FC = () => {
                   <option value="floating-glass">{t('editor.controls.header.glass')}</option>
                   <option value="floating-shadow">Floating Shadow</option>
                 </optgroup>
-                <optgroup label="── Transparent ──">
-                  <option value="transparent-blur">Transparent Blur</option>
-                  <option value="transparent-bordered">Transparent Bordered</option>
-                  <option value="transparent-gradient">Transparent Gradient</option>
+                <optgroup label="── Gradient ──">
+                  <option value="transparent-blur">Gradient Blur</option>
+                  <option value="transparent-bordered">Gradient Bordered</option>
+                  <option value="transparent-gradient">Gradient Fade</option>
+                  <option value="transparent-gradient-dark">Gradient Dark</option>
                 </optgroup>
               </select>
             </div>
@@ -6833,16 +6944,6 @@ const Controls: React.FC = () => {
 
 
         {/* ========== OPTIONS (Sticky & Glass) ========== */}
-        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-          <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
-            <Settings size={14} />
-            Opciones
-          </label>
-          <div className="grid grid-cols-2 gap-4">
-            <ToggleControl label={t('editor.controls.header.sticky')} checked={data.header.isSticky} onChange={(v) => setNestedData('header.isSticky', v)} />
-            <ToggleControl label={t('editor.controls.header.glass')} checked={data.header.glassEffect} onChange={(v) => setNestedData('header.glassEffect', v)} />
-          </div>
-        </div>
 
 
         {/* ========== HEIGHT & HOVER ========== */}
@@ -6920,6 +7021,10 @@ const Controls: React.FC = () => {
                 </button>
               ))}
             </div>
+            <div className="space-y-2 mt-3">
+              <ColorControl label="Fondo Botón" value={data.header.colors?.buttonBackground || data.header.colors?.accent || '#4f46e5'} onChange={(v) => setNestedData('header.colors.buttonBackground', v)} />
+              <ColorControl label="Texto Botón" value={data.header.colors?.buttonText || '#ffffff'} onChange={(v) => setNestedData('header.colors.buttonText', v)} />
+            </div>
           </div>
         )}
 
@@ -6934,6 +7039,12 @@ const Controls: React.FC = () => {
             <ColorControl label={t('editor.controls.common.background')} value={data.header.colors?.background} onChange={(v) => setNestedData('header.colors.background', v)} />
             <ColorControl label={t('editor.controls.common.text')} value={data.header.colors?.text} onChange={(v) => setNestedData('header.colors.text', v)} />
             <ColorControl label={t('editor.controls.common.accent')} value={data.header.colors?.accent || '#4f46e5'} onChange={(v) => setNestedData('header.colors.accent', v)} />
+            {data.header.style === 'transparent-gradient' && (
+              <ColorControl label="Color Gradiente" value={data.header.colors?.gradientFadeColor || data.header.colors?.text || '#ffffff'} onChange={(v) => setNestedData('header.colors.gradientFadeColor', v)} />
+            )}
+            {data.header.style === 'transparent-gradient-dark' && (
+              <ColorControl label="Color Gradiente" value={data.header.colors?.gradientDarkColor || '#000000'} onChange={(v) => setNestedData('header.colors.gradientDarkColor', v)} />
+            )}
           </div>
         </div>
       </div>

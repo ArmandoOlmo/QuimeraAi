@@ -6,7 +6,7 @@
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 import { User, onAuthStateChanged, auth, db, doc, getDoc, setDoc } from '../../firebase';
 import { UserDocument, UserRole, RolePermissions, IndividualRole, AgencyRole } from '../../types';
-import { getPermissions, isOwner, determineRole, OWNER_EMAIL } from '../../constants/roles';
+import { getPermissions, isOwner, determineRole } from '../../constants/roles';
 
 interface AuthContextType {
     // User State
@@ -84,19 +84,29 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                         finalUserDoc = newUserDocData;
                     }
 
-                    // Auto-promote owner
+                    // Auto-promote owner (fallback until Custom Claims are deployed)
                     if (isOwner(firebaseUser.email!) && finalUserDoc.role !== 'owner') {
                         try {
                             finalUserDoc.role = 'owner';
                             await setDoc(userDocRef, { role: 'owner' }, { merge: true });
                         } catch (e) {
-                            console.warn("Failed to auto-promote owner:", e);
+                            console.warn('Failed to auto-promote owner:', e);
                         }
                     }
 
                     setUserDocument({ ...finalUserDoc, id: firebaseUser.uid });
                     const effectiveRole = determineRole(firebaseUser.email!, finalUserDoc.role || 'user');
                     setUserPermissions(getPermissions(effectiveRole));
+
+                    // Read isOwner from Custom Claims (set by server-side Cloud Function)
+                    try {
+                        const tokenResult = await firebaseUser.getIdTokenResult();
+                        if (tokenResult.claims.isOwner === true) {
+                            setIsOwnerFromClaims(true);
+                        }
+                    } catch (claimsErr) {
+                        console.warn('[AuthProvider] Could not read custom claims:', claimsErr);
+                    }
                 } catch (error) {
                     console.error('Error fetching user document:', error);
                     // Fallback user document
@@ -123,11 +133,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         };
     }, []);
 
-    const isUserOwner = isOwner(user?.email || '');
+    const [isOwnerFromClaims, setIsOwnerFromClaims] = useState(false);
+
+    // isUserOwner: Custom Claims (primary) OR email check (fallback) OR Firestore role
+    const isUserOwner = isOwnerFromClaims || isOwner(user?.email || '') || userDocument?.role === 'owner';
     const currentTenant = userDocument?.tenantId || null;
     const currentTenantRole = userDocument?.tenantRole || null;
     // Include isUserOwner as fallback to handle race condition where userDocument.role
-    // hasn't loaded yet but we can verify owner by email
+    // hasn't loaded yet but we can verify owner by claims
     const canAccessSuperAdmin = isUserOwner || ['owner', 'superadmin', 'admin', 'manager'].includes(userDocument?.role || '');
 
     // Functions

@@ -54,6 +54,9 @@ const Newsletter: React.FC<NewsletterProps> = ({ title, description, placeholder
   const textColor = colors?.text || colors?.cardText || '#ffffff';
   const placeholderColor = colors?.inputPlaceholder || '#6b7280';
 
+  // DEBUG LOG
+  console.log('[Newsletter Render]', { incomingColors: colors, headingColor, textColor });
+
   return (
     <section id="newsletter" className="w-full" style={{ backgroundColor: colors?.background }}>
       <style dangerouslySetInnerHTML={{
@@ -64,7 +67,7 @@ const Newsletter: React.FC<NewsletterProps> = ({ title, description, placeholder
         }
       `}} />
       <div className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`}>
-        <div className={`border border-white/10 p-8 md:p-12 text-center backdrop-blur-xl ${borderRadiusClasses[cardBorderRadius]}`} style={{ borderColor: colors?.borderColor || 'rgba(255,255,255,0.1)', backgroundColor: hexToRgba((colors?.cardBackground || '#4f46e5').startsWith('rgba') ? '#4f46e5' : (colors?.cardBackground || '#4f46e5'), 0.4) }}>
+        <div className={`border border-white/10 p-8 md:p-12 text-center backdrop-blur-xl ${borderRadiusClasses[cardBorderRadius]}`} style={{ borderColor: colors?.borderColor || 'rgba(255,255,255,0.1)', backgroundColor: colors?.cardBackground || 'rgba(79, 70, 229, 0.75)' }}>
           <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold text-site-heading mb-4 font-header`} style={{ color: headingColor, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>{title}</h2>
           <p className={`${descriptionSizeClasses[descriptionFontSize]} max-w-2xl mx-auto mb-8 font-body`} style={{ color: textColor }}>{description}</p>
           <form onSubmit={(e) => e.preventDefault()} className="max-w-xl mx-auto flex flex-col sm:flex-row gap-4">

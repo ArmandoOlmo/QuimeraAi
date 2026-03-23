@@ -1879,10 +1879,7 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
             {activeTab === 'style' && (
                 <>
                     {/* Spacing */}
-                    <div className="space-y-3">
-                        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
-                            {t('landingEditor.spacing', 'Espaciado')}
-                        </label>
+                    <ControlGroup label={t('landingEditor.spacing', 'Espaciado')}>
                         <SelectControl
                             label={t('landingEditor.verticalPadding', 'Vertical')}
                             value={data.paddingY || 'lg'}
@@ -1907,13 +1904,10 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                             ]}
                             onChange={(v) => updateData('paddingX', v)}
                         />
-                    </div>
+                    </ControlGroup>
 
-                    {/* Section Background */}
-                    <div className="space-y-3 pt-3 border-t border-editor-border">
-                        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
-                            {t('landingEditor.sectionColors', 'Colores de Sección')}
-                        </label>
+                    {/* Section Colors */}
+                    <ControlGroup label={t('landingEditor.sectionColors', 'Colores de Sección')}>
                         <ColorControl
                             label={t('landingEditor.backgroundColor', 'Fondo de Sección')}
                             value={data.colors?.background || data.backgroundColor || '#0f172a'}
@@ -1921,29 +1915,20 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                                 updateData('backgroundColor', v);
                                 updateNestedData('colors.background', v);
                             }}
-                            paletteColors={getSelectedPaletteColors()}
-                            recentPalettes={getRecentPalettes()}
                         />
-                    </div>
+                    </ControlGroup>
 
                     {/* Card Gradient */}
-                    <div className="space-y-3 pt-3 border-t border-editor-border">
-                        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
-                            {t('landingEditor.cardGradient', 'Gradiente de Tarjeta')}
-                        </label>
+                    <ControlGroup label={t('landingEditor.cardGradient', 'Gradiente de Tarjeta')}>
                         <ColorControl
                             label={t('landingEditor.gradientStart', 'Inicio del Gradiente')}
                             value={data.colors?.gradientStart || '#4f46e5'}
                             onChange={(v) => updateNestedData('colors.gradientStart', v)}
-                            paletteColors={getSelectedPaletteColors()}
-                            recentPalettes={getRecentPalettes()}
                         />
                         <ColorControl
                             label={t('landingEditor.gradientEnd', 'Fin del Gradiente')}
                             value={data.colors?.gradientEnd || '#7c3aed'}
                             onChange={(v) => updateNestedData('colors.gradientEnd', v)}
-                            paletteColors={getSelectedPaletteColors()}
-                            recentPalettes={getRecentPalettes()}
                         />
                         {/* Gradient Preview */}
                         <div
@@ -1952,13 +1937,10 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                                 backgroundImage: `linear-gradient(135deg, ${data.colors?.gradientStart || '#4f46e5'}, ${data.colors?.gradientEnd || '#7c3aed'})`
                             }}
                         />
-                    </div>
+                    </ControlGroup>
 
-                    {/* Text & Button Colors */}
-                    <div className="space-y-3 pt-3 border-t border-editor-border">
-                        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
-                            {t('landingEditor.textAndButtonColors', 'Texto y Botón')}
-                        </label>
+                    {/* Text & Button */}
+                    <ControlGroup label={t('landingEditor.textAndButtonColors', 'Texto y Botón')}>
                         <ColorControl
                             label={t('landingEditor.headingColor', 'Color del Título')}
                             value={data.colors?.heading || data.textColor || '#ffffff'}
@@ -1966,37 +1948,26 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                                 updateData('textColor', v);
                                 updateNestedData('colors.heading', v);
                             }}
-                            paletteColors={getSelectedPaletteColors()}
-                            recentPalettes={getRecentPalettes()}
                         />
                         <ColorControl
                             label={t('landingEditor.descriptionColor', 'Color de Descripción')}
                             value={data.colors?.text || '#e2e8f0'}
                             onChange={(v) => updateNestedData('colors.text', v)}
-                            paletteColors={getSelectedPaletteColors()}
-                            recentPalettes={getRecentPalettes()}
                         />
                         <ColorControl
                             label={t('landingEditor.buttonBackground', 'Fondo del Botón')}
                             value={data.colors?.buttonBackground || '#ffffff'}
                             onChange={(v) => updateNestedData('colors.buttonBackground', v)}
-                            paletteColors={getSelectedPaletteColors()}
-                            recentPalettes={getRecentPalettes()}
                         />
                         <ColorControl
                             label={t('landingEditor.buttonText', 'Texto del Botón')}
                             value={data.colors?.buttonText || '#4f46e5'}
                             onChange={(v) => updateNestedData('colors.buttonText', v)}
-                            paletteColors={getSelectedPaletteColors()}
-                            recentPalettes={getRecentPalettes()}
                         />
-                    </div>
+                    </ControlGroup>
 
                     {/* Corner Gradient */}
-                    <div className="space-y-3 pt-3 border-t border-editor-border">
-                        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
-                            {t('landingEditor.cornerGradient', 'Gradiente de Esquina')}
-                        </label>
+                    <ControlGroup label={t('landingEditor.cornerGradient', 'Gradiente de Esquina')}>
                         <Toggle
                             label={t('landingEditor.enableCornerGradient', 'Activar gradiente de esquina')}
                             checked={data.cornerGradient?.enabled || false}
@@ -2019,11 +1990,9 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                                     label={t('landingEditor.gradientColor', 'Color del Gradiente')}
                                     value={data.cornerGradient?.color || '#ffffff'}
                                     onChange={(v) => updateNestedData('cornerGradient.color', v)}
-                                    paletteColors={getSelectedPaletteColors()}
-                                    recentPalettes={getRecentPalettes()}
                                 />
                                 <RangeControl
-                                    label={t('landingEditor.opacity', 'Opacidad')}
+                                    label={`${t('landingEditor.opacity', 'Opacidad')}: ${data.cornerGradient?.opacity || 20}%`}
                                     value={data.cornerGradient?.opacity || 20}
                                     min={0}
                                     max={100}
@@ -2031,7 +2000,7 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                                     onChange={(v) => updateNestedData('cornerGradient.opacity', v)}
                                 />
                                 <RangeControl
-                                    label={t('landingEditor.size', 'Tamaño')}
+                                    label={`${t('landingEditor.size', 'Tamaño')}: ${data.cornerGradient?.size || 50}%`}
                                     value={data.cornerGradient?.size || 50}
                                     min={20}
                                     max={100}
@@ -2040,16 +2009,16 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                                 />
                             </>
                         )}
-                    </div>
+                    </ControlGroup>
 
                     {/* Background Pattern */}
-                    <div className="pt-3 border-t border-editor-border">
+                    <ControlGroup label={t('landingEditor.showPattern', 'Patrón de Fondo')}>
                         <Toggle
                             label={t('landingEditor.showPattern', 'Mostrar patrón de fondo')}
                             checked={data.showPattern ?? false}
                             onChange={(v) => updateData('showPattern', v)}
                         />
-                    </div>
+                    </ControlGroup>
                 </>
             )}
         </div>
@@ -3025,9 +2994,9 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                         </span>
                         <button
                             onClick={() => updateData('headingsCaps', !data.headingsCaps)}
-                            className={`${data.headingsCaps ? 'bg-editor-accent' : 'bg-editor-border'} relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none`}
+                            className={`${data.headingsCaps ? 'bg-editor-accent' : 'bg-editor-border'} relative inline-flex h-[22px] w-10 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none`}
                         >
-                            <span className={`${data.headingsCaps ? 'translate-x-4' : 'translate-x-0'} pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out`} />
+                            <span className={`${data.headingsCaps ? 'translate-x-[18px]' : 'translate-x-0'} pointer-events-none inline-block h-[18px] w-[18px] transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out`} />
                         </button>
                     </div>
 
@@ -3038,9 +3007,9 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                         </span>
                         <button
                             onClick={() => updateData('buttonsCaps', !data.buttonsCaps)}
-                            className={`${data.buttonsCaps ? 'bg-editor-accent' : 'bg-editor-border'} relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none`}
+                            className={`${data.buttonsCaps ? 'bg-editor-accent' : 'bg-editor-border'} relative inline-flex h-[22px] w-10 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none`}
                         >
-                            <span className={`${data.buttonsCaps ? 'translate-x-4' : 'translate-x-0'} pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out`} />
+                            <span className={`${data.buttonsCaps ? 'translate-x-[18px]' : 'translate-x-0'} pointer-events-none inline-block h-[18px] w-[18px] transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out`} />
                         </button>
                     </div>
 
@@ -3051,9 +3020,9 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                         </span>
                         <button
                             onClick={() => updateData('navLinksCaps', !data.navLinksCaps)}
-                            className={`${data.navLinksCaps ? 'bg-editor-accent' : 'bg-editor-border'} relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none`}
+                            className={`${data.navLinksCaps ? 'bg-editor-accent' : 'bg-editor-border'} relative inline-flex h-[22px] w-10 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none`}
                         >
-                            <span className={`${data.navLinksCaps ? 'translate-x-4' : 'translate-x-0'} pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out`} />
+                            <span className={`${data.navLinksCaps ? 'translate-x-[18px]' : 'translate-x-0'} pointer-events-none inline-block h-[18px] w-[18px] transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out`} />
                         </button>
                     </div>
                 </div>
@@ -4312,6 +4281,7 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
             )}
             {activeTab === 'style' && (
                 <>
+                    {/* Spacing */}
                     <ControlGroup label={t('landingEditor.paddingY', 'Espaciado Vertical')}>
                         <SelectControl
                             value={data.paddingY || 'lg'}
@@ -4323,16 +4293,85 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                             ]}
                         />
                     </ControlGroup>
-                    <ControlGroup label={t('landingEditor.backgroundColor', 'Color de Fondo')}>
+
+                    {/* Section Colors */}
+                    <ControlGroup label={t('landingEditor.sectionColors', 'Colores de Sección')}>
                         <ColorControl
-                            value={data.colors?.background || '#0f172a'}
+                            label={t('landingEditor.backgroundColor', 'Fondo')}
+                            value={data.colors?.background || '#000000'}
                             onChange={(v) => updateData('colors', { ...data.colors, background: v })}
                         />
-                    </ControlGroup>
-                    <ControlGroup label={t('landingEditor.accentColor', 'Color de Acento')}>
                         <ColorControl
-                            value={data.colors?.accent || '#6366f1'}
-                            onChange={(v) => updateData('colors', { ...data.colors, accent: v })}
+                            label={t('landingEditor.headingColor', 'Título de Sección')}
+                            value={data.colors?.heading || '#F9FAFB'}
+                            onChange={(v) => updateData('colors', { ...data.colors, heading: v })}
+                        />
+                        <ColorControl
+                            label={t('landingEditor.descriptionColor', 'Descripción de Sección')}
+                            value={data.colors?.text || '#94a3b8'}
+                            onChange={(v) => updateData('colors', { ...data.colors, text: v })}
+                        />
+                    </ControlGroup>
+
+                    {/* Card Box */}
+                    <ControlGroup label={t('landingEditor.cardBox', 'Caja de Tarjeta')}>
+                        <ColorControl
+                            label={t('landingEditor.cardBackground', 'Fondo de Tarjeta')}
+                            value={data.colors?.cardBackground || 'rgba(79, 70, 229, 0.75)'}
+                            onChange={(v) => updateData('colors', { ...data.colors, cardBackground: v })}
+                        />
+                        <ColorControl
+                            label={t('landingEditor.borderColor', 'Borde de Tarjeta')}
+                            value={data.colors?.borderColor || '#374151'}
+                            onChange={(v) => updateData('colors', { ...data.colors, borderColor: v })}
+                        />
+                        <ColorControl
+                            label={t('landingEditor.cardHeading', 'Título de Tarjeta')}
+                            value={data.colors?.cardHeading || '#ffffff'}
+                            onChange={(v) => updateData('colors', { ...data.colors, cardHeading: v })}
+                        />
+                        <ColorControl
+                            label={t('landingEditor.cardText', 'Texto de Tarjeta')}
+                            value={data.colors?.cardText || '#ffffff'}
+                            onChange={(v) => updateData('colors', { ...data.colors, cardText: v })}
+                        />
+                    </ControlGroup>
+
+                    {/* Input Field */}
+                    <ControlGroup label={t('landingEditor.inputColors', 'Colores de Input')}>
+                        <ColorControl
+                            label={t('landingEditor.inputBackground', 'Fondo de Input')}
+                            value={data.colors?.inputBackground || '#111827'}
+                            onChange={(v) => updateData('colors', { ...data.colors, inputBackground: v })}
+                        />
+                        <ColorControl
+                            label={t('landingEditor.inputText', 'Texto de Input')}
+                            value={data.colors?.inputText || '#ffffff'}
+                            onChange={(v) => updateData('colors', { ...data.colors, inputText: v })}
+                        />
+                        <ColorControl
+                            label={t('landingEditor.placeholder', 'Placeholder')}
+                            value={data.colors?.inputPlaceholder || '#6b7280'}
+                            onChange={(v) => updateData('colors', { ...data.colors, inputPlaceholder: v })}
+                        />
+                        <ColorControl
+                            label={t('landingEditor.inputBorder', 'Borde de Input')}
+                            value={data.colors?.inputBorder || '#374151'}
+                            onChange={(v) => updateData('colors', { ...data.colors, inputBorder: v })}
+                        />
+                    </ControlGroup>
+
+                    {/* Button */}
+                    <ControlGroup label={t('landingEditor.buttonColors', 'Colores de Botón')}>
+                        <ColorControl
+                            label={t('landingEditor.buttonBackground', 'Fondo de Botón')}
+                            value={data.colors?.buttonBackground || '#4f46e5'}
+                            onChange={(v) => updateData('colors', { ...data.colors, buttonBackground: v })}
+                        />
+                        <ColorControl
+                            label={t('landingEditor.buttonText', 'Texto de Botón')}
+                            value={data.colors?.buttonText || '#ffffff'}
+                            onChange={(v) => updateData('colors', { ...data.colors, buttonText: v })}
                         />
                     </ControlGroup>
                 </>

@@ -861,8 +861,8 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         const userProjects = projects.filter(p => p.status !== 'Template');
         const currentProjectCount = userProjects.length;
 
-        // Check project limit (-1 means unlimited, owner has no limits)
-        const isOwner = userDocument?.role === 'owner';
+        // Check project limit (-1 means unlimited, owner/superadmin has no limits)
+        const isOwner = userDocument?.role === 'owner' || userDocument?.role === 'superadmin';
         if (loadingAuth) return; // Wait for auth to be sure
         if (!isOwner && maxProjects !== -1 && currentProjectCount >= maxProjects) {
             // Show upgrade modal if available
@@ -985,8 +985,8 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         const userProjects = projects.filter(p => p.status !== 'Template');
         const currentProjectCount = userProjects.length;
 
-        // Check project limit (-1 means unlimited, owner has no limits)
-        const isOwner = userDocument?.role === 'owner';
+        // Check project limit (-1 means unlimited, owner/superadmin has no limits)
+        const isOwner = userDocument?.role === 'owner' || userDocument?.role === 'superadmin';
         // Note: loadingAuth guard removed - by the time a user is on the dashboard, auth is loaded
         if (!isOwner && maxProjects !== -1 && currentProjectCount >= maxProjects) {
             // Show upgrade modal if available

@@ -14,6 +14,7 @@
 
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
+import { OWNER_CONFIG } from './config';
 
 // Initialize Firebase Admin if not already initialized
 if (!admin.apps.length) {
@@ -22,6 +23,15 @@ if (!admin.apps.length) {
 
 const db = admin.firestore();
 const auth = admin.auth();
+
+/**
+ * Check if an email matches the platform owner (server-side only)
+ */
+function isOwnerEmail(email: string): boolean {
+    const ownerEmail = OWNER_CONFIG.email;
+    if (!ownerEmail || !email) return false;
+    return email.toLowerCase() === ownerEmail.toLowerCase();
+}
 
 // Valid roles that can be set
 const VALID_ROLES = ['owner', 'superadmin', 'admin', 'manager', 'user'];
@@ -71,10 +81,18 @@ export const onUserRoleChange = functions.firestore
             const userRecord = await auth.getUser(userId);
             const existingClaims = userRecord.customClaims || {};
             
-            // Update claims with new role
+            // Check if this user is the platform owner
+            const userEmail = newData.email || userRecord.email || '';
+            const ownerFlag = isOwnerEmail(userEmail);
+            
+            // Auto-promote owner role if email matches
+            const effectiveRole = ownerFlag ? 'owner' : validatedRole;
+            
+            // Update claims with new role and isOwner flag
             const newClaims = {
                 ...existingClaims,
-                role: validatedRole,
+                role: effectiveRole,
+                isOwner: ownerFlag,
                 // Include tenantId if present in user data
                 ...(newData.tenantId && { tenantId: newData.tenantId }),
             };

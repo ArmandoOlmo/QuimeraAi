@@ -44,7 +44,8 @@ export type NavbarStyle =
     // NUEVOS: Transparentes
     | 'transparent-blur'     // Transparente con blur backdrop
     | 'transparent-bordered' // Transparente con borde sutil
-    | 'transparent-gradient'; // Transparente con gradiente inferior
+    | 'transparent-gradient'      // Transparente con gradiente inferior
+    | 'transparent-gradient-dark'; // Gradiente oscuro en bordes hacia color principal
 
 export interface NavLink {
     text: string;
@@ -65,6 +66,8 @@ export interface HeaderData {
     hoverStyle: NavLinkHoverStyle;
     ctaText: string;
     showCta: boolean;
+    ctaUrl?: string;
+    ctaLinkType?: 'manual' | 'product' | 'collection' | 'section' | 'content';
     menuId?: string;
     showLogin: boolean;
     loginText: string;
@@ -76,7 +79,7 @@ export interface HeaderData {
     showCart?: boolean;
     cartItemCount?: number;
     onCartClick?: () => void;
-    colors: { background: string; text: string; accent: string; border?: string };
+    colors: { background: string; text: string; accent: string; border?: string; gradientFadeColor?: string; gradientDarkColor?: string; buttonBackground?: string; buttonText?: string };
     buttonBorderRadius: BorderRadiusSize;
     isPreviewMode?: boolean;
     linkFontSize?: number;

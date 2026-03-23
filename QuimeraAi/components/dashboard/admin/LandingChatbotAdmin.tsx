@@ -1797,9 +1797,9 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                                         <div className="flex items-start gap-3">
                                             <button
                                                 onClick={() => updateProactiveMessage(index, 'enabled', !msg.enabled)}
-                                                className={`mt-1 relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${msg.enabled ? 'bg-primary' : 'bg-secondary'}`}
+                                                className={`mt-1 relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${msg.enabled ? 'bg-primary' : 'bg-secondary'}`}
                                             >
-                                                <span className={`inline-block h-3 w-3 transform rounded-full bg-white transition ${msg.enabled ? 'translate-x-5' : 'translate-x-1'}`} />
+                                                <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${msg.enabled ? 'translate-x-6' : 'translate-x-1'}`} />
                                             </button>
                                             <div className="flex-1 space-y-2">
                                                 <div className="grid grid-cols-2 gap-2">

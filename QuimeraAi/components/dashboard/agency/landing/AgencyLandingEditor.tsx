@@ -697,7 +697,7 @@ export function AgencyLandingEditor({ onBack }: AgencyLandingEditorProps) {
                 background: colors.primary,
                 text: '#ffffff',
                 heading: '#ffffff',
-                cardBackground: `rgba(255, 255, 255, 0.15)`,
+                cardBackground: colors.surface,
                 buttonBackground: '#ffffff',
                 buttonText: colors.primary,
             }
