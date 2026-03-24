@@ -738,8 +738,8 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
                 showDate,
                 ...(publishedAt ? { publishedAt } : {}),
                 categoryId,
-                ...(podcastAudioUrl ? { podcastAudioUrl } : {}),
-                ...(podcastVideoUrl ? { podcastVideoUrl } : {}),
+                podcastAudioUrl: podcastAudioUrl || '',
+                podcastVideoUrl: podcastVideoUrl || '',
                 createdAt: post?.createdAt || new Date().toISOString(),
                 updatedAt: new Date().toISOString(),
             };
