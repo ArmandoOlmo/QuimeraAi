@@ -743,6 +743,7 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
                 createdAt: post?.createdAt || new Date().toISOString(),
                 updatedAt: new Date().toISOString(),
             };
+            console.log('[ModernCMSEditor] Saving post data:', { categoryId: postData.categoryId, title: postData.title, id: postData.id });
             await saveCMSPost(postData);
             setLastSaved(new Date());
 

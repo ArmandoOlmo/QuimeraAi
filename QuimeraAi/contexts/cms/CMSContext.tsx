@@ -217,6 +217,7 @@ export const CMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
             if (id && id.length > 0) {
                 const postRef = doc(db, collectionPath, id);
+                console.log('[CMSContext] Updating post, categoryId:', data.categoryId, 'postId:', id);
                 await updateDoc(postRef, stripUndefined({ ...data, updatedAt: now }));
             } else {
                 const postsCol = collection(db, collectionPath);
