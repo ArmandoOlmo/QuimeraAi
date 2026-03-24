@@ -11,11 +11,84 @@ import QuimeraLoader from '../ui/QuimeraLoader';
 import ModernCMSEditor from './modern/ModernCMSEditor';
 import ContentCreatorAssistant from './ContentCreatorAssistant';
 import CMSProjectSelectorPage from './CMSProjectSelectorPage';
-import { Menu, Plus, Search, FileText, Edit3, Trash2, Loader2, Calendar, Globe, PenTool, ArrowDown, ArrowUp, Grid, List, Eye, X as XIcon, Copy, Edit2, Download, Sparkles, ArrowLeft, ChevronDown, Check, Tag, FolderOpen, MoveUp, MoveDown, ArrowUpDown } from 'lucide-react';
+import { Menu, Plus, Search, FileText, Edit3, Trash2, Loader2, Calendar, Globe, PenTool, ArrowDown, ArrowUp, Grid, List, Eye, X as XIcon, Copy, Edit2, Download, Sparkles, ArrowLeft, ChevronDown, Check, Tag, FolderOpen, GripVertical, ArrowUpDown } from 'lucide-react';
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, TouchSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
+import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { useRouter } from '../../hooks/useRouter';
 import { ROUTES } from '../../routes/config';
 import { CMSPost, CMSCategory } from '../../types';
 import { sanitizeHtml } from '../../utils/sanitize';
+
+// === Drag & Drop Sortable Profile Item ===
+const SortableProfileItem: React.FC<{ post: CMSPost; index: number }> = ({ post, index }) => {
+    const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: post.id });
+    const style: React.CSSProperties = {
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isDragging ? 0.5 : 1,
+        zIndex: isDragging ? 50 : 'auto',
+    };
+
+    return (
+        <div
+            ref={setNodeRef}
+            style={style}
+            className={`flex items-center gap-3 p-3 bg-secondary/20 border rounded-xl transition-colors mb-2 ${isDragging ? 'border-primary shadow-lg' : 'border-border hover:border-primary/30'}`}
+        >
+            {/* Drag Handle */}
+            <button
+                {...attributes}
+                {...listeners}
+                className="p-1 rounded-lg cursor-grab active:cursor-grabbing text-muted-foreground hover:text-primary touch-none flex-shrink-0"
+            >
+                <GripVertical size={16} />
+            </button>
+
+            {/* Position number */}
+            <span className="w-6 h-6 flex items-center justify-center rounded-full bg-primary/10 text-primary text-xs font-bold flex-shrink-0">
+                {index + 1}
+            </span>
+
+            {/* Thumbnail */}
+            <div className="w-10 h-10 rounded-lg overflow-hidden bg-secondary flex-shrink-0">
+                {post.featuredImage ? (
+                    <img src={post.featuredImage} alt="" className="w-full h-full object-cover" />
+                ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                        <FileText size={16} className="text-muted-foreground opacity-30" />
+                    </div>
+                )}
+            </div>
+
+            {/* Title */}
+            <div className="flex-1 min-w-0">
+                <p className="font-semibold text-sm text-foreground truncate">{post.title}</p>
+                <p className="text-[10px] text-muted-foreground">
+                    {post.status === 'published' ? '● Publicado' : '○ Borrador'}
+                </p>
+            </div>
+        </div>
+    );
+};
+
+const ProfileDragList: React.FC<{ posts: CMSPost[]; onDragEnd: (event: DragEndEvent) => void }> = ({ posts, onDragEnd }) => {
+    const sensors = useSensors(
+        useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+        useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 5 } }),
+        useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+    );
+
+    return (
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
+            <SortableContext items={posts.map(p => p.id)} strategy={verticalListSortingStrategy}>
+                {posts.map((post, index) => (
+                    <SortableProfileItem key={post.id} post={post} index={index} />
+                ))}
+            </SortableContext>
+        </DndContext>
+    );
+};
 
 const CMSDashboard: React.FC = () => {
     const { t } = useTranslation();
@@ -266,28 +339,26 @@ const CMSDashboard: React.FC = () => {
         return cat?.layoutType === 'profile' ? cat : null;
     }, [categoryFilter, categories]);
 
-    // Reorder handler for profile categories
-    const handleReorderProfile = async (postId: string, direction: 'up' | 'down') => {
-        if (!activeProfileCategory) return;
+    // Reorder handler for profile categories (drag-and-drop)
+    const handleProfileDragEnd = async (event: DragEndEvent) => {
+        const { active, over } = event;
+        if (!over || active.id === over.id || !activeProfileCategory) return;
 
-        // Get posts in this category sorted by current sortOrder
         const categoryPosts = cmsPosts
             .filter(p => p.categoryId === activeProfileCategory.id)
             .sort((a, b) => (a.sortOrder ?? 999) - (b.sortOrder ?? 999));
 
-        const currentIndex = categoryPosts.findIndex(p => p.id === postId);
-        if (currentIndex === -1) return;
-        if (direction === 'up' && currentIndex === 0) return;
-        if (direction === 'down' && currentIndex === categoryPosts.length - 1) return;
+        const oldIndex = categoryPosts.findIndex(p => p.id === active.id);
+        const newIndex = categoryPosts.findIndex(p => p.id === over.id);
+        if (oldIndex === -1 || newIndex === -1) return;
 
-        const swapIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
-        const currentPost = categoryPosts[currentIndex];
-        const swapPost = categoryPosts[swapIndex];
+        const reordered = arrayMove(categoryPosts, oldIndex, newIndex);
 
-        // Assign new sortOrder values
+        // Batch-save all new sortOrder values
         try {
-            await saveCMSPost({ ...currentPost, sortOrder: swapIndex });
-            await saveCMSPost({ ...swapPost, sortOrder: currentIndex });
+            await Promise.all(
+                reordered.map((post, i) => saveCMSPost({ ...post, sortOrder: i }))
+            );
         } catch (e) {
             console.error('[CMSDashboard] Error reordering profiles:', e);
         }
@@ -948,26 +1019,6 @@ const CMSDashboard: React.FC = () => {
                                                 </button>
                                             </div>
 
-                                            {/* Profile Reorder Buttons — visible when filtering by a profile category */}
-                                            {activeProfileCategory && (
-                                                <div className="absolute top-12 left-3 sm:top-4 sm:left-auto sm:right-14 z-20 flex flex-col gap-1">
-                                                    <button
-                                                        onClick={(e) => { e.stopPropagation(); handleReorderProfile(post.id, 'up'); }}
-                                                        className="bg-white/90 dark:bg-black/60 backdrop-blur-md p-1.5 rounded-full shadow-lg hover:scale-110 active:scale-95 transition-transform text-foreground"
-                                                        title="Move Up"
-                                                    >
-                                                        <MoveUp size={14} />
-                                                    </button>
-                                                    <button
-                                                        onClick={(e) => { e.stopPropagation(); handleReorderProfile(post.id, 'down'); }}
-                                                        className="bg-white/90 dark:bg-black/60 backdrop-blur-md p-1.5 rounded-full shadow-lg hover:scale-110 active:scale-95 transition-transform text-foreground"
-                                                        title="Move Down"
-                                                    >
-                                                        <MoveDown size={14} />
-                                                    </button>
-                                                </div>
-                                            )}
-
                                             {/* Bottom Section: Title, Category Badge, and Date */}
                                             <div className="absolute bottom-0 left-0 right-0 z-10 p-4 sm:p-6">
                                                 {post.categoryId && categories.find(c => c.id === post.categoryId) && (
@@ -1112,7 +1163,7 @@ const CMSDashboard: React.FC = () => {
                 count={selectedPosts.length}
             />
 
-            {/* Profile Ordering Modal */}
+            {/* Profile Ordering Modal — Drag and Drop */}
             {showProfileOrderModal && activeProfileCategory && (() => {
                 const profilePosts = cmsPosts
                     .filter(p => p.categoryId === activeProfileCategory.id)
@@ -1139,60 +1190,16 @@ const CMSDashboard: React.FC = () => {
                             {/* Subtitle */}
                             <div className="px-5 py-3 bg-secondary/30 border-b border-border">
                                 <p className="text-xs text-muted-foreground">
-                                    {t('cms.orderProfilesDesc', 'Usa las flechas para organizar el orden en que aparecen los perfiles en tu sitio.')}
+                                    {t('cms.orderProfilesDragDesc', 'Arrastra y suelta los perfiles para reorganizar el orden en que aparecen en tu sitio.')}
                                 </p>
                             </div>
 
-                            {/* Sortable List */}
-                            <div className="flex-1 overflow-y-auto p-4 space-y-2">
+                            {/* Drag & Drop Sortable List */}
+                            <div className="flex-1 overflow-y-auto p-4">
                                 {profilePosts.length === 0 ? (
                                     <p className="text-sm text-muted-foreground text-center py-8">{t('cms.noProfilePosts', 'No hay perfiles en esta categoría.')}</p>
                                 ) : (
-                                    profilePosts.map((post, index) => (
-                                        <div key={post.id} className="flex items-center gap-3 p-3 bg-secondary/20 border border-border rounded-xl hover:border-primary/30 transition-colors group">
-                                            {/* Position number */}
-                                            <span className="w-6 h-6 flex items-center justify-center rounded-full bg-primary/10 text-primary text-xs font-bold flex-shrink-0">
-                                                {index + 1}
-                                            </span>
-
-                                            {/* Thumbnail */}
-                                            <div className="w-10 h-10 rounded-lg overflow-hidden bg-secondary flex-shrink-0">
-                                                {post.featuredImage ? (
-                                                    <img src={post.featuredImage} alt="" className="w-full h-full object-cover" />
-                                                ) : (
-                                                    <div className="w-full h-full flex items-center justify-center">
-                                                        <FileText size={16} className="text-muted-foreground opacity-30" />
-                                                    </div>
-                                                )}
-                                            </div>
-
-                                            {/* Title */}
-                                            <div className="flex-1 min-w-0">
-                                                <p className="font-semibold text-sm text-foreground truncate">{post.title}</p>
-                                                <p className="text-[10px] text-muted-foreground">
-                                                    {post.status === 'published' ? '● Publicado' : '○ Borrador'}
-                                                </p>
-                                            </div>
-
-                                            {/* Up/Down buttons */}
-                                            <div className="flex flex-col gap-0.5 flex-shrink-0">
-                                                <button
-                                                    onClick={() => handleReorderProfile(post.id, 'up')}
-                                                    disabled={index === 0}
-                                                    className="p-1.5 rounded-lg hover:bg-primary/10 transition-colors text-muted-foreground hover:text-primary disabled:opacity-20 disabled:cursor-not-allowed"
-                                                >
-                                                    <MoveUp size={14} />
-                                                </button>
-                                                <button
-                                                    onClick={() => handleReorderProfile(post.id, 'down')}
-                                                    disabled={index === profilePosts.length - 1}
-                                                    className="p-1.5 rounded-lg hover:bg-primary/10 transition-colors text-muted-foreground hover:text-primary disabled:opacity-20 disabled:cursor-not-allowed"
-                                                >
-                                                    <MoveDown size={14} />
-                                                </button>
-                                            </div>
-                                        </div>
-                                    ))
+                                    <ProfileDragList posts={profilePosts} onDragEnd={handleProfileDragEnd} />
                                 )}
                             </div>
                         </div>
