@@ -153,9 +153,9 @@ interface MetaTags {
 const domainCache = new Map<string, { data: DomainData | null; timestamp: number }>();
 const DOMAIN_CACHE_TTL = 1 * 60 * 1000;
 
-// Project cache (5 minute TTL)
+// Project cache (1 minute TTL)
 const projectCache = new Map<string, { data: ProjectData | null; timestamp: number }>();
-const PROJECT_CACHE_TTL = 5 * 60 * 1000;
+const PROJECT_CACHE_TTL = 1 * 60 * 1000;
 
 // =============================================================================
 // DOMAIN RESOLUTION
@@ -549,21 +549,7 @@ function generateFullHtml(
         dynamicData: dynamicData || null,
         // Full project data for client-side rendering with PublicWebsitePreview
         // IMPORTANT: Include ALL fields that PublicWebsitePreview needs
-        project: {
-            id: project.id,
-            name: project.name,
-            pages: project.pages || [],
-            data: project.data,
-            theme: project.theme,
-            brandIdentity: project.brandIdentity,
-            componentOrder: project.componentOrder || [],
-            sectionVisibility: project.sectionVisibility || {},
-            componentStatus: project.componentStatus || {},
-            componentStyles: project.componentStyles || {},
-            menus: project.menus || [],
-            seoConfig: project.seoConfig || {},
-            aiAssistantConfig: project.aiAssistantConfig || null,
-        },
+        project: project,
         // Pre-loaded products and categories for ecommerce pages
         products: products || [],
         categories: categories || [],
@@ -616,7 +602,66 @@ app.get('/__debug', (req: Request, res: Response) => {
 app.post('/__clear-cache', (req: Request, res: Response) => {
     domainCache.clear();
     projectCache.clear();
+    assetCache.clear();
+    cachedAssetRefs = null;
     res.json({ success: true, message: 'Cache cleared' });
+});
+
+// =============================================================================
+// ASSET PROXY (For Vite lazy-loaded chunks and PWA files)
+// =============================================================================
+
+// Matches /assets/* and root PWA files
+app.get(['/assets/*', '/manifest.webmanifest', '/registerSW.js', '/favicon.ico', '/pwa-*.png'], async (req: Request, res: Response) => {
+    const assetPath = req.path;
+    
+    // Check in-memory cache first
+    const cached = assetCache.get(assetPath);
+    if (cached) {
+        const ttl = isHashedAsset(assetPath) ? ASSET_CACHE_TTL_HASHED : ASSET_CACHE_TTL_UNHASHED;
+        if (Date.now() - cached.timestamp < ttl) {
+            res.setHeader('Content-Type', cached.contentType);
+            // Browser caching
+            if (isHashedAsset(assetPath)) {
+                res.setHeader('Cache-Control', 'public, max-age=31536000, immutable'); // 1 year for hashed
+            } else {
+                res.setHeader('Cache-Control', 'public, max-age=60'); // 1 min for unhashed
+            }
+            return res.send(cached.data);
+        }
+    }
+
+    try {
+        // Fetch from Firebase Hosting origin
+        const response = await fetch(`${APP_URL}${assetPath}`);
+        
+        if (!response.ok) {
+            return res.status(response.status).send(`Asset not found: ${assetPath}`);
+        }
+
+        const arrayBuffer = await response.arrayBuffer();
+        const buffer = Buffer.from(arrayBuffer);
+        const contentType = response.headers.get('content-type') || 'application/javascript';
+
+        // Save to cache
+        assetCache.set(assetPath, {
+            data: buffer,
+            contentType,
+            timestamp: Date.now()
+        });
+
+        // Set headers and send response
+        res.setHeader('Content-Type', contentType);
+        if (isHashedAsset(assetPath)) {
+            res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+        } else {
+            res.setHeader('Cache-Control', 'public, max-age=60');
+        }
+        res.send(buffer);
+    } catch (error) {
+        console.error(`[SSR] Error proxying asset ${assetPath}:`, error);
+        res.status(500).send('Error proxying asset');
+    }
 });
 
 // Main SSR handler
@@ -727,7 +772,7 @@ app.get('*', async (req: Request, res: Response) => {
         const html = generateFullHtml(project, page, dynamicData, meta, hostname, path, products, categories, posts, userId, assetRefs);
 
         res.setHeader('Content-Type', 'text/html; charset=utf-8');
-        res.setHeader('Cache-Control', 'public, max-age=60, s-maxage=300'); // 1min browser, 5min CDN
+        res.setHeader('Cache-Control', 'public, max-age=60, s-maxage=60'); // 1min browser, 1min CDN
         res.send(html);
 
         console.log(`[SSR] Served: ${hostname}${path} -> ${page.title}`);

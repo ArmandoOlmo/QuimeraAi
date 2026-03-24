@@ -99,6 +99,20 @@ async function doFetch(): Promise<PrefetchedPreviewData> {
             } catch (_) { /* ignore */ }
         }
 
+        // If project was found but categories are still empty, try user project doc for categories
+        if (project && categories.length === 0 && userId) {
+            try {
+                const userProjectSnap = await getDoc(doc(db, 'users', userId, 'projects', projectId));
+                if (userProjectSnap.exists()) {
+                    const upData = userProjectSnap.data();
+                    if (upData?.categories && Array.isArray(upData.categories) && upData.categories.length > 0) {
+                        categories = upData.categories;
+                        console.log('[PreviewPrefetch] ✅ Loaded categories from user project (fallback):', categories.length);
+                    }
+                }
+            } catch (_) { /* ignore */ }
+        }
+
         // Last resort: templates
         if (!project) {
             try {

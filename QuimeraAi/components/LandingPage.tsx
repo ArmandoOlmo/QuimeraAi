@@ -958,16 +958,20 @@ const LandingPageContent: React.FC = () => {
         )}
 
         {/* 2. Article View */}
-        {!showArticleLoading && activePost && (
-          <BlogPost
-            post={activePost}
-            theme={theme}
-            onBack={handleBackToHome}
-            backgroundColor={pageBackgroundColor}
-            textColor={data.hero?.colors?.text || '#ffffff'}
-            accentColor={data.hero?.colors?.primary || '#4f46e5'}
-          />
-        )}
+        {!showArticleLoading && activePost && (() => {
+          const postCategory = categories.find(c => c.id === activePost.categoryId);
+          return (
+            <BlogPost
+              post={activePost}
+              theme={theme}
+              onBack={handleBackToHome}
+              backgroundColor={pageBackgroundColor}
+              textColor={data.hero?.colors?.text || '#ffffff'}
+              accentColor={data.hero?.colors?.primary || '#4f46e5'}
+              layoutType={postCategory?.layoutType}
+            />
+          );
+        })()}
 
         {/* 2.5. Category View */}
         {!showArticleLoading && !activePost && activeCategorySlug && (() => {
@@ -990,6 +994,7 @@ const LandingPageContent: React.FC = () => {
               backgroundColor={pageBackgroundColor}
               textColor={data.hero?.colors?.text || '#ffffff'}
               accentColor={data.hero?.colors?.primary || '#4f46e5'}
+              headerStyle={data.header?.style || ''}
             />
           );
         })()}

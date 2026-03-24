@@ -7,8 +7,10 @@
 
 import React, { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft, Calendar, FileText, Tag } from 'lucide-react';
+import { ArrowLeft, Calendar, FileText } from 'lucide-react';
 import { CMSPost, CMSCategory } from '../types';
+import MasonryGallery from './cms/layouts/MasonryGallery';
+import ProfileDirectory from './cms/layouts/ProfileDirectory';
 
 interface BlogCategoryPageProps {
     category: CMSCategory;
@@ -18,6 +20,7 @@ interface BlogCategoryPageProps {
     backgroundColor?: string;
     textColor?: string;
     accentColor?: string;
+    headerStyle?: string;
 }
 
 const BlogCategoryPage: React.FC<BlogCategoryPageProps> = ({
@@ -28,6 +31,7 @@ const BlogCategoryPage: React.FC<BlogCategoryPageProps> = ({
     backgroundColor = 'var(--site-base, #ffffff)',
     textColor = 'var(--site-heading, #1a1a2e)',
     accentColor = 'var(--site-accent, #4f46e5)',
+    headerStyle = '',
 }) => {
     const { t } = useTranslation();
 
@@ -43,69 +47,50 @@ const BlogCategoryPage: React.FC<BlogCategoryPageProps> = ({
     const cardBorder = `color-mix(in srgb, ${textColor} 10%, transparent)`;
     const mutedText = `color-mix(in srgb, ${textColor} 60%, ${backgroundColor})`;
 
+    // Dynamic top padding: floating and transparent headers don't push content down (absolute/fixed)
+    // Only edge-* and default sticky-solid headers push content, so they use minimal padding
+    const headerOverlapsContent = headerStyle.startsWith('floating') || headerStyle.startsWith('transparent') || headerStyle === 'sticky-transparent';
+    const topPadding = headerOverlapsContent ? 'pt-28' : 'pt-6';
+
     return (
         <div className="min-h-screen pb-20 animate-fade-in-up" style={{ backgroundColor, color: textColor }}>
-            {/* Hero Section */}
-            <div className="relative overflow-hidden" style={{ minHeight: category.featuredImage ? '40vh' : '30vh' }}>
-                {category.featuredImage ? (
-                    <div className="absolute inset-0 z-0">
-                        <div className="absolute inset-x-0 bottom-0 h-2/3 z-10" style={{ background: `linear-gradient(to top, ${backgroundColor}, ${backgroundColor}cc, transparent)` }} />
-                        <div className="absolute inset-0 z-10" style={{ backgroundColor: 'rgba(0,0,0,0.3)' }} />
-                        <img
-                            src={category.featuredImage}
-                            alt={category.name}
-                            className="w-full h-full object-cover"
-                        />
-                    </div>
-                ) : (
-                    <div className="absolute inset-0 z-0" style={{ background: `linear-gradient(135deg, ${accentColor}15, ${backgroundColor})` }}>
-                        <div className="absolute inset-x-0 bottom-0 h-1/2" style={{ background: `linear-gradient(to top, ${backgroundColor}, transparent)` }} />
-                    </div>
-                )}
+            {/* Compact Category Header */}
+            <div className={`container mx-auto px-4 sm:px-6 ${topPadding} pb-8`}>
+                <div className="max-w-6xl mx-auto">
+                    {/* Back button */}
+                    <button
+                        onClick={onNavigateBack}
+                        className="flex items-center gap-2 mb-5 text-sm hover:opacity-70 transition-opacity"
+                        style={{ color: mutedText }}
+                    >
+                        <ArrowLeft size={16} />
+                        <span>{t('blog.backToHome', 'Volver al inicio')}</span>
+                    </button>
 
-                <div className="relative z-20 container mx-auto px-4 sm:px-6 pb-12 sm:pb-16 flex items-end" style={{ minHeight: 'inherit' }}>
-                    <div className="max-w-4xl w-full">
-                        {/* Back button */}
-                        <button
-                            onClick={onNavigateBack}
-                            className="flex items-center gap-2 mb-6 font-medium hover:opacity-80 transition-opacity"
-                            style={{ color: category.featuredImage ? '#ffffff' : textColor }}
-                        >
-                            <ArrowLeft size={18} />
-                            <span>{t('blog.backToHome', 'Volver al inicio')}</span>
-                        </button>
-
-                        <div className="flex items-center gap-3 mb-4">
-                            <span
-                                className="px-3 py-1 rounded-full text-xs sm:text-sm font-bold uppercase tracking-widest flex items-center gap-1.5"
-                                style={{
-                                    color: accentColor,
-                                    backgroundColor: `${accentColor}20`,
-                                    border: `1px solid ${accentColor}30`,
-                                }}
-                            >
-                                <Tag size={14} />
-                                {t('blog.category', 'Categoría')}
-                            </span>
-                        </div>
+                    {/* Title row */}
+                    <div className="flex items-baseline gap-4 flex-wrap">
                         <h1
-                            className="text-4xl sm:text-5xl md:text-6xl font-black mb-4 leading-[1.1] tracking-tighter font-header"
-                            style={{ color: category.featuredImage ? '#ffffff' : textColor }}
+                            className="text-2xl sm:text-3xl font-bold tracking-tight font-header"
+                            style={{ color: textColor }}
                         >
                             {category.name}
                         </h1>
-                        {category.description && (
-                            <p
-                                className="text-lg sm:text-xl font-light leading-relaxed max-w-3xl opacity-80"
-                                style={{ color: category.featuredImage ? '#ffffffcc' : mutedText }}
-                            >
-                                {category.description}
-                            </p>
-                        )}
-                        <p className="text-sm mt-4 font-medium" style={{ color: mutedText }}>
+                        <span className="text-sm font-medium" style={{ color: mutedText }}>
                             {publishedPosts.length} {publishedPosts.length === 1 ? t('blog.article', 'artículo') : t('blog.articles', 'artículos')}
-                        </p>
+                        </span>
                     </div>
+
+                    {category.description && (
+                        <p
+                            className="text-sm mt-2 max-w-2xl leading-relaxed"
+                            style={{ color: mutedText }}
+                        >
+                            {category.description}
+                        </p>
+                    )}
+
+                    {/* Divider */}
+                    <div className="mt-5" style={{ borderBottom: `1px solid ${cardBorder}` }} />
                 </div>
             </div>
 
@@ -127,6 +112,22 @@ const BlogCategoryPage: React.FC<BlogCategoryPageProps> = ({
                                 {t('blog.noCategoryPostsDesc', 'Los artículos publicados en esta categoría aparecerán aquí.')}
                             </p>
                         </div>
+                    ) : category.layoutType === 'gallery' ? (
+                        <MasonryGallery
+                            posts={publishedPosts}
+                            backgroundColor={backgroundColor}
+                            textColor={textColor}
+                            accentColor={accentColor}
+                            onArticleClick={onArticleClick}
+                        />
+                    ) : category.layoutType === 'profile' ? (
+                        <ProfileDirectory
+                            posts={publishedPosts}
+                            backgroundColor={backgroundColor}
+                            textColor={textColor}
+                            accentColor={accentColor}
+                            onArticleClick={onArticleClick}
+                        />
                     ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
                             {publishedPosts.map((post) => (

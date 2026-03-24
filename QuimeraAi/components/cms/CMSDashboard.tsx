@@ -52,7 +52,7 @@ const CMSDashboard: React.FC = () => {
     const [categoryFilter, setCategoryFilter] = useState<string>('all');
     const [showCategoryManager, setShowCategoryManager] = useState(false);
     const [editingCategory, setEditingCategory] = useState<CMSCategory | null>(null);
-    const [categoryForm, setCategoryForm] = useState({ name: '', slug: '', description: '' });
+    const [categoryForm, setCategoryForm] = useState<{ name: string; slug: string; description: string; layoutType: 'blog' | 'gallery' | 'profile' }>({ name: '', slug: '', description: '', layoutType: 'blog' });
     const [isSavingCategory, setIsSavingCategory] = useState(false);
     const [deleteCategoryConfirmId, setDeleteCategoryConfirmId] = useState<string | null>(null);
 
@@ -532,7 +532,7 @@ const CMSDashboard: React.FC = () => {
 
                             {/* Manage Categories button */}
                             <button
-                                onClick={() => { setShowCategoryManager(true); setEditingCategory(null); setCategoryForm({ name: '', slug: '', description: '' }); }}
+                                onClick={() => { setShowCategoryManager(true); setEditingCategory(null); setCategoryForm({ name: '', slug: '', description: '', layoutType: 'blog' }); }}
                                 className="text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
                                 title={t('cms.manageCategories', 'Gestionar Categorías')}
                             >
@@ -1095,6 +1095,20 @@ const CMSDashboard: React.FC = () => {
                                     rows={2}
                                     className="w-full bg-secondary/50 border border-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-primary outline-none resize-none text-foreground"
                                 />
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-medium text-muted-foreground ml-1">
+                                        {t('cms.categoryLayout', 'Estilo de Diseño (Layout)')}
+                                    </label>
+                                    <select
+                                        value={categoryForm.layoutType}
+                                        onChange={(e) => setCategoryForm(prev => ({ ...prev, layoutType: e.target.value as 'blog' | 'gallery' | 'profile' }))}
+                                        className="w-full bg-secondary/50 border border-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-primary outline-none text-foreground"
+                                    >
+                                        <option value="blog">{t('cms.layouts.blog', 'Blog Estándar')}</option>
+                                        <option value="gallery">{t('cms.layouts.gallery', 'Galería (Masonry)')}</option>
+                                        <option value="profile">{t('cms.layouts.profile', 'Directorio de Perfiles')}</option>
+                                    </select>
+                                </div>
                                 <div className="flex gap-2">
                                     <button
                                         onClick={async () => {
@@ -1107,11 +1121,12 @@ const CMSDashboard: React.FC = () => {
                                                     name: categoryForm.name.trim(),
                                                     slug: categoryForm.slug.trim() || categoryForm.name.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, ''),
                                                     description: categoryForm.description.trim() || undefined,
+                                                    layoutType: categoryForm.layoutType,
                                                     createdAt: editingCategory?.createdAt || now,
                                                     updatedAt: now,
                                                 };
                                                 await saveCategory(cat);
-                                                setCategoryForm({ name: '', slug: '', description: '' });
+                                                setCategoryForm({ name: '', slug: '', description: '', layoutType: 'blog' });
                                                 setEditingCategory(null);
                                             } catch (e) {
                                                 console.error('Error saving category:', e);
@@ -1127,7 +1142,7 @@ const CMSDashboard: React.FC = () => {
                                     </button>
                                     {editingCategory && (
                                         <button
-                                            onClick={() => { setEditingCategory(null); setCategoryForm({ name: '', slug: '', description: '' }); }}
+                                            onClick={() => { setEditingCategory(null); setCategoryForm({ name: '', slug: '', description: '', layoutType: 'blog' }); }}
                                             className="px-4 py-2 text-sm font-medium bg-secondary text-foreground rounded-lg hover:bg-secondary/80 transition-all"
                                         >
                                             {t('common.cancel', 'Cancelar')}
@@ -1161,7 +1176,7 @@ const CMSDashboard: React.FC = () => {
                                                     <button
                                                         onClick={() => {
                                                             setEditingCategory(cat);
-                                                            setCategoryForm({ name: cat.name, slug: cat.slug, description: cat.description || '' });
+                                                            setCategoryForm({ name: cat.name, slug: cat.slug, description: cat.description || '', layoutType: cat.layoutType || 'blog' });
                                                         }}
                                                         className="p-1.5 hover:bg-secondary rounded-lg transition-colors text-muted-foreground hover:text-foreground"
                                                     >

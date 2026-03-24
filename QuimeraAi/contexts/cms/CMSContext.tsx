@@ -403,6 +403,7 @@ export const CMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         slug: c.slug || '',
         description: c.description ?? '',
         featuredImage: c.featuredImage ?? '',
+        layoutType: c.layoutType || 'blog',
         createdAt: c.createdAt || new Date().toISOString(),
         updatedAt: c.updatedAt || new Date().toISOString(),
     });

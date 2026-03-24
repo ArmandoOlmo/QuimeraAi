@@ -273,9 +273,39 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
           }
 
           // Load categories from SSR data
-          if ((projectData as any).categories && Array.isArray((projectData as any).categories)) {
+          if ((projectData as any).categories && Array.isArray((projectData as any).categories) && (projectData as any).categories.length > 0) {
             console.log('[PublicWebsitePreview] ✅ Loaded categories from SSR data:', (projectData as any).categories.length);
             setCategories((projectData as any).categories);
+          } else {
+            // Categories not in SSR data — fetch from publicStores
+            console.log('[PublicWebsitePreview] ⚠️ No categories in SSR data, fetching from publicStores...');
+            try {
+              const publicStoreRef = doc(db, 'publicStores', ssrData.projectId);
+              const publicStoreSnap = await getDoc(publicStoreRef);
+              if (publicStoreSnap.exists()) {
+                const psData = publicStoreSnap.data();
+                if (psData?.categories && Array.isArray(psData.categories) && psData.categories.length > 0) {
+                  console.log('[PublicWebsitePreview] ✅ Loaded categories from publicStores (SSR fallback):', psData.categories.length);
+                  setCategories(psData.categories);
+                } else {
+                  console.log('[PublicWebsitePreview] ⚠️ publicStores has no categories either');
+                  // Last resort: try user project doc
+                  if (userId) {
+                    const userProjectRef = doc(db, 'users', userId, 'projects', ssrData.projectId);
+                    const userProjectSnap = await getDoc(userProjectRef);
+                    if (userProjectSnap.exists()) {
+                      const upData = userProjectSnap.data();
+                      if (upData?.categories && Array.isArray(upData.categories) && upData.categories.length > 0) {
+                        console.log('[PublicWebsitePreview] ✅ Loaded categories from user project (SSR fallback):', upData.categories.length);
+                        setCategories(upData.categories);
+                      }
+                    }
+                  }
+                }
+              }
+            } catch (e) {
+              console.warn('[PublicWebsitePreview] Error fetching categories fallback:', e);
+            }
           }
 
           // Load CMS posts from SSR data
@@ -335,6 +365,7 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
             if (publicStoreSnap.exists()) {
               const rawData = publicStoreSnap.data();
               projectData = { id: publicStoreSnap.id, ...rawData } as Project;
+              console.log('[PublicWebsitePreview] ✅ Loaded from publicStores. Has categories?', !!(rawData as any)?.categories, 'Count:', (rawData as any)?.categories?.length || 0);
             }
 
             if (!publicPostsSnap.empty) {
@@ -410,9 +441,29 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
           }
 
           // Load categories from project data
-          if ((projectData as any).categories && Array.isArray((projectData as any).categories)) {
+          if ((projectData as any).categories && Array.isArray((projectData as any).categories) && (projectData as any).categories.length > 0) {
             console.log('[PublicWebsitePreview] ✅ Loaded categories from project data:', (projectData as any).categories.length);
             setCategories((projectData as any).categories);
+          } else if (userId) {
+            // Fallback: categories might be in user's project doc but not in publicStores
+            try {
+              const userProjectRef = doc(db, 'users', userId, 'projects', projectId);
+              const userProjectSnap = await getDoc(userProjectRef);
+              if (userProjectSnap.exists()) {
+                const userProjectData = userProjectSnap.data();
+                if (userProjectData?.categories && Array.isArray(userProjectData.categories) && userProjectData.categories.length > 0) {
+                  console.log('[PublicWebsitePreview] ✅ Loaded categories from user project (fallback):', userProjectData.categories.length);
+                  setCategories(userProjectData.categories);
+                } else {
+                  setCategories([]);
+                }
+              } else {
+                setCategories([]);
+              }
+            } catch (e) {
+              console.warn('[PublicWebsitePreview] Could not load categories from user project:', e);
+              setCategories([]);
+            }
           } else {
             setCategories([]);
           }
@@ -449,9 +500,9 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
 
       // Blog article routing: /blog/slug
       if (path.startsWith('/blog/') && path !== '/blog/') {
-        // Blog category routing: /blog/categoria/slug
-        if (path.startsWith('/blog/categoria/')) {
-          const slug = path.replace('/blog/categoria/', '').replace(/\/$/, '');
+        // Blog category routing: /blog/categoria/slug OR /blog/category/slug
+        if (path.startsWith('/blog/categoria/') || path.startsWith('/blog/category/')) {
+          const slug = path.replace('/blog/categoria/', '').replace('/blog/category/', '').replace(/\/$/, '');
           console.log('[PublicWebsitePreview] handleNavigation - Blog category:', slug);
           setStoreView({ type: 'none' });
           setActivePage(null);
@@ -547,6 +598,35 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
       // Article routing: #article:slug (legacy)
       if (decodedHash.includes('#article:')) {
         const slug = decodedHash.split('#article:')[1].trim();
+        const post = cmsPosts.find(p => p.slug === slug);
+        if (post) {
+          setStoreView({ type: 'none' });
+          setActivePage(null);
+          setActivePost(post);
+          window.scrollTo(0, 0);
+        }
+        return;
+      }
+
+      // Blog category routing: #blog/categoria/slug OR #blog/category/slug
+      if (decodedHash.includes('#blog/categoria/') || decodedHash.includes('#blog/category/')) {
+        const slug = decodedHash
+          .split('#blog/categoria/').pop()!
+          .split('#blog/category/').pop()!
+          .replace(/\/$/, '')
+          .trim();
+        console.log('[PublicWebsitePreview] Hash category routing:', slug);
+        setStoreView({ type: 'none' });
+        setActivePage(null);
+        setActivePost(null);
+        setActiveCategorySlug(slug);
+        window.scrollTo(0, 0);
+        return;
+      }
+
+      // Blog article routing via hash: #blog/slug
+      if (decodedHash.startsWith('#blog/') && !decodedHash.startsWith('#blog/categoria/') && !decodedHash.startsWith('#blog/category/')) {
+        const slug = decodedHash.replace('#blog/', '').replace(/\/$/, '').trim();
         const post = cmsPosts.find(p => p.slug === slug);
         if (post) {
           setStoreView({ type: 'none' });
@@ -686,9 +766,9 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
       return;
     }
 
-    // Blog category: /blog/categoria/slug
-    if (href.startsWith('/blog/categoria/')) {
-      const slug = href.replace('/blog/categoria/', '').replace(/\/$/, '');
+    // Blog category: /blog/categoria/slug OR /blog/category/slug
+    if (href.startsWith('/blog/categoria/') || href.startsWith('/blog/category/')) {
+      const slug = href.replace('/blog/categoria/', '').replace('/blog/category/', '').replace(/\/$/, '');
       console.log('[PublicWebsitePreview] Navigating to blog category:', slug, '| Available categories:', categories.length, categories.map(c => c.slug));
       setStoreView({ type: 'none' });
       setActivePage(null);
@@ -1502,6 +1582,14 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
             });
             const category = projectCategories.find((c: CMSCategory) => c.slug === activeCategorySlug);
             if (!category) {
+              // If still loading, show spinner instead of error
+              if (loading) {
+                return (
+                  <div className="flex items-center justify-center min-h-[50vh]">
+                    <div className="w-8 h-8 border-2 border-white/20 border-t-white/60 rounded-full animate-spin" />
+                  </div>
+                );
+              }
               console.warn('[PublicWebsitePreview] ❌ Category NOT found! Slug:', activeCategorySlug, 'Available slugs:', projectCategories.map((c: CMSCategory) => c.slug));
               return (
                 <div className="flex items-center justify-center min-h-[50vh] text-white/50">
@@ -1519,20 +1607,26 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
                 backgroundColor={pageBackgroundColor}
                 textColor={data?.hero?.colors?.text || '#ffffff'}
                 accentColor={data?.hero?.colors?.primary || '#4f46e5'}
+                headerStyle={mergedData?.header?.style || ''}
               />
             );
           })()
-        ) : activePost ? (
+        ) : activePost ? (() => {
           /* Article View */
-          <BlogPost
-            post={activePost}
-            theme={theme}
-            onBack={handleBackToHome}
-            backgroundColor={pageBackgroundColor}
-            textColor={data?.hero?.colors?.text || '#ffffff'}
-            accentColor={data?.hero?.colors?.primary || '#4f46e5'}
-          />
-        ) : activePage ? (
+          const postCategory = categories.find(c => c.id === activePost.categoryId)
+            || ((project as any)?.categories || []).find((c: any) => c.id === activePost.categoryId);
+          return (
+            <BlogPost
+              post={activePost}
+              theme={theme}
+              onBack={handleBackToHome}
+              backgroundColor={pageBackgroundColor}
+              textColor={data?.hero?.colors?.text || '#ffffff'}
+              accentColor={data?.hero?.colors?.primary || '#4f46e5'}
+              layoutType={postCategory?.layoutType}
+            />
+          );
+        })() : activePage ? (
           /* Multi-Page View - Render specific page using PageRenderer */
           <PageRenderer
             page={activePage}

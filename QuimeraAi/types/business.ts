@@ -417,6 +417,7 @@ export interface CMSCategory {
     slug: string;
     description?: string;
     featuredImage?: string;
+    layoutType?: 'blog' | 'gallery' | 'profile';
     createdAt: string;
     updatedAt: string;
 }

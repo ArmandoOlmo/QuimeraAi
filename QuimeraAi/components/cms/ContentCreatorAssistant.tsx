@@ -29,8 +29,11 @@ const ContentCreatorAssistant: React.FC<ContentCreatorAssistantProps> = ({ onClo
     const { getPrompt } = useAdmin();
     const [step, setStep] = useState<Step>('topic');
     const [topic, setTopic] = useState('');
+    const [sourceUrl, setSourceUrl] = useState('');
     const [audience, setAudience] = useState('');
     const [tone, setTone] = useState('professional');
+    const [contentType, setContentType] = useState('blog');
+    const [outputLanguage, setOutputLanguage] = useState('es');
     const [generatedPost, setGeneratedPost] = useState<Partial<CMSPost> | null>(null);
     const [isGenerating, setIsGenerating] = useState(false);
 
@@ -49,6 +52,22 @@ const ContentCreatorAssistant: React.FC<ContentCreatorAssistantProps> = ({ onClo
         { id: 'informative', label: t('cms_assistant.tones.informative') },
         { id: 'funny', label: t('cms_assistant.tones.funny') },
         { id: 'minimalist', label: t('cms_assistant.tones.minimalist') }
+    ];
+
+    // Content types configuration
+    const contentTypes = [
+        { id: 'blog', label: 'Blog Estándar' },
+        { id: 'gallery', label: 'Galería (Imágenes/Proyectos)' },
+        { id: 'profile', label: 'Perfil (Bio/Directorio)' }
+    ];
+
+    // Output language options
+    const languages = [
+        { id: 'es', label: 'Español', flag: '🇪🇸' },
+        { id: 'en', label: 'English', flag: '🇺🇸' },
+        { id: 'fr', label: 'Français', flag: '🇫🇷' },
+        { id: 'pt', label: 'Português', flag: '🇧🇷' },
+        { id: 'de', label: 'Deutsch', flag: '🇩🇪' }
     ];
 
     // Helper function to attempt repairing truncated JSON
@@ -160,33 +179,71 @@ const ContentCreatorAssistant: React.FC<ContentCreatorAssistantProps> = ({ onClo
 
             let promptText = '';
 
-            if (promptTemplate) {
-                promptText = promptTemplate.template
-                    .replace('{{topic}}', topic)
-                    .replace('{{audience}}', audience || 'General audience')
-                    .replace('{{tone}}', tone);
-                modelToUse = promptTemplate.model;
+            // For non-blog content types, build a dedicated prompt from scratch
+            if (contentType === 'profile') {
+                modelToUse = promptTemplate?.model || 'gemini-2.5-flash';
+                promptText = `Act as a professional content writer. Create a PROFILE/BIOGRAPHY entry based on the following inputs:
+- Subject/Topic: ${topic}
+- Target Audience: ${audience || 'General audience'}
+- Tone: ${tone}
+
+Return a JSON object with the following fields:
+- title: The person's or entity's full name (NOT an article title)
+- slug: A SEO-friendly slug based on the name (kebab-case)
+- excerpt: Their professional title or headline (e.g. "CEO de Empresa X | Experto en Marketing Digital")
+- content: A detailed professional biography in HTML using <h2>, <h3>, <p>, and <ul>/<li> tags. Include background, achievements, skills, and career highlights. Minimum 300 words.
+- seoTitle: SEO optimized title with their name and role (60 characters max)
+- seoDescription: SEO optimized description about them (155 characters max)
+
+Output ONLY valid JSON without any markdown formatting or code blocks.
+CRUCIAL: YOU MUST OUTPUT EXACTLY 1 VALID JSON OBJECT AND NOTHING ELSE.`;
+            } else if (contentType === 'gallery') {
+                modelToUse = promptTemplate?.model || 'gemini-2.5-flash';
+                promptText = `Act as a professional content writer. Create a GALLERY/PORTFOLIO entry based on the following inputs:
+- Subject/Topic: ${topic}
+- Target Audience: ${audience || 'General audience'}
+- Tone: ${tone}
+
+Return a JSON object with the following fields:
+- title: A short, visually descriptive title for the artwork, photo, or project (NOT an article title)
+- slug: A SEO-friendly slug (kebab-case)
+- excerpt: A brief image caption (under 100 characters, suitable for display under a photo)
+- content: The full backstory, technique details, inspiration, or project description in HTML using <h2>, <h3>, <p>, and <ul>/<li> tags. Minimum 200 words.
+- seoTitle: SEO optimized title (60 characters max)
+- seoDescription: SEO optimized description (155 characters max)
+
+Output ONLY valid JSON without any markdown formatting or code blocks.
+CRUCIAL: YOU MUST OUTPUT EXACTLY 1 VALID JSON OBJECT AND NOTHING ELSE.`;
             } else {
-                // Fallback if prompt is missing (shouldn't happen with sync)
-                console.warn('⚠️ Prompt "content-creator-assistant" not found, using fallback.');
-                promptText = `
-                Act as a professional content writer. Create a blog post structure based on the following inputs:
-                - Topic: ${topic}
-                - Target Audience: ${audience || 'General audience'}
-                - Tone: ${tone}
+                // Standard blog — use the dynamic prompt template
+                if (promptTemplate) {
+                    promptText = promptTemplate.template
+                        .replace('{{topic}}', topic)
+                        .replace('{{audience}}', audience || 'General audience')
+                        .replace('{{tone}}', tone);
+                    modelToUse = promptTemplate.model;
+                } else {
+                    console.warn('⚠️ Prompt "content-creator-assistant" not found, using fallback.');
+                    promptText = `
+                    Act as a professional content writer. Create a blog post structure based on the following inputs:
+                    - Topic: ${topic}
+                    - Target Audience: ${audience || 'General audience'}
+                    - Tone: ${tone}
 
-                Return a JSON object with the following fields:
-                - title: A catchy title for the post (in Spanish if the topic is in Spanish, otherwise in English)
-                - slug: A SEO-friendly slug (kebab-case)
-                - excerpt: A short summary suitable for meta description (150-160 characters)
-                - content: The HTML content of the post. It should be structured with <h2>, <h3>, <p>, and <ul>/<li> tags. The content should be comprehensive and detailed (at least 800 words).
-                - seoTitle: SEO optimized title (60 characters max)
-                - seoDescription: SEO optimized description (155 characters max)
+                    Return a JSON object with the following fields:
+                    - title: A catchy title for the post (in Spanish if the topic is in Spanish, otherwise in English)
+                    - slug: A SEO-friendly slug (kebab-case)
+                    - excerpt: A short summary suitable for meta description (150-160 characters)
+                    - content: The HTML content of the post. It should be structured with <h2>, <h3>, <p>, and <ul>/<li> tags. The content should be comprehensive and detailed (at least 800 words).
+                    - seoTitle: SEO optimized title (60 characters max)
+                    - seoDescription: SEO optimized description (155 characters max)
 
-                Make sure the content is engaging, well-structured, and valuable for the target audience.
-                Output ONLY valid JSON without any markdown formatting or code blocks.
-                IMPORTANT: Keep the content concise to avoid truncation. Aim for 400-600 words maximum.
-                `;
+                    Make sure the content is engaging, well-structured, and valuable for the target audience.
+                    Output ONLY valid JSON without any markdown formatting or code blocks.
+                    IMPORTANT: Keep the content concise to avoid truncation. Aim for 400-600 words maximum.
+                    `;
+                }
+                promptText += `\nCRUCIAL: YOU MUST OUTPUT EXACTLY 1 VALID JSON OBJECT AND NOTHING ELSE.`;
             }
 
             // If media is present, add multimodal context to the prompt
@@ -195,7 +252,16 @@ const ContentCreatorAssistant: React.FC<ContentCreatorAssistantProps> = ({ onClo
                 promptText += `\n\nIMPORTANT: I have uploaded a ${mediaLabel} as visual reference. Analyze it carefully and use what you see in it to create the content. Reference visual details, objects, scenes, or information from the ${mediaLabel} in your writing. Make the content directly relevant to what the ${mediaLabel} shows.`;
             }
 
+            if (sourceUrl.trim()) {
+                promptText += `\n\nIMPORTANT: Read the website at this URL: ${sourceUrl.trim()}\nExtract the information, recreate it, and write the post based on that content.`;
+            }
+
+            // Language override
+            const selectedLang = languages.find(l => l.id === outputLanguage)?.label || 'Español';
+            promptText += `\n\nLANGUAGE: ALL content (title, excerpt, content, seoTitle, seoDescription) MUST be written entirely in ${selectedLang}. Do not use any other language.`;
+
             const projectId = activeProject?.id || 'content-creator-assistant';
+            const apiTools = sourceUrl.trim() ? [{ url_context: {} }] : undefined;
 
             // Use multimodal or text-only generation based on media presence
             let response;
@@ -204,12 +270,12 @@ const ContentCreatorAssistant: React.FC<ContentCreatorAssistantProps> = ({ onClo
                 response = await generateMultimodalContentViaProxy(projectId, promptText, mediaFiles, modelToUse, {
                     temperature: 0.9,
                     maxOutputTokens: 8192
-                }, user?.uid);
+                }, user?.uid, apiTools);
             } else {
                 response = await generateContentViaProxy(projectId, promptText, modelToUse, {
                     temperature: 0.9,
                     maxOutputTokens: 8192
-                }, user?.uid);
+                }, user?.uid, apiTools);
             }
 
             // Log successful API call
@@ -224,7 +290,18 @@ const ContentCreatorAssistant: React.FC<ContentCreatorAssistantProps> = ({ onClo
             }
 
             console.log("📝 Raw response:", response);
-            const responseText = extractTextFromResponse(response);
+
+            // Extract ALL text parts from response (url_context may produce multiple parts)
+            let responseText = '';
+            const candidates = response?.response?.candidates || response?.candidates || [];
+            if (candidates.length > 0 && candidates[0]?.content?.parts) {
+                for (const part of candidates[0].content.parts) {
+                    if (part.text) responseText += part.text;
+                }
+            }
+            if (!responseText) {
+                responseText = extractTextFromResponse(response);
+            }
             console.log("📝 Response text from AI:", responseText);
 
             // Limpiar la respuesta de posibles markdown code blocks
@@ -233,6 +310,15 @@ const ContentCreatorAssistant: React.FC<ContentCreatorAssistantProps> = ({ onClo
                 cleanedText = cleanedText.replace(/^```json\n?/, '').replace(/\n?```$/, '');
             } else if (cleanedText.startsWith('```')) {
                 cleanedText = cleanedText.replace(/^```\n?/, '').replace(/\n?```$/, '');
+            }
+
+            // If the text doesn't start with '{', try to extract JSON from within it
+            if (!cleanedText.startsWith('{') && !cleanedText.startsWith('[')) {
+                const jsonMatch = cleanedText.match(/\{[\s\S]*\}/);
+                if (jsonMatch) {
+                    console.log('🔧 Extracted JSON from conversational response');
+                    cleanedText = jsonMatch[0];
+                }
             }
 
             // Use robust JSON parsing with repair attempt
@@ -341,6 +427,17 @@ const ContentCreatorAssistant: React.FC<ContentCreatorAssistantProps> = ({ onClo
                                 className="w-full h-32 bg-secondary/30 border border-border rounded-xl p-4 text-lg focus:ring-2 focus:ring-primary/50 outline-none resize-none"
                             />
 
+                            <div className="space-y-2">
+                                <label className="block text-sm font-medium text-muted-foreground">URL de Referencia (Opcional)</label>
+                                <input
+                                    type="url"
+                                    value={sourceUrl}
+                                    onChange={(e) => setSourceUrl(e.target.value)}
+                                    placeholder="https://ejemplo.com/noticia (La IA leerá esta página)"
+                                    className="w-full bg-secondary/30 border border-border rounded-lg p-3 outline-none focus:border-primary transition-colors"
+                                />
+                            </div>
+
                             {/* Media Upload Zone */}
                             <div>
                                 <label className="block text-sm font-medium text-muted-foreground mb-2 flex items-center gap-2">
@@ -437,6 +534,7 @@ const ContentCreatorAssistant: React.FC<ContentCreatorAssistantProps> = ({ onClo
                                     {tones.map((t) => (
                                         <button
                                             key={t.id}
+                                            type="button"
                                             onClick={() => setTone(t.id)}
                                             className={`p-3 rounded-lg border text-sm font-medium transition-all ${tone === t.id
                                                 ? 'bg-primary text-primary-foreground border-primary'
@@ -444,6 +542,45 @@ const ContentCreatorAssistant: React.FC<ContentCreatorAssistantProps> = ({ onClo
                                                 }`}
                                         >
                                             {t.label}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="space-y-4">
+                                <label className="block font-medium">Tipo de Contenido</label>
+                                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                                    {contentTypes.map((c) => (
+                                        <button
+                                            key={c.id}
+                                            type="button"
+                                            onClick={() => setContentType(c.id)}
+                                            className={`p-3 rounded-lg border text-sm font-medium transition-all ${contentType === c.id
+                                                ? 'bg-primary text-primary-foreground border-primary'
+                                                : 'bg-card border-border hover:border-primary/50'
+                                                }`}
+                                        >
+                                            {c.label}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="space-y-4">
+                                <label className="block font-medium">Idioma del Contenido</label>
+                                <div className="grid grid-cols-5 gap-2">
+                                    {languages.map((l) => (
+                                        <button
+                                            key={l.id}
+                                            type="button"
+                                            onClick={() => setOutputLanguage(l.id)}
+                                            className={`p-2 rounded-lg border text-xs font-medium transition-all flex flex-col items-center gap-1 ${outputLanguage === l.id
+                                                ? 'bg-primary text-primary-foreground border-primary'
+                                                : 'bg-card border-border hover:border-primary/50'
+                                                }`}
+                                        >
+                                            <span className="text-lg">{l.flag}</span>
+                                            {l.label}
                                         </button>
                                     ))}
                                 </div>
