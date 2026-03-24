@@ -1117,9 +1117,9 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
             ? doc(db, 'templates', projectId)
             : doc(db, ...pathSegments, projectId);
 
-        await updateDoc(docRef, { favicon: downloadURL });
+        await updateDoc(docRef, { faviconUrl: downloadURL });
         setProjects(prev => prev.map(p =>
-            p.id === projectId ? { ...p, favicon: downloadURL } : p
+            p.id === projectId ? { ...p, faviconUrl: downloadURL } : p
         ));
     };
 

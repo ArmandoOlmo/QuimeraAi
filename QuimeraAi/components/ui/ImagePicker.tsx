@@ -79,7 +79,7 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
         try {
             if (destination === 'global') {
                 await uploadGlobalFile(file);
-                success(t('dashboard.imagePicker.uploadGlobalSuccess', { name: file.name, defaultValue: 'Archivo subido a librería global' }));
+                success(t('dashboard.imagePicker.uploadGlobalSuccess', { name: file.name, defaultValue: t('imageGeneration.uploadedToLibrary') }));
             } else {
                 await uploadFile(file);
                 success(t('dashboard.imagePicker.uploadSuccess', { name: file.name }));

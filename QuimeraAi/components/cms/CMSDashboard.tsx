@@ -522,7 +522,7 @@ const CMSDashboard: React.FC = () => {
                                         className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                                     >
                                         <option value="all">{t('cms.filters.allCategories', 'Todas')}</option>
-                                        <option value="uncategorized">{t('cms.filters.uncategorized', 'Sin categoría')}</option>
+                                        <option value="uncategorized">{t('cms.filters.uncategorized', t('cms.uncategorized'))}</option>
                                         {categories.map(cat => (
                                             <option key={cat.id} value={cat.id}>{cat.name}</option>
                                         ))}

@@ -9,6 +9,7 @@ import { sanitizeHtml } from '../../utils/sanitize';
 import { ArrowLeft, Shield, Lock, Eye, Database, Users, Mail, Globe, FileText, Settings, Clock, AlertTriangle, Loader2, ScrollText } from 'lucide-react';
 import { useSafeAppContent } from '../../contexts/appContent';
 import { LegalPage, DEFAULT_TERMS_OF_SERVICE } from '../../types/appContent';
+import { useTranslation } from 'react-i18next';
 
 // Icon mapping
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string; size?: number }>> = {
@@ -27,6 +28,7 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string; size?: 
 };
 
 const TermsOfServicePage: React.FC = () => {
+    const { t } = useTranslation();
     const appContent = useSafeAppContent();
     const [pageData, setPageData] = useState<LegalPage | null>(null);
     const [isLoading, setIsLoading] = useState(true);
@@ -121,7 +123,7 @@ const TermsOfServicePage: React.FC = () => {
                         className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors"
                     >
                         <ArrowLeft size={20} />
-                        <span>Volver</span>
+                        <span>{t('legal.back')}</span>
                     </button>
                     <div className="flex items-center gap-2">
                         <Shield className="text-indigo-500" size={24} />

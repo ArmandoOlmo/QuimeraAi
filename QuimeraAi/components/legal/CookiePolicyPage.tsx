@@ -9,6 +9,7 @@ import { sanitizeHtml } from '../../utils/sanitize';
 import { ArrowLeft, Shield, Lock, Eye, Database, Users, Mail, Globe, FileText, Settings, Clock, AlertTriangle, Loader2, Cookie } from 'lucide-react';
 import { useSafeAppContent } from '../../contexts/appContent';
 import { LegalPage, DEFAULT_COOKIE_POLICY } from '../../types/appContent';
+import { useTranslation } from 'react-i18next';
 
 // Icon mapping
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string; size?: number }>> = {
@@ -27,6 +28,7 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string; size?: 
 };
 
 const CookiePolicyPage: React.FC = () => {
+    const { t } = useTranslation();
     const appContent = useSafeAppContent();
     const [pageData, setPageData] = useState<LegalPage | null>(null);
     const [isLoading, setIsLoading] = useState(true);
@@ -104,8 +106,8 @@ const CookiePolicyPage: React.FC = () => {
             <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
                 <div className="text-center">
                     <Cookie className="w-16 h-16 mx-auto text-slate-600 mb-4" />
-                    <h1 className="text-2xl font-bold text-white mb-2">Page Not Found</h1>
-                    <p className="text-slate-400">This page has not been configured yet.</p>
+                    <h1 className="text-2xl font-bold text-white mb-2">{t('legal.pageNotFound')}</h1>
+                    <p className="text-slate-400">{t('legal.notConfigured')}</p>
                 </div>
             </div>
         );
@@ -121,7 +123,7 @@ const CookiePolicyPage: React.FC = () => {
                         className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors"
                     >
                         <ArrowLeft size={20} />
-                        <span>Volver</span>
+                        <span>{t('legal.back')}</span>
                     </button>
                     <div className="flex items-center gap-2">
                         <Shield className="text-amber-500" size={24} />
@@ -142,7 +144,7 @@ const CookiePolicyPage: React.FC = () => {
                         <p className="text-slate-400 mb-2">{pageData.subtitle}</p>
                     )}
                     <p className="text-slate-500 text-sm">
-                        Última actualización: {new Date(pageData.lastUpdated).toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' })}
+                        {t('legal.lastUpdated')}: {new Date(pageData.lastUpdated).toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' })}
                     </p>
                 </div>
 
@@ -153,8 +155,7 @@ const CookiePolicyPage: React.FC = () => {
                         Resumen Rápido
                     </h2>
                     <p className="text-slate-300 text-sm">
-                        Utilizamos cookies para mejorar su experiencia, analizar el tráfico del sitio y personalizar el contenido. 
-                        Al continuar navegando, acepta el uso de cookies según esta política.
+                        {t('legal.cookieSummary')}
                     </p>
                 </div>
 
@@ -185,15 +186,15 @@ const CookiePolicyPage: React.FC = () => {
                         <section className="bg-amber-500/20 border border-amber-500/30 rounded-2xl p-6">
                             <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
                                 <Mail className="text-amber-400" size={20} />
-                                ¿Preguntas sobre Cookies?
+                                {t('legal.cookieQuestions')}
                             </h2>
                             <div className="text-slate-300">
                                 <p className="mb-4">
-                                    Si tiene preguntas sobre nuestra política de cookies, puede contactarnos:
+                                    {t('legal.cookieContactText')}
                                 </p>
                                 <div className="space-y-2">
                                     <p><strong>Email:</strong> {pageData.contactEmail}</p>
-                                    <p><strong>Sitio web:</strong> https://quimera.ai</p>
+                                    <p><strong>{t('legal.website')}:</strong> https://quimera.ai</p>
                                 </div>
                             </div>
                         </section>
@@ -204,7 +205,7 @@ const CookiePolicyPage: React.FC = () => {
             {/* Footer */}
             <footer className="border-t border-slate-700/50 py-8 mt-12">
                 <div className="max-w-4xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-slate-400 text-sm">
-                    <p>© {new Date().getFullYear()} Quimera AI. Todos los derechos reservados.</p>
+                    <p>© {new Date().getFullYear()} Quimera AI. {t('legal.allRightsReserved')}</p>
                     <div className="flex gap-4">
                         <a href="/privacy-policy" className="hover:text-white transition-colors">
                             Política de Privacidad

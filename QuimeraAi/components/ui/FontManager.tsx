@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { useProject } from '../../contexts/project';
 import { FontFamily } from '../../types';
 import ColorControl from './ColorControl';
@@ -20,6 +21,7 @@ const fontWeightOptions = [
 ];
 
 const FontManager: React.FC = () => {
+    const { t } = useTranslation();
     const { theme, setTheme } = useProject();
 
     const handleChange = (key: keyof typeof theme, value: FontFamily) => {
@@ -94,7 +96,7 @@ const FontManager: React.FC = () => {
                             ? 'bg-editor-accent/20 border-editor-accent text-editor-accent'
                             : 'bg-editor-panel-bg border-editor-border text-editor-text-secondary hover:border-editor-accent/50'
                     }`}
-                    title="Italic"
+                    title={t('editor.italic')}
                 >
                     <Italic className="h-3.5 w-3.5" />
                 </button>
@@ -108,7 +110,7 @@ const FontManager: React.FC = () => {
             <div className="bg-editor-panel-bg/50 p-4 rounded-lg border-2 border-editor-accent/50 shadow-lg">
                 <label className="block text-sm font-bold text-editor-accent mb-3 uppercase tracking-wider flex items-center gap-2">
                     <Image size={16} />
-                    Fondo General del Sitio Web
+                    {t('editor.siteBackground')}
                 </label>
                 <ColorControl 
                     label="" 
@@ -117,10 +119,10 @@ const FontManager: React.FC = () => {
                 />
                 <div className="mt-3 p-2 bg-editor-bg/50 rounded border border-editor-border">
                     <p className="text-xs text-editor-text-primary font-medium mb-1">
-                        ✨ Background Color / Color de Fondo
+                        {t('editor.backgroundColorLabel')}
                     </p>
                     <p className="text-xs text-editor-text-secondary italic">
-                        Este color se aplica a TODA la página web (body completo), no solo a secciones individuales.
+                        {t('editor.backgroundColorDescription')}
                     </p>
                 </div>
             </div>
@@ -130,11 +132,11 @@ const FontManager: React.FC = () => {
             {/* Typography Controls */}
             <div>
                 <label className="block text-xs font-bold text-editor-text-secondary mb-3 uppercase tracking-wider">
-                    Fuentes / Fonts
+                    {t('editor.fonts')}
                 </label>
-                {renderFontGroup("Headings Font", 'fontFamilyHeader', 'fontWeightHeader', 'fontStyleHeader', 700)}
-                {renderFontGroup("Body Text Font", 'fontFamilyBody', 'fontWeightBody', 'fontStyleBody', 400)}
-                {renderFontGroup("Buttons & UI Font", 'fontFamilyButton', 'fontWeightButton', 'fontStyleButton', 600)}
+                {renderFontGroup(t('editor.headingsFont'), 'fontFamilyHeader', 'fontWeightHeader', 'fontStyleHeader', 700)}
+                {renderFontGroup(t('editor.bodyFont'), 'fontFamilyBody', 'fontWeightBody', 'fontStyleBody', 400)}
+                {renderFontGroup(t('editor.buttonsFont'), 'fontFamilyButton', 'fontWeightButton', 'fontStyleButton', 600)}
             </div>
         </div>
     );

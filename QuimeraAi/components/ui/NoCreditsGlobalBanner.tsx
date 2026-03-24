@@ -6,6 +6,7 @@
  */
 
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { AlertTriangle, Crown, Zap, ArrowRight, ShoppingCart } from 'lucide-react';
 import { useCreditsUsage } from '../../hooks/useCreditsUsage';
 import { useAuth } from '../../contexts/core/AuthContext';
@@ -17,6 +18,7 @@ interface NoCreditsGlobalBannerProps {
 }
 
 const NoCreditsGlobalBanner: React.FC<NoCreditsGlobalBannerProps> = ({ className = '' }) => {
+    const { t } = useTranslation();
     const { usage, isLoading } = useCreditsUsage();
     const { canAccessSuperAdmin, isUserOwner, userDocument } = useAuth();
     const upgradeContext = useSafeUpgrade();
@@ -57,10 +59,10 @@ const NoCreditsGlobalBanner: React.FC<NoCreditsGlobalBannerProps> = ({ className
                         </div>
                         <div>
                             <p className="font-bold text-sm sm:text-base">
-                                ¡Se te acabaron los créditos de IA!
+                                {t('credits.noCreditsTitle')}
                             </p>
                             <p className="text-xs sm:text-sm text-red-100">
-                                No puedes usar funciones de IA hasta que compres más créditos o actualices tu plan.
+                                {t('credits.noCreditsDescription')}
                             </p>
                         </div>
                     </div>
@@ -72,14 +74,14 @@ const NoCreditsGlobalBanner: React.FC<NoCreditsGlobalBannerProps> = ({ className
                             className="flex items-center gap-2 px-4 py-2 bg-white text-red-600 rounded-lg text-sm font-bold hover:bg-red-50 transition-colors shadow-md"
                         >
                             <ShoppingCart className="w-4 h-4" />
-                            Comprar Créditos
+                            {t('credits.buyCredits')}
                         </button>
                         <button
                             onClick={handleUpgradeClick}
                             className="flex items-center gap-2 px-4 py-2 bg-white/20 text-white rounded-lg text-sm font-semibold hover:bg-white/30 transition-colors border border-white/30"
                         >
                             <Crown className="w-4 h-4" />
-                            Actualizar Plan
+                            {t('credits.upgradePlan')}
                         </button>
                     </div>
                 </div>

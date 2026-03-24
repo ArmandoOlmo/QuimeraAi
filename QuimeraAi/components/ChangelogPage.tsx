@@ -45,6 +45,7 @@ interface ChangelogPageProps {
 
 // Tag Badge Component
 const TagBadge: React.FC<{ tag: ChangelogTag; size?: 'sm' | 'md' }> = ({ tag, size = 'md' }) => {
+    const { t } = useTranslation();
   const colors = CHANGELOG_TAG_COLORS[tag];
   const labels = CHANGELOG_TAG_LABELS[tag];
   
@@ -132,38 +133,38 @@ const EntryCard: React.FC<{
             <button
               onClick={handleCopyLink}
               className="p-2 rounded-lg text-gray-500 hover:text-white hover:bg-white/10 transition-all relative group/btn"
-              title="Copiar enlace"
+              title={t('changelog.copyLink')}
             >
               {copied ? <Check size={18} className="text-green-400" /> : <Link2 size={18} />}
               <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 text-xs bg-gray-900 text-white px-2 py-1 rounded opacity-0 group-hover/btn:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-                {copied ? '¡Copiado!' : 'Copiar enlace'}
+                {copied ? t('changelog.copied') : t('changelog.copyLink')}
               </span>
             </button>
             <button
               onClick={() => handleShare('reddit')}
               className="p-2 rounded-lg text-gray-500 hover:text-[#FF4500] hover:bg-[#FF4500]/10 transition-all"
-              title="Compartir en Reddit"
+              title={t('changelog.shareReddit')}
             >
               <MessageCircle size={18} />
             </button>
             <button
               onClick={() => handleShare('twitter')}
               className="p-2 rounded-lg text-gray-500 hover:text-[#1DA1F2] hover:bg-[#1DA1F2]/10 transition-all"
-              title="Compartir en Twitter"
+              title={t('changelog.shareTwitter')}
             >
               <Twitter size={18} />
             </button>
             <button
               onClick={() => handleShare('linkedin')}
               className="p-2 rounded-lg text-gray-500 hover:text-[#0A66C2] hover:bg-[#0A66C2]/10 transition-all"
-              title="Compartir en LinkedIn"
+              title={t('changelog.shareLinkedin')}
             >
               <Linkedin size={18} />
             </button>
             <button
               onClick={onToggle}
               className="p-2 rounded-lg text-gray-500 hover:text-white hover:bg-white/10 transition-all ml-2"
-              title={isExpanded ? 'Colapsar' : 'Expandir'}
+              title={isExpanded ? t('changelog.collapse') : t('changelog.expand')}
             >
               {isExpanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
             </button>
@@ -243,7 +244,7 @@ const FilterDropdown: React.FC<{
         `}
       >
         <Filter size={18} />
-        <span className="hidden sm:inline">Filtros</span>
+        <span className="hidden sm:inline">{t('changelog.filters')}</span>
         {activeTagsCount > 0 && (
           <span className="bg-yellow-400 text-black text-xs font-bold px-1.5 py-0.5 rounded-full">
             {activeTagsCount}
@@ -260,7 +261,7 @@ const FilterDropdown: React.FC<{
           />
           <div className="absolute right-0 top-full mt-2 w-72 bg-[#151515] border border-white/10 rounded-xl shadow-2xl z-50 overflow-hidden">
             <div className="p-4 border-b border-white/10 flex items-center justify-between">
-              <span className="text-white font-semibold">Filtrar por tipo</span>
+              <span className="text-white font-semibold">{t('changelog.filterByType')}</span>
               {activeTagsCount > 0 && (
                 <button
                   onClick={onClear}
@@ -409,7 +410,7 @@ const ChangelogPage: React.FC<ChangelogPageProps> = ({
             {/* Navigation - Desktop */}
             <nav className="hidden md:flex items-center gap-8">
               <button onClick={onNavigateToHome} className="text-sm text-gray-400 hover:text-white transition-colors">
-                Inicio
+                {t('changelog.home')}
               </button>
               <span className="text-sm text-white font-medium">
                 Changelog
@@ -422,13 +423,13 @@ const ChangelogPage: React.FC<ChangelogPageProps> = ({
                 onClick={onNavigateToLogin}
                 className="text-sm text-gray-300 hover:text-white transition-colors"
               >
-                Iniciar Sesión
+                {t('changelog.login')}
               </button>
               <button 
                 onClick={onNavigateToRegister}
                 className="px-5 py-2.5 bg-yellow-400 text-black font-semibold rounded-xl hover:bg-yellow-300 transition-colors"
               >
-                Registrarse
+                {t('changelog.register')}
               </button>
             </div>
 
@@ -446,7 +447,7 @@ const ChangelogPage: React.FC<ChangelogPageProps> = ({
             <div className="md:hidden mt-4 pb-4 border-t border-white/10 pt-4">
               <nav className="flex flex-col gap-4 mb-6">
                 <button onClick={() => { setIsMobileMenuOpen(false); onNavigateToHome(); }} className="text-gray-300 hover:text-white py-2 text-left">
-                  Inicio
+                  {t('changelog.home')}
                 </button>
                 <span className="text-white font-medium py-2">
                   Changelog
@@ -454,10 +455,10 @@ const ChangelogPage: React.FC<ChangelogPageProps> = ({
               </nav>
               <div className="flex flex-col gap-3">
                 <button onClick={() => { setIsMobileMenuOpen(false); onNavigateToLogin(); }} className="w-full py-3 text-center text-gray-300 border border-white/10 rounded-xl">
-                  Iniciar Sesión
+                  {t('changelog.login')}
                 </button>
                 <button onClick={() => { setIsMobileMenuOpen(false); onNavigateToRegister(); }} className="w-full py-3 bg-yellow-400 text-black font-semibold rounded-xl">
-                  Registrarse
+                  {t('changelog.register')}
                 </button>
               </div>
             </div>
@@ -473,13 +474,13 @@ const ChangelogPage: React.FC<ChangelogPageProps> = ({
             <div className="max-w-3xl">
               <div className="flex items-center gap-2 mb-4">
                 <Sparkles className="w-5 h-5 text-yellow-400" />
-                <span className="text-yellow-400 text-sm font-medium uppercase tracking-wide">Actualizaciones</span>
+                <span className="text-yellow-400 text-sm font-medium uppercase tracking-wide">{t('changelog.updates')}</span>
               </div>
               <h1 className="text-4xl md:text-6xl font-black mb-4 bg-gradient-to-r from-white via-white to-gray-500 bg-clip-text text-transparent">
                 Changelog
               </h1>
               <p className="text-lg md:text-xl text-gray-400 max-w-2xl">
-                Mantente al día con las últimas mejoras, nuevas funcionalidades y correcciones de Quimera AI.
+                {t('changelog.subtitle')}
               </p>
             </div>
           </div>
@@ -496,7 +497,7 @@ const ChangelogPage: React.FC<ChangelogPageProps> = ({
                   type="text"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Buscar actualizaciones..."
+                  placeholder={t('changelog.searchUpdates')}
                   className="w-full pl-12 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-gray-500 focus:outline-none focus:border-yellow-400/50 focus:ring-2 focus:ring-yellow-400/20 transition-all"
                 />
                 {searchTerm && (
@@ -521,7 +522,7 @@ const ChangelogPage: React.FC<ChangelogPageProps> = ({
             {/* Active Filters */}
             {(selectedTags.length > 0 || searchTerm) && (
               <div className="flex flex-wrap items-center gap-2 mt-4">
-                <span className="text-sm text-gray-500">Filtros activos:</span>
+                <span className="text-sm text-gray-500">{t('changelog.activeFilters')}</span>
                 {searchTerm && (
                   <button
                     onClick={() => setSearchTerm('')}
@@ -558,7 +559,7 @@ const ChangelogPage: React.FC<ChangelogPageProps> = ({
             {isLoading ? (
               <div className="flex flex-col items-center justify-center py-20">
                 <div className="w-10 h-10 border-2 border-yellow-400 border-t-transparent rounded-full animate-spin mb-4" />
-                <p className="text-gray-500">Cargando actualizaciones...</p>
+                <p className="text-gray-500">{t('changelog.loadingUpdates')}</p>
               </div>
             ) : error ? (
               <div className="text-center py-20">
@@ -567,7 +568,7 @@ const ChangelogPage: React.FC<ChangelogPageProps> = ({
                   onClick={() => window.location.reload()}
                   className="text-yellow-400 hover:underline"
                 >
-                  Intentar de nuevo
+                  {t('changelog.tryAgain')}
                 </button>
               </div>
             ) : filteredEntries.length === 0 ? (
@@ -575,11 +576,11 @@ const ChangelogPage: React.FC<ChangelogPageProps> = ({
                 <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4">
                   <Search className="w-8 h-8 text-gray-600" />
                 </div>
-                <h3 className="text-xl font-bold text-white mb-2">No se encontraron resultados</h3>
+                <h3 className="text-xl font-bold text-white mb-2">{t('changelog.noResults')}</h3>
                 <p className="text-gray-500 mb-4">
                   {searchTerm || selectedTags.length > 0 
-                    ? 'Intenta con otros términos de búsqueda o filtros'
-                    : 'No hay entradas en el changelog todavía'
+                    ? t('changelog.tryOtherSearch')
+                    : t('changelog.noEntries')
                   }
                 </p>
                 {(searchTerm || selectedTags.length > 0) && (
@@ -587,7 +588,7 @@ const ChangelogPage: React.FC<ChangelogPageProps> = ({
                     onClick={clearFilters}
                     className="text-yellow-400 hover:underline"
                   >
-                    Limpiar filtros
+                    {t('changelog.clearFilters')}
                   </button>
                 )}
               </div>
@@ -618,7 +619,7 @@ const ChangelogPage: React.FC<ChangelogPageProps> = ({
                   }`}
                 >
                   <ArrowLeft size={18} />
-                  <span className="hidden sm:inline">Anterior</span>
+                  <span className="hidden sm:inline">{t('changelog.previous')}</span>
                 </button>
                 
                 <div className="flex items-center gap-2">
@@ -646,7 +647,7 @@ const ChangelogPage: React.FC<ChangelogPageProps> = ({
                       : 'border-white/10 text-gray-400 hover:text-white hover:border-white/20'
                   }`}
                 >
-                  <span className="hidden sm:inline">Siguiente</span>
+                  <span className="hidden sm:inline">{t('changelog.next')}</span>
                   <ArrowRight size={18} />
                 </button>
               </div>
@@ -655,7 +656,7 @@ const ChangelogPage: React.FC<ChangelogPageProps> = ({
             {/* Results Count */}
             {filteredEntries.length > 0 && (
               <p className="text-center text-gray-500 text-sm mt-6">
-                Mostrando {((currentPage - 1) * entriesPerPage) + 1} - {Math.min(currentPage * entriesPerPage, filteredEntries.length)} de {filteredEntries.length} actualizaciones
+                {t('changelog.showing', { start: ((currentPage - 1) * entriesPerPage) + 1, end: Math.min(currentPage * entriesPerPage, filteredEntries.length), total: filteredEntries.length })}
               </p>
             )}
           </div>
@@ -666,10 +667,10 @@ const ChangelogPage: React.FC<ChangelogPageProps> = ({
           <div className="container mx-auto px-4 sm:px-6">
             <div className="max-w-2xl mx-auto text-center">
               <h2 className="text-2xl md:text-3xl font-bold mb-4">
-                ¿Listo para crear tu sitio web?
+                {t('changelog.readyToCreate')}
               </h2>
               <p className="text-gray-400 mb-8">
-                Únete a miles de usuarios que ya están creando sitios web increíbles con Quimera AI.
+                {t('changelog.joinThousands')}
               </p>
               <button
                 onClick={onNavigateToRegister}
@@ -678,7 +679,7 @@ const ChangelogPage: React.FC<ChangelogPageProps> = ({
                 Comenzar Gratis
                 <ArrowRight size={20} />
               </button>
-              <p className="text-gray-600 text-sm mt-3">No requiere tarjeta de crédito</p>
+              <p className="text-gray-600 text-sm mt-3">{t('changelog.noCreditCard')}</p>
             </div>
           </div>
         </section>
@@ -691,13 +692,13 @@ const ChangelogPage: React.FC<ChangelogPageProps> = ({
             <div className="flex items-center gap-2">
               <img src={QUIMERA_DEFAULT_LOGO} alt="Quimera.ai" className="w-6 h-6" />
               <span className="text-sm text-gray-500">
-                © {new Date().getFullYear()} Quimera.ai. Todos los derechos reservados.
+                © {new Date().getFullYear()} Quimera.ai. {t('changelog.allRightsReserved')}
               </span>
             </div>
             <div className="flex items-center gap-6 text-sm text-gray-500">
-              <a href="/privacy-policy" className="hover:text-white transition-colors">Privacidad</a>
-              <a href="/terms-of-service" className="hover:text-white transition-colors">Términos</a>
-              <a href="/help-center" className="hover:text-white transition-colors">Ayuda</a>
+              <a href="/privacy-policy" className="hover:text-white transition-colors">{t('changelog.privacy')}</a>
+              <a href="/terms-of-service" className="hover:text-white transition-colors">{t('changelog.terms')}</a>
+              <a href="/help-center" className="hover:text-white transition-colors">{t('changelog.help')}</a>
             </div>
           </div>
         </div>

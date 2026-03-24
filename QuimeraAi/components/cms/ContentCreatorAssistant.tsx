@@ -56,7 +56,7 @@ const ContentCreatorAssistant: React.FC<ContentCreatorAssistantProps> = ({ onClo
 
     // Content types configuration
     const contentTypes = [
-        { id: 'blog', label: 'Blog Estándar' },
+        { id: 'blog', label: t('cms.standardBlog') },
         { id: 'gallery', label: 'Galería (Imágenes/Proyectos)' },
         { id: 'profile', label: 'Perfil (Bio/Directorio)' }
     ];

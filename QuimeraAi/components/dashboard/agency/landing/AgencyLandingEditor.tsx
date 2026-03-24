@@ -909,7 +909,7 @@ export function AgencyLandingEditor({ onBack }: AgencyLandingEditorProps) {
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="h-9 w-9 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-                                title="Ver sitio"
+                                title={t('landingEditor.viewSite')}
                             >
                                 <ExternalLink size={18} />
                             </a>
@@ -1052,7 +1052,7 @@ export function AgencyLandingEditor({ onBack }: AgencyLandingEditorProps) {
                                     key={previewKey}
                                     src={`/agency-landing-preview?tenantId=${currentTenant.id}`}
                                     className="flex-1 w-full border-0"
-                                    title="Agency Landing Preview"
+                                    title={t('landingEditor.agencyPreview')}
                                 />
                             </div>
                         </div>

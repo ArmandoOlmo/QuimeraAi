@@ -191,7 +191,7 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
                         <h3
                             className="text-xl font-bold text-foreground flex items-center gap-2 cursor-pointer hover:text-primary transition-colors"
                             onClick={handleDomainClick}
-                            title="Click para refrescar vinculación"
+                            title={t('domainsDashboard.clickToRefresh')}
                         >
                             {domain.name}
                             {domain.deployment?.deploymentUrl && (
@@ -413,7 +413,7 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
                                     <span className="text-sm font-medium text-foreground">Cambiar Nameservers (Cloudflare)</span>
                                 </div>
                                 <p className="text-xs text-muted-foreground mb-3">
-                                    Ve a la sección de <strong>Nameservers</strong> de tu proveedor y reemplaza los existentes por estos:
+                                    Ve a la sección de <strong>{t('domainsDashboard.nameservers')}</strong> de tu proveedor y reemplaza los existentes por estos:
                                 </p>
                                 <div className="grid gap-2">
                                     {(domain as any).cloudflareNameservers.map((ns: string, idx: number) => (
@@ -443,7 +443,7 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
                             )}
                             
                             <p className="text-sm text-muted-foreground mb-4">
-                                En tu proveedor de dominios, ve a la sección de <strong>DNS</strong> o <strong>Registros DNS</strong> y agrega los siguientes registros:
+                                En tu proveedor de dominios, ve a la sección de <strong>DNS</strong> o <strong>{t('domainsDashboard.dnsRecords')}</strong> y agrega los siguientes registros:
                             </p>
 
                             <div className="space-y-4">
@@ -475,7 +475,7 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
                                                         alert('IP copiada ✓');
                                                     }}
                                                     className="p-1 hover:bg-primary/20 rounded text-primary ml-2"
-                                                    title="Copiar IP"
+                                                    title={t('domainsDashboard.copyIP')}
                                                 >
                                                     <Copy size={14} />
                                                 </button>
@@ -512,7 +512,7 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
                                                         alert('CNAME copiado ✓');
                                                     }}
                                                     className="p-1 hover:bg-primary/20 rounded text-primary ml-2"
-                                                    title="Copiar CNAME"
+                                                    title={t('domainsDashboard.copyCNAME')}
                                                 >
                                                     <Copy size={14} />
                                                 </button>

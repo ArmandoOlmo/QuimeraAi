@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { SocialPlatform, SocialLink } from '../../types';
 import {
   Twitter, Facebook, Instagram, Linkedin, Github, Youtube,
@@ -78,6 +79,7 @@ const SocialLinksEditor: React.FC<SocialLinksEditorProps> = ({
   onUpdate,
   onUpdateHref,
 }) => {
+  const { t } = useTranslation();
   const [showAddMenu, setShowAddMenu] = useState(false);
   const links = Array.isArray(socialLinks) ? socialLinks : [];
 
@@ -101,7 +103,7 @@ const SocialLinksEditor: React.FC<SocialLinksEditorProps> = ({
       <div className="flex items-center justify-between">
         <h4 className="font-bold text-editor-text-primary text-sm uppercase tracking-wider flex items-center gap-2">
           <Share2 size={14} className="text-editor-accent" />
-          Social Links
+          {t('editor.socialLinks')}
         </h4>
         <span className="text-[10px] text-editor-text-secondary">{links.length} links</span>
       </div>
@@ -151,8 +153,8 @@ const SocialLinksEditor: React.FC<SocialLinksEditorProps> = ({
       ) : (
         <div className="bg-editor-bg/50 rounded-lg border border-dashed border-editor-border p-4 text-center">
           <Share2 size={20} className="mx-auto mb-2 text-editor-text-secondary/50" />
-          <p className="text-xs text-editor-text-secondary">No social links added yet</p>
-          <p className="text-[10px] text-editor-text-secondary/60 mt-0.5">Add your social profiles below</p>
+          <p className="text-xs text-editor-text-secondary">{t('editor.noSocialLinks')}</p>
+          <p className="text-[10px] text-editor-text-secondary/60 mt-0.5">{t('editor.addSocialBelow')}</p>
         </div>
       )}
 
@@ -164,7 +166,7 @@ const SocialLinksEditor: React.FC<SocialLinksEditorProps> = ({
             className="w-full py-2 border border-dashed border-editor-border rounded-lg text-editor-text-secondary hover:text-editor-accent hover:border-editor-accent/50 transition-all flex items-center justify-center gap-2 text-xs font-medium"
           >
             <Plus size={14} />
-            Add Social Link
+            {t('editor.addSocialLink')}
             <ChevronDown size={12} className={`transition-transform ${showAddMenu ? 'rotate-180' : ''}`} />
           </button>
 

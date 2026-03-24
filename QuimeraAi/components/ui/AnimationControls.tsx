@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { AnimationType } from '../../types';
 import { Wand2 } from 'lucide-react';
 
@@ -15,8 +16,10 @@ const AnimationControls: React.FC<AnimationControlsProps> = ({
   enableCardAnimation = true,
   onChangeAnimationType,
   onToggleAnimation,
-  label = 'Card Animations'
+  label: labelProp
 }) => {
+  const { t } = useTranslation();
+  const label = labelProp || t('controls.cardAnimations');
   return (
     <div className="space-y-3 p-3 bg-editor-border/20 rounded-md">
       <div className="flex items-center gap-2 mb-2">
@@ -28,7 +31,7 @@ const AnimationControls: React.FC<AnimationControlsProps> = ({
 
       <div className="flex items-center justify-between">
         <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
-          Enable Animations
+          {t('controls.enableAnimations')}
         </label>
         <button
           type="button"
@@ -47,21 +50,21 @@ const AnimationControls: React.FC<AnimationControlsProps> = ({
       {enableCardAnimation && (
         <div>
           <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">
-            Animation Type
+            {t('controls.animationType')}
           </label>
           <select
             value={animationType}
             onChange={(e) => onChangeAnimationType(e.target.value as AnimationType)}
             className="w-full bg-editor-panel-bg border border-editor-border rounded-md px-3 py-2 text-sm text-editor-text-primary focus:outline-none focus:ring-1 focus:ring-editor-accent transition-all"
           >
-            <option value="none">None</option>
-            <option value="fade-in">Fade In</option>
-            <option value="fade-in-up">Fade In Up</option>
-            <option value="fade-in-down">Fade In Down</option>
-            <option value="slide-up">Slide Up</option>
-            <option value="slide-down">Slide Down</option>
-            <option value="scale-in">Scale In</option>
-            <option value="bounce-in">Bounce In</option>
+            <option value="none">{t('controls.animNone')}</option>
+            <option value="fade-in">{t('controls.animFadeIn')}</option>
+            <option value="fade-in-up">{t('controls.animFadeInUp')}</option>
+            <option value="fade-in-down">{t('controls.animFadeInDown')}</option>
+            <option value="slide-up">{t('controls.animSlideUp')}</option>
+            <option value="slide-down">{t('controls.animSlideDown')}</option>
+            <option value="scale-in">{t('controls.animScaleIn')}</option>
+            <option value="bounce-in">{t('controls.animBounceIn')}</option>
           </select>
         </div>
       )}

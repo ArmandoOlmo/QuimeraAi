@@ -5,6 +5,7 @@
  */
 
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { X, Zap, Check, Loader2, Crown, Sparkles, AlertTriangle } from 'lucide-react';
 import { AI_CREDIT_PACKAGES, AiCreditPackage } from '../../types/subscription';
 import { getFunctionsInstance } from '../../firebase';
@@ -18,6 +19,7 @@ interface PurchaseCreditsModalProps {
 }
 
 const PurchaseCreditsModal: React.FC<PurchaseCreditsModalProps> = ({ isOpen, onClose }) => {
+    const { t } = useTranslation();
     const { user } = useAuth();
     const tenantContext = useSafeTenant();
     const [loading, setLoading] = useState<string | null>(null); // packageId being purchased
@@ -30,7 +32,7 @@ const PurchaseCreditsModal: React.FC<PurchaseCreditsModalProps> = ({ isOpen, onC
 
     const handlePurchase = async (pkg: AiCreditPackage) => {
         if (!user) {
-            setError('Debes estar autenticado para comprar créditos.');
+            setError(t('credits.mustBeAuthenticated'));
             return;
         }
 
@@ -57,7 +59,7 @@ const PurchaseCreditsModal: React.FC<PurchaseCreditsModalProps> = ({ isOpen, onC
             }
         } catch (err: any) {
             console.error('[PurchaseCreditsModal] Error:', err);
-            setError(err.message || 'Error al crear la sesión de pago. Inténtalo de nuevo.');
+            setError(err.message || t('credits.checkoutError'));
             setLoading(null);
         }
     };
@@ -76,11 +78,11 @@ const PurchaseCreditsModal: React.FC<PurchaseCreditsModalProps> = ({ isOpen, onC
                                 <Zap className="w-5 h-5 text-white" />
                             </div>
                             <div>
-                                <h2 className="text-lg font-bold text-foreground">Comprar Créditos de IA</h2>
+                                <h2 className="text-lg font-bold text-foreground">{t('credits.purchaseTitle')}</h2>
                                 <p className="text-xs text-muted-foreground">
                                     {isAgency
-                                        ? 'Los créditos se agregan al pool compartido de tu agencia'
-                                        : 'Créditos adicionales para tu cuenta'
+                                        ? t('credits.agencyPoolDescription')
+                                        : t('credits.personalDescription')
                                     }
                                 </p>
                             </div>
@@ -99,7 +101,7 @@ const PurchaseCreditsModal: React.FC<PurchaseCreditsModalProps> = ({ isOpen, onC
                     <div className="mx-6 mt-4 px-4 py-2.5 bg-purple-500/10 border border-purple-500/20 rounded-lg flex items-center gap-2">
                         <Crown className="w-4 h-4 text-purple-400 flex-shrink-0" />
                         <span className="text-xs text-purple-300">
-                            <strong>Pool Compartido</strong> — los créditos comprados se distribuyen entre todos tus clientes
+                            <strong>{t('credits.sharedPool')}</strong> — {t('credits.sharedPoolDescription')}
                         </span>
                     </div>
                 )}
@@ -127,7 +129,7 @@ const PurchaseCreditsModal: React.FC<PurchaseCreditsModalProps> = ({ isOpen, onC
                             {/* Popular badge */}
                             {pkg.isPopular && (
                                 <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 px-3 py-0.5 bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-[10px] font-bold rounded-full shadow-md uppercase tracking-wider">
-                                    Popular
+                                    {t('credits.popular')}
                                 </div>
                             )}
 
@@ -137,7 +139,7 @@ const PurchaseCreditsModal: React.FC<PurchaseCreditsModalProps> = ({ isOpen, onC
                                 <span className="font-bold text-foreground text-lg">
                                     {pkg.credits.toLocaleString()}
                                 </span>
-                                <span className="text-xs text-muted-foreground">créditos</span>
+                                <span className="text-xs text-muted-foreground">{t('credits.creditsLabel')}</span>
                             </div>
 
                             {/* Price */}
@@ -148,7 +150,7 @@ const PurchaseCreditsModal: React.FC<PurchaseCreditsModalProps> = ({ isOpen, onC
 
                             {/* Price per credit */}
                             <div className="text-xs text-muted-foreground mb-3">
-                                ${pkg.pricePerCredit.toFixed(3)} por crédito
+                                ${pkg.pricePerCredit.toFixed(3)} {t('credits.perCredit')}
                                 {pkg.discount > 0 && (
                                     <span className="ml-1.5 text-green-400 font-semibold">
                                         -{pkg.discount}%
@@ -172,12 +174,12 @@ const PurchaseCreditsModal: React.FC<PurchaseCreditsModalProps> = ({ isOpen, onC
                                 {loading === pkg.id ? (
                                     <>
                                         <Loader2 className="w-4 h-4 animate-spin" />
-                                        Redirigiendo...
+                                        {t('credits.redirecting')}
                                     </>
                                 ) : (
                                     <>
                                         <Check className="w-4 h-4" />
-                                        Comprar
+                                        {t('credits.buy')}
                                     </>
                                 )}
                             </button>
@@ -188,7 +190,7 @@ const PurchaseCreditsModal: React.FC<PurchaseCreditsModalProps> = ({ isOpen, onC
                 {/* Footer */}
                 <div className="px-6 py-3 bg-secondary/30 border-t border-border text-center">
                     <p className="text-xs text-muted-foreground">
-                        Pago seguro con Stripe · Los créditos se agregan inmediatamente después del pago
+                        {t('credits.securePayment')}
                     </p>
                 </div>
             </div>

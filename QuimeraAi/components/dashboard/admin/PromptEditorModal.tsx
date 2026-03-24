@@ -4,6 +4,7 @@ import { useAdmin } from '../../../contexts/admin';
 import Modal from '../../ui/Modal';
 import { LLMPrompt } from '../../../types';
 import { X } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface PromptEditorModalProps {
     isOpen: boolean;
@@ -13,6 +14,7 @@ interface PromptEditorModalProps {
 }
 
 const PromptEditorModal: React.FC<PromptEditorModalProps> = ({ isOpen, onClose, promptToEdit, initialPrompt }) => {
+    const { t } = useTranslation();
     const { savePrompt } = useAdmin();
     const [formData, setFormData] = useState({
         name: '',
@@ -78,7 +80,7 @@ const PromptEditorModal: React.FC<PromptEditorModalProps> = ({ isOpen, onClose, 
             onClose();
         } catch (err) {
             console.error('Failed to save prompt:', err);
-            setError('Failed to save prompt. Please try again.');
+            setError(t('superadmin.failedToSave'));
         } finally {
             setIsLoading(false);
         }
@@ -97,33 +99,33 @@ const PromptEditorModal: React.FC<PromptEditorModalProps> = ({ isOpen, onClose, 
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                            <label htmlFor="prompt-name" className="block text-sm font-medium text-editor-text-secondary mb-1">Prompt Name (Unique ID)</label>
+                            <label htmlFor="prompt-name" className="block text-sm font-medium text-editor-text-secondary mb-1">{t('superadmin.promptName')}</label>
                             <input id="prompt-name" name="name" type="text" value={formData.name} onChange={handleChange} required className="w-full bg-editor-bg text-white p-2 rounded-md border border-editor-border focus:ring-2 focus:ring-editor-accent focus:outline-none" />
                         </div>
                         <div>
-                            <label htmlFor="prompt-area" className="block text-sm font-medium text-editor-text-secondary mb-1">Area / Category</label>
+                            <label htmlFor="prompt-area" className="block text-sm font-medium text-editor-text-secondary mb-1">{t('superadmin.areaCategory')}</label>
                             <select id="prompt-area" name="area" value={formData.area} onChange={handleChange} className="w-full bg-editor-bg text-white p-2 rounded-md border border-editor-border focus:ring-2 focus:ring-editor-accent focus:outline-none">
-                                <option>Onboarding</option>
-                                <option>Content Generation</option>
-                                <option>Image Generation</option>
-                                <option>File Management</option>
-                                <option>Other</option>
+                                <option>{t('superadmin.promptOnboarding')}</option>
+                                <option>{t('superadmin.promptContentGen')}</option>
+                                <option>{t('superadmin.promptImageGen')}</option>
+                                <option>{t('superadmin.promptFileManagement')}</option>
+                                <option>{t('superadmin.promptOther')}</option>
                             </select>
                         </div>
                     </div>
 
                     <div>
-                        <label htmlFor="prompt-description" className="block text-sm font-medium text-editor-text-secondary mb-1">Description</label>
-                        <textarea id="prompt-description" name="description" value={formData.description} onChange={handleChange} required rows={2} className="w-full bg-editor-bg text-white p-2 rounded-md border border-editor-border focus:ring-2 focus:ring-editor-accent focus:outline-none" placeholder="Explain what this prompt does and where it is used." />
+                        <label htmlFor="prompt-description" className="block text-sm font-medium text-editor-text-secondary mb-1">{t('superadmin.description')}</label>
+                        <textarea id="prompt-description" name="description" value={formData.description} onChange={handleChange} required rows={2} className="w-full bg-editor-bg text-white p-2 rounded-md border border-editor-border focus:ring-2 focus:ring-editor-accent focus:outline-none" placeholder={t('superadmin.descriptionPlaceholder')} />
                     </div>
                     <div>
-                        <label htmlFor="prompt-template" className="block text-sm font-medium text-editor-text-secondary mb-1">Template</label>
+                        <label htmlFor="prompt-template" className="block text-sm font-medium text-editor-text-secondary mb-1">{t('superadmin.template')}</label>
                         <p className="text-xs text-editor-text-secondary/70 mb-2">{'Use placeholders like `{{businessName}}` or `{{context}}` which will be replaced dynamically.'}</p>
                         <textarea id="prompt-template" name="template" value={formData.template} onChange={handleChange} required rows={8} className="w-full bg-editor-bg text-white p-2 rounded-md border border-editor-border font-mono text-sm focus:ring-2 focus:ring-editor-accent focus:outline-none" />
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                         <div>
-                            <label htmlFor="prompt-model" className="block text-sm font-medium text-editor-text-secondary mb-1">Model</label>
+                            <label htmlFor="prompt-model" className="block text-sm font-medium text-editor-text-secondary mb-1">{t('superadmin.model')}</label>
                             <select id="prompt-model" name="model" value={formData.model} onChange={handleChange} className="w-full bg-editor-bg text-white p-2 rounded-md border border-editor-border focus:ring-2 focus:ring-editor-accent focus:outline-none">
                                 <option value="gemini-3-pro-preview">Gemini 3 Pro (Recommended)</option>
                                 <option value="gemini-3-flash-preview">Gemini 3 Flash</option>
@@ -138,17 +140,17 @@ const PromptEditorModal: React.FC<PromptEditorModalProps> = ({ isOpen, onClose, 
                             </select>
                         </div>
                         <div>
-                            <label htmlFor="prompt-version" className="block text-sm font-medium text-editor-text-secondary mb-1">Version</label>
+                            <label htmlFor="prompt-version" className="block text-sm font-medium text-editor-text-secondary mb-1">{t('superadmin.version')}</label>
                             <input id="prompt-version" name="version" type="number" min="1" value={formData.version} onChange={handleChange} required className="w-full bg-editor-bg text-white p-2 rounded-md border border-editor-border focus:ring-2 focus:ring-editor-accent focus:outline-none" />
                         </div>
                     </div>
                 </div>
 
                 <div className="p-6 bg-editor-panel-bg/50 border-t border-editor-border flex justify-end items-center space-x-3">
-                    <button type="button" onClick={onClose} className="font-semibold py-2 px-5 rounded-lg hover:bg-editor-border transition-colors">Cancel</button>
+                    <button type="button" onClick={onClose} className="font-semibold py-2 px-5 rounded-lg hover:bg-editor-border transition-colors">{t('superadmin.cancel')}</button>
                     <button type="submit" disabled={isLoading} className="bg-editor-accent text-editor-bg font-bold py-2 px-5 rounded-lg shadow-md hover:bg-editor-accent-hover transition-colors disabled:opacity-50 flex items-center">
                         {isLoading && <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>}
-                        {isLoading ? 'Saving...' : 'Save Prompt'}
+                        {isLoading ? t('superadmin.saving') : t('superadmin.savePrompt')}
                     </button>
                 </div>
             </form>

@@ -10,6 +10,7 @@ import { sanitizeHtml } from '../../utils/sanitize';
 import { ArrowLeft, Trash2, Shield, Mail, CheckCircle, AlertTriangle, Clock, FileText, Settings, Loader2, Globe, Database, Eye, Users, Lock } from 'lucide-react';
 import { useSafeAppContent } from '../../contexts/appContent';
 import { LegalPage, DEFAULT_DATA_DELETION } from '../../types/appContent';
+import { useTranslation } from 'react-i18next';
 
 // Icon mapping
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string; size?: number }>> = {
@@ -29,6 +30,7 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string; size?: 
 };
 
 const DataDeletionPage: React.FC = () => {
+    const { t } = useTranslation();
     const appContent = useSafeAppContent();
     const [pageData, setPageData] = useState<LegalPage | null>(null);
     const [isLoading, setIsLoading] = useState(true);
@@ -126,8 +128,8 @@ const DataDeletionPage: React.FC = () => {
             <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
                 <div className="text-center">
                     <FileText className="w-16 h-16 mx-auto text-slate-600 mb-4" />
-                    <h1 className="text-2xl font-bold text-white mb-2">Page Not Found</h1>
-                    <p className="text-slate-400">This page has not been configured yet.</p>
+                    <h1 className="text-2xl font-bold text-white mb-2">{t('legal.pageNotFound')}</h1>
+                    <p className="text-slate-400">{t('legal.notConfigured')}</p>
                 </div>
             </div>
         );
@@ -143,7 +145,7 @@ const DataDeletionPage: React.FC = () => {
                         className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors"
                     >
                         <ArrowLeft size={20} />
-                        <span>Volver</span>
+                        <span>{t('legal.back')}</span>
                     </button>
                     <div className="flex items-center gap-2">
                         <Shield className="text-indigo-500" size={24} />
@@ -169,18 +171,18 @@ const DataDeletionPage: React.FC = () => {
                 <div className="grid md:grid-cols-3 gap-4 mb-12">
                     <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-5 text-center">
                         <Clock className="mx-auto mb-3 text-indigo-400" size={24} />
-                        <h3 className="font-semibold text-white mb-1">Tiempo de Proceso</h3>
-                        <p className="text-sm text-slate-400">Hasta 30 días hábiles</p>
+                        <h3 className="font-semibold text-white mb-1">{t('legal.processTime')}</h3>
+                        <p className="text-sm text-slate-400">{t('legal.upTo30Days')}</p>
                     </div>
                     <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-5 text-center">
                         <Shield className="mx-auto mb-3 text-green-400" size={24} />
-                        <h3 className="font-semibold text-white mb-1">Eliminación Completa</h3>
-                        <p className="text-sm text-slate-400">Todos sus datos serán eliminados</p>
+                        <h3 className="font-semibold text-white mb-1">{t('legal.completeDeletion')}</h3>
+                        <p className="text-sm text-slate-400">{t('legal.allDataDeleted')}</p>
                     </div>
                     <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-5 text-center">
                         <Mail className="mx-auto mb-3 text-blue-400" size={24} />
-                        <h3 className="font-semibold text-white mb-1">Confirmación</h3>
-                        <p className="text-sm text-slate-400">Recibirá email de confirmación</p>
+                        <h3 className="font-semibold text-white mb-1">{t('legal.confirmation')}</h3>
+                        <p className="text-sm text-slate-400">{t('legal.emailConfirmation')}</p>
                     </div>
                 </div>
 
@@ -225,7 +227,7 @@ const DataDeletionPage: React.FC = () => {
                                 <form onSubmit={handleSubmit} className="space-y-5">
                                     <div>
                                         <label className="block text-sm font-medium text-slate-300 mb-2">
-                                            Email de la cuenta *
+                                            {t('legal.accountEmail')}
                                         </label>
                                         <input
                                             type="email"
@@ -236,19 +238,19 @@ const DataDeletionPage: React.FC = () => {
                                             className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-xl text-white placeholder-slate-400 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
                                         />
                                         <p className="text-xs text-slate-500 mt-1">
-                                            Ingrese el email asociado a su cuenta de Quimera AI
+                                            {t('legal.enterAccountEmail')}
                                         </p>
                                     </div>
 
                                     <div>
                                         <label className="block text-sm font-medium text-slate-300 mb-2">
-                                            Motivo de la solicitud (opcional)
+                                            {t('legal.reasonOptional')}
                                         </label>
                                         <textarea
                                             value={reason}
                                             onChange={(e) => setReason(e.target.value)}
                                             rows={4}
-                                            placeholder="Cuéntenos por qué desea eliminar sus datos..."
+                                            placeholder={t('legal.reasonPlaceholder')}
                                             className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-xl text-white placeholder-slate-400 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all resize-none"
                                         />
                                     </div>
@@ -261,8 +263,7 @@ const DataDeletionPage: React.FC = () => {
                                             className="mt-1 rounded border-slate-500 text-indigo-500 focus:ring-indigo-500"
                                         />
                                         <label htmlFor="confirm" className="text-sm text-slate-300">
-                                            Entiendo que esta acción es <strong>permanente e irreversible</strong> y 
-                                            que todos mis datos serán eliminados.
+                                            {t('legal.confirmPermanent')}
                                         </label>
                                     </div>
 
@@ -274,7 +275,7 @@ const DataDeletionPage: React.FC = () => {
                                         {isSubmitting ? (
                                             <>
                                                 <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                                Enviando...
+                                                {t('legal.sending')}
                                             </>
                                         ) : (
                                             <>
@@ -290,18 +291,18 @@ const DataDeletionPage: React.FC = () => {
                                 <div className="inline-flex items-center justify-center w-16 h-16 bg-green-500/20 rounded-full mb-6">
                                     <CheckCircle className="text-green-400" size={32} />
                                 </div>
-                                <h2 className="text-2xl font-bold text-white mb-4">Solicitud Recibida</h2>
+                                <h2 className="text-2xl font-bold text-white mb-4">{t('legal.requestReceived')}</h2>
                                 <p className="text-slate-300 mb-6">
                                     Hemos recibido su solicitud de eliminación de datos. 
                                     Recibirá un email de confirmación en <strong>{email}</strong> 
                                     con los próximos pasos.
                                 </p>
                                 <div className="bg-slate-800/50 rounded-xl p-4 text-left">
-                                    <h3 className="font-semibold text-white mb-2">Próximos pasos:</h3>
+                                    <h3 className="font-semibold text-white mb-2">{t('legal.nextSteps')}</h3>
                                     <ol className="text-sm text-slate-300 space-y-2 list-decimal list-inside">
-                                        <li>Verifique su email y confirme la solicitud</li>
-                                        <li>Procesaremos su solicitud en hasta 30 días</li>
-                                        <li>Recibirá confirmación cuando se complete</li>
+                                        <li>{t('legal.step1')}</li>
+                                        <li>{t('legal.step2')}</li>
+                                        <li>{t('legal.step3')}</li>
                                     </ol>
                                 </div>
                             </div>
@@ -312,9 +313,9 @@ const DataDeletionPage: React.FC = () => {
                 {/* Contact Section */}
                 {pageData.contactEmail && (
                     <section className="mt-12 bg-indigo-500/20 border border-indigo-500/30 rounded-2xl p-6 text-center">
-                        <h2 className="text-xl font-bold text-white mb-3">¿Necesita ayuda?</h2>
+                        <h2 className="text-xl font-bold text-white mb-3">{t('legal.needHelp')}</h2>
                         <p className="text-slate-300 mb-4">
-                            Si tiene preguntas sobre la eliminación de datos o necesita asistencia, contáctenos:
+                            {t('legal.deletionContactText')}
                         </p>
                         <a 
                             href={`mailto:${pageData.contactEmail}`}
@@ -330,7 +331,7 @@ const DataDeletionPage: React.FC = () => {
             {/* Footer */}
             <footer className="border-t border-slate-700/50 py-8 mt-12">
                 <div className="max-w-4xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-slate-400 text-sm">
-                    <p>© {new Date().getFullYear()} Quimera AI. Todos los derechos reservados.</p>
+                    <p>© {new Date().getFullYear()} Quimera AI. {t('legal.allRightsReserved')}</p>
                     <a href="/privacy-policy" className="hover:text-white transition-colors">
                         Política de Privacidad
                     </a>

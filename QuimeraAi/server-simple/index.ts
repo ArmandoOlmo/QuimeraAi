@@ -444,8 +444,8 @@ function generateFullHtml(
     const textColor = globalColors.text || '#94a3b8';
     const headingColor = globalColors.heading || '#f8fafc';
 
-    // Get favicon
-    const favicon = project.seoConfig?.favicon || '';
+    // Get favicon - project-level faviconUrl (from Navigation control) takes priority
+    const favicon = (project as any).faviconUrl || project.seoConfig?.favicon || '';
 
     // Full HTML document - SEO-optimized with React app for rendering
     // We only include meta tags and initial data, React handles all rendering

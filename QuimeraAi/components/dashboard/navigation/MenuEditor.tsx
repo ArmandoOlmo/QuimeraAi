@@ -714,7 +714,7 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onClose, isNew, projectId
                                                                             setLinkPickerOpenId(item.id); // Open picker on type
                                                                         }}
                                                                         onFocus={() => setLinkPickerOpenId(item.id)}
-                                                                        placeholder="Paste a link or search"
+                                                                        placeholder={t('navigationDashboard.pasteLinkOrSearch')}
                                                                         className="w-full pl-9 pr-3 py-2 bg-secondary/30 border border-border rounded-md text-sm focus:ring-1 focus:ring-primary outline-none"
                                                                     />
                                                                 </div>

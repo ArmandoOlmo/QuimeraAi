@@ -211,7 +211,7 @@ const AgencyDashboardMain: React.FC = () => {
                         <button
                             onClick={() => setIsMobileMenuOpen(true)}
                             className="lg:hidden h-9 w-9 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary/80 rounded-xl transition-colors"
-                            aria-label="Open navigation menu"
+                            aria-label={t('dashboard.agency.openNavMenu')}
                         >
                             <Menu className="w-5 h-5" />
                         </button>

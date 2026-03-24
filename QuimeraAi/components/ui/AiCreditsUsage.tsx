@@ -5,6 +5,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
     Sparkles,
     TrendingUp,
@@ -82,19 +83,19 @@ export const CreditOperationBadge: React.FC<CreditOperationBadgeProps> = ({
     };
 
     const operationLabels: Record<AiCreditOperation, string> = {
-        onboarding_complete: 'Nuevo sitio',
-        design_plan: 'Design Plan',
-        content_generation: 'Contenido',
-        image_generation: 'Imagen',
-        image_generation_fast: 'Imagen rápida',
-        image_generation_ultra: 'Imagen HD',
-        chatbot_message: 'Chat',
-        ai_assistant_request: 'Asistente',
-        ai_assistant_complex: 'Asistente+',
-        product_description: 'Producto',
-        seo_optimization: 'SEO',
-        email_generation: 'Email',
-        translation: 'Traducción',
+        onboarding_complete: t('credits.opNewSite'),
+        design_plan: t('credits.opDesignPlan'),
+        content_generation: t('credits.opContent'),
+        image_generation: t('credits.opImage'),
+        image_generation_fast: t('credits.opImageFast'),
+        image_generation_ultra: t('credits.opImageHD'),
+        chatbot_message: t('credits.opChat'),
+        ai_assistant_request: t('credits.opAssistant'),
+        ai_assistant_complex: t('credits.opAssistantPlus'),
+        product_description: t('credits.opProduct'),
+        seo_optimization: t('credits.opSEO'),
+        email_generation: t('credits.opEmail'),
+        translation: t('credits.opTranslation'),
     };
 
     return (
@@ -170,6 +171,7 @@ export const AiCreditsUsage: React.FC<AiCreditsUsageProps> = ({
     onBuyCreditsClick,
     className = '',
 }) => {
+    const { t } = useTranslation();
     const {
         isLoading,
         error,
@@ -273,10 +275,10 @@ export const AiCreditsUsage: React.FC<AiCreditsUsageProps> = ({
                 <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
                         <Sparkles className="w-4 h-4 text-purple-400" />
-                        <span className="text-sm font-medium text-white">AI Credits</span>
+                        <span className="text-sm font-medium text-white">{t('credits.aiCredits')}</span>
                     </div>
                     <span className="text-xs text-white/60">
-                        {formatCredits(creditsRemaining)} restantes
+                        {formatCredits(creditsRemaining)} {t('credits.remaining')}
                     </span>
                 </div>
 
@@ -291,14 +293,14 @@ export const AiCreditsUsage: React.FC<AiCreditsUsageProps> = ({
                 {isNearLimit && !hasExceededLimit && !isOwner && (
                     <p className="text-xs text-amber-400 mt-2 flex items-center gap-1">
                         <AlertTriangle className="w-3 h-3" />
-                        Te quedan pocos credits
+                        {t('credits.fewCreditsLeft')}
                     </p>
                 )}
 
                 {hasExceededLimit && !isOwner && (
                     <p className="text-xs text-red-400 mt-2 flex items-center gap-1">
                         <AlertTriangle className="w-3 h-3" />
-                        Has excedido tu límite
+                        {t('credits.exceededLimit')}
                     </p>
                 )}
             </div>
@@ -317,7 +319,7 @@ export const AiCreditsUsage: React.FC<AiCreditsUsageProps> = ({
                             <Sparkles className="w-5 h-5 text-purple-400" />
                         </div>
                         <div>
-                            <h3 className="font-semibold text-white">AI Credits</h3>
+                            <h3 className="font-semibold text-white">{t('credits.aiCredits')}</h3>
                             <p className="text-xs text-white/60">
                                 Plan {currentPlan?.name || 'Free'}
                             </p>
@@ -341,10 +343,10 @@ export const AiCreditsUsage: React.FC<AiCreditsUsageProps> = ({
                         </div>
                         <div className="flex-1">
                             <p className="text-xs text-indigo-300 font-medium">
-                                Pool compartido
+                                {t('credits.sharedPool')}
                             </p>
                             <p className="text-xs text-indigo-400/70">
-                                Créditos de {poolInfo.agencyName}
+                                {t('credits.creditsFrom', { name: poolInfo.agencyName })}
                             </p>
                         </div>
                     </div>
@@ -373,21 +375,21 @@ export const AiCreditsUsage: React.FC<AiCreditsUsageProps> = ({
                     <div className="flex-1">
                         <div className="grid grid-cols-2 gap-3">
                             <div>
-                                <p className="text-xs text-white/60 mb-1">Usados</p>
+                                <p className="text-xs text-white/60 mb-1">{t('credits.used')}</p>
                                 <p className="text-lg font-semibold text-white">
                                     {formatCredits(creditsUsed)}
                                 </p>
                             </div>
                             <div>
-                                <p className="text-xs text-white/60 mb-1">Restantes</p>
+                                <p className="text-xs text-white/60 mb-1">{t('credits.remaining')}</p>
                                 <p className="text-lg font-semibold" style={{ color: isOwner ? '#a855f7' : usageColor }}>
                                     {isOwner ? '∞' : formatCredits(creditsRemaining)}
                                 </p>
                             </div>
                             <div className="col-span-2">
-                                <p className="text-xs text-white/60 mb-1">Incluidos en plan</p>
+                                <p className="text-xs text-white/60 mb-1">{t('credits.includedInPlan')}</p>
                                 <p className="text-sm text-white">
-                                    {isOwner ? 'Ilimitados' : `${formatCredits(creditsIncluded)} credits/mes`}
+                                    {isOwner ? t('credits.unlimited') : `${formatCredits(creditsIncluded)} credits/${t('credits.month')}`}
                                 </p>
                             </div>
                         </div>
@@ -401,10 +403,10 @@ export const AiCreditsUsage: React.FC<AiCreditsUsageProps> = ({
                             <AlertTriangle className="w-4 h-4 text-amber-400 mt-0.5" />
                             <div>
                                 <p className="text-sm text-amber-400 font-medium">
-                                    Te quedan pocos credits
+                                    {t('credits.fewCreditsLeft')}
                                 </p>
                                 <p className="text-xs text-amber-400/80 mt-1">
-                                    Considera actualizar tu plan o comprar un paquete adicional.
+                                    {t('credits.considerUpgrade')}
                                 </p>
                             </div>
                         </div>
@@ -417,10 +419,10 @@ export const AiCreditsUsage: React.FC<AiCreditsUsageProps> = ({
                             <AlertTriangle className="w-4 h-4 text-red-400 mt-0.5" />
                             <div>
                                 <p className="text-sm text-red-400 font-medium">
-                                    Has excedido tu límite de credits
+                                    {t('credits.exceededLimitFull')}
                                 </p>
                                 <p className="text-xs text-red-400/80 mt-1">
-                                    Actualiza tu plan para continuar usando las funciones de IA.
+                                    {t('credits.upgradeToContine')}
                                 </p>
                             </div>
                         </div>
@@ -431,7 +433,7 @@ export const AiCreditsUsage: React.FC<AiCreditsUsageProps> = ({
             {/* Usage breakdown */}
             {Object.keys(usageByOperation).length > 0 && (
                 <div className="px-4 pb-4">
-                    <p className="text-xs text-white/60 mb-2">Uso por tipo</p>
+                    <p className="text-xs text-white/60 mb-2">{t('credits.usageByType')}</p>
                     <div className="space-y-2">
                         {Object.entries(usageByOperation)
                             .sort((a, b) => b[1].credits - a[1].credits)
@@ -466,7 +468,7 @@ export const AiCreditsUsage: React.FC<AiCreditsUsageProps> = ({
                             className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white text-sm font-medium transition-colors"
                         >
                             <Package className="w-4 h-4" />
-                            Comprar Credits
+                            {t('credits.buyCredits')}
                         </button>
 
                         {/* Show upgrade button if callback provided OR if upgrade context available (and NOT owner) */}
@@ -476,7 +478,7 @@ export const AiCreditsUsage: React.FC<AiCreditsUsageProps> = ({
                                 className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white text-sm font-medium transition-colors"
                             >
                                 <Crown className="w-4 h-4" />
-                                Upgrade
+                                {t('credits.upgrade')}
                                 <ChevronRight className="w-4 h-4" />
                             </button>
                         )}
@@ -523,7 +525,7 @@ export const CreditPackages: React.FC<CreditPackagesProps> = ({
                 >
                     {pkg.isPopular && (
                         <span className="absolute -top-2 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full bg-purple-500 text-xs text-white font-medium">
-                            Popular
+                            {t('credits.popular')}
                         </span>
                     )}
 
@@ -539,7 +541,7 @@ export const CreditPackages: React.FC<CreditPackagesProps> = ({
 
                     {pkg.discount > 0 && (
                         <span className="text-xs text-green-400 mt-1 block">
-                            {pkg.discount}% de descuento
+                            {pkg.discount}% {t('credits.discount')}
                         </span>
                     )}
 

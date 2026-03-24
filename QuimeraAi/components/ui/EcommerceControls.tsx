@@ -2717,7 +2717,7 @@ export const SingleContentSelector: React.FC<SingleContentSelectorProps> = ({
                     <button
                         onClick={() => selectContent(undefined)}
                         className="p-1 hover:bg-red-500/20 rounded text-red-400 hover:text-red-300 transition-colors"
-                        title="Quitar contenido"
+                        title={t('ecommerce.removeContent')}
                     >
                         <X size={16} />
                     </button>

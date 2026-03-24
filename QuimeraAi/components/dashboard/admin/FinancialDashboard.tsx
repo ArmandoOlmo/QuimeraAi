@@ -364,7 +364,7 @@ const FinancialDashboard: React.FC<FinancialDashboardProps> = ({ onBack }) => {
                                     trendLabel={`${activeTenants.length} ${t('superadmin.financesDetail.totalActive', 'activos totales')}`}
                                 />
                                 <StatCard
-                                    title="ARPU"
+                                    title={t('superadmin.arpu')}
                                     value={`$${arpu.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
                                     icon={Activity}
                                     trendLabel={t('superadmin.financesDetail.avgRevenue', 'Ingreso promedio por usuario')}

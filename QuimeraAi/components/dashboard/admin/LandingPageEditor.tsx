@@ -865,21 +865,21 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
                             <button
                                 onClick={() => setPreviewDevice('desktop')}
                                 className={`p-2 rounded-md transition-colors ${previewDevice === 'desktop' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}
-                                title="Desktop"
+                                title={t('landingEditor.desktop')}
                             >
                                 <Monitor size={18} />
                             </button>
                             <button
                                 onClick={() => setPreviewDevice('tablet')}
                                 className={`p-2 rounded-md transition-colors ${previewDevice === 'tablet' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}
-                                title="Tablet"
+                                title={t('landingEditor.tablet')}
                             >
                                 <Tablet size={18} />
                             </button>
                             <button
                                 onClick={() => setPreviewDevice('mobile')}
                                 className={`p-2 rounded-md transition-colors ${previewDevice === 'mobile' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}
-                                title="Mobile"
+                                title={t('landingEditor.mobile')}
                             >
                                 <Smartphone size={18} />
                             </button>
@@ -1078,7 +1078,7 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
                                     key={previewKey}
                                     src="/?preview=landing"
                                     className="flex-1 w-full border-0"
-                                    title="Landing Page Preview"
+                                    title={t('landingEditor.landingPreview')}
                                 />
                             </div>
                         </div>

@@ -675,7 +675,7 @@ const GlobalStylesControl: React.FC<GlobalStylesControlProps> = ({ mode = 'both'
                                     ? 'bg-editor-accent/20 border-editor-accent text-editor-accent'
                                     : 'bg-editor-panel-bg border-editor-border text-editor-text-secondary hover:border-editor-accent/50'
                             }`}
-                            title="Italic"
+                            title={t('globalStyles.italic')}
                         >
                             <span className="text-sm font-serif italic">I</span>
                         </button>
@@ -748,7 +748,7 @@ const GlobalStylesControl: React.FC<GlobalStylesControlProps> = ({ mode = 'both'
                                 onClick={handleResetColors}
                                 disabled={isApplying}
                                 className="text-xs text-editor-text-secondary hover:text-editor-accent flex items-center gap-1 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                                title="Restablecer colores"
+                                title={t('globalStyles.resetColors')}
                             >
                                 <RotateCcw size={12} className={isApplying ? 'animate-spin' : ''} />
                                 {t('editor.controls.globalStyles.reset', 'Reset')}

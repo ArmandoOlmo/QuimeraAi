@@ -205,7 +205,7 @@ const TenantManagement: React.FC<TenantManagementProps> = ({ onBack }) => {
                     <button
                         onClick={() => setSelectedTenant(tenant)}
                         className="p-2 text-editor-text-secondary hover:text-editor-accent hover:bg-editor-bg rounded-lg transition-colors"
-                        title="Ver detalles"
+                        title={t('superadmin.viewDetails')}
                     >
                         <Edit2 size={18} />
                     </button>
@@ -213,7 +213,7 @@ const TenantManagement: React.FC<TenantManagementProps> = ({ onBack }) => {
                         <button
                             onClick={() => handleDeleteTenant(tenant.id)}
                             className="p-2 text-editor-text-secondary hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
-                            title="Eliminar"
+                            title={t('superadmin.delete')}
                         >
                             <Trash2 size={18} />
                         </button>
@@ -282,7 +282,7 @@ const TenantManagement: React.FC<TenantManagementProps> = ({ onBack }) => {
                         <button
                             onClick={onBack}
                             className="h-9 w-9 flex items-center justify-center text-editor-text-secondary hover:text-editor-text-primary md:hidden mr-2 transition-colors"
-                            title="Volver"
+                            title={t('superadmin.goBack')}
                         >
                             <ArrowLeft className="w-5 h-5" />
                         </button>
@@ -388,11 +388,11 @@ const TenantManagement: React.FC<TenantManagementProps> = ({ onBack }) => {
                                     onChange={(e) => setStatusFilter(e.target.value as TenantStatus | 'all')}
                                     className="px-3 py-2 bg-editor-bg border border-editor-border rounded-lg text-sm text-editor-text-primary focus:outline-none focus:ring-2 focus:ring-editor-accent"
                                 >
-                                    <option value="all">Todos los estados</option>
-                                    <option value="active">Activos</option>
-                                    <option value="trial">En prueba</option>
-                                    <option value="suspended">Suspendidos</option>
-                                    <option value="expired">Expirados</option>
+                                    <option value="all">{t('superadmin.allStatuses')}</option>
+                                    <option value="active">{t('superadmin.active')}</option>
+                                    <option value="trial">{t('superadmin.onTrial')}</option>
+                                    <option value="suspended">{t('superadmin.suspended')}</option>
+                                    <option value="expired">{t('superadmin.expired')}</option>
                                 </select>
 
                                 {canPerform('canEditTenants') && (
@@ -476,7 +476,7 @@ const TenantManagement: React.FC<TenantManagementProps> = ({ onBack }) => {
                                         name="name"
                                         required
                                         className="w-full px-3 py-2 bg-editor-bg border border-editor-border rounded-lg text-editor-text-primary focus:outline-none focus:ring-2 focus:ring-editor-accent"
-                                        placeholder="Nombre del tenant"
+                                        placeholder={t('superadmin.tenantName')}
                                     />
                                 </div>
                                 <div>
@@ -495,8 +495,8 @@ const TenantManagement: React.FC<TenantManagementProps> = ({ onBack }) => {
                                         name="type"
                                         className="w-full px-3 py-2 bg-editor-bg border border-editor-border rounded-lg text-editor-text-primary focus:outline-none focus:ring-2 focus:ring-editor-accent"
                                     >
-                                        <option value="individual">Individual</option>
-                                        <option value="agency">Agencia</option>
+                                        <option value="individual">{t('superadmin.individual')}</option>
+                                        <option value="agency">{t('superadmin.agency')}</option>
                                     </select>
                                 </div>
                                 <div>
@@ -505,9 +505,9 @@ const TenantManagement: React.FC<TenantManagementProps> = ({ onBack }) => {
                                         name="plan"
                                         className="w-full px-3 py-2 bg-editor-bg border border-editor-border rounded-lg text-editor-text-primary focus:outline-none focus:ring-2 focus:ring-editor-accent"
                                     >
-                                        <option value="free">Gratuito</option>
+                                        <option value="free">{t('superadmin.free')}</option>
                                         <option value="pro">Pro</option>
-                                        <option value="enterprise">Enterprise</option>
+                                        <option value="enterprise">{t('superadmin.enterprise')}</option>
                                     </select>
                                 </div>
                                 <div>
@@ -515,7 +515,7 @@ const TenantManagement: React.FC<TenantManagementProps> = ({ onBack }) => {
                                     <input
                                         name="companyName"
                                         className="w-full px-3 py-2 bg-editor-bg border border-editor-border rounded-lg text-editor-text-primary focus:outline-none focus:ring-2 focus:ring-editor-accent"
-                                        placeholder="Nombre de la empresa"
+                                        placeholder={t('superadmin.companyName')}
                                     />
                                 </div>
                             </div>
@@ -620,7 +620,7 @@ const TenantDetailsModal: React.FC<{
                 await loadCreditData();
                 setAddCreditAmount(100);
                 setAddCreditReason('');
-                alert(t('superadmin.tenant.detailsModal.addCreditsSuccess', 'Créditos añadidos con éxito'));
+                alert(t('superadmin.tenant.detailsModal.addCreditsSuccess', t('superadmin.creditsAddedSuccess')));
             } else {
                 alert('Error al añadir créditos.');
             }
@@ -868,7 +868,7 @@ const TenantDetailsModal: React.FC<{
                                                         value={addCreditReason}
                                                         onChange={(e) => setAddCreditReason(e.target.value)}
                                                         className="flex-1 px-3 py-2 bg-editor-bg border border-editor-border rounded-lg text-editor-text-primary focus:outline-none focus:border-editor-accent"
-                                                        placeholder="Razón de la recarga"
+                                                        placeholder={t('superadmin.rechargeReason')}
                                                     />
                                                     <button
                                                         onClick={handleAddCredits}

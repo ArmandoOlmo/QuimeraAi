@@ -170,34 +170,55 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
     const [loadingLibraryImage, setLoadingLibraryImage] = useState<string | null>(null);
 
     // Filter project images for the library browser
+    const effectiveProjectId = activeProjectId || projectId;
     const libraryImages = useMemo(() => {
         const sourceFiles = destination === 'global' ? globalFiles : files;
         let result = sourceFiles.filter(f => f.type.startsWith('image/'));
-        if (destination === 'user' && activeProjectId) {
-            result = result.filter(f => f.projectId === activeProjectId);
+        if (destination === 'user' && effectiveProjectId) {
+            result = result.filter(f => f.projectId === effectiveProjectId);
         }
         if (librarySearchQuery) {
             result = searchFiles(result, librarySearchQuery);
         }
         return result;
-    }, [files, globalFiles, librarySearchQuery, activeProjectId, destination]);
+    }, [files, globalFiles, librarySearchQuery, effectiveProjectId, destination]);
 
-    // Add a library image as a reference (fetches as base64)
+    // Add a library image as a reference (converts to base64 via img+canvas to avoid CORS)
     const handleAddLibraryImage = async (downloadURL: string) => {
         if (referenceImages.length >= 14) return;
         setLoadingLibraryImage(downloadURL);
         try {
-            const response = await fetch(downloadURL);
-            const blob = await response.blob();
             const base64 = await new Promise<string>((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = () => resolve(reader.result as string);
-                reader.onerror = reject;
-                reader.readAsDataURL(blob);
+                const img = new Image();
+                img.crossOrigin = 'anonymous';
+                img.onload = () => {
+                    try {
+                        const canvas = document.createElement('canvas');
+                        canvas.width = img.naturalWidth;
+                        canvas.height = img.naturalHeight;
+                        const ctx = canvas.getContext('2d');
+                        if (!ctx) { reject(new Error('Canvas context not available')); return; }
+                        ctx.drawImage(img, 0, 0);
+                        const dataUrl = canvas.toDataURL('image/png');
+                        resolve(dataUrl);
+                    } catch (canvasError) {
+                        // If canvas is tainted (CORS), fall back to URL directly
+                        console.warn('Canvas tainted, using URL directly:', canvasError);
+                        resolve(downloadURL);
+                    }
+                };
+                img.onerror = () => {
+                    // If image fails to load with crossOrigin, use URL directly
+                    console.warn('Image load with crossOrigin failed, using URL directly');
+                    resolve(downloadURL);
+                };
+                img.src = downloadURL;
             });
             setReferenceImages(prev => [...prev, base64]);
         } catch (error) {
             console.error('Error loading library image as reference:', error);
+            // Ultimate fallback: just use the URL
+            setReferenceImages(prev => [...prev, downloadURL]);
         } finally {
             setLoadingLibraryImage(null);
         }
@@ -535,14 +556,14 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
                                                             target="_blank"
                                                             rel="noreferrer"
                                                             className="p-2 bg-white/10 hover:bg-white/20 rounded-lg text-white transition-colors backdrop-blur-sm"
-                                                            title="Download"
+                                                            title={t('imageGeneration.download')}
                                                             onClick={(e) => e.stopPropagation()}
                                                         >
                                                             <Download size={20} />
                                                         </a>
                                                         <button
                                                             className="p-2 bg-white/10 hover:bg-white/20 rounded-lg text-white transition-colors backdrop-blur-sm"
-                                                            title="Expand"
+                                                            title={t('imageGeneration.expand')}
                                                         >
                                                             <Eye size={20} />
                                                         </button>

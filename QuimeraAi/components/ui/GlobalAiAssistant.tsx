@@ -3361,7 +3361,7 @@ Usuario: ${userMsg}`;
                         onClick={(e) => { e.stopPropagation(); setIsMinimized(true); }}
                         className="shrink-0 self-center flex items-center justify-center rounded-full hover:bg-primary/10 text-muted-foreground hover:text-primary transition-colors"
                         style={{ width: '36px', height: '36px', minWidth: '36px', minHeight: '36px', maxHeight: '36px' }}
-                        title="Minimizar a burbuja"
+                        title={t('aiAssistant.minimizeToBubble')}
                     >
                         <Minus size={18} />
                     </button>
@@ -3527,7 +3527,7 @@ Usuario: ${userMsg}`;
                             onClick={startLiveSession}
                             disabled={isConnecting || isLiveActive || hasApiKey === false}
                             className={`p-2 rounded-full transition-all ${isConnecting ? 'text-muted-foreground' : 'text-muted-foreground hover:text-primary hover:bg-primary/10'}`}
-                            title="Iniciar modo de voz"
+                            title={t('aiAssistant.startVoiceMode')}
                         >
                             {isConnecting ? <img src="https://firebasestorage.googleapis.com/v0/b/quimeraai.firebasestorage.app/o/quimera%2Fquimeralogo.png?alt=media&token=82368c1c-0f63-42b7-831f-72780006f032" alt="Connecting..." className="w-5 h-5 object-contain animate-pulse" /> : <Mic size={20} />}
                         </button>

@@ -217,17 +217,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                       </select>
                     </div>
 
-                    {/* Favicon */}
-                    <div>
-                      <ImagePicker
-                        label="Favicon"
-                        value={localConfig.favicon || ''}
-                        onChange={(url) => updateField('favicon', url)}
-                      />
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {t('seo.faviconHelp', 'Sube o selecciona el favicon del proyecto (formato .ico, .png o .svg, 32x32px recomendado)')}
-                      </p>
-                    </div>
+                    {/* Favicon is managed via the Web Editor Navigation panel */}
 
                     <div>
                       <label className="block text-sm font-medium text-foreground mb-2">
