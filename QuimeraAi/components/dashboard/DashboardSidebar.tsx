@@ -275,11 +275,25 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
   };
 
   const sensors = useSensors(
-    useSensor(PointerSensor),
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
     })
   );
+
+  // Build the complete list of sortable IDs — must include every ID rendered as a SortableNavItem
+  const allSortableIds = useMemo(() => {
+    const ids = navItems.map(item => item.id);
+    // Add standalone items that are rendered as SortableNavItem but aren't in navItems
+    if (!ids.includes(agencyItem.id)) ids.push(agencyItem.id);
+    if (!ids.includes(settingsItem.id)) ids.push(settingsItem.id);
+    if (canAccessSuperAdmin && !ids.includes('superadmin')) ids.push('superadmin');
+    return ids;
+  }, [navItems, canAccessSuperAdmin]);
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
@@ -628,7 +642,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
               onDragEnd={handleDragEnd}
             >
               <SortableContext
-                items={navItems.map(item => item.id)}
+                items={allSortableIds}
                 strategy={verticalListSortingStrategy}
               >
                 {/* Dashboard - Fixed at top */}
