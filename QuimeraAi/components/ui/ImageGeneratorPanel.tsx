@@ -1,14 +1,16 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { useAI } from '../../contexts/ai';
 import { useFiles } from '../../contexts/files';
+import { useProject } from '../../contexts/project';
 import { useTranslation } from 'react-i18next';
 import {
     Zap, Loader2, Wand2, X, Download, Upload, Image as ImageIcon, Plus,
     AlertTriangle, Sparkles, Brain, Users, Thermometer, Eye,
     ChevronDown, Settings2, Palette, Camera, Sun, Check, CheckCircle2,
-    PanelLeftClose
+    PanelLeftClose, Search, Grid
 } from 'lucide-react';
 import ProgressBar3D from './ProgressBar3D';
+import { searchFiles } from '../../utils/fileHelpers';
 
 interface ImageGeneratorPanelProps {
     destination: 'user' | 'global';
@@ -25,7 +27,8 @@ interface ImageGeneratorPanelProps {
 
 const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, className = '', onClose, onCollapse, hidePreview = false, onImageGenerated, onUseImage, projectId, generationContext = 'general' }) => {
     const { generateImage, enhancePrompt } = useAI();
-    const { uploadGlobalFile, uploadFile, hasActiveProject } = useFiles();
+    const { uploadGlobalFile, uploadFile, hasActiveProject, files, globalFiles } = useFiles();
+    const { activeProjectId } = useProject();
     const { t } = useTranslation();
 
     // Translation-dependent constants
@@ -160,6 +163,45 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
     const [isDragging, setIsDragging] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
+
+    // Library Browser State
+    const [showLibraryBrowser, setShowLibraryBrowser] = useState(false);
+    const [librarySearchQuery, setLibrarySearchQuery] = useState('');
+    const [loadingLibraryImage, setLoadingLibraryImage] = useState<string | null>(null);
+
+    // Filter project images for the library browser
+    const libraryImages = useMemo(() => {
+        const sourceFiles = destination === 'global' ? globalFiles : files;
+        let result = sourceFiles.filter(f => f.type.startsWith('image/'));
+        if (destination === 'user' && activeProjectId) {
+            result = result.filter(f => f.projectId === activeProjectId);
+        }
+        if (librarySearchQuery) {
+            result = searchFiles(result, librarySearchQuery);
+        }
+        return result;
+    }, [files, globalFiles, librarySearchQuery, activeProjectId, destination]);
+
+    // Add a library image as a reference (fetches as base64)
+    const handleAddLibraryImage = async (downloadURL: string) => {
+        if (referenceImages.length >= 14) return;
+        setLoadingLibraryImage(downloadURL);
+        try {
+            const response = await fetch(downloadURL);
+            const blob = await response.blob();
+            const base64 = await new Promise<string>((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result as string);
+                reader.onerror = reject;
+                reader.readAsDataURL(blob);
+            });
+            setReferenceImages(prev => [...prev, base64]);
+        } catch (error) {
+            console.error('Error loading library image as reference:', error);
+        } finally {
+            setLoadingLibraryImage(null);
+        }
+    };
 
     // Helper function to convert File to base64 data URL
     const fileToBase64 = (file: File): Promise<string> => {
@@ -639,6 +681,16 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
                                     )}
                                 </div>
 
+                                {/* Browse Library Button */}
+                                <button
+                                    onClick={() => { setLibrarySearchQuery(''); setShowLibraryBrowser(true); }}
+                                    className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border border-editor-border hover:border-editor-accent/50 bg-editor-bg/30 hover:bg-editor-accent/10 text-editor-text-secondary hover:text-editor-accent transition-all text-xs font-medium group"
+                                >
+                                    <Grid size={14} className="group-hover:text-editor-accent transition-colors" />
+                                    <span>{t('editor.browseLibrary', { defaultValue: 'Browse Library' })}</span>
+                                    <span className="text-[10px] opacity-60">({libraryImages.length})</span>
+                                </button>
+
                                 {referenceImages.length > 0 && (
                                     <div className="flex flex-wrap gap-2 pt-2">
                                         {referenceImages.map((img, idx) => (
@@ -874,6 +926,134 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
                                         </button>
                                     )}
                                 </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Library Browser Modal */}
+            {showLibraryBrowser && (
+                <div
+                    className="fixed inset-0 z-[150] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in"
+                    onClick={() => setShowLibraryBrowser(false)}
+                >
+                    <div
+                        className="bg-editor-bg border border-editor-border rounded-2xl shadow-2xl w-full max-w-2xl max-h-[70vh] flex flex-col overflow-hidden"
+                        onClick={e => e.stopPropagation()}
+                    >
+                        {/* Header */}
+                        <div className="flex items-center justify-between p-4 border-b border-editor-border bg-editor-panel-bg shrink-0">
+                            <div className="flex items-center gap-2.5">
+                                <Grid size={18} className="text-editor-accent" />
+                                <h3 className="text-editor-text-primary font-bold text-sm">
+                                    {t('editor.selectFromLibrary', { defaultValue: 'Select from Library' })}
+                                </h3>
+                                <span className="text-[10px] px-1.5 py-0.5 bg-editor-bg rounded text-editor-text-secondary">
+                                    {libraryImages.length} {libraryImages.length === 1 ? 'image' : 'images'}
+                                </span>
+                            </div>
+                            <button
+                                onClick={() => setShowLibraryBrowser(false)}
+                                className="p-1.5 rounded-lg hover:bg-editor-border text-editor-text-secondary hover:text-editor-text-primary transition-colors"
+                            >
+                                <X size={18} />
+                            </button>
+                        </div>
+
+                        {/* Search Bar */}
+                        <div className="p-3 border-b border-editor-border/50 shrink-0">
+                            <div className="flex items-center gap-2 bg-editor-panel-bg rounded-xl px-3 py-2 border border-editor-border/50">
+                                <Search size={14} className="text-editor-text-secondary shrink-0" />
+                                <input
+                                    type="text"
+                                    value={librarySearchQuery}
+                                    onChange={(e) => setLibrarySearchQuery(e.target.value)}
+                                    placeholder={t('editor.searchLibraryImages', { defaultValue: 'Search images...' })}
+                                    className="flex-1 bg-transparent outline-none text-sm text-editor-text-primary placeholder:text-editor-text-secondary/40"
+                                    autoFocus
+                                />
+                                {librarySearchQuery && (
+                                    <button
+                                        onClick={() => setLibrarySearchQuery('')}
+                                        className="text-editor-text-secondary hover:text-editor-text-primary shrink-0"
+                                    >
+                                        <X size={12} />
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Images Grid */}
+                        <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
+                            {libraryImages.length > 0 ? (
+                                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
+                                    {libraryImages.map(file => {
+                                        const isAlreadyUsed = referenceImages.some(ref => ref.includes(file.id));
+                                        const isLoading = loadingLibraryImage === file.downloadURL;
+                                        const isFull = referenceImages.length >= 14;
+                                        return (
+                                            <button
+                                                key={file.id}
+                                                onClick={() => handleAddLibraryImage(file.downloadURL)}
+                                                disabled={isLoading || isFull}
+                                                className={`aspect-square rounded-xl overflow-hidden border-2 cursor-pointer group relative transition-all ${isLoading ? 'border-editor-accent animate-pulse' : isFull ? 'border-transparent opacity-40 cursor-not-allowed' : 'border-transparent hover:border-editor-accent/60'}`}
+                                            >
+                                                <img
+                                                    src={file.downloadURL}
+                                                    alt={file.name}
+                                                    className="w-full h-full object-cover transition-transform group-hover:scale-110"
+                                                />
+                                                {isLoading ? (
+                                                    <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                                                        <Loader2 size={20} className="animate-spin text-editor-accent" />
+                                                    </div>
+                                                ) : (
+                                                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-1.5">
+                                                        <Plus size={18} className="text-white" />
+                                                        <span className="text-white text-[10px] font-bold">{t('editor.addAsReference', { defaultValue: 'Add as Reference' })}</span>
+                                                    </div>
+                                                )}
+                                                {/* File name tooltip */}
+                                                <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/80 to-transparent p-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <span className="text-[9px] text-white/80 truncate block">{file.name}</span>
+                                                </div>
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            ) : librarySearchQuery ? (
+                                <div className="h-full flex flex-col items-center justify-center text-editor-text-secondary py-12">
+                                    <Search size={36} className="mb-3 opacity-40" />
+                                    <p className="text-sm font-medium">{t('editor.noImagesFound', { defaultValue: 'No images found' })}</p>
+                                    <button
+                                        onClick={() => setLibrarySearchQuery('')}
+                                        className="text-editor-accent hover:underline text-xs mt-2"
+                                    >
+                                        {t('editor.clearSearch', { defaultValue: 'Clear search' })}
+                                    </button>
+                                </div>
+                            ) : (
+                                <div className="h-full flex flex-col items-center justify-center text-editor-text-secondary py-12">
+                                    <ImageIcon size={36} className="mb-3 opacity-40" />
+                                    <p className="text-sm font-medium">{t('editor.noImagesInLibrary', { defaultValue: 'No images in library' })}</p>
+                                    <p className="text-xs mt-1 opacity-60">{t('editor.uploadImagesFirst', { defaultValue: 'Upload images to your project first' })}</p>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Footer with reference count */}
+                        <div className="p-3 border-t border-editor-border bg-editor-panel-bg/80 shrink-0">
+                            <div className="flex items-center justify-between">
+                                <span className="text-xs text-editor-text-secondary">
+                                    {t('editor.referencesSelected', { count: referenceImages.length, max: 14, defaultValue: `${referenceImages.length}/14 references` })}
+                                </span>
+                                <button
+                                    onClick={() => setShowLibraryBrowser(false)}
+                                    className="text-xs font-bold text-editor-accent hover:text-editor-accent/80 transition-colors"
+                                >
+                                    {t('common.done', { defaultValue: 'Done' })}
+                                </button>
                             </div>
                         </div>
                     </div>
