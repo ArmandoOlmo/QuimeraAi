@@ -11,7 +11,7 @@ import QuimeraLoader from '../ui/QuimeraLoader';
 import ModernCMSEditor from './modern/ModernCMSEditor';
 import ContentCreatorAssistant from './ContentCreatorAssistant';
 import CMSProjectSelectorPage from './CMSProjectSelectorPage';
-import { Menu, Plus, Search, FileText, Edit3, Trash2, Loader2, Calendar, Globe, PenTool, ArrowDown, ArrowUp, Grid, List, Eye, X as XIcon, Copy, Edit2, Download, Sparkles, ArrowLeft, ChevronDown, Check, Tag, FolderOpen } from 'lucide-react';
+import { Menu, Plus, Search, FileText, Edit3, Trash2, Loader2, Calendar, Globe, PenTool, ArrowDown, ArrowUp, Grid, List, Eye, X as XIcon, Copy, Edit2, Download, Sparkles, ArrowLeft, ChevronDown, Check, Tag, FolderOpen, MoveUp, MoveDown } from 'lucide-react';
 import { useRouter } from '../../hooks/useRouter';
 import { ROUTES } from '../../routes/config';
 import { CMSPost, CMSCategory } from '../../types';
@@ -255,6 +255,40 @@ const CMSDashboard: React.FC = () => {
 
         return result;
     }, [cmsPosts, searchQuery, statusFilter, sortBy, sortOrder, dateRange, categoryFilter]);
+
+    // Detect if we're filtering by a profile-type category (for reorder UI)
+    const activeProfileCategory = useMemo(() => {
+        if (categoryFilter === 'all' || categoryFilter === 'uncategorized') return null;
+        const cat = categories.find(c => c.id === categoryFilter);
+        return cat?.layoutType === 'profile' ? cat : null;
+    }, [categoryFilter, categories]);
+
+    // Reorder handler for profile categories
+    const handleReorderProfile = async (postId: string, direction: 'up' | 'down') => {
+        if (!activeProfileCategory) return;
+
+        // Get posts in this category sorted by current sortOrder
+        const categoryPosts = cmsPosts
+            .filter(p => p.categoryId === activeProfileCategory.id)
+            .sort((a, b) => (a.sortOrder ?? 999) - (b.sortOrder ?? 999));
+
+        const currentIndex = categoryPosts.findIndex(p => p.id === postId);
+        if (currentIndex === -1) return;
+        if (direction === 'up' && currentIndex === 0) return;
+        if (direction === 'down' && currentIndex === categoryPosts.length - 1) return;
+
+        const swapIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
+        const currentPost = categoryPosts[currentIndex];
+        const swapPost = categoryPosts[swapIndex];
+
+        // Assign new sortOrder values
+        try {
+            await saveCMSPost({ ...currentPost, sortOrder: swapIndex });
+            await saveCMSPost({ ...swapPost, sortOrder: currentIndex });
+        } catch (e) {
+            console.error('[CMSDashboard] Error reordering profiles:', e);
+        }
+    };
 
     // Métricas
     const metrics = useMemo(() => ({
@@ -898,6 +932,26 @@ const CMSDashboard: React.FC = () => {
                                                     <Trash2 size={20} />
                                                 </button>
                                             </div>
+
+                                            {/* Profile Reorder Buttons — visible when filtering by a profile category */}
+                                            {activeProfileCategory && (
+                                                <div className="absolute top-12 left-3 sm:top-4 sm:left-auto sm:right-14 z-20 flex flex-col gap-1">
+                                                    <button
+                                                        onClick={(e) => { e.stopPropagation(); handleReorderProfile(post.id, 'up'); }}
+                                                        className="bg-white/90 dark:bg-black/60 backdrop-blur-md p-1.5 rounded-full shadow-lg hover:scale-110 active:scale-95 transition-transform text-foreground"
+                                                        title="Move Up"
+                                                    >
+                                                        <MoveUp size={14} />
+                                                    </button>
+                                                    <button
+                                                        onClick={(e) => { e.stopPropagation(); handleReorderProfile(post.id, 'down'); }}
+                                                        className="bg-white/90 dark:bg-black/60 backdrop-blur-md p-1.5 rounded-full shadow-lg hover:scale-110 active:scale-95 transition-transform text-foreground"
+                                                        title="Move Down"
+                                                    >
+                                                        <MoveDown size={14} />
+                                                    </button>
+                                                </div>
+                                            )}
 
                                             {/* Bottom Section: Title, Category Badge, and Date */}
                                             <div className="absolute bottom-0 left-0 right-0 z-10 p-4 sm:p-6">

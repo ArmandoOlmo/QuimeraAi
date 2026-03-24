@@ -444,6 +444,7 @@ export interface CMSPost {
     updatedAt: string;
     projectId?: string;    // Link to project (for filtering posts by project)
     isDemoPost?: boolean;  // Flag to identify demo posts created during onboarding
+    sortOrder?: number;    // Manual sort position (used for profile categories)
 }
 
 // =============================================================================

@@ -29,46 +29,62 @@ const ProfileDirectory: React.FC<ProfileDirectoryProps> = ({
 
     return (
         <div className="w-full relative">
-            {/* Profile Grid */}
+            {/* Vertical Profile Card Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {posts.map((post) => (
                     <div
                         key={post.id}
-                        className="group flex items-center p-4 rounded-2xl cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
+                        className="group flex flex-col rounded-2xl cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:shadow-xl overflow-hidden"
                         style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}` }}
                         onClick={() => setSelectedProfile(post)}
                     >
-                        <div className="w-16 h-16 rounded-full overflow-hidden flex-shrink-0 mr-4" style={{ backgroundColor: `${accentColor}20` }}>
+                        {/* Full Image — vertical card, aspect 4:5 */}
+                        <div className="relative w-full overflow-hidden" style={{ aspectRatio: '4 / 5' }}>
                             {post.featuredImage ? (
                                 <img
                                     src={post.featuredImage}
                                     alt={post.title}
-                                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                                 />
                             ) : (
-                                <div className="w-full h-full flex items-center justify-center">
-                                    <User size={24} style={{ color: accentColor }} />
+                                <div
+                                    className="w-full h-full flex items-center justify-center"
+                                    style={{ backgroundColor: `${accentColor}15` }}
+                                >
+                                    <User size={48} style={{ color: accentColor }} className="opacity-40" />
                                 </div>
                             )}
+                            {/* Subtle gradient overlay at bottom of image */}
+                            <div
+                                className="absolute bottom-0 left-0 right-0 h-16 pointer-events-none"
+                                style={{ background: `linear-gradient(to top, ${cardBg}, transparent)` }}
+                            />
                         </div>
-                        <div className="flex-1 min-w-0">
-                            <h3 className="font-bold text-base truncate mb-1" style={{ color: textColor }}>
-                                {post.title}
-                            </h3>
-                            {post.excerpt && (
-                                <p className="text-xs truncate" style={{ color: mutedText }}>
-                                    {post.excerpt}
-                                </p>
-                            )}
-                        </div>
-                        <div className="w-8 h-8 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all -translate-x-4 group-hover:translate-x-0" style={{ backgroundColor: `${accentColor}10`, color: accentColor }}>
-                            <ChevronRight size={16} />
+
+                        {/* Name + Excerpt */}
+                        <div className="px-4 py-4 flex items-center gap-2">
+                            <div className="flex-1 min-w-0">
+                                <h3 className="font-bold text-base truncate mb-1" style={{ color: textColor }}>
+                                    {post.title}
+                                </h3>
+                                {post.excerpt && (
+                                    <p className="text-xs line-clamp-2" style={{ color: mutedText }}>
+                                        {post.excerpt}
+                                    </p>
+                                )}
+                            </div>
+                            <div
+                                className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 opacity-0 group-hover:opacity-100 transition-all"
+                                style={{ backgroundColor: `${accentColor}10`, color: accentColor }}
+                            >
+                                <ChevronRight size={16} />
+                            </div>
                         </div>
                     </div>
                 ))}
             </div>
 
-            {/* Side Drawer Overlay */}
+            {/* Side Drawer Overlay — unchanged */}
             {selectedProfile && (
                 <div 
                     className="fixed inset-0 z-[100] flex animate-fade-in"

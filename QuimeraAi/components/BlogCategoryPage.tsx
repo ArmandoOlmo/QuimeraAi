@@ -35,12 +35,21 @@ const BlogCategoryPage: React.FC<BlogCategoryPageProps> = ({
 }) => {
     const { t } = useTranslation();
 
-    // Only published articles, sorted by date
+    // Only published articles, sorted appropriately per layout type
     const publishedPosts = useMemo(() => {
-        return posts
-            .filter(p => p.status === 'published')
-            .sort((a, b) => new Date(b.publishedAt || b.createdAt).getTime() - new Date(a.publishedAt || a.createdAt).getTime());
-    }, [posts]);
+        const filtered = posts.filter(p => p.status === 'published');
+        if (category.layoutType === 'profile') {
+            // Profile categories: sort by manual sortOrder (ascending), fallback to date
+            return filtered.sort((a, b) => {
+                const orderA = a.sortOrder ?? 999;
+                const orderB = b.sortOrder ?? 999;
+                if (orderA !== orderB) return orderA - orderB;
+                return new Date(b.publishedAt || b.createdAt).getTime() - new Date(a.publishedAt || a.createdAt).getTime();
+            });
+        }
+        // Blog/gallery: sort by date descending
+        return filtered.sort((a, b) => new Date(b.publishedAt || b.createdAt).getTime() - new Date(a.publishedAt || a.createdAt).getTime());
+    }, [posts, category.layoutType]);
 
     // Derive a subtle card bg from the background
     const cardBg = `color-mix(in srgb, ${textColor} 5%, ${backgroundColor})`;
