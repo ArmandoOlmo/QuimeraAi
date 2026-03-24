@@ -266,8 +266,7 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
     const [expandedGroups, setExpandedGroups] = useState({
         structure: false,
         content: false,
-        ecommerce: false,
-        integrations: false
+        ecommerce: false
     });
     const [activeId, setActiveId] = useState<PageSection | null>(null);
 
@@ -335,7 +334,7 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
         return componentOrder.filter(s => {
             if (seen.has(s)) return false;
             seen.add(s);
-            return !['header', 'footer', 'typography', 'colors', 'storeSettings', 'leads', 'newsletter', 'map', ...ECOMMERCE_SECTION_IDS].includes(s) &&
+            return !['header', 'footer', 'typography', 'colors', 'storeSettings', ...ECOMMERCE_SECTION_IDS].includes(s) &&
                 componentStatus[s];
         });
     }, [componentOrder, componentStatus]);
@@ -347,16 +346,6 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
             seen.add(s);
             return ECOMMERCE_SECTION_IDS.includes(s) &&
                 s !== 'storeSettings' &&
-                componentStatus[s];
-        });
-    }, [componentOrder, componentStatus]);
-
-    const integrationSections = useMemo(() => {
-        const seen = new Set<PageSection>();
-        return componentOrder.filter(s => {
-            if (seen.has(s)) return false;
-            seen.add(s);
-            return ['leads', 'newsletter', 'map'].includes(s) &&
                 componentStatus[s];
         });
     }, [componentOrder, componentStatus]);
@@ -373,8 +362,8 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
 
     // All draggable sections combined for the DnD context (deduplicated)
     const allDraggableSections = useMemo(() =>
-        Array.from(new Set([...contentSections, ...ecommerceSections, ...integrationSections])),
-        [contentSections, ecommerceSections, integrationSections]
+        Array.from(new Set([...contentSections, ...ecommerceSections])),
+        [contentSections, ecommerceSections]
     );
 
     const handleDragStart = (event: DragStartEvent) => {
@@ -567,7 +556,6 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
                                 {renderGroup(t('editor.structure'), structureSections, 'structure', false)}
                                 {renderGroup(t('editor.content'), contentSections, 'content', true)}
                                 {renderGroup('Ecommerce', ecommerceSections, 'ecommerce', true)}
-                                {renderGroup(t('editor.integrations'), integrationSections, 'integrations', true)}
                             </>
                         )}
                     </SortableContext>
