@@ -11,7 +11,7 @@ import QuimeraLoader from '../ui/QuimeraLoader';
 import ModernCMSEditor from './modern/ModernCMSEditor';
 import ContentCreatorAssistant from './ContentCreatorAssistant';
 import CMSProjectSelectorPage from './CMSProjectSelectorPage';
-import { Menu, Plus, Search, FileText, Edit3, Trash2, Loader2, Calendar, Globe, PenTool, ArrowDown, ArrowUp, Grid, List, Eye, X as XIcon, Copy, Edit2, Download, Sparkles, ArrowLeft, ChevronDown, Check, Tag, FolderOpen, MoveUp, MoveDown } from 'lucide-react';
+import { Menu, Plus, Search, FileText, Edit3, Trash2, Loader2, Calendar, Globe, PenTool, ArrowDown, ArrowUp, Grid, List, Eye, X as XIcon, Copy, Edit2, Download, Sparkles, ArrowLeft, ChevronDown, Check, Tag, FolderOpen, MoveUp, MoveDown, ArrowUpDown } from 'lucide-react';
 import { useRouter } from '../../hooks/useRouter';
 import { ROUTES } from '../../routes/config';
 import { CMSPost, CMSCategory } from '../../types';
@@ -55,6 +55,9 @@ const CMSDashboard: React.FC = () => {
     const [categoryForm, setCategoryForm] = useState<{ name: string; slug: string; description: string; layoutType: 'blog' | 'gallery' | 'profile' }>({ name: '', slug: '', description: '', layoutType: 'blog' });
     const [isSavingCategory, setIsSavingCategory] = useState(false);
     const [deleteCategoryConfirmId, setDeleteCategoryConfirmId] = useState<string | null>(null);
+
+    // Profile ordering modal
+    const [showProfileOrderModal, setShowProfileOrderModal] = useState(false);
 
     // Delete confirmation modal
     const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
@@ -562,6 +565,18 @@ const CMSDashboard: React.FC = () => {
                                         ))}
                                     </select>
                                 </div>
+                            )}
+
+                            {/* Order Profiles button — only when profile category is active */}
+                            {activeProfileCategory && (
+                                <button
+                                    onClick={() => setShowProfileOrderModal(true)}
+                                    className="flex items-center gap-1.5 px-2.5 py-1 bg-primary/10 hover:bg-primary/20 border border-primary/30 rounded-lg text-primary text-xs font-bold transition-all flex-shrink-0"
+                                    title={t('cms.orderProfiles', 'Ordenar Perfiles')}
+                                >
+                                    <ArrowUpDown size={13} />
+                                    <span className="hidden sm:inline">{t('cms.orderProfiles', 'Ordenar Perfiles')}</span>
+                                </button>
                             )}
 
                             {/* Manage Categories button */}
@@ -1096,6 +1111,94 @@ const CMSDashboard: React.FC = () => {
                 isLoading={isDeleting}
                 count={selectedPosts.length}
             />
+
+            {/* Profile Ordering Modal */}
+            {showProfileOrderModal && activeProfileCategory && (() => {
+                const profilePosts = cmsPosts
+                    .filter(p => p.categoryId === activeProfileCategory.id)
+                    .sort((a, b) => (a.sortOrder ?? 999) - (b.sortOrder ?? 999));
+
+                return (
+                    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center sm:p-4" onClick={() => setShowProfileOrderModal(false)}>
+                        <div
+                            className="bg-card w-full sm:max-w-md sm:rounded-2xl rounded-t-2xl max-h-[85vh] overflow-hidden flex flex-col animate-slide-up sm:animate-fade-in"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            {/* Header */}
+                            <div className="sticky top-0 bg-card border-b border-border px-5 py-4 flex items-center justify-between z-10 shrink-0">
+                                <div className="sm:hidden absolute top-1.5 left-1/2 -translate-x-1/2 w-10 h-1 bg-border rounded-full" />
+                                <h3 className="font-bold text-lg flex items-center gap-2">
+                                    <ArrowUpDown size={20} className="text-primary" />
+                                    {t('cms.orderProfiles', 'Ordenar Perfiles')}
+                                </h3>
+                                <button onClick={() => setShowProfileOrderModal(false)} className="p-1.5 hover:bg-secondary rounded-lg transition-colors">
+                                    <XIcon size={18} />
+                                </button>
+                            </div>
+
+                            {/* Subtitle */}
+                            <div className="px-5 py-3 bg-secondary/30 border-b border-border">
+                                <p className="text-xs text-muted-foreground">
+                                    {t('cms.orderProfilesDesc', 'Usa las flechas para organizar el orden en que aparecen los perfiles en tu sitio.')}
+                                </p>
+                            </div>
+
+                            {/* Sortable List */}
+                            <div className="flex-1 overflow-y-auto p-4 space-y-2">
+                                {profilePosts.length === 0 ? (
+                                    <p className="text-sm text-muted-foreground text-center py-8">{t('cms.noProfilePosts', 'No hay perfiles en esta categoría.')}</p>
+                                ) : (
+                                    profilePosts.map((post, index) => (
+                                        <div key={post.id} className="flex items-center gap-3 p-3 bg-secondary/20 border border-border rounded-xl hover:border-primary/30 transition-colors group">
+                                            {/* Position number */}
+                                            <span className="w-6 h-6 flex items-center justify-center rounded-full bg-primary/10 text-primary text-xs font-bold flex-shrink-0">
+                                                {index + 1}
+                                            </span>
+
+                                            {/* Thumbnail */}
+                                            <div className="w-10 h-10 rounded-lg overflow-hidden bg-secondary flex-shrink-0">
+                                                {post.featuredImage ? (
+                                                    <img src={post.featuredImage} alt="" className="w-full h-full object-cover" />
+                                                ) : (
+                                                    <div className="w-full h-full flex items-center justify-center">
+                                                        <FileText size={16} className="text-muted-foreground opacity-30" />
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            {/* Title */}
+                                            <div className="flex-1 min-w-0">
+                                                <p className="font-semibold text-sm text-foreground truncate">{post.title}</p>
+                                                <p className="text-[10px] text-muted-foreground">
+                                                    {post.status === 'published' ? '● Publicado' : '○ Borrador'}
+                                                </p>
+                                            </div>
+
+                                            {/* Up/Down buttons */}
+                                            <div className="flex flex-col gap-0.5 flex-shrink-0">
+                                                <button
+                                                    onClick={() => handleReorderProfile(post.id, 'up')}
+                                                    disabled={index === 0}
+                                                    className="p-1.5 rounded-lg hover:bg-primary/10 transition-colors text-muted-foreground hover:text-primary disabled:opacity-20 disabled:cursor-not-allowed"
+                                                >
+                                                    <MoveUp size={14} />
+                                                </button>
+                                                <button
+                                                    onClick={() => handleReorderProfile(post.id, 'down')}
+                                                    disabled={index === profilePosts.length - 1}
+                                                    className="p-1.5 rounded-lg hover:bg-primary/10 transition-colors text-muted-foreground hover:text-primary disabled:opacity-20 disabled:cursor-not-allowed"
+                                                >
+                                                    <MoveDown size={14} />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                );
+            })()}
 
             {/* Category Manager Modal */}
             {showCategoryManager && (
