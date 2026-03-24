@@ -250,7 +250,7 @@ export const CMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
                         authorId: post.authorId || user.uid,
                         projectId: activeProject.id,
                         updatedAt: now,
-                        publishedAt: now // Update published timestamp
+                        publishedAt: data.publishedAt || now // Preserve original publishedAt, only set for first publish
                     }), { merge: true });
                     console.log('[CMSContext] ✅ Synced published post to public store');
 

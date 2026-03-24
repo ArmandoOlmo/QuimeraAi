@@ -359,6 +359,8 @@ const CMSDashboard: React.FC = () => {
             await Promise.all(
                 reordered.map((post, i) => saveCMSPost({ ...post, sortOrder: i }))
             );
+            // Refresh posts to reflect new order
+            loadCMSPosts();
         } catch (e) {
             console.error('[CMSDashboard] Error reordering profiles:', e);
         }
