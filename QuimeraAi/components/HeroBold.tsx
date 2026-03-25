@@ -9,17 +9,17 @@ import { getHeroLayoutClasses } from '../utils/heroLayout';
 import { HeroTextLayout } from '../types';
 
 const headlineSizeClasses: Record<FontSize, string> = {
-    sm: 'text-5xl md:text-6xl',
-    md: 'text-6xl md:text-8xl',
-    lg: 'text-7xl md:text-9xl',
-    xl: 'text-8xl md:text-[10rem]',
+    sm: 'text-3xl md:text-5xl md:text-6xl',
+    md: 'text-4xl md:text-6xl md:text-8xl',
+    lg: 'text-4xl md:text-7xl md:text-9xl',
+    xl: 'text-5xl md:text-8xl md:text-[10rem]',
 };
 
 const subheadlineSizeClasses: Record<FontSize, string> = {
-    sm: 'text-base md:text-lg',
-    md: 'text-lg md:text-xl',
-    lg: 'text-xl md:text-2xl',
-    xl: 'text-2xl md:text-3xl',
+    sm: 'text-xs md:text-base md:text-lg',
+    md: 'text-sm md:text-lg md:text-xl',
+    lg: 'text-sm md:text-xl md:text-2xl',
+    xl: 'text-base md:text-2xl md:text-3xl',
 };
 
 const borderRadiusClasses: Record<BorderRadiusSize, string> = {
@@ -122,8 +122,12 @@ const HeroBold: React.FC<HeroProps> = ({
                         className="w-full h-full object-cover"
                     />
                     {/* Heavy color overlay tint from primary */}
-                    <div className="absolute inset-0" style={{
+                    <div className="absolute inset-0 hidden md:block" style={{
                         background: `linear-gradient(135deg, ${actualColors.primary}${Math.round(gradientOpacity * 2.55).toString(16).padStart(2, '0')} 0%, rgba(0,0,0,${(overlayOpacity ?? gradientOpacity) / 100}) 50%, ${actualColors.secondary}${Math.round(gradientOpacity * 0.5 * 2.55).toString(16).padStart(2, '0')} 100%)`
+                    }} />
+                    {/* Mobile: lighter top for image visibility */}
+                    <div className="absolute inset-0 md:hidden" style={{
+                        background: `linear-gradient(to bottom, rgba(0,0,0,0.05) 0%, rgba(0,0,0,0.15) 40%, rgba(0,0,0,${(overlayOpacity ?? gradientOpacity) / 100}) 100%)`
                     }} />
                 </div>
             )}
@@ -172,7 +176,7 @@ const HeroBold: React.FC<HeroProps> = ({
             </div>
 
             {/* Content */}
-            <div className={`relative z-10 w-full ${paddingXClasses[paddingX]} ${paddingYClasses[paddingY]} pt-24`}>
+            <div className={`relative z-10 w-full ${paddingXClasses[paddingX]} ${paddingYClasses[paddingY]} pt-12 md:pt-24`}>
                 <div className="container mx-auto max-w-7xl">
 
                     {/* Badge with skew */}
@@ -191,7 +195,7 @@ const HeroBold: React.FC<HeroProps> = ({
 
                     {/* Oversized headline */}
                     <h1
-                        className={`${headlineSizeClasses[headlineFontSize]} font-black tracking-tighter leading-[0.85] mb-8 font-header uppercase bold-headline`}
+                        className={`${headlineSizeClasses[headlineFontSize]} font-black tracking-tighter leading-[0.85] mb-4 md:mb-8 font-header uppercase bold-headline`}
                         style={{
                             color: actualColors.heading,
                             textTransform: 'uppercase',
@@ -202,7 +206,7 @@ const HeroBold: React.FC<HeroProps> = ({
                     />
 
                     {/* Subheadline with thick accent bar */}
-                    <div className="relative pl-8 mb-10 bold-sub">
+                    <div className="relative pl-6 md:pl-8 mb-6 md:mb-10 bold-sub">
                         <div className="absolute left-0 top-0 bottom-0 w-1.5 rounded-full" style={{ backgroundColor: actualColors.primary }} />
                         <p
                             className={`${subheadlineSizeClasses[subheadlineFontSize]} font-bold leading-relaxed max-w-2xl font-body`}
@@ -220,7 +224,7 @@ const HeroBold: React.FC<HeroProps> = ({
                                 const href = primaryCtaLink || '/#cta';
                                 if (onNavigate && !href.startsWith('http://') && !href.startsWith('https://')) { e.preventDefault(); onNavigate(href); }
                             }}
-                            className={`group relative overflow-hidden px-12 py-5 text-xl font-black uppercase tracking-wide transform hover:scale-105 active:scale-95 transition-all duration-300 font-button ${borderRadiusClasses[borderRadius]}`}
+                            className={`group relative overflow-hidden px-8 py-3 md:px-12 md:py-5 text-base md:text-xl font-black uppercase tracking-wide transform hover:scale-105 active:scale-95 transition-all duration-300 font-button ${borderRadiusClasses[borderRadius]}`}
                             style={{
                                 backgroundColor: actualColors.buttonBackground,
                                 color: actualColors.buttonText,
@@ -245,7 +249,7 @@ const HeroBold: React.FC<HeroProps> = ({
                                 const href = secondaryCtaLink || '/#features';
                                 if (onNavigate && !href.startsWith('http://') && !href.startsWith('https://')) { e.preventDefault(); onNavigate(href); }
                             }}
-                            className={`group relative overflow-hidden px-12 py-5 text-xl font-black uppercase tracking-wide hover:scale-105 active:scale-95 transition-all duration-300 font-button ${borderRadiusClasses[borderRadius]} ${secondaryButtonStyle === 'outline'
+                            className={`group relative overflow-hidden px-8 py-3 md:px-12 md:py-5 text-base md:text-xl font-black uppercase tracking-wide hover:scale-105 active:scale-95 transition-all duration-300 font-button ${borderRadiusClasses[borderRadius]} ${secondaryButtonStyle === 'outline'
                                 ? 'border-4 bg-transparent'
                                 : secondaryButtonStyle === 'ghost'
                                     ? 'bg-transparent border-0'

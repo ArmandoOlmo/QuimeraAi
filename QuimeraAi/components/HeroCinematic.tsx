@@ -9,17 +9,17 @@ import { hexToRgba } from '../utils/colorUtils';
 import { sanitizeHtml } from '../utils/sanitize';
 
 const headlineSizeClasses: Record<FontSize, string> = {
-    sm: 'text-4xl md:text-5xl',
-    md: 'text-5xl md:text-7xl',
-    lg: 'text-6xl md:text-8xl',
-    xl: 'text-7xl md:text-9xl',
+    sm: 'text-2xl md:text-4xl md:text-5xl',
+    md: 'text-3xl md:text-5xl md:text-7xl',
+    lg: 'text-3xl md:text-6xl md:text-8xl',
+    xl: 'text-4xl md:text-7xl md:text-9xl',
 };
 
 const subheadlineSizeClasses: Record<FontSize, string> = {
-    sm: 'text-base',
-    md: 'text-lg md:text-xl',
-    lg: 'text-xl md:text-2xl',
-    xl: 'text-2xl md:text-3xl',
+    sm: 'text-xs md:text-base',
+    md: 'text-sm md:text-lg md:text-xl',
+    lg: 'text-sm md:text-xl md:text-2xl',
+    xl: 'text-base md:text-2xl md:text-3xl',
 };
 
 const borderRadiusClasses: Record<BorderRadiusSize, string> = {
@@ -123,9 +123,16 @@ const HeroCinematic: React.FC<HeroProps> = ({
                     />
                     {/* Heavy multi-stop gradient — movie poster bottom-heavy */}
                     <div
-                        className="absolute inset-0"
+                        className="absolute inset-0 hidden md:block"
                         style={{
                             background: `linear-gradient(to bottom, rgba(0,0,0,${(overlayOpacity ?? gradientOpacity) * 0.4 / 100}) 0%, rgba(0,0,0,${(overlayOpacity ?? gradientOpacity) * 0.2 / 100}) 30%, rgba(0,0,0,${(overlayOpacity ?? gradientOpacity) * 0.6 / 100}) 60%, rgba(0,0,0,${(overlayOpacity ?? gradientOpacity) / 100}) 100%)`
+                        }}
+                    />
+                    {/* Mobile: lighter top for image visibility */}
+                    <div
+                        className="absolute inset-0 md:hidden"
+                        style={{
+                            background: `linear-gradient(to bottom, rgba(0,0,0,0.05) 0%, rgba(0,0,0,0.1) 40%, rgba(0,0,0,${(overlayOpacity ?? gradientOpacity) / 100}) 100%)`
                         }}
                     />
                     {/* Color-tinted side gradients for drama */}
@@ -152,18 +159,18 @@ const HeroCinematic: React.FC<HeroProps> = ({
             </div>
 
             {/* Letterbox bars — cinematic widescreen */}
-            <div className="absolute top-0 left-0 right-0 h-12 md:h-16 bg-black z-20 cinematic-bar-top">
+            <div className="absolute top-0 left-0 right-0 h-6 md:h-12 md:h-16 bg-black z-20 cinematic-bar-top">
                 <div className="absolute bottom-0 left-0 right-0 h-px cinematic-bar-glow" style={{ background: `linear-gradient(90deg, transparent 10%, ${actualColors.primary}60 50%, transparent 90%)` }} />
             </div>
-            <div className="absolute bottom-0 left-0 right-0 h-12 md:h-16 bg-black z-20 cinematic-bar-bottom">
+            <div className="absolute bottom-0 left-0 right-0 h-6 md:h-12 md:h-16 bg-black z-20 cinematic-bar-bottom">
                 <div className="absolute top-0 left-0 right-0 h-px cinematic-bar-glow" style={{ background: `linear-gradient(90deg, transparent 10%, ${actualColors.primary}60 50%, transparent 90%)` }} />
             </div>
 
             {/* Content — positioned by textLayout */}
-            <div className={`relative z-10 w-full max-w-7xl mx-auto ${paddingXClasses[paddingX]} flex flex-1 ${layout.containerClass}`}
+            <div className={`relative z-10 w-full max-w-7xl mx-auto ${paddingXClasses[paddingX]} flex flex-1 items-end pb-8 md:pb-0 ${layout.containerClass}`}
                 style={{ minHeight: heroHeight ? `${heroHeight}vh` : '80vh' }}
             >
-              <div className={`flex flex-col gap-5 w-full max-w-2xl ${layout.textAlignClass} ${layout.itemsAlignClass}`}>
+              <div className={`flex flex-col gap-3 md:gap-5 w-full max-w-2xl ${layout.textAlignClass} ${layout.itemsAlignClass}`}>
 
                 {/* Badge */}
                 {showBadge && badgeText && (
@@ -178,7 +185,7 @@ const HeroCinematic: React.FC<HeroProps> = ({
 
                 {/* Headline — oversized uppercase cinematic */}
                 <h1
-                    className={`${headlineSizeClasses[headlineFontSize]} font-black tracking-tighter leading-[0.95] mb-8 font-header uppercase cinematic-headline`}
+                    className={`${headlineSizeClasses[headlineFontSize]} font-black tracking-tighter leading-[0.95] mb-4 md:mb-8 font-header uppercase cinematic-headline`}
                     style={{
                         color: actualColors.heading,
                         textTransform: 'uppercase',
@@ -197,21 +204,21 @@ const HeroCinematic: React.FC<HeroProps> = ({
 
                 {/* Subheadline */}
                 <p
-                    className={`${subheadlineSizeClasses[subheadlineFontSize]} mb-12 opacity-80 max-w-2xl font-light leading-relaxed font-body cinematic-sub`}
+                    className={`${subheadlineSizeClasses[subheadlineFontSize]} mb-6 md:mb-12 opacity-80 max-w-2xl font-light leading-relaxed font-body cinematic-sub`}
                     style={{ color: actualColors.text }}
                 >
                     {subheadline}
                 </p>
 
                 {/* CTAs — premium with fill-reveal hover */}
-                <div className={`flex flex-col sm:flex-row ${layout.horizontalAlign === 'center' ? 'justify-center' : layout.horizontalAlign === 'right' ? 'justify-end' : 'justify-start'} gap-5 mb-16 w-full sm:w-auto cinematic-ctas`}>
+                <div className={`flex flex-col sm:flex-row ${layout.horizontalAlign === 'center' ? 'justify-center' : layout.horizontalAlign === 'right' ? 'justify-end' : 'justify-start'} gap-3 md:gap-5 mb-8 md:mb-16 w-full sm:w-auto cinematic-ctas`}>
                     <a
                         href={primaryCtaLink || '/#cta'}
                         onClick={(e) => {
                             const href = primaryCtaLink || '/#cta';
                             if (onNavigate && !href.startsWith('http://') && !href.startsWith('https://')) { e.preventDefault(); onNavigate(href); }
                         }}
-                        className={`group relative overflow-hidden py-4 px-10 font-bold text-lg uppercase tracking-wider transition-all duration-300 hover:scale-105 active:scale-95 font-button ${borderRadiusClasses[borderRadius]}`}
+                        className={`group relative overflow-hidden py-3 px-6 md:py-4 md:px-10 font-bold text-sm md:text-lg uppercase tracking-wider transition-all duration-300 hover:scale-105 active:scale-95 font-button ${borderRadiusClasses[borderRadius]}`}
                         style={{
                             backgroundColor: actualColors.buttonBackground,
                             color: actualColors.buttonText,
@@ -237,7 +244,7 @@ const HeroCinematic: React.FC<HeroProps> = ({
                             const href = secondaryCtaLink || '/#features';
                             if (onNavigate && !href.startsWith('http://') && !href.startsWith('https://')) { e.preventDefault(); onNavigate(href); }
                         }}
-                        className={`group py-4 px-10 font-bold text-lg uppercase tracking-wider backdrop-blur-md transition-all duration-300 hover:scale-105 font-button ${borderRadiusClasses[borderRadius]} ${secondaryButtonStyle === 'outline'
+                        className={`group py-3 px-6 md:py-4 md:px-10 font-bold text-sm md:text-lg uppercase tracking-wider backdrop-blur-md transition-all duration-300 hover:scale-105 font-button ${borderRadiusClasses[borderRadius]} ${secondaryButtonStyle === 'outline'
                             ? 'border-2 bg-transparent hover:bg-white/10'
                             : secondaryButtonStyle === 'ghost'
                                 ? 'bg-transparent hover:bg-white/10 border border-transparent'

@@ -10,17 +10,17 @@ import { HeroTextLayout } from '../types';
 
 // Ajustamos los tamaños para que sean más impactantes en este diseño full-screen
 const headlineSizeClasses: Record<FontSize, string> = {
-  sm: 'text-4xl md:text-4xl',
-  md: 'text-5xl md:text-6xl',
-  lg: 'text-6xl md:text-7xl',
-  xl: 'text-7xl md:text-8xl',
+  sm: 'text-2xl md:text-4xl',
+  md: 'text-3xl md:text-5xl md:text-6xl',
+  lg: 'text-3xl md:text-6xl md:text-7xl',
+  xl: 'text-4xl md:text-7xl md:text-8xl',
 };
 
 const subheadlineSizeClasses: Record<FontSize, string> = {
-  sm: 'text-base',
-  md: 'text-lg',
-  lg: 'text-xl md:text-2xl',
-  xl: 'text-2xl md:text-3xl',
+  sm: 'text-xs md:text-base',
+  md: 'text-sm md:text-lg',
+  lg: 'text-sm md:text-xl md:text-2xl',
+  xl: 'text-base md:text-2xl md:text-3xl',
 };
 
 const borderRadiusClasses: Record<BorderRadiusSize, string> = {
@@ -138,10 +138,15 @@ const HeroModern: React.FC<HeroProps> = ({
             className="w-full h-full object-cover scale-105 transition-transform duration-1000"
           />
           {/* Gradient Overlay Mejorado con múltiples capas - Opacidad configurable */}
-          <div
-            className="absolute inset-0 bg-gradient-to-b from-black via-black to-black"
+          <div className="absolute inset-0 hidden md:block bg-gradient-to-b from-black via-black to-black"
             style={{
               background: `linear-gradient(to bottom, rgba(0,0,0,${(overlayOpacity ?? gradientOpacity) * 0.3 / 100}), rgba(0,0,0,${(overlayOpacity ?? gradientOpacity) * 0.7 / 100}), rgba(0,0,0,${(overlayOpacity ?? gradientOpacity) / 100}))`
+            }}
+          ></div>
+          {/* Mobile: lighter top, stronger bottom so image is visible */}
+          <div className="absolute inset-0 md:hidden"
+            style={{
+              background: `linear-gradient(to bottom, rgba(0,0,0,0.05) 0%, rgba(0,0,0,0.1) 40%, rgba(0,0,0,${(overlayOpacity ?? gradientOpacity) / 100}) 100%)`
             }}
           ></div>
           <div className="absolute inset-0 bg-gradient-to-r from-indigo-900/20 via-transparent to-emerald-900/20"></div>
@@ -153,10 +158,10 @@ const HeroModern: React.FC<HeroProps> = ({
       )}
 
       {/* Contenido - positioned by textLayout */}
-      <div className={`relative z-10 w-full max-w-7xl mx-auto ${paddingXClasses[paddingX]} flex flex-1 ${layout.containerClass}`}
+      <div className={`relative z-10 w-full max-w-7xl mx-auto ${paddingXClasses[paddingX]} flex flex-1 items-end pb-6 md:pb-0 ${layout.containerClass}`}
         style={{ minHeight: heroHeight ? `${heroHeight}vh` : '80vh' }}
       >
-        <div className={`flex flex-col gap-5 w-full max-w-2xl ${layout.textAlignClass} ${layout.itemsAlignClass}`}>
+        <div className={`flex flex-col gap-3 md:gap-5 w-full max-w-2xl ${layout.textAlignClass} ${layout.itemsAlignClass}`}>
 
         {/* Badge Flotante Premium */}
         {showBadge && badgeText && (
@@ -171,7 +176,7 @@ const HeroModern: React.FC<HeroProps> = ({
 
         {/* Título Principal */}
         <h1
-          className={`${headlineSizeClasses[headlineFontSize]} font-black tracking-tight leading-[1.1] animate-fade-in-up font-header mt-0 mb-0 pt-10 md:mt-[60px] md:mb-[60px]`}
+          className={`${headlineSizeClasses[headlineFontSize]} font-black tracking-tight leading-[1.1] animate-fade-in-up font-header mt-0 mb-0 pt-4 md:pt-10 md:mt-[60px] md:mb-[60px]`}
           style={{
             animationDelay: '0.1s',
             color: actualColors.heading,
@@ -183,14 +188,14 @@ const HeroModern: React.FC<HeroProps> = ({
 
         {/* Subtítulo */}
         <p
-          className={`${subheadlineSizeClasses[subheadlineFontSize]} mb-12 opacity-90 max-w-2xl font-light leading-relaxed animate-fade-in-up font-body`}
+          className={`${subheadlineSizeClasses[subheadlineFontSize]} mb-6 md:mb-12 opacity-90 max-w-2xl font-light leading-relaxed animate-fade-in-up font-body`}
           style={{ animationDelay: '0.2s', color: actualColors.text }}
         >
           {subheadline}
         </p>
 
         {/* Botones de Acción Premium */}
-        <div className={`flex flex-col sm:flex-row ${layout.horizontalAlign === 'center' ? 'justify-center' : layout.horizontalAlign === 'right' ? 'justify-end' : 'justify-start'} gap-5 mb-16 w-full sm:w-auto animate-fade-in-up`} style={{ animationDelay: '0.3s' }}>
+        <div className={`flex flex-col sm:flex-row ${layout.horizontalAlign === 'center' ? 'justify-center' : layout.horizontalAlign === 'right' ? 'justify-end' : 'justify-start'} gap-3 md:gap-5 mb-8 md:mb-16 w-full sm:w-auto animate-fade-in-up`} style={{ animationDelay: '0.3s' }}>
           <a
             href={primaryCtaLink || '/#cta'}
             onClick={(e) => {
@@ -200,7 +205,7 @@ const HeroModern: React.FC<HeroProps> = ({
                 onNavigate(href);
               }
             }}
-            className={`group relative overflow-hidden py-4 px-10 font-bold text-lg transition-all duration-300 hover:scale-105 active:scale-95 font-button ${borderRadiusClasses[borderRadius]}`}
+            className={`group relative overflow-hidden py-3 px-6 md:py-4 md:px-10 font-bold text-sm md:text-lg transition-all duration-300 hover:scale-105 active:scale-95 font-button ${borderRadiusClasses[borderRadius]}`}
             style={{
               backgroundColor: actualColors.buttonBackground,
               color: actualColors.buttonText,
@@ -224,7 +229,7 @@ const HeroModern: React.FC<HeroProps> = ({
                 onNavigate(href);
               }
             }}
-            className={`group py-4 px-10 font-bold text-lg backdrop-blur-md transition-all duration-300 hover:scale-105 font-button ${borderRadiusClasses[borderRadius]} ${secondaryButtonStyle === 'outline'
+            className={`group py-3 px-6 md:py-4 md:px-10 font-bold text-sm md:text-lg backdrop-blur-md transition-all duration-300 hover:scale-105 font-button ${borderRadiusClasses[borderRadius]} ${secondaryButtonStyle === 'outline'
               ? 'border-2 bg-transparent hover:bg-white/10'
               : secondaryButtonStyle === 'ghost'
                 ? 'bg-transparent hover:bg-white/10 border border-transparent'

@@ -9,17 +9,17 @@ import { getHeroLayoutClasses } from '../utils/heroLayout';
 import { HeroTextLayout } from '../types';
 
 const headlineSizeClasses: Record<FontSize, string> = {
-    sm: 'text-4xl md:text-5xl',
-    md: 'text-5xl md:text-7xl',
-    lg: 'text-6xl md:text-8xl',
-    xl: 'text-7xl md:text-9xl',
+    sm: 'text-2xl md:text-4xl md:text-5xl',
+    md: 'text-3xl md:text-5xl md:text-7xl',
+    lg: 'text-3xl md:text-6xl md:text-8xl',
+    xl: 'text-4xl md:text-7xl md:text-9xl',
 };
 
 const subheadlineSizeClasses: Record<FontSize, string> = {
-    sm: 'text-base',
-    md: 'text-lg md:text-xl',
-    lg: 'text-xl md:text-2xl',
-    xl: 'text-2xl md:text-3xl',
+    sm: 'text-xs md:text-base',
+    md: 'text-sm md:text-lg md:text-xl',
+    lg: 'text-sm md:text-xl md:text-2xl',
+    xl: 'text-base md:text-2xl md:text-3xl',
 };
 
 const borderRadiusClasses: Record<BorderRadiusSize, string> = {
@@ -123,9 +123,16 @@ const HeroEditorial: React.FC<HeroProps> = ({
                     />
                     {/* Multi-layer gradient for editorial depth */}
                     <div
-                        className="absolute inset-0"
+                        className="absolute inset-0 hidden md:block"
                         style={{
                             background: `linear-gradient(to top, rgba(0,0,0,${(overlayOpacity ?? gradientOpacity) / 100}) 0%, rgba(0,0,0,${(overlayOpacity ?? gradientOpacity) * 0.6 / 100}) 30%, rgba(0,0,0,${(overlayOpacity ?? gradientOpacity) * 0.15 / 100}) 60%, rgba(0,0,0,${(overlayOpacity ?? gradientOpacity) * 0.3 / 100}) 100%)`
+                        }}
+                    />
+                    {/* Mobile: lighter top for image visibility */}
+                    <div
+                        className="absolute inset-0 md:hidden"
+                        style={{
+                            background: `linear-gradient(to bottom, rgba(0,0,0,0.05) 0%, rgba(0,0,0,0.1) 40%, rgba(0,0,0,${(overlayOpacity ?? gradientOpacity) / 100}) 100%)`
                         }}
                     />
                     {/* Warm vignette from primary color */}
@@ -146,10 +153,10 @@ const HeroEditorial: React.FC<HeroProps> = ({
             )}
 
             {/* Decorative corner frame lines — editorial magazine border */}
-            <div className="absolute top-8 left-8 w-20 h-20 border-t-2 border-l-2 border-white/20 z-20 hero-editorial-corner-tl" />
-            <div className="absolute top-8 right-8 w-20 h-20 border-t-2 border-r-2 border-white/20 z-20 hero-editorial-corner-tr" />
-            <div className="absolute bottom-8 left-8 w-20 h-20 border-b-2 border-l-2 border-white/20 z-20 hero-editorial-corner-bl" />
-            <div className="absolute bottom-8 right-8 w-20 h-20 border-b-2 border-r-2 border-white/20 z-20 hero-editorial-corner-br" />
+            <div className="absolute top-8 left-8 w-20 h-20 border-t-2 border-l-2 border-white/20 z-20 hero-editorial-corner-tl hidden md:block" />
+            <div className="absolute top-8 right-8 w-20 h-20 border-t-2 border-r-2 border-white/20 z-20 hero-editorial-corner-tr hidden md:block" />
+            <div className="absolute bottom-8 left-8 w-20 h-20 border-b-2 border-l-2 border-white/20 z-20 hero-editorial-corner-bl hidden md:block" />
+            <div className="absolute bottom-8 right-8 w-20 h-20 border-b-2 border-r-2 border-white/20 z-20 hero-editorial-corner-br hidden md:block" />
 
             {/* Issue number / decorative vertical text */}
             <div className="absolute top-1/2 right-8 -translate-y-1/2 z-20 hidden xl:flex flex-col items-center gap-4 hero-editorial-side">
@@ -159,7 +166,7 @@ const HeroEditorial: React.FC<HeroProps> = ({
             </div>
 
             {/* Content anchored at bottom-left */}
-            <div className={`relative z-10 w-full ${paddingXClasses[paddingX]} ${paddingYClasses[paddingY]} pt-24`}>
+            <div className={`relative z-10 w-full ${paddingXClasses[paddingX]} ${paddingYClasses[paddingY]} pt-12 md:pt-24`}>
                 <div className="container mx-auto max-w-6xl">
                     {/* Badge with pulse */}
                     {showBadge && badgeText && (
@@ -177,7 +184,7 @@ const HeroEditorial: React.FC<HeroProps> = ({
 
                     {/* Headline — editorial serif feel */}
                     <h1
-                        className={`${headlineSizeClasses[headlineFontSize]} font-bold tracking-tight leading-[1.02] mb-6 max-w-4xl font-header hero-editorial-headline`}
+                        className={`${headlineSizeClasses[headlineFontSize]} font-bold tracking-tight leading-[1.02] mb-4 md:mb-6 max-w-4xl font-header hero-editorial-headline`}
                         style={{
                             color: actualColors.heading,
                             textTransform: 'var(--headings-transform, none)' as any,
@@ -187,7 +194,7 @@ const HeroEditorial: React.FC<HeroProps> = ({
                     />
 
                     {/* Subheadline with left accent bar */}
-                    <div className="relative pl-6 mb-10 hero-editorial-sub">
+                    <div className="relative pl-4 md:pl-6 mb-6 md:mb-10 hero-editorial-sub">
                         <div className="absolute left-0 top-1 bottom-1 w-[2px]" style={{ backgroundColor: `${actualColors.primary}60` }} />
                         <p
                             className={`${subheadlineSizeClasses[subheadlineFontSize]} opacity-80 max-w-2xl font-light leading-relaxed font-body`}
@@ -198,14 +205,14 @@ const HeroEditorial: React.FC<HeroProps> = ({
                     </div>
 
                     {/* CTAs with shine effect */}
-                    <div className="flex flex-col sm:flex-row gap-5 mb-8 hero-editorial-ctas">
+                    <div className="flex flex-col sm:flex-row gap-3 md:gap-5 mb-4 md:mb-8 hero-editorial-ctas">
                         <a
                             href={primaryCtaLink || '/#cta'}
                             onClick={(e) => {
                                 const href = primaryCtaLink || '/#cta';
                                 if (onNavigate && !href.startsWith('http://') && !href.startsWith('https://')) { e.preventDefault(); onNavigate(href); }
                             }}
-                            className={`group relative overflow-hidden inline-flex items-center gap-2 py-4 px-10 font-bold text-base transition-all duration-300 hover:scale-105 active:scale-95 font-button ${borderRadiusClasses[borderRadius]}`}
+                            className={`group relative overflow-hidden inline-flex items-center gap-2 py-3 px-6 md:py-4 md:px-10 font-bold text-sm md:text-base transition-all duration-300 hover:scale-105 active:scale-95 font-button ${borderRadiusClasses[borderRadius]}`}
                             style={{
                                 backgroundColor: actualColors.buttonBackground,
                                 color: actualColors.buttonText,
@@ -226,7 +233,7 @@ const HeroEditorial: React.FC<HeroProps> = ({
                                 const href = secondaryCtaLink || '/#features';
                                 if (onNavigate && !href.startsWith('http://') && !href.startsWith('https://')) { e.preventDefault(); onNavigate(href); }
                             }}
-                            className={`group py-4 px-10 font-bold text-base backdrop-blur-md transition-all duration-300 hover:scale-105 font-button ${borderRadiusClasses[borderRadius]} ${secondaryButtonStyle === 'outline'
+                            className={`group py-3 px-6 md:py-4 md:px-10 font-bold text-sm md:text-base backdrop-blur-md transition-all duration-300 hover:scale-105 font-button ${borderRadiusClasses[borderRadius]} ${secondaryButtonStyle === 'outline'
                                 ? 'border-2 bg-transparent hover:bg-white/10'
                                 : secondaryButtonStyle === 'ghost'
                                     ? 'bg-transparent hover:bg-white/10 border border-transparent'

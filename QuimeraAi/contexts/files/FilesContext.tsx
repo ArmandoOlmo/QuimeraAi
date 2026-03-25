@@ -166,10 +166,10 @@ export const FilesProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
             // Project-scoped Firestore path
             const filesPath = `users/${user.uid}/projects/${activeProjectId}/files`;
-            const docRef = await addDoc(collection(db, filesPath), fileRecord);
+            await addDoc(collection(db, filesPath), fileRecord);
 
-            const newFile = { ...fileRecord, id: docRef.id } as FileRecord;
-            setFiles(prev => [newFile, ...prev]);
+            // Note: No manual setFiles here — the onSnapshot listener (line 121)
+            // automatically picks up the new document and updates state.
 
             return downloadURL;
         } catch (error) {

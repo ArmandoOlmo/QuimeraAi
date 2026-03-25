@@ -7,17 +7,17 @@ import { hexToRgba } from '../utils/colorUtils';
 import { sanitizeHtml } from '../utils/sanitize';
 
 const headlineSizeClasses: Record<FontSize, string> = {
-  sm: 'text-2xl md:text-3xl',
-  md: 'text-3xl md:text-5xl',
-  lg: 'text-4xl md:text-6xl',
-  xl: 'text-5xl md:text-8xl',
+  sm: 'text-lg md:text-2xl md:text-3xl',
+  md: 'text-xl md:text-3xl md:text-5xl',
+  lg: 'text-2xl md:text-4xl md:text-6xl',
+  xl: 'text-3xl md:text-5xl md:text-8xl',
 };
 
 const subheadlineSizeClasses: Record<FontSize, string> = {
-  sm: 'text-sm',
-  md: 'text-base',
-  lg: 'text-lg md:text-xl',
-  xl: 'text-xl md:text-2xl',
+  sm: 'text-xs md:text-sm',
+  md: 'text-sm md:text-base',
+  lg: 'text-sm md:text-lg md:text-xl',
+  xl: 'text-base md:text-xl md:text-2xl',
 };
 
 const borderRadiusClasses: Record<BorderRadiusSize, string> = {
@@ -115,11 +115,17 @@ const Hero: React.FC<HeroProps> = (props) => {
           className="w-full h-full object-cover"
           key={imageUrl}
         />
-        {/* Dark overlay for readability */}
+        {/* Dark overlay for readability — stronger bottom gradient on mobile */}
         <div
-          className="absolute inset-0"
+          className="absolute inset-0 hidden md:block"
           style={{
             background: `linear-gradient(to bottom, rgba(0,0,0,${(overlayOpacity ?? 50) / 100}), rgba(0,0,0,${((overlayOpacity ?? 50) + 15) / 100}))`
+          }}
+        />
+        <div
+          className="absolute inset-0 md:hidden"
+          style={{
+            background: `linear-gradient(to bottom, rgba(0,0,0,0.05) 0%, rgba(0,0,0,0.15) 40%, rgba(0,0,0,${((overlayOpacity ?? 50) + 20) / 100}) 100%)`
           }}
         />
       </div>
@@ -135,7 +141,7 @@ const Hero: React.FC<HeroProps> = (props) => {
     };
 
     return (
-      <div className={`flex flex-col gap-5 w-full max-w-2xl ${alignClasses[align]}`}>
+      <div className={`flex flex-col gap-3 md:gap-5 w-full max-w-2xl ${alignClasses[align]}`}>
         {/* Headline — Logo image or text */}
         {headlineImageUrl ? (
           <img
@@ -167,7 +173,7 @@ const Hero: React.FC<HeroProps> = (props) => {
           {subheadline}
         </p>
 
-        <div className={`flex flex-wrap gap-4 mt-2 ${align === 'center' ? 'justify-center' : align === 'right' ? 'justify-end' : 'justify-start'}`}>
+        <div className={`flex flex-wrap gap-2 md:gap-4 mt-1 md:mt-2 ${align === 'center' ? 'justify-center' : align === 'right' ? 'justify-end' : 'justify-start'}`}>
           <a
             href={primaryCtaLink || '/#cta'}
             onClick={(e) => handleNavigate(e, primaryCtaLink || '/#cta')}
@@ -179,7 +185,7 @@ const Hero: React.FC<HeroProps> = (props) => {
               backdropFilter: 'blur(12px) saturate(180%)',
               WebkitBackdropFilter: 'blur(12px) saturate(180%)',
             }}
-            className={`relative overflow-hidden group font-bold py-3 px-8 border border-white/15 hover:-translate-y-1 hover:scale-105 active:translate-y-0 active:scale-95 transition-all duration-300 font-button ${borderRadiusClasses[borderRadius]}`}
+            className={`relative overflow-hidden group font-bold py-2 px-5 md:py-3 md:px-8 text-sm md:text-base border border-white/15 hover:-translate-y-1 hover:scale-105 active:translate-y-0 active:scale-95 transition-all duration-300 font-button ${borderRadiusClasses[borderRadius]}`}
           >
             <span className="relative z-10">{primaryCta}</span>
             <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-12" />
@@ -187,7 +193,7 @@ const Hero: React.FC<HeroProps> = (props) => {
           <a
             href={secondaryCtaLink || '/#features'}
             onClick={(e) => handleNavigate(e, secondaryCtaLink || '/#features')}
-            className={`relative overflow-hidden group font-bold py-3 px-8 hover:-translate-y-1 hover:scale-105 active:translate-y-0 active:scale-95 transition-all duration-300 font-button ${borderRadiusClasses[borderRadius]} ${secondaryButtonStyle === 'outline'
+            className={`relative overflow-hidden group font-bold py-2 px-5 md:py-3 md:px-8 text-sm md:text-base hover:-translate-y-1 hover:scale-105 active:translate-y-0 active:scale-95 transition-all duration-300 font-button ${borderRadiusClasses[borderRadius]} ${secondaryButtonStyle === 'outline'
               ? 'border-2 bg-transparent'
               : secondaryButtonStyle === 'ghost'
                 ? 'bg-transparent hover:bg-white/10'
@@ -219,7 +225,7 @@ const Hero: React.FC<HeroProps> = (props) => {
   // Header padding (top positions) — ~80px to clear navigation header
   // Bottom padding — same as top (~80px) for visual symmetry
   const HEADER_PADDING = 'pt-28 md:pt-32';
-  const BOTTOM_PADDING = 'pb-20 md:pb-24';
+  const BOTTOM_PADDING = 'pb-0 md:pb-14';
 
   // Determine alignment from textLayout
   const getHorizontalAlign = (): 'left' | 'center' | 'right' => {
@@ -236,9 +242,10 @@ const Hero: React.FC<HeroProps> = (props) => {
   };
 
   const getVerticalClass = (): string => {
-    if (textLayout.endsWith('-top') || textLayout === 'center-top') return `items-start ${HEADER_PADDING}`;
-    if (textLayout.endsWith('-bottom') || textLayout === 'center-bottom') return `items-end ${BOTTOM_PADDING}`;
-    return 'items-center'; // center (vertical center)
+    // On mobile, always push content to bottom so the image is fully visible
+    if (textLayout.endsWith('-top') || textLayout === 'center-top') return `items-end pb-6 md:items-start md:pb-0 ${HEADER_PADDING}`;
+    if (textLayout.endsWith('-bottom') || textLayout === 'center-bottom') return `items-end pb-6 md:pb-0 ${BOTTOM_PADDING}`;
+    return 'items-end pb-6 md:items-center md:pb-0'; // center (vertical center)
   };
 
   return (

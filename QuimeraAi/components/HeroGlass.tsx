@@ -9,17 +9,17 @@ import { getHeroLayoutClasses } from '../utils/heroLayout';
 import { HeroTextLayout } from '../types';
 
 const headlineSizeClasses: Record<FontSize, string> = {
-    sm: 'text-3xl md:text-4xl',
-    md: 'text-4xl md:text-5xl',
-    lg: 'text-5xl md:text-6xl',
-    xl: 'text-6xl md:text-7xl',
+    sm: 'text-xl md:text-3xl md:text-4xl',
+    md: 'text-2xl md:text-4xl md:text-5xl',
+    lg: 'text-3xl md:text-5xl md:text-6xl',
+    xl: 'text-3xl md:text-6xl md:text-7xl',
 };
 
 const subheadlineSizeClasses: Record<FontSize, string> = {
-    sm: 'text-sm',
-    md: 'text-base',
-    lg: 'text-lg md:text-xl',
-    xl: 'text-xl md:text-2xl',
+    sm: 'text-xs md:text-sm',
+    md: 'text-sm md:text-base',
+    lg: 'text-sm md:text-lg md:text-xl',
+    xl: 'text-base md:text-xl md:text-2xl',
 };
 
 const borderRadiusClasses: Record<BorderRadiusSize, string> = {
@@ -119,7 +119,11 @@ const HeroGlass: React.FC<HeroProps> = ({
                 <div className="absolute inset-0 z-0 transform-gpu">
                     <img src={imageUrl} alt="Hero Background" className="w-full h-full object-cover glass-img" />
                     {/* Darkening for glass card to pop */}
-                    <div className="absolute inset-0" style={{ backgroundColor: `rgba(0,0,0,${(overlayOpacity ?? gradientOpacity) / 100})` }} />
+                    <div className="absolute inset-0 hidden md:block" style={{ backgroundColor: `rgba(0,0,0,${(overlayOpacity ?? gradientOpacity) / 100})` }} />
+                    {/* Mobile: lighter top for image visibility */}
+                    <div className="absolute inset-0 md:hidden" style={{
+                        background: `linear-gradient(to bottom, rgba(0,0,0,0.05) 0%, rgba(0,0,0,0.1) 40%, rgba(0,0,0,${(overlayOpacity ?? gradientOpacity) / 100}) 100%)`
+                    }} />
                 </div>
             )}
 
@@ -156,7 +160,7 @@ const HeroGlass: React.FC<HeroProps> = ({
             </div>
 
             {/* Floating glass card - positioned by textLayout */}
-            <div className={`relative z-10 w-full max-w-7xl mx-auto ${paddingXClasses[paddingX]} flex flex-1 ${layout.containerClass}`}
+            <div className={`relative z-10 w-full max-w-7xl mx-auto ${paddingXClasses[paddingX]} flex flex-1 items-end pb-6 md:pb-0 ${layout.containerClass}`}
                 style={{ minHeight: heroHeight ? `${heroHeight}vh` : '80vh' }}
             >
                 <div className="w-full max-w-3xl">
@@ -170,7 +174,7 @@ const HeroGlass: React.FC<HeroProps> = ({
 
                         {/* Glass card */}
                         <div
-                            className={`relative rounded-3xl p-8 md:p-14 ${layout.textAlignClass} glass-float`}
+                            className={`relative rounded-3xl p-5 md:p-8 md:p-14 ${layout.textAlignClass} glass-float`}
                             style={{
                                 background: 'rgba(255,255,255,0.06)',
                                 backdropFilter: 'blur(24px)',
@@ -196,7 +200,7 @@ const HeroGlass: React.FC<HeroProps> = ({
 
                             {/* Headline */}
                             <h1
-                                className={`${headlineSizeClasses[headlineFontSize]} font-bold tracking-tight leading-[1.1] mb-6 font-header glass-headline`}
+                                className={`${headlineSizeClasses[headlineFontSize]} font-bold tracking-tight leading-[1.1] mb-4 md:mb-6 font-header glass-headline`}
                                 style={{
                                     color: actualColors.heading,
                                     textTransform: 'var(--headings-transform, none)' as any,
@@ -207,7 +211,7 @@ const HeroGlass: React.FC<HeroProps> = ({
 
                             {/* Subheadline */}
                             <p
-                                className={`${subheadlineSizeClasses[subheadlineFontSize]} mb-10 opacity-70 max-w-xl font-light leading-relaxed font-body glass-sub`}
+                                className={`${subheadlineSizeClasses[subheadlineFontSize]} mb-6 md:mb-10 opacity-70 max-w-xl font-light leading-relaxed font-body glass-sub`}
                                 style={{ color: actualColors.text }}
                             >
                                 {subheadline}
@@ -221,7 +225,7 @@ const HeroGlass: React.FC<HeroProps> = ({
                                         const href = primaryCtaLink || '/#cta';
                                         if (onNavigate && !href.startsWith('http://') && !href.startsWith('https://')) { e.preventDefault(); onNavigate(href); }
                                     }}
-                                    className={`group relative overflow-hidden inline-flex items-center justify-center gap-2 py-4 px-8 font-bold text-base transition-all duration-300 hover:scale-105 active:scale-95 font-button ${borderRadiusClasses[borderRadius]}`}
+                                    className={`group relative overflow-hidden inline-flex items-center justify-center gap-2 py-3 px-6 md:py-4 md:px-8 font-bold text-sm md:text-base transition-all duration-300 hover:scale-105 active:scale-95 font-button ${borderRadiusClasses[borderRadius]}`}
                                     style={{
                                         background: `linear-gradient(135deg, ${actualColors.buttonBackground}, ${actualColors.secondary})`,
                                         color: actualColors.buttonText,
@@ -241,7 +245,7 @@ const HeroGlass: React.FC<HeroProps> = ({
                                         const href = secondaryCtaLink || '/#features';
                                         if (onNavigate && !href.startsWith('http://') && !href.startsWith('https://')) { e.preventDefault(); onNavigate(href); }
                                     }}
-                                    className={`group py-4 px-8 font-bold text-base backdrop-blur-sm transition-all duration-300 hover:scale-105 font-button ${borderRadiusClasses[borderRadius]} ${secondaryButtonStyle === 'outline'
+                                    className={`group py-3 px-6 md:py-4 md:px-8 font-bold text-sm md:text-base backdrop-blur-sm transition-all duration-300 hover:scale-105 font-button ${borderRadiusClasses[borderRadius]} ${secondaryButtonStyle === 'outline'
                                         ? 'border bg-white/5 hover:bg-white/10'
                                         : secondaryButtonStyle === 'ghost'
                                             ? 'bg-transparent hover:bg-white/10 border border-transparent'

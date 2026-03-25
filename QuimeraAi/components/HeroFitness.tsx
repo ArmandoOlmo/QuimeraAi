@@ -9,17 +9,17 @@ import { getHeroLayoutClasses } from '../utils/heroLayout';
 import { HeroTextLayout } from '../types';
 
 const headlineSizeClasses: Record<FontSize, string> = {
-    sm: 'text-4xl md:text-5xl',
-    md: 'text-5xl md:text-7xl',
-    lg: 'text-6xl md:text-8xl',
-    xl: 'text-7xl md:text-9xl',
+    sm: 'text-2xl md:text-4xl md:text-5xl',
+    md: 'text-3xl md:text-5xl md:text-7xl',
+    lg: 'text-3xl md:text-6xl md:text-8xl',
+    xl: 'text-4xl md:text-7xl md:text-9xl',
 };
 
 const subheadlineSizeClasses: Record<FontSize, string> = {
-    sm: 'text-base md:text-lg',
-    md: 'text-lg md:text-xl',
-    lg: 'text-xl md:text-2xl',
-    xl: 'text-2xl md:text-3xl',
+    sm: 'text-xs md:text-base md:text-lg',
+    md: 'text-sm md:text-lg md:text-xl',
+    lg: 'text-sm md:text-xl md:text-2xl',
+    xl: 'text-base md:text-2xl md:text-3xl',
 };
 
 const borderRadiusClasses: Record<BorderRadiusSize, string> = {
@@ -122,9 +122,16 @@ const HeroFitness: React.FC<HeroProps> = ({
                 />
                 {/* Dark Overlay with Gradient */}
                 <div
-                    className="absolute inset-0"
+                    className="absolute inset-0 hidden md:block"
                     style={{
                         background: `linear-gradient(135deg, ${actualColors.background}ee 0%, ${actualColors.background}cc 50%, ${actualColors.background}99 100%)`
+                    }}
+                ></div>
+                {/* Mobile: lighter overlay for image visibility */}
+                <div
+                    className="absolute inset-0 md:hidden"
+                    style={{
+                        background: `linear-gradient(to bottom, rgba(0,0,0,0.05) 0%, rgba(0,0,0,0.15) 40%, ${actualColors.background}ee 100%)`
                     }}
                 ></div>
 
@@ -179,7 +186,7 @@ const HeroFitness: React.FC<HeroProps> = ({
 
                         {/* Headline - Extra Bold */}
                         <h1
-                            className={`${headlineSizeClasses[headlineFontSize]} font-black tracking-tighter leading-[0.9] mb-6 font-header uppercase animate-fade-in-up`}
+                            className={`${headlineSizeClasses[headlineFontSize]} font-black tracking-tighter leading-[0.9] mb-4 md:mb-6 font-header uppercase animate-fade-in-up`}
                             style={{
                                 color: actualColors.heading,
                                 textShadow: `4px 4px 0px ${actualColors.primary}40, 8px 8px 0px ${actualColors.background}40`
@@ -189,7 +196,7 @@ const HeroFitness: React.FC<HeroProps> = ({
 
                         {/* Subheadline with Accent Border */}
                         <div
-                            className="relative pl-6 mb-8 animate-fade-in-up"
+                            className="relative pl-4 md:pl-6 mb-6 md:mb-8 animate-fade-in-up"
                             style={{ animationDelay: '0.1s' }}
                         >
                             <div
@@ -222,7 +229,7 @@ const HeroFitness: React.FC<HeroProps> = ({
                                     backgroundColor: actualColors.buttonBackground || actualColors.primary,
                                     color: actualColors.buttonText
                                 }}
-                                className={`group relative overflow-hidden px-10 py-5 text-xl font-black uppercase tracking-wide transform hover:scale-105 active:scale-95 transition-all duration-300 font-button ${borderRadiusClasses[borderRadius]}`}
+                                className={`group relative overflow-hidden px-6 py-3 md:px-10 md:py-5 text-base md:text-xl font-black uppercase tracking-wide transform hover:scale-105 active:scale-95 transition-all duration-300 font-button ${borderRadiusClasses[borderRadius]}`}
                             >
                                 <span className="relative z-10 flex items-center gap-2">
                                     <Zap size={24} className="group-hover:rotate-12 transition-transform" />
@@ -243,7 +250,7 @@ const HeroFitness: React.FC<HeroProps> = ({
                                         onNavigate(href);
                                     }
                                 }}
-                                className={`group relative overflow-hidden px-10 py-5 text-xl font-black uppercase tracking-wide hover:scale-105 active:scale-95 transition-all duration-300 font-button ${borderRadiusClasses[borderRadius]} ${secondaryButtonStyle === 'outline'
+                                className={`group relative overflow-hidden px-6 py-3 md:px-10 md:py-5 text-base md:text-xl font-black uppercase tracking-wide hover:scale-105 active:scale-95 transition-all duration-300 font-button ${borderRadiusClasses[borderRadius]} ${secondaryButtonStyle === 'outline'
                                         ? 'border-4 bg-transparent'
                                         : secondaryButtonStyle === 'ghost'
                                             ? 'bg-transparent border-0'

@@ -9,17 +9,17 @@ import { hexToRgba } from '../utils/colorUtils';
 import { sanitizeHtml } from '../utils/sanitize';
 
 const headlineSizeClasses: Record<FontSize, string> = {
-    sm: 'text-4xl md:text-5xl',
-    md: 'text-5xl md:text-6xl',
-    lg: 'text-6xl md:text-7xl',
-    xl: 'text-7xl md:text-8xl',
+    sm: 'text-2xl md:text-4xl md:text-5xl',
+    md: 'text-3xl md:text-5xl md:text-6xl',
+    lg: 'text-3xl md:text-6xl md:text-7xl',
+    xl: 'text-4xl md:text-7xl md:text-8xl',
 };
 
 const subheadlineSizeClasses: Record<FontSize, string> = {
-    sm: 'text-base',
-    md: 'text-lg',
-    lg: 'text-xl md:text-2xl',
-    xl: 'text-2xl md:text-3xl',
+    sm: 'text-xs md:text-base',
+    md: 'text-sm md:text-lg',
+    lg: 'text-sm md:text-xl md:text-2xl',
+    xl: 'text-base md:text-2xl md:text-3xl',
 };
 
 const borderRadiusClasses: Record<BorderRadiusSize, string> = {
@@ -122,9 +122,16 @@ const HeroMinimal: React.FC<HeroProps> = ({
                     />
                     {/* Even, subtle darkening — not dramatic */}
                     <div
-                        className="absolute inset-0"
+                        className="absolute inset-0 hidden md:block"
                         style={{
                             background: `rgba(0,0,0,${(overlayOpacity ?? gradientOpacity) / 100})`
+                        }}
+                    />
+                    {/* Mobile: lighter top for image visibility */}
+                    <div
+                        className="absolute inset-0 md:hidden"
+                        style={{
+                            background: `linear-gradient(to bottom, rgba(0,0,0,0.05) 0%, rgba(0,0,0,0.1) 40%, rgba(0,0,0,${(overlayOpacity ?? gradientOpacity) / 100}) 100%)`
                         }}
                     />
                     {/* Subtle radial vignette */}
@@ -148,10 +155,10 @@ const HeroMinimal: React.FC<HeroProps> = ({
             </div>
 
             {/* Content — positioned by textLayout */}
-            <div className={`relative z-10 w-full max-w-7xl mx-auto ${paddingXClasses[paddingX]} flex flex-1 ${layout.containerClass}`}
+            <div className={`relative z-10 w-full max-w-7xl mx-auto ${paddingXClasses[paddingX]} flex flex-1 items-end pb-6 md:pb-0 ${layout.containerClass}`}
                 style={{ minHeight: heroHeight ? `${heroHeight}vh` : '80vh' }}
             >
-              <div className={`flex flex-col gap-5 w-full max-w-2xl ${layout.textAlignClass} ${layout.itemsAlignClass}`}>
+              <div className={`flex flex-col gap-3 md:gap-5 w-full max-w-2xl ${layout.textAlignClass} ${layout.itemsAlignClass}`}>
 
                 {/* Minimalist badge */}
                 {showBadge && badgeText && (
@@ -163,7 +170,7 @@ const HeroMinimal: React.FC<HeroProps> = ({
 
                 {/* Headline — thin elegant weight */}
                 <h1
-                    className={`${headlineSizeClasses[headlineFontSize]} font-extralight tracking-tight leading-[1.1] mb-8 font-header minimal-headline`}
+                    className={`${headlineSizeClasses[headlineFontSize]} font-extralight tracking-tight leading-[1.1] mb-4 md:mb-8 font-header minimal-headline`}
                     style={{
                         color: actualColors.heading,
                         textTransform: 'var(--headings-transform, none)' as any,
@@ -173,11 +180,11 @@ const HeroMinimal: React.FC<HeroProps> = ({
                 />
 
                 {/* Tiny accent dot */}
-                <div className="minimal-dot w-1.5 h-1.5 rounded-full mb-8" style={{ backgroundColor: actualColors.primary }} />
+                <div className="minimal-dot w-1.5 h-1.5 rounded-full mb-4 md:mb-8" style={{ backgroundColor: actualColors.primary }} />
 
                 {/* Subheadline — light and airy */}
                 <p
-                    className={`${subheadlineSizeClasses[subheadlineFontSize]} mb-12 opacity-60 max-w-xl font-light leading-relaxed font-body minimal-sub`}
+                    className={`${subheadlineSizeClasses[subheadlineFontSize]} mb-6 md:mb-12 opacity-60 max-w-xl font-light leading-relaxed font-body minimal-sub`}
                     style={{ color: actualColors.text }}
                 >
                     {subheadline}
@@ -191,7 +198,7 @@ const HeroMinimal: React.FC<HeroProps> = ({
                             const href = primaryCtaLink || '/#cta';
                             if (onNavigate && !href.startsWith('http://') && !href.startsWith('https://')) { e.preventDefault(); onNavigate(href); }
                         }}
-                        className={`group relative overflow-hidden inline-flex items-center gap-2 py-3.5 px-8 font-medium text-sm tracking-wide transition-all duration-500 hover:scale-[1.02] active:scale-[0.98] font-button ${borderRadiusClasses[borderRadius]}`}
+                        className={`group relative overflow-hidden inline-flex items-center gap-2 py-2.5 px-6 md:py-3.5 md:px-8 font-medium text-xs md:text-sm tracking-wide transition-all duration-500 hover:scale-[1.02] active:scale-[0.98] font-button ${borderRadiusClasses[borderRadius]}`}
                         style={{
                             backgroundColor: actualColors.buttonBackground,
                             color: actualColors.buttonText,
@@ -211,7 +218,7 @@ const HeroMinimal: React.FC<HeroProps> = ({
                             const href = secondaryCtaLink || '/#features';
                             if (onNavigate && !href.startsWith('http://') && !href.startsWith('https://')) { e.preventDefault(); onNavigate(href); }
                         }}
-                        className={`group py-3.5 px-8 font-medium text-sm tracking-wide backdrop-blur-sm transition-all duration-500 hover:scale-[1.02] font-button ${borderRadiusClasses[borderRadius]} ${secondaryButtonStyle === 'outline'
+                        className={`group py-2.5 px-6 md:py-3.5 md:px-8 font-medium text-xs md:text-sm tracking-wide backdrop-blur-sm transition-all duration-500 hover:scale-[1.02] font-button ${borderRadiusClasses[borderRadius]} ${secondaryButtonStyle === 'outline'
                             ? 'border bg-transparent hover:bg-white/5'
                             : secondaryButtonStyle === 'ghost'
                                 ? 'bg-transparent hover:bg-white/5 border border-transparent'
@@ -235,7 +242,7 @@ const HeroMinimal: React.FC<HeroProps> = ({
                 </div>
 
                 {/* Scroll indicator — subtle bounce */}
-                <div className="mt-20 minimal-scroll">
+                <div className="mt-10 md:mt-20 minimal-scroll">
                     <div className="w-5 h-8 rounded-full border border-white/20 flex items-start justify-center p-1">
                         <div className="w-1 h-2 rounded-full bg-white/40 minimal-scroll-dot" />
                     </div>
