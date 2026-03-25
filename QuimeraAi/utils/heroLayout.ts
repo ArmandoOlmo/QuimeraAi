@@ -6,7 +6,7 @@
 import { HeroTextLayout } from '../types';
 
 const HEADER_PADDING = 'pt-28 md:pt-32';
-const BOTTOM_PADDING = 'pb-0 md:pb-14';
+const BOTTOM_PADDING = 'pb-4 md:pb-6';
 
 /**
  * Returns 'left' | 'center' | 'right' based on textLayout

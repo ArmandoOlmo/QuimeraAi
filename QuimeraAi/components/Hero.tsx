@@ -225,7 +225,7 @@ const Hero: React.FC<HeroProps> = (props) => {
   // Header padding (top positions) — ~80px to clear navigation header
   // Bottom padding — same as top (~80px) for visual symmetry
   const HEADER_PADDING = 'pt-28 md:pt-32';
-  const BOTTOM_PADDING = 'pb-0 md:pb-14';
+  const BOTTOM_PADDING = 'pb-4 md:pb-6';
 
   // Determine alignment from textLayout
   const getHorizontalAlign = (): 'left' | 'center' | 'right' => {
@@ -244,7 +244,7 @@ const Hero: React.FC<HeroProps> = (props) => {
   const getVerticalClass = (): string => {
     // On mobile, always push content to bottom so the image is fully visible
     if (textLayout.endsWith('-top') || textLayout === 'center-top') return `items-end pb-6 md:items-start md:pb-0 ${HEADER_PADDING}`;
-    if (textLayout.endsWith('-bottom') || textLayout === 'center-bottom') return `items-end pb-6 md:pb-0 ${BOTTOM_PADDING}`;
+    if (textLayout.endsWith('-bottom') || textLayout === 'center-bottom') return `items-end ${BOTTOM_PADDING}`;
     return 'items-end pb-6 md:items-center md:pb-0'; // center (vertical center)
   };
 

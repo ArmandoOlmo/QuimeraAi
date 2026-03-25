@@ -158,7 +158,7 @@ const HeroModern: React.FC<HeroProps> = ({
       )}
 
       {/* Contenido - positioned by textLayout */}
-      <div className={`relative z-10 w-full max-w-7xl mx-auto ${paddingXClasses[paddingX]} flex flex-1 items-end pb-6 md:pb-0 ${layout.containerClass}`}
+      <div className={`relative z-10 w-full max-w-7xl mx-auto ${paddingXClasses[paddingX]} flex flex-1 ${layout.containerClass}`}
         style={{ minHeight: heroHeight ? `${heroHeight}vh` : '80vh' }}
       >
         <div className={`flex flex-col gap-3 md:gap-5 w-full max-w-2xl ${layout.textAlignClass} ${layout.itemsAlignClass}`}>
