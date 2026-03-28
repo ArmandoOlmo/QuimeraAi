@@ -35,7 +35,7 @@ import {
 import {
   initializeFirestore,
   persistentLocalCache,
-  persistentSingleTabManager,
+  persistentMultipleTabManager,
   collection,
   doc,
   addDoc,
@@ -100,7 +100,7 @@ export const getStorageInstance = () => {
 // This replaces the deprecated enableMultiTabIndexedDbPersistence
 export const db = initializeFirestore(app, {
   localCache: persistentLocalCache({
-    tabManager: persistentSingleTabManager({ forceOwnership: true }),
+    tabManager: persistentMultipleTabManager(),
     cacheSizeBytes: CACHE_SIZE_UNLIMITED
   })
 });
