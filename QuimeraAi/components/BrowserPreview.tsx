@@ -3,6 +3,7 @@ import React, { ReactNode, forwardRef, useCallback } from 'react';
 import { useUI } from '../contexts/core/UIContext';
 import { useAuth } from '../contexts/core/AuthContext';
 import { useProject } from '../contexts/project';
+import { useTenant } from '../contexts/tenant/TenantContext';
 import { PreviewDevice, PreviewOrientation } from '../types';
 import { ExternalLink } from 'lucide-react';
 
@@ -29,6 +30,7 @@ const BrowserPreview = forwardRef<HTMLDivElement, BrowserPreviewProps>(({ childr
   const { previewDevice, previewOrientation } = useUI();
   const { user } = useAuth();
   const { activeProject } = useProject();
+  const { currentTenant } = useTenant();
 
   const projectSlug = activeProject?.name
     ? activeProject.name.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-')
@@ -36,9 +38,17 @@ const BrowserPreview = forwardRef<HTMLDivElement, BrowserPreviewProps>(({ childr
 
   const handleOpenPreview = useCallback(() => {
     if (!user?.uid || !activeProject?.id) return;
-    const previewUrl = `${window.location.origin}/preview/${user.uid}/${activeProject.id}`;
+    
+    let previewUrl = '';
+    if (activeProject.id === 'agency-landing-mode') {
+      if (!currentTenant?.id) return;
+      previewUrl = `${window.location.origin}/preview/agency/${currentTenant.id}`;
+    } else {
+      previewUrl = `${window.location.origin}/preview/${user.uid}/${activeProject.id}`;
+    }
+    
     window.open(previewUrl, '_blank');
-  }, [user?.uid, activeProject?.id]);
+  }, [user?.uid, activeProject?.id, currentTenant?.id]);
 
   return (
     <div className={`h-full mx-auto transition-all duration-300 ease-in-out ${widthClasses[previewDevice][previewOrientation]}`}>

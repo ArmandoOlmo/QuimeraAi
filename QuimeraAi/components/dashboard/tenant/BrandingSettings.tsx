@@ -336,6 +336,102 @@ const BrandingSettings: React.FC<BrandingSettingsProps> = ({ className = '' }) =
                     )}
                 </div>
             </div>
+            {/* Quimera Subdomain Section — Free for all tenants */}
+            <div className="bg-card border border-border rounded-xl overflow-hidden">
+                <div className="p-6 border-b border-border">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+                            <Globe size={20} className="text-emerald-500" />
+                        </div>
+                        <div>
+                            <h2 className="text-lg font-semibold text-foreground">
+                                {t('branding.quimeraSubdomain', 'Subdominio Quimera')}
+                            </h2>
+                            <p className="text-sm text-muted-foreground">
+                                {t('branding.quimeraSubdomainDesc', 'Tu portal de clientes gratuito en quimera.ai — sin necesidad de dominio propio')}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="p-6 space-y-4">
+                    {/* Subdomain status */}
+                    {currentTenant.branding?.quimeraSubdomain ? (
+                        <div className="flex items-center justify-between p-4 bg-emerald-500/5 border border-emerald-500/20 rounded-lg">
+                            <div className="flex items-center gap-3">
+                                <Globe size={16} className="text-emerald-500" />
+                                <div>
+                                    <p className="font-medium text-foreground">
+                                        {currentTenant.branding.quimeraSubdomain}.quimera.ai
+                                    </p>
+                                    <p className="text-xs text-emerald-500">
+                                        ✓ {t('branding.subdomainActive', 'Activo — sin configuración DNS necesaria')}
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <button
+                                    onClick={() => {
+                                        navigator.clipboard.writeText(`https://${currentTenant.branding?.quimeraSubdomain}.quimera.ai`);
+                                    }}
+                                    className="p-1.5 rounded hover:bg-secondary text-muted-foreground"
+                                    title="Copiar URL"
+                                >
+                                    <Copy size={14} />
+                                </button>
+                                <a
+                                    href={`https://${currentTenant.branding?.quimeraSubdomain}.quimera.ai`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="p-1.5 rounded hover:bg-secondary text-muted-foreground"
+                                >
+                                    <ExternalLink size={14} />
+                                </a>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="text-center py-6">
+                            <Globe size={36} className="mx-auto text-muted-foreground/50 mb-3" />
+                            <p className="text-sm text-muted-foreground mb-4">
+                                {t('branding.noSubdomain', 'Aún no tienes un subdominio configurado. Establece uno para que tu portal esté disponible en tunombre.quimera.ai')}
+                            </p>
+                        </div>
+                    )}
+
+                    {/* Configure/change subdomain */}
+                    {canManageSettings && (
+                        <div>
+                            <label className="block text-sm font-medium text-foreground mb-2">
+                                {currentTenant.branding?.quimeraSubdomain
+                                    ? t('branding.changeSubdomain', 'Cambiar subdominio')
+                                    : t('branding.setSubdomain', 'Elegir subdominio')}
+                            </label>
+                            <div className="flex items-center gap-2">
+                                <div className="relative flex-1">
+                                    <input
+                                        type="text"
+                                        value={branding.quimeraSubdomain || ''}
+                                        onChange={e => setBranding({
+                                            ...branding,
+                                            quimeraSubdomain: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''),
+                                        })}
+                                        placeholder={currentTenant.name?.toLowerCase().replace(/\s+/g, '-') || 'mi-empresa'}
+                                        maxLength={30}
+                                        className="w-full px-4 py-2.5 bg-background border border-border rounded-lg text-foreground focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+                                    />
+                                </div>
+                                <span className="text-sm text-muted-foreground font-medium whitespace-nowrap">.quimera.ai</span>
+                            </div>
+                            {branding.quimeraSubdomain && (
+                                <p className="text-xs text-muted-foreground mt-1.5">
+                                    Portal: <span className="text-primary font-medium">{branding.quimeraSubdomain}.quimera.ai</span>
+                                    {' '}— los cambios se guardan con el botón de arriba
+                                </p>
+                            )}
+                        </div>
+                    )}
+                </div>
+            </div>
 
             {/* Custom Domain Section */}
             <div className="bg-card border border-border rounded-xl overflow-hidden">

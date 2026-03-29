@@ -1194,6 +1194,7 @@ const DomainsDashboard: React.FC = () => {
     const { projects } = useProject();
     const { setView } = useUI();
     const { navigate } = useRouter();
+    const { user, userDocument, openProfileModal } = useAuth();
     const tenantContext = useSafeTenant();
     const upgradeContext = useSafeUpgrade();
 
@@ -1212,6 +1213,34 @@ const DomainsDashboard: React.FC = () => {
     const [cloudflareError, setCloudflareError] = useState<string | null>(null);
     const [showNameserversModal, setShowNameserversModal] = useState(false);
     const [showInstructions, setShowInstructions] = useState(true);
+
+    // Subdomain card state
+    const currentUsername = (userDocument as any)?.username || '';
+    const defaultProjectId = (userDocument as any)?.defaultProjectId || '';
+    const [subdomainProjectId, setSubdomainProjectId] = useState(defaultProjectId);
+    const [subdomainCopied, setSubdomainCopied] = useState(false);
+
+    useEffect(() => {
+        if (defaultProjectId) setSubdomainProjectId(defaultProjectId);
+    }, [defaultProjectId]);
+
+    const handleSubdomainProjectChange = async (projectId: string) => {
+        if (!user || !currentUsername) return;
+        setSubdomainProjectId(projectId);
+        try {
+            const { updateSubdomainProject } = await import('../../../services/subdomainService');
+            await updateSubdomainProject(currentUsername, user.uid, projectId);
+        } catch (err) {
+            console.error('[DomainsDashboard] Error updating subdomain project:', err);
+        }
+    };
+
+    const handleCopySubdomainUrl = () => {
+        if (!currentUsername) return;
+        navigator.clipboard.writeText(`https://${currentUsername}.quimera.ai`);
+        setSubdomainCopied(true);
+        setTimeout(() => setSubdomainCopied(false), 2000);
+    };
 
     // Auto-open modal when returning from Stripe checkout
     useEffect(() => {
@@ -1346,6 +1375,104 @@ const DomainsDashboard: React.FC = () => {
 
                 <main className="flex-1 overflow-y-auto p-6 lg:p-8 scroll-smooth bg-secondary/5 relative z-10">
                     <div className="max-w-5xl mx-auto space-y-8">
+
+                        {/* Quimera Subdomain Card */}
+                        <div className="bg-gradient-to-r from-primary/5 via-primary/10 to-primary/5 border border-primary/20 rounded-xl p-5 relative overflow-hidden">
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+                            <div className="relative z-10">
+                                <div className="flex items-start justify-between gap-4 mb-3">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center">
+                                            <Globe size={20} className="text-primary" />
+                                        </div>
+                                        <div>
+                                            <h3 className="font-bold text-foreground text-sm">
+                                                {t('domainsDashboard.quimeraSubdomain', 'Tu Subdominio Quimera')}
+                                            </h3>
+                                            <p className="text-xs text-muted-foreground">
+                                                {t('domainsDashboard.freeSubdomain', 'Incluido gratis con tu cuenta')}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold ${
+                                        currentUsername
+                                            ? 'bg-emerald-500/20 text-emerald-500 border border-emerald-500/30'
+                                            : 'bg-amber-500/20 text-amber-500 border border-amber-500/30'
+                                    }`}>
+                                        {currentUsername ? (
+                                            <><CheckCircle size={10} /> {t('domainsDashboard.active', 'Activo')}</>
+                                        ) : (
+                                            <><Clock size={10} /> {t('domainsDashboard.notConfigured', 'Sin configurar')}</>
+                                        )}
+                                    </span>
+                                </div>
+
+                                {currentUsername ? (
+                                    <div className="space-y-3">
+                                        {/* URL display */}
+                                        <div className="flex items-center gap-2 bg-background/80 border border-border rounded-lg px-3 py-2">
+                                            <Globe size={14} className="text-primary flex-shrink-0" />
+                                            <span className="text-sm font-medium text-foreground flex-1 truncate">
+                                                {currentUsername}.quimera.ai
+                                            </span>
+                                            <button
+                                                onClick={handleCopySubdomainUrl}
+                                                className="flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-md bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+                                            >
+                                                {subdomainCopied ? <CheckCircle size={12} /> : <Copy size={12} />}
+                                                {subdomainCopied ? t('common.copied', 'Copiado') : t('common.copy', 'Copiar')}
+                                            </button>
+                                            <a
+                                                href={`https://${currentUsername}.quimera.ai`}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="flex items-center px-2 py-1 text-xs font-medium rounded-md bg-secondary/50 text-muted-foreground hover:text-foreground transition-colors"
+                                            >
+                                                <ExternalLink size={12} />
+                                            </a>
+                                        </div>
+
+                                        {/* Project selector */}
+                                        <div className="flex items-center gap-3">
+                                            <label className="text-xs font-medium text-muted-foreground whitespace-nowrap">
+                                                {t('domainsDashboard.showProject', 'Proyecto a mostrar:')}
+                                            </label>
+                                            <select
+                                                value={subdomainProjectId}
+                                                onChange={e => handleSubdomainProjectChange(e.target.value)}
+                                                className="flex-1 text-xs bg-background border border-border rounded-lg px-2 py-1.5 text-foreground outline-none focus:ring-1 focus:ring-primary/30"
+                                            >
+                                                <option value="">{t('domainsDashboard.selectProject', 'Seleccionar proyecto...')}</option>
+                                                {projects.filter(p => p.status !== 'Template').map(p => (
+                                                    <option key={p.id} value={p.id}>{p.name}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+
+                                        {/* Change username link */}
+                                        <button
+                                            onClick={() => openProfileModal()}
+                                            className="text-xs text-primary hover:text-primary/80 font-medium transition-colors"
+                                        >
+                                            {t('domainsDashboard.changeUsername', 'Cambiar nombre de usuario →')}
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <div className="flex items-center gap-3 mt-2">
+                                        <button
+                                            onClick={() => openProfileModal()}
+                                            className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"
+                                        >
+                                            <Globe size={14} />
+                                            {t('domainsDashboard.configureSubdomain', 'Configurar Subdominio')}
+                                        </button>
+                                        <p className="text-xs text-muted-foreground">
+                                            {t('domainsDashboard.setUsernameHint', 'Establece un nombre de usuario en tu perfil para activar tu subdominio gratis.')}
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
 
                         {/* Collapsible Instructions */}
                         <div className="bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/30 rounded-xl overflow-hidden">

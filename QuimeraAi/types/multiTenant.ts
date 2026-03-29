@@ -38,6 +38,7 @@ export interface TenantBranding {
     companyName?: string;
     customDomain?: string;         // "app.clienteabc.com"
     customDomainVerified?: boolean;
+    quimeraSubdomain?: string;     // Free subdomain: "empresa.quimera.ai"
     emailFromName?: string;
     emailFromAddress?: string;
     footerText?: string;
@@ -655,10 +656,12 @@ export function getEffectiveLimits(
  * Calculate monthly cost of add-ons
  */
 export function calculateAddonsCost(addons: SubscriptionAddons): number {
+    // Prices aligned with functions/src/billing/addonsManagement.ts
+    // Each unit here = 1 block (1 sub-client, 100GB storage, 1000 credits)
     const ADDON_PRICES = {
         extraSubClients: 15,  // $15 per additional sub-client
-        extraStorageGB: 0.10, // $0.10 per GB
-        extraAiCredits: 0.02, // $0.02 per credit
+        extraStorageGB: 10,   // $10 per 100GB block
+        extraAiCredits: 20,   // $20 per 1000 credits block
     };
 
     let totalCost = 0;

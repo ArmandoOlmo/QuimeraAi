@@ -110,9 +110,11 @@ type StoreViewState =
 interface PublicWebsitePreviewProps {
   projectId?: string;
   userId?: string;
+  /** Username for subdomain resolution (username.quimera.ai) */
+  username?: string;
 }
 
-const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: propProjectId, userId: propUserId }) => {
+const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: propProjectId, userId: propUserId, username: propUsername }) => {
   const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -217,7 +219,8 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
       const { userId, projectId } = getIdsFromURL();
 
       // projectId is required, userId is optional for published sites
-      if (!projectId) {
+      // But username can be used to resolve projectId
+      if (!projectId && !propUsername) {
         setError('Missing projectId in URL');
         setLoading(false);
         return;
@@ -225,6 +228,56 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
 
       try {
         let projectData: Project | null = null;
+
+        // PRIORITY -2: Resolve username to projectId (user subdomain)
+        let resolvedProjectId = projectId;
+        let resolvedUserId = userId;
+        if (!resolvedProjectId && propUsername) {
+          console.log(`[PublicWebsitePreview] Resolving username: ${propUsername}`);
+          try {
+            // Look up user by username
+            const usersCol = collection(db, 'users');
+            const usernameQuery = query(usersCol, where('username', '==', propUsername), limit(1));
+            const usernameSnap = await getDocs(usernameQuery);
+            
+            if (!usernameSnap.empty) {
+              const userDoc = usernameSnap.docs[0];
+              resolvedUserId = userDoc.id;
+              const userData = userDoc.data();
+              
+              // Try to get default/primary project from user data
+              resolvedProjectId = userData.defaultProjectId || userData.primaryProjectId;
+              
+              if (!resolvedProjectId) {
+                // Fallback: get first project from user's projects subcollection
+                const projectsCol = collection(db, 'users', resolvedUserId, 'projects');
+                const projectsQuery = query(projectsCol, limit(1));
+                const projectsSnap = await getDocs(projectsQuery);
+                if (!projectsSnap.empty) {
+                  resolvedProjectId = projectsSnap.docs[0].id;
+                }
+              }
+              
+              console.log(`[PublicWebsitePreview] Resolved username '${propUsername}' -> userId: ${resolvedUserId}, projectId: ${resolvedProjectId}`);
+            } else {
+              console.warn(`[PublicWebsitePreview] Username '${propUsername}' not found`);
+              setError(`User "${propUsername}" not found`);
+              setLoading(false);
+              return;
+            }
+          } catch (err) {
+            console.error('[PublicWebsitePreview] Error resolving username:', err);
+            setError('Failed to resolve username');
+            setLoading(false);
+            return;
+          }
+          
+          if (!resolvedProjectId) {
+            setError(`User "${propUsername}" has no published projects`);
+            setLoading(false);
+            return;
+          }
+        }
 
         // PRIORITY -1: Check for prefetched data (started before React mounted)
         const prefetch = getPreviewPrefetch();

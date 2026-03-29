@@ -7,10 +7,10 @@
 // USER & AUTH
 // =============================================================================
 export type UserRole = 'user' | 'manager' | 'admin' | 'superadmin' | 'owner';
-export type TenantType = 'individual' | 'agency';
-export type TenantStatus = 'active' | 'suspended' | 'trial' | 'expired';
 export type IndividualRole = 'owner';
-export type AgencyRole = 'agency_owner' | 'agency_admin' | 'agency_member' | 'client';
+
+// Import multi-tenant types instead of duplicating them
+import { TenantType, TenantStatus, AgencyRole, TenantLimits, TenantUsage, Tenant } from './multiTenant';
 
 export interface RolePermissions {
     // User Management
@@ -43,66 +43,7 @@ export interface RolePermissions {
     canExportData: boolean;
 }
 
-export interface TenantLimits {
-    maxProjects: number;
-    maxUsers: number;
-    maxStorageGB: number;
-    maxAiCredits: number;
-}
-
-export interface TenantUsage {
-    projectCount: number;
-    userCount: number;
-    storageUsedGB: number;
-    aiCreditsUsed: number;
-}
-
-export interface Tenant {
-    id: string;
-    type: TenantType;
-    name: string;
-    email: string;
-    logoUrl?: string;
-
-    // Business Information
-    companyName?: string;
-    taxId?: string;
-    industry?: string;
-    website?: string;
-
-    // Status & Dates
-    status: TenantStatus;
-    createdAt: { seconds: number; nanoseconds: number } | string;
-    lastActiveAt?: { seconds: number; nanoseconds: number } | string;
-    trialEndsAt?: { seconds: number; nanoseconds: number } | string;
-
-    // Subscription & Limits
-    subscriptionPlan: string;
-    limits: TenantLimits;
-    usage: TenantUsage;
-
-    // Associated Users
-    ownerUserId: string;
-    ownerTenantId?: string; // If this is a sub-client of an agency
-    memberUserIds: string[];
-
-    // Projects
-    projectIds: string[];
-
-    // Settings
-    settings?: {
-        allowMemberInvites?: boolean;
-        requireTwoFactor?: boolean;
-        brandingEnabled?: boolean;
-    };
-
-    // Billing
-    billingInfo?: {
-        mrr: number;
-        nextBillingDate?: string;
-        paymentMethod?: string;
-    };
-}
+// Removed explicitly to avoid conflicts in index.ts exports
 
 // User Preferences (synced across devices)
 export interface UserPreferences {
@@ -299,13 +240,7 @@ export interface ServiceModule {
     description: string;
 }
 
-export interface PlanLimits {
-    maxProjects: number;
-    maxUsers: number;
-    maxStorageGB: number;
-    maxAiCredits: number;
-    maxSubClients?: number;
-}
+import { PlanLimits } from './subscription';
 
 export interface Plan {
     id: string;

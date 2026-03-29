@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/core/AuthContext';
 import Modal from '../ui/Modal';
@@ -18,7 +18,8 @@ import {
     uploadBytes,
     getDownloadURL
 } from '../../firebase';
-import { X, Camera, Trash2, Save, AlertTriangle } from 'lucide-react';
+import { X, Camera, Trash2, Save, AlertTriangle, Globe, CheckCircle, XCircle, Loader2 } from 'lucide-react';
+import { validateUsernameFormat, validateUsername, claimSubdomain } from '../../services/subdomainService';
 
 interface ProfileModalProps {
     isOpen: boolean;
@@ -34,6 +35,14 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) => {
     const [phone, setPhone] = useState('');
     const [department, setDepartment] = useState('');
     const [socialLinks, setSocialLinks] = useState({ linkedin: '', twitter: '', github: '', website: '' });
+
+    // Username / subdomain state
+    const [username, setUsername] = useState('');
+    const [usernameError, setUsernameError] = useState('');
+    const [usernameValid, setUsernameValid] = useState(false);
+    const [usernameChecking, setUsernameChecking] = useState(false);
+    const usernameDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const originalUsername = useRef<string>('');
 
     const [photoFile, setPhotoFile] = useState<File | null>(null);
     const [photoPreview, setPhotoPreview] = useState<string | null>(null);
@@ -57,8 +66,58 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) => {
                 website: userDocument.socialLinks?.website || '',
             });
             setPhotoPreview(userDocument.photoURL);
+            // Load existing username
+            const existingUsername = (userDocument as any).username || '';
+            setUsername(existingUsername);
+            originalUsername.current = existingUsername;
+            if (existingUsername) setUsernameValid(true);
         }
     }, [userDocument]);
+
+    // Debounced username validation
+    const handleUsernameChange = useCallback((value: string) => {
+        const normalized = value.toLowerCase().replace(/[^a-z0-9-]/g, '');
+        setUsername(normalized);
+        setUsernameError('');
+        setUsernameValid(false);
+
+        // Clear previous debounce
+        if (usernameDebounceRef.current) clearTimeout(usernameDebounceRef.current);
+
+        if (!normalized) {
+            setUsernameChecking(false);
+            return;
+        }
+
+        // If same as original, it's valid
+        if (normalized === originalUsername.current) {
+            setUsernameValid(true);
+            setUsernameChecking(false);
+            return;
+        }
+
+        // Instant format check
+        const formatCheck = validateUsernameFormat(normalized);
+        if (!formatCheck.valid) {
+            setUsernameError(formatCheck.error || '');
+            setUsernameChecking(false);
+            return;
+        }
+
+        // Debounced async availability check
+        setUsernameChecking(true);
+        usernameDebounceRef.current = setTimeout(async () => {
+            const result = await validateUsername(normalized, user?.uid);
+            setUsernameChecking(false);
+            if (result.valid) {
+                setUsernameValid(true);
+                setUsernameError('');
+            } else {
+                setUsernameValid(false);
+                setUsernameError(result.error || '');
+            }
+        }, 600);
+    }, [user?.uid]);
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -90,21 +149,36 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) => {
                 });
             }
 
-            // 3. Update Firestore document
-            const updatedDocData = {
+            // 3. Handle username/subdomain claim if changed
+            const usernameChanged = username !== originalUsername.current;
+            if (usernameChanged && username) {
+                const claimResult = await claimSubdomain(username, user.uid);
+                if (!claimResult.success) {
+                    setError(claimResult.error || 'Error al reclamar subdominio');
+                    setIsLoading(false);
+                    return;
+                }
+            }
+
+            // 4. Update Firestore document
+            const updatedDocData: Record<string, any> = {
                 name,
                 photoURL: newPhotoURL,
                 jobTitle,
                 bio,
                 phone,
                 department,
-                socialLinks
+                socialLinks,
             };
+            if (usernameChanged) {
+                updatedDocData.username = username;
+            }
             const userDocRef = doc(db, 'users', user.uid);
             await updateDoc(userDocRef, updatedDocData);
 
-            // 4. Update context state
+            // 5. Update context state
             setUserDocument(prev => prev ? { ...prev, ...updatedDocData } : null);
+            originalUsername.current = username;
             onClose();
 
         } catch (err) {
@@ -218,6 +292,48 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) => {
                                     onChange={e => setName(e.target.value)}
                                     className="w-full bg-secondary/30 text-foreground p-3 rounded-xl border border-border focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all text-base"
                                 />
+                            </div>
+
+                            {/* Username / Subdomain Field */}
+                            <div className="sm:col-span-2">
+                                <label htmlFor="username" className="flex items-center gap-2 text-sm font-medium text-foreground mb-2">
+                                    <Globe size={14} className="text-primary" />
+                                    {t('profile.username', 'Nombre de usuario (subdominio)')}
+                                </label>
+                                <div className="relative">
+                                    <input
+                                        id="username"
+                                        type="text"
+                                        value={username}
+                                        onChange={e => handleUsernameChange(e.target.value)}
+                                        placeholder="tu-nombre"
+                                        maxLength={30}
+                                        className={`w-full bg-secondary/30 text-foreground p-3 pr-10 rounded-xl border outline-none transition-all text-base ${
+                                            usernameError
+                                                ? 'border-red-500/50 focus:ring-2 focus:ring-red-500/30'
+                                                : usernameValid && username
+                                                    ? 'border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/30'
+                                                    : 'border-border focus:ring-2 focus:ring-primary/50 focus:border-primary'
+                                        }`}
+                                    />
+                                    {/* Status indicator */}
+                                    <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                                        {usernameChecking && <Loader2 size={16} className="animate-spin text-muted-foreground" />}
+                                        {!usernameChecking && usernameValid && username && <CheckCircle size={16} className="text-emerald-500" />}
+                                        {!usernameChecking && usernameError && <XCircle size={16} className="text-red-500" />}
+                                    </div>
+                                </div>
+                                {/* Preview URL */}
+                                {username && !usernameError && (
+                                    <p className="mt-1.5 text-xs text-muted-foreground flex items-center gap-1">
+                                        <Globe size={11} />
+                                        {t('profile.subdomainPreview', 'Tu sitio será visible en:')}
+                                        <span className="font-semibold text-primary">{username}.quimera.ai</span>
+                                    </p>
+                                )}
+                                {usernameError && (
+                                    <p className="mt-1.5 text-xs text-red-500">{usernameError}</p>
+                                )}
                             </div>
 
                             {/* Job Title */}

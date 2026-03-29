@@ -74,13 +74,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                     if (userSnap.exists()) {
                         finalUserDoc = userSnap.data() as Omit<UserDocument, 'id'>;
                     } else {
-                        // Create user document if doesn't exist
+                        // Create user document if doesn't exist (using merge: true to prevent accidental wipes of existing fields)
                         const newUserDocData = {
                             name: firebaseUser.displayName || 'Unnamed User',
                             email: firebaseUser.email!,
                             photoURL: firebaseUser.photoURL || '',
                         };
-                        await setDoc(userDocRef, newUserDocData);
+                        await setDoc(userDocRef, newUserDocData, { merge: true });
                         finalUserDoc = newUserDocData;
                     }
 

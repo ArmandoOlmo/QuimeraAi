@@ -2,6 +2,18 @@
   "projects": {
     "default": "quimeraai",
     "quimera-502e2": "quimera-502e2"
-  }
+  },
+  "targets": {
+    "quimeraai": {
+      "hosting": {
+        "app": [
+          "quimera-app"
+        ],
+        "main": [
+          "quimeraai"
+        ]
+      }
+    }
+  },
+  "etags": {}
 }
-

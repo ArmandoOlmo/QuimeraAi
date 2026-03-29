@@ -416,7 +416,7 @@ const Features: React.FC<FeaturesProps> = ({
           className={`grid w-full grid-cols-1 sm:grid-cols-2 ${gridColumns >= 3 ? 'lg:grid-cols-3' : ''} ${gridColumns >= 4 ? 'xl:grid-cols-4' : ''}`}
           style={{ gap: '0px' }}
         >
-          {items.map((feature, index) => (
+          {(items || []).map((feature, index) => (
             <ImageOverlayCard
               key={index}
               feature={feature}
@@ -453,7 +453,7 @@ const Features: React.FC<FeaturesProps> = ({
             </div>
 
             <div className={`grid grid-cols-1 md:grid-cols-2 ${gridColsClasses[gridColumns] || 'lg:grid-cols-3'} gap-6`}>
-              {items.map((feature, index) => (
+              {(items || []).map((feature, index) => (
                 <ModernFeatureCard
                   key={index}
                   feature={feature}
@@ -495,7 +495,7 @@ const Features: React.FC<FeaturesProps> = ({
 
             {/* Bento Grid Premium */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-              {items.map((feature, index) => {
+              {(items || []).map((feature, index) => {
                 const isLarge = index === 0;
 
                 return (
@@ -618,7 +618,7 @@ const Features: React.FC<FeaturesProps> = ({
           </p>
         </div>
         <div className={`grid grid-cols-1 md:grid-cols-2 ${gridColsClasses[gridColumns] || 'lg:grid-cols-3'} gap-8`}>
-          {items.map((feature, index) => (
+          {(items || []).map((feature, index) => (
             <FeatureCard
               key={index}
               imageUrl={feature.imageUrl}

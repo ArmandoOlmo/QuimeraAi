@@ -9,7 +9,7 @@ import {
     ArrowLeft, Menu, Image, MessageSquare, PackageSearch, Palette,
     FlaskConical, Languages, Search, FileText, FolderOpen,
     Navigation, Star, Settings, Grid3x3, List, X, Sparkles, Zap, Newspaper, Layout,
-    Loader2, DollarSign
+    Loader2, DollarSign, Globe
 } from 'lucide-react';
 import DashboardSidebar from './DashboardSidebar';
 import MobileSearchModal from '../ui/MobileSearchModal';
@@ -43,6 +43,7 @@ const ExecutionModeToggle = React.lazy(() => import('./admin/ExecutionModeToggle
 const NewsManagement = React.lazy(() => import('./admin/NewsManagement'));
 const LandingPageEditor = React.lazy(() => import('./admin/LandingPageEditor'));
 const ServiceAvailabilityControl = React.lazy(() => import('./admin/ServiceAvailabilityControl'));
+const SubdomainManagement = React.lazy(() => import('./admin/SubdomainManagement'));
 
 // Loading skeleton for admin panels
 const AdminPanelLoader = () => (
@@ -94,6 +95,7 @@ const ADMIN_ROUTES: Record<string, string> = {
     'news': ROUTES.ADMIN_NEWS,
     'landing-editor': ROUTES.ADMIN_LANDING_EDITOR,
     'service-availability': ROUTES.ADMIN_SERVICE_AVAILABILITY,
+    'subdomains': ROUTES.ADMIN_SUBDOMAINS,
 };
 
 // Components
@@ -250,6 +252,7 @@ const SuperAdminDashboard = () => {
         { id: 'app-info', title: t('superadmin.appInformation'), description: t('superadmin.appInformationDesc'), icon: <FileText size={24} />, category: 'core', route: ROUTES.ADMIN_APP_INFO, allowedRoles: ['owner', 'superadmin'] },
         { id: 'subscriptions', title: t('superadmin.subscriptions'), description: t('superadmin.subscriptionsDesc'), icon: <Sparkles size={24} />, category: 'core', route: ROUTES.ADMIN_SUBSCRIPTIONS, isNew: true, allowedRoles: ['owner', 'superadmin'] },
         { id: 'service-availability', title: t('serviceAvailability.title', 'Disponibilidad de Servicios'), description: t('serviceAvailability.description', 'Control global de servicios de la plataforma'), icon: <Settings size={24} />, category: 'core', route: ROUTES.ADMIN_SERVICE_AVAILABILITY, isNew: true, allowedRoles: ['owner', 'superadmin'] },
+        { id: 'subdomains', title: t('superadmin.subdomainManagement', 'Gestión de Subdominios'), description: t('superadmin.subdomainManagementDesc', 'Administrar subdominios de usuarios, agencias y tenants'), icon: <Globe size={24} />, category: 'core', route: ROUTES.ADMIN_SUBDOMAINS, isNew: true, allowedRoles: ['owner', 'superadmin'] },
 
         // Content Management
         { id: 'news', title: t('admin.news.title', 'Noticias y Novedades'), description: t('superadmin.newsDesc', 'Gestionar noticias y actualizaciones para el dashboard'), icon: <Newspaper size={24} />, category: 'content', route: ROUTES.ADMIN_NEWS, isNew: true, allowedRoles: ['owner', 'superadmin', 'admin'] },
@@ -342,6 +345,7 @@ const SuperAdminDashboard = () => {
             case 'news': return <NewsManagement onBack={handleBack} />;
             case 'landing-editor': return <LandingPageEditor onBack={handleBack} />;
             case 'service-availability': return <ServiceAvailabilityControl onBack={handleBack} />;
+            case 'subdomains': return <SubdomainManagement onBack={handleBack} />;
             case 'finances': return <FinancialDashboard onBack={handleBack} />;
             case 'design-tokens': return <AdminViewLayout title={t('superadmin.designTokensTitle')} onBack={handleBack}><DesignTokensEditor /></AdminViewLayout>;
             case 'analytics': return <AdminViewLayout title={t('superadmin.componentAnalyticsTitle')} onBack={handleBack} noPadding><AnalyticsDashboard /></AdminViewLayout>;

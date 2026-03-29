@@ -69,6 +69,11 @@ async function checkSubClientLimit(agencyTenantId: string): Promise<{ canCreate:
 
   // Get limit based on plan + add-ons
   const baseLimits: Record<string, number> = {
+    // Current agency plans (unlimited sub-clients)
+    agency_starter: 9999,
+    agency_pro: 9999,
+    agency_scale: 9999,
+    // Legacy plans (fixed limits)
     agency: 10,
     agency_plus: 25,
     enterprise: 9999,
@@ -206,7 +211,8 @@ export const autoProvisionClient = functions.https.onCall(
         type: 'agency_client',
         ownerTenantId: agencyTenantId,
         ownerUserId: null,  // Will be set when owner accepts invite
-        subscriptionPlan: 'agency',  // Inherits from parent
+        subscriptionPlan: 'agency_client',  // Managed by parent agency
+        parentPlan: agencyData.subscriptionPlan,  // Reference to agency's actual plan
         status: 'trial',
         industry,
         contactEmail,

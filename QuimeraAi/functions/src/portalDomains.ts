@@ -105,8 +105,12 @@ export const addPortalDomain = functions.https.onCall(
 
         const tenantData = tenantDoc.data()!;
 
-        // Check tenant plan allows custom domains
-        const allowedPlans = ['agency', 'agency_plus', 'enterprise'];
+        // Check tenant plan allows custom domains (current + legacy plans)
+        const allowedPlans = [
+            'agency_starter', 'agency_pro', 'agency_scale',  // Current
+            'agency', 'agency_plus',                          // Legacy
+            'enterprise',                                     // Enterprise
+        ];
         if (!allowedPlans.includes(tenantData.subscriptionPlan)) {
             throw new functions.https.HttpsError(
                 'failed-precondition',

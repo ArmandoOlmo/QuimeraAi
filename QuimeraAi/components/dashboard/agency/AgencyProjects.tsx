@@ -18,6 +18,7 @@ import {
 import { useProject } from '../../../contexts/project';
 import { Project } from '../../../types';
 import { ProjectTransferModal } from './ProjectTransferModal';
+import { SubdomainConfigModal } from './SubdomainConfigModal';
 
 // ============================================================================
 // COMPONENT
@@ -29,6 +30,7 @@ export function AgencyProjects() {
 
     const [searchQuery, setSearchQuery] = useState('');
     const [transferProject, setTransferProject] = useState<Project | null>(null);
+    const [subdomainProject, setSubdomainProject] = useState<Project | null>(null);
 
     // Filter out templates, show only user projects
     const userProjects = projects.filter(p => p.status !== 'Template');
@@ -207,6 +209,13 @@ export function AgencyProjects() {
                                         {t('common.preview', 'Vista Previa')}
                                     </button>
                                     <button
+                                        onClick={() => setSubdomainProject(project)}
+                                        className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium text-muted-foreground hover:text-foreground bg-secondary/50 hover:bg-secondary rounded-lg transition-colors"
+                                    >
+                                        <Globe size={14} />
+                                        {t('agency.subdomain', 'Subdominio')}
+                                    </button>
+                                    <button
                                         onClick={() => setTransferProject(project)}
                                         className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium text-primary-foreground bg-primary hover:bg-primary/90 rounded-lg transition-colors"
                                     >
@@ -229,6 +238,18 @@ export function AgencyProjects() {
                     onTransferComplete={(newProjectId) => {
                         console.log('Transfer completed, new project ID:', newProjectId);
                         setTransferProject(null);
+                    }}
+                />
+            )}
+            {/* Subdomain Config Modal */}
+            {subdomainProject && (
+                <SubdomainConfigModal
+                    project={subdomainProject}
+                    isOpen={!!subdomainProject}
+                    onClose={() => setSubdomainProject(null)}
+                    onSubdomainSet={(sub) => {
+                        console.log('Subdomain set:', sub, 'for project:', subdomainProject.id);
+                        setSubdomainProject(null);
                     }}
                 />
             )}

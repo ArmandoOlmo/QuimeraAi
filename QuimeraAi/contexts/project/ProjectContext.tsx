@@ -170,7 +170,7 @@ interface ProjectContextType {
     refreshProjects: () => Promise<void>;
 }
 
-const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
+export const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
 
 export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const { user, userDocument, loadingAuth } = useAuth();

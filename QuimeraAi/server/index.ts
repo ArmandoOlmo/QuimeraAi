@@ -10,6 +10,7 @@ import compression from 'compression';
 import path from 'path';
 import fs from 'fs';
 import { resolveDomainToProject, DomainResolutionResult } from './domainResolver';
+import { extractUserSubdomain, resolveUserSubdomain } from './subdomainResolver';
 import { renderStorefront } from './ssrRenderer';
 
 // Only import vite types - actual import is dynamic in development only
@@ -87,7 +88,27 @@ async function createServer() {
             let projectId: string | null = null;
             let domainInfo: DomainResolutionResult | null = null;
 
-            if (isCustomDomain) {
+            // -----------------------------------------------------------
+            // CHECK 0: User subdomain (username.quimera.ai)
+            // -----------------------------------------------------------
+            const userSubdomain = extractUserSubdomain(hostname);
+            if (userSubdomain) {
+                console.log(`[SSR] User subdomain detected: ${userSubdomain}`);
+                const userResolution = await resolveUserSubdomain(userSubdomain);
+                
+                if (userResolution) {
+                    projectId = userResolution.projectId;
+                    console.log(`[SSR] User subdomain ${userSubdomain} -> Project ${projectId}`);
+                } else {
+                    // User not found — show 404
+                    return res.status(404).send(getDomainNotFoundPage(`${userSubdomain}.quimera.ai`));
+                }
+            }
+
+            // -----------------------------------------------------------
+            // CHECK 1: Custom domain (existing behavior)
+            // -----------------------------------------------------------
+            if (!projectId && isCustomDomain) {
                 // Resolve custom domain to project
                 domainInfo = await resolveDomainToProject(hostname);
                 

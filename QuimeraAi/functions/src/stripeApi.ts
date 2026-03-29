@@ -870,9 +870,16 @@ async function handleSubscriptionChange(subscription: Stripe.Subscription) {
         ? 'active'
         : subscription.status;
 
-    console.log(`[Stripe Webhook] Subscription ${subscription.id} changed for tenant: ${tenantId}, status: ${status}`);
+    // Don't default to 'free' — resolve actual plan from Firestore if metadata is missing
+    const effectivePlanId = planId || await getEffectivePlanId(tenantId);
+    if (!effectivePlanId) {
+        console.error(`[Stripe Webhook] CRITICAL: Cannot determine planId for tenant ${tenantId} on subscription change, skipping`);
+        return;
+    }
 
-    await updateTenantSubscription(tenantId, planId || 'free', {
+    console.log(`[Stripe Webhook] Subscription ${subscription.id} changed for tenant: ${tenantId}, status: ${status}, plan: ${effectivePlanId} (fromMeta: ${!!planId})`);
+
+    await updateTenantSubscription(tenantId, effectivePlanId, {
         stripeSubscriptionId: subscription.id,
         stripeCustomerId: subscription.customer as string,
         status,
@@ -1111,6 +1118,37 @@ async function updateTenantSubscription(
                 createdAt: now,
                 lastUpdated: now,
             });
+        }
+
+        // ── CRITICAL: Sync subscriptionPlan + limits to tenant doc ──────────
+        // Frontend reads currentTenant.subscriptionPlan for feature gating
+        // and currentTenant.limits for resource limits
+        try {
+            const tenantRef = db.doc(`tenants/${tenantId}`);
+            const planLimitsMap: Record<string, Record<string, number>> = {
+                free:            { maxProjects: 1,  maxUsers: 1,   maxStorageGB: 0.5,  maxAiCredits: 60 },
+                hobby:           { maxProjects: 2,  maxUsers: 1,   maxStorageGB: 2,    maxAiCredits: 100 },
+                starter:         { maxProjects: 5,  maxUsers: 2,   maxStorageGB: 5,    maxAiCredits: 300 },
+                individual:      { maxProjects: 1,  maxUsers: 1,   maxStorageGB: 10,   maxAiCredits: 500 },
+                pro:             { maxProjects: 20, maxUsers: 10,  maxStorageGB: 50,   maxAiCredits: 1500 },
+                agency_starter:  { maxProjects: -1, maxUsers: 5,   maxStorageGB: 50,   maxAiCredits: 2000,  maxSubClients: -1, maxReports: 25,  maxApiCalls: 5000 },
+                agency_pro:      { maxProjects: -1, maxUsers: 15,  maxStorageGB: 200,  maxAiCredits: 5000,  maxSubClients: -1, maxReports: 100, maxApiCalls: 25000 },
+                agency_scale:    { maxProjects: -1, maxUsers: 50,  maxStorageGB: 1000, maxAiCredits: 15000, maxSubClients: -1, maxReports: -1,  maxApiCalls: -1 },
+                agency:          { maxProjects: 50, maxUsers: 25,  maxStorageGB: 200,  maxAiCredits: 5000,  maxSubClients: 10, maxReports: 50,  maxApiCalls: 10000 },
+                agency_plus:     { maxProjects: 100,maxUsers: 50,  maxStorageGB: 500,  maxAiCredits: 10000, maxSubClients: 25, maxReports: 200, maxApiCalls: 50000 },
+                enterprise:      { maxProjects: 1000,maxUsers: 500,maxStorageGB: 2000, maxAiCredits: 25000, maxSubClients: 100,maxReports: -1,  maxApiCalls: -1 },
+            };
+            const limits = planLimitsMap[planId] || planLimitsMap.free;
+
+            await tenantRef.update({
+                subscriptionPlan: planId,
+                subscriptionStatus: updates.status || 'active',
+                limits,
+                updatedAt: now,
+            });
+            console.log(`[syncTenant] Synced subscriptionPlan=${planId}, status=${updates.status}, limits to tenants/${tenantId}`);
+        } catch (tenantSyncError) {
+            console.error(`[syncTenant] Error syncing subscriptionPlan to tenants/${tenantId}:`, tenantSyncError);
         }
 
         // ── Sync billingInfo to tenant doc ────────────────────────────────

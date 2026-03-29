@@ -9,7 +9,7 @@ import {
     Code, Link as LinkIcon, Image as ImageIcon,
     Table, Minus, Undo, Redo,
     ChevronDown, Type, Sparkles, Palette,
-    RemoveFormatting, Highlighter, Camera
+    RemoveFormatting, Highlighter, Camera, Wand2
 } from 'lucide-react';
 
 interface EditorMenuBarProps {
@@ -241,6 +241,9 @@ const EditorMenuBar: React.FC<EditorMenuBarProps> = ({ editor, onImageUpload, on
                 </button>
                 <button onClick={() => onAICommand('vision')} disabled={isAiWorking} title={t('cms_editor.assistant.fromImage', { defaultValue: 'From Image' })} className="p-1.5 rounded-md transition-colors text-primary hover:text-primary/70 active:opacity-50 disabled:opacity-30 disabled:cursor-not-allowed">
                     <Camera size={16} />
+                </button>
+                <button onClick={() => onAICommand('format')} disabled={isAiWorking} title={t('cms_editor.assistant.format', { defaultValue: 'Formatear con IA' })} className="p-1.5 rounded-md transition-colors text-yellow-400 hover:text-yellow-300 active:opacity-50 disabled:opacity-30 disabled:cursor-not-allowed">
+                    <Wand2 size={16} />
                 </button>
             </div>
         </div>

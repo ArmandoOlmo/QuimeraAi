@@ -807,17 +807,24 @@ export const cancelSubscription = functions.https.onCall(
 
             await db.doc(`subscriptions/${tenantId}`).update(updates);
 
-            // If immediately cancelled, reset credits to free plan
+            // If immediately cancelled, reset credits to free plan and sync tenant doc
             if (immediately) {
                 await db.doc(`aiCreditsUsage/${tenantId}`).update({
                     planId: 'free',
                     // Primary fields
-                    limit: 30,
+                    limit: 60,
                     used: 0,
                     // Legacy fields
-                    creditsIncluded: 30,
+                    creditsIncluded: 60,
                     creditsUsed: 0,
-                    creditsRemaining: 30,
+                    creditsRemaining: 60,
+                    updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+                });
+
+                // Sync subscriptionPlan to tenant doc for frontend feature gating
+                await db.doc(`tenants/${tenantId}`).update({
+                    subscriptionPlan: 'free',
+                    subscriptionStatus: 'cancelled',
                     updatedAt: admin.firestore.FieldValue.serverTimestamp(),
                 });
             }
@@ -996,7 +1003,7 @@ export const getSubscriptionDetails = functions.https.onCall(
 // Helper function to get plan limits
 async function getPlanLimits(planId: string): Promise<{ maxAiCredits: number }> {
     const planCredits: Record<string, number> = {
-        free: 30,
+        free: 60,
         hobby: 100,
         starter: 300,
         individual: 500,        // Nuevo plan Individual

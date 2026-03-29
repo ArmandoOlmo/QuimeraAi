@@ -3,4 +3,3 @@
  */
 
 export { AgencyLandingPage } from './AgencyLandingPage';
-export * from './sections';

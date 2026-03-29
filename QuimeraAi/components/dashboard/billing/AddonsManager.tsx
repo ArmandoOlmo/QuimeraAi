@@ -54,8 +54,8 @@ interface AddonsManagerProps {
 
 const ADDON_PRICING = {
   extraSubClients: 15, // $15 per additional sub-client
-  extraStorageGB: 0.1, // $0.10 per GB (sold in 100GB blocks = $10)
-  extraAiCredits: 0.02, // $0.02 per credit (sold in 1000 credit blocks = $20)
+  extraStorageGB: 10,  // $10 per 100GB block
+  extraAiCredits: 20,  // $20 per 1000 credits block
 };
 
 // ============================================================================
@@ -115,10 +115,10 @@ export function AddonsManager({ onUpdate }: AddonsManagerProps) {
         name: 'Almacenamiento Extra',
         description: 'Espacio adicional para archivos, imágenes y contenido',
         icon: <HardDrive className="h-6 w-6" />,
-        pricePerUnit: 10, // $10 por bloque de 100GB
+        pricePerUnit: ADDON_PRICING.extraStorageGB,
         unit: '100GB',
         unitLabel: 'bloques de 100GB',
-        currentQuantity: Math.floor((currentAddons.extraStorageGB || 0) / 100),
+        currentQuantity: currentAddons.extraStorageGB || 0,
         minQuantity: 0,
         maxQuantity: 50, // Max 5TB extra
       },
@@ -127,10 +127,10 @@ export function AddonsManager({ onUpdate }: AddonsManagerProps) {
         name: 'AI Credits Extra',
         description: 'Créditos adicionales para funciones de IA',
         icon: <Zap className="h-6 w-6" />,
-        pricePerUnit: 20, // $20 por bloque de 1000 créditos
+        pricePerUnit: ADDON_PRICING.extraAiCredits,
         unit: '1000 credits',
         unitLabel: 'bloques de 1000 créditos',
-        currentQuantity: Math.floor((currentAddons.extraAiCredits || 0) / 1000),
+        currentQuantity: currentAddons.extraAiCredits || 0,
         minQuantity: 0,
         maxQuantity: 100, // Max 100k extra credits
       },
@@ -188,13 +188,11 @@ export function AddonsManager({ onUpdate }: AddonsManagerProps) {
   };
 
   const calculateOriginalCost = (): number => {
-    const extraSubClientsOriginal = originalAddons.extraSubClients || 0;
-    const extraStorageOriginal =
-      Math.floor((originalAddons.extraStorageGB || 0) / 100) * 10;
-    const extraCreditsOriginal =
-      Math.floor((originalAddons.extraAiCredits || 0) / 1000) * 20;
+    const extraSubClientsOriginal = (originalAddons.extraSubClients || 0) * ADDON_PRICING.extraSubClients;
+    const extraStorageOriginal = (originalAddons.extraStorageGB || 0) * ADDON_PRICING.extraStorageGB;
+    const extraCreditsOriginal = (originalAddons.extraAiCredits || 0) * ADDON_PRICING.extraAiCredits;
 
-    return extraSubClientsOriginal * 15 + extraStorageOriginal + extraCreditsOriginal;
+    return extraSubClientsOriginal + extraStorageOriginal + extraCreditsOriginal;
   };
 
   const handleSaveChanges = async () => {
@@ -203,16 +201,14 @@ export function AddonsManager({ onUpdate }: AddonsManagerProps) {
     setSuccessMessage(null);
 
     try {
-      // Convert addon quantities to actual values
+      // Addon quantities are already in block units (matching backend expectations)
       const newAddons: SubscriptionAddons = {
         extraSubClients:
           addons.find((a) => a.id === 'extraSubClients')?.currentQuantity || 0,
         extraStorageGB:
-          (addons.find((a) => a.id === 'extraStorageGB')?.currentQuantity || 0) *
-          100,
+          addons.find((a) => a.id === 'extraStorageGB')?.currentQuantity || 0,
         extraAiCredits:
-          (addons.find((a) => a.id === 'extraAiCredits')?.currentQuantity || 0) *
-          1000,
+          addons.find((a) => a.id === 'extraAiCredits')?.currentQuantity || 0,
       };
 
       // Call Cloud Function to update subscription

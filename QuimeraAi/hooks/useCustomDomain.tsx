@@ -6,8 +6,9 @@
  */
 
 import { useState, useEffect } from 'react';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, collection, query, where, limit, getDocs } from 'firebase/firestore';
 import { db } from '../firebase';
+import { detectSubdomain } from '../utils/subdomainUtils';
 
 // Domains that are NOT custom domains (our own app domains)
 // Custom domains like quimeraapp.com ARE treated as custom domains
@@ -105,8 +106,91 @@ export function useCustomDomain(): CustomDomainState {
             return;
         }
 
-        // PRIORITY 2: Check hostname for custom domain detection
+        // PRIORITY 2: Check for user subdomain (username.quimera.ai)
         const hostname = typeof window !== 'undefined' ? window.location.hostname : '';
+        const subInfo = detectSubdomain(hostname);
+        
+        if (subInfo.type === 'user' && subInfo.subdomain) {
+            console.log(`[CustomDomain] User subdomain detected: ${subInfo.subdomain}`);
+            
+            const resolveSubdomain = async () => {
+                try {
+                    // Resolve username to user + project
+                    const usersCol = collection(db, 'users');
+                    const usernameQuery = query(usersCol, where('username', '==', subInfo.subdomain), limit(1));
+                    const usernameSnap = await getDocs(usernameQuery);
+                    
+                    if (!usernameSnap.empty) {
+                        const userDoc = usernameSnap.docs[0];
+                        const userData = userDoc.data();
+                        const userId = userDoc.id;
+                        let projectId = userData.defaultProjectId || userData.primaryProjectId;
+                        
+                        if (!projectId) {
+                            // Fallback: first project
+                            const projectsCol = collection(db, 'users', userId, 'projects');
+                            const projectsQuery = query(projectsCol, limit(1));
+                            const projectsSnap = await getDocs(projectsQuery);
+                            if (!projectsSnap.empty) {
+                                projectId = projectsSnap.docs[0].id;
+                            }
+                        }
+                        
+                        if (projectId) {
+                            setState({
+                                isCustomDomain: true,
+                                isLoading: false,
+                                projectId,
+                                userId,
+                                domain: `${subInfo.subdomain}.quimera.ai`,
+                                error: null,
+                                projectData: null,
+                            });
+                            return;
+                        }
+                    }
+                    
+                    // Username not found or no projects
+                    setState({
+                        isCustomDomain: true,
+                        isLoading: false,
+                        projectId: null,
+                        userId: null,
+                        domain: `${subInfo.subdomain}.quimera.ai`,
+                        error: 'User not found',
+                        projectData: null,
+                    });
+                } catch (error) {
+                    console.error(`[CustomDomain] Error resolving subdomain ${subInfo.subdomain}:`, error);
+                    setState({
+                        isCustomDomain: true,
+                        isLoading: false,
+                        projectId: null,
+                        userId: null,
+                        domain: `${subInfo.subdomain}.quimera.ai`,
+                        error: 'Failed to resolve subdomain',
+                        projectData: null,
+                    });
+                }
+            };
+            
+            resolveSubdomain();
+            return;
+        }
+        
+        // PRIORITY 3: App subdomain (app.quimera.ai) — treat as root (not custom domain)
+        if (subInfo.type === 'app' || subInfo.type === 'root') {
+            setState({
+                isCustomDomain: false,
+                isLoading: false,
+                projectId: null,
+                userId: null,
+                domain: null,
+                error: null,
+                projectData: null,
+            });
+            return;
+        }
 
         if (!hostname || !isCustomDomainHostname(hostname)) {
             setState({

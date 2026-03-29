@@ -214,6 +214,7 @@ export const AGENCY_LANDING_COMPONENTS = [
     { type: 'newsletter', label: 'Newsletter', category: 'content' },
     { type: 'video', label: 'Video', category: 'content' },
     { type: 'slideshow', label: 'Carrusel de Imágenes', category: 'content' },
+    { type: 'screenshotCarousel', label: 'Galería de Pantallas', category: 'content' },
     { type: 'howItWorks', label: 'Cómo Funciona', category: 'content' },
     { type: 'map', label: 'Mapa', category: 'content' },
     { type: 'menu', label: 'Menú', category: 'content' },

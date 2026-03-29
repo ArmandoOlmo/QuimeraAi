@@ -220,6 +220,7 @@ service cloud.firestore {
       // Users can read their own memberships or admins can read all
       allow read: if request.auth != null && (
         isSuperAdminOrOwner() ||
+        resource.data.userId == request.auth.uid || 
         membershipId.split('_')[1] == request.auth.uid
       );
       // Only tenant owner/admin or superadmin can create/update/delete memberships
@@ -423,6 +424,35 @@ service cloud.firestore {
       );
       allow update, delete: if request.auth != null && (
         isSuperAdminOrOwner() || 
+        resource.data.userId == request.auth.uid
+      );
+    }
+
+    // ============================================
+    // SUBDOMAINS - Uniqueness Index for username.quimera.ai
+    // Public read for subdomain resolution (SSR + client)
+    // Write by owner (claim own) or superadmin (manage all)
+    // ============================================
+    match /subdomains/{subdomainName} {
+      // Public read — needed for SSR resolution and client-side subdomain detection
+      allow read: if true;
+      
+      // Create: authenticated user, userId must match auth (claim own subdomain)
+      // Or superadmin can reserve/assign
+      allow create: if request.auth != null && (
+        isSuperAdminOrOwner() ||
+        request.resource.data.userId == request.auth.uid
+      );
+      
+      // Update: owner of the subdomain or superadmin
+      allow update: if request.auth != null && (
+        isSuperAdminOrOwner() ||
+        resource.data.userId == request.auth.uid
+      );
+      
+      // Delete: owner of the subdomain or superadmin
+      allow delete: if request.auth != null && (
+        isSuperAdminOrOwner() ||
         resource.data.userId == request.auth.uid
       );
     }

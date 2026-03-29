@@ -775,7 +775,7 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
             ' '
         );
 
-        if (!selectedText && command !== 'continue' && command !== 'vision') {
+        if (!selectedText && command !== 'continue' && command !== 'vision' && command !== 'format') {
             alert("Please select some text first.");
             return;
         }
@@ -822,6 +822,29 @@ Text to fix: "${selectedText}"`;
 
 Text to improve: "${selectedText}"`;
                 }
+            } else if (command === 'format') {
+                const fullText = editor?.getText() || '';
+                if (!fullText.trim()) {
+                    setIsAiWorking(false);
+                    return;
+                }
+                promptConfig = getPrompt('cms-format-only');
+                if (promptConfig) {
+                    populatedPrompt = promptConfig.template.replace('{{text}}', fullText);
+                } else {
+                    populatedPrompt = `You are a professional HTML formatter working inside a CMS rich text editor. Your task is to take the following plain text and apply rich HTML formatting to give it proper structure.
+
+CRITICAL RULES:
+- Do NOT change, add, remove, rewrite, or paraphrase ANY word. The text must remain EXACTLY the same, word for word.
+- ONLY add HTML structure: use <h2> and <h3> for section headings, <p> for paragraphs, <strong> for important terms or key phrases, <em> for emphasis, <ul>/<li> for items that are clearly lists.
+- Detect natural sections in the text and apply appropriate heading levels.
+- Break long blocks into proper paragraphs using <p> tags.
+- Do NOT wrap output in code blocks, markdown, or JSON.
+- Return ONLY the formatted HTML.
+
+Text to format:
+"""${fullText}"""`;
+                }
             }
 
             modelName = promptConfig?.model || 'gemini-2.5-flash';
@@ -840,10 +863,18 @@ Text to improve: "${selectedText}"`;
                 });
             }
 
-            const result = extractTextFromResponse(response).trim();
+            let result = extractTextFromResponse(response).trim();
+            // Strip markdown code block wrappers if present
+            result = result.replace(/^```html\n?/i, '').replace(/\n?```$/i, '');
+            result = result.replace(/^```\n?/, '').replace(/\n?```$/, '');
+
+            console.log(`[ModernCMSEditor] AI ${command} result (${result.length} chars):`, result.substring(0, 200));
 
             if (command === 'continue') {
                 editor?.chain().focus().insertContent(result).run();
+            } else if (command === 'format') {
+                // Replace entire editor content with formatted version
+                editor?.commands.setContent(result);
             } else {
                 // Replace selected text
                 editor?.chain().focus().deleteSelection().insertContent(result).run();

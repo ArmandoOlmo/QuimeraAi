@@ -43,6 +43,12 @@ const AgencyLandingPreview = lazyWithRetry(() => import('../components/AgencyLan
 // Agency Signup (Public page for agency plan registration)
 const AgencySignup = lazyWithRetry(() => import('../components/AgencySignup'));
 
+// Marketing pages (Public)
+const PricingPage = lazyWithRetry(() => import('../components/marketing/PricingPage'));
+const AboutPage = lazyWithRetry(() => import('../components/marketing/AboutPage'));
+const ContactPage = lazyWithRetry(() => import('../components/marketing/ContactPage'));
+const FeaturesPage = lazyWithRetry(() => import('../components/marketing/FeaturesPage'));
+
 
 // Lazy-loaded ecommerce components
 const ProductDetailPageWithCart = lazyWithRetry(() => import('../components/ecommerce/ProductDetailPageWithCart'));
@@ -314,6 +320,14 @@ const Router: React.FC<RouterProps> = ({
   // =========================================================================
 
   if (isPreviewRoute) {
+    if (path.startsWith('/preview/agency/')) {
+      return (
+        <Suspense fallback={<LoadingScreen />}>
+          <AgencyLandingPreview />
+        </Suspense>
+      );
+    }
+    
     return (
       <Suspense fallback={<LoadingScreen />}>
         <PublicWebsitePreview />
@@ -460,6 +474,58 @@ const Router: React.FC<RouterProps> = ({
     return (
       <Suspense fallback={<LoadingScreen />}>
         <ChangelogPage
+          onNavigateToHome={() => navigate(ROUTES.LANDING)}
+          onNavigateToLogin={() => navigate(ROUTES.LOGIN)}
+          onNavigateToRegister={() => navigate(ROUTES.REGISTER)}
+        />
+      </Suspense>
+    );
+  }
+
+  // =========================================================================
+  // MARKETING PAGES (Public)
+  // =========================================================================
+
+  if (path === '/pricing') {
+    return (
+      <Suspense fallback={<LoadingScreen />}>
+        <PricingPage
+          onNavigateToHome={() => navigate(ROUTES.LANDING)}
+          onNavigateToLogin={() => navigate(ROUTES.LOGIN)}
+          onNavigateToRegister={() => navigate(ROUTES.REGISTER)}
+        />
+      </Suspense>
+    );
+  }
+
+  if (path === '/about') {
+    return (
+      <Suspense fallback={<LoadingScreen />}>
+        <AboutPage
+          onNavigateToHome={() => navigate(ROUTES.LANDING)}
+          onNavigateToLogin={() => navigate(ROUTES.LOGIN)}
+          onNavigateToRegister={() => navigate(ROUTES.REGISTER)}
+        />
+      </Suspense>
+    );
+  }
+
+  if (path === '/contact') {
+    return (
+      <Suspense fallback={<LoadingScreen />}>
+        <ContactPage
+          onNavigateToHome={() => navigate(ROUTES.LANDING)}
+          onNavigateToLogin={() => navigate(ROUTES.LOGIN)}
+          onNavigateToRegister={() => navigate(ROUTES.REGISTER)}
+        />
+      </Suspense>
+    );
+  }
+
+  if (path === '/features') {
+    return (
+      <Suspense fallback={<LoadingScreen />}>
+        <FeaturesPage
           onNavigateToHome={() => navigate(ROUTES.LANDING)}
           onNavigateToLogin={() => navigate(ROUTES.LOGIN)}
           onNavigateToRegister={() => navigate(ROUTES.REGISTER)}

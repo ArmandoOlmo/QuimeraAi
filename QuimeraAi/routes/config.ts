@@ -42,6 +42,12 @@ export const ROUTES = {
   BLOG: '/blog',
   BLOG_ARTICLE: '/blog/:slug',
 
+  // Marketing Pages (Public)
+  PRICING: '/pricing',
+  ABOUT: '/about',
+  CONTACT: '/contact',
+  FEATURES_PAGE: '/features',
+
   // Legal Pages (Public)
   PRIVACY_POLICY: '/privacy-policy',
   DATA_DELETION: '/data-deletion',
@@ -143,6 +149,7 @@ export const ROUTES = {
   ADMIN_LANDING_EDITOR: '/admin/landing-editor',
   ADMIN_SERVICE_AVAILABILITY: '/admin/service-availability',
   ADMIN_FINANCES: '/admin/finances',
+  ADMIN_SUBDOMAINS: '/admin/subdomains',
 } as const;
 
 // =============================================================================
@@ -223,6 +230,34 @@ export const routeConfigs: RouteConfig[] = [
     path: ROUTES.BLOG_ARTICLE,
     type: 'public',
     title: 'Article',
+    requiresAuth: false,
+  },
+
+  // =========================================================================
+  // MARKETING PAGES (Public)
+  // =========================================================================
+  {
+    path: ROUTES.PRICING,
+    type: 'public',
+    title: 'Pricing',
+    requiresAuth: false,
+  },
+  {
+    path: ROUTES.ABOUT,
+    type: 'public',
+    title: 'About',
+    requiresAuth: false,
+  },
+  {
+    path: ROUTES.CONTACT,
+    type: 'public',
+    title: 'Contact',
+    requiresAuth: false,
+  },
+  {
+    path: ROUTES.FEATURES_PAGE,
+    type: 'public',
+    title: 'Features',
     requiresAuth: false,
   },
 

@@ -16,6 +16,7 @@ import { auth, signOut } from './firebase';
 import { View, AdminView } from './types/ui';
 import LandingChatbotWidget from './components/LandingChatbotWidget';
 import { useCustomDomain, DomainNotConfiguredPage, DomainLoadingPage } from './hooks/useCustomDomain';
+import { detectSubdomain, SubdomainInfo } from './utils/subdomainUtils';
 import AdPixelsInjector from './components/AdPixelsInjector';
 import { lazyWithRetry } from './utils/lazyWithRetry';
 // Side-effect import: triggers Firestore prefetch for /preview/ routes IMMEDIATELY
@@ -198,6 +199,11 @@ const App: React.FC = () => {
   const [isPreview, setIsPreview] = useState(isPreviewRoute());
   const customDomain = useCustomDomain();
 
+  // Subdomain detection for user subdomains (username.quimera.ai)
+  const [subdomainInfo] = useState<SubdomainInfo>(() => 
+    detectSubdomain(typeof window !== 'undefined' ? window.location.hostname : '')
+  );
+
   // Performance optimization: lightweight auth check before loading heavy providers
   const lightAuth = useLightAuthState();
 
@@ -242,6 +248,36 @@ const App: React.FC = () => {
   // Handle custom domain detection - loading state
   if (customDomain.isLoading) {
     return <DomainLoadingPage />;
+  }
+
+  // User subdomain (username.quimera.ai) - render their published site
+  if (subdomainInfo.type === 'user' && subdomainInfo.subdomain) {
+    // useCustomDomain will resolve the user's project if the subdomain
+    // is detected as a custom domain. If not, we pass the subdomain
+    // directly to PublicWebsitePreview which resolves by username.
+    if (customDomain.isCustomDomain && customDomain.projectId && customDomain.userId) {
+      return (
+        <ErrorBoundary>
+          <Suspense fallback={<MinimalLoader />}>
+            <PublicWebsitePreview
+              userId={customDomain.userId}
+              projectId={customDomain.projectId}
+            />
+          </Suspense>
+        </ErrorBoundary>
+      );
+    }
+
+    // Fallback: render with username resolution
+    return (
+      <ErrorBoundary>
+        <Suspense fallback={<MinimalLoader />}>
+          <PublicWebsitePreview
+            username={subdomainInfo.subdomain}
+          />
+        </Suspense>
+      </ErrorBoundary>
+    );
   }
 
   // Custom domain - render landing page directly

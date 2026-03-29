@@ -26,6 +26,26 @@ export const ADDON_UNITS = {
   extraAiCredits: 1000,   // Sold in 1000 credit blocks
 };
 
+// Human-readable addon names for Stripe product creation
+const ADDON_DISPLAY_NAMES: Record<string, string> = {
+  extraSubClients: 'Sub-clientes Adicionales',
+  extraStorageGB: 'Almacenamiento Extra (100GB)',
+  extraAiCredits: 'AI Credits Extra (1000)',
+};
+
+// Plans eligible for add-ons (current + legacy + enterprise)
+const ADDON_ELIGIBLE_PLANS = [
+  // Current agency plans
+  'agency_starter',
+  'agency_pro',
+  'agency_scale',
+  // Legacy agency plans (for existing subscribers)
+  'agency',
+  'agency_plus',
+  // Enterprise
+  'enterprise',
+];
+
 // ============================================================================
 // HELPER FUNCTIONS
 // ============================================================================
@@ -73,6 +93,41 @@ function calculateTotalAddonsPrice(addons: Record<string, number>): number {
   }
 
   return total;
+}
+
+/**
+ * Find or create a Stripe product for an add-on.
+ * Searches by metadata first; creates if not found.
+ */
+async function getOrCreateAddonProduct(addonKey: string): Promise<string> {
+
+  // Search for existing product with matching metadata
+  const existingProducts = await stripe.products.search({
+    query: `metadata['addon_key']:'${addonKey}' AND active:'true'`,
+    limit: 1,
+  });
+
+  if (existingProducts.data.length > 0) {
+    return existingProducts.data[0].id;
+  }
+
+  // Create new product in Stripe
+  const displayName = ADDON_DISPLAY_NAMES[addonKey] || `Add-on: ${addonKey}`;
+  const product = await stripe.products.create({
+    name: `Quimera Add-on: ${displayName}`,
+    description: `Add-on recurrente para agencias - ${displayName}`,
+    metadata: {
+      addon_key: addonKey,
+      type: 'addon',
+    },
+  });
+
+  functions.logger.info('Created Stripe product for add-on', {
+    addonKey,
+    productId: product.id,
+  });
+
+  return product.id;
 }
 
 // ============================================================================
@@ -180,14 +235,14 @@ export const checkAddonsEligibility = functions.https.onCall(async (data, contex
   const tenantData = tenantDoc.data()!;
   const plan = tenantData.subscriptionPlan;
 
-  // Add-ons only available for agency, agency_plus, enterprise
-  const isEligible = ['agency', 'agency_plus', 'enterprise'].includes(plan);
+  // Add-ons available for all agency plans (current + legacy) and enterprise
+  const isEligible = ADDON_ELIGIBLE_PLANS.includes(plan);
 
   return {
     success: true,
     isEligible,
     plan,
-    reason: isEligible ? null : 'Add-ons are only available for Agency plans',
+    reason: isEligible ? null : 'Add-ons are only available for Agency plans (Starter, Pro, Scale, or Enterprise)',
   };
 });
 
@@ -226,23 +281,37 @@ export const updateSubscriptionAddons = functions.https.onCall(async (data, cont
       const subscription = await stripe.subscriptions.retrieve(subscriptionId);
 
       // Create invoice items for add-ons (proration will be automatic)
-      const items = [];
+      const items: Stripe.SubscriptionUpdateParams.Item[] = [];
 
       // Keep base subscription item
       items.push({
         id: subscription.items.data[0].id,
       });
 
-      // Add add-on items
+      // Remove existing add-on items (items beyond the first/base one)
+      for (let i = 1; i < subscription.items.data.length; i++) {
+        items.push({
+          id: subscription.items.data[i].id,
+          deleted: true,
+        });
+      }
+
+      // Add new add-on items
       for (const [addonKey, qty] of Object.entries(addons)) {
         const quantityNum = qty as number;
         if (quantityNum > 0) {
+          const pricePerUnit = ADDON_PRICES[addonKey as keyof typeof ADDON_PRICES];
+          if (!pricePerUnit) continue;
+
+          // Find or create the Stripe product for this add-on
+          const productId = await getOrCreateAddonProduct(addonKey);
+
           items.push({
             price_data: {
               currency: 'usd',
-              product: `addon_${addonKey}`,
+              product: productId,
               recurring: { interval: 'month' as const },
-              unit_amount: ADDON_PRICES[addonKey as keyof typeof ADDON_PRICES] * 100,
+              unit_amount: pricePerUnit * 100,
             },
             quantity: quantityNum,
           });
@@ -251,7 +320,7 @@ export const updateSubscriptionAddons = functions.https.onCall(async (data, cont
 
       // Update subscription with new items
       await stripe.subscriptions.update(subscriptionId, {
-        items: items as Stripe.SubscriptionUpdateParams.Item[],
+        items,
         proration_behavior: 'create_prorations',
       });
     }

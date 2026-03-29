@@ -461,17 +461,16 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                         <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider block">
                             {t('landingEditor.layout', 'DISEÑO Y ESTRUCTURA')}
                         </label>
-                        <div className="grid grid-cols-4 gap-2">
+                        <div className="grid grid-cols-3 gap-2">
                             {[
-                                { id: 'centered', icon: AlignCenter, label: 'Centrado' },
-                                { id: 'left', icon: AlignLeft, label: 'Izquierda' },
-                                { id: 'right', icon: AlignRight, label: 'Derecha' },
-                                { id: 'split', icon: Columns, label: 'Dividido' }
+                                { id: 'center', icon: AlignCenter, label: 'Centrado' },
+                                { id: 'left-top', icon: AlignLeft, label: 'Izquierda' },
+                                { id: 'right-bottom', icon: AlignRight, label: 'Derecha' }
                             ].map((option) => (
                                 <button
                                     key={option.id}
-                                    onClick={() => updateData('layout', option.id)}
-                                    className={`flex flex-col items-center justify-center p-3 rounded-lg border transition-all ${data.layout === option.id
+                                    onClick={() => updateData('textLayout', option.id)}
+                                    className={`flex flex-col items-center justify-center p-3 rounded-lg border transition-all ${data.textLayout === option.id || (!data.textLayout && option.id === 'center')
                                         ? 'bg-editor-accent/10 border-editor-accent text-primary'
                                         : 'bg-editor-panel-bg border-editor-border hover:border-editor-accent/50 text-editor-text-secondary'
                                         }`}
