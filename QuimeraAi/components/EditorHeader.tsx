@@ -4,7 +4,7 @@ import { useUI } from '../contexts/core/UIContext';
 import { useProject } from '../contexts/project';
 import { PreviewDevice } from '../types';
 // Replaced non-existent 'Cube' icon with 'Box'.
-import { Menu, Monitor, Tablet, Smartphone, LayoutDashboard, Check, CloudUpload, Box } from 'lucide-react';
+import { Menu, Monitor, Tablet, Smartphone, LayoutDashboard, Check, CloudUpload, Box, Globe } from 'lucide-react';
 
 const EditorHeader: React.FC = () => {
   const { t } = useTranslation();
@@ -70,10 +70,10 @@ const EditorHeader: React.FC = () => {
     }
   };
 
-  const deviceOptions: { name: PreviewDevice; icon: React.ReactNode }[] = [
-    { name: 'desktop', icon: <Monitor className="w-4 h-4" /> },
-    { name: 'tablet', icon: <Tablet className="w-4 h-4" /> },
-    { name: 'mobile', icon: <Smartphone className="w-4 h-4" /> },
+  const deviceOptions: { name: PreviewDevice; icon: React.ReactNode; label: string }[] = [
+    { name: 'desktop', icon: <Monitor className="w-4 h-4" />, label: t('editor.desktop') },
+    { name: 'tablet', icon: <Tablet className="w-4 h-4" />, label: t('editor.tablet') },
+    { name: 'mobile', icon: <Smartphone className="w-4 h-4" />, label: t('editor.mobile') },
   ];
 
   const orientationOptions = [
@@ -85,7 +85,7 @@ const EditorHeader: React.FC = () => {
 
   return (
     <header className="bg-editor-bg border-b border-editor-border h-14 flex-shrink-0 z-20">
-      <div className="h-full flex items-center justify-between px-3 gap-3">
+      <div className="h-full flex items-center justify-between px-3 gap-3 relative">
 
         {/* LEFT SECTION - Navigation & Project */}
         <div className="flex items-center gap-2 min-w-0">
@@ -133,51 +133,39 @@ const EditorHeader: React.FC = () => {
           )}
         </div>
 
-        {/* CENTER SECTION - Device & Orientation */}
-        <div className="hidden md:flex items-center gap-2">
-          <div className="flex items-center gap-1">
-            {deviceOptions.map(({ name, icon }) => (
-              <button
-                key={name}
-                title={t(`editor.previewOn${name.charAt(0).toUpperCase() + name.slice(1)}`)}
-                onClick={() => setPreviewDevice(name)}
-                className={`h-9 w-9 flex items-center justify-center transition-all ${previewDevice === name
-                  ? 'text-editor-accent'
-                  : 'text-editor-text-secondary hover:text-editor-text-primary'
-                  }`}
-              >
-                {icon}
-              </button>
-            ))}
-          </div>
-          <div className="flex items-center gap-1">
-            {orientationOptions.map((option) => (
-              <button
-                key={option.value}
-                title={`${option.label}${orientationDisabled ? ` (${t('editor.desktopOnlyLandscape')})` : ''}`}
-                onClick={() => setPreviewOrientation(option.value)}
-                disabled={orientationDisabled}
-                className={`h-9 w-9 text-xs font-semibold transition-all ${previewOrientation === option.value
-                  ? 'text-editor-accent'
-                  : 'text-editor-text-secondary hover:text-editor-text-primary'
-                  } ${orientationDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                aria-pressed={previewOrientation === option.value}
-                aria-label={`${t('editor.preview')} ${option.label}`}
-              >
-                {option.short}
-              </button>
-            ))}
-          </div>
+        {/* CENTER SECTION - Device Toggle */}
+        <div className="hidden md:flex items-center gap-2 bg-secondary/50 rounded-lg p-1 absolute left-1/2 -translate-x-1/2">
+          {deviceOptions.map(({ name, icon, label }) => (
+            <button
+              key={name}
+              title={t(`editor.previewOn${name.charAt(0).toUpperCase() + name.slice(1)}`)}
+              onClick={() => setPreviewDevice(name)}
+              className={`
+                flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all
+                ${previewDevice === name
+                  ? 'bg-primary text-primary-foreground'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-background/50'
+                }
+              `}
+            >
+              {icon}
+              <span>{label}</span>
+            </button>
+          ))}
         </div>
 
         {/* RIGHT SECTION - Actions */}
-        <div className="flex items-center gap-1">
-          {/* Save Button - Subtle */}
+        <div className="flex items-center gap-2">
+          {/* Save Button */}
           <button
             title={saveState === 'idle' ? t('editor.saveChanges') : t('editor.saved')}
             onClick={handleSaveClick}
             disabled={saveState === 'saved'}
-            className="flex items-center gap-1.5 h-9 px-3 rounded-md text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40 disabled:text-green-500 disabled:hover:bg-transparent"
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+              saveState === 'saved'
+                ? 'bg-green-500/20 text-green-500'
+                : 'text-muted-foreground hover:text-foreground hover:bg-secondary/50'
+            }`}
           >
             {saveState === 'idle' ? (
               <CloudUpload className="w-4 h-4" />
@@ -219,27 +207,31 @@ const EditorHeader: React.FC = () => {
               }
             }}
             disabled={publishState === 'publishing'}
-            className={`font-medium text-sm h-9 px-3 transition-colors flex items-center gap-1.5 ${publishState === 'published'
-                ? 'text-green-500'
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+              publishState === 'published'
+                ? 'bg-green-500/20 text-green-500'
                 : publishState === 'error'
-                  ? 'text-red-500'
-                  : 'text-editor-accent hover:text-editor-accent-hover'
-              } ${publishState === 'publishing' ? 'opacity-50 cursor-wait' : ''}`}
+                  ? 'bg-red-500/20 text-red-500'
+                  : 'bg-primary text-primary-foreground hover:opacity-90'
+            } ${publishState === 'publishing' ? 'opacity-50 cursor-wait' : ''}`}
           >
             {publishState === 'publishing' ? (
               <>
                 <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                {t('editor.publishing', 'Publicando...')}
+                <span className="hidden sm:inline">{t('editor.publishing', 'Publicando...')}</span>
               </>
             ) : publishState === 'published' ? (
               <>
                 <Check className="w-4 h-4" />
-                {t('editor.published', '¡Publicado!')}
+                <span className="hidden sm:inline">{t('editor.published', '¡Publicado!')}</span>
               </>
             ) : publishState === 'error' ? (
-              t('editor.publishError', 'Error')
+              <span>{t('editor.publishError', 'Error')}</span>
             ) : (
-              t('editor.publish')
+              <>
+                <Globe className="w-4 h-4" />
+                <span className="hidden sm:inline">{t('editor.publish')}</span>
+              </>
             )}
           </button>
         </div>

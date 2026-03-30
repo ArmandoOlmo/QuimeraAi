@@ -224,9 +224,10 @@ const FileItem: React.FC<{
 
 interface FileHistoryProps {
     variant?: 'widget' | 'full' | 'gallery-only';
+    onAddReferenceImage?: (base64Data: string) => Promise<void>;
 }
 
-const FileHistory: React.FC<FileHistoryProps> = ({ variant = 'widget' }) => {
+const FileHistory: React.FC<FileHistoryProps> = ({ variant = 'widget', onAddReferenceImage }) => {
     const { t } = useTranslation();
     const { files, isFilesLoading, uploadFile, deleteFile, hasActiveProject } = useFiles();
     const { projects, activeProject } = useProject();
@@ -1030,7 +1031,7 @@ const FileHistory: React.FC<FileHistoryProps> = ({ variant = 'widget' }) => {
                                                         isSelected={library.isSelected(file.id)}
                                                         onToggleSelect={() => library.toggleSelection(file.id)}
                                                         isSelectionMode={library.isSelectionMode}
-                                                        onAddToReference={variant !== 'widget' ? addImageToReference : undefined}
+                                                        onAddToReference={onAddReferenceImage || (variant !== 'widget' ? addImageToReference : undefined)}
                                                         onDelete={(f) => { setFileToDelete(f); setShowDeleteConfirm(true); }}
                                                     />
                                                 </div>

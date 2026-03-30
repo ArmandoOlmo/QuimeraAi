@@ -123,32 +123,44 @@ const AssetsDashboard: React.FC = () => {
                 <main className="flex-1 overflow-auto relative z-[2] p-4 md:p-6 lg:p-8">
                     <div className="max-w-7xl mx-auto">
                         <div className="bg-card/80 border border-border rounded-2xl overflow-hidden">
-                            {/* Image Generator Section */}
-                            {!isGeneratorCollapsed ? (
-                                <div className="border-b border-border">
+                            {/* Generator Toggle Bar - same format open & closed */}
+                            <div
+                                className="border-b border-border flex items-center justify-between px-4 py-3 hover:bg-muted/30 transition-colors cursor-pointer group"
+                                onClick={() => setIsGeneratorCollapsed(prev => !prev)}
+                            >
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2 rounded-xl bg-primary/10 group-hover:bg-primary/20 text-primary transition-colors">
+                                        <Sparkles size={18} />
+                                    </div>
+                                    <span className="text-sm font-semibold text-foreground">
+                                        {t('editor.imageGenerator', 'Generador de Imágenes')}
+                                    </span>
+                                </div>
+                                <ChevronDown
+                                    size={18}
+                                    className={`text-muted-foreground group-hover:text-foreground transition-transform duration-200 ${!isGeneratorCollapsed ? 'rotate-180' : ''}`}
+                                />
+                            </div>
+
+                            {/* Generator Panel Content (collapsible) */}
+                            <div className={`border-b border-border ${isGeneratorCollapsed ? 'hidden' : 'block'}`}>
                                     <ImageGeneratorPanel
                                         destination="user"
                                         className=""
-                                        onCollapse={() => setIsGeneratorCollapsed(true)}
+                                        hideHeader
                                         projectId={effectiveProjectId || undefined}
                                     />
-                                </div>
-                            ) : (
-                                <div className="h-14 border-b border-border flex items-center px-4 gap-3">
-                                    <button
-                                        onClick={() => setIsGeneratorCollapsed(false)}
-                                        className="p-2.5 rounded-xl bg-primary/10 hover:bg-primary/20 text-primary transition-colors flex items-center gap-2"
-                                        title={t('common.expand', { defaultValue: 'Expandir generador' })}
-                                    >
-                                        <Sparkles size={18} />
-                                        <span className="text-sm font-medium">{t('editor.imageGenerator', 'Generador de Imágenes')}</span>
-                                    </button>
-                                </div>
-                            )}
+                            </div>
 
                             {/* Gallery Section */}
                             <div className="p-4 md:p-6">
-                                <FileHistory variant="gallery-only" />
+                                <FileHistory 
+                                    variant="gallery-only" 
+                                    onAddReferenceImage={async (base64) => {
+                                        window.dispatchEvent(new CustomEvent('assets:add-reference-image', { detail: base64 }));
+                                        setIsGeneratorCollapsed(false);
+                                    }}
+                                />
                             </div>
                         </div>
                     </div>

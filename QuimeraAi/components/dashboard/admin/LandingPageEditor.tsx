@@ -835,7 +835,7 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
 
             <div className="flex-1 flex flex-col overflow-hidden">
                 {/* Header */}
-                <header className="h-14 px-4 lg:px-6 border-b border-border flex items-center bg-background z-20 sticky top-0">
+                <header className="h-14 px-4 lg:px-6 border-b border-border flex items-center bg-background z-20 sticky top-0 relative">
                     {/* Left Section */}
                     <div className="flex items-center gap-3">
                         <button
@@ -860,29 +860,28 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
                     </div>
 
                     {/* Center - Device Preview Toggle */}
-                    <div className="hidden md:flex flex-1 justify-center">
-                        <div className="flex items-center gap-1 bg-secondary/50 rounded-lg p-1">
-                            <button
-                                onClick={() => setPreviewDevice('desktop')}
-                                className={`p-2 rounded-md transition-colors ${previewDevice === 'desktop' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}
-                                title={t('landingEditor.desktop')}
-                            >
-                                <Monitor size={18} />
-                            </button>
-                            <button
-                                onClick={() => setPreviewDevice('tablet')}
-                                className={`p-2 rounded-md transition-colors ${previewDevice === 'tablet' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}
-                                title={t('landingEditor.tablet')}
-                            >
-                                <Tablet size={18} />
-                            </button>
-                            <button
-                                onClick={() => setPreviewDevice('mobile')}
-                                className={`p-2 rounded-md transition-colors ${previewDevice === 'mobile' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}
-                                title={t('landingEditor.mobile')}
-                            >
-                                <Smartphone size={18} />
-                            </button>
+                    <div className="hidden md:flex absolute left-1/2 -translate-x-1/2">
+                        <div className="flex items-center gap-2 bg-secondary/50 rounded-lg p-1">
+                            {([
+                                { name: 'desktop' as const, icon: <Monitor size={16} />, label: 'Desktop' },
+                                { name: 'mobile' as const, icon: <Smartphone size={16} />, label: 'Mobile' },
+                            ]).map(({ name, icon, label }) => (
+                                <button
+                                    key={name}
+                                    onClick={() => setPreviewDevice(name)}
+                                    className={`
+                                        flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all
+                                        ${previewDevice === name
+                                            ? 'bg-primary text-primary-foreground'
+                                            : 'text-muted-foreground hover:text-foreground hover:bg-background/50'
+                                        }
+                                    `}
+                                    title={t(`landingEditor.${name}`)}
+                                >
+                                    {icon}
+                                    <span>{label}</span>
+                                </button>
+                            ))}
                         </div>
                     </div>
 
@@ -891,19 +890,19 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
                         {/* Refresh preview */}
                         <button
                             onClick={() => setPreviewKey(prev => prev + 1)}
-                            className="h-9 w-9 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                            className="flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all text-muted-foreground hover:text-foreground hover:bg-secondary/50"
                             title={t('landingEditor.refreshPreview', 'Refrescar vista previa')}
                         >
-                            <RefreshCw size={18} />
+                            <RefreshCw size={16} />
                         </button>
 
                         {/* Toggle preview */}
                         <button
                             onClick={() => setIsPreviewVisible(!isPreviewVisible)}
-                            className="h-9 w-9 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                            className="flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all text-muted-foreground hover:text-foreground hover:bg-secondary/50"
                             title={isPreviewVisible ? 'Ocultar vista previa' : 'Mostrar vista previa'}
                         >
-                            {isPreviewVisible ? <EyeOff size={18} /> : <Eye size={18} />}
+                            {isPreviewVisible ? <EyeOff size={16} /> : <Eye size={16} />}
                         </button>
 
                         {/* Undo/Redo buttons */}
@@ -921,7 +920,7 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
                         <button
                             onClick={handleSave}
                             disabled={isSaving || !hasUnsavedChanges}
-                            className={`flex items-center gap-2 h-9 px-4 rounded-md text-sm font-medium transition-all ${hasUnsavedChanges
+                            className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${hasUnsavedChanges
                                 ? 'bg-primary text-primary-foreground hover:opacity-90'
                                 : 'bg-secondary/50 text-muted-foreground cursor-not-allowed'
                                 }`}
@@ -939,7 +938,7 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
                         {/* Back button */}
                         <button
                             onClick={onBack}
-                            className="flex items-center gap-2 h-9 px-3 rounded-lg bg-secondary/50 hover:bg-secondary text-sm font-medium transition-all text-muted-foreground hover:text-foreground"
+                            className="flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all text-muted-foreground hover:text-foreground hover:bg-secondary/50"
                         >
                             <ArrowLeft className="w-4 h-4" />
                             <span className="hidden sm:inline">{t('common.back', 'Volver')}</span>

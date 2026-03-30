@@ -1074,23 +1074,24 @@ IMPORTANT FORMATTING RULES:
                         </div>
                     </div>
 
-                    {/* Right Section - Icon-only buttons */}
-                    <div className="flex items-center gap-1">
+                    {/* Right Section - Action buttons */}
+                    <div className="flex items-center gap-2">
                         {/* Save */}
                         <button
                             onClick={handleSave}
                             disabled={isSaving}
-                            className="h-9 w-9 flex items-center justify-center rounded-lg transition-all text-primary hover:text-primary/80 disabled:opacity-50"
+                            className="flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-50"
                             title={t('common.save', 'Guardar')}
                         >
-                            {isSaving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save size={18} />}
+                            {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save size={16} />}
+                            <span className="hidden sm:inline">{t('common.save', 'Guardar')}</span>
                         </button>
 
                         {/* Web Editor */}
                         {activeProject?.id && (
                             <button
                                 onClick={() => navigate(ROUTES.EDITOR.replace(':projectId', activeProject.id))}
-                                className="h-9 w-9 flex items-center justify-center transition-all text-muted-foreground hover:text-foreground"
+                                className="flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all text-muted-foreground hover:text-foreground hover:bg-secondary/50"
                                 title={t('cms_editor.goToWebEditor', 'Ir al Web Editor')}
                             >
                                 <Monitor className="w-4 h-4" />
@@ -1100,7 +1101,7 @@ IMPORTANT FORMATTING RULES:
                         {/* Back */}
                         <button
                             onClick={onClose}
-                            className="h-9 w-9 flex items-center justify-center transition-all text-muted-foreground hover:text-foreground"
+                            className="flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all text-muted-foreground hover:text-foreground hover:bg-secondary/50"
                             title={t('common.back', 'Volver')}
                         >
                             <ArrowLeft className="w-4 h-4" />
@@ -1109,10 +1110,10 @@ IMPORTANT FORMATTING RULES:
                         {/* Sidebar Toggle */}
                         <button
                             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                            className={`h-9 w-9 flex items-center justify-center transition-colors ${isSidebarOpen ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}
+                            className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${isSidebarOpen ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:text-foreground hover:bg-secondary/50'}`}
                             title={t('cms_editor.postSettings')}
                         >
-                            <MoreVertical size={18} />
+                            <MoreVertical size={16} />
                         </button>
                     </div>
                 </header>

@@ -35,6 +35,7 @@ import ComponentTree from './ui/ComponentTree';
 import TabbedControls from './ui/TabbedControls';
 import SocialLinksEditor from './ui/SocialLinksEditor';
 import AnimationControls from './ui/AnimationControls';
+import { useServiceAvailability } from '../hooks/useServiceAvailability';
 import {
   useFeaturedProductsControls,
   useCategoryGridControls,
@@ -389,7 +390,29 @@ const Controls: React.FC = () => {
 
   // Page settings modal state
   const [showPageSettings, setShowPageSettings] = useState<string | null>(null);
-  const { componentStatus, componentStyles } = useAdmin();
+  const { componentStatus: rawComponentStatus, componentStyles } = useAdmin();
+
+  // --- Service Availability: hide components whose parent service is disabled ---
+  const { canAccessService } = useServiceAvailability();
+  const canAccessEcommerce = canAccessService('ecommerce');
+
+  // Ecommerce-related PageSections that should be hidden when the ecommerce service is off
+  const ECOMMERCE_SECTIONS: Set<string> = useMemo(() => new Set([
+    'products', 'storeSettings', 'featuredProducts', 'categoryGrid',
+    'productHero', 'saleCountdown', 'trustBadges', 'recentlyViewed',
+    'productReviews', 'collectionBanner', 'productBundle', 'announcementBar',
+  ]), []);
+
+  // Merged componentStatus: admin toggles + service availability
+  const componentStatus = useMemo(() => {
+    const merged = { ...rawComponentStatus };
+    if (!canAccessEcommerce) {
+      ECOMMERCE_SECTIONS.forEach(section => {
+        merged[section as PageSection] = false;
+      });
+    }
+    return merged;
+  }, [rawComponentStatus, canAccessEcommerce, ECOMMERCE_SECTIONS]);
   const { navigate } = useRouter();
 
   const [aiAssistField, setAiAssistField] = useState<{ path: string, value: string, context: string } | null>(null);

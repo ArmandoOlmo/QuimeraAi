@@ -84,8 +84,8 @@ const SimpleEditorHeader: React.FC<SimpleEditorHeaderProps> = ({
   };
 
   return (
-    <header className="h-14 px-3 md:px-6 border-b border-border bg-background flex items-center gap-2 md:gap-4 z-20 sticky top-0" role="banner">
-      <div className="flex items-center gap-2 md:gap-4 min-w-0 flex-1">
+    <header className="h-14 px-3 md:px-6 border-b border-border bg-background flex items-center justify-between z-20 sticky top-0 relative" role="banner">
+      <div className="flex items-center gap-2 md:gap-4 min-w-0">
         {/* Mobile Menu Button - Opens DashboardSidebar */}
         {onOpenMobileMenu && (
           <button
@@ -146,22 +146,25 @@ const SimpleEditorHeader: React.FC<SimpleEditorHeaderProps> = ({
       </div>
 
       {/* CENTER SECTION - Device Preview Controls */}
-      <div className="hidden md:flex items-center gap-1">
+      <div className="hidden md:flex items-center gap-2 bg-secondary/50 rounded-lg p-1 absolute left-1/2 -translate-x-1/2">
         {([
-          { name: 'desktop' as PreviewDevice, icon: <Monitor className="w-4 h-4" /> },
-          { name: 'tablet' as PreviewDevice, icon: <Tablet className="w-4 h-4" /> },
-          { name: 'mobile' as PreviewDevice, icon: <Smartphone className="w-4 h-4" /> },
-        ]).map(({ name, icon }) => (
+          { name: 'desktop' as PreviewDevice, icon: <Monitor className="w-4 h-4" />, label: t('editor.desktop') },
+          { name: 'mobile' as PreviewDevice, icon: <Smartphone className="w-4 h-4" />, label: t('editor.mobile') },
+        ]).map(({ name, icon, label }) => (
           <button
             key={name}
             title={t(`editor.previewOn${name.charAt(0).toUpperCase() + name.slice(1)}`)}
             onClick={() => setPreviewDevice(name)}
-            className={`h-8 w-8 flex items-center justify-center transition-all ${previewDevice === name
-              ? 'text-primary'
-              : 'text-muted-foreground hover:text-foreground'
-              }`}
+            className={`
+              flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all
+              ${previewDevice === name
+                ? 'bg-primary text-primary-foreground'
+                : 'text-muted-foreground hover:text-foreground hover:bg-background/50'
+              }
+            `}
           >
             {icon}
+            <span className="capitalize">{label}</span>
           </button>
         ))}
       </div>
@@ -170,10 +173,11 @@ const SimpleEditorHeader: React.FC<SimpleEditorHeaderProps> = ({
         {/* Back Button - Go to projects/websites */}
         <button
           onClick={() => navigate(ROUTES.WEBSITES)}
-          className="flex items-center justify-center gap-2 h-9 text-sm font-medium transition-all text-muted-foreground hover:text-foreground"
+          className="flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all text-muted-foreground hover:text-foreground hover:bg-secondary/50"
           aria-label={t('common.back')}
         >
           <ArrowLeft className="w-4 h-4" />
+          <span className="hidden sm:inline">{t('common.back')}</span>
         </button>
 
         {/* Save Button */}
@@ -182,13 +186,20 @@ const SimpleEditorHeader: React.FC<SimpleEditorHeaderProps> = ({
             title={saveState === 'idle' ? t('editor.saveChanges') : t('editor.saved')}
             onClick={handleSaveClick}
             disabled={saveState === 'saved'}
-            className="flex items-center gap-2 h-9 text-sm font-medium transition-all text-muted-foreground hover:text-foreground disabled:text-green-500"
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+              saveState === 'saved'
+                ? 'bg-green-500/20 text-green-500'
+                : 'text-muted-foreground hover:text-foreground hover:bg-secondary/50'
+            }`}
           >
             {saveState === 'idle' ? (
               <CloudUpload className="w-4 h-4" />
             ) : (
               <Check className="w-4 h-4" />
             )}
+            <span className="hidden sm:inline">
+              {saveState === 'idle' ? t('common.save') : t('editor.saved')}
+            </span>
           </button>
         )}
 
@@ -217,12 +228,13 @@ const SimpleEditorHeader: React.FC<SimpleEditorHeaderProps> = ({
               }
             }}
             disabled={publishState === 'publishing'}
-            className={`font-medium text-sm h-9 px-3 transition-colors flex items-center gap-1.5 ${publishState === 'published'
-              ? 'text-green-500'
-              : publishState === 'error'
-                ? 'text-red-500'
-                : 'text-primary hover:text-primary/80'
-              } ${publishState === 'publishing' ? 'opacity-50 cursor-wait' : ''}`}
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+              publishState === 'published'
+                ? 'bg-green-500/20 text-green-500'
+                : publishState === 'error'
+                  ? 'bg-red-500/20 text-red-500'
+                  : 'bg-primary text-primary-foreground hover:opacity-90'
+            } ${publishState === 'publishing' ? 'opacity-50 cursor-wait' : ''}`}
           >
             {publishState === 'publishing' ? (
               <>
@@ -237,7 +249,10 @@ const SimpleEditorHeader: React.FC<SimpleEditorHeaderProps> = ({
             ) : publishState === 'error' ? (
               <span>{t('editor.publishError', 'Error')}</span>
             ) : (
-              t('editor.publish')
+              <>
+                <Globe className="w-4 h-4" />
+                <span className="hidden sm:inline">{t('editor.publish')}</span>
+              </>
             )}
           </button>
         )}

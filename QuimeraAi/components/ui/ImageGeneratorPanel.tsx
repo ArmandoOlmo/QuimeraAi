@@ -18,6 +18,8 @@ interface ImageGeneratorPanelProps {
     onClose?: () => void;
     onCollapse?: () => void;
     hidePreview?: boolean;
+    /** Hide the built-in header (useful when parent provides its own toggle bar) */
+    hideHeader?: boolean;
     onImageGenerated?: (imageUrl: string) => void;
     onUseImage?: (imageUrl: string) => void;
     projectId?: string;
@@ -25,7 +27,7 @@ interface ImageGeneratorPanelProps {
     generationContext?: 'background' | 'general';
 }
 
-const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, className = '', onClose, onCollapse, hidePreview = false, onImageGenerated, onUseImage, projectId, generationContext = 'general' }) => {
+const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, className = '', onClose, onCollapse, hidePreview = false, hideHeader = false, onImageGenerated, onUseImage, projectId, generationContext = 'general' }) => {
     const { generateImage, enhancePrompt } = useAI();
     const { uploadGlobalFile, uploadFile, hasActiveProject, files, globalFiles } = useFiles();
     const { activeProjectId } = useProject();
@@ -163,6 +165,25 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
     const [isDragging, setIsDragging] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
+
+    // Listen to external commands to add reference images
+    useEffect(() => {
+        const handleAddReferenceImage = (e: Event) => {
+            const customEvent = e as CustomEvent<string>;
+            const imageData = customEvent.detail;
+            if (!imageData) return;
+
+            setReferenceImages(prev => {
+                if (prev.length >= 14 || prev.includes(imageData)) {
+                    return prev;
+                }
+                return [...prev, imageData];
+            });
+        };
+
+        window.addEventListener('assets:add-reference-image', handleAddReferenceImage);
+        return () => window.removeEventListener('assets:add-reference-image', handleAddReferenceImage);
+    }, []);
 
     // Library Browser State
     const [showLibraryBrowser, setShowLibraryBrowser] = useState(false);
@@ -462,6 +483,7 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
             `}</style>
 
             {/* Header */}
+            {!hideHeader && (
             <header className="flex items-center justify-between whitespace-nowrap border-b border-editor-border bg-editor-bg/80 backdrop-blur-md px-6 py-3 shrink-0 z-20">
                 <div className="flex items-center gap-4">
                     <div className="w-6 h-6 text-editor-accent flex items-center justify-center">
@@ -477,15 +499,27 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
                         </span>
                     )}
                 </div>
-                {onClose && (
-                    <button
-                        onClick={onClose}
-                        className="flex items-center justify-center rounded-lg w-10 h-10 hover:bg-editor-panel-bg text-editor-text-secondary hover:text-editor-text-primary transition-colors"
-                    >
-                        <X size={20} />
-                    </button>
-                )}
+                <div className="flex items-center gap-1">
+                    {onCollapse && (
+                        <button
+                            onClick={onCollapse}
+                            className="flex items-center justify-center rounded-lg w-10 h-10 hover:bg-editor-panel-bg text-editor-accent hover:text-editor-accent/80 transition-colors"
+                            title={t('common.collapse', { defaultValue: 'Minimizar generador' })}
+                        >
+                            <ChevronDown size={20} className="rotate-180" />
+                        </button>
+                    )}
+                    {onClose && (
+                        <button
+                            onClick={onClose}
+                            className="flex items-center justify-center rounded-lg w-10 h-10 hover:bg-editor-panel-bg text-editor-text-secondary hover:text-editor-text-primary transition-colors"
+                        >
+                            <X size={20} />
+                        </button>
+                    )}
+                </div>
             </header>
+            )}
 
             <div className="flex flex-col md:flex-row flex-1 overflow-hidden">
                 {/* Main Content Area */}

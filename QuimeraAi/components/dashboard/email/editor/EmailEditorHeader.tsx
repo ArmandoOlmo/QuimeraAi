@@ -55,7 +55,7 @@ const EmailEditorHeader: React.FC<EmailEditorHeaderProps> = ({
 
     return (
         <header className="bg-editor-bg border-b border-editor-border h-14 flex-shrink-0 z-20">
-            <div className="h-full flex items-center justify-between px-4 gap-4">
+            <div className="h-full flex items-center justify-between px-4 gap-4 relative">
                 {/* LEFT SECTION - Mobile Menu, Back & Name */}
                 <div className="flex items-center gap-3 min-w-0">
                     {/* Mobile Menu Button */}
@@ -97,7 +97,7 @@ const EmailEditorHeader: React.FC<EmailEditorHeaderProps> = ({
                 </div>
 
                 {/* CENTER SECTION - Device Toggle */}
-                <div className="flex items-center gap-2 bg-editor-panel-bg rounded-lg p-1">
+                <div className="flex items-center gap-2 bg-secondary/50 rounded-lg p-1 absolute left-1/2 -translate-x-1/2">
                     {deviceOptions.map(({ name, icon, width }) => (
                         <button
                             key={name}
@@ -105,14 +105,14 @@ const EmailEditorHeader: React.FC<EmailEditorHeaderProps> = ({
                             className={`
                                 flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all
                                 ${previewDevice === name
-                                    ? 'bg-editor-accent text-white'
-                                    : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-bg/50'
+                                    ? 'bg-primary text-primary-foreground'
+                                    : 'text-muted-foreground hover:text-foreground hover:bg-background/50'
                                 }
                             `}
                             title={`${t('email.preview', 'Vista previa')} ${name} (${width})`}
                         >
                             {icon}
-                            <span className="hidden md:inline capitalize">{name}</span>
+                            <span className="hidden md:inline capitalize">{name === 'desktop' ? 'Desktop' : 'Mobile'}</span>
                         </button>
                     ))}
                 </div>
@@ -121,7 +121,7 @@ const EmailEditorHeader: React.FC<EmailEditorHeaderProps> = ({
                 <div className="flex items-center gap-2">
                     {/* Preview Button */}
                     <button
-                        className="flex items-center gap-1.5 h-9 px-3 rounded-md text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40"
+                        className="flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all text-muted-foreground hover:text-foreground hover:bg-secondary/50"
                         title={t('email.previewEmail', 'Vista previa del email')}
                     >
                         <Eye className="w-4 h-4" />
@@ -132,7 +132,7 @@ const EmailEditorHeader: React.FC<EmailEditorHeaderProps> = ({
                     <button
                         onClick={onSendTest}
                         disabled={!onSendTest}
-                        className="flex items-center gap-1.5 h-9 px-3 rounded-md text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all text-muted-foreground hover:text-foreground hover:bg-secondary/50 disabled:opacity-50 disabled:cursor-not-allowed"
                         title={t('email.sendTest', 'Enviar prueba')}
                     >
                         <Send className="w-4 h-4" />
@@ -144,10 +144,10 @@ const EmailEditorHeader: React.FC<EmailEditorHeaderProps> = ({
                         onClick={handleSave}
                         disabled={saveState === 'saved'}
                         className={`
-                            flex items-center gap-1.5 h-9 px-4 rounded-md text-sm font-medium transition-all
+                            flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all
                             ${saveState === 'saved'
                                 ? 'bg-green-500/20 text-green-500'
-                                : 'bg-editor-accent text-white hover:bg-editor-accent/90'
+                                : 'bg-primary text-primary-foreground hover:opacity-90'
                             }
                         `}
                         title={saveState === 'idle' ? t('common.save', 'Guardar') : t('editor.saved', 'Guardado')}
