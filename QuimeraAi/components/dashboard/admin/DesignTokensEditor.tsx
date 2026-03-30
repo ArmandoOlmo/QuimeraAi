@@ -8,6 +8,7 @@ import { Palette, Type, Maximize2, Cloud, Monitor, Save, RotateCcw, Check, Alert
 import { applyTokensToFullProject } from '../../../utils/designTokenApplier';
 import { defaultAppTokens } from '../../../utils/appTokenApplier';
 import { fontOptions, fontStacks, formatFontName } from '../../../utils/fontLoader';
+import FontFamilyPicker from '../../ui/FontFamilyPicker';
 
 const DesignTokensEditor: React.FC = () => {
   const { designTokens, updateDesignTokens, appTokens, updateAppTokens } = useAdmin();
@@ -765,23 +766,13 @@ const DesignTokensEditor: React.FC = () => {
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                   {/* Sans (Body) */}
                   <div className="space-y-2">
-                    <label className="block text-sm text-editor-text-secondary">Body / Sans-serif</label>
-                    <div className="relative">
-                      <select
-                        value={localAppTokens.typography.fontFamily.sans}
-                        onChange={(e) => updateAppTypography('fontFamily', 'sans', e.target.value as FontFamily)}
-                        className="w-full bg-editor-bg border border-editor-border rounded-lg px-3 py-2.5 text-sm text-editor-text-primary focus:outline-none focus:ring-2 focus:ring-editor-accent appearance-none cursor-pointer"
-                        style={{ fontFamily: fontStacks[localAppTokens.typography.fontFamily.sans] }}
-                      >
-                        {fontOptions.map(font => (
-                          <option key={font} value={font} style={{ fontFamily: fontStacks[font] }}>
-                            {formatFontName(font)}
-                          </option>
-                        ))}
-                      </select>
-                      <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-editor-text-secondary pointer-events-none" />
-                    </div>
-                    <div className="p-3 bg-editor-bg rounded-lg border border-editor-border" style={{ fontFamily: fontStacks[localAppTokens.typography.fontFamily.sans] }}>
+                    <FontFamilyPicker
+                      label="Body / Sans-serif"
+                      value={localAppTokens.typography.fontFamily.sans as FontFamily}
+                      onChange={(val) => updateAppTypography('fontFamily', 'sans', val)}
+                      showPreview={false}
+                    />
+                    <div className="p-3 bg-editor-bg rounded-lg border border-editor-border mt-2" style={{ fontFamily: fontStacks[localAppTokens.typography.fontFamily.sans] }}>
                       <p className="text-editor-text-primary">Dashboard text</p>
                       <p className="text-editor-text-secondary text-sm">ABCDEFGHIJ abcdefghij 0123456789</p>
                     </div>
@@ -789,23 +780,13 @@ const DesignTokensEditor: React.FC = () => {
 
                   {/* Header */}
                   <div className="space-y-2">
-                    <label className="block text-sm text-editor-text-secondary">Headers / Titles</label>
-                    <div className="relative">
-                      <select
-                        value={localAppTokens.typography.fontFamily.header}
-                        onChange={(e) => updateAppTypography('fontFamily', 'header', e.target.value as FontFamily)}
-                        className="w-full bg-editor-bg border border-editor-border rounded-lg px-3 py-2.5 text-sm text-editor-text-primary focus:outline-none focus:ring-2 focus:ring-editor-accent appearance-none cursor-pointer"
-                        style={{ fontFamily: fontStacks[localAppTokens.typography.fontFamily.header] }}
-                      >
-                        {fontOptions.map(font => (
-                          <option key={font} value={font} style={{ fontFamily: fontStacks[font] }}>
-                            {formatFontName(font)}
-                          </option>
-                        ))}
-                      </select>
-                      <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-editor-text-secondary pointer-events-none" />
-                    </div>
-                    <div className="p-3 bg-editor-bg rounded-lg border border-editor-border" style={{ fontFamily: fontStacks[localAppTokens.typography.fontFamily.header] }}>
+                    <FontFamilyPicker
+                      label="Headers / Titles"
+                      value={localAppTokens.typography.fontFamily.header as FontFamily}
+                      onChange={(val) => updateAppTypography('fontFamily', 'header', val)}
+                      showPreview={false}
+                    />
+                    <div className="p-3 bg-editor-bg rounded-lg border border-editor-border mt-2" style={{ fontFamily: fontStacks[localAppTokens.typography.fontFamily.header] }}>
                       <p className="text-editor-text-primary font-bold">Section Title</p>
                       <p className="text-editor-text-secondary text-sm">ABCDEFGHIJ abcdefghij 0123456789</p>
                     </div>
@@ -813,23 +794,13 @@ const DesignTokensEditor: React.FC = () => {
 
                   {/* Mono */}
                   <div className="space-y-2">
-                    <label className="block text-sm text-editor-text-secondary">Monospace / Code</label>
-                    <div className="relative">
-                      <select
-                        value={localAppTokens.typography.fontFamily.mono}
-                        onChange={(e) => updateAppTypography('fontFamily', 'mono', e.target.value as FontFamily)}
-                        className="w-full bg-editor-bg border border-editor-border rounded-lg px-3 py-2.5 text-sm text-editor-text-primary focus:outline-none focus:ring-2 focus:ring-editor-accent appearance-none cursor-pointer"
-                        style={{ fontFamily: fontStacks[localAppTokens.typography.fontFamily.mono] }}
-                      >
-                        {fontOptions.map(font => (
-                          <option key={font} value={font} style={{ fontFamily: fontStacks[font] }}>
-                            {formatFontName(font)}
-                          </option>
-                        ))}
-                      </select>
-                      <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-editor-text-secondary pointer-events-none" />
-                    </div>
-                    <div className="p-3 bg-editor-bg rounded-lg border border-editor-border" style={{ fontFamily: fontStacks[localAppTokens.typography.fontFamily.mono] }}>
+                    <FontFamilyPicker
+                      label="Monospace / Code"
+                      value={localAppTokens.typography.fontFamily.mono as FontFamily}
+                      onChange={(val) => updateAppTypography('fontFamily', 'mono', val)}
+                      showPreview={false}
+                    />
+                    <div className="p-3 bg-editor-bg rounded-lg border border-editor-border mt-2" style={{ fontFamily: fontStacks[localAppTokens.typography.fontFamily.mono] }}>
                       <p className="text-editor-text-primary">const code = 'example'</p>
                       <p className="text-editor-text-secondary text-sm">0123456789 { }[]();:</p>
                     </div>

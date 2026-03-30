@@ -17,6 +17,7 @@ import { colorPalettes, ColorPalette, getDefaultGlobalColors } from '../../data/
 import { hexToRgba } from '../../utils/colorUtils';
 import { fontOptions, fontStacks, formatFontName, getFontStack, loadAllFonts, resolveFontFamily } from '../../utils/fontLoader';
 import { Type, Palette, Check, Sparkles, Grid, RotateCcw, Info, Loader2, Upload, ChevronDown } from 'lucide-react';
+import FontFamilyPicker from './FontFamilyPicker';
 
 export type GlobalStylesMode = 'colors' | 'typography' | 'both';
 
@@ -632,23 +633,14 @@ const GlobalStylesControl: React.FC<GlobalStylesControlProps> = ({ mode = 'both'
         defaultWeight: number = 400
     ) => (
         <div className="mb-5 last:mb-0">
-            <label className="block text-xs font-bold text-editor-text-secondary mb-1.5 uppercase tracking-wider">{label}</label>
-            {/* Font Family Select */}
-            <div className="relative mb-2">
-                <select
-                    value={theme[familyKey] as string}
-                    onChange={(e) => handleFontChange(familyKey, e.target.value as FontFamily)}
-                    className="w-full bg-editor-panel-bg border border-editor-border rounded-md px-3 py-2.5 text-sm text-editor-text-primary focus:outline-none focus:ring-1 focus:ring-editor-accent transition-all appearance-none cursor-pointer hover:border-editor-accent/50"
-                >
-                    {fontOptions.map(font => (
-                        <option key={font} value={font}>
-                            {formatFontName(font)}
-                        </option>
-                    ))}
-                </select>
-                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-editor-text-secondary">
-                    <ChevronDown className="h-4 w-4" />
-                </div>
+            {/* Font Family Select using FontFamilyPicker */}
+            <div className="mb-2">
+                <FontFamilyPicker
+                    label={label}
+                    value={theme[familyKey] as FontFamily}
+                    onChange={(font) => handleFontChange(familyKey, font)}
+                    showPreview={false}
+                />
             </div>
             {/* Weight + Italic row */}
             {weightKey && (
@@ -1025,7 +1017,7 @@ const GlobalStylesControl: React.FC<GlobalStylesControlProps> = ({ mode = 'both'
                                         key={link}
                                         className="text-sm"
                                         style={{
-                                            fontFamily: getFontStack(theme.fontFamilyHeader || 'poppins'),
+                                            fontFamily: getFontStack((theme.fontFamilyHeader as FontFamily) || 'inter'),
                                             color: globalColors.text,
                                             textTransform: theme.navLinksAllCaps ? 'uppercase' : 'none',
                                             letterSpacing: theme.navLinksAllCaps ? '0.05em' : 'normal'
@@ -1039,7 +1031,7 @@ const GlobalStylesControl: React.FC<GlobalStylesControlProps> = ({ mode = 'both'
                             <h3
                                 className="text-xl mb-2 font-bold"
                                 style={{
-                                    fontFamily: getFontStack(theme.fontFamilyHeader || 'poppins'),
+                                    fontFamily: getFontStack((theme.fontFamilyHeader as FontFamily) || 'inter'),
                                     color: globalColors.heading,
                                     textTransform: theme.headingsAllCaps ? 'uppercase' : 'none',
                                     letterSpacing: theme.headingsAllCaps ? '0.05em' : 'normal'
@@ -1050,7 +1042,7 @@ const GlobalStylesControl: React.FC<GlobalStylesControlProps> = ({ mode = 'both'
                             <p
                                 className="text-sm mb-4"
                                 style={{
-                                    fontFamily: getFontStack(theme.fontFamilyBody || 'mulish'),
+                                    fontFamily: getFontStack((theme.fontFamilyBody as FontFamily) || 'inter'),
                                     color: globalColors.text
                                 }}
                             >

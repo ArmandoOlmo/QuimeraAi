@@ -18,7 +18,8 @@ import ImagePickerModal from '../../ui/ImagePickerModal';
 import ImageGeneratorModal from '../../ui/ImageGeneratorModal';
 import ColorControl from '../../ui/ColorControl';
 import CoolorsImporter from '../../ui/CoolorsImporter';
-import { GlobalColors } from '../../../types';
+import FontFamilyPicker from '../../ui/FontFamilyPicker';
+import { GlobalColors, FontFamily } from '../../../types';
 import { colorPalettes, getDefaultGlobalColors } from '../../../data/colorPalettes';
 import { fontOptions, formatFontName, getFontStack, loadAllFonts, resolveFontFamily } from '../../../utils/fontLoader';
 
@@ -2916,23 +2917,14 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
         defaultWeight: number = 400
     ) => (
         <div className="mb-5 last:mb-0">
-            <label className="block text-xs font-bold text-editor-text-secondary mb-1.5 uppercase tracking-wider">{label}</label>
-            {/* Font Family Select */}
-            <div className="relative mb-2">
-                <select
-                    value={resolveFontFamily(data[fontKey]) || 'poppins'}
-                    onChange={(e) => updateData(fontKey, e.target.value)}
-                    className="w-full bg-editor-panel-bg border border-editor-border rounded-md px-3 py-2.5 text-sm text-editor-text-primary focus:outline-none focus:ring-1 focus:ring-editor-accent transition-all appearance-none cursor-pointer hover:border-editor-accent/50"
-                >
-                    {fontOptions.map(font => (
-                        <option key={font} value={font}>
-                            {formatFontName(font)}
-                        </option>
-                    ))}
-                </select>
-                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-editor-text-secondary">
-                    <ChevronDown className="h-4 w-4" />
-                </div>
+            {/* Font Family Select using FontFamilyPicker */}
+            <div className="mb-2">
+                <FontFamilyPicker
+                    label={label}
+                    value={(resolveFontFamily(data[fontKey]) as FontFamily) || 'inter'}
+                    onChange={(font) => updateData(fontKey, font)}
+                    showPreview={false}
+                />
             </div>
             {/* Weight + Italic row */}
             <div className="flex gap-2">

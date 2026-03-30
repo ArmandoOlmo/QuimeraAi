@@ -1,13 +1,10 @@
-/**
- * EmailPreview
- * Center panel showing the email preview with responsive device simulation
- */
-
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Mail } from 'lucide-react';
 import { useEmailEditor } from './EmailEditor';
 import { renderEmailBlock } from './blocks/BlockRenderer';
+import { fontStacks, loadGoogleFonts, resolveFontFamily } from '../../../../utils/fontLoader';
+import { FontFamily } from '../../../../types';
 
 // =============================================================================
 // DEVICE DIMENSIONS
@@ -32,6 +29,22 @@ const EmailPreview: React.FC = () => {
     } = useEmailEditor();
     
     const containerWidth = DEVICE_WIDTHS[previewDevice];
+
+    // Resolve the font-family: if it's a fontLoader key (e.g. 'inter'), get the CSS stack
+    // If it's already a CSS stack (old format like 'Arial, sans-serif'), use as-is
+    const rawFont = document.globalStyles.fontFamily;
+    const isKnownKey = rawFont in fontStacks;
+    const resolvedFontStack = isKnownKey
+        ? fontStacks[rawFont as FontFamily]
+        : rawFont;
+
+    // Dynamically load the Google Font when selected
+    useEffect(() => {
+        if (isKnownKey) {
+            const resolved = resolveFontFamily(rawFont);
+            loadGoogleFonts([resolved], 'email-editor-preview-font');
+        }
+    }, [rawFont, isKnownKey]);
     
     return (
         <div className="h-full flex flex-col">
@@ -80,7 +93,7 @@ const EmailPreview: React.FC = () => {
                             <div 
                                 style={{ 
                                     backgroundColor: document.globalStyles.backgroundColor,
-                                    fontFamily: document.globalStyles.fontFamily,
+                                    fontFamily: resolvedFontStack,
                                     maxWidth: containerWidth,
                                     margin: '0 auto',
                                 }}

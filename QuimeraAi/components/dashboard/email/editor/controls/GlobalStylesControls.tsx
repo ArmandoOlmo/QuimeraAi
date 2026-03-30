@@ -3,7 +3,7 @@
  * Controls for editing global email styles (fonts, colors, etc.)
  */
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useEmailEditor } from '../EmailEditor';
 import ColorControl from '../../../../ui/ColorControl';
@@ -11,6 +11,9 @@ import { useSafeProject } from '../../../../../contexts/project/ProjectContext';
 import { Button } from '../../../../ui/button';
 import { useToast } from '../../../../../contexts/ToastContext';
 import { Palette, Download } from 'lucide-react';
+import { loadAllFonts } from '../../../../../utils/fontLoader';
+import { FontFamily } from '../../../../../types';
+import FontFamilyPicker from '../../../../ui/FontFamilyPicker';
 
 // =============================================================================
 // HELPER COMPONENTS (following Controls.tsx pattern)
@@ -82,20 +85,7 @@ const BorderRadiusSelector: React.FC<{
     );
 };
 
-// =============================================================================
-// FONT OPTIONS
-// =============================================================================
 
-const FONT_OPTIONS = [
-    { value: 'Arial, sans-serif', label: 'Arial' },
-    { value: 'Helvetica, Arial, sans-serif', label: 'Helvetica' },
-    { value: 'Georgia, serif', label: 'Georgia' },
-    { value: 'Times New Roman, Times, serif', label: 'Times New Roman' },
-    { value: 'Trebuchet MS, sans-serif', label: 'Trebuchet MS' },
-    { value: 'Verdana, sans-serif', label: 'Verdana' },
-    { value: 'Courier New, monospace', label: 'Courier New' },
-    { value: '-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif', label: 'System UI' },
-];
 
 // =============================================================================
 // COMPONENT
@@ -107,6 +97,11 @@ const GlobalStylesControls: React.FC = () => {
     const { globalStyles } = document;
     const { activeProject } = useSafeProject();
     const { showToast } = useToast();
+
+    // Preload ALL Google Fonts for dropdown preview (same as Web Editor)
+    useEffect(() => {
+        loadAllFonts();
+    }, []);
 
     // Derive palette from project global colors for the Color Picker
     const projectPalette = React.useMemo(() => {
@@ -207,11 +202,10 @@ const GlobalStylesControls: React.FC = () => {
             {/* Typography */}
             <div>
                 <SectionTitle>{t('email.typography', 'Tipografía')}</SectionTitle>
-                <SelectControl
+                <FontFamilyPicker
                     label={t('email.fontFamily', 'Fuente')}
-                    value={globalStyles.fontFamily}
-                    options={FONT_OPTIONS}
-                    onChange={(value) => updateGlobalStyles({ fontFamily: value })}
+                    value={globalStyles.fontFamily as FontFamily}
+                    onChange={(font) => updateGlobalStyles({ fontFamily: font })}
                 />
             </div>
 
