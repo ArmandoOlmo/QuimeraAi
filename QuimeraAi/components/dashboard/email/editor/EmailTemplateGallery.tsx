@@ -9,6 +9,7 @@ import { Search, X, FileText, Sparkles } from 'lucide-react';
 import { EmailDocument } from '../../../../types/email';
 import { emailTemplates, EmailTemplatePreset } from '../../../../data/emailTemplates';
 import { v4 as uuidv4 } from 'uuid';
+import { useServiceAvailability } from '../../../../hooks/useServiceAvailability';
 
 // =============================================================================
 // PROPS
@@ -45,9 +46,15 @@ const EmailTemplateGallery: React.FC<EmailTemplateGalleryProps> = ({
     const { t } = useTranslation();
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedCategory, setSelectedCategory] = useState<string>('all');
+
+    // Service availability: hide ecommerce templates when service is off
+    const { canAccessService } = useServiceAvailability();
+    const canAccessEcommerce = canAccessService('ecommerce');
     
-    // Filter templates
+    // Filter templates (also exclude ecommerce templates if service is off)
     const filteredTemplates = emailTemplates.filter(template => {
+        // Hide ecommerce templates when service is disabled
+        if (!canAccessEcommerce && template.category === 'ecommerce') return false;
         const matchesSearch = 
             template.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
             template.description.toLowerCase().includes(searchTerm.toLowerCase());
@@ -55,8 +62,12 @@ const EmailTemplateGallery: React.FC<EmailTemplateGalleryProps> = ({
         return matchesSearch && matchesCategory;
     });
     
-    // Get unique categories
-    const categories = ['all', ...new Set(emailTemplates.map(t => t.category))];
+    // Get unique categories (exclude ecommerce if service is off)
+    const categories = ['all', ...new Set(
+        emailTemplates
+            .filter(t => canAccessEcommerce || t.category !== 'ecommerce')
+            .map(t => t.category)
+    )];
     
     // Handle template selection
     const handleSelectTemplate = (template: EmailTemplatePreset) => {

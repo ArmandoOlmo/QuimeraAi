@@ -531,6 +531,8 @@ export interface EmailHeroContent {
     buttonText?: string;
     buttonUrl?: string;
     showButton?: boolean;
+    linkType?: 'manual' | 'product' | 'collection' | 'content';
+    collectionId?: string;
 }
 
 /**
@@ -558,6 +560,8 @@ export interface EmailButtonContent {
     text: string;
     url: string;
     fullWidth?: boolean;
+    linkType?: 'manual' | 'product' | 'collection' | 'content';
+    collectionId?: string;
 }
 
 /**

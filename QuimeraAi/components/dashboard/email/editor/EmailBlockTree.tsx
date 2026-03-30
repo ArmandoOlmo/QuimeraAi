@@ -49,6 +49,7 @@ import {
 } from 'lucide-react';
 import { useEmailEditor } from './EmailEditor';
 import { EmailBlock, EmailBlockType } from '../../../../types/email';
+import { useServiceAvailability } from '../../../../hooks/useServiceAvailability';
 
 // =============================================================================
 // BLOCK ICONS & LABELS
@@ -256,6 +257,18 @@ const EmailBlockTree: React.FC = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [activeId, setActiveId] = useState<string | null>(null);
 
+    // Service availability: hide products block when ecommerce service is off
+    const { canAccessService } = useServiceAvailability();
+    const canAccessEcommerce = canAccessService('ecommerce');
+
+    // Ecommerce block types to hide when service is disabled
+    const ECOMMERCE_BLOCK_TYPES: Set<EmailBlockType> = new Set(['products']);
+
+    // Filter available blocks based on service availability
+    const effectiveAvailableBlocks = canAccessEcommerce
+        ? AVAILABLE_BLOCKS
+        : AVAILABLE_BLOCKS.filter(type => !ECOMMERCE_BLOCK_TYPES.has(type));
+
     // Configure sensors
     const sensors = useSensors(
         useSensor(PointerSensor, {
@@ -274,8 +287,8 @@ const EmailBlockTree: React.FC = () => {
         return blockLabels[block.type].toLowerCase().includes(searchTerm.toLowerCase());
     });
 
-    // Filter available blocks by search
-    const filteredAvailableBlocks = AVAILABLE_BLOCKS.filter(type => {
+    // Filter available blocks by search (using service-filtered list)
+    const filteredAvailableBlocks = effectiveAvailableBlocks.filter(type => {
         if (!searchTerm) return true;
         return blockLabels[type].toLowerCase().includes(searchTerm.toLowerCase());
     });

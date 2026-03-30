@@ -234,7 +234,7 @@ Respond ONLY with the JSON object, no markdown, no explanation.`;
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         placeholder={t('accounting.searchTransactions', 'Search transactions...')}
-                        className="w-full h-10 pl-9 pr-4 rounded-xl border border-white/[0.08] bg-secondary/30 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all"
+                        className="w-full h-10 pl-9 pr-4 rounded-xl border border-border/60 bg-secondary/30 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all"
                     />
                 </div>
 
@@ -243,7 +243,7 @@ Respond ONLY with the JSON object, no markdown, no explanation.`;
                     <select
                         value={filterType}
                         onChange={(e) => setFilterType(e.target.value as any)}
-                        className="h-10 px-3 rounded-xl border border-white/[0.08] bg-secondary/30 text-sm text-foreground focus:ring-2 focus:ring-primary/40 transition-all"
+                        className="h-10 px-3 rounded-xl border border-border/60 bg-secondary/30 text-sm text-foreground focus:ring-2 focus:ring-primary/40 transition-all"
                     >
                         <option value="all">{t('accounting.allTypes', 'All Types')}</option>
                         <option value="income">{t('accounting.income', 'Income')}</option>
@@ -253,7 +253,7 @@ Respond ONLY with the JSON object, no markdown, no explanation.`;
                     <select
                         value={filterCategory}
                         onChange={(e) => setFilterCategory(e.target.value)}
-                        className="h-10 px-3 rounded-xl border border-white/[0.08] bg-secondary/30 text-sm text-foreground focus:ring-2 focus:ring-primary/40 transition-all"
+                        className="h-10 px-3 rounded-xl border border-border/60 bg-secondary/30 text-sm text-foreground focus:ring-2 focus:ring-primary/40 transition-all"
                     >
                         <option value="all">{t('accounting.allCategories', 'All Categories')}</option>
                         {categories.map((cat) => (
@@ -264,7 +264,7 @@ Respond ONLY with the JSON object, no markdown, no explanation.`;
                     <select
                         value={filterAccount}
                         onChange={(e) => setFilterAccount(e.target.value)}
-                        className="h-10 px-3 rounded-xl border border-white/[0.08] bg-secondary/30 text-sm text-foreground focus:ring-2 focus:ring-primary/40 transition-all"
+                        className="h-10 px-3 rounded-xl border border-border/60 bg-secondary/30 text-sm text-foreground focus:ring-2 focus:ring-primary/40 transition-all"
                     >
                         <option value="all">{t('accounting.allAccounts', 'All Accounts')}</option>
                         {accounts.map((acc) => (
@@ -277,7 +277,7 @@ Respond ONLY with the JSON object, no markdown, no explanation.`;
                         onClick={() => setShowAiVerifiedOnly((v) => !v)}
                         className={`h-10 px-3 rounded-xl border text-sm font-medium flex items-center gap-1.5 transition-all ${showAiVerifiedOnly
                                 ? 'bg-primary/20 border-primary/40 text-primary'
-                                : 'border-white/[0.08] bg-secondary/30 text-muted-foreground hover:text-foreground'
+                                : 'border-border/60 bg-secondary/30 text-muted-foreground hover:text-foreground'
                             }`}
                     >
                         <Sparkles size={14} />
@@ -313,15 +313,15 @@ Respond ONLY with the JSON object, no markdown, no explanation.`;
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                         <input type="date" value={formData.date} onChange={(e) => setFormData((f) => ({ ...f, date: e.target.value }))}
-                            className="h-10 px-3 rounded-xl border border-white/[0.08] bg-secondary/30 text-sm text-foreground focus:ring-2 focus:ring-primary/40" />
+                            className="h-10 px-3 rounded-xl border border-border/60 bg-secondary/30 text-sm text-foreground focus:ring-2 focus:ring-primary/40" />
                         <input type="text" value={formData.description} onChange={(e) => setFormData((f) => ({ ...f, description: e.target.value }))}
                             placeholder={t('accounting.description', 'Description')}
-                            className="h-10 px-3 rounded-xl border border-white/[0.08] bg-secondary/30 text-sm text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/40" />
+                            className="h-10 px-3 rounded-xl border border-border/60 bg-secondary/30 text-sm text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/40" />
                         <input type="number" value={formData.amount || ''} onChange={(e) => setFormData((f) => ({ ...f, amount: parseFloat(e.target.value) || 0 }))}
                             placeholder={t('accounting.amount', 'Amount')} min={0} step="0.01"
-                            className="h-10 px-3 rounded-xl border border-white/[0.08] bg-secondary/30 text-sm text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/40" />
+                            className="h-10 px-3 rounded-xl border border-border/60 bg-secondary/30 text-sm text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/40" />
                         <select value={formData.type} onChange={(e) => setFormData((f) => ({ ...f, type: e.target.value as TransactionType }))}
-                            className="h-10 px-3 rounded-xl border border-white/[0.08] bg-secondary/30 text-sm text-foreground focus:ring-2 focus:ring-primary/40">
+                            className="h-10 px-3 rounded-xl border border-border/60 bg-secondary/30 text-sm text-foreground focus:ring-2 focus:ring-primary/40">
                             <option value="income">{t('accounting.income', 'Income')}</option>
                             <option value="expense">{t('accounting.expense', 'Expense')}</option>
                         </select>
@@ -330,13 +330,13 @@ Respond ONLY with the JSON object, no markdown, no explanation.`;
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                         <input type="text" value={formData.counterpartyName || ''} onChange={(e) => setFormData((f) => ({ ...f, counterpartyName: e.target.value }))}
                             placeholder={t('accounting.counterparty', 'Client / Vendor')}
-                            className="h-10 px-3 rounded-xl border border-white/[0.08] bg-secondary/30 text-sm text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/40" />
+                            className="h-10 px-3 rounded-xl border border-border/60 bg-secondary/30 text-sm text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/40" />
                         <input type="text" value={formData.category} onChange={(e) => setFormData((f) => ({ ...f, category: e.target.value }))}
                             placeholder={t('accounting.categoryOptional', 'Category (AI will auto-fill)')}
-                            className="h-10 px-3 rounded-xl border border-white/[0.08] bg-secondary/30 text-sm text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/40" />
+                            className="h-10 px-3 rounded-xl border border-border/60 bg-secondary/30 text-sm text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/40" />
                         <input type="text" value={formData.account} onChange={(e) => setFormData((f) => ({ ...f, account: e.target.value }))}
                             placeholder={t('accounting.accountOptional', 'Account (AI will auto-fill)')}
-                            className="h-10 px-3 rounded-xl border border-white/[0.08] bg-secondary/30 text-sm text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/40" />
+                            className="h-10 px-3 rounded-xl border border-border/60 bg-secondary/30 text-sm text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/40" />
                     </div>
 
                     <div className="flex items-center gap-3 justify-end">
@@ -356,11 +356,11 @@ Respond ONLY with the JSON object, no markdown, no explanation.`;
             )}
 
             {/* Table */}
-            <div className="rounded-2xl border border-white/[0.08] bg-card/80 backdrop-blur-xl overflow-hidden">
+            <div className="rounded-2xl border border-border/60 bg-card/80 backdrop-blur-xl overflow-hidden">
                 <div className="overflow-x-auto">
                     <table className="w-full">
                         <thead>
-                            <tr className="border-b border-white/[0.06] text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                            <tr className="border-b border-border/40 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                                 <th className="text-left p-4 cursor-pointer hover:text-foreground transition-colors" onClick={() => toggleSort('date')}>
                                     <span className="flex items-center gap-1">{t('accounting.date', 'Date')} <ArrowUpDown size={12} /></span>
                                 </th>
@@ -388,7 +388,7 @@ Respond ONLY with the JSON object, no markdown, no explanation.`;
                                 filtered.map((tx) => (
                                     <tr
                                         key={tx.id}
-                                        className="border-b border-white/[0.04] hover:bg-secondary/20 transition-colors cursor-pointer group"
+                                        className="border-b border-border/30 hover:bg-secondary/20 transition-colors cursor-pointer group"
                                         onClick={() => startEdit(tx)}
                                     >
                                         <td className="p-4 text-sm text-foreground font-medium whitespace-nowrap">{tx.date}</td>
@@ -430,7 +430,7 @@ Respond ONLY with the JSON object, no markdown, no explanation.`;
 
                 {/* Footer summary */}
                 {filtered.length > 0 && (
-                    <div className="px-4 py-3 border-t border-white/[0.06] flex items-center justify-between text-xs text-muted-foreground">
+                    <div className="px-4 py-3 border-t border-border/40 flex items-center justify-between text-xs text-muted-foreground">
                         <span>{t('accounting.showingCount', '{{count}} transactions', { count: filtered.length })}</span>
                         <div className="flex items-center gap-4">
                             <span className="flex items-center gap-1.5">

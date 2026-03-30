@@ -167,7 +167,7 @@ const ProjectSelectorPage: React.FC<ProjectSelectorPageProps> = ({
 
                             {/* Stats Bar */}
                             <div className="grid grid-cols-3 gap-3 sm:gap-4">
-                                <div className="group relative overflow-hidden rounded-2xl border border-white/[0.08] dark:border-white/[0.06] bg-card/60 dark:bg-card/40 backdrop-blur-xl p-3 sm:p-4 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 ease-out">
+                                <div className="group relative overflow-hidden rounded-2xl border border-border/60 bg-card/80 dark:bg-card/40 backdrop-blur-xl p-3 sm:p-4 shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 ease-out">
                                     <div className="absolute -top-8 -right-8 w-24 h-24 rounded-full opacity-20 dark:opacity-15 blur-2xl bg-gradient-to-br from-primary to-primary/60 group-hover:opacity-40 group-hover:scale-110 transition-all duration-500" aria-hidden="true" />
                                     <div className="relative z-10 flex items-center gap-2 sm:gap-3">
                                         <div className="p-1.5 sm:p-2 rounded-lg bg-primary/20">
@@ -179,7 +179,7 @@ const ProjectSelectorPage: React.FC<ProjectSelectorPageProps> = ({
                                         </div>
                                     </div>
                                 </div>
-                                <div className="group relative overflow-hidden rounded-2xl border border-white/[0.08] dark:border-white/[0.06] bg-card/60 dark:bg-card/40 backdrop-blur-xl p-3 sm:p-4 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-xl hover:shadow-green-500/10 transition-all duration-300 ease-out">
+                                <div className="group relative overflow-hidden rounded-2xl border border-border/60 bg-card/80 dark:bg-card/40 backdrop-blur-xl p-3 sm:p-4 shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-xl hover:shadow-green-500/10 transition-all duration-300 ease-out">
                                     <div className="absolute -top-8 -right-8 w-24 h-24 rounded-full opacity-20 dark:opacity-15 blur-2xl bg-gradient-to-br from-green-500 to-emerald-400 group-hover:opacity-40 group-hover:scale-110 transition-all duration-500" aria-hidden="true" />
                                     <div className="relative z-10 flex items-center gap-2 sm:gap-3">
                                         <div className="p-1.5 sm:p-2 rounded-lg bg-green-500/20">
@@ -191,7 +191,7 @@ const ProjectSelectorPage: React.FC<ProjectSelectorPageProps> = ({
                                         </div>
                                     </div>
                                 </div>
-                                <div className="group relative overflow-hidden rounded-2xl border border-white/[0.08] dark:border-white/[0.06] bg-card/60 dark:bg-card/40 backdrop-blur-xl p-3 sm:p-4 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-xl hover:shadow-slate-500/10 transition-all duration-300 ease-out">
+                                <div className="group relative overflow-hidden rounded-2xl border border-border/60 bg-card/80 dark:bg-card/40 backdrop-blur-xl p-3 sm:p-4 shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-xl hover:shadow-slate-500/10 transition-all duration-300 ease-out">
                                     <div className="absolute -top-8 -right-8 w-24 h-24 rounded-full opacity-20 dark:opacity-15 blur-2xl bg-gradient-to-br from-slate-500 to-slate-400 group-hover:opacity-40 group-hover:scale-110 transition-all duration-500" aria-hidden="true" />
                                     <div className="relative z-10 flex items-center gap-2 sm:gap-3">
                                         <div className="p-1.5 sm:p-2 rounded-lg bg-slate-500/20">
@@ -343,7 +343,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, onSelect, formatDate
     return (
         <button
             onClick={onSelect}
-            className="group relative bg-card/60 dark:bg-card/40 backdrop-blur-xl hover:bg-card border border-white/[0.08] dark:border-white/[0.06] rounded-2xl overflow-hidden transition-all duration-300 text-left shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-xl hover:shadow-primary/10 hover:-translate-y-1 w-full"
+            className="group relative bg-card/80 dark:bg-card/40 backdrop-blur-xl hover:bg-card border border-border/60 rounded-2xl overflow-hidden transition-all duration-300 text-left shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-xl hover:shadow-primary/10 hover:-translate-y-1 w-full"
         >
             {/* Gradient blob decoration */}
             <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full opacity-20 dark:opacity-15 blur-2xl bg-gradient-to-br from-primary to-primary/60 group-hover:opacity-40 dark:group-hover:opacity-30 group-hover:scale-110 transition-all duration-500 z-0" aria-hidden="true" />
@@ -407,7 +407,7 @@ const ProjectListItem: React.FC<ProjectListItemProps> = ({ project, onSelect, fo
     return (
         <button
             onClick={onSelect}
-            className="w-full flex items-center gap-4 p-4 bg-card/60 dark:bg-card/40 backdrop-blur-xl hover:bg-card border border-white/[0.08] dark:border-white/[0.06] hover:border-primary/30 rounded-2xl transition-all duration-300 text-left group relative overflow-hidden shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-xl hover:shadow-primary/10"
+            className="w-full flex items-center gap-4 p-4 bg-card/80 dark:bg-card/40 backdrop-blur-xl hover:bg-card border border-border/60 hover:border-primary/30 rounded-2xl transition-all duration-300 text-left group relative overflow-hidden shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-xl hover:shadow-primary/10"
         >
             {/* Gradient blob decoration */}
             <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full opacity-20 dark:opacity-15 blur-2xl bg-gradient-to-br from-primary to-primary/60 group-hover:opacity-40 dark:group-hover:opacity-30 group-hover:scale-110 transition-all duration-500" aria-hidden="true" />

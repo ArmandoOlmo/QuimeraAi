@@ -58,7 +58,7 @@ const STATUS_COLORS: Record<string, string> = {
 const StatCard = ({ title, value, icon: Icon, trend, trendLabel, isPositiveTrend }: {
     title: string; value: string; icon: any; trend?: string; trendLabel?: string; isPositiveTrend?: boolean;
 }) => (
-    <div className="group relative overflow-hidden rounded-2xl border border-white/[0.08] dark:border-white/[0.06] bg-card/80 dark:bg-card/70 backdrop-blur-xl p-4 sm:p-5 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 ease-out">
+    <div className="group relative overflow-hidden rounded-2xl border border-border/60 bg-card/80 dark:bg-card/70 backdrop-blur-xl p-4 sm:p-5 shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 ease-out">
         <div className="absolute -top-8 -right-8 w-24 h-24 rounded-full opacity-15 dark:opacity-10 blur-2xl bg-gradient-to-br from-primary to-primary/60 group-hover:opacity-30 group-hover:scale-110 transition-all duration-500" aria-hidden="true" />
         <div className="relative z-10 flex justify-between items-start mb-3">
             <div className="p-2 bg-primary/20 rounded-lg">
@@ -382,7 +382,7 @@ const FinancialDashboard: React.FC<FinancialDashboardProps> = ({ onBack }) => {
 
                                 {/* Revenue Over Time (AreaChart) — only if Stripe data */}
                                 <div className="xl:col-span-2">
-                                    <div className="relative overflow-hidden rounded-2xl border border-white/[0.08] dark:border-white/[0.06] bg-card/80 dark:bg-card/70 backdrop-blur-xl p-4 sm:p-6">
+                                    <div className="relative overflow-hidden rounded-2xl border border-border/60 bg-card/80 dark:bg-card/70 backdrop-blur-xl p-4 sm:p-6">
                                         <h3 className="font-bold text-base sm:text-lg mb-4 sm:mb-6 flex items-center gap-2">
                                             <TrendingUp className="w-5 h-5 text-primary" />
                                             {stripeLoaded
@@ -425,7 +425,7 @@ const FinancialDashboard: React.FC<FinancialDashboardProps> = ({ onBack }) => {
 
                                 {/* Plan Distribution (PieChart) — always from tenants */}
                                 <div className="xl:col-span-1">
-                                    <div className="relative overflow-hidden rounded-2xl border border-white/[0.08] dark:border-white/[0.06] bg-card/80 dark:bg-card/70 backdrop-blur-xl p-4 sm:p-6 h-full">
+                                    <div className="relative overflow-hidden rounded-2xl border border-border/60 bg-card/80 dark:bg-card/70 backdrop-blur-xl p-4 sm:p-6 h-full">
                                         <h3 className="font-bold text-base sm:text-lg mb-4 flex items-center gap-2">
                                             <PieChartIcon className="w-5 h-5 text-primary" />
                                             {t('superadmin.financesDetail.revenueByPlan', 'Distribución por Plan')}
@@ -476,7 +476,7 @@ const FinancialDashboard: React.FC<FinancialDashboardProps> = ({ onBack }) => {
                             <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6">
 
                                 {/* Tenant Growth (BarChart) */}
-                                <div className="relative overflow-hidden rounded-2xl border border-white/[0.08] dark:border-white/[0.06] bg-card/80 dark:bg-card/70 backdrop-blur-xl p-4 sm:p-6">
+                                <div className="relative overflow-hidden rounded-2xl border border-border/60 bg-card/80 dark:bg-card/70 backdrop-blur-xl p-4 sm:p-6">
                                     <h3 className="font-bold text-base sm:text-lg mb-4 sm:mb-6 flex items-center gap-2">
                                         <BarChart3 className="w-5 h-5 text-primary" />
                                         {t('superadmin.financesDetail.tenantGrowth', 'Crecimiento de Clientes')}
@@ -495,7 +495,7 @@ const FinancialDashboard: React.FC<FinancialDashboardProps> = ({ onBack }) => {
                                 </div>
 
                                 {/* Recent Tenants Table */}
-                                <div className="relative overflow-hidden rounded-2xl border border-white/[0.08] dark:border-white/[0.06] bg-card/80 dark:bg-card/70 backdrop-blur-xl p-4 sm:p-6">
+                                <div className="relative overflow-hidden rounded-2xl border border-border/60 bg-card/80 dark:bg-card/70 backdrop-blur-xl p-4 sm:p-6">
                                     <h3 className="font-bold text-base sm:text-lg mb-4 flex items-center gap-2">
                                         <Building2 className="w-5 h-5 text-primary" />
                                         {t('superadmin.financesDetail.recentClients', 'Clientes Recientes')}

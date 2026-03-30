@@ -1,14 +1,22 @@
 /**
  * HeroBlockControls
  * Controls for editing Hero block content and styles
+ * Includes link type selector for the hero button, mirroring the web editor
  */
 
 import React from 'react';
 import { useTranslation } from 'react-i18next';
+import { Link } from 'lucide-react';
 import { useEmailEditor } from '../EmailEditor';
+import { useProject } from '../../../../../contexts/project';
 import { EmailBlock, EmailHeroContent, EmailBlockStyles } from '../../../../../types/email';
 import ColorControl from '../../../../ui/ColorControl';
 import ImagePicker from '../../../../ui/ImagePicker';
+import {
+    SingleProductSelector,
+    SingleCollectionSelector,
+    SingleContentSelector
+} from '../../../../ui/EcommerceControls';
 
 // =============================================================================
 // HELPER COMPONENTS
@@ -109,6 +117,7 @@ interface HeroBlockControlsProps {
 const HeroBlockControls: React.FC<HeroBlockControlsProps> = ({ block, activeTab }) => {
     const { t } = useTranslation();
     const { updateBlock } = useEmailEditor();
+    const { activeProject } = useProject();
 
     const content = block.content as EmailHeroContent;
     const styles = block.styles;
@@ -124,6 +133,8 @@ const HeroBlockControls: React.FC<HeroBlockControlsProps> = ({ block, activeTab 
             styles: { ...styles, ...updates },
         });
     };
+
+    const currentLinkType = content.linkType || 'manual';
 
     if (activeTab === 'content') {
         return (
@@ -173,12 +184,90 @@ const HeroBlockControls: React.FC<HeroBlockControlsProps> = ({ block, activeTab 
                             placeholder={t('email.buttonTextPlaceholder', 'Click aquí')}
                         />
 
-                        <Input
-                            label={t('email.buttonUrl', 'URL del botón')}
-                            value={content.buttonUrl || ''}
-                            onChange={(e) => updateContent({ buttonUrl: e.target.value })}
-                            placeholder="https://"
-                        />
+                        {/* Link Type Selector - Same pattern as web editor CTA */}
+                        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
+                            <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
+                                <Link size={14} />
+                                {t('email.linkType', 'Tipo de enlace')}
+                            </label>
+                            <div className="flex bg-editor-panel-bg rounded-md border border-editor-border p-1">
+                                {[
+                                    { value: 'manual', label: 'URL' },
+                                    { value: 'product', label: t('email.linkProduct', 'Producto') },
+                                    { value: 'collection', label: t('email.linkCollection', 'Colección') },
+                                    { value: 'content', label: t('email.linkContent', 'Contenido') }
+                                ].map((type) => (
+                                    <button
+                                        key={type.value}
+                                        onClick={() => updateContent({ linkType: type.value as any })}
+                                        className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors ${currentLinkType === type.value
+                                            ? 'bg-editor-accent text-editor-bg'
+                                            : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-bg'
+                                            }`}
+                                    >
+                                        {type.label}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Manual URL Input */}
+                        {(currentLinkType === 'manual') && (
+                            <>
+                                <Input
+                                    label={t('email.buttonUrl', 'URL del botón')}
+                                    value={content.buttonUrl || ''}
+                                    onChange={(e) => updateContent({ buttonUrl: e.target.value })}
+                                    placeholder="https://example.com or #section"
+                                />
+                                <p className="text-xs text-editor-text-secondary -mt-2">
+                                    {t('email.linkHelpManual', 'URLs externas o # para secciones de la página (ej. #contacto)')}
+                                </p>
+                            </>
+                        )}
+
+                        {/* Product Selector */}
+                        {currentLinkType === 'product' && (
+                            <SingleProductSelector
+                                storeId={activeProject?.id || ''}
+                                selectedProductId={content.buttonUrl?.startsWith('/product/') ? content.buttonUrl.split('/product/')[1] : undefined}
+                                onSelect={(id) => {
+                                    if (id) {
+                                        updateContent({ buttonUrl: `/product/${id}` });
+                                    } else {
+                                        updateContent({ buttonUrl: '' });
+                                    }
+                                }}
+                                label={t('email.selectProduct', 'Seleccionar producto')}
+                            />
+                        )}
+
+                        {/* Collection Selector */}
+                        {currentLinkType === 'collection' && (
+                            <SingleCollectionSelector
+                                storeId={activeProject?.id || ''}
+                                gridCategories={[]}
+                                selectedCollectionId={content.collectionId}
+                                onSelect={(id) => {
+                                    updateContent({ collectionId: id || undefined });
+                                    if (id) {
+                                        updateContent({ buttonUrl: '' });
+                                    }
+                                }}
+                                label={t('email.selectCollection', 'Seleccionar colección')}
+                            />
+                        )}
+
+                        {/* Content Selector */}
+                        {currentLinkType === 'content' && (
+                            <SingleContentSelector
+                                selectedContentPath={content.buttonUrl}
+                                onSelect={(path) => {
+                                    updateContent({ buttonUrl: path || '' });
+                                }}
+                                label={t('email.selectContent', 'Seleccionar contenido')}
+                            />
+                        )}
                     </>
                 )}
             </div>
@@ -238,9 +327,3 @@ const HeroBlockControls: React.FC<HeroBlockControlsProps> = ({ block, activeTab 
 };
 
 export default HeroBlockControls;
-
-
-
-
-
-

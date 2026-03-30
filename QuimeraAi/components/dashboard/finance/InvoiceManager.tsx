@@ -122,14 +122,14 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({
                 <h3 className="text-lg font-bold text-foreground flex items-center gap-2"><FileText size={20} className="text-primary" />{editingId ? t('accounting.editInvoice', 'Edit Invoice') : t('accounting.newInvoice', 'New Invoice')}</h3>
                 <button onClick={() => { resetForm(); setView('list'); }} className="text-muted-foreground hover:text-foreground"><X size={20} /></button>
             </div>
-            <div className="rounded-2xl border border-white/[0.08] bg-card/80 backdrop-blur-xl p-5 space-y-4">
+            <div className="rounded-2xl border border-border/60 bg-card/80 backdrop-blur-xl p-5 space-y-4">
                 <h4 className="font-semibold text-foreground text-sm uppercase tracking-wider">{t('accounting.clientInfo', 'Client Information')}</h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <input type="text" value={clientName} onChange={e => setClientName(e.target.value)} placeholder={t('accounting.clientName', 'Client Name')} className="h-10 px-3 rounded-xl border border-white/[0.08] bg-secondary/30 text-sm text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/40" />
-                    <input type="email" value={clientEmail} onChange={e => setClientEmail(e.target.value)} placeholder={t('accounting.clientEmail', 'Client Email')} className="h-10 px-3 rounded-xl border border-white/[0.08] bg-secondary/30 text-sm text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/40" />
+                    <input type="text" value={clientName} onChange={e => setClientName(e.target.value)} placeholder={t('accounting.clientName', 'Client Name')} className="h-10 px-3 rounded-xl border border-border/60 bg-secondary/30 text-sm text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/40" />
+                    <input type="email" value={clientEmail} onChange={e => setClientEmail(e.target.value)} placeholder={t('accounting.clientEmail', 'Client Email')} className="h-10 px-3 rounded-xl border border-border/60 bg-secondary/30 text-sm text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/40" />
                 </div>
             </div>
-            <div className="rounded-2xl border border-white/[0.08] bg-card/80 backdrop-blur-xl p-5 space-y-4">
+            <div className="rounded-2xl border border-border/60 bg-card/80 backdrop-blur-xl p-5 space-y-4">
                 <div className="flex items-center justify-between">
                     <h4 className="font-semibold text-foreground text-sm uppercase tracking-wider">{t('accounting.termsAndDates', 'Terms & Dates')}</h4>
                     <button onClick={handleAiOptimize} disabled={isOptimizing} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-gradient-to-r from-primary to-purple-500 text-white shadow-md hover:shadow-lg hover:scale-105 transition-all disabled:opacity-50">
@@ -137,34 +137,34 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({
                     </button>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    <div><label className="text-xs text-muted-foreground font-medium mb-1 block">{t('accounting.issueDate', 'Issue Date')}</label><input type="date" value={issueDate} onChange={e => setIssueDate(e.target.value)} className="h-10 w-full px-3 rounded-xl border border-white/[0.08] bg-secondary/30 text-sm text-foreground focus:ring-2 focus:ring-primary/40" /></div>
-                    <div><label className="text-xs text-muted-foreground font-medium mb-1 block">{t('accounting.dueDate', 'Due Date')}</label><input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} className="h-10 w-full px-3 rounded-xl border border-white/[0.08] bg-secondary/30 text-sm text-foreground focus:ring-2 focus:ring-primary/40" /></div>
-                    <div><label className="text-xs text-muted-foreground font-medium mb-1 block">{t('accounting.paymentTerms', 'Payment Terms')}</label><input type="text" value={paymentTerms} onChange={e => setPaymentTerms(e.target.value)} className="h-10 w-full px-3 rounded-xl border border-white/[0.08] bg-secondary/30 text-sm text-foreground focus:ring-2 focus:ring-primary/40" /></div>
+                    <div><label className="text-xs text-muted-foreground font-medium mb-1 block">{t('accounting.issueDate', 'Issue Date')}</label><input type="date" value={issueDate} onChange={e => setIssueDate(e.target.value)} className="h-10 w-full px-3 rounded-xl border border-border/60 bg-secondary/30 text-sm text-foreground focus:ring-2 focus:ring-primary/40" /></div>
+                    <div><label className="text-xs text-muted-foreground font-medium mb-1 block">{t('accounting.dueDate', 'Due Date')}</label><input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} className="h-10 w-full px-3 rounded-xl border border-border/60 bg-secondary/30 text-sm text-foreground focus:ring-2 focus:ring-primary/40" /></div>
+                    <div><label className="text-xs text-muted-foreground font-medium mb-1 block">{t('accounting.paymentTerms', 'Payment Terms')}</label><input type="text" value={paymentTerms} onChange={e => setPaymentTerms(e.target.value)} className="h-10 w-full px-3 rounded-xl border border-border/60 bg-secondary/30 text-sm text-foreground focus:ring-2 focus:ring-primary/40" /></div>
                 </div>
-                <div><label className="text-xs text-muted-foreground font-medium mb-1 block">{t('accounting.reminderNote', 'Payment Reminder')}</label><textarea value={reminderNote} onChange={e => setReminderNote(e.target.value)} rows={2} placeholder={t('accounting.reminderPlaceholder', 'Friendly payment reminder...')} className="w-full px-3 py-2 rounded-xl border border-white/[0.08] bg-secondary/30 text-sm text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/40 resize-none" /></div>
+                <div><label className="text-xs text-muted-foreground font-medium mb-1 block">{t('accounting.reminderNote', 'Payment Reminder')}</label><textarea value={reminderNote} onChange={e => setReminderNote(e.target.value)} rows={2} placeholder={t('accounting.reminderPlaceholder', 'Friendly payment reminder...')} className="w-full px-3 py-2 rounded-xl border border-border/60 bg-secondary/30 text-sm text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/40 resize-none" /></div>
             </div>
-            <div className="rounded-2xl border border-white/[0.08] bg-card/80 backdrop-blur-xl p-5 space-y-4">
+            <div className="rounded-2xl border border-border/60 bg-card/80 backdrop-blur-xl p-5 space-y-4">
                 <h4 className="font-semibold text-foreground text-sm uppercase tracking-wider">{t('accounting.lineItems', 'Line Items')}</h4>
                 <div className="space-y-3">
                     {items.map((item, idx) => (
                         <div key={item.id} className="grid grid-cols-12 gap-2 items-center">
-                            <input type="text" value={item.description} onChange={e => updateItem(idx, 'description', e.target.value)} placeholder={t('accounting.itemDescription', 'Description')} className="col-span-5 h-9 px-3 rounded-lg border border-white/[0.08] bg-secondary/30 text-sm text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/40" />
-                            <input type="number" value={item.quantity || ''} onChange={e => updateItem(idx, 'quantity', parseFloat(e.target.value) || 0)} min={0} className="col-span-2 h-9 px-2 rounded-lg border border-white/[0.08] bg-secondary/30 text-sm text-foreground text-center focus:ring-2 focus:ring-primary/40" />
-                            <input type="number" value={item.unitPrice || ''} onChange={e => updateItem(idx, 'unitPrice', parseFloat(e.target.value) || 0)} min={0} step="0.01" className="col-span-2 h-9 px-2 rounded-lg border border-white/[0.08] bg-secondary/30 text-sm text-foreground text-center focus:ring-2 focus:ring-primary/40" />
+                            <input type="text" value={item.description} onChange={e => updateItem(idx, 'description', e.target.value)} placeholder={t('accounting.itemDescription', 'Description')} className="col-span-5 h-9 px-3 rounded-lg border border-border/60 bg-secondary/30 text-sm text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/40" />
+                            <input type="number" value={item.quantity || ''} onChange={e => updateItem(idx, 'quantity', parseFloat(e.target.value) || 0)} min={0} className="col-span-2 h-9 px-2 rounded-lg border border-border/60 bg-secondary/30 text-sm text-foreground text-center focus:ring-2 focus:ring-primary/40" />
+                            <input type="number" value={item.unitPrice || ''} onChange={e => updateItem(idx, 'unitPrice', parseFloat(e.target.value) || 0)} min={0} step="0.01" className="col-span-2 h-9 px-2 rounded-lg border border-border/60 bg-secondary/30 text-sm text-foreground text-center focus:ring-2 focus:ring-primary/40" />
                             <div className="col-span-2 text-sm font-semibold text-foreground text-right">${(item.quantity * item.unitPrice).toFixed(2)}</div>
                             <button onClick={() => removeItem(idx)} className="col-span-1 justify-self-center text-muted-foreground hover:text-destructive" disabled={items.length === 1}><X size={14} /></button>
                         </div>
                     ))}
                 </div>
                 <button onClick={addItem} className="text-sm text-primary font-semibold flex items-center gap-1 hover:text-primary/80"><Plus size={14} />{t('accounting.addLineItem', 'Add Line Item')}</button>
-                <div className="border-t border-white/[0.06] pt-4 space-y-2 max-w-xs ml-auto">
+                <div className="border-t border-border/40 pt-4 space-y-2 max-w-xs ml-auto">
                     <div className="flex justify-between text-sm"><span className="text-muted-foreground">{t('accounting.subtotal', 'Subtotal')}</span><span className="text-foreground font-medium">${subtotal.toFixed(2)}</span></div>
                     <div className="flex justify-between text-sm"><span className="text-muted-foreground">{t('accounting.tax', 'Tax')}</span><span className="text-foreground font-medium">${taxTotal.toFixed(2)}</span></div>
-                    <div className="flex justify-between text-base font-bold border-t border-white/[0.06] pt-2"><span>{t('accounting.total', 'Total')}</span><span className="text-primary">${total.toFixed(2)}</span></div>
+                    <div className="flex justify-between text-base font-bold border-t border-border/40 pt-2"><span>{t('accounting.total', 'Total')}</span><span className="text-primary">${total.toFixed(2)}</span></div>
                 </div>
             </div>
             <div className="flex items-center gap-3 justify-end">
-                <button onClick={() => handleSave(true)} disabled={isSaving || !clientName} className="px-5 py-2.5 rounded-xl border border-white/[0.08] bg-secondary/50 text-foreground text-sm font-semibold hover:bg-secondary disabled:opacity-50 flex items-center gap-2">{isSaving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}{t('accounting.saveDraft', 'Save Draft')}</button>
+                <button onClick={() => handleSave(true)} disabled={isSaving || !clientName} className="px-5 py-2.5 rounded-xl border border-border/60 bg-secondary/50 text-foreground text-sm font-semibold hover:bg-secondary disabled:opacity-50 flex items-center gap-2">{isSaving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}{t('accounting.saveDraft', 'Save Draft')}</button>
                 <button onClick={() => handleSave(false)} disabled={isSaving || !clientName} className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-primary to-primary/80 text-white text-sm font-semibold shadow-lg shadow-primary/25 hover:shadow-primary/40 hover:scale-105 transition-all disabled:opacity-50 flex items-center gap-2">{isSaving ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}{t('accounting.saveAndSend', 'Save & Send')}</button>
             </div>
         </div>
@@ -173,9 +173,9 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({
     return (
         <div className="space-y-4">
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-                <div className="relative flex-1 w-full"><Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" /><input type="text" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder={t('accounting.searchInvoices', 'Search invoices...')} className="w-full h-10 pl-9 pr-4 rounded-xl border border-white/[0.08] bg-secondary/30 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40" /></div>
+                <div className="relative flex-1 w-full"><Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" /><input type="text" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder={t('accounting.searchInvoices', 'Search invoices...')} className="w-full h-10 pl-9 pr-4 rounded-xl border border-border/60 bg-secondary/30 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40" /></div>
                 <div className="flex items-center gap-2">
-                    <select value={filterStatus} onChange={e => setFilterStatus(e.target.value as any)} className="h-10 px-3 rounded-xl border border-white/[0.08] bg-secondary/30 text-sm text-foreground focus:ring-2 focus:ring-primary/40">
+                    <select value={filterStatus} onChange={e => setFilterStatus(e.target.value as any)} className="h-10 px-3 rounded-xl border border-border/60 bg-secondary/30 text-sm text-foreground focus:ring-2 focus:ring-primary/40">
                         <option value="all">{t('accounting.allStatuses', 'All')}</option><option value="draft">{t('accounting.draft', 'Draft')}</option><option value="sent">{t('accounting.sent', 'Sent')}</option><option value="paid">{t('accounting.paid', 'Paid')}</option><option value="overdue">{t('accounting.overdue', 'Overdue')}</option>
                     </select>
                     <button onClick={() => { resetForm(); setView('form'); }} className="h-10 px-4 rounded-xl bg-gradient-to-r from-primary to-primary/80 text-white text-sm font-semibold shadow-lg shadow-primary/25 hover:shadow-primary/40 hover:scale-105 transition-all flex items-center gap-2"><Plus size={16} />{t('accounting.newInvoice', 'New Invoice')}</button>
@@ -186,7 +186,7 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({
             ) : (
                 <div className="space-y-3">{filtered.map(inv => {
                     const s = STATUS_STYLES[inv.status]; const I = s.icon; return (
-                        <div key={inv.id} className="rounded-2xl border border-white/[0.08] bg-card/80 backdrop-blur-xl p-4 hover:shadow-lg transition-all group cursor-pointer" onClick={() => openEdit(inv)}>
+                        <div key={inv.id} className="rounded-2xl border border-border/60 bg-card/80 backdrop-blur-xl p-4 hover:shadow-lg transition-all group cursor-pointer" onClick={() => openEdit(inv)}>
                             <div className="flex items-center justify-between gap-4">
                                 <div className="flex items-center gap-4 min-w-0">
                                     <div className={`p-2 rounded-xl ${s.bg}`}><I size={18} className={s.text} /></div>

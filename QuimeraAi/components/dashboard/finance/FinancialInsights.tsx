@@ -106,7 +106,7 @@ Keep the response concise, professional, and under 500 words. Use bullet points 
 
     if (isLoading) {
         return (
-            <div className="rounded-2xl border border-white/[0.08] bg-card/80 backdrop-blur-xl p-6 space-y-4">
+            <div className="rounded-2xl border border-border/60 bg-card/80 backdrop-blur-xl p-6 space-y-4">
                 <Skeleton className="h-6 w-48" />
                 <Skeleton className="h-4 w-full" />
                 <Skeleton className="h-4 w-3/4" />
@@ -116,9 +116,9 @@ Keep the response concise, professional, and under 500 words. Use bullet points 
     }
 
     return (
-        <div className="rounded-2xl border border-white/[0.08] dark:border-white/[0.06] bg-card/80 dark:bg-card/70 backdrop-blur-xl shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] overflow-hidden">
+        <div className="rounded-2xl border border-border/60 bg-card/80 dark:bg-card/70 backdrop-blur-xl shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] overflow-hidden">
             {/* Header */}
-            <div className="p-5 border-b border-white/[0.06] bg-gradient-to-r from-primary/10 via-transparent to-purple-500/10">
+            <div className="p-5 border-b border-border/40 bg-gradient-to-r from-primary/10 via-transparent to-purple-500/10">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                         <div className="p-2 bg-gradient-to-br from-primary/30 to-purple-500/30 rounded-xl">
@@ -174,21 +174,21 @@ Keep the response concise, professional, and under 500 words. Use bullet points 
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                        <div className="flex items-center gap-3 p-4 rounded-xl bg-secondary/30 border border-white/[0.04]">
+                        <div className="flex items-center gap-3 p-4 rounded-xl bg-secondary/30 border border-border/30">
                             <TrendingUp size={20} className="text-green-400" />
                             <div>
                                 <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">{t('accounting.cashFlowHealth', 'Cash Flow')}</p>
                                 <p className="text-sm text-foreground font-medium">{t('accounting.clickGenerate', 'Click generate to analyze')}</p>
                             </div>
                         </div>
-                        <div className="flex items-center gap-3 p-4 rounded-xl bg-secondary/30 border border-white/[0.04]">
+                        <div className="flex items-center gap-3 p-4 rounded-xl bg-secondary/30 border border-border/30">
                             <DollarSign size={20} className="text-primary" />
                             <div>
                                 <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">{t('accounting.savingsOpps', 'Savings')}</p>
                                 <p className="text-sm text-foreground font-medium">{t('accounting.clickGenerate', 'Click generate to analyze')}</p>
                             </div>
                         </div>
-                        <div className="flex items-center gap-3 p-4 rounded-xl bg-secondary/30 border border-white/[0.04]">
+                        <div className="flex items-center gap-3 p-4 rounded-xl bg-secondary/30 border border-border/30">
                             <ShieldCheck size={20} className="text-purple-400" />
                             <div>
                                 <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">{t('accounting.forecast', '3-Month Forecast')}</p>

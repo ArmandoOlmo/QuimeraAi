@@ -242,7 +242,7 @@ const NavigationDashboard: React.FC = () => {
                         {/* Stats Overview */}
                         {effectiveProject && (
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <div className="group relative overflow-hidden rounded-2xl border border-white/[0.08] dark:border-white/[0.06] bg-card/60 dark:bg-card/40 backdrop-blur-xl p-5 min-h-[130px] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:scale-[1.03] hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 ease-out">
+                                <div className="group relative overflow-hidden rounded-2xl border border-border/60 bg-card/80 dark:bg-card/40 backdrop-blur-xl p-5 min-h-[130px] shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:scale-[1.03] hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 ease-out">
                                     <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full opacity-30 dark:opacity-20 blur-2xl bg-gradient-to-br from-primary to-primary/60 group-hover:opacity-50 dark:group-hover:opacity-35 group-hover:scale-110 transition-all duration-500" aria-hidden="true" />
                                     <div className="absolute right-4 bottom-3 select-none pointer-events-none">
                                         <span className="leading-[0.85] text-foreground/[0.08] dark:text-white/[0.10] group-hover:text-foreground/[0.14] dark:group-hover:text-white/[0.16] transition-colors duration-500" style={{ fontFamily: "'Fira Sans Extra Condensed', sans-serif", fontWeight: 100, fontSize: 'clamp(4rem, 6vw, 7rem)' }}>
@@ -256,7 +256,7 @@ const NavigationDashboard: React.FC = () => {
                                         <p className="text-sm text-muted-foreground font-medium mt-auto">{t('navigationDashboard.totalMenus', 'Total de Menús')}</p>
                                     </div>
                                 </div>
-                                <div className="group relative overflow-hidden rounded-2xl border border-white/[0.08] dark:border-white/[0.06] bg-card/60 dark:bg-card/40 backdrop-blur-xl p-5 min-h-[130px] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:scale-[1.03] hover:shadow-xl hover:shadow-green-500/10 transition-all duration-300 ease-out">
+                                <div className="group relative overflow-hidden rounded-2xl border border-border/60 bg-card/80 dark:bg-card/40 backdrop-blur-xl p-5 min-h-[130px] shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:scale-[1.03] hover:shadow-xl hover:shadow-green-500/10 transition-all duration-300 ease-out">
                                     <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full opacity-30 dark:opacity-20 blur-2xl bg-gradient-to-br from-green-500 to-emerald-400 group-hover:opacity-50 dark:group-hover:opacity-35 group-hover:scale-110 transition-all duration-500" aria-hidden="true" />
                                     <div className="absolute right-4 bottom-3 select-none pointer-events-none">
                                         <span className="leading-[0.85] text-foreground/[0.08] dark:text-white/[0.10] group-hover:text-foreground/[0.14] dark:group-hover:text-white/[0.16] transition-colors duration-500" style={{ fontFamily: "'Fira Sans Extra Condensed', sans-serif", fontWeight: 100, fontSize: 'clamp(4rem, 6vw, 7rem)' }}>
@@ -270,7 +270,7 @@ const NavigationDashboard: React.FC = () => {
                                         <p className="text-sm text-muted-foreground font-medium mt-auto">{t('navigationDashboard.activeMenus', 'Menús Activos')}</p>
                                     </div>
                                 </div>
-                                <div className="group relative overflow-hidden rounded-2xl border border-white/[0.08] dark:border-white/[0.06] bg-card/60 dark:bg-card/40 backdrop-blur-xl p-5 min-h-[130px] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:scale-[1.03] hover:shadow-xl hover:shadow-orange-500/10 transition-all duration-300 ease-out">
+                                <div className="group relative overflow-hidden rounded-2xl border border-border/60 bg-card/80 dark:bg-card/40 backdrop-blur-xl p-5 min-h-[130px] shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:scale-[1.03] hover:shadow-xl hover:shadow-orange-500/10 transition-all duration-300 ease-out">
                                     <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full opacity-30 dark:opacity-20 blur-2xl bg-gradient-to-br from-orange-500 to-amber-400 group-hover:opacity-50 dark:group-hover:opacity-35 group-hover:scale-110 transition-all duration-500" aria-hidden="true" />
                                     <div className="absolute right-4 bottom-3 select-none pointer-events-none">
                                         <span className="leading-[0.85] text-foreground/[0.08] dark:text-white/[0.10] group-hover:text-foreground/[0.14] dark:group-hover:text-white/[0.16] transition-colors duration-500" style={{ fontFamily: "'Fira Sans Extra Condensed', sans-serif", fontWeight: 100, fontSize: 'clamp(4rem, 6vw, 7rem)' }}>
@@ -378,7 +378,7 @@ const NavigationDashboard: React.FC = () => {
                                         <div
                                             key={menu.id}
                                             onClick={() => handleEdit(menu)}
-                                            className="group relative overflow-hidden rounded-2xl border border-white/[0.08] dark:border-white/[0.06] bg-card/60 dark:bg-card/40 backdrop-blur-xl p-5 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:scale-[1.03] hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 ease-out cursor-pointer"
+                                            className="group relative overflow-hidden rounded-2xl border border-border/60 bg-card/80 dark:bg-card/40 backdrop-blur-xl p-5 shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:scale-[1.03] hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 ease-out cursor-pointer"
                                         >
                                             {/* Gradient blob decoration */}
                                             <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full opacity-20 dark:opacity-15 blur-2xl bg-gradient-to-br from-primary to-primary/60 group-hover:opacity-40 dark:group-hover:opacity-30 group-hover:scale-110 transition-all duration-500" aria-hidden="true" />

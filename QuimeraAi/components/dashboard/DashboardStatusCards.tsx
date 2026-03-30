@@ -217,12 +217,12 @@ const DashboardStatusCards: React.FC = () => {
                             <button
                                 key={card.id}
                                 onClick={() => navigate(card.route)}
-                                className="group relative overflow-hidden rounded-2xl border border-white/[0.08] dark:border-white/[0.06]
-                                   bg-card/60 dark:bg-card/40 backdrop-blur-xl
+                                className="group relative overflow-hidden rounded-2xl border border-border/60
+                                   bg-card/80 dark:bg-card/40 backdrop-blur-xl
                                    p-5 text-left min-h-[140px]
-                                   shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)]
+                                   shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)]
                                    hover:scale-[1.03] hover:shadow-xl hover:shadow-primary/10
-                                   transition-all duration-300 ease-out
+                                   hover:border-border transition-all duration-300 ease-out
                                    focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
                                 style={{ animationDelay: `${idx * 60}ms` }}
                                 aria-label={t(card.titleKey)}
@@ -239,13 +239,13 @@ const DashboardStatusCards: React.FC = () => {
 
                                 {/* ── Big number + label (right side, bottom-aligned) ──────── */}
                                 <div className="absolute right-4 bottom-3 flex items-end gap-1.5 select-none pointer-events-none">
-                                    <span className="text-xs font-semibold text-muted-foreground/60 dark:text-muted-foreground/50 mb-1">
+                                    <span className="text-xs font-semibold text-muted-foreground/80 dark:text-muted-foreground/50 mb-1">
                                         {metric.label}
                                     </span>
                                     <span
                                         className="leading-[0.85]
-                                           text-foreground/[0.08] dark:text-white/[0.10]
-                                           group-hover:text-foreground/[0.14] dark:group-hover:text-white/[0.16]
+                                           text-foreground/[0.06] dark:text-white/[0.10]
+                                           group-hover:text-foreground/[0.10] dark:group-hover:text-white/[0.16]
                                            transition-colors duration-500"
                                         style={{ fontFamily: "'Fira Sans Extra Condensed', sans-serif", fontWeight: 100, fontSize: 'clamp(5rem, 8vw, 9rem)' }}
                                     >

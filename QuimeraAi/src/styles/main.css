@@ -9,28 +9,28 @@
 :root,
 html.light {
   /* Background & Foreground - Pampas (#F4F3EE) inspired */
-  --background: 40 33% 97%;
-  --foreground: 30 10% 10%;
+  --background: 40 25% 96%;
+  --foreground: 30 12% 8%;
 
-  /* Card - Pure White */
-  --card: 0 0% 100%;
-  --card-foreground: 30 10% 10%;
+  /* Card - Warm White with subtle warmth */
+  --card: 40 20% 99%;
+  --card-foreground: 30 12% 8%;
 
-  /* Popover - Pure White */
-  --popover: 0 0% 100%;
-  --popover-foreground: 30 10% 10%;
+  /* Popover - Warm White */
+  --popover: 40 20% 99%;
+  --popover-foreground: 30 12% 8%;
 
   /* Primary - Cadmium Yellow (preserved) */
   --primary: 41 96% 58%;
   --primary-foreground: 30 10% 10%;
 
-  /* Secondary - Cloudy (#B1ADA1) inspired */
-  --secondary: 36 8% 92%;
-  --secondary-foreground: 30 10% 10%;
+  /* Secondary - Cloudy (#B1ADA1) inspired — more visible */
+  --secondary: 36 10% 89%;
+  --secondary-foreground: 30 12% 12%;
 
-  /* Muted - Cloudy tones */
-  --muted: 36 8% 92%;
-  --muted-foreground: 36 8% 45%;
+  /* Muted - Cloudy tones — stronger contrast */
+  --muted: 36 10% 89%;
+  --muted-foreground: 30 10% 36%;
 
   /* Accent - Cadmium Yellow tint (preserved yellow theme) */
   --accent: 41 40% 94%;
@@ -40,21 +40,21 @@ html.light {
   --destructive: 0 84.2% 60.2%;
   --destructive-foreground: 0 0% 100%;
 
-  /* Border & Input - Cloudy inspired */
-  --border: 36 12% 80%;
-  --input: 36 12% 80%;
+  /* Border & Input - More subtle warm borders (reduced by ~10%) */
+  --border: 36 10% 79%;
+  --input: 36 10% 79%;
   --ring: 41 96% 58%;
 
   /* Radius */
   --radius: 0.375rem;
 
   /* Editor Specific - Updated for Claude aesthetic */
-  --editor-bg: #F8F7F4;
-  --editor-panel-bg: #FFFFFF;
+  --editor-bg: #F5F4F0;
+  --editor-panel-bg: #FDFCFA;
   --editor-border: #D1CEC5;
   --editor-accent: #FBB92B;
-  --editor-text-primary: #1A1816;
-  --editor-text-secondary: #5C5750;
+  --editor-text-primary: #161412;
+  --editor-text-secondary: #4A4640;
 
   /* Site Content Colors */
   --site-heading-color: #1A1816;

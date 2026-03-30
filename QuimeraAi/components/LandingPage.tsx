@@ -106,6 +106,7 @@ const LandingPageContent: React.FC = () => {
   const [activePost, setActivePost] = useState<CMSPost | null>(null);
   const [activeCategorySlug, setActiveCategorySlug] = useState<string | null>(null);
   const [isRouting, setIsRouting] = useState(false);
+  const [blogSlugNotFound, setBlogSlugNotFound] = useState(false);
 
   // Store view state for ecommerce hash routing
   const [storeView, setStoreView] = useState<StoreView>({ type: 'none' });
@@ -189,6 +190,7 @@ const LandingPageContent: React.FC = () => {
       setActivePost(null);
       setStoreView({ type: 'none' });
       setIsRouting(false);
+      setBlogSlugNotFound(false);
 
       // ========================================
       // REAL PATH ROUTING (Shopify/Wix style)
@@ -202,11 +204,13 @@ const LandingPageContent: React.FC = () => {
 
         if (post) {
           setActivePost(post);
+          setBlogSlugNotFound(false);
           window.scrollTo(0, 0);
           setIsRouting(false);
         } else {
           if (!isLoadingCMS && cmsPosts.length > 0) {
             console.warn(`Article with slug "${slug}" not found.`);
+            setBlogSlugNotFound(true);
             setIsRouting(false);
           }
         }
@@ -323,6 +327,7 @@ const LandingPageContent: React.FC = () => {
     window.history.pushState({}, '', '/');
     setActivePost(null);
     setActiveCategorySlug(null);
+    setBlogSlugNotFound(false);
     setStoreView({ type: 'none' });
     window.scrollTo(0, 0);
   };
@@ -358,6 +363,7 @@ const LandingPageContent: React.FC = () => {
     setActivePost(null);
     setActiveCategorySlug(null);
     setStoreView({ type: 'none' });
+    setBlogSlugNotFound(false);
 
     // Home page
     if (href === '/' || href === '') {
@@ -392,6 +398,11 @@ const LandingPageContent: React.FC = () => {
       const post = cmsPosts.find(p => p.slug === slug);
       if (post) {
         setActivePost(post);
+        setBlogSlugNotFound(false);
+        window.scrollTo(0, 0);
+      } else {
+        console.warn(`[LandingPage] Blog post not found for slug: ${slug}`);
+        setBlogSlugNotFound(true);
         window.scrollTo(0, 0);
       }
       return;
@@ -862,9 +873,10 @@ const LandingPageContent: React.FC = () => {
   };
 
   const isArticleHash = typeof window !== 'undefined' && window.location.hash.startsWith('#article:');
+  const isBlogPath = typeof window !== 'undefined' && window.location.pathname.startsWith('/blog/');
 
   // Determine if we should show the loading spinner for an article
-  const showArticleLoading = isArticleHash && (isLoadingCMS || (isRouting && !activePost));
+  const showArticleLoading = (isArticleHash || isBlogPath) && (isLoadingCMS || (isRouting && !activePost));
 
   // Use theme pageBackground with smart fallback based on globalColors or hero background
   // Priority: pageBackground > globalColors.background > hero background > default
@@ -999,8 +1011,8 @@ const LandingPageContent: React.FC = () => {
           );
         })()}
 
-        {/* 3. 404 State (Article hash but no post found after loading) */}
-        {!showArticleLoading && isArticleHash && !activePost && !isLoadingCMS && (
+        {/* 3. 404 State (Article hash or /blog/ path but no post found after loading) */}
+        {!showArticleLoading && (isArticleHash || blogSlugNotFound) && !activePost && !isLoadingCMS && (
           <div className="min-h-[60vh] flex flex-col items-center justify-center text-center px-4">
             <h2 className="text-3xl font-bold text-site-heading mb-4">Article Not Found</h2>
             <p className="text-site-body mb-8">The article you are looking for does not exist or has been removed.</p>
