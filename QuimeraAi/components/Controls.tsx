@@ -7528,7 +7528,7 @@ const Controls: React.FC = () => {
 
       {/* Left Panel: Sections List - Desktop only */}
       <div className={`
-        bg-card/50 border-r border-border w-64 lg:w-72 flex-shrink-0 flex flex-col overflow-hidden
+        bg-card/50 border-r border-border/50 w-64 lg:w-72 flex-shrink-0 flex flex-col overflow-hidden
         fixed inset-y-0 left-0 z-40 transform duration-300 ease-in-out
         md:relative md:inset-auto md:z-auto md:transform-none md:h-full
         hidden md:flex

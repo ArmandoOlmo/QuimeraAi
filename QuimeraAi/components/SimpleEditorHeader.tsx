@@ -84,7 +84,7 @@ const SimpleEditorHeader: React.FC<SimpleEditorHeaderProps> = ({
   };
 
   return (
-    <header className="h-14 px-3 md:px-6 border-b border-border flex items-center gap-2 md:gap-4 header-glass z-20 sticky top-0" role="banner">
+    <header className="h-14 px-3 md:px-6 border-b border-border bg-background flex items-center gap-2 md:gap-4 z-20 sticky top-0" role="banner">
       <div className="flex items-center gap-2 md:gap-4 min-w-0 flex-1">
         {/* Mobile Menu Button - Opens DashboardSidebar */}
         {onOpenMobileMenu && (

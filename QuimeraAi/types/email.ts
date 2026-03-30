@@ -677,7 +677,7 @@ export interface EmailDocument {
  * Configuración por defecto para estilos globales
  */
 export const DEFAULT_EMAIL_GLOBAL_STYLES: EmailGlobalStyles = {
-    fontFamily: 'Arial, sans-serif',
+    fontFamily: 'inter',
     primaryColor: '#4f46e5',
     secondaryColor: '#6366f1',
     backgroundColor: '#ffffff',
