@@ -6,19 +6,9 @@ import { FontFamily } from '../../types';
 import ColorControl from './ColorControl';
 import { ChevronDown, Image, Italic } from 'lucide-react';
 import { fontOptions, formatFontName } from '../../utils/fontLoader';
+import FontWeightPicker from './FontWeightPicker';
 
-// Available font weights with human-readable labels
-const fontWeightOptions = [
-    { value: 100, label: 'Thin (100)' },
-    { value: 200, label: 'Extra Light (200)' },
-    { value: 300, label: 'Light (300)' },
-    { value: 400, label: 'Regular (400)' },
-    { value: 500, label: 'Medium (500)' },
-    { value: 600, label: 'SemiBold (600)' },
-    { value: 700, label: 'Bold (700)' },
-    { value: 800, label: 'Extra Bold (800)' },
-    { value: 900, label: 'Black (900)' },
-];
+
 
 const FontManager: React.FC = () => {
     const { t } = useTranslation();
@@ -73,25 +63,15 @@ const FontManager: React.FC = () => {
             {/* Weight + Italic row */}
             <div className="flex gap-2">
                 {/* Weight Select */}
-                <div className="relative flex-1">
-                    <select
-                        value={(theme as any)[weightKey] || defaultWeight}
-                        onChange={(e) => handleWeightChange(weightKey, Number(e.target.value))}
-                        className="w-full bg-editor-panel-bg border border-editor-border rounded-md px-3 py-1.5 text-xs text-editor-text-primary focus:outline-none focus:ring-1 focus:ring-editor-accent transition-all appearance-none cursor-pointer hover:border-editor-accent/50"
-                    >
-                        {fontWeightOptions.map(opt => (
-                            <option key={opt.value} value={opt.value}>{opt.label}</option>
-                        ))}
-                    </select>
-                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-editor-text-secondary">
-                        <ChevronDown className="h-3 w-3" />
-                    </div>
-                </div>
+                <FontWeightPicker
+                    value={(theme as any)[weightKey] || defaultWeight}
+                    onChange={(weight) => handleWeightChange(weightKey, weight)}
+                />
                 
                 {/* Italic Toggle */}
                 <button
                     onClick={() => handleStyleToggle(styleKey)}
-                    className={`flex items-center justify-center w-8 h-8 rounded-md border transition-all cursor-pointer ${
+                    className={`flex items-center justify-center w-8 self-stretch rounded-md border transition-all cursor-pointer ${
                         (theme as any)[styleKey] === 'italic'
                             ? 'bg-editor-accent/20 border-editor-accent text-editor-accent'
                             : 'bg-editor-panel-bg border-editor-border text-editor-text-secondary hover:border-editor-accent/50'

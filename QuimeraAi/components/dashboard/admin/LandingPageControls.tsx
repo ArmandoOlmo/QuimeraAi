@@ -19,6 +19,7 @@ import ImageGeneratorModal from '../../ui/ImageGeneratorModal';
 import ColorControl from '../../ui/ColorControl';
 import CoolorsImporter from '../../ui/CoolorsImporter';
 import FontFamilyPicker from '../../ui/FontFamilyPicker';
+import FontWeightPicker from '../../ui/FontWeightPicker';
 import { GlobalColors, FontFamily } from '../../../types';
 import { colorPalettes, getDefaultGlobalColors } from '../../../data/colorPalettes';
 import { fontOptions, formatFontName, getFontStack, loadAllFonts, resolveFontFamily } from '../../../utils/fontLoader';
@@ -2896,17 +2897,7 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
         </div>
     );
 
-    const FONT_WEIGHT_OPTIONS = [
-        { value: 100, label: 'Thin (100)' },
-        { value: 200, label: 'Extra Light (200)' },
-        { value: 300, label: 'Light (300)' },
-        { value: 400, label: 'Regular (400)' },
-        { value: 500, label: 'Medium (500)' },
-        { value: 600, label: 'SemiBold (600)' },
-        { value: 700, label: 'Bold (700)' },
-        { value: 800, label: 'Extra Bold (800)' },
-        { value: 900, label: 'Black (900)' },
-    ];
+
 
     // Render a font select with weight + italic controls (matches GlobalStylesControl.tsx)
     const renderFontSelect = (
@@ -2928,26 +2919,16 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
             </div>
             {/* Weight + Italic row */}
             <div className="flex gap-2">
-                <div className="relative flex-1">
-                    <select
-                        value={data[weightKey] || defaultWeight}
-                        onChange={(e) => updateData(weightKey, Number(e.target.value))}
-                        className="w-full bg-editor-panel-bg border border-editor-border rounded-md px-3 py-1.5 text-xs text-editor-text-primary focus:outline-none focus:ring-1 focus:ring-editor-accent transition-all appearance-none cursor-pointer hover:border-editor-accent/50"
-                    >
-                        {FONT_WEIGHT_OPTIONS.map(opt => (
-                            <option key={opt.value} value={opt.value}>{opt.label}</option>
-                        ))}
-                    </select>
-                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-editor-text-secondary">
-                        <ChevronDown className="h-3 w-3" />
-                    </div>
-                </div>
+                <FontWeightPicker
+                    value={data[weightKey] || defaultWeight}
+                    onChange={(weight) => updateData(weightKey, weight)}
+                />
                 <button
                     onClick={() => {
                         const currentValue = data[styleKey] || 'normal';
                         updateData(styleKey, currentValue === 'normal' ? 'italic' : 'normal');
                     }}
-                    className={`flex items-center justify-center w-8 h-8 rounded-md border transition-all cursor-pointer ${
+                    className={`flex items-center justify-center w-8 self-stretch rounded-md border transition-all cursor-pointer ${
                         data[styleKey] === 'italic'
                             ? 'bg-editor-accent/20 border-editor-accent text-editor-accent'
                             : 'bg-editor-panel-bg border-editor-border text-editor-text-secondary hover:border-editor-accent/50'
