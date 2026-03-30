@@ -84,7 +84,7 @@ const EditorHeader: React.FC = () => {
   const orientationDisabled = previewDevice === 'desktop';
 
   return (
-    <header className="bg-editor-bg border-b border-editor-border/50 h-14 flex-shrink-0 z-20">
+    <header className="bg-editor-bg border-b border-editor-border h-14 flex-shrink-0 z-20">
       <div className="h-full flex items-center justify-between px-3 gap-3">
 
         {/* LEFT SECTION - Navigation & Project */}
@@ -108,7 +108,7 @@ const EditorHeader: React.FC = () => {
           </button>
 
           {/* Divider */}
-          <div className="w-px h-6 bg-editor-border/50" />
+          <div className="w-px h-6 bg-editor-border" />
 
           {/* Project Name */}
           {isEditingName ? (

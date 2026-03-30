@@ -7,6 +7,7 @@
 import React, { useState, useCallback, createContext, useContext } from 'react';
 import { useTranslation } from 'react-i18next';
 import { v4 as uuidv4 } from 'uuid';
+import { PanelRightClose, PanelRightOpen } from 'lucide-react';
 import {
     EmailBlock,
     EmailBlockType,
@@ -16,7 +17,6 @@ import {
     DEFAULT_BLOCK_CONTENT,
     DEFAULT_BLOCK_STYLES,
 } from '../../../../types/email';
-import DashboardSidebar from '../../DashboardSidebar';
 import EmailEditorHeader from './EmailEditorHeader';
 import EmailBlockTree from './EmailBlockTree';
 import EmailPreview from './EmailPreview';
@@ -135,6 +135,9 @@ const EmailEditor: React.FC<EmailEditorProps> = ({
 
     // Mobile menu state for sidebar
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+    // Properties panel visibility state
+    const [isPropertiesPanelOpen, setIsPropertiesPanelOpen] = useState(true);
 
     // ==========================================================================
     // BLOCK OPERATIONS
@@ -288,16 +291,9 @@ const EmailEditor: React.FC<EmailEditorProps> = ({
 
     return (
         <EmailEditorContext.Provider value={contextValue}>
-            <div className="flex h-screen bg-editor-bg text-editor-text-primary">
-                {/* Dashboard Sidebar - Collapsed by default, same as Web Editor */}
-                <DashboardSidebar
-                    isMobileOpen={isMobileMenuOpen}
-                    onClose={() => setIsMobileMenuOpen(false)}
-                    defaultCollapsed={true}
-                />
-
+            <div className="flex flex-col h-full bg-editor-bg text-editor-text-primary">
                 {/* Main Editor Content */}
-                <div className="flex flex-col flex-1 min-w-0">
+                <div className="flex flex-col flex-1 min-w-0 min-h-0">
                     {/* Header */}
                     <EmailEditorHeader
                         documentName={campaignName || document.name}
@@ -309,20 +305,34 @@ const EmailEditor: React.FC<EmailEditorProps> = ({
                     />
 
                     {/* Main Content - 3 Column Layout */}
-                    <div className="flex-1 flex overflow-hidden">
+                    <div className="flex-1 flex overflow-hidden relative">
                         {/* Left Sidebar - Block Tree */}
-                        <div className="w-64 flex-shrink-0 border-r border-editor-border overflow-hidden hidden md:block">
+                        <div className="w-64 flex-shrink-0 border-r border-editor-border overflow-hidden hidden md:flex flex-col">
                             <EmailBlockTree />
                         </div>
 
                         {/* Center - Preview */}
-                        <div className="flex-1 overflow-hidden bg-editor-panel-bg/30">
+                        <div className="flex-1 overflow-hidden bg-editor-panel-bg relative min-w-0">
                             <EmailPreview />
                         </div>
 
+                        {/* Toggle Properties Panel Button - Right aligned, same pattern as Controls.tsx */}
+                        <button
+                            onClick={() => setIsPropertiesPanelOpen(!isPropertiesPanelOpen)}
+                            className={`hidden lg:flex fixed top-1/2 -translate-y-1/2 z-30 p-2 bg-card border border-border shadow-lg hover:bg-accent transition-all duration-300 overflow-hidden rounded-lg ${isPropertiesPanelOpen
+                                ? 'right-[calc(20rem-18px)]'
+                                : 'right-0 rounded-l-lg rounded-r-none'
+                                }`}
+                            title={isPropertiesPanelOpen ? 'Ocultar propiedades' : 'Mostrar propiedades'}
+                        >
+                            {isPropertiesPanelOpen ? <PanelRightClose size={18} /> : <PanelRightOpen size={18} />}
+                        </button>
+
                         {/* Right Sidebar - Properties Panel */}
-                        <div className="w-80 flex-shrink-0 border-l border-editor-border overflow-hidden hidden lg:block">
-                            <EmailPropertiesPanel />
+                        <div className={`flex-shrink-0 border-l border-editor-border bg-editor-panel-bg flex flex-col overflow-hidden hidden lg:flex transition-all duration-300 ${isPropertiesPanelOpen ? 'w-80' : 'w-0'}`}>
+                            <div className="w-80 h-full flex-shrink-0">
+                                <EmailPropertiesPanel />
+                            </div>
                         </div>
                     </div>
                 </div>

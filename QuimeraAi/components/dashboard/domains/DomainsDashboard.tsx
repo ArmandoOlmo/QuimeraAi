@@ -68,6 +68,7 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
     const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
     const [deployConfirmOpen, setDeployConfirmOpen] = useState(false);
     const [showLogs, setShowLogs] = useState(false);
+    const [isExpanded, setIsExpanded] = useState(false);
     const [deployProvider] = useState<'vercel' | 'cloudflare' | 'netlify' | 'cloud_run'>('cloud_run');
     const [verificationMessage, setVerificationMessage] = useState<string | null>(null);
 
@@ -186,16 +187,17 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
             {/* Gradient blob decoration */}
             <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full opacity-20 dark:opacity-15 blur-2xl bg-gradient-to-br from-primary to-primary/60 group-hover:opacity-40 dark:group-hover:opacity-30 group-hover:scale-110 transition-all duration-500 pointer-events-none" aria-hidden="true" />
             <div className="p-6">
-                <div className="flex justify-between items-start mb-4">
+                {/* Accordion Header - Always visible */}
+                <div
+                    className="flex justify-between items-start cursor-pointer"
+                    onClick={() => setIsExpanded(!isExpanded)}
+                >
                     <div className="flex-1">
-                        <h3
-                            className="text-xl font-bold text-foreground flex items-center gap-2 cursor-pointer hover:text-primary transition-colors"
-                            onClick={handleDomainClick}
-                            title={t('domainsDashboard.clickToRefresh')}
-                        >
+                        <h3 className="text-xl font-bold text-foreground flex items-center gap-2 transition-colors">
                             {domain.name}
                             {domain.deployment?.deploymentUrl && (
                                 <a href={domain.deployment.deploymentUrl} target="_blank" rel="noreferrer"
+                                    onClick={(e) => e.stopPropagation()}
                                     className="text-muted-foreground hover:text-primary" title={t('domainsDashboard.viewDeployment')}>
                                     <ExternalLink size={14} />
                                 </a>
@@ -210,14 +212,13 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
                             {domain.status === 'deployed' && <span className="text-xs font-bold text-green-500 flex items-center bg-green-500/10 px-2 py-0.5 rounded-full border border-green-500/20"><CheckCircle size={12} className="mr-1" /> {t('domainsDashboard.status.deployed')}</span>}
                             {domain.status === 'error' && (
                                 <button
-                                    onClick={handleVerify}
+                                    onClick={(e) => { e.stopPropagation(); handleVerify(); }}
                                     className="text-xs font-bold text-red-500 flex items-center bg-red-500/10 px-2 py-0.5 rounded-full border border-red-500/20 hover:bg-red-500/20 transition-colors"
                                 >
                                     <AlertTriangle size={12} className="mr-1" /> {t('domainsDashboard.status.error')} - {t('domainsDashboard.retryVerify', 'Reintentar')}
                                 </button>
                             )}
                             <span className="text-xs text-muted-foreground">• {domain.provider}</span>
-                            {/* SSL Status Badge */}
                             {domain.sslStatus === 'active' && (
                                 <span className="text-xs font-bold text-green-500 flex items-center bg-green-500/10 px-2 py-0.5 rounded-full border border-green-500/20">
                                     🔒 SSL
@@ -229,29 +230,15 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
                                 </span>
                             )}
                         </div>
-                        {domain.deployment?.deploymentUrl && (
+                        {!isExpanded && domain.deployment?.deploymentUrl && (
                             <p className="text-xs text-muted-foreground mt-1">
                                 🌐 {domain.deployment.deploymentUrl}
                             </p>
                         )}
-                        {domain.deployment?.lastDeployedAt && (
-                            <p className="text-xs text-muted-foreground mt-0.5">
-                                {t('domainsDashboard.lastDeployed')}: {new Date(domain.deployment.lastDeployedAt).toLocaleString()}
-                            </p>
-                        )}
                     </div>
-                    <div className="flex gap-2">
-                        {domain.status === 'deploying' && (
-                            <button
-                                onClick={() => updateDomain(domain.id, { status: 'active' })}
-                                className="p-2 text-yellow-500 hover:bg-yellow-500/10 rounded-lg transition-colors"
-                                title={t('common.cancel', 'Cancelar')}
-                            >
-                                <X size={18} />
-                            </button>
-                        )}
+                    <div className="flex items-center gap-2 ml-4">
                         <button
-                            onClick={handleVerify}
+                            onClick={(e) => { e.stopPropagation(); handleVerify(); }}
                             disabled={isVerifying || isDeleting}
                             className="p-2 text-muted-foreground hover:text-primary hover:bg-secondary rounded-lg transition-colors disabled:opacity-50"
                             title={t('domainsDashboard.verifyDns')}
@@ -259,15 +246,22 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
                             <RefreshCw size={18} className={isVerifying ? 'animate-spin' : ''} />
                         </button>
                         <button
-                            onClick={handleDelete}
+                            onClick={(e) => { e.stopPropagation(); handleDelete(); }}
                             className="p-2 text-muted-foreground hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors disabled:opacity-50"
                             disabled={isDeleting}
                             title={t('domainsDashboard.deleteDomain', 'Eliminar dominio')}
                         >
                             {isDeleting ? <Loader2 size={18} className="animate-spin" /> : <Trash2 size={18} />}
                         </button>
+                        <div className="p-2 text-muted-foreground">
+                            {isExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                        </div>
                     </div>
                 </div>
+
+                {/* Accordion Body - Collapsible */}
+                {isExpanded && (
+                <div className="mt-6 pt-6 border-t border-border/50 animate-in fade-in slide-in-from-top-2 duration-200">
 
                 <div className="grid md:grid-cols-2 gap-6 mb-4">
                     <div>
@@ -608,6 +602,8 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
                         </div>
                     )}
                 </div>
+                </div>
+                )}  {/* end isExpanded */}
             </div>
 
             {
@@ -1194,7 +1190,7 @@ const DomainsDashboard: React.FC = () => {
     const { projects } = useProject();
     const { setView } = useUI();
     const { navigate } = useRouter();
-    const { user, userDocument, openProfileModal } = useAuth();
+    const { user } = useAuth();
     const tenantContext = useSafeTenant();
     const upgradeContext = useSafeUpgrade();
 
@@ -1214,33 +1210,7 @@ const DomainsDashboard: React.FC = () => {
     const [showNameserversModal, setShowNameserversModal] = useState(false);
     const [showInstructions, setShowInstructions] = useState(true);
 
-    // Subdomain card state
-    const currentUsername = (userDocument as any)?.username || '';
-    const defaultProjectId = (userDocument as any)?.defaultProjectId || '';
-    const [subdomainProjectId, setSubdomainProjectId] = useState(defaultProjectId);
-    const [subdomainCopied, setSubdomainCopied] = useState(false);
 
-    useEffect(() => {
-        if (defaultProjectId) setSubdomainProjectId(defaultProjectId);
-    }, [defaultProjectId]);
-
-    const handleSubdomainProjectChange = async (projectId: string) => {
-        if (!user || !currentUsername) return;
-        setSubdomainProjectId(projectId);
-        try {
-            const { updateSubdomainProject } = await import('../../../services/subdomainService');
-            await updateSubdomainProject(currentUsername, user.uid, projectId);
-        } catch (err) {
-            console.error('[DomainsDashboard] Error updating subdomain project:', err);
-        }
-    };
-
-    const handleCopySubdomainUrl = () => {
-        if (!currentUsername) return;
-        navigator.clipboard.writeText(`https://${currentUsername}.quimera.ai`);
-        setSubdomainCopied(true);
-        setTimeout(() => setSubdomainCopied(false), 2000);
-    };
 
     // Auto-open modal when returning from Stripe checkout
     useEffect(() => {
@@ -1376,103 +1346,6 @@ const DomainsDashboard: React.FC = () => {
                 <main className="flex-1 overflow-y-auto p-6 lg:p-8 scroll-smooth bg-secondary/5 relative z-10">
                     <div className="max-w-5xl mx-auto space-y-8">
 
-                        {/* Quimera Subdomain Card */}
-                        <div className="bg-gradient-to-r from-primary/5 via-primary/10 to-primary/5 border border-primary/20 rounded-xl p-5 relative overflow-hidden">
-                            <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-                            <div className="relative z-10">
-                                <div className="flex items-start justify-between gap-4 mb-3">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center">
-                                            <Globe size={20} className="text-primary" />
-                                        </div>
-                                        <div>
-                                            <h3 className="font-bold text-foreground text-sm">
-                                                {t('domainsDashboard.quimeraSubdomain', 'Tu Subdominio Quimera')}
-                                            </h3>
-                                            <p className="text-xs text-muted-foreground">
-                                                {t('domainsDashboard.freeSubdomain', 'Incluido gratis con tu cuenta')}
-                                            </p>
-                                        </div>
-                                    </div>
-                                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold ${
-                                        currentUsername
-                                            ? 'bg-emerald-500/20 text-emerald-500 border border-emerald-500/30'
-                                            : 'bg-amber-500/20 text-amber-500 border border-amber-500/30'
-                                    }`}>
-                                        {currentUsername ? (
-                                            <><CheckCircle size={10} /> {t('domainsDashboard.active', 'Activo')}</>
-                                        ) : (
-                                            <><Clock size={10} /> {t('domainsDashboard.notConfigured', 'Sin configurar')}</>
-                                        )}
-                                    </span>
-                                </div>
-
-                                {currentUsername ? (
-                                    <div className="space-y-3">
-                                        {/* URL display */}
-                                        <div className="flex items-center gap-2 bg-background/80 border border-border rounded-lg px-3 py-2">
-                                            <Globe size={14} className="text-primary flex-shrink-0" />
-                                            <span className="text-sm font-medium text-foreground flex-1 truncate">
-                                                {currentUsername}.quimera.ai
-                                            </span>
-                                            <button
-                                                onClick={handleCopySubdomainUrl}
-                                                className="flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-md bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
-                                            >
-                                                {subdomainCopied ? <CheckCircle size={12} /> : <Copy size={12} />}
-                                                {subdomainCopied ? t('common.copied', 'Copiado') : t('common.copy', 'Copiar')}
-                                            </button>
-                                            <a
-                                                href={`https://${currentUsername}.quimera.ai`}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="flex items-center px-2 py-1 text-xs font-medium rounded-md bg-secondary/50 text-muted-foreground hover:text-foreground transition-colors"
-                                            >
-                                                <ExternalLink size={12} />
-                                            </a>
-                                        </div>
-
-                                        {/* Project selector */}
-                                        <div className="flex items-center gap-3">
-                                            <label className="text-xs font-medium text-muted-foreground whitespace-nowrap">
-                                                {t('domainsDashboard.showProject', 'Proyecto a mostrar:')}
-                                            </label>
-                                            <select
-                                                value={subdomainProjectId}
-                                                onChange={e => handleSubdomainProjectChange(e.target.value)}
-                                                className="flex-1 text-xs bg-background border border-border rounded-lg px-2 py-1.5 text-foreground outline-none focus:ring-1 focus:ring-primary/30"
-                                            >
-                                                <option value="">{t('domainsDashboard.selectProject', 'Seleccionar proyecto...')}</option>
-                                                {projects.filter(p => p.status !== 'Template').map(p => (
-                                                    <option key={p.id} value={p.id}>{p.name}</option>
-                                                ))}
-                                            </select>
-                                        </div>
-
-                                        {/* Change username link */}
-                                        <button
-                                            onClick={() => openProfileModal()}
-                                            className="text-xs text-primary hover:text-primary/80 font-medium transition-colors"
-                                        >
-                                            {t('domainsDashboard.changeUsername', 'Cambiar nombre de usuario →')}
-                                        </button>
-                                    </div>
-                                ) : (
-                                    <div className="flex items-center gap-3 mt-2">
-                                        <button
-                                            onClick={() => openProfileModal()}
-                                            className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"
-                                        >
-                                            <Globe size={14} />
-                                            {t('domainsDashboard.configureSubdomain', 'Configurar Subdominio')}
-                                        </button>
-                                        <p className="text-xs text-muted-foreground">
-                                            {t('domainsDashboard.setUsernameHint', 'Establece un nombre de usuario en tu perfil para activar tu subdominio gratis.')}
-                                        </p>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
 
                         {/* Collapsible Instructions */}
                         <div className="bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/30 rounded-xl overflow-hidden">

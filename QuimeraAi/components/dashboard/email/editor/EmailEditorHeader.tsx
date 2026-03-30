@@ -54,7 +54,7 @@ const EmailEditorHeader: React.FC<EmailEditorHeaderProps> = ({
     ];
 
     return (
-        <header className="bg-editor-bg border-b border-editor-border/50 h-14 flex-shrink-0 z-20">
+        <header className="bg-editor-bg border-b border-editor-border h-14 flex-shrink-0 z-20">
             <div className="h-full flex items-center justify-between px-4 gap-4">
                 {/* LEFT SECTION - Mobile Menu, Back & Name */}
                 <div className="flex items-center gap-3 min-w-0">
@@ -81,7 +81,7 @@ const EmailEditorHeader: React.FC<EmailEditorHeaderProps> = ({
                     )}
 
                     {/* Divider */}
-                    <div className="w-px h-6 bg-editor-border/50" />
+                    <div className="w-px h-6 bg-editor-border" />
 
                     {/* Document Name */}
                     <div className="flex items-center gap-2 min-w-0">

@@ -52,23 +52,23 @@ const BrowserPreview = forwardRef<HTMLDivElement, BrowserPreviewProps>(({ childr
 
   return (
     <div className={`h-full mx-auto transition-all duration-300 ease-in-out ${widthClasses[previewDevice][previewOrientation]}`}>
-      <div className="w-full h-full rounded-xl shadow-2xl bg-editor-panel-bg border border-editor-border flex flex-col overflow-hidden relative">
+      <div className="w-full h-full rounded-xl shadow-2xl bg-editor-panel-bg border border-editor-border flex flex-col overflow-hidden relative" style={{ boxShadow: '0 8px 40px hsl(270 48% 8% / 0.4), 0 2px 8px hsl(270 48% 8% / 0.2)' }}>
         {/* Browser Header */}
-        <div className="flex-shrink-0 h-12 bg-editor-bg border-b border-editor-border flex items-center px-4 space-x-2 z-10">
+        <div className="flex-shrink-0 h-12 bg-editor-bg/80 backdrop-blur-md border-b border-editor-border flex items-center px-4 space-x-2 z-10">
           <div className="flex space-x-2">
-            <span className="w-3.5 h-3.5 bg-red-500 rounded-full"></span>
-            <span className="w-3.5 h-3.5 bg-yellow-500 rounded-full"></span>
-            <span className="w-3.5 h-3.5 bg-green-500 rounded-full"></span>
+            <span className="w-3 h-3 bg-red-500/80 rounded-full hover:bg-red-500 transition-colors"></span>
+            <span className="w-3 h-3 bg-yellow-500/80 rounded-full hover:bg-yellow-500 transition-colors"></span>
+            <span className="w-3 h-3 bg-green-500/80 rounded-full hover:bg-green-500 transition-colors"></span>
           </div>
           <div className="flex-grow flex items-center justify-center">
             <div
               onClick={handleOpenPreview}
               title="Click to open preview in new tab"
-              className="bg-editor-panel-bg text-editor-text-secondary text-sm rounded-full px-4 py-1.5 w-full max-w-md text-center truncate flex items-center justify-center cursor-pointer hover:bg-editor-border/30 transition-colors border border-editor-border/50 group"
+              className="bg-editor-panel-bg/50 text-editor-text-secondary text-xs rounded-full px-4 py-1.5 w-full max-w-md text-center truncate flex items-center justify-center cursor-pointer hover:bg-editor-border/20 transition-all duration-200 border border-editor-border/30 group backdrop-blur-sm"
             >
-              <span className="opacity-50 mr-0.5">https://quimera.ai/</span>
-              <span className="font-medium text-editor-text-primary">{projectSlug}</span>
-              <ExternalLink size={12} className="ml-2 opacity-0 group-hover:opacity-60 transition-opacity flex-shrink-0" />
+              <span className="opacity-40 mr-0.5">https://quimera.ai/</span>
+              <span className="font-medium text-editor-text-primary/90">{projectSlug}</span>
+              <ExternalLink size={11} className="ml-2 opacity-0 group-hover:opacity-50 transition-opacity flex-shrink-0" />
             </div>
           </div>
           <div className="w-16"></div> {/* Spacer to balance the controls */}

@@ -128,7 +128,7 @@ const Pricing: React.FC<PricingProps> = ({
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 items-center">
-            {tiers.map((tier, index) => (
+            {(tiers || []).map((tier, index) => (
               <div
                 key={index}
                 className={`
@@ -181,7 +181,7 @@ const Pricing: React.FC<PricingProps> = ({
                   </div>
 
                   <ul className="space-y-4 mb-8">
-                    {tier.features.map((feature, i) => (
+                    {(tier.features || []).map((feature, i) => (
                       <li key={i} className="flex items-start font-body" style={{ color: safeColors.cardText }}>
                         <CheckCircle
                           size={20}
@@ -246,7 +246,7 @@ const Pricing: React.FC<PricingProps> = ({
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 items-center">
-            {tiers.map((tier, index) => (
+            {(tiers || []).map((tier, index) => (
               <div
                 key={index}
                 className={`
@@ -319,7 +319,7 @@ const Pricing: React.FC<PricingProps> = ({
                   </div>
 
                   <ul className="space-y-3 mb-8">
-                    {tier.features.map((feature, i) => (
+                    {(tier.features || []).map((feature, i) => (
                       <li key={i} className="flex items-start font-body" style={{ color: safeColors.cardText }}>
                         <div
                           className="mr-3 flex-shrink-0 rounded-full p-1"
@@ -387,7 +387,7 @@ const Pricing: React.FC<PricingProps> = ({
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 items-stretch">
-            {tiers.map((tier, index) => (
+            {(tiers || []).map((tier, index) => (
               <div
                 key={index}
                 className={`
@@ -439,7 +439,7 @@ const Pricing: React.FC<PricingProps> = ({
                   </div>
 
                   <ul className="space-y-3 mb-8">
-                    {tier.features.map((feature, i) => (
+                    {(tier.features || []).map((feature, i) => (
                       <li key={i} className="flex items-start font-body" style={{ color: safeColors.cardText }}>
                         <div
                           className="mr-3 mt-0.5 flex-shrink-0 rounded-full p-1 backdrop-blur-sm"
@@ -501,7 +501,7 @@ const Pricing: React.FC<PricingProps> = ({
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-px bg-gradient-to-r" style={{ backgroundImage: `linear-gradient(to right, ${actualColors.borderColor}, ${actualColors.borderColor})` }}>
-            {tiers.map((tier, index) => (
+            {(tiers || []).map((tier, index) => (
               <div
                 key={index}
                 className={`
@@ -551,7 +551,7 @@ const Pricing: React.FC<PricingProps> = ({
                   </div>
 
                   <ul className="space-y-4 mb-10">
-                    {tier.features.map((feature, i) => (
+                    {(tier.features || []).map((feature, i) => (
                       <li key={i} className="flex items-start font-body text-sm leading-relaxed" style={{ color: safeColors.cardText }}>
                         <span className="mr-3 mt-1 flex-shrink-0" style={{ color: actualColors.accent }}>—</span>
                         <span>{feature}</span>

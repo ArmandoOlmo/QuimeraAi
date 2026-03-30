@@ -1322,7 +1322,7 @@ const CampaignsView: React.FC<CampaignsViewProps> = ({ onCreateTrigger }) => {
             {/* Visual Email Editor - Full Screen */}
             {
                 showEmailEditor && emailDocument && (
-                    <div className="fixed inset-0 z-[100]">
+                    <div className="absolute inset-0 z-[100]">
                         <EmailEditor
                             initialDocument={emailDocument}
                             onSave={handleSaveFromEditor}

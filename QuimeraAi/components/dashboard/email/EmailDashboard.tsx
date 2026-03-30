@@ -176,7 +176,7 @@ const EmailDashboard: React.FC<EmailDashboardProps> = ({ projectId: propProjectI
             <div className="min-h-screen bg-background flex">
                 <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
 
-                <div className="flex-1 flex flex-col min-h-screen relative">
+                <div className="flex-1 flex flex-col h-screen overflow-auto relative">
                     <DashboardWaveRibbons className="absolute inset-x-0 top-[14rem] h-64 z-0 pointer-events-none overflow-hidden" />
                     {/* Header - Simplified */}
                     <header className="h-14 px-4 sm:px-6 border-b border-border flex items-center justify-between bg-card/50 backdrop-blur-sm sticky top-0 z-40">
@@ -197,12 +197,11 @@ const EmailDashboard: React.FC<EmailDashboardProps> = ({ projectId: propProjectI
 
                         {/* Back Button Only */}
                         <button
-                            onClick={() => navigate(ROUTES.DASHBOARD)}
-                            className="flex items-center justify-center gap-2 h-9 px-3 rounded-lg bg-secondary/50 hover:bg-secondary text-sm font-medium transition-all text-muted-foreground hover:text-foreground"
+                            onClick={() => window.history.back()}
+                            className="flex items-center justify-center h-9 w-9 rounded-lg hover:bg-muted transition-all text-muted-foreground hover:text-foreground"
                             aria-label={t('common.back', 'Volver')}
                         >
                             <ArrowLeft size={16} />
-                            <span className="hidden sm:inline">{t('common.back', 'Volver')}</span>
                         </button>
                     </header>
 
@@ -246,8 +245,10 @@ const EmailDashboard: React.FC<EmailDashboardProps> = ({ projectId: propProjectI
                     </div>
 
                     {/* Content */}
-                    <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 relative z-[2]">
-                        {renderContent()}
+                    <main className="flex-1 overflow-y-auto w-full relative z-[2]">
+                        <div className="w-full max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
+                            {renderContent()}
+                        </div>
                     </main>
                 </div>
             </div>

@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="flex h-screen bg-gray-100">
+  
+  <div class="relative flex-shrink-0 h-screen z-50 lg:w-72 bg-red-500 transition-all duration-300">
+    <aside class="fixed lg:relative z-50 h-full w-full bg-blue-500 text-white p-4">
+      DashboardSidebar Component (aside)
+    </aside>
+  </div>
+
+  <div class="flex flex-col flex-1 min-w-0 bg-green-200">
+     <div class="flex-1 flex overflow-hidden">
+        <div class="w-64 flex-shrink-0 bg-yellow-300 p-4">
+           EmailBlockTree
+        </div>
+        <div class="flex-1 overflow-auto flex justify-center p-4 bg-gray-300">
+           EmailPreview Canvas
+        </div>
+     </div>
+  </div>
+
+</body>
+</html>

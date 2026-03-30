@@ -50,9 +50,10 @@ import {
 
 interface AgencyNavigationManagementProps {
     onBack?: () => void;
+    onSaveReady?: (saveState: { save: () => Promise<void>; isSaving: boolean; hasChanges: boolean }) => void;
 }
 
-const AgencyNavigationManagement: React.FC<AgencyNavigationManagementProps> = ({ onBack }) => {
+const AgencyNavigationManagement: React.FC<AgencyNavigationManagementProps> = ({ onBack, onSaveReady }) => {
     const { t } = useTranslation();
     const { currentTenant } = useTenant();
     const { articles } = useAgencyContent();
@@ -75,8 +76,17 @@ const AgencyNavigationManagement: React.FC<AgencyNavigationManagementProps> = ({
     // Published articles only
     const publishedArticles = articles.filter(a => a.status === 'published');
 
+    // Expose save state to parent
+    useEffect(() => {
+        if (onSaveReady) {
+            onSaveReady({ save: handleSave, isSaving, hasChanges });
+        }
+    }, [isSaving, hasChanges]); // eslint-disable-line react-hooks/exhaustive-deps
+
     // Load config
     useEffect(() => {
+        let cancelled = false;
+
         const loadConfig = async () => {
             if (!currentTenant?.id) {
                 setIsLoading(false);
@@ -86,6 +96,8 @@ const AgencyNavigationManagement: React.FC<AgencyNavigationManagementProps> = ({
             setIsLoading(true);
             try {
                 let config = await getAgencyLanding(currentTenant.id);
+
+                if (cancelled) return;
 
                 if (!config) {
                     config = createDefaultAgencyLandingConfig(currentTenant.id, currentTenant.name) as AgencyLandingConfig;
@@ -109,15 +121,21 @@ const AgencyNavigationManagement: React.FC<AgencyNavigationManagementProps> = ({
                 if (footerSection?.data?.socialLinks) {
                     setSocialLinks(footerSection.data.socialLinks);
                 }
-            } catch (error) {
+            } catch (error: any) {
+                if (cancelled) return;
                 console.error('Error loading agency landing:', error);
-                showToast('Error al cargar configuración', 'error');
+                // Don't show toast for permission errors (race condition with auth)
+                if (error?.code !== 'permission-denied') {
+                    showToast('Error al cargar configuración', 'error');
+                }
             }
-            setIsLoading(false);
+            if (!cancelled) setIsLoading(false);
         };
 
         loadConfig();
-    }, [currentTenant?.id, currentTenant?.name, showToast]);
+        return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [currentTenant?.id]);
 
     // Save changes
     const handleSave = async () => {
@@ -268,143 +286,85 @@ const AgencyNavigationManagement: React.FC<AgencyNavigationManagementProps> = ({
     }
 
     return (
-        <div className="flex flex-col h-full bg-background">
-            {/* Header */}
-            <header className="h-14 border-b border-border flex items-center justify-between bg-background z-20 sticky top-0">
-                <div className="flex items-center gap-3">
-                    {onBack && (
-                        <button onClick={onBack} className="flex items-center justify-center h-9 w-9 rounded-lg hover:bg-secondary transition-colors">
-                            <ArrowLeft size={18} />
-                        </button>
-                    )}
-                    <MenuIcon className="text-primary w-5 h-5" />
-                    <h1 className="text-lg font-semibold">Enlaces del Menú</h1>
-                    <span className="px-2 py-0.5 text-xs font-medium bg-blue-500/10 text-blue-500 rounded-full">
-                        Solo enlaces
-                    </span>
+        <div className="space-y-6 max-w-4xl mx-auto">
+            {/* Page Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div>
+                    <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
+                        <MenuIcon className="h-6 w-6 text-primary" />
+                        {t('agency.navigation', 'Enlaces del Menú')}
+                    </h2>
+                    <p className="text-muted-foreground mt-1">
+                        {t('agency.navigationDesc', 'Configura los enlaces de navegación del header, columnas del footer y redes sociales.')}
+                    </p>
                 </div>
-
                 <button
                     onClick={handleSave}
                     disabled={isSaving || !hasChanges}
-                    className="flex items-center gap-2 h-9 px-4 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex items-center gap-2 px-5 py-2.5 bg-primary text-primary-foreground rounded-xl font-medium transition-all hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
                 >
-                    {isSaving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
-                    Guardar
+                    {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                    {isSaving ? t('common.saving', 'Guardando...') : t('common.save', 'Guardar')}
                 </button>
-            </header>
+            </div>
 
-            {/* Info banner */}
-            <div className="py-3 bg-blue-500/5 border-b border-blue-500/10">
-                <p className="text-sm text-blue-400">
-                    💡 Aquí configuras los <strong>enlaces de navegación</strong> del header, las <strong>columnas del footer</strong> con sus enlaces, y tus <strong>redes sociales</strong>.
+            {/* Info Banner */}
+            <div className="flex items-start gap-3 p-4 bg-primary/5 border border-primary/20 rounded-xl">
+                <MenuIcon className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
+                <p className="text-sm text-foreground">
+                    Aquí configuras los <strong>enlaces de navegación</strong> del header, las <strong>columnas del footer</strong> con sus enlaces, y tus <strong>redes sociales</strong>. Los aspectos visuales se configuran desde el editor del Landing Page.
                 </p>
             </div>
 
-            {/* Tabs */}
-            <div className="border-b border-border px-4 sm:px-6">
-                <div className="flex gap-1">
+            {/* Tabs Card */}
+            <div className="bg-card border border-border rounded-xl overflow-hidden">
+                <div className="px-6 py-0 border-b border-border bg-muted/30 flex gap-1">
                     <button
                         onClick={() => setActiveTab('header')}
-                        className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'header' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'
-                            }`}
+                        className={`px-4 py-3.5 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${activeTab === 'header' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
                     >
-                        <MenuIcon size={14} className="inline mr-2" />
+                        <MenuIcon size={14} />
                         Enlaces Header ({headerLinks.length})
                     </button>
                     <button
                         onClick={() => setActiveTab('footer')}
-                        className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'footer' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'
-                            }`}
+                        className={`px-4 py-3.5 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${activeTab === 'footer' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
                     >
-                        <Layout size={14} className="inline mr-2" />
+                        <Layout size={14} />
                         Columnas Footer ({footerColumns.length})
                     </button>
                 </div>
-            </div>
 
-            {/* Content */}
-            <main className="flex-1 overflow-y-auto p-4 sm:p-6">
-                <div className="space-y-4 sm:space-y-6">
+                <div className="p-6 space-y-6">
 
                     {/* ============================================ */}
                     {/* HEADER LINKS TAB */}
                     {/* ============================================ */}
                     {activeTab === 'header' && (
                         <>
-                            {/* Instructions - Collapsible */}
-                            <div className="bg-gradient-to-br from-amber-500/10 to-orange-500/5 border border-amber-500/30 rounded-xl overflow-hidden">
-                                <button
-                                    onClick={() => setShowInstructions(!showInstructions)}
-                                    className="w-full p-4 flex items-center justify-between hover:bg-amber-500/5 transition-colors"
-                                >
-                                    <h4 className="font-semibold text-amber-500 flex items-center gap-2 text-base">
-                                        📋 Guía: Configura el menú de navegación
-                                    </h4>
-                                    {showInstructions ? <ChevronUp className="text-amber-500" size={20} /> : <ChevronDown className="text-amber-500" size={20} />}
-                                </button>
+                            {/* Quick Guide - collapsible */}
+                            <button
+                                onClick={() => setShowInstructions(!showInstructions)}
+                                className="w-full flex items-center justify-between text-left p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
+                            >
+                                <span className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                                    📋 Guía rápida de configuración
+                                </span>
+                                {showInstructions ? <ChevronUp size={16} className="text-muted-foreground" /> : <ChevronDown size={16} className="text-muted-foreground" />}
+                            </button>
 
-                                {showInstructions && (
-                                    <div className="px-5 pb-5 text-sm space-y-4">
-                                        <div className="space-y-4">
-                                            <div className="flex items-start gap-3">
-                                                <span className="flex items-center justify-center w-6 h-6 rounded-full bg-amber-500/20 text-amber-500 text-xs font-bold shrink-0 mt-0.5">1</span>
-                                                <div>
-                                                    <strong className="text-foreground block mb-1">Tipos de Enlaces Disponibles</strong>
-                                                    <ul className="list-disc list-inside space-y-1 text-muted-foreground ml-1">
-                                                        <li><strong>Secciones (#):</strong> Llevan a partes de tu página (ej. <code className="bg-secondary px-1.5 py-0.5 rounded text-xs">#services</code>, <code className="bg-secondary px-1.5 py-0.5 rounded text-xs">#pricing</code>).</li>
-                                                        <li><strong>Artículos (CMS):</strong> Contenido de tu blog. Al seleccionarlos de la lista "Artículos del CMS" abajo, se configuran automáticamente.</li>
-                                                        <li><strong>Externos (https://):</strong> Enlaces a otras webs (ej. tu calendario, portafolio externo).</li>
-                                                    </ul>
-                                                </div>
-                                            </div>
-
-                                            <div className="flex items-start gap-3">
-                                                <span className="flex items-center justify-center w-6 h-6 rounded-full bg-amber-500/20 text-amber-500 text-xs font-bold shrink-0 mt-0.5">2</span>
-                                                <div>
-                                                    <strong className="text-foreground block mb-1">Cómo Configurar</strong>
-                                                    <p className="text-muted-foreground mb-2">
-                                                        Usa los botones <strong>"Enlace manual"</strong> o selecciona un <strong>Artículo</strong> de la lista inferior.
-                                                    </p>
-                                                    <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground bg-amber-500/5 p-2 rounded">
-                                                        <div>
-                                                            <span className="font-semibold text-amber-600 block">Texto:</span>
-                                                            Lo que ve el usuario en el menú.
-                                                        </div>
-                                                        <div>
-                                                            <span className="font-semibold text-amber-600 block">URL / Enlace:</span>
-                                                            El destino (ej. <code className="text-xs">#contacto</code> o <code className="text-xs">https://google.com</code>).
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <div className="flex items-start gap-3">
-                                                <span className="flex items-center justify-center w-6 h-6 rounded-full bg-amber-500/20 text-amber-500 text-xs font-bold shrink-0 mt-0.5">3</span>
-                                                <div>
-                                                    <strong className="text-foreground block mb-1">Gestión</strong>
-                                                    <p className="text-muted-foreground">
-                                                        Edita directamente escribiendo en los campos. Para <strong>eliminar</strong>, pasa el cursor sobre el enlace y haz clic en el icono de basura <Trash2 size={10} className="inline" />.
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div className="pt-3 border-t border-amber-500/20">
-                                            <p className="text-xs text-muted-foreground flex gap-2">
-                                                <span className="shrink-0">💡</span>
-                                                <span>
-                                                    <strong>Consejo Pro:</strong> Mantén tu menú limpio (máximo 5-6 elementos) para asegurar que se vea bien en móviles y tablets. Prioriza las acciones más importantes.
-                                                </span>
-                                            </p>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
+                            {showInstructions && (
+                                <div className="text-sm text-muted-foreground space-y-2 pl-3 border-l-2 border-primary/20">
+                                    <p><strong className="text-foreground">Secciones (#):</strong> Llevan a partes de tu página (ej. <code className="bg-secondary px-1.5 py-0.5 rounded text-xs">#services</code>)</p>
+                                    <p><strong className="text-foreground">Artículos (CMS):</strong> Contenido de tu blog. Se configuran automáticamente al seleccionarlos.</p>
+                                    <p><strong className="text-foreground">Externos (https://):</strong> Enlaces a otras webs (ej. calendario, portafolio).</p>
+                                    <p className="text-xs text-muted-foreground/70">💡 Mantén tu menú limpio (máximo 5-6 elementos) para que se vea bien en todos los dispositivos.</p>
+                                </div>
+                            )}
 
                             {/* Current links */}
-                            <div className="bg-card border border-border rounded-xl p-4 space-y-4">
-                                <h3 className="font-medium flex items-center gap-2">
+                            <div className="space-y-4">
+                                <h3 className="font-semibold text-foreground flex items-center gap-2">
                                     <LinkIcon size={16} className="text-primary" />
                                     Enlaces en navegación
                                 </h3>
@@ -463,8 +423,8 @@ const AgencyNavigationManagement: React.FC<AgencyNavigationManagementProps> = ({
                             </div>
 
                             {/* CMS Articles */}
-                            <div className="bg-card border border-border rounded-xl p-4 space-y-4">
-                                <h3 className="font-medium flex items-center gap-2">
+                            <div className="pt-6 border-t border-border space-y-4">
+                                <h3 className="font-semibold text-foreground flex items-center gap-2">
                                     <FileText size={16} className="text-primary" />
                                     Artículos del CMS
                                     <span className="text-xs text-muted-foreground">({publishedArticles.length} publicados)</span>
@@ -505,69 +465,25 @@ const AgencyNavigationManagement: React.FC<AgencyNavigationManagementProps> = ({
                     {/* ============================================ */}
                     {activeTab === 'footer' && (
                         <>
-                            {/* Instructions - Collapsible */}
-                            <div className="bg-gradient-to-br from-blue-500/10 to-indigo-500/5 border border-blue-500/30 rounded-xl overflow-hidden">
-                                <button
-                                    onClick={() => setShowInstructions(!showInstructions)}
-                                    className="w-full p-4 flex items-center justify-between hover:bg-blue-500/5 transition-colors"
-                                >
-                                    <h4 className="font-semibold text-blue-400 flex items-center gap-2 text-base">
-                                        📋 Guía: Configura el pie de página
-                                    </h4>
-                                    {showInstructions ? <ChevronUp className="text-blue-400" size={20} /> : <ChevronDown className="text-blue-400" size={20} />}
-                                </button>
+                            {/* Quick Guide - collapsible */}
+                            <button
+                                onClick={() => setShowInstructions(!showInstructions)}
+                                className="w-full flex items-center justify-between text-left p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
+                            >
+                                <span className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                                    📋 Guía rápida del footer
+                                </span>
+                                {showInstructions ? <ChevronUp size={16} className="text-muted-foreground" /> : <ChevronDown size={16} className="text-muted-foreground" />}
+                            </button>
 
-                                {showInstructions && (
-                                    <div className="px-5 pb-5 text-sm space-y-4">
-                                        <div className="space-y-4">
-                                            <div className="flex items-start gap-3">
-                                                <span className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-500/20 text-blue-400 text-xs font-bold shrink-0 mt-0.5">1</span>
-                                                <div>
-                                                    <strong className="text-foreground block mb-1">Estructura por Columnas</strong>
-                                                    <p className="text-muted-foreground mb-2">
-                                                        El footer se organiza verticalmente. Crea columnas temáticas como "Compañía", "Legal" o "Recursos" para agrupar tus enlaces.
-                                                    </p>
-                                                    <button className="flex items-center gap-1 text-xs bg-blue-500/10 text-blue-400 px-2 py-1 rounded border border-blue-500/20">
-                                                        <Plus size={10} /> Añadir columna al footer
-                                                    </button>
-                                                </div>
-                                            </div>
-
-                                            <div className="flex items-start gap-3">
-                                                <span className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-500/20 text-blue-400 text-xs font-bold shrink-0 mt-0.5">2</span>
-                                                <div>
-                                                    <strong className="text-foreground block mb-1">Contenido de las Columnas</strong>
-                                                    <ul className="list-disc list-inside space-y-1 text-muted-foreground ml-1">
-                                                        <li>Añade enlaces individuales a cada columna.</li>
-                                                        <li>Puedes vincular <strong>Artículos del CMS</strong> (ej. tutoriales, noticias) directamente desde los botones de acceso rápido en cada columna.</li>
-                                                        <li>Ideal para enlaces secundarios como <em>Política de Privacidad</em> o <em>Términos de Servicio</em>.</li>
-                                                    </ul>
-                                                </div>
-                                            </div>
-
-                                            <div className="flex items-start gap-3">
-                                                <span className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-500/20 text-blue-400 text-xs font-bold shrink-0 mt-0.5">3</span>
-                                                <div>
-                                                    <strong className="text-foreground block mb-1">Redes Sociales</strong>
-                                                    <p className="text-muted-foreground">
-                                                        Aparecen al final del footer. Activa solo las redes que uses.
-                                                        Usa URLs completas a tu perfil, por ejemplo: <code className="bg-secondary px-1.5 py-0.5 rounded text-xs select-all">https://instagram.com/miempresa</code>.
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div className="pt-3 border-t border-blue-500/20">
-                                            <p className="text-xs text-muted-foreground flex gap-2">
-                                                <span className="shrink-0">💡</span>
-                                                <span>
-                                                    <strong>Estrategia:</strong> Un footer bien organizado genera confianza. Incluye siempre una forma de contacto y tus enlaces legales obligatorios aquí.
-                                                </span>
-                                            </p>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
+                            {showInstructions && (
+                                <div className="text-sm text-muted-foreground space-y-2 pl-3 border-l-2 border-primary/20">
+                                    <p><strong className="text-foreground">Columnas:</strong> Organiza enlaces por categoría (ej. "Compañía", "Legal", "Recursos").</p>
+                                    <p><strong className="text-foreground">Contenido:</strong> Añade enlaces manuales o artículos del CMS a cada columna.</p>
+                                    <p><strong className="text-foreground">Redes Sociales:</strong> Aparecen al final del footer. Usa URLs completas.</p>
+                                    <p className="text-xs text-muted-foreground/70">💡 Un footer bien organizado genera confianza. Incluye contacto y enlaces legales.</p>
+                                </div>
+                            )}
 
                             {/* Footer columns */}
                             {footerColumns.map((column, colIndex) => (
@@ -669,9 +585,9 @@ const AgencyNavigationManagement: React.FC<AgencyNavigationManagementProps> = ({
                             </button>
 
                             {/* Social Links Section */}
-                            <div className="mt-8 p-4 bg-card rounded-xl border border-border">
-                                <h3 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
-                                    <LinkIcon size={16} />
+                            <div className="pt-6 border-t border-border space-y-4">
+                                <h3 className="font-semibold text-foreground flex items-center gap-2">
+                                    <LinkIcon size={16} className="text-primary" />
                                     Redes Sociales
                                 </h3>
 
@@ -724,7 +640,7 @@ const AgencyNavigationManagement: React.FC<AgencyNavigationManagementProps> = ({
                         </>
                     )}
                 </div>
-            </main>
+            </div>
         </div>
     );
 };

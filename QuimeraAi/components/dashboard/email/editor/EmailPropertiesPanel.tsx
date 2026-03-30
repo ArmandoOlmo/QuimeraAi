@@ -15,7 +15,8 @@ import GlobalStylesControls from './controls/GlobalStylesControls';
 // TAB TYPES
 // =============================================================================
 
-type TabType = 'content' | 'style' | 'global';
+type TabType = 'content' | 'style';
+type StyleSubTab = 'block' | 'global';
 
 // =============================================================================
 // COMPONENT
@@ -31,17 +32,24 @@ const EmailPropertiesPanel: React.FC = () => {
     } = useEmailEditor();
     
     const [activeTab, setActiveTab] = useState<TabType>('content');
+    const [styleSubTab, setStyleSubTab] = useState<StyleSubTab>('block');
     
     // Get selected block
     const selectedBlock = selectedBlockId 
         ? document.blocks.find(b => b.id === selectedBlockId)
         : null;
+        
+    // Switch to 'global' if style tab is active but no block is selected
+    React.useEffect(() => {
+        if (!selectedBlockId && activeTab === 'style' && styleSubTab === 'block') {
+            setStyleSubTab('global');
+        }
+    }, [selectedBlockId, activeTab, styleSubTab]);
     
-    // Define tabs
+    // Define main tabs
     const tabs = [
         { id: 'content' as TabType, label: t('controls.contentTab', 'Contenido'), icon: FileText },
         { id: 'style' as TabType, label: t('controls.styleTab', 'Estilo'), icon: Palette },
-        { id: 'global' as TabType, label: t('email.global', 'Global'), icon: Settings },
     ];
     
     return (
@@ -53,9 +61,13 @@ const EmailPropertiesPanel: React.FC = () => {
                         <h3 className="text-sm font-bold text-editor-text-secondary uppercase tracking-wider">
                             {t('editor.properties', 'Propiedades')}
                         </h3>
-                        {selectedBlock && (
+                        {selectedBlock ? (
                             <p className="text-base font-semibold text-editor-text-primary mt-1 capitalize">
                                 {selectedBlock.type}
+                            </p>
+                        ) : (
+                            <p className="text-base text-editor-text-secondary mt-1">
+                                {t('email.document', 'Documento')}
                             </p>
                         )}
                     </div>
@@ -88,10 +100,58 @@ const EmailPropertiesPanel: React.FC = () => {
             {/* Content */}
             <div className="flex-1 overflow-y-auto">
                 <div className="p-4">
-                    {activeTab === 'global' ? (
-                        <GlobalStylesControls />
+                    {activeTab === 'style' ? (
+                        <>
+                            {/* Style Sub-Tabs Header (Only if block is selected) */}
+                            {selectedBlock && (
+                                <div className="flex gap-1 bg-editor-panel-bg p-1 rounded-lg mb-6 border border-editor-border">
+                                    <button
+                                        onClick={() => setStyleSubTab('block')}
+                                        className={`
+                                            flex-1 py-1.5 px-3 rounded-md text-xs font-medium transition-all text-center
+                                            ${styleSubTab === 'block' 
+                                                ? 'bg-editor-accent/10 text-editor-accent border border-editor-accent/20' 
+                                                : 'text-editor-text-secondary hover:text-editor-text-primary'
+                                            }
+                                        `}
+                                    >
+                                        {t('email.blockStyles', 'Bloque')}
+                                    </button>
+                                    <button
+                                        onClick={() => setStyleSubTab('global')}
+                                        className={`
+                                            flex-1 py-1.5 px-3 rounded-md text-xs font-medium transition-all text-center flex items-center justify-center gap-1.5
+                                            ${styleSubTab === 'global' 
+                                                ? 'bg-editor-accent/10 text-editor-accent border border-editor-accent/20' 
+                                                : 'text-editor-text-secondary hover:text-editor-text-primary'
+                                            }
+                                        `}
+                                    >
+                                        <Settings size={12} />
+                                        {t('email.globalStyles', 'Global')}
+                                    </button>
+                                </div>
+                            )}
+
+                            {/* Style Content */}
+                            {styleSubTab === 'global' ? (
+                                <div>
+                                    <div className="mb-4 pb-2 border-b border-editor-border">
+                                        <h4 className="text-sm font-bold text-editor-text-primary flex items-center gap-2">
+                                            <Settings className="w-4 h-4 text-editor-text-secondary" />
+                                            {t('email.globalSettings', 'Configuración Global')}
+                                        </h4>
+                                    </div>
+                                    <GlobalStylesControls />
+                                </div>
+                            ) : selectedBlock ? (
+                                renderBlockControls(selectedBlock, 'style')
+                            ) : (
+                                <NoBlockStyleSelected />
+                            )}
+                        </>
                     ) : selectedBlock ? (
-                        renderBlockControls(selectedBlock, activeTab)
+                        renderBlockControls(selectedBlock, 'content')
                     ) : (
                         <NoBlockSelected 
                             activeTab={activeTab}
@@ -108,7 +168,7 @@ const EmailPropertiesPanel: React.FC = () => {
 };
 
 // =============================================================================
-// NO BLOCK SELECTED STATE
+// NO BLOCK SELECTED STATES
 // =============================================================================
 
 interface NoBlockSelectedProps {
@@ -180,11 +240,15 @@ const NoBlockSelected: React.FC<NoBlockSelectedProps> = ({
         );
     }
     
-    // Style tab when no block selected
+    return null;
+};
+
+const NoBlockStyleSelected: React.FC = () => {
+    const { t } = useTranslation();
     return (
         <div className="flex flex-col items-center justify-center py-12 text-center">
             <div className="bg-editor-panel-bg/50 rounded-full p-6 mb-4">
-                <Mail size={32} className="text-editor-text-secondary" />
+                <Palette size={32} className="text-editor-text-secondary" />
             </div>
             <h3 className="text-lg font-semibold text-editor-text-primary mb-2">
                 {t('email.noBlockSelected', 'Ningún bloque seleccionado')}

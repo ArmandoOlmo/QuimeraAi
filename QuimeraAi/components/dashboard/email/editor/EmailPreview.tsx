@@ -36,7 +36,7 @@ const EmailPreview: React.FC = () => {
     return (
         <div className="h-full flex flex-col">
             {/* Preview Header */}
-            <div className="flex-shrink-0 px-4 py-3 border-b border-editor-border bg-editor-bg/50">
+            <div className="flex-shrink-0 px-4 py-3 border-b border-editor-border bg-editor-bg">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                         <Mail size={16} className="text-editor-text-secondary" />

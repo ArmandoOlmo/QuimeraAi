@@ -422,9 +422,9 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
           disabled={item.disabled}
           className={`
             group flex items-center transition-all duration-200 relative touch-manipulation
-            min-h-[40px] lg:min-h-[36px]
-            py-2 px-3 lg:py-2 lg:px-3 mb-1 lg:mb-1
-            active:scale-[0.98] lg:active:scale-100
+            min-h-[40px] md:min-h-[36px]
+            py-2 px-3 md:py-2 md:px-3 mb-1 md:mb-1
+            active:scale-[0.98] md:active:scale-100
             ${showExpanded
               ? 'w-full rounded-lg'
               : 'justify-center w-12 mx-auto rounded-lg'
@@ -437,7 +437,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
                   : 'text-primary dark:text-primary'
                 )
                 : (showExpanded
-                  ? 'text-muted-foreground hover:bg-secondary/80 lg:hover:bg-secondary hover:text-foreground active:bg-secondary'
+                  ? 'text-muted-foreground hover:bg-secondary/80 md:hover:bg-secondary hover:text-foreground active:bg-secondary'
                   : 'text-muted-foreground hover:text-foreground'
                 )
             }
@@ -453,7 +453,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
             <div
               {...attributes}
               {...listeners}
-              className="hidden lg:block absolute left-0 top-1/2 -translate-y-1/2 p-1 cursor-grab active:cursor-grabbing opacity-0 group-hover/drag:opacity-100 transition-opacity"
+              className="hidden md:block absolute left-0 top-1/2 -translate-y-1/2 p-1 cursor-grab active:cursor-grabbing opacity-0 group-hover/drag:opacity-100 transition-opacity"
             >
               <GripVertical size={16} className="text-muted-foreground" />
             </div>
@@ -463,7 +463,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
             size={22}
             strokeWidth={isActive ? 2.5 : 2}
             className={`
-              ${showExpanded ? (item.isFixed ? 'mr-3' : 'lg:ml-5 mr-3') : ''} 
+              ${showExpanded ? (item.isFixed ? 'mr-3' : 'md:ml-5 mr-3') : ''} 
               flex-shrink-0 transition-all
               ${isLocked ? 'opacity-50' : ''}
             `}
@@ -471,7 +471,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
           />
 
           {showExpanded && (
-            <span className={`text-[15px] lg:text-sm font-medium whitespace-nowrap overflow-hidden transition-all flex-1 text-left ${isLocked ? 'opacity-60' : ''}`}>
+            <span className={`text-[15px] md:text-sm font-medium whitespace-nowrap overflow-hidden transition-all flex-1 text-left ${isLocked ? 'opacity-60' : ''}`}>
               {item.label}
             </span>
           )}
@@ -495,7 +495,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
 
           {/* Active indicator for mobile */}
           {isActive && showExpanded && !isLocked && (
-            <div className="lg:hidden absolute right-3 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-white/80" />
+            <div className="md:hidden absolute right-3 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-white/80" />
           )}
         </button>
       </div>
@@ -507,7 +507,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
       {/* Mobile Overlay - Enhanced with blur and tap feedback */}
       <div
         className={`
-          fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden 
+          fixed inset-0 bg-black/60 backdrop-blur-sm z-40 md:hidden 
           transition-all duration-300 ease-out
           ${isMobileOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}
         `}
@@ -518,10 +518,10 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
       {/* Sidebar wrapper for proper positioning of toggle button */}
       <div className={`
         relative flex-shrink-0 h-screen z-50
-        ${hiddenOnDesktop ? 'lg:hidden' : ''}
+        ${hiddenOnDesktop ? 'md:hidden' : ''}
         ${isDragging ? '' : 'transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]'}
-        ${!isMobileOpen && isCollapsed ? 'lg:w-[80px]' : ''}
-        ${!isMobileOpen && !isCollapsed ? 'lg:w-72' : ''}
+        ${!isMobileOpen && isCollapsed ? 'md:w-[80px]' : ''}
+        ${!isMobileOpen && !isCollapsed ? 'md:w-72' : ''}
       `}>
         <aside
           ref={sidebarRef}
@@ -533,11 +533,11 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
             setDragOffset(0);
           }}
           className={`
-              fixed lg:relative z-50 h-[100dvh] lg:h-full bg-background border-r border-border 
-              shadow-2xl lg:shadow-xl flex flex-col
+              fixed md:relative z-50 h-[100dvh] md:h-full bg-background/95 backdrop-blur-xl border-r border-border 
+              shadow-2xl md:shadow-[4px_0_24px_hsl(270_48%_8%/0.3)] flex flex-col
               ${isDragging ? '' : 'transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]'}
-              ${isMobileOpen ? 'translate-x-0 w-[85vw] max-w-[320px]' : '-translate-x-full lg:translate-x-0'}
-              lg:w-full
+              ${isMobileOpen ? 'translate-x-0 w-[85vw] max-w-[320px]' : '-translate-x-full md:translate-x-0'}
+              md:w-full
           `}
           style={isMobileOpen && isDragging && dragOffset > 0 ? {
             transform: `translateX(-${dragOffset}px)`,
@@ -546,10 +546,10 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
           aria-label="Main navigation"
         >
           {/* Header / Logo - Enhanced for mobile */}
-          <div className="relative h-[72px] lg:h-[80px] flex items-center justify-between px-4 lg:px-0 lg:justify-center border-b border-border/50 lg:border-none flex-shrink-0">
+          <div className="relative h-[72px] md:h-[80px] flex items-center justify-between px-4 md:px-0 md:justify-center border-b border-border md:border-none flex-shrink-0">
             <div
               onClick={() => navigate(ROUTES.DASHBOARD)}
-              className={`flex items-center gap-3 transition-all duration-300 cursor-pointer ${isCollapsed ? 'lg:px-0 lg:justify-center lg:gap-0' : 'lg:px-6'}`}
+              className={`flex items-center gap-3 transition-all duration-300 cursor-pointer ${isCollapsed ? 'md:px-0 md:justify-center md:gap-0' : 'md:px-6'}`}
             >
               {/* Logo - reads from tenant branding; uses generic icon for agencies without logo */}
               {tenantContext?.currentTenant?.branding?.logoUrl ? (
@@ -582,7 +582,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
                 />
               )}
               {/* Text Logo (Hidden when collapsed on desktop) */}
-              <span className={`text-xl lg:text-2xl font-extrabold tracking-tight text-foreground whitespace-nowrap transition-opacity duration-300 ${isCollapsed ? 'lg:opacity-0 lg:hidden' : 'opacity-100'}`}>
+              <span className={`text-xl md:text-2xl font-extrabold tracking-tight text-foreground whitespace-nowrap transition-opacity duration-300 ${isCollapsed ? 'md:opacity-0 md:hidden' : 'opacity-100'}`}>
                 {tenantContext?.currentTenant?.branding?.companyName
                   ? tenantContext.currentTenant.branding.companyName
                   : <>Quimera<span className="text-primary">.ai</span></>
@@ -593,7 +593,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
             {/* Mobile Close Button - Touch optimized (min 44px) */}
             <button
               onClick={onClose}
-              className="lg:hidden flex items-center justify-center w-11 h-11 rounded-full 
+              className="md:hidden flex items-center justify-center w-11 h-11 rounded-full 
                           text-muted-foreground hover:text-foreground hover:bg-secondary/80 
                           active:scale-95 transition-all touch-manipulation flex-shrink-0"
               aria-label={t('common.close')}
@@ -604,7 +604,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
 
           {/* Workspace Switcher - Multi-tenant support */}
           {showWorkspaceSwitcher && (
-            <div className={`px-3 lg:px-4 py-2 border-b border-border/50 ${isCollapsed && !isMobileOpen ? 'hidden lg:block' : ''}`}>
+            <div className={`px-3 md:px-4 py-2 border-b border-border ${isCollapsed && !isMobileOpen ? 'hidden md:block' : ''}`}>
               <WorkspaceSwitcher
                 collapsed={isCollapsed && !isMobileOpen}
                 onCreateWorkspace={() => {
@@ -617,7 +617,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
           )}
 
           {/* Project Switcher - Global project selection */}
-          <div className={`px-3 lg:px-4 py-2 border-b border-border/50 ${isCollapsed && !isMobileOpen ? 'hidden lg:block' : ''}`}>
+          <div className={`px-3 md:px-4 py-2 border-b border-border ${isCollapsed && !isMobileOpen ? 'hidden md:block' : ''}`}>
             <ProjectSwitcher
               collapsed={isCollapsed && !isMobileOpen}
               onCreateProject={() => {
@@ -630,7 +630,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
 
           {/* Navigation - Optimized for mobile with momentum scroll */}
           <nav
-            className="flex-1 min-h-0 px-3 lg:px-4 py-4 lg:py-6 space-y-1 lg:space-y-2 overflow-y-auto overscroll-contain
+            className="flex-1 min-h-0 px-3 md:px-4 py-4 md:py-6 space-y-1 md:space-y-2 overflow-y-auto overscroll-contain
                      scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent
                      [-webkit-overflow-scrolling:touch]"
             role="navigation"
@@ -687,7 +687,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
                         className={`overflow-hidden transition-all duration-300 ease-in-out ${collapsedSections.websites ? 'max-h-0 opacity-0' : 'max-h-[500px] opacity-100'
                           }`}
                       >
-                        <div className="pl-2 border-l-2 border-border/50 ml-4 mt-1">
+                        <div className="pl-2 border-l border-border ml-4 mt-1">
                           {websiteItems.filter(isItemAccessible).map((item, index) => (
                             <SortableNavItem key={item.id} item={item} index={index + 1} />
                           ))}
@@ -715,7 +715,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
                           className={`overflow-hidden transition-all duration-300 ease-in-out ${collapsedSections.ecommerce ? 'max-h-0 opacity-0' : 'max-h-[500px] opacity-100'
                             }`}
                         >
-                          <div className="pl-2 border-l-2 border-border/50 ml-4 mt-1">
+                          <div className="pl-2 border-l border-border ml-4 mt-1">
                             {ecommerceItems.filter(isItemAccessible).map((item, index) => (
                               <SortableNavItem key={item.id} item={item} index={index + websiteItems.length + 1} />
                             ))}
@@ -745,7 +745,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
                           className={`overflow-hidden transition-all duration-300 ease-in-out ${collapsedSections.tools ? 'max-h-0 opacity-0' : 'max-h-[500px] opacity-100'
                             }`}
                         >
-                          <div className="pl-2 border-l-2 border-border/50 ml-4 mt-1">
+                          <div className="pl-2 border-l border-border ml-4 mt-1">
                             {toolsItems.filter(isItemAccessible).map((item, index) => (
                               <SortableNavItem key={item.id} item={item} index={index + websiteItems.length + ecommerceItems.length + 1} />
                             ))}
@@ -755,7 +755,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
                     )}
 
                     {/* Agency Button - Standalone outside control panel area */}
-                    <div className={`my-3 lg:my-4 border-t border-border ${isCollapsed && !isMobileOpen ? 'mx-2' : 'mx-0'}`} />
+                    <div className={`my-3 md:my-4 border-t border-border ${isCollapsed && !isMobileOpen ? 'mx-2' : 'mx-0'}`} />
                     <SortableNavItem
                       item={agencyItem}
                       index={websiteItems.length + ecommerceItems.length + toolsItems.length + 1}
@@ -772,7 +772,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
                 {/* Panel de administración solo para roles autorizados (owner, superadmin, admin, manager) */}
                 {canAccessSuperAdmin && (
                   <>
-                    <div className={`my-3 lg:my-4 border-t border-border ${isCollapsed && !isMobileOpen ? 'mx-2' : 'mx-0'}`} />
+                    <div className={`my-3 md:my-4 border-t border-border ${isCollapsed && !isMobileOpen ? 'mx-2' : 'mx-0'}`} />
                     <SortableNavItem
                       item={{
                         id: 'superadmin',
@@ -790,7 +790,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
           </nav>
 
           {/* Footer / User Profile / Theme - Optimized for mobile */}
-          <div className="flex-shrink-0 border-t border-border bg-card/50 backdrop-blur-sm relative">
+          <div className="flex-shrink-0 border-t border-border bg-card/40 backdrop-blur-md relative">
 
             {/* Footer Toggle Button - Small circle at top center */}
             {(!isCollapsed || isMobileOpen) && (
@@ -810,14 +810,14 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
             )}
 
             {/* Collapsible content wrapper */}
-            <div className={`p-3 pb-4 lg:p-4 lg:pb-4 transition-all duration-300 ease-in-out ${isFooterCollapsed && !isCollapsed && (!isMobileOpen || isMobileOpen) ? 'pt-4' : ''}`}>
+            <div className={`p-3 pb-4 md:p-4 md:pb-4 transition-all duration-300 ease-in-out ${isFooterCollapsed && !isCollapsed && (!isMobileOpen || isMobileOpen) ? 'pt-4' : ''}`}>
 
               {/* Theme + Language (single compact bar) - Collapsible */}
               <div className={`overflow-hidden transition-all duration-300 ease-in-out ${isFooterCollapsed || (isCollapsed && !isMobileOpen)
                 ? 'max-h-0 opacity-0 mb-0'
                 : 'max-h-20 opacity-100 mb-3'
                 }`}>
-                <div className="flex items-center justify-between gap-2 bg-muted p-1.5 rounded-xl border border-border/60">
+                <div className="flex items-center justify-between gap-2 bg-muted p-1.5 rounded-xl border border-border">
                   {/* Theme */}
                   <div className="flex items-center gap-1">
                     <button
@@ -866,7 +866,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
               {/* REFINED PRO PLAN WIDGET - Collapsible */}
               <div className={`overflow-hidden transition-all duration-300 ease-in-out ${isFooterCollapsed || (isCollapsed && !isMobileOpen)
                 ? 'max-h-0 opacity-0 mb-0'
-                : 'max-h-28 opacity-100 mb-3 lg:mb-4'
+                : 'max-h-28 opacity-100 mb-3 md:mb-4'
                 }`}>
                 <div className="px-1">
                   <div className="flex justify-between items-end mb-2 px-1">
@@ -892,7 +892,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
                     {!isOwner && (
                       <button
                         onClick={handleUpgradeClick}
-                        className="text-[11px] lg:text-[10px] font-bold text-primary hover:text-yellow-600 dark:hover:text-yellow-400 transition-colors py-1 px-2 -mr-2 touch-manipulation"
+                        className="text-[11px] md:text-[10px] font-bold text-primary hover:text-yellow-600 dark:hover:text-yellow-400 transition-colors py-1 px-2 -mr-2 touch-manipulation"
                       >
                         {t('common.upgrade')} →
                       </button>
@@ -913,13 +913,13 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
                   onClick={openProfileModal}
                 >
                   {user?.photoURL ? (
-                    <img src={user.photoURL} alt="User" className="w-11 h-11 lg:w-10 lg:h-10 rounded-full object-cover border-2 border-border group-hover:border-primary transition-colors" />
+                    <img src={user.photoURL} alt="User" className="w-11 h-11 md:w-10 md:h-10 rounded-full object-cover border-2 border-border group-hover:border-primary transition-colors" />
                   ) : (
-                    <div className="w-11 h-11 lg:w-10 lg:h-10 rounded-full bg-secondary flex items-center justify-center border-2 border-border group-hover:border-primary transition-colors">
-                      <UserIcon size={22} className="lg:w-5 lg:h-5 text-muted-foreground" />
+                    <div className="w-11 h-11 md:w-10 md:h-10 rounded-full bg-secondary flex items-center justify-center border-2 border-border group-hover:border-primary transition-colors">
+                      <UserIcon size={22} className="md:w-5 md:h-5 text-muted-foreground" />
                     </div>
                   )}
-                  <div className="absolute bottom-0 right-0 w-3.5 h-3.5 lg:w-3 lg:h-3 bg-green-500 border-2 border-background rounded-full"></div>
+                  <div className="absolute bottom-0 right-0 w-3.5 h-3.5 md:w-3 md:h-3 bg-green-500 border-2 border-background rounded-full"></div>
                 </div>
 
                 {(!isCollapsed || isMobileOpen) && (
@@ -933,10 +933,10 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
                   {(!isCollapsed || isMobileOpen) && (
                     <button
                       onClick={handleSignOut}
-                      className="p-2.5 lg:p-1.5 -mr-1 text-muted-foreground hover:text-destructive active:text-destructive transition-colors touch-manipulation active:scale-95"
+                      className="p-2.5 md:p-1.5 -mr-1 text-muted-foreground hover:text-destructive active:text-destructive transition-colors touch-manipulation active:scale-95"
                       aria-label={t('auth.logout')}
                     >
-                      <LogOut size={18} className="lg:w-4 lg:h-4" aria-hidden="true" />
+                      <LogOut size={18} className="md:w-4 md:h-4" aria-hidden="true" />
                     </button>
                   )}
                 </div>
@@ -948,7 +948,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
         {/* Desktop Toggle Button - Outside aside for proper z-index */}
         <button
           onClick={() => setIsCollapsed(!isCollapsed)}
-          className="hidden lg:flex absolute top-[16px] -right-3 z-[100] w-6 h-6 bg-card border border-border rounded-full items-center justify-center text-muted-foreground hover:text-foreground hover:border-primary transition-all shadow-md"
+          className="hidden md:flex absolute top-[16px] -right-3 z-[100] w-6 h-6 bg-card border border-border rounded-full items-center justify-center text-muted-foreground hover:text-foreground hover:border-primary transition-all shadow-md"
           aria-label={isCollapsed ? t('common.expandSidebar') : t('common.collapseSidebar')}
           aria-expanded={!isCollapsed}
         >

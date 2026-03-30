@@ -270,7 +270,8 @@ const AgencyDashboardMain: React.FC = () => {
 
                     {/* Other tabs with standard container */}
                     {activeTab !== 'landing' && (
-                        <div className="w-full h-full overflow-y-auto p-6">
+                        <div className="w-full h-full overflow-y-auto p-4 sm:p-6 lg:p-8">
+                            <div className="max-w-7xl mx-auto">
                             {loadingClients ? (
                                 <div className="flex items-center justify-center h-64">
                                     <QuimeraLoader size="md" />
@@ -396,6 +397,7 @@ const AgencyDashboardMain: React.FC = () => {
                                     )}
                                 </>
                             )}
+                            </div>
                         </div>
                     )}
                 </main>
