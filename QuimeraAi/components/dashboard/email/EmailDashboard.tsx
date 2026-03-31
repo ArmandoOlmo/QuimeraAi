@@ -111,7 +111,6 @@ const EmailDashboard: React.FC<EmailDashboardProps> = ({ projectId: propProjectI
     const handleProjectSelect = (projectId: string) => {
         setSelectedProjectId(projectId);
         setIsProjectSelectorOpen(false);
-        localStorage.setItem('emailSelectedProjectId', projectId);
     };
 
     // Loading state

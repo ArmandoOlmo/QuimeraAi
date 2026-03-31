@@ -150,6 +150,7 @@ export const ROUTES = {
   ADMIN_SERVICE_AVAILABILITY: '/admin/service-availability',
   ADMIN_FINANCES: '/admin/finances',
   ADMIN_SUBDOMAINS: '/admin/subdomains',
+  ADMIN_DIAGNOSE: '/admin/diagnose',
 } as const;
 
 // =============================================================================

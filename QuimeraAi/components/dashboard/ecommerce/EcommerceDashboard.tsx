@@ -185,8 +185,6 @@ const EcommerceDashboard: React.FC = () => {
     const handleProjectSelect = (projectId: string) => {
         setSelectedProjectId(projectId);
         setIsProjectSelectorOpen(false);
-        // Guardar en localStorage para persistencia
-        localStorage.setItem('ecommerceSelectedProjectId', projectId);
     };
 
     const handleEnableEcommerce = async () => {

@@ -61,6 +61,10 @@ const isPreviewRoute = () => {
   return path.startsWith('/preview/');
 };
 
+// Temporary diagnostic tool route
+const isDiagnoseRoute = () => window.location.pathname === '/admin/diagnose';
+const ProjectDiagnostic = lazyWithRetry(() => import('./components/admin/ProjectDiagnostic'));
+
 // Check for public bio page route
 const isBioRoute = () => {
   const path = window.location.pathname;
@@ -229,6 +233,19 @@ const App: React.FC = () => {
         <Suspense fallback={<MinimalLoader />}>
           <PublicWebsitePreview />
         </Suspense>
+      </ErrorBoundary>
+    );
+  }
+
+  // Temporary diagnostic tool (DELETE after fixing data)
+  if (isDiagnoseRoute()) {
+    return (
+      <ErrorBoundary>
+        <AppProviders>
+          <Suspense fallback={<MinimalLoader />}>
+            <ProjectDiagnostic />
+          </Suspense>
+        </AppProviders>
       </ErrorBoundary>
     );
   }
