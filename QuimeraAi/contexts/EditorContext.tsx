@@ -442,6 +442,10 @@ export const EditorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
     const isInitialLoadRef = useRef(true);
     const projectsRef = useRef<Project[]>([]); // Ref to keep latest projects for auto-save
+    // CRITICAL: Ref to track the active project ID synchronously for auto-save validation.
+    // Unlike the state variable, refs update immediately and are not subject to React's
+    // batching, so the auto-save timer callback can reliably check if the project changed.
+    const activeProjectIdRef = useRef<string | null>(null);
 
     // Project AI Assistant Config
     // IMPORTANT: aiAssistantConfig must be declared BEFORE aiAssistantConfigRef
@@ -1423,9 +1427,12 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
             return;
         }
 
-        // Skip first render (initial project load)
+        // CRITICAL FIX: Skip during initial load OR project transition.
+        // isInitialLoadRef is set to true when activeProjectId changes (see effect below).
+        // We must NOT reset it here — it gets reset by a dedicated setTimeout
+        // in the activeProjectId change effect, giving React time to propagate
+        // all the state updates from loadProject() before allowing auto-save.
         if (isInitialLoadRef.current) {
-            isInitialLoadRef.current = false;
             return;
         }
 
@@ -1440,15 +1447,29 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
         // Set debounced auto-save (2 seconds after last change)
         autoSaveTimerRef.current = setTimeout(async () => {
             try {
+                // CRITICAL FIX: Validate that the project hasn't changed during the debounce.
+                // The ref is updated synchronously (not subject to React batching),
+                // so this catches cases where the user switched projects during the 2s window.
+                if (activeProjectIdRef.current !== scheduledProjectId) {
+                    console.log(`🛑 [EditorContext Auto-save] Aborted: Project changed during debounce (scheduled: ${scheduledProjectId}, current: ${activeProjectIdRef.current})`);
+                    return;
+                }
+
+                // Also re-check isInitialLoadRef (loadProject may have been called during debounce)
+                if (isInitialLoadRef.current) {
+                    console.log('🛑 [EditorContext Auto-save] Aborted: Project is loading');
+                    return;
+                }
+
                 // CRITICAL: Double-check project still exists in local state before saving
                 // This prevents recreating deleted projects due to race conditions
                 const projectToSave = projectsRef.current.find(p => p.id === scheduledProjectId);
                 if (!projectToSave) {
-                    console.log('🛑 [Auto-save] Aborted: Project no longer exists in local state (was likely deleted)');
+                    console.log('🛑 [EditorContext Auto-save] Aborted: Project no longer exists in local state (was likely deleted)');
                     return;
                 }
                 if (!user) {
-                    console.log('🛑 [Auto-save] Aborted: No authenticated user');
+                    console.log('🛑 [EditorContext Auto-save] Aborted: No authenticated user');
                     return;
                 }
 
@@ -1456,7 +1477,7 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
                 if (projectToSave.status === 'Template') {
                     const userRole = userDocument?.role || '';
                     if (!['owner', 'superadmin'].includes(userRole)) {
-                        console.warn('⚠️ Auto-save skipped: Only owner/superadmin can save templates');
+                        console.warn('⚠️ [EditorContext Auto-save] Skipped: Only owner/superadmin can save templates');
                         return;
                     }
                 }
@@ -1489,7 +1510,7 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
                     // First verify document still exists to prevent recreation
                     const docSnap = await getDoc(templateDocRef);
                     if (!docSnap.exists() || docSnap.data()?.isDeleted) {
-                        console.log('🛑 [Auto-save] Aborted: Template was deleted from Firestore');
+                        console.log('🛑 [EditorContext Auto-save] Aborted: Template was deleted from Firestore');
                         return;
                     }
                     await updateDoc(templateDocRef, dataToSave);
@@ -1499,7 +1520,7 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
                     // First verify document still exists to prevent recreation
                     const docSnap = await getDoc(projectDocRef);
                     if (!docSnap.exists()) {
-                        console.log('🛑 [Auto-save] Aborted: Project was deleted from Firestore');
+                        console.log('🛑 [EditorContext Auto-save] Aborted: Project was deleted from Firestore');
                         return;
                     }
                     await updateDoc(projectDocRef, dataToSave);
@@ -1507,12 +1528,13 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
 
                 // Update projects ref without triggering re-render (Firestore is the source of truth)
                 projectsRef.current = projectsRef.current.map(p => p.id === scheduledProjectId ? updatedProject : p);
+                console.log(`✅ [EditorContext Auto-save] Saved project "${projectToSave.name}" (${scheduledProjectId})`);
             } catch (error: any) {
                 // Don't log errors for "document not found" - this is expected for deleted projects
                 if (error?.code === 'not-found' || error?.message?.includes('No document to update')) {
-                    console.log('🛑 [Auto-save] Document not found (likely deleted), skipping save');
+                    console.log('🛑 [EditorContext Auto-save] Document not found (likely deleted), skipping save');
                 } else {
-                    console.error('❌ Auto-save error:', error);
+                    console.error('❌ [EditorContext Auto-save] Error:', error);
                 }
             }
         }, 2000);
@@ -1528,9 +1550,24 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
     // Including it here caused a race condition: loadProject() setting stale cached config
     // would trigger auto-save and overwrite fresh changes made in the AI Dashboard.
 
-    // Reset initial load flag when project changes
+    // CRITICAL FIX: When activeProjectId changes, set the loading guard AND cancel
+    // any pending auto-save timer. The guard is released after a generous delay
+    // to give React time to propagate all state updates from loadProject().
     useEffect(() => {
+        // Update the ref synchronously (used by auto-save callback for validation)
+        activeProjectIdRef.current = activeProjectId;
+        // Set the loading guard
         isInitialLoadRef.current = true;
+        // Cancel any pending auto-save from the PREVIOUS project
+        if (autoSaveTimerRef.current) {
+            clearTimeout(autoSaveTimerRef.current);
+            autoSaveTimerRef.current = null;
+        }
+        // Release the guard after state has settled (React needs time to batch updates)
+        const releaseTimer = setTimeout(() => {
+            isInitialLoadRef.current = false;
+        }, 3000); // 3 seconds: generous window for loadProject + legacy migration
+        return () => clearTimeout(releaseTimer);
     }, [activeProjectId]);
 
     const toggleDashboardSidebar = () => {
@@ -1573,6 +1610,17 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
     const loadProject = (projectId: string, fromAdmin: boolean = false, navigateToEditor: boolean = true, projectOverride?: Project) => {
         const projectToLoad = projectOverride || projects.find(p => p.id === projectId);
         if (projectToLoad) {
+            // CRITICAL FIX: Set loading guard and cancel pending auto-save BEFORE
+            // any state updates. This prevents the auto-save timer from executing
+            // with stale data from the previous project.
+            isInitialLoadRef.current = true;
+            activeProjectIdRef.current = projectId;
+            if (autoSaveTimerRef.current) {
+                clearTimeout(autoSaveTimerRef.current);
+                autoSaveTimerRef.current = null;
+                console.log('[EditorContext] Cancelled pending auto-save during loadProject');
+            }
+
             setActiveProjectId(projectId);
             // DEEP CLONE data to prevent mutation issues
             // Also ensure that if data.chatbot is missing (old projects), we provide default

@@ -239,6 +239,9 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
     const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
     const isInitialLoadRef = useRef(true);
     const projectsRef = useRef<Project[]>([]);
+    // CRITICAL: Ref to track the active project ID synchronously for auto-save validation.
+    // Unlike state, refs are updated immediately and avoid React batching issues.
+    const activeProjectIdRef = useRef<string | null>(activeProjectId);
 
     // Track deleted template IDs
     const getDeletedTemplateIds = (): Set<string> => {
@@ -508,6 +511,18 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         // gap (await import) and the auto-save effect fires before this guard
         // was previously set.
         isInitialLoadRef.current = true;
+
+        // CRITICAL FIX: Cancel any pending auto-save from the PREVIOUS project
+        // before updating any state. This prevents the timer callback from
+        // executing with the old project's data but the new project's ID.
+        if (autoSaveTimerRef.current) {
+            clearTimeout(autoSaveTimerRef.current);
+            autoSaveTimerRef.current = null;
+            console.log('[ProjectContext] Cancelled pending auto-save during project switch');
+        }
+
+        // Update the ref synchronously (used by auto-save callback for validation)
+        activeProjectIdRef.current = projectId;
 
         setActiveProjectId(projectId);
         setData(project.data);
@@ -816,12 +831,22 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
             clearTimeout(autoSaveTimerRef.current);
         }
 
+        // Capture the projectId at the time of scheduling
+        const scheduledProjectId = activeProjectId;
+
         autoSaveTimerRef.current = setTimeout(() => {
             // SAFETY NET: Double-check isInitialLoadRef inside the callback.
             // This prevents saving during a project switch if the effect body
             // check passed but loadProject set the guard before the timer fired.
             if (isInitialLoadRef.current) {
                 console.log('[ProjectContext] Auto-save skipped: project is loading');
+                return;
+            }
+            // CRITICAL FIX: Validate the project hasn't changed during the debounce.
+            // activeProjectIdRef is updated synchronously in loadProject(), so this
+            // catches transitions the state-based scheduledProjectId can't detect.
+            if (activeProjectIdRef.current !== scheduledProjectId) {
+                console.log(`[ProjectContext] Auto-save skipped: project changed during debounce (scheduled: ${scheduledProjectId}, current: ${activeProjectIdRef.current})`);
                 return;
             }
             saveProject().catch(console.error);

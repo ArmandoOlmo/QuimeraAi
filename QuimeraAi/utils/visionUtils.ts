@@ -34,7 +34,13 @@ export const captureCurrentView = async (): Promise<string | null> => {
                     }
                 });
             } else {
-                // For text, password, email, textarea, etc.
+                // For text, email, textarea, etc.
+                // SECURITY: Skip sensitive input types to avoid leaking data to the AI model
+                const sensitiveTypes = ['password', 'hidden', 'token'];
+                if (sensitiveTypes.includes(input.type)) return;
+                // Also skip inputs with autocomplete hints for sensitive data
+                const ac = (input.getAttribute('autocomplete') || '').toLowerCase();
+                if (ac.includes('password') || ac.includes('cc-') || ac.includes('credit-card')) return;
                 input.setAttribute('value', input.value);
             }
         });
