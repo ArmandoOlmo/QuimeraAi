@@ -192,6 +192,13 @@ export interface AiAssistantConfig {
     appearance?: ChatAppearanceConfig;
     enableLiveVoice: boolean;
     voiceName: 'Puck' | 'Charon' | 'Kore' | 'Fenrir' | 'Zephyr';
+    // Gemini 3.1 Flash Live capabilities
+    /** Enable affective dialog — AI adapts tone to match user emotion (e.g., frustration detection) */
+    enableAffectiveDialog?: boolean;
+    /** Enable unlimited session duration via context window compression */
+    enableUnlimitedSessions?: boolean;
+    /** Enable auto-reconnect on WebSocket drop via session resumption */
+    enableAutoReconnect?: boolean;
     // CMS articles included as chatbot knowledge sources
     cmsArticleIds?: string[];
     // Social media channel integrations
@@ -220,6 +227,13 @@ export interface GlobalAssistantConfig {
     maxTokens: number;
     autoDetectLanguage?: boolean;
     supportedLanguages?: string;
+    // Gemini 3.1 Flash Live capabilities
+    /** Enable affective dialog — AI adapts tone to match user emotion */
+    enableAffectiveDialog?: boolean;
+    /** Enable unlimited session duration via context window compression */
+    enableUnlimitedSessions?: boolean;
+    /** Enable auto-reconnect on WebSocket drop via session resumption */
+    enableAutoReconnect?: boolean;
 }
 
 // =============================================================================

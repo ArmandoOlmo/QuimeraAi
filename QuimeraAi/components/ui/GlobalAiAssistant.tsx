@@ -2458,12 +2458,22 @@ const GlobalAiAssistant: React.FC = () => {
 
             // STEP 3: Connect to WebSocket (microphone is already available)
             const sessionPromise = ai.live.connect({
-                model: 'gemini-2.5-flash-native-audio-preview-12-2025',
+                model: 'gemini-3.1-flash-live-preview',
                 config: {
                     responseModalities: [Modality.AUDIO],
                     speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: globalAssistantConfig.voiceName } } },
                     tools: [{ functionDeclarations: TOOLS }],
                     systemInstruction: getEffectiveSystemInstruction('voice'),
+                    // Gemini 3.1 Flash Live: Unlimited session duration
+                    contextWindowCompression: { slidingWindow: {} },
+                    // Gemini 3.1 Flash Live: Auto-reconnect on WebSocket drop
+                    sessionResumption: {},
+                    // NOTE: enableAffectiveDialog omitted — SDK serializes it into
+                    // generationConfig where the Live API server rejects it (SDK bug).
+                    // Will re-enable when SDK fix ships.
+                    // Transcription support
+                    inputAudioTranscription: {},
+                    outputAudioTranscription: {},
                 },
                 callbacks: {
                     onopen: async () => {
@@ -2479,7 +2489,7 @@ const GlobalAiAssistant: React.FC = () => {
                                 sessionPromise.then(session => {
                                     try {
                                         session.sendRealtimeInput({
-                                            media: {
+                                            video: {
                                                 mimeType: "image/jpeg",
                                                 data: screenCapture
                                             }
@@ -2508,7 +2518,7 @@ const GlobalAiAssistant: React.FC = () => {
                             sessionPromise.then(session => {
                                 if (!isConnectedRef.current) return;
                                 try {
-                                    session.sendRealtimeInput({ media: { mimeType: 'audio/pcm;rate=16000', data: base64Data } });
+                                    session.sendRealtimeInput({ audio: { mimeType: 'audio/pcm;rate=16000', data: base64Data } });
                                     audioSendCount++;
                                     if (audioSendCount % 100 === 0) {
                                         console.log(`[Voice Mode] 🎤 Audio chunks sent: ${audioSendCount}`);
@@ -2602,6 +2612,32 @@ const GlobalAiAssistant: React.FC = () => {
                             }
                             console.log('[Voice Mode] Sending tool responses back to model');
                             sessionPromise.then(session => { if (isConnectedRef.current) session.sendToolResponse({ functionResponses }); });
+
+                            // 🆕 Periodic screen capture: After tool execution (e.g., navigation),
+                            // send fresh visual context so the AI sees the updated view
+                            const hasViewChange = message.toolCall.functionCalls.some(
+                                (fc: any) => fc.name === 'change_view' || fc.name === 'navigate_admin' ||
+                                fc.name.startsWith('open_') || fc.name === 'select_section'
+                            );
+                            if (hasViewChange) {
+                                // Wait for the view transition to render, then capture
+                                setTimeout(async () => {
+                                    if (!isConnectedRef.current) return;
+                                    try {
+                                        const freshCapture = await captureCurrentView();
+                                        if (freshCapture && isConnectedRef.current) {
+                                            console.log('[Voice Mode] 📸 Sending updated screen context after view change');
+                                            const session = await sessionPromise;
+                                            session.sendRealtimeInput({
+                                                video: { mimeType: 'image/jpeg', data: freshCapture }
+                                            });
+                                        }
+                                    } catch (e) {
+                                        console.warn('[Voice Mode] Could not capture updated screen:', e);
+                                    }
+                                }, 1500); // Wait 1.5s for view to render
+                            }
+
                             return; // Don't fall through to audio handling for tool call messages
                         }
 

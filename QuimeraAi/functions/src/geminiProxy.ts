@@ -142,6 +142,11 @@ const ALLOWED_MODELS = [
     'gemini-3-flash-preview',
     'gemini-3-pro-preview',
     'gemini-3-pro-image-preview',
+    // Gemini 3.1 Live API (real-time voice/audio)
+    'gemini-3.1-flash-live-preview',
+    // Legacy native audio models (kept for backwards compatibility)
+    'gemini-2.5-flash-native-audio-preview-12-2025',
+    'gemini-2.5-flash-native-audio-preview-09-2025',
     // Legacy models (for backwards compatibility)
     'gemini-1.5-flash',
     'gemini-1.5-pro',
@@ -397,6 +402,10 @@ const MODEL_TOKEN_MULTIPLIERS: Record<string, number> = {
     'gemini-2.0-flash-exp': 1,
     'gemini-3-flash-preview': 1,
     'gemini-1.5-flash': 1,
+    // Gemini 3.1 Live API (real-time voice): 2x multiplier
+    'gemini-3.1-flash-live-preview': 2,
+    'gemini-2.5-flash-native-audio-preview-12-2025': 2,
+    'gemini-2.5-flash-native-audio-preview-09-2025': 2,
     // Gemini Pro models: 3x multiplier
     'gemini-2.5-pro': 3,
     'gemini-3-pro-preview': 3,

@@ -1470,13 +1470,19 @@ ${suggestAvailableSlots()}
             nextStartTimeRef.current = outputCtx.currentTime;
 
             const sessionPromise = ai.live.connect({
-                model: 'gemini-2.5-flash-native-audio-preview-09-2025',
+                model: 'gemini-3.1-flash-live-preview',
                 config: {
                     responseModalities: [Modality.AUDIO],
                     speechConfig: {
                         voiceConfig: { prebuiltVoiceConfig: { voiceName: config.voiceName || 'Zephyr' } }
                     },
                     systemInstruction: buildSystemInstruction(),
+                    // Gemini 3.1 Flash Live: Unlimited session duration
+                    contextWindowCompression: { slidingWindow: {} },
+                    // Gemini 3.1 Flash Live: Auto-reconnect on WebSocket drop  
+                    sessionResumption: {},
+                    // NOTE: enableAffectiveDialog omitted — SDK bug serializes it
+                    // into generationConfig where the Live API server rejects it.
                     // Enable transcription for both user input and model output
                     inputAudioTranscription: {},
                     outputAudioTranscription: {},
@@ -1486,6 +1492,22 @@ ${suggestAvailableSlots()}
                         setIsConnecting(false);
                         setIsLiveActive(true);
                         isConnectedRef.current = true;
+
+                        // Send initial screen capture for visual context (dashboard mode only)
+                        if (!isEmbedded) {
+                            try {
+                                const screenCapture = await captureCurrentView();
+                                if (screenCapture && isConnectedRef.current) {
+                                    console.log('[ChatCore] 📸 Sending initial screen context for voice session');
+                                    const session = await sessionPromise;
+                                    session.sendRealtimeInput({
+                                        video: { mimeType: 'image/jpeg', data: screenCapture }
+                                    });
+                                }
+                            } catch (e) {
+                                console.warn('[ChatCore] Could not capture initial screen:', e);
+                            }
+                        }
                         try {
                             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
                             streamRef.current = stream;
@@ -1501,7 +1523,7 @@ ${suggestAvailableSlots()}
                                     if (!isConnectedRef.current) return;
                                     try {
                                         session.sendRealtimeInput({
-                                            media: { mimeType: 'audio/pcm;rate=16000', data: base64Data }
+                                            audio: { mimeType: 'audio/pcm;rate=16000', data: base64Data }
                                         });
                                     } catch (err) { }
                                 });

@@ -289,7 +289,7 @@ export const voiceChat = functions.https.onRequest(async (req, res) => {
             : userMessage;
 
         const result = await genAI.models.generateContent({
-            model: 'gemini-2.0-flash-exp',
+            model: 'gemini-3-flash-preview',
             contents: fullPrompt,
         });
 
