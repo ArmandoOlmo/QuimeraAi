@@ -60,6 +60,13 @@ import {
     onTenantProjectChange
 } from './billing/stripeConnectAgency';
 
+// Client Payment Links (branded checkout)
+import {
+    createClientPaymentLink,
+    confirmClientPayment,
+    getPaymentLinkInfo
+} from './billing/clientPaymentLinks';
+
 // Add-ons Management functions
 import {
     getAddonsPricing,
@@ -269,7 +276,11 @@ export const agencyBilling = {
     generateClientInvoice,
     updateAgencyProjectCount,
     getAgencyBillingSummary,
-    onTenantProjectChange
+    onTenantProjectChange,
+    // Payment Links (branded checkout)
+    createClientPaymentLink,
+    confirmClientPayment,
+    getPaymentLinkInfo,
 };
 
 // Export Ecommerce Sync functions (Firestore triggers)
@@ -574,6 +585,10 @@ export {
     updateAgencyProjectCount,
     getAgencyBillingSummary,
     onTenantProjectChange,
+    // Client Payment Links exports
+    createClientPaymentLink,
+    confirmClientPayment,
+    getPaymentLinkInfo,
     // Add-ons Management exports
     getAddonsPricing,
     calculateAddonsPrice,

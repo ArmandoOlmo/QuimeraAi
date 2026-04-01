@@ -134,7 +134,9 @@ const AppointmentsDashboard: React.FC = () => {
 
     // Local state
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-    const [viewMode, setViewMode] = useState<ViewMode>('week');
+    const [viewMode, setViewMode] = useState<ViewMode>(
+        typeof window !== 'undefined' && window.innerWidth < 640 ? 'day' : 'week'
+    );
     const [currentDate, setCurrentDate] = useState(new Date());
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [createModalInitialDate, setCreateModalInitialDate] = useState<Date | undefined>();
@@ -602,7 +604,7 @@ const AppointmentsDashboard: React.FC = () => {
 
                 {/* Filters Panel */}
                 {showFilters && (
-                    <div className="px-6 py-4 border-b border-border bg-secondary/20 animate-slide-down">
+                    <div className="px-3 sm:px-6 py-3 sm:py-4 border-b border-border bg-secondary/20 animate-slide-down overflow-x-auto">
                         <div className="flex flex-wrap gap-4">
                             {/* Status filters */}
                             <div>

@@ -31,6 +31,7 @@ const ViewRouter = lazyWithRetry(() => import('./components/ViewRouter'));
 const PublicWebsitePreview = lazyWithRetry(() => import('./components/PublicWebsitePreview'));
 const StorefrontApp = lazyWithRetry(() => import('./components/ecommerce/StorefrontApp'));
 const PublicBioPage = lazyWithRetry(() => import('./components/PublicBioPage'));
+const AgencyCheckoutPage = lazyWithRetry(() => import('./components/checkout/AgencyCheckoutPage'));
 
 // Minimal loading fallback for lazy components — brandless spinner (no Quimera logo)
 const MinimalLoader = () => (
@@ -69,6 +70,12 @@ const ProjectDiagnostic = lazyWithRetry(() => import('./components/admin/Project
 const isBioRoute = () => {
   const path = window.location.pathname;
   return path.startsWith('/bio/');
+};
+
+// Check for checkout payment link route
+const isCheckoutRoute = () => {
+  const path = window.location.pathname;
+  return path.startsWith('/pay/');
 };
 
 // =============================================================================
@@ -257,6 +264,18 @@ const App: React.FC = () => {
       <ErrorBoundary>
         <Suspense fallback={<MinimalLoader />}>
           <PublicBioPage username={username} />
+        </Suspense>
+      </ErrorBoundary>
+    );
+  }
+
+  // Checkout Payment Link route - no providers/auth needed
+  if (isCheckoutRoute()) {
+    const token = window.location.pathname.split('/pay/')[1];
+    return (
+      <ErrorBoundary>
+        <Suspense fallback={<MinimalLoader />}>
+          <AgencyCheckoutPage token={token} />
         </Suspense>
       </ErrorBoundary>
     );

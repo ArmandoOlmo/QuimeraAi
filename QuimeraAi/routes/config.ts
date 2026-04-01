@@ -121,6 +121,9 @@ export const ROUTES = {
   // Agency Signup (Public)
   AGENCY_SIGNUP: '/agency-signup',
 
+  // Client Payment Checkout (Public)
+  CHECKOUT_PAY: '/pay/:token',
+
   // Admin Routes
   SUPERADMIN: '/admin',
   ADMIN_ADMINS: '/admin/admins',
@@ -544,6 +547,12 @@ export const routeConfigs: RouteConfig[] = [
     path: ROUTES.AGENCY_SIGNUP,
     type: 'public',
     title: 'Agency Plans',
+    requiresAuth: false,
+  },
+  {
+    path: ROUTES.CHECKOUT_PAY,
+    type: 'public',
+    title: 'Checkout',
     requiresAuth: false,
   },
 

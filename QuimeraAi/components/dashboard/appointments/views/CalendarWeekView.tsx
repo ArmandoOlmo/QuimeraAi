@@ -36,10 +36,13 @@ interface CalendarWeekViewProps {
 // CONSTANTS
 // =============================================================================
 
+const DAYS_ES_SHORT = ['D', 'L', 'M', 'X', 'J', 'V', 'S'];
 const DAYS_ES = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
 const DAYS_FULL_ES = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
 const HOUR_HEIGHT = 64; // px per hour
+const GRID_COLS = '3rem repeat(7, 1fr)';
+const GRID_COLS_SM = '4rem repeat(7, 1fr)';
 
 // =============================================================================
 // SUB-COMPONENTS
@@ -166,162 +169,173 @@ export const CalendarWeekView: React.FC<CalendarWeekViewProps> = ({
 
     return (
         <div className="flex-1 flex flex-col min-h-0 bg-background">
-            {/* Header with days */}
-            <div className="flex border-b border-border sticky top-0 z-30 bg-background shadow-xs">
-                {/* Time column header */}
-                <div className="w-16 flex-shrink-0 border-r border-border bg-background" />
-
-                {/* Day headers */}
-                {weekDays.map((day, index) => {
-                    const isCurrentDay = isToday(day);
-                    const dayKey = day.toISOString().split('T')[0];
-
-                    return (
-                        <div
-                            key={dayKey}
-                            className={`
-                                flex-1 py-3 text-center border-r border-border last:border-r-0
-                                min-w-[100px] flex flex-col items-center justify-center gap-1
-                                ${isCurrentDay ? 'bg-primary/5' : 'bg-background'}
-                            `}
-                        >
-                            <span className={`text-xs font-semibold uppercase tracking-wide ${isCurrentDay ? 'text-primary' : 'text-muted-foreground'}`}>
-                                {DAYS_ES[day.getDay()]}
-                            </span>
-                            <div className={`
-                                w-8 h-8 flex items-center justify-center rounded-full text-lg font-bold
-                                ${isCurrentDay
-                                    ? 'bg-primary text-primary-foreground shadow-sm'
-                                    : 'text-foreground hover:bg-secondary/50'
-                                }
-                            `}>
-                                {day.getDate()}
-                            </div>
-                        </div>
-                    );
-                })}
-            </div>
-
-            {/* Scrollable time grid */}
+            {/* Scrollable container wrapping header + body so columns share the same grid */}
             <div
                 ref={scrollContainerRef}
                 className="flex-1 overflow-auto custom-scrollbar relative"
             >
-                {/* Current Time Indicator Line (Spanning full width) */}
-                {weekDays.some(day => isToday(day)) && (
+                <div className="min-w-[500px] sm:min-w-[700px] lg:min-w-full">
+                    {/* ── Header row ── */}
                     <div
-                        className="absolute left-0 right-0 z-20 pointer-events-none flex items-center"
-                        style={{ top: `${currentTimeTop}px` }}
+                        className="grid border-b border-border sticky top-0 z-30 bg-background shadow-xs"
+                        style={{ gridTemplateColumns: GRID_COLS }}
                     >
-                        <div className="w-16 flex justify-end pr-2">
-                            <span className="text-[10px] font-bold text-red-500 bg-background px-1 rounded">
-                                {new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
-                            </span>
-                        </div>
-                        <div className="flex-1 h-px bg-red-500 shadow-[0_0_4px_rgba(239,68,68,0.6)]" />
-                    </div>
-                )}
+                        {/* Time gutter header */}
+                        <div className="border-r border-border bg-background" />
 
-                <div className="flex min-w-[700px] lg:min-w-full">
-                    {/* Time column */}
-                    <div className="w-16 flex-shrink-0 border-r border-border bg-background z-10">
-                        {HOURS.map(hour => (
-                            <div
-                                key={hour}
-                                className="h-[64px] relative"
-                            >
-                                <span className="absolute -top-2.5 right-2 text-xs text-muted-foreground font-medium bg-background px-1">
-                                    {hour}:00
-                                </span>
-                            </div>
-                        ))}
-                    </div>
+                        {/* Day headers */}
+                        {weekDays.map((day) => {
+                            const isCurrentDay = isToday(day);
+                            const dayKey = day.toISOString().split('T')[0];
 
-                    {/* Day columns */}
-                    {weekDays.map((day, dayIndex) => {
-                        const isCurrentDay = isToday(day);
-                        const dayKey = day.toISOString().split('T')[0];
-                        const dayAppointments = appointmentsByDay.get(dayKey) || [];
-                        const dayStart = new Date(day);
-                        dayStart.setHours(0, 0, 0, 0);
-
-                        return (
-                            <div
-                                key={dayKey}
-                                className={`
-                                    flex-1 border-r border-border/40 last:border-r-0 relative
-                                    ${isCurrentDay ? 'bg-primary/[0.02]' : ''}
-                                `}
-                            >
-                                {/* Hour slots background lines */}
-                                {HOURS.map(hour => {
-                                    // Check if this slot is blocked
-                                    const slotStart = new Date(day);
-                                    slotStart.setHours(hour, 0, 0, 0);
-                                    const slotEnd = new Date(day);
-                                    slotEnd.setHours(hour, 59, 59, 999);
-
-                                    const blocked = blockedDates.find(bd => {
-                                        const bdStart = new Date(bd.startDate.seconds * 1000);
-                                        const bdEnd = new Date(bd.endDate.seconds * 1000);
-                                        if (bd.allDay) {
-                                            bdStart.setHours(0, 0, 0, 0);
-                                            bdEnd.setHours(23, 59, 59, 999);
+                            return (
+                                <div
+                                    key={dayKey}
+                                    className={`
+                                        py-2 sm:py-3 text-center border-r border-border last:border-r-0
+                                        flex flex-col items-center justify-center gap-0.5 sm:gap-1
+                                        ${isCurrentDay ? 'bg-primary/5' : 'bg-background'}
+                                    `}
+                                >
+                                    <span className={`text-[10px] sm:text-xs font-semibold uppercase tracking-wide ${isCurrentDay ? 'text-primary' : 'text-muted-foreground'}`}>
+                                        <span className="sm:hidden">{DAYS_ES_SHORT[day.getDay()]}</span>
+                                        <span className="hidden sm:inline">{DAYS_ES[day.getDay()]}</span>
+                                    </span>
+                                    <div className={`
+                                        w-6 h-6 sm:w-8 sm:h-8 flex items-center justify-center rounded-full text-sm sm:text-lg font-bold
+                                        ${isCurrentDay
+                                            ? 'bg-primary text-primary-foreground shadow-sm'
+                                            : 'text-foreground hover:bg-secondary/50'
                                         }
-                                        return bdStart <= slotEnd && bdEnd >= slotStart;
-                                    });
+                                    `}>
+                                        {day.getDate()}
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
 
-                                    return (
-                                        <div
-                                            key={hour}
-                                            onClick={() => {
-                                                if (blocked && onBlockClick) {
-                                                    onBlockClick(blocked);
-                                                } else if (!blocked) {
-                                                    const sd = new Date(day);
-                                                    sd.setHours(hour, 0, 0, 0);
-                                                    onSlotClick(sd, hour);
-                                                }
-                                            }}
-                                            className={`
-                                                h-[64px] border-b border-border/20 cursor-pointer transition-colors relative
-                                                ${blocked
-                                                    ? 'cursor-not-allowed'
-                                                    : 'hover:bg-black/[0.02]'
-                                                }
-                                            `}
-                                        >
-                                            {blocked && (
-                                                <div
-                                                    className="absolute inset-0 z-[5] pointer-events-none"
-                                                    style={{
-                                                        background: 'repeating-linear-gradient(135deg, transparent, transparent 4px, rgba(239,68,68,0.08) 4px, rgba(239,68,68,0.08) 8px)',
-                                                    }}
-                                                >
-                                                    <div className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity pointer-events-auto">
-                                                        <span className="text-[10px] font-medium text-destructive bg-destructive/10 px-1.5 py-0.5 rounded-full flex items-center gap-1">
-                                                            <Ban size={10} />
-                                                            {blocked.title}
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                            )}
-                                        </div>
-                                    );
-                                })}
+                    {/* ── Body grid ── */}
+                    <div className="relative">
+                        {/* Current Time Indicator Line */}
+                        {weekDays.some(day => isToday(day)) && (
+                            <div
+                                className="absolute left-0 right-0 z-20 pointer-events-none flex items-center"
+                                style={{ top: `${currentTimeTop}px` }}
+                            >
+                                <div className="w-12 sm:w-16 flex justify-end pr-1 sm:pr-2">
+                                    <span className="text-[8px] sm:text-[10px] font-bold text-red-500 bg-background px-0.5 sm:px-1 rounded">
+                                        {new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
+                                    </span>
+                                </div>
+                                <div className="flex-1 h-px bg-red-500 shadow-[0_0_4px_rgba(239,68,68,0.6)]" />
+                            </div>
+                        )}
 
-                                {/* Appointments */}
-                                {dayAppointments.map(apt => (
-                                    <TimeSlotAppointment
-                                        key={apt.id}
-                                        appointment={apt}
-                                        onClick={() => onAppointmentClick(apt)}
-                                        dayStart={dayStart}
-                                    />
+                        <div
+                            className="grid"
+                            style={{ gridTemplateColumns: GRID_COLS }}
+                        >
+                            {/* Time column */}
+                            <div className="border-r border-border bg-background z-10">
+                                {HOURS.map(hour => (
+                                    <div
+                                        key={hour}
+                                        className="h-[64px] relative"
+                                    >
+                                        <span className="absolute -top-2 sm:-top-2.5 right-1 sm:right-2 text-[10px] sm:text-xs text-muted-foreground font-medium bg-background px-0.5 sm:px-1">
+                                            {hour}:00
+                                        </span>
+                                    </div>
                                 ))}
                             </div>
-                        );
-                    })}
+
+                            {/* Day columns */}
+                            {weekDays.map((day) => {
+                                const isCurrentDay = isToday(day);
+                                const dayKey = day.toISOString().split('T')[0];
+                                const dayAppointments = appointmentsByDay.get(dayKey) || [];
+                                const dayStart = new Date(day);
+                                dayStart.setHours(0, 0, 0, 0);
+
+                                return (
+                                    <div
+                                        key={dayKey}
+                                        className={`
+                                            border-r border-border/40 last:border-r-0 relative
+                                            ${isCurrentDay ? 'bg-primary/[0.02]' : ''}
+                                        `}
+                                    >
+                                        {/* Hour slots background lines */}
+                                        {HOURS.map(hour => {
+                                            const slotStart = new Date(day);
+                                            slotStart.setHours(hour, 0, 0, 0);
+                                            const slotEnd = new Date(day);
+                                            slotEnd.setHours(hour, 59, 59, 999);
+
+                                            const blocked = blockedDates.find(bd => {
+                                                const bdStart = new Date(bd.startDate.seconds * 1000);
+                                                const bdEnd = new Date(bd.endDate.seconds * 1000);
+                                                if (bd.allDay) {
+                                                    bdStart.setHours(0, 0, 0, 0);
+                                                    bdEnd.setHours(23, 59, 59, 999);
+                                                }
+                                                return bdStart <= slotEnd && bdEnd >= slotStart;
+                                            });
+
+                                            return (
+                                                <div
+                                                    key={hour}
+                                                    onClick={() => {
+                                                        if (blocked && onBlockClick) {
+                                                            onBlockClick(blocked);
+                                                        } else if (!blocked) {
+                                                            const sd = new Date(day);
+                                                            sd.setHours(hour, 0, 0, 0);
+                                                            onSlotClick(sd, hour);
+                                                        }
+                                                    }}
+                                                    className={`
+                                                        h-[64px] border-b border-border/20 cursor-pointer transition-colors relative
+                                                        ${blocked
+                                                            ? 'cursor-not-allowed'
+                                                            : 'hover:bg-black/[0.02]'
+                                                        }
+                                                    `}
+                                                >
+                                                    {blocked && (
+                                                        <div
+                                                            className="absolute inset-0 z-[5] pointer-events-none"
+                                                            style={{
+                                                                background: 'repeating-linear-gradient(135deg, transparent, transparent 4px, rgba(239,68,68,0.08) 4px, rgba(239,68,68,0.08) 8px)',
+                                                            }}
+                                                        >
+                                                            <div className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity pointer-events-auto">
+                                                                <span className="text-[10px] font-medium text-destructive bg-destructive/10 px-1.5 py-0.5 rounded-full flex items-center gap-1">
+                                                                    <Ban size={10} />
+                                                                    {blocked.title}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            );
+                                        })}
+
+                                        {/* Appointments */}
+                                        {dayAppointments.map(apt => (
+                                            <TimeSlotAppointment
+                                                key={apt.id}
+                                                appointment={apt}
+                                                onClick={() => onAppointmentClick(apt)}
+                                                dayStart={dayStart}
+                                            />
+                                        ))}
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

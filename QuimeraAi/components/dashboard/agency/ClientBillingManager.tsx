@@ -22,6 +22,7 @@ import {
     Package,
 } from 'lucide-react';
 import { AssignPlanModal } from './plans';
+import { GeneratePaymentLink } from './GeneratePaymentLink';
 
 const functions = getFunctions();
 
@@ -55,6 +56,14 @@ export function ClientBillingManager() {
 
     // Plan assignment modal state
     const [assignPlanModal, setAssignPlanModal] = useState<{
+        isOpen: boolean;
+        clientId: string;
+        clientName: string;
+        currentPlanId: string | null;
+    }>({ isOpen: false, clientId: '', clientName: '', currentPlanId: null });
+
+    // Payment link modal state
+    const [paymentLinkModal, setPaymentLinkModal] = useState<{
         isOpen: boolean;
         clientId: string;
         clientName: string;
@@ -441,11 +450,16 @@ export function ClientBillingManager() {
                                         <div className="flex items-center justify-end gap-2">
                                             {!client.subscriptionId ? (
                                                 <button
-                                                    onClick={() => setSetupModalClient(client.clientId)}
-                                                    className="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
+                                                    onClick={() => setPaymentLinkModal({
+                                                        isOpen: true,
+                                                        clientId: client.clientId,
+                                                        clientName: client.clientName,
+                                                        currentPlanId: client.agencyPlanId || null,
+                                                    })}
+                                                    className="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
                                                 >
                                                     <Plus className="h-4 w-4" />
-                                                    Configurar
+                                                    Generar Link
                                                 </button>
                                             ) : (
                                                 <>
@@ -700,6 +714,15 @@ export function ClientBillingManager() {
                     onAssigned={handlePlanAssigned}
                 />
             )}
+
+            {/* Generate Payment Link Modal */}
+            <GeneratePaymentLink
+                isOpen={paymentLinkModal.isOpen}
+                onClose={() => setPaymentLinkModal({ ...paymentLinkModal, isOpen: false })}
+                clientTenantId={paymentLinkModal.clientId}
+                clientName={paymentLinkModal.clientName}
+                currentPlanId={paymentLinkModal.currentPlanId}
+            />
 
             <ConfirmationModal
                 isOpen={cancelConfirm.isOpen}
