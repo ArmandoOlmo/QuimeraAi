@@ -551,42 +551,21 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
               onClick={() => navigate(ROUTES.DASHBOARD)}
               className={`flex items-center gap-3 transition-all duration-300 cursor-pointer ${isCollapsed ? 'md:px-0 md:justify-center md:gap-0' : 'md:px-6'}`}
             >
-              {/* Logo - reads from tenant branding; uses generic icon for agencies without logo */}
-              {tenantContext?.currentTenant?.branding?.logoUrl ? (
-                <img
-                  src={tenantContext.currentTenant.branding.logoUrl}
-                  alt={tenantContext.currentTenant.branding.companyName || "Logo"}
-                  className="w-10 h-10 object-contain flex-shrink-0"
-                  width={40}
-                  height={40}
-                  loading="eager"
-                  decoding="async"
-                />
-              ) : tenantContext?.currentTenant?.branding?.companyName ? (
-                /* Agency without custom logo — show generic Sparkles icon with accent color */
-                <div
-                  className="w-10 h-10 flex items-center justify-center rounded-xl flex-shrink-0"
-                  style={{ backgroundColor: (tenantContext.currentTenant.branding as any)?.primaryColor || 'hsl(var(--primary))' }}
-                >
-                  <Sparkles className="w-5 h-5 text-white" />
-                </div>
-              ) : (
-                <img
-                  src={appLogoUrl}
-                  alt="Quimera Logo"
-                  className="w-10 h-10 object-contain flex-shrink-0"
-                  width={40}
-                  height={40}
-                  loading="eager"
-                  decoding="async"
-                />
-              )}
+              {/* Logo - Always show Quimera.ai branding in dashboard sidebar.
+                  White Label branding (tenant.branding) is only for client-facing views
+                  (checkout page, agency landing, client portal). */}
+              <img
+                src={appLogoUrl}
+                alt="Quimera Logo"
+                className="w-10 h-10 object-contain flex-shrink-0"
+                width={40}
+                height={40}
+                loading="eager"
+                decoding="async"
+              />
               {/* Text Logo (Hidden when collapsed on desktop) */}
               <span className={`text-xl md:text-2xl font-extrabold tracking-tight text-foreground whitespace-nowrap transition-opacity duration-300 ${isCollapsed ? 'md:opacity-0 md:hidden' : 'opacity-100'}`}>
-                {tenantContext?.currentTenant?.branding?.companyName
-                  ? tenantContext.currentTenant.branding.companyName
-                  : <>Quimera<span className="text-primary">.ai</span></>
-                }
+                <>Quimera<span className="text-primary">.ai</span></>
               </span>
             </div>
 
