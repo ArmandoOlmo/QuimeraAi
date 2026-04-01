@@ -99,7 +99,7 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
             }
         } catch (error: any) {
             console.error('[DomainCard] Verification error:', error);
-            setVerificationMessage('❌ ' + (error.message || 'Error al verificar'));
+            setVerificationMessage('❌ ' + (error.message || t('domainsDashboard.domainErrorMessage')));
         } finally {
             setIsVerifying(false);
         }
@@ -120,7 +120,7 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
             console.log(`✅ [DomainCard] Delete completed`);
         } catch (error: any) {
             console.error('❌ [DomainCard] Delete FAILED:', error);
-            alert(`❌ Error:\n\n${error?.message || 'Error desconocido'}\n\nRevisa la consola para más detalles.`);
+            alert(`❌ Error:\n\n${error?.message || t('domainsDashboard.errorUnknown')}\n\nRevisa la consola para más detalles.`);
         } finally {
             setIsDeleting(false);
             setDeleteConfirmOpen(false);
@@ -175,10 +175,10 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
                 const syncFn = httpsCallable(functions, 'syncDomainMapping');
                 await syncFn({ domain: domain.name, projectId: domain.projectId });
 
-                alert('✅ Dominio sincronizado. Tu sitio debería cargar en unos segundos.');
+                alert(t('domainsDashboard.domainSyncSuccess'));
             } catch (e: any) {
                 console.error('Error syncing domain:', e);
-                alert('❌ Error: ' + (e.message || 'No se pudo sincronizar el dominio'));
+                alert(t('domainsDashboard.domainSyncError', { message: e.message || t('domainsDashboard.domainSyncErrorGeneric') }));
             }
         }
     };
@@ -397,10 +397,10 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
                             </div>
                             <div>
                                 <h4 className="font-bold text-foreground text-base mb-1">
-                                    Configura tu DNS
+                                    {t('domainsDashboard.configureDnsHeading')}
                                 </h4>
                                 <p className="text-sm text-muted-foreground">
-                                    Ve a tu proveedor de dominios (GoDaddy, Namecheap, Google Domains, etc.) y agrega estos registros DNS.
+                                    {t('domainsDashboard.configureDnsSubtext')}
                                 </p>
                             </div>
                         </div>
@@ -409,11 +409,11 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
                         {(domain as any).cloudflareNameservers?.length > 0 && (
                             <div className="bg-purple-500/10 border border-purple-500/20 rounded-lg p-4 mb-4">
                                 <div className="flex items-center gap-2 mb-3">
-                                    <span className="text-xs font-bold bg-purple-500/20 text-purple-500 px-2 py-0.5 rounded">OPCIÓN RÁPIDA</span>
-                                    <span className="text-sm font-medium text-foreground">Cambiar Nameservers (Cloudflare)</span>
+                                    <span className="text-xs font-bold bg-purple-500/20 text-purple-500 px-2 py-0.5 rounded">{t('domainsDashboard.quickOption')}</span>
+                                    <span className="text-sm font-medium text-foreground">{t('domainsDashboard.changeNameserversCloudflare')}</span>
                                 </div>
                                 <p className="text-xs text-muted-foreground mb-3">
-                                    Ve a la sección de <strong>{t('domainsDashboard.nameservers')}</strong> de tu proveedor y reemplaza los existentes por estos:
+                                    {t('domainsDashboard.changeNameserversSubtext', { section: t('domainsDashboard.nameservers') })}
                                 </p>
                                 <div className="grid gap-2">
                                     {(domain as any).cloudflareNameservers.map((ns: string, idx: number) => (
@@ -422,7 +422,7 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
                                             <button
                                                 onClick={() => {
                                                     navigator.clipboard.writeText(ns);
-                                                    alert('Nameserver copiado');
+                                                    alert(t('domainsDashboard.nameserverCopied'));
                                                 }}
                                                 className="p-1 hover:bg-primary/20 rounded text-primary"
                                             >
@@ -438,41 +438,39 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
                         <div className="bg-card/80 rounded-lg p-4 mb-4 border border-border">
                             {(domain as any).cloudflareNameservers?.length > 0 && (
                                 <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">
-                                    — O usa Registros DNS Directos —
+                                    {t('domainsDashboard.orUseDnsRecords')}
                                 </div>
                             )}
                             
-                            <p className="text-sm text-muted-foreground mb-4">
-                                En tu proveedor de dominios, ve a la sección de <strong>DNS</strong> o <strong>{t('domainsDashboard.dnsRecords')}</strong> y agrega los siguientes registros:
-                            </p>
+                            <p className="text-sm text-muted-foreground mb-4" dangerouslySetInnerHTML={{ __html: t('domainsDashboard.dnsProviderInstructions', { section: t('domainsDashboard.dnsRecords') }) }} />
 
                             <div className="space-y-4">
                                 {/* Step 1: A Record */}
                                 <div className="bg-secondary/30 rounded-lg p-4">
                                     <div className="flex items-center gap-2 mb-3">
                                         <span className="w-6 h-6 rounded-full bg-blue-500 text-white text-xs font-bold flex items-center justify-center">1</span>
-                                        <span className="text-sm font-bold text-foreground">Registro A</span>
-                                        <span className="text-xs text-muted-foreground ml-1">— Para el dominio principal</span>
+                                        <span className="text-sm font-bold text-foreground">{t('domainsDashboard.recordA')}</span>
+                                        <span className="text-xs text-muted-foreground ml-1">{t('domainsDashboard.forMainDomain')}</span>
                                     </div>
                                     <div className="grid grid-cols-3 gap-3 bg-background p-3 rounded border border-border">
                                         <div>
-                                            <span className="text-[10px] text-muted-foreground uppercase font-bold block mb-1">Tipo</span>
+                                            <span className="text-[10px] text-muted-foreground uppercase font-bold block mb-1">{t('domainsDashboard.typeLabel')}</span>
                                             <code className="font-mono font-bold text-blue-500">A</code>
                                         </div>
                                         <div>
-                                            <span className="text-[10px] text-muted-foreground uppercase font-bold block mb-1">Host / Nombre</span>
+                                            <span className="text-[10px] text-muted-foreground uppercase font-bold block mb-1">{t('domainsDashboard.hostNameLabel')}</span>
                                             <code className="font-mono font-bold text-foreground">@</code>
                                         </div>
                                         <div>
                                             <div className="flex items-center justify-between">
                                                 <div>
-                                                    <span className="text-[10px] text-muted-foreground uppercase font-bold block mb-1">Valor / Apunta a</span>
+                                                    <span className="text-[10px] text-muted-foreground uppercase font-bold block mb-1">{t('domainsDashboard.valuePointsTo')}</span>
                                                     <code className="font-mono font-bold text-primary">130.211.43.242</code>
                                                 </div>
                                                 <button
                                                     onClick={() => {
                                                         navigator.clipboard.writeText('130.211.43.242');
-                                                        alert('IP copiada ✓');
+                                                        alert(t('domainsDashboard.ipCopiedAlert'));
                                                     }}
                                                     className="p-1 hover:bg-primary/20 rounded text-primary ml-2"
                                                     title={t('domainsDashboard.copyIP')}
@@ -488,28 +486,28 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
                                 <div className="bg-secondary/30 rounded-lg p-4">
                                     <div className="flex items-center gap-2 mb-3">
                                         <span className="w-6 h-6 rounded-full bg-green-500 text-white text-xs font-bold flex items-center justify-center">2</span>
-                                        <span className="text-sm font-bold text-foreground">Registro CNAME</span>
-                                        <span className="text-xs text-muted-foreground ml-1">— Para www.{domain.name}</span>
+                                        <span className="text-sm font-bold text-foreground">{t('domainsDashboard.recordCNAME')}</span>
+                                        <span className="text-xs text-muted-foreground ml-1">{t('domainsDashboard.forWwwDomain', { domain: domain.name })}</span>
                                     </div>
                                     <div className="grid grid-cols-3 gap-3 bg-background p-3 rounded border border-border">
                                         <div>
-                                            <span className="text-[10px] text-muted-foreground uppercase font-bold block mb-1">Tipo</span>
+                                            <span className="text-[10px] text-muted-foreground uppercase font-bold block mb-1">{t('domainsDashboard.typeLabel')}</span>
                                             <code className="font-mono font-bold text-green-500">CNAME</code>
                                         </div>
                                         <div>
-                                            <span className="text-[10px] text-muted-foreground uppercase font-bold block mb-1">Host / Nombre</span>
+                                            <span className="text-[10px] text-muted-foreground uppercase font-bold block mb-1">{t('domainsDashboard.hostNameLabel')}</span>
                                             <code className="font-mono font-bold text-foreground">www</code>
                                         </div>
                                         <div>
                                             <div className="flex items-center justify-between">
                                                 <div>
-                                                    <span className="text-[10px] text-muted-foreground uppercase font-bold block mb-1">Valor / Apunta a</span>
+                                                    <span className="text-[10px] text-muted-foreground uppercase font-bold block mb-1">{t('domainsDashboard.valuePointsTo')}</span>
                                                     <code className="font-mono font-bold text-primary text-xs">{domain.name}</code>
                                                 </div>
                                                 <button
                                                     onClick={() => {
                                                         navigator.clipboard.writeText(domain.name);
-                                                        alert('CNAME copiado ✓');
+                                                        alert(t('domainsDashboard.cnameCopiedAlert'));
                                                     }}
                                                     className="p-1 hover:bg-primary/20 rounded text-primary ml-2"
                                                     title={t('domainsDashboard.copyCNAME')}
@@ -525,22 +523,19 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
                                 <div className="bg-secondary/30 rounded-lg p-4">
                                     <div className="flex items-center gap-2 mb-2">
                                         <span className="w-6 h-6 rounded-full bg-amber-500 text-white text-xs font-bold flex items-center justify-center">3</span>
-                                        <span className="text-sm font-bold text-foreground">Guarda y Verifica</span>
+                                        <span className="text-sm font-bold text-foreground">{t('domainsDashboard.saveAndVerify')}</span>
                                     </div>
-                                    <p className="text-xs text-muted-foreground ml-8">
-                                        Guarda los cambios en tu proveedor de DNS. La propagación puede tomar entre <strong>5 minutos y 48 horas</strong>. 
-                                        Luego haz click en "Verificar DNS" abajo.
-                                    </p>
+                                    <p className="text-xs text-muted-foreground ml-8" dangerouslySetInnerHTML={{ __html: t('domainsDashboard.saveAndVerifyText') }} />
                                 </div>
                             </div>
 
                             {/* Provider-specific tips */}
                             <div className="mt-4 p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg">
-                                <p className="text-xs font-bold text-amber-600 dark:text-amber-400 mb-1">💡 Tips para proveedores comunes:</p>
+                                <p className="text-xs font-bold text-amber-600 dark:text-amber-400 mb-1">{t('domainsDashboard.providerTipsTitle')}</p>
                                 <ul className="text-xs text-muted-foreground space-y-1 list-disc list-inside">
-                                    <li><strong>GoDaddy:</strong> Ve a DNS → Registros DNS. Si ya existe un registro A con @, edítalo en vez de crear uno nuevo.</li>
-                                    <li><strong>Namecheap:</strong> Ve a Advanced DNS → Host Records. Usa @ como Host para el registro A.</li>
-                                    <li><strong>Google Domains:</strong> Ve a DNS → Registros personalizados. Agrega ambos registros.</li>
+                                    <li dangerouslySetInnerHTML={{ __html: t('domainsDashboard.providerTipGoDaddy') }} />
+                                    <li dangerouslySetInnerHTML={{ __html: t('domainsDashboard.providerTipNamecheap') }} />
+                                    <li dangerouslySetInnerHTML={{ __html: t('domainsDashboard.providerTipGoogle') }} />
                                 </ul>
                             </div>
                         </div>
@@ -564,15 +559,15 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
                             className="w-full bg-primary text-primary-foreground font-bold py-3 px-4 rounded-lg transition-colors disabled:opacity-50 flex items-center justify-center gap-2 hover:opacity-90"
                         >
                             {isVerifying ? (
-                                <><Loader2 size={18} className="animate-spin" /> Verificando...</>
+                                <><Loader2 size={18} className="animate-spin" /> {t('domainsDashboard.verifyingBtn')}</>
                             ) : (
-                                <><RefreshCw size={18} /> Verificar DNS</>
+                                <><RefreshCw size={18} /> {t('domainsDashboard.verifyDnsBtn')}</>
                             )}
                         </button>
 
                         <p className="text-xs text-center text-muted-foreground mt-3 flex items-center justify-center gap-1">
                             <Clock size={12} />
-                            Los cambios de DNS pueden tardar entre 5 min y 48 horas en propagarse.
+                            {t('domainsDashboard.dnsPropagationNote')}
                         </p>
                     </div>
                 )}
@@ -619,7 +614,7 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
                         <div className="bg-secondary/20 rounded-xl p-6 border border-border">
                             <h4 className="font-bold text-foreground mb-4 flex items-center">
                                 <Globe size={16} className="mr-2 text-primary" />
-                                Registros DNS requeridos
+                                {t('domainsDashboard.dnsRecordsRequired')}
                             </h4>
 
                             <div className="space-y-3 mb-4">
@@ -635,7 +630,7 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
                                             <button
                                                 onClick={() => {
                                                     navigator.clipboard.writeText(QUIMERA_DNS.IP);
-                                                    alert('IP copiada ✓');
+                                                    alert(t('domainsDashboard.ipCopiedAlert'));
                                                 }}
                                                 className="p-2 hover:bg-secondary rounded-md text-muted-foreground hover:text-primary transition-colors"
                                             >
@@ -657,7 +652,7 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
                                             <button
                                                 onClick={() => {
                                                     navigator.clipboard.writeText(domain.name);
-                                                    alert('CNAME copiado ✓');
+                                                    alert(t('domainsDashboard.cnameCopiedAlert'));
                                                 }}
                                                 className="p-2 hover:bg-secondary rounded-md text-muted-foreground hover:text-primary transition-colors"
                                             >
@@ -671,7 +666,7 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
                             <div className="flex items-center gap-2 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
                                 <Clock size={14} className="text-blue-500 flex-shrink-0" />
                                 <p className="text-xs text-muted-foreground">
-                                    Los cambios de DNS pueden tardar entre 5 min y 48 horas en propagarse.
+                                    {t('domainsDashboard.dnsPropagationNote')}
                                 </p>
                             </div>
                         </div>
@@ -1284,12 +1279,12 @@ const DomainsDashboard: React.FC = () => {
             });
 
             setIsConnectModalOpen(false);
-            alert(`✅ Dominio "${normalizedDomain}" agregado.\n\nAhora configura los registros DNS en tu proveedor:\n\n• Registro A: @ → ${QUIMERA_DNS.IP}\n• Registro CNAME: www → ${normalizedDomain}\n\nLuego haz clic en "Verificar" para activarlo.`);
+            alert(t('domainsDashboard.domainAddedAlert', { domain: normalizedDomain, ip: QUIMERA_DNS.IP }));
             await refetch();
 
         } catch (error: any) {
             console.error('[DomainsDashboard] Error adding domain:', error);
-            setCloudflareError(error.message || 'Error al guardar el dominio');
+            setCloudflareError(error.message || t('domainsDashboard.errorSavingDomain'));
         } finally {
             setIsSettingUpCloudflare(false);
             setConnectDomainName('');
@@ -1360,7 +1355,7 @@ const DomainsDashboard: React.FC = () => {
                                 className="w-full p-5 flex items-center justify-between hover:bg-primary/5 transition-colors"
                             >
                                 <h4 className="font-bold text-primary flex items-center gap-2 text-base">
-                                    📋 Guía Completa: Cómo conectar tu dominio personalizado
+                                    {t('domainsDashboard.guide.title')}
                                 </h4>
                                 {showInstructions ? <ChevronUp className="text-primary" size={20} /> : <ChevronDown className="text-primary" size={20} />}
                             </button>
@@ -1372,19 +1367,15 @@ const DomainsDashboard: React.FC = () => {
                                     <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4">
                                         <h5 className="font-bold text-foreground mb-2 flex items-center gap-2">
                                             <Globe size={16} className="text-blue-500" />
-                                            ¿Qué es un dominio personalizado?
+                                            {t('domainsDashboard.guide.whatIsDomain')}
                                         </h5>
-                                        <p className="text-muted-foreground text-sm leading-relaxed">
-                                            Un dominio personalizado es la dirección web que tus clientes escriben para ver tu sitio (ejemplo: <code className="font-mono text-primary font-bold bg-primary/10 px-1 rounded">www.tunegocio.com</code>). 
-                                            En lugar de usar una URL larga, tendrás tu propia dirección profesional. 
-                                            Para que funcione, necesitas <strong>apuntar tu dominio a nuestros servidores</strong> — y aquí te explicamos cómo hacerlo paso a paso.
-                                        </p>
+                                        <p className="text-muted-foreground text-sm leading-relaxed" dangerouslySetInnerHTML={{ __html: t('domainsDashboard.guide.whatIsDomainDesc') }} />
                                     </div>
 
                                     {/* ======== VISUAL DIAGRAM - How DNS Works ======== */}
                                     <div className="bg-card border border-border rounded-xl p-5">
                                         <h5 className="font-bold text-foreground mb-4 flex items-center gap-2">
-                                            🗺️ ¿Cómo funciona? (Diagrama visual)
+                                            {t('domainsDashboard.guide.howItWorksTitle')}
                                         </h5>
                                         <div className="flex flex-col items-center gap-0">
                                             {/* Row 1: User */}
@@ -1393,7 +1384,7 @@ const DomainsDashboard: React.FC = () => {
                                                     <span className="text-xl">👤</span>
                                                 </div>
                                                 <div>
-                                                    <p className="font-bold text-foreground text-sm">Tu cliente escribe</p>
+                                                    <p className="font-bold text-foreground text-sm">{t('domainsDashboard.guide.diagramClientTypes')}</p>
                                                     <code className="text-primary font-mono font-bold text-xs">www.tunegocio.com</code>
                                                 </div>
                                             </div>
@@ -1408,8 +1399,8 @@ const DomainsDashboard: React.FC = () => {
                                                     <span className="text-xl">🌐</span>
                                                 </div>
                                                 <div>
-                                                    <p className="font-bold text-foreground text-sm">El DNS busca la dirección</p>
-                                                    <p className="text-xs text-muted-foreground">Los registros DNS que tú configurarás le dicen al navegador a dónde ir</p>
+                                                    <p className="font-bold text-foreground text-sm">{t('domainsDashboard.guide.diagramDnsLookup')}</p>
+                                                    <p className="text-xs text-muted-foreground">{t('domainsDashboard.guide.diagramDnsLookupDesc')}</p>
                                                 </div>
                                             </div>
                                             {/* Arrow */}
@@ -1423,8 +1414,8 @@ const DomainsDashboard: React.FC = () => {
                                                     <span className="text-xl">🖥️</span>
                                                 </div>
                                                 <div>
-                                                    <p className="font-bold text-foreground text-sm">Nuestro servidor muestra tu web</p>
-                                                    <p className="text-xs text-muted-foreground">IP: <code className="font-mono font-bold text-green-600">130.211.43.242</code> — aquí vive tu sitio</p>
+                                                    <p className="font-bold text-foreground text-sm">{t('domainsDashboard.guide.diagramServerShows')}</p>
+                                                    <p className="text-xs text-muted-foreground" dangerouslySetInnerHTML={{ __html: t('domainsDashboard.guide.diagramServerDesc') }} />
                                                 </div>
                                             </div>
                                             {/* Arrow */}
@@ -1438,8 +1429,8 @@ const DomainsDashboard: React.FC = () => {
                                                     <span className="text-xl">✨</span>
                                                 </div>
                                                 <div>
-                                                    <p className="font-bold text-foreground text-sm">¡Tu sitio se ve perfecto!</p>
-                                                    <p className="text-xs text-muted-foreground">Con SSL (candado 🔒) incluido gratis</p>
+                                                    <p className="font-bold text-foreground text-sm">{t('domainsDashboard.guide.diagramResult')}</p>
+                                                    <p className="text-xs text-muted-foreground">{t('domainsDashboard.guide.diagramResultDesc')}</p>
                                                 </div>
                                             </div>
                                         </div>
@@ -1448,17 +1439,15 @@ const DomainsDashboard: React.FC = () => {
                                     {/* ======== STEP BY STEP GUIDE ======== */}
                                     <div className="space-y-5">
                                         <h5 className="font-bold text-foreground text-base flex items-center gap-2">
-                                            🚀 Instrucciones paso a paso
+                                            {t('domainsDashboard.guide.stepByStepTitle')}
                                         </h5>
 
                                         {/* STEP 1: Go to your provider */}
                                         <div className="flex items-start gap-3">
                                             <span className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-500 text-white text-sm font-bold shrink-0 mt-0.5 shadow-md">1</span>
                                             <div className="flex-1">
-                                                <strong className="text-foreground block mb-2 text-base">Entra al panel de tu proveedor de dominio</strong>
-                                                <p className="text-muted-foreground mb-3">
-                                                    Ve a la página web donde <strong>compraste tu dominio</strong>. Si no recuerdas cuál es, los más comunes son:
-                                                </p>
+                                                <strong className="text-foreground block mb-2 text-base">{t('domainsDashboard.guide.step1Title')}</strong>
+                                                <p className="text-muted-foreground mb-3" dangerouslySetInnerHTML={{ __html: t('domainsDashboard.guide.step1Desc') }} />
                                                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                                                     <div className="bg-card border border-border rounded-lg p-3 text-center">
                                                         <p className="font-bold text-foreground text-sm">GoDaddy</p>
@@ -1474,7 +1463,7 @@ const DomainsDashboard: React.FC = () => {
                                                     </div>
                                                 </div>
                                                 <p className="text-xs text-muted-foreground mt-2">
-                                                    Inicia sesión con la cuenta con la que compraste tu dominio.
+                                                    {t('domainsDashboard.guide.step1LoginHint')}
                                                 </p>
                                             </div>
                                         </div>
@@ -1483,9 +1472,9 @@ const DomainsDashboard: React.FC = () => {
                                         <div className="flex items-start gap-3">
                                             <span className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-500 text-white text-sm font-bold shrink-0 mt-0.5 shadow-md">2</span>
                                             <div className="flex-1">
-                                                <strong className="text-foreground block mb-2 text-base">Busca la sección de DNS</strong>
+                                                <strong className="text-foreground block mb-2 text-base">{t('domainsDashboard.guide.step2Title')}</strong>
                                                 <p className="text-muted-foreground mb-3">
-                                                    Dentro de tu panel, busca un botón o menú que diga alguna de estas cosas:
+                                                    {t('domainsDashboard.guide.step2Desc')}
                                                 </p>
                                                 <div className="flex flex-wrap gap-2 mb-3">
                                                     {['DNS', 'Manage DNS', 'DNS Records', 'Registros DNS', 'DNS Zone', 'Advanced DNS', 'Configuración DNS'].map(label => (
@@ -1497,7 +1486,7 @@ const DomainsDashboard: React.FC = () => {
                                                 <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-3">
                                                     <p className="text-xs text-amber-600 dark:text-amber-400 flex items-start gap-2">
                                                         <AlertTriangle size={14} className="shrink-0 mt-0.5" />
-                                                        <span><strong>Cada proveedor lo llama diferente.</strong> Si no encuentras "DNS", busca "Zona DNS", "Records", o "Configuración avanzada". Si tienes dudas, escríbenos.</span>
+                                                        <span dangerouslySetInnerHTML={{ __html: t('domainsDashboard.guide.step2Warning') }} />
                                                     </p>
                                                 </div>
                                             </div>
@@ -1508,33 +1497,31 @@ const DomainsDashboard: React.FC = () => {
                                             <span className="flex items-center justify-center w-8 h-8 rounded-full bg-red-500 text-white text-sm font-bold shrink-0 mt-0.5 shadow-md">3</span>
                                             <div className="flex-1">
                                                 <strong className="text-foreground block mb-2 text-base flex items-center gap-2">
-                                                    🗑️ BORRA los registros A y CNAME viejos (si existen)
+                                                    {t('domainsDashboard.guide.step3Title')}
                                                 </strong>
                                                 <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 mb-3">
                                                     <p className="text-sm text-red-600 dark:text-red-400 font-bold mb-3">
-                                                        ⚠️ MUY IMPORTANTE: Antes de agregar los nuevos, debes borrar los que ya están.
+                                                        {t('domainsDashboard.guide.step3Warning')}
                                                     </p>
-                                                    <p className="text-sm text-muted-foreground mb-3">
-                                                        En la lista de registros DNS, busca si ya existen registros con estos datos y <strong className="text-red-500">elimínalos</strong>:
-                                                    </p>
+                                                    <p className="text-sm text-muted-foreground mb-3" dangerouslySetInnerHTML={{ __html: t('domainsDashboard.guide.step3Desc') }} />
                                                     <div className="space-y-2">
                                                         <div className="flex items-center gap-3 bg-red-500/5 p-3 rounded-lg border border-red-500/10">
                                                             <Trash2 size={16} className="text-red-500 shrink-0" />
                                                             <div>
-                                                                <p className="font-bold text-foreground text-sm">Borrar Registro A con Host <code className="font-mono bg-red-500/10 px-1 rounded">@</code></p>
-                                                                <p className="text-xs text-muted-foreground">Si ves un registro tipo "A" con nombre "@" o vacío — <strong className="text-red-500">bórralo</strong></p>
+                                                                <p className="font-bold text-foreground text-sm" dangerouslySetInnerHTML={{ __html: t('domainsDashboard.guide.step3DeleteA') }} />
+                                                                <p className="text-xs text-muted-foreground" dangerouslySetInnerHTML={{ __html: t('domainsDashboard.guide.step3DeleteADesc') }} />
                                                             </div>
                                                         </div>
                                                         <div className="flex items-center gap-3 bg-red-500/5 p-3 rounded-lg border border-red-500/10">
                                                             <Trash2 size={16} className="text-red-500 shrink-0" />
                                                             <div>
-                                                                <p className="font-bold text-foreground text-sm">Borrar CNAME con Host <code className="font-mono bg-red-500/10 px-1 rounded">www</code></p>
-                                                                <p className="text-xs text-muted-foreground">Si ves un registro tipo "CNAME" con nombre "www" — <strong className="text-red-500">bórralo</strong></p>
+                                                                <p className="font-bold text-foreground text-sm" dangerouslySetInnerHTML={{ __html: t('domainsDashboard.guide.step3DeleteCNAME') }} />
+                                                                <p className="text-xs text-muted-foreground" dangerouslySetInnerHTML={{ __html: t('domainsDashboard.guide.step3DeleteCNAMEDesc') }} />
                                                             </div>
                                                         </div>
                                                     </div>
                                                     <p className="text-xs text-muted-foreground mt-3 italic">
-                                                        💡 Si no hay ningún registro A o CNAME, no te preocupes — simplemente pasa al siguiente paso.
+                                                        {t('domainsDashboard.guide.step3NoRecordsHint')}
                                                     </p>
                                                 </div>
                                             </div>
@@ -1545,36 +1532,34 @@ const DomainsDashboard: React.FC = () => {
                                             <span className="flex items-center justify-center w-8 h-8 rounded-full bg-green-500 text-white text-sm font-bold shrink-0 mt-0.5 shadow-md">4</span>
                                             <div className="flex-1">
                                                 <strong className="text-foreground block mb-2 text-base flex items-center gap-2">
-                                                    ✅ AGREGA estos 2 registros nuevos
+                                                    {t('domainsDashboard.guide.step4Title')}
                                                 </strong>
-                                                <p className="text-muted-foreground mb-3">
-                                                    Ahora busca un botón que diga <strong>"Add Record"</strong>, <strong>"Agregar Registro"</strong> o <strong>"+"</strong> y agrega estos dos registros exactamente como se muestran:
-                                                </p>
+                                                <p className="text-muted-foreground mb-3" dangerouslySetInnerHTML={{ __html: t('domainsDashboard.guide.step4Desc') }} />
 
                                                 {/* Record 1: A */}
                                                 <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4 mb-3">
                                                     <div className="flex items-center gap-2 mb-3">
-                                                        <span className="text-xs font-extrabold bg-blue-500 text-white px-2.5 py-1 rounded-md">REGISTRO 1</span>
-                                                        <span className="text-sm font-bold text-foreground">Registro A (Obligatorio)</span>
+                                                        <span className="text-xs font-extrabold bg-blue-500 text-white px-2.5 py-1 rounded-md">{t('domainsDashboard.guide.record1Label')}</span>
+                                                        <span className="text-sm font-bold text-foreground">{t('domainsDashboard.guide.record1Title')}</span>
                                                     </div>
                                                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-background p-4 rounded-lg border border-border">
                                                         <div>
-                                                            <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider block mb-1">Tipo (Type)</span>
+                                                            <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider block mb-1">{t('domainsDashboard.guide.typeColumn')}</span>
                                                             <code className="font-mono font-extrabold text-blue-500 text-lg">A</code>
                                                         </div>
                                                         <div>
-                                                            <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider block mb-1">Host / Nombre (Name)</span>
+                                                            <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider block mb-1">{t('domainsDashboard.guide.hostColumn')}</span>
                                                             <code className="font-mono font-extrabold text-foreground text-lg">@</code>
-                                                            <p className="text-[10px] text-muted-foreground mt-0.5">El símbolo @ significa "dominio raíz"</p>
+                                                            <p className="text-[10px] text-muted-foreground mt-0.5">{t('domainsDashboard.guide.atSymbolHint')}</p>
                                                         </div>
                                                         <div>
-                                                            <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider block mb-1">Valor / Apunta a (Value)</span>
+                                                            <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider block mb-1">{t('domainsDashboard.guide.valueColumn')}</span>
                                                             <div className="flex items-center gap-2">
                                                                 <code className="font-mono font-extrabold text-primary text-lg">130.211.43.242</code>
                                                                 <button
-                                                                    onClick={() => { navigator.clipboard.writeText('130.211.43.242'); alert('✅ IP copiada al portapapeles'); }}
+                                                                    onClick={() => { navigator.clipboard.writeText('130.211.43.242'); alert(t('domainsDashboard.guide.ipCopiedToClipboard')); }}
                                                                     className="p-1.5 hover:bg-primary/20 rounded-lg text-primary transition-colors"
-                                                                    title="Copiar IP"
+                                                                    title={t('domainsDashboard.guide.copyIpTitle')}
                                                                 >
                                                                     <Copy size={14} />
                                                                 </button>
@@ -1586,25 +1571,25 @@ const DomainsDashboard: React.FC = () => {
                                                 {/* Record 2: CNAME */}
                                                 <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-4">
                                                     <div className="flex items-center gap-2 mb-3">
-                                                        <span className="text-xs font-extrabold bg-green-500 text-white px-2.5 py-1 rounded-md">REGISTRO 2</span>
-                                                        <span className="text-sm font-bold text-foreground">Registro CNAME (Obligatorio)</span>
+                                                        <span className="text-xs font-extrabold bg-green-500 text-white px-2.5 py-1 rounded-md">{t('domainsDashboard.guide.record2Label')}</span>
+                                                        <span className="text-sm font-bold text-foreground">{t('domainsDashboard.guide.record2Title')}</span>
                                                     </div>
                                                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-background p-4 rounded-lg border border-border">
                                                         <div>
-                                                            <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider block mb-1">Tipo (Type)</span>
+                                                            <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider block mb-1">{t('domainsDashboard.guide.typeColumn')}</span>
                                                             <code className="font-mono font-extrabold text-green-500 text-lg">CNAME</code>
                                                         </div>
                                                         <div>
-                                                            <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider block mb-1">Host / Nombre (Name)</span>
+                                                            <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider block mb-1">{t('domainsDashboard.guide.hostColumn')}</span>
                                                             <code className="font-mono font-extrabold text-foreground text-lg">www</code>
-                                                            <p className="text-[10px] text-muted-foreground mt-0.5">Escribe literalmente "www"</p>
+                                                            <p className="text-[10px] text-muted-foreground mt-0.5">{t('domainsDashboard.guide.wwwLiteralHint')}</p>
                                                         </div>
                                                         <div>
-                                                            <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider block mb-1">Valor / Apunta a (Value)</span>
+                                                            <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider block mb-1">{t('domainsDashboard.guide.valueColumn')}</span>
                                                             <div className="flex items-center gap-2">
                                                                 <code className="font-mono font-extrabold text-primary text-base">tudominio.com</code>
                                                             </div>
-                                                            <p className="text-[10px] text-muted-foreground mt-0.5">Pon tu dominio sin "www"</p>
+                                                            <p className="text-[10px] text-muted-foreground mt-0.5">{t('domainsDashboard.guide.cnameValueHint')}</p>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -1615,14 +1600,12 @@ const DomainsDashboard: React.FC = () => {
                                         <div className="flex items-start gap-3">
                                             <span className="flex items-center justify-center w-8 h-8 rounded-full bg-purple-500 text-white text-sm font-bold shrink-0 mt-0.5 shadow-md">5</span>
                                             <div className="flex-1">
-                                                <strong className="text-foreground block mb-2 text-base">Guarda los cambios en tu proveedor</strong>
-                                                <p className="text-muted-foreground mb-2">
-                                                    Busca un botón que diga <strong>"Save"</strong>, <strong>"Guardar"</strong>, <strong>"Save Changes"</strong> o <strong>"Apply"</strong> y haz clic.
-                                                </p>
+                                                <strong className="text-foreground block mb-2 text-base">{t('domainsDashboard.guide.step5Title')}</strong>
+                                                <p className="text-muted-foreground mb-2" dangerouslySetInnerHTML={{ __html: t('domainsDashboard.guide.step5Desc') }} />
                                                 <div className="bg-purple-500/10 border border-purple-500/20 rounded-lg p-3">
                                                     <p className="text-xs text-purple-600 dark:text-purple-400 flex items-start gap-2">
                                                         <Clock size={14} className="shrink-0 mt-0.5" />
-                                                        <span>Los cambios de DNS pueden tardar entre <strong>5 minutos y 48 horas</strong> en activarse. Lo normal es que funcionen en <strong>15-30 minutos</strong>.</span>
+                                                        <span dangerouslySetInnerHTML={{ __html: t('domainsDashboard.guide.step5PropagationNote') }} />
                                                     </p>
                                                 </div>
                                             </div>
@@ -1632,11 +1615,8 @@ const DomainsDashboard: React.FC = () => {
                                         <div className="flex items-start gap-3">
                                             <span className="flex items-center justify-center w-8 h-8 rounded-full bg-primary text-white text-sm font-bold shrink-0 mt-0.5 shadow-md">6</span>
                                             <div className="flex-1">
-                                                <strong className="text-foreground block mb-2 text-base">Vuelve aquí y conecta tu dominio</strong>
-                                                <p className="text-muted-foreground">
-                                                    Una vez que hayas configurado los registros DNS en tu proveedor, vuelve aquí y haz clic en el botón de abajo para registrar tu dominio en nuestra plataforma. 
-                                                    Luego haz clic en <strong>"Verificar"</strong> para confirmar que todo está correcto.
-                                                </p>
+                                                <strong className="text-foreground block mb-2 text-base">{t('domainsDashboard.guide.step6Title')}</strong>
+                                                <p className="text-muted-foreground" dangerouslySetInnerHTML={{ __html: t('domainsDashboard.guide.step6Desc') }} />
                                             </div>
                                         </div>
                                     </div>
@@ -1644,38 +1624,38 @@ const DomainsDashboard: React.FC = () => {
                                     {/* ======== PROVIDER-SPECIFIC GUIDES ======== */}
                                     <div className="bg-amber-500/5 border border-amber-500/20 rounded-xl p-4">
                                         <h5 className="text-sm font-bold text-amber-600 dark:text-amber-400 mb-3 flex items-center gap-2">
-                                            💡 Guía rápida por proveedor
+                                            {t('domainsDashboard.guide.providerGuideTitle')}
                                         </h5>
                                         <div className="space-y-3">
                                             <div className="bg-card rounded-lg p-3 border border-border">
-                                                <p className="font-bold text-foreground text-sm mb-1">🟠 GoDaddy</p>
+                                                <p className="font-bold text-foreground text-sm mb-1" dangerouslySetInnerHTML={{ __html: t('domainsDashboard.guide.godaddyTitle') }} />
                                                 <ol className="text-xs text-muted-foreground list-decimal list-inside space-y-0.5">
-                                                    <li>Inicia sesión en <strong>godaddy.com</strong></li>
-                                                    <li>Ve a <strong>"Mis Productos"</strong> → tu dominio → <strong>"DNS"</strong></li>
-                                                    <li>En "Registros DNS", si ves un registro A con <code className="font-mono bg-secondary px-1 rounded">@</code> → haz clic en el lápiz ✏️ y cambia el valor a <code className="font-mono text-primary font-bold bg-primary/10 px-1 rounded">130.211.43.242</code></li>
-                                                    <li>Si ves un CNAME con <code className="font-mono bg-secondary px-1 rounded">www</code> → edítalo. Si no existe → <strong>"Agregar"</strong></li>
-                                                    <li>Haz clic en <strong>"Guardar"</strong></li>
+                                                    <li dangerouslySetInnerHTML={{ __html: t('domainsDashboard.guide.godaddyStep1') }} />
+                                                    <li dangerouslySetInnerHTML={{ __html: t('domainsDashboard.guide.godaddyStep2') }} />
+                                                    <li dangerouslySetInnerHTML={{ __html: t('domainsDashboard.guide.godaddyStep3') }} />
+                                                    <li dangerouslySetInnerHTML={{ __html: t('domainsDashboard.guide.godaddyStep4') }} />
+                                                    <li dangerouslySetInnerHTML={{ __html: t('domainsDashboard.guide.godaddyStep5') }} />
                                                 </ol>
                                             </div>
                                             <div className="bg-card rounded-lg p-3 border border-border">
-                                                <p className="font-bold text-foreground text-sm mb-1">🔵 Namecheap</p>
+                                                <p className="font-bold text-foreground text-sm mb-1" dangerouslySetInnerHTML={{ __html: t('domainsDashboard.guide.namecheapTitle') }} />
                                                 <ol className="text-xs text-muted-foreground list-decimal list-inside space-y-0.5">
-                                                    <li>Inicia sesión en <strong>namecheap.com</strong></li>
-                                                    <li>Ve a <strong>"Domain List"</strong> → <strong>"Manage"</strong> junto a tu dominio</li>
-                                                    <li>Haz clic en la pestaña <strong>"Advanced DNS"</strong></li>
-                                                    <li>En "Host Records": borra los registros A y CNAME existentes si los hay</li>
-                                                    <li>Haz clic en <strong>"Add New Record"</strong> y agrega los 2 registros de arriba</li>
-                                                    <li>Guarda con el ícono de <strong>✓ (check verde)</strong></li>
+                                                    <li dangerouslySetInnerHTML={{ __html: t('domainsDashboard.guide.namecheapStep1') }} />
+                                                    <li dangerouslySetInnerHTML={{ __html: t('domainsDashboard.guide.namecheapStep2') }} />
+                                                    <li dangerouslySetInnerHTML={{ __html: t('domainsDashboard.guide.namecheapStep3') }} />
+                                                    <li dangerouslySetInnerHTML={{ __html: t('domainsDashboard.guide.namecheapStep4') }} />
+                                                    <li dangerouslySetInnerHTML={{ __html: t('domainsDashboard.guide.namecheapStep5') }} />
+                                                    <li dangerouslySetInnerHTML={{ __html: t('domainsDashboard.guide.namecheapStep6') }} />
                                                 </ol>
                                             </div>
                                             <div className="bg-card rounded-lg p-3 border border-border">
-                                                <p className="font-bold text-foreground text-sm mb-1">🟢 Google Domains / Squarespace</p>
+                                                <p className="font-bold text-foreground text-sm mb-1" dangerouslySetInnerHTML={{ __html: t('domainsDashboard.guide.googleTitle') }} />
                                                 <ol className="text-xs text-muted-foreground list-decimal list-inside space-y-0.5">
-                                                    <li>Ve a <strong>domains.google.com</strong> (ahora redirige a Squarespace)</li>
-                                                    <li>Selecciona tu dominio → <strong>"DNS"</strong> en el menú lateral</li>
-                                                    <li>En <strong>"Registros personalizados"</strong>, borra los existentes tipo A y CNAME</li>
-                                                    <li>Haz clic en <strong>"Administrar registros personalizados"</strong></li>
-                                                    <li>Agrega los 2 registros y haz clic en <strong>"Guardar"</strong></li>
+                                                    <li dangerouslySetInnerHTML={{ __html: t('domainsDashboard.guide.googleStep1') }} />
+                                                    <li dangerouslySetInnerHTML={{ __html: t('domainsDashboard.guide.googleStep2') }} />
+                                                    <li dangerouslySetInnerHTML={{ __html: t('domainsDashboard.guide.googleStep3') }} />
+                                                    <li dangerouslySetInnerHTML={{ __html: t('domainsDashboard.guide.googleStep4') }} />
+                                                    <li dangerouslySetInnerHTML={{ __html: t('domainsDashboard.guide.googleStep5') }} />
                                                 </ol>
                                             </div>
                                         </div>
@@ -1685,9 +1665,7 @@ const DomainsDashboard: React.FC = () => {
                                     <div className="border-t border-primary/20 pt-4">
                                         <p className="text-xs text-muted-foreground flex gap-2">
                                             <span className="shrink-0">⏱️</span>
-                                            <span>
-                                                <strong>¿Cuánto tarda?</strong> Normalmente los cambios se activan en 15-30 minutos, aunque puede tardar hasta 48 horas. Si después de 1 hora no funciona, verifica que los registros estén correctos y vuelve a intentar la verificación.
-                                            </span>
+                                            <span dangerouslySetInnerHTML={{ __html: t('domainsDashboard.guide.proTip') }} />
                                         </p>
                                     </div>
 
@@ -1699,10 +1677,10 @@ const DomainsDashboard: React.FC = () => {
                                         >
                                             {!customDomainsAllowed && <Crown className="w-5 h-5 text-yellow-300" />}
                                             <Link2 size={20} />
-                                            Conectar Mi Dominio
+                                            {t('domainsDashboard.guide.ctaButton')}
                                         </button>
                                         <p className="text-xs text-muted-foreground mt-2 text-center">
-                                            Haz clic aquí después de haber configurado los registros DNS en tu proveedor
+                                            {t('domainsDashboard.guide.ctaSubtext')}
                                         </p>
                                     </div>
                                 </div>
@@ -1835,7 +1813,7 @@ const DomainsDashboard: React.FC = () => {
                                                         type="button"
                                                         onClick={() => {
                                                             navigator.clipboard.writeText(QUIMERA_DNS.IP);
-                                                            alert('¡IP copiada!');
+                                                            alert(t('domainsDashboard.connectModal.ipCopied'));
                                                         }}
                                                         className="p-1 hover:bg-secondary rounded text-muted-foreground hover:text-primary"
                                                     >
@@ -1865,7 +1843,7 @@ const DomainsDashboard: React.FC = () => {
                                                         type="button"
                                                         onClick={() => {
                                                             navigator.clipboard.writeText(connectDomainName || 'tudominio.com');
-                                                            alert('¡CNAME copiado!');
+                                                            alert(t('domainsDashboard.connectModal.cnameCopied'));
                                                         }}
                                                         className="p-1 hover:bg-secondary rounded text-muted-foreground hover:text-primary flex-shrink-0"
                                                     >
@@ -1879,12 +1857,12 @@ const DomainsDashboard: React.FC = () => {
 
                                 {/* Quick steps */}
                                 <div className="mt-4 pt-4 border-t border-border text-xs text-muted-foreground">
-                                    <p className="font-bold mb-2">📋 Pasos rápidos:</p>
+                                    <p className="font-bold mb-2">{t('domainsDashboard.connectModal.quickStepsTitle')}</p>
                                     <ol className="list-decimal list-inside space-y-1">
-                                        <li>Ve a tu proveedor de dominio (Name.com, GoDaddy, etc.)</li>
-                                        <li>Busca "DNS" o "Manage DNS Records"</li>
-                                        <li>Agrega los 2 registros de arriba</li>
-                                        <li>Espera 5-15 minutos y haz clic en "Verificar"</li>
+                                        <li>{t('domainsDashboard.connectModal.quickStep1')}</li>
+                                        <li>{t('domainsDashboard.connectModal.quickStep2')}</li>
+                                        <li>{t('domainsDashboard.connectModal.quickStep3')}</li>
+                                        <li>{t('domainsDashboard.connectModal.quickStep4')}</li>
                                     </ol>
                                 </div>
                             </div>
