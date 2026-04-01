@@ -11,10 +11,10 @@ import {
     Music, Video, Play, Phone, Mail, ShoppingCart, ShoppingBag,
     Store, FileText, Mic, Headphones, Radio, Camera, AtSign,
     Globe, Rss, File, DollarSign, CreditCard, Star, Users,
-    Calendar, Heart,
+    Calendar, Heart, CheckCircle,
     type LucideIcon,
 } from 'lucide-react';
-import { db, doc, getDoc, addDoc, collection, serverTimestamp } from '../firebase';
+import { db, doc, getDoc, addDoc, collection, serverTimestamp, query, where, getDocs } from '../firebase';
 import type { BioLink, BioProfile, BioTheme } from '../contexts/bioPage';
 import type { AiAssistantConfig } from '../types/ai-assistant';
 import type { Lead } from '../types';
@@ -96,6 +96,7 @@ interface PublicBioPageData {
     theme: BioTheme;
     links: BioLink[];
     isPublished: boolean;
+    emailSignupEnabled?: boolean;
     projectId?: string;
     ownerId?: string;
     aiAssistant?: AiAssistantConfig;
@@ -110,6 +111,12 @@ const PublicBioPage: React.FC<PublicBioPageProps> = ({ username }) => {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [isChatbotOpen, setIsChatbotOpen] = useState(false);
+
+    // Email signup state
+    const [signupEmail, setSignupEmail] = useState('');
+    const [isSubmittingEmail, setIsSubmittingEmail] = useState(false);
+    const [emailSubmitted, setEmailSubmitted] = useState(false);
+    const [emailError, setEmailError] = useState<string | null>(null);
 
     // Extract username from URL if not passed as prop
     const bioUsername = username || window.location.pathname.split('/bio/')[1];
@@ -191,6 +198,55 @@ const PublicBioPage: React.FC<PublicBioPageProps> = ({ username }) => {
         // Could add analytics tracking here
         window.open(link.url, '_blank');
     };
+
+    // Email signup handler - saves subscriber to Firestore
+    const handleEmailSignup = useCallback(async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!bioPageData || !signupEmail.trim()) return;
+
+        // Basic email validation
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(signupEmail.trim())) {
+            setEmailError('Please enter a valid email');
+            return;
+        }
+
+        setIsSubmittingEmail(true);
+        setEmailError(null);
+
+        try {
+            // Check for duplicate
+            const subscribersCol = collection(db, 'publicBioPages', bioPageData.username.toLowerCase(), 'subscribers');
+            const dupQuery = query(subscribersCol, where('email', '==', signupEmail.trim().toLowerCase()));
+            const dupSnap = await getDocs(dupQuery);
+
+            if (!dupSnap.empty) {
+                // Already subscribed — show success silently
+                setEmailSubmitted(true);
+                setSignupEmail('');
+                return;
+            }
+
+            // Store subscriber email in subcollection
+            await addDoc(subscribersCol, {
+                email: signupEmail.trim().toLowerCase(),
+                subscribedAt: serverTimestamp(),
+                source: 'bio_page',
+                bioUsername: bioPageData.username,
+                ownerId: bioPageData.ownerId || null,
+                projectId: bioPageData.projectId || null,
+            });
+
+            setEmailSubmitted(true);
+            setSignupEmail('');
+            console.log('[PublicBioPage] Email subscriber saved');
+        } catch (err) {
+            console.error('[PublicBioPage] Error saving email subscriber:', err);
+            setEmailError('Something went wrong. Please try again.');
+        } finally {
+            setIsSubmittingEmail(false);
+        }
+    }, [bioPageData, signupEmail]);
 
     if (isLoading) {
         return (
@@ -478,6 +534,63 @@ const PublicBioPage: React.FC<PublicBioPageProps> = ({ username }) => {
                             );
                         })}
                     </div>
+
+                    {/* Email Signup */}
+                    {bioPageData.emailSignupEnabled && (
+                        <div
+                            className="mt-6 p-4 rounded-xl"
+                            style={{ backgroundColor: `${theme.buttonColor}10` }}
+                        >
+                            {emailSubmitted ? (
+                                <div className="flex items-center justify-center gap-2 py-2">
+                                    <CheckCircle size={18} style={{ color: theme.buttonColor }} />
+                                    <p className="text-sm font-medium" style={{ color: bodyColor }}>
+                                        Thanks for subscribing!
+                                    </p>
+                                </div>
+                            ) : (
+                                <form onSubmit={handleEmailSignup}>
+                                    <p className="text-xs text-center mb-2 opacity-70" style={{ color: bodyColor }}>
+                                        Join my newsletter
+                                    </p>
+                                    <div className="flex gap-2">
+                                        <input
+                                            type="email"
+                                            value={signupEmail}
+                                            onChange={(e) => { setSignupEmail(e.target.value); setEmailError(null); }}
+                                            placeholder="Email"
+                                            required
+                                            className="flex-1 px-3 py-2 text-xs rounded-lg bg-black/20 border border-white/10 outline-none"
+                                            style={{
+                                                color: bodyColor,
+                                                fontFamily: theme.bodyFont || 'inherit',
+                                            }}
+                                            disabled={isSubmittingEmail}
+                                        />
+                                        <button
+                                            type="submit"
+                                            disabled={isSubmittingEmail || !signupEmail.trim()}
+                                            className="px-3 py-2 text-xs font-medium rounded-lg transition-opacity disabled:opacity-50"
+                                            style={{
+                                                backgroundColor: theme.buttonColor,
+                                                color: theme.buttonTextColor || '#ffffff',
+                                                fontFamily: theme.bodyFont || 'inherit',
+                                            }}
+                                        >
+                                            {isSubmittingEmail ? (
+                                                <Loader2 size={14} className="animate-spin" />
+                                            ) : (
+                                                'Join'
+                                            )}
+                                        </button>
+                                    </div>
+                                    {emailError && (
+                                        <p className="text-xs text-red-400 mt-1.5 text-center">{emailError}</p>
+                                    )}
+                                </form>
+                            )}
+                        </div>
+                    )}
 
                     {/* Footer */}
                     <div className="text-center mt-12 opacity-50">

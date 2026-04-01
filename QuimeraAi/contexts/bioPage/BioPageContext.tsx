@@ -494,6 +494,7 @@ export const BioPageProvider: React.FC<{ children: ReactNode }> = ({ children })
                 profile: removeUndefinedValues(bioPage.profile),
                 theme: removeUndefinedValues(bioPage.theme),
                 links: bioPage.links.map(l => removeUndefinedValues(l)),
+                emailSignupEnabled: emailSignupEnabled,
                 isPublished: true,
                 ownerId: user.uid,
                 tenantId: currentTenantId || null,

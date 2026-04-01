@@ -4,7 +4,7 @@
  * Integrated with Quimera's dashboard architecture
  */
 
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { generateContentViaProxy, extractTextFromResponse } from '../../utils/geminiProxyClient';
 import {
@@ -105,6 +105,8 @@ import ImagePicker from '../ui/ImagePicker';
 import ColorControl from '../ui/ColorControl';
 import ChatCore from '../chat/ChatCore';
 import { hexToRgba } from '../../utils/colorUtils';
+import { useServiceAvailability } from '../../hooks/useServiceAvailability';
+import { db, collection, getDocs, deleteDoc, doc, query, orderBy } from '../../firebase';
 
 // =============================================================================
 // TYPES
@@ -420,6 +422,10 @@ const BioPageBuilder: React.FC = () => {
     const { navigate } = useRouter();
     const { user } = useAuth();
 
+    // Service availability: hide commerce features when ecommerce service is off
+    const { canAccessService } = useServiceAvailability();
+    const canAccessEcommerce = canAccessService('ecommerce');
+
     // Mobile sidebar state
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -456,6 +462,57 @@ const BioPageBuilder: React.FC = () => {
     // AI generation state
     const [isGeneratingBio, setIsGeneratingBio] = useState(false);
     const [isGeneratingAvatar, setIsGeneratingAvatar] = useState(false);
+
+    // Subscriber state for Audience tab
+    interface Subscriber {
+        id: string;
+        email: string;
+        subscribedAt: any;
+        source?: string;
+    }
+    const [subscribers, setSubscribers] = useState<Subscriber[]>([]);
+    const [isLoadingSubscribers, setIsLoadingSubscribers] = useState(false);
+    const [isDeletingSubscriber, setIsDeletingSubscriber] = useState<string | null>(null);
+
+    // Load subscribers when Audience tab is active
+    useEffect(() => {
+        if (activeTab !== 'audience' || !bioPage?.username) return;
+
+        const loadSubscribers = async () => {
+            setIsLoadingSubscribers(true);
+            try {
+                const subscribersCol = collection(db, 'publicBioPages', bioPage.username.toLowerCase(), 'subscribers');
+                const q = query(subscribersCol, orderBy('subscribedAt', 'desc'));
+                const snap = await getDocs(q);
+                const subs = snap.docs.map(d => ({
+                    id: d.id,
+                    ...d.data(),
+                } as Subscriber));
+                setSubscribers(subs);
+            } catch (err) {
+                console.error('[BioPageBuilder] Error loading subscribers:', err);
+            } finally {
+                setIsLoadingSubscribers(false);
+            }
+        };
+
+        loadSubscribers();
+    }, [activeTab, bioPage?.username]);
+
+    // Delete a subscriber
+    const handleDeleteSubscriber = async (subscriberId: string) => {
+        if (!bioPage?.username) return;
+        setIsDeletingSubscriber(subscriberId);
+        try {
+            const subscriberRef = doc(db, 'publicBioPages', bioPage.username.toLowerCase(), 'subscribers', subscriberId);
+            await deleteDoc(subscriberRef);
+            setSubscribers(prev => prev.filter(s => s.id !== subscriberId));
+        } catch (err) {
+            console.error('[BioPageBuilder] Error deleting subscriber:', err);
+        } finally {
+            setIsDeletingSubscriber(null);
+        }
+    };
 
     // ===== INITIALIZATION: Load or create bio page =====
     React.useEffect(() => {
@@ -619,9 +676,14 @@ const BioPageBuilder: React.FC = () => {
         closeAddLinkModal();
     };
 
-    // Get filtered integrations based on category and search
+    // Get filtered integrations based on category, search, and service availability
     const filteredIntegrations = useMemo(() => {
         let filtered = INTEGRATIONS;
+
+        // Service availability: hide commerce integrations when ecommerce is off
+        if (!canAccessEcommerce) {
+            filtered = filtered.filter(i => i.category !== 'commerce');
+        }
 
         if (addLinkCategory !== 'all' && addLinkCategory !== 'suggested') {
             filtered = filtered.filter(i => i.category === addLinkCategory);
@@ -636,7 +698,7 @@ const BioPageBuilder: React.FC = () => {
         }
 
         return filtered;
-    }, [addLinkCategory, addLinkSearch]);
+    }, [addLinkCategory, addLinkSearch, canAccessEcommerce]);
 
     const updateLink = (id: string, updates: Partial<BioLink>) => {
         contextUpdateLink(id, updates);
@@ -739,10 +801,17 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
     const navItems = [
         { id: 'links', icon: Link2, label: t('bioPage.links', 'Links') },
         { id: 'design', icon: Palette, label: t('bioPage.design', 'Design') },
-        { id: 'shop', icon: ShoppingBag, label: t('bioPage.shop', 'Shop') },
+        // Service availability: hide Shop tab when ecommerce service is off
+        ...(canAccessEcommerce ? [{ id: 'shop', icon: ShoppingBag, label: t('bioPage.shop', 'Shop') }] : []),
         { id: 'analytics', icon: BarChart3, label: t('bioPage.analytics', 'Analytics') },
         { id: 'audience', icon: Users, label: t('bioPage.audience', 'Audience') },
     ];
+
+    // Service availability: filter Commerce category from link categories
+    const effectiveLinkCategories = useMemo(() => {
+        if (canAccessEcommerce) return LINK_CATEGORIES;
+        return LINK_CATEGORIES.filter(c => c.id !== 'commerce');
+    }, [canAccessEcommerce]);
 
     // ==========================================================================
     // RENDER HELPERS
@@ -1854,7 +1923,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
             <div className="flex items-center justify-between p-4 bg-card/50 backdrop-blur-sm border border-border/50 rounded-xl">
                 <div className="flex items-center gap-3">
                     <div className="p-2 bg-primary/10 rounded-lg">
-                        <Users size={20} className="text-primary" />
+                        <Mail size={20} className="text-primary" />
                     </div>
                     <div>
                         <p className="font-medium text-foreground">
@@ -1875,6 +1944,70 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                             }`}
                     />
                 </button>
+            </div>
+
+            {/* Subscriber List */}
+            <div className="bg-card/50 backdrop-blur-sm border border-border/50 rounded-xl overflow-hidden">
+                <div className="p-4 border-b border-border/50 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                        <Users size={18} className="text-muted-foreground" />
+                        <h3 className="font-medium text-foreground text-sm">
+                            {t('bioPage.subscribers', 'Subscribers')}
+                        </h3>
+                    </div>
+                    <span className="text-xs font-semibold text-muted-foreground bg-muted px-2 py-1 rounded-full">
+                        {subscribers.length}
+                    </span>
+                </div>
+
+                <div className="max-h-80 overflow-y-auto">
+                    {isLoadingSubscribers ? (
+                        <div className="flex items-center justify-center py-8">
+                            <Loader2 size={20} className="animate-spin text-primary" />
+                        </div>
+                    ) : subscribers.length === 0 ? (
+                        <div className="text-center py-8 px-4">
+                            <Mail size={32} className="mx-auto text-muted-foreground/30 mb-3" />
+                            <p className="text-sm text-muted-foreground">
+                                {emailSignupEnabled
+                                    ? t('bioPage.noSubscribersYet', 'No subscribers yet. Share your bio page to start collecting emails!')
+                                    : t('bioPage.enableSignupFirst', 'Enable email signup above to start collecting emails.')}
+                            </p>
+                        </div>
+                    ) : (
+                        <div className="divide-y divide-border/50">
+                            {subscribers.map(sub => (
+                                <div key={sub.id} className="flex items-center justify-between px-4 py-3 hover:bg-muted/30 transition-colors group">
+                                    <div className="flex items-center gap-3 min-w-0">
+                                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                                            <Mail size={14} className="text-primary" />
+                                        </div>
+                                        <div className="min-w-0">
+                                            <p className="text-sm font-medium text-foreground truncate">{sub.email}</p>
+                                            <p className="text-xs text-muted-foreground">
+                                                {sub.subscribedAt?.seconds
+                                                    ? new Date(sub.subscribedAt.seconds * 1000).toLocaleDateString()
+                                                    : t('common.recently', 'Recently')}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <button
+                                        onClick={() => handleDeleteSubscriber(sub.id)}
+                                        disabled={isDeletingSubscriber === sub.id}
+                                        className="p-1.5 rounded-md text-muted-foreground hover:text-red-500 hover:bg-red-500/10 transition-colors opacity-0 group-hover:opacity-100"
+                                        title={t('common.delete', 'Delete')}
+                                    >
+                                        {isDeletingSubscriber === sub.id ? (
+                                            <Loader2 size={14} className="animate-spin" />
+                                        ) : (
+                                            <Trash2 size={14} />
+                                        )}
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
     );
@@ -2578,7 +2711,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                         <div className="flex flex-1 overflow-hidden">
                             {/* Categories Sidebar */}
                             <nav className="w-48 border-r border-border p-3 overflow-y-auto flex-shrink-0">
-                                {LINK_CATEGORIES.map((category) => (
+                                {effectiveLinkCategories.map((category) => (
                                     <button
                                         key={category.id}
                                         onClick={() => setAddLinkCategory(category.id)}

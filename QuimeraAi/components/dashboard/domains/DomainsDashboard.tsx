@@ -1353,69 +1353,356 @@ const DomainsDashboard: React.FC = () => {
                     <div className="max-w-5xl mx-auto space-y-8">
 
 
-                        {/* Collapsible Instructions */}
-                        <div className="bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/30 rounded-xl overflow-hidden">
+                        {/* Collapsible Instructions - Comprehensive Beginner Guide */}
+                        <div className="bg-gradient-to-br from-primary/10 via-blue-500/5 to-primary/5 border border-primary/30 rounded-xl overflow-hidden shadow-sm">
                             <button
                                 onClick={() => setShowInstructions(!showInstructions)}
-                                className="w-full p-4 flex items-center justify-between hover:bg-primary/5 transition-colors"
+                                className="w-full p-5 flex items-center justify-between hover:bg-primary/5 transition-colors"
                             >
-                                <h4 className="font-semibold text-primary flex items-center gap-2 text-base">
-                                    📋 {t('domainsDashboard.guideTitle', 'Guía: Gestiona tus dominios personalizados')}
+                                <h4 className="font-bold text-primary flex items-center gap-2 text-base">
+                                    📋 Guía Completa: Cómo conectar tu dominio personalizado
                                 </h4>
                                 {showInstructions ? <ChevronUp className="text-primary" size={20} /> : <ChevronDown className="text-primary" size={20} />}
                             </button>
 
                             {showInstructions && (
-                                <div className="px-5 pb-5 text-sm space-y-4">
-                                    <div className="space-y-4">
+                                <div className="px-5 pb-6 text-sm space-y-6">
+
+                                    {/* ======== WHAT IS A DOMAIN - Intro for beginners ======== */}
+                                    <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4">
+                                        <h5 className="font-bold text-foreground mb-2 flex items-center gap-2">
+                                            <Globe size={16} className="text-blue-500" />
+                                            ¿Qué es un dominio personalizado?
+                                        </h5>
+                                        <p className="text-muted-foreground text-sm leading-relaxed">
+                                            Un dominio personalizado es la dirección web que tus clientes escriben para ver tu sitio (ejemplo: <code className="font-mono text-primary font-bold bg-primary/10 px-1 rounded">www.tunegocio.com</code>). 
+                                            En lugar de usar una URL larga, tendrás tu propia dirección profesional. 
+                                            Para que funcione, necesitas <strong>apuntar tu dominio a nuestros servidores</strong> — y aquí te explicamos cómo hacerlo paso a paso.
+                                        </p>
+                                    </div>
+
+                                    {/* ======== VISUAL DIAGRAM - How DNS Works ======== */}
+                                    <div className="bg-card border border-border rounded-xl p-5">
+                                        <h5 className="font-bold text-foreground mb-4 flex items-center gap-2">
+                                            🗺️ ¿Cómo funciona? (Diagrama visual)
+                                        </h5>
+                                        <div className="flex flex-col items-center gap-0">
+                                            {/* Row 1: User */}
+                                            <div className="flex items-center gap-3 bg-blue-500/10 border border-blue-500/20 rounded-xl px-5 py-3 w-full max-w-md">
+                                                <div className="w-10 h-10 bg-blue-500/20 rounded-full flex items-center justify-center shrink-0">
+                                                    <span className="text-xl">👤</span>
+                                                </div>
+                                                <div>
+                                                    <p className="font-bold text-foreground text-sm">Tu cliente escribe</p>
+                                                    <code className="text-primary font-mono font-bold text-xs">www.tunegocio.com</code>
+                                                </div>
+                                            </div>
+                                            {/* Arrow */}
+                                            <div className="flex flex-col items-center py-1">
+                                                <div className="w-0.5 h-4 bg-primary/40" />
+                                                <ChevronDown size={16} className="text-primary -mt-1.5" />
+                                            </div>
+                                            {/* Row 2: DNS */}
+                                            <div className="flex items-center gap-3 bg-amber-500/10 border border-amber-500/20 rounded-xl px-5 py-3 w-full max-w-md">
+                                                <div className="w-10 h-10 bg-amber-500/20 rounded-full flex items-center justify-center shrink-0">
+                                                    <span className="text-xl">🌐</span>
+                                                </div>
+                                                <div>
+                                                    <p className="font-bold text-foreground text-sm">El DNS busca la dirección</p>
+                                                    <p className="text-xs text-muted-foreground">Los registros DNS que tú configurarás le dicen al navegador a dónde ir</p>
+                                                </div>
+                                            </div>
+                                            {/* Arrow */}
+                                            <div className="flex flex-col items-center py-1">
+                                                <div className="w-0.5 h-4 bg-primary/40" />
+                                                <ChevronDown size={16} className="text-primary -mt-1.5" />
+                                            </div>
+                                            {/* Row 3: Our Server */}
+                                            <div className="flex items-center gap-3 bg-green-500/10 border border-green-500/20 rounded-xl px-5 py-3 w-full max-w-md">
+                                                <div className="w-10 h-10 bg-green-500/20 rounded-full flex items-center justify-center shrink-0">
+                                                    <span className="text-xl">🖥️</span>
+                                                </div>
+                                                <div>
+                                                    <p className="font-bold text-foreground text-sm">Nuestro servidor muestra tu web</p>
+                                                    <p className="text-xs text-muted-foreground">IP: <code className="font-mono font-bold text-green-600">130.211.43.242</code> — aquí vive tu sitio</p>
+                                                </div>
+                                            </div>
+                                            {/* Arrow */}
+                                            <div className="flex flex-col items-center py-1">
+                                                <div className="w-0.5 h-4 bg-primary/40" />
+                                                <ChevronDown size={16} className="text-primary -mt-1.5" />
+                                            </div>
+                                            {/* Row 4: Result */}
+                                            <div className="flex items-center gap-3 bg-purple-500/10 border border-purple-500/20 rounded-xl px-5 py-3 w-full max-w-md">
+                                                <div className="w-10 h-10 bg-purple-500/20 rounded-full flex items-center justify-center shrink-0">
+                                                    <span className="text-xl">✨</span>
+                                                </div>
+                                                <div>
+                                                    <p className="font-bold text-foreground text-sm">¡Tu sitio se ve perfecto!</p>
+                                                    <p className="text-xs text-muted-foreground">Con SSL (candado 🔒) incluido gratis</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* ======== STEP BY STEP GUIDE ======== */}
+                                    <div className="space-y-5">
+                                        <h5 className="font-bold text-foreground text-base flex items-center gap-2">
+                                            🚀 Instrucciones paso a paso
+                                        </h5>
+
+                                        {/* STEP 1: Go to your provider */}
                                         <div className="flex items-start gap-3">
-                                            <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary/20 text-primary text-xs font-bold shrink-0 mt-0.5">1</span>
-                                            <div>
-                                                <strong className="text-foreground block mb-1">{t('domainsDashboard.guide.step1Title', 'Opciones Disponibles')}</strong>
-                                                <ul className="list-disc list-inside space-y-1 text-muted-foreground ml-1">
-                                                    <li><strong>{t('domainsDashboard.guide.buyDomain', 'Comprar Dominio')}:</strong> {t('domainsDashboard.guide.buyDomainDesc', 'Busca y registra un nuevo dominio directamente desde aquí.')}</li>
-                                                    <li><strong>{t('domainsDashboard.guide.connectDomain', 'Conectar Existente')}:</strong> {t('domainsDashboard.guide.connectDomainDesc', 'Vincula un dominio que ya posees configurando los registros DNS.')}</li>
-                                                </ul>
+                                            <span className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-500 text-white text-sm font-bold shrink-0 mt-0.5 shadow-md">1</span>
+                                            <div className="flex-1">
+                                                <strong className="text-foreground block mb-2 text-base">Entra al panel de tu proveedor de dominio</strong>
+                                                <p className="text-muted-foreground mb-3">
+                                                    Ve a la página web donde <strong>compraste tu dominio</strong>. Si no recuerdas cuál es, los más comunes son:
+                                                </p>
+                                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                                                    <div className="bg-card border border-border rounded-lg p-3 text-center">
+                                                        <p className="font-bold text-foreground text-sm">GoDaddy</p>
+                                                        <p className="text-xs text-muted-foreground">godaddy.com</p>
+                                                    </div>
+                                                    <div className="bg-card border border-border rounded-lg p-3 text-center">
+                                                        <p className="font-bold text-foreground text-sm">Namecheap</p>
+                                                        <p className="text-xs text-muted-foreground">namecheap.com</p>
+                                                    </div>
+                                                    <div className="bg-card border border-border rounded-lg p-3 text-center">
+                                                        <p className="font-bold text-foreground text-sm">Google Domains</p>
+                                                        <p className="text-xs text-muted-foreground">domains.google</p>
+                                                    </div>
+                                                </div>
+                                                <p className="text-xs text-muted-foreground mt-2">
+                                                    Inicia sesión con la cuenta con la que compraste tu dominio.
+                                                </p>
                                             </div>
                                         </div>
 
+                                        {/* STEP 2: Find DNS section */}
                                         <div className="flex items-start gap-3">
-                                            <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary/20 text-primary text-xs font-bold shrink-0 mt-0.5">2</span>
-                                            <div>
-                                                <strong className="text-foreground block mb-1">{t('domainsDashboard.guide.step2Title', 'Configuración DNS')}</strong>
-                                                <p className="text-muted-foreground mb-2">
-                                                    {t('domainsDashboard.guide.step2Desc', 'Para dominios externos, necesitarás configurar los registros DNS en tu proveedor:')}
+                                            <span className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-500 text-white text-sm font-bold shrink-0 mt-0.5 shadow-md">2</span>
+                                            <div className="flex-1">
+                                                <strong className="text-foreground block mb-2 text-base">Busca la sección de DNS</strong>
+                                                <p className="text-muted-foreground mb-3">
+                                                    Dentro de tu panel, busca un botón o menú que diga alguna de estas cosas:
                                                 </p>
-                                                <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground bg-primary/5 p-2 rounded">
-                                                    <div>
-                                                        <span className="font-semibold text-primary block">{t('domainsDashboard.guide.aRecord', 'Registro A')}:</span>
-                                                        @ → 130.211.43.242
+                                                <div className="flex flex-wrap gap-2 mb-3">
+                                                    {['DNS', 'Manage DNS', 'DNS Records', 'Registros DNS', 'DNS Zone', 'Advanced DNS', 'Configuración DNS'].map(label => (
+                                                        <span key={label} className="bg-secondary/80 text-foreground text-xs font-mono font-bold px-3 py-1.5 rounded-lg border border-border">
+                                                            {label}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                                <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-3">
+                                                    <p className="text-xs text-amber-600 dark:text-amber-400 flex items-start gap-2">
+                                                        <AlertTriangle size={14} className="shrink-0 mt-0.5" />
+                                                        <span><strong>Cada proveedor lo llama diferente.</strong> Si no encuentras "DNS", busca "Zona DNS", "Records", o "Configuración avanzada". Si tienes dudas, escríbenos.</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* STEP 3: DELETE old records */}
+                                        <div className="flex items-start gap-3">
+                                            <span className="flex items-center justify-center w-8 h-8 rounded-full bg-red-500 text-white text-sm font-bold shrink-0 mt-0.5 shadow-md">3</span>
+                                            <div className="flex-1">
+                                                <strong className="text-foreground block mb-2 text-base flex items-center gap-2">
+                                                    🗑️ BORRA los registros A y CNAME viejos (si existen)
+                                                </strong>
+                                                <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 mb-3">
+                                                    <p className="text-sm text-red-600 dark:text-red-400 font-bold mb-3">
+                                                        ⚠️ MUY IMPORTANTE: Antes de agregar los nuevos, debes borrar los que ya están.
+                                                    </p>
+                                                    <p className="text-sm text-muted-foreground mb-3">
+                                                        En la lista de registros DNS, busca si ya existen registros con estos datos y <strong className="text-red-500">elimínalos</strong>:
+                                                    </p>
+                                                    <div className="space-y-2">
+                                                        <div className="flex items-center gap-3 bg-red-500/5 p-3 rounded-lg border border-red-500/10">
+                                                            <Trash2 size={16} className="text-red-500 shrink-0" />
+                                                            <div>
+                                                                <p className="font-bold text-foreground text-sm">Borrar Registro A con Host <code className="font-mono bg-red-500/10 px-1 rounded">@</code></p>
+                                                                <p className="text-xs text-muted-foreground">Si ves un registro tipo "A" con nombre "@" o vacío — <strong className="text-red-500">bórralo</strong></p>
+                                                            </div>
+                                                        </div>
+                                                        <div className="flex items-center gap-3 bg-red-500/5 p-3 rounded-lg border border-red-500/10">
+                                                            <Trash2 size={16} className="text-red-500 shrink-0" />
+                                                            <div>
+                                                                <p className="font-bold text-foreground text-sm">Borrar CNAME con Host <code className="font-mono bg-red-500/10 px-1 rounded">www</code></p>
+                                                                <p className="text-xs text-muted-foreground">Si ves un registro tipo "CNAME" con nombre "www" — <strong className="text-red-500">bórralo</strong></p>
+                                                            </div>
+                                                        </div>
                                                     </div>
-                                                    <div>
-                                                        <span className="font-semibold text-primary block">{t('domainsDashboard.guide.cnameRecord', 'Registro CNAME')}:</span>
-                                                        www → tudominio.com
+                                                    <p className="text-xs text-muted-foreground mt-3 italic">
+                                                        💡 Si no hay ningún registro A o CNAME, no te preocupes — simplemente pasa al siguiente paso.
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* STEP 4: ADD new records */}
+                                        <div className="flex items-start gap-3">
+                                            <span className="flex items-center justify-center w-8 h-8 rounded-full bg-green-500 text-white text-sm font-bold shrink-0 mt-0.5 shadow-md">4</span>
+                                            <div className="flex-1">
+                                                <strong className="text-foreground block mb-2 text-base flex items-center gap-2">
+                                                    ✅ AGREGA estos 2 registros nuevos
+                                                </strong>
+                                                <p className="text-muted-foreground mb-3">
+                                                    Ahora busca un botón que diga <strong>"Add Record"</strong>, <strong>"Agregar Registro"</strong> o <strong>"+"</strong> y agrega estos dos registros exactamente como se muestran:
+                                                </p>
+
+                                                {/* Record 1: A */}
+                                                <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4 mb-3">
+                                                    <div className="flex items-center gap-2 mb-3">
+                                                        <span className="text-xs font-extrabold bg-blue-500 text-white px-2.5 py-1 rounded-md">REGISTRO 1</span>
+                                                        <span className="text-sm font-bold text-foreground">Registro A (Obligatorio)</span>
+                                                    </div>
+                                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-background p-4 rounded-lg border border-border">
+                                                        <div>
+                                                            <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider block mb-1">Tipo (Type)</span>
+                                                            <code className="font-mono font-extrabold text-blue-500 text-lg">A</code>
+                                                        </div>
+                                                        <div>
+                                                            <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider block mb-1">Host / Nombre (Name)</span>
+                                                            <code className="font-mono font-extrabold text-foreground text-lg">@</code>
+                                                            <p className="text-[10px] text-muted-foreground mt-0.5">El símbolo @ significa "dominio raíz"</p>
+                                                        </div>
+                                                        <div>
+                                                            <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider block mb-1">Valor / Apunta a (Value)</span>
+                                                            <div className="flex items-center gap-2">
+                                                                <code className="font-mono font-extrabold text-primary text-lg">130.211.43.242</code>
+                                                                <button
+                                                                    onClick={() => { navigator.clipboard.writeText('130.211.43.242'); alert('✅ IP copiada al portapapeles'); }}
+                                                                    className="p-1.5 hover:bg-primary/20 rounded-lg text-primary transition-colors"
+                                                                    title="Copiar IP"
+                                                                >
+                                                                    <Copy size={14} />
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                {/* Record 2: CNAME */}
+                                                <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-4">
+                                                    <div className="flex items-center gap-2 mb-3">
+                                                        <span className="text-xs font-extrabold bg-green-500 text-white px-2.5 py-1 rounded-md">REGISTRO 2</span>
+                                                        <span className="text-sm font-bold text-foreground">Registro CNAME (Obligatorio)</span>
+                                                    </div>
+                                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-background p-4 rounded-lg border border-border">
+                                                        <div>
+                                                            <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider block mb-1">Tipo (Type)</span>
+                                                            <code className="font-mono font-extrabold text-green-500 text-lg">CNAME</code>
+                                                        </div>
+                                                        <div>
+                                                            <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider block mb-1">Host / Nombre (Name)</span>
+                                                            <code className="font-mono font-extrabold text-foreground text-lg">www</code>
+                                                            <p className="text-[10px] text-muted-foreground mt-0.5">Escribe literalmente "www"</p>
+                                                        </div>
+                                                        <div>
+                                                            <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider block mb-1">Valor / Apunta a (Value)</span>
+                                                            <div className="flex items-center gap-2">
+                                                                <code className="font-mono font-extrabold text-primary text-base">tudominio.com</code>
+                                                            </div>
+                                                            <p className="text-[10px] text-muted-foreground mt-0.5">Pon tu dominio sin "www"</p>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
 
+                                        {/* STEP 5: Save */}
                                         <div className="flex items-start gap-3">
-                                            <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary/20 text-primary text-xs font-bold shrink-0 mt-0.5">3</span>
-                                            <div>
-                                                <strong className="text-foreground block mb-1">{t('domainsDashboard.guide.step3Title', 'Verificación y SSL')}</strong>
+                                            <span className="flex items-center justify-center w-8 h-8 rounded-full bg-purple-500 text-white text-sm font-bold shrink-0 mt-0.5 shadow-md">5</span>
+                                            <div className="flex-1">
+                                                <strong className="text-foreground block mb-2 text-base">Guarda los cambios en tu proveedor</strong>
+                                                <p className="text-muted-foreground mb-2">
+                                                    Busca un botón que diga <strong>"Save"</strong>, <strong>"Guardar"</strong>, <strong>"Save Changes"</strong> o <strong>"Apply"</strong> y haz clic.
+                                                </p>
+                                                <div className="bg-purple-500/10 border border-purple-500/20 rounded-lg p-3">
+                                                    <p className="text-xs text-purple-600 dark:text-purple-400 flex items-start gap-2">
+                                                        <Clock size={14} className="shrink-0 mt-0.5" />
+                                                        <span>Los cambios de DNS pueden tardar entre <strong>5 minutos y 48 horas</strong> en activarse. Lo normal es que funcionen en <strong>15-30 minutos</strong>.</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* STEP 6: Connect here */}
+                                        <div className="flex items-start gap-3">
+                                            <span className="flex items-center justify-center w-8 h-8 rounded-full bg-primary text-white text-sm font-bold shrink-0 mt-0.5 shadow-md">6</span>
+                                            <div className="flex-1">
+                                                <strong className="text-foreground block mb-2 text-base">Vuelve aquí y conecta tu dominio</strong>
                                                 <p className="text-muted-foreground">
-                                                    {t('domainsDashboard.guide.step3Desc', 'Una vez configurados los DNS, haz clic en "Verificar" para activar tu dominio. El certificado SSL se generará automáticamente.')}
+                                                    Una vez que hayas configurado los registros DNS en tu proveedor, vuelve aquí y haz clic en el botón de abajo para registrar tu dominio en nuestra plataforma. 
+                                                    Luego haz clic en <strong>"Verificar"</strong> para confirmar que todo está correcto.
                                                 </p>
                                             </div>
                                         </div>
                                     </div>
 
-                                    <div className="pt-3 border-t border-primary/20">
+                                    {/* ======== PROVIDER-SPECIFIC GUIDES ======== */}
+                                    <div className="bg-amber-500/5 border border-amber-500/20 rounded-xl p-4">
+                                        <h5 className="text-sm font-bold text-amber-600 dark:text-amber-400 mb-3 flex items-center gap-2">
+                                            💡 Guía rápida por proveedor
+                                        </h5>
+                                        <div className="space-y-3">
+                                            <div className="bg-card rounded-lg p-3 border border-border">
+                                                <p className="font-bold text-foreground text-sm mb-1">🟠 GoDaddy</p>
+                                                <ol className="text-xs text-muted-foreground list-decimal list-inside space-y-0.5">
+                                                    <li>Inicia sesión en <strong>godaddy.com</strong></li>
+                                                    <li>Ve a <strong>"Mis Productos"</strong> → tu dominio → <strong>"DNS"</strong></li>
+                                                    <li>En "Registros DNS", si ves un registro A con <code className="font-mono bg-secondary px-1 rounded">@</code> → haz clic en el lápiz ✏️ y cambia el valor a <code className="font-mono text-primary font-bold bg-primary/10 px-1 rounded">130.211.43.242</code></li>
+                                                    <li>Si ves un CNAME con <code className="font-mono bg-secondary px-1 rounded">www</code> → edítalo. Si no existe → <strong>"Agregar"</strong></li>
+                                                    <li>Haz clic en <strong>"Guardar"</strong></li>
+                                                </ol>
+                                            </div>
+                                            <div className="bg-card rounded-lg p-3 border border-border">
+                                                <p className="font-bold text-foreground text-sm mb-1">🔵 Namecheap</p>
+                                                <ol className="text-xs text-muted-foreground list-decimal list-inside space-y-0.5">
+                                                    <li>Inicia sesión en <strong>namecheap.com</strong></li>
+                                                    <li>Ve a <strong>"Domain List"</strong> → <strong>"Manage"</strong> junto a tu dominio</li>
+                                                    <li>Haz clic en la pestaña <strong>"Advanced DNS"</strong></li>
+                                                    <li>En "Host Records": borra los registros A y CNAME existentes si los hay</li>
+                                                    <li>Haz clic en <strong>"Add New Record"</strong> y agrega los 2 registros de arriba</li>
+                                                    <li>Guarda con el ícono de <strong>✓ (check verde)</strong></li>
+                                                </ol>
+                                            </div>
+                                            <div className="bg-card rounded-lg p-3 border border-border">
+                                                <p className="font-bold text-foreground text-sm mb-1">🟢 Google Domains / Squarespace</p>
+                                                <ol className="text-xs text-muted-foreground list-decimal list-inside space-y-0.5">
+                                                    <li>Ve a <strong>domains.google.com</strong> (ahora redirige a Squarespace)</li>
+                                                    <li>Selecciona tu dominio → <strong>"DNS"</strong> en el menú lateral</li>
+                                                    <li>En <strong>"Registros personalizados"</strong>, borra los existentes tipo A y CNAME</li>
+                                                    <li>Haz clic en <strong>"Administrar registros personalizados"</strong></li>
+                                                    <li>Agrega los 2 registros y haz clic en <strong>"Guardar"</strong></li>
+                                                </ol>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* ======== PRO TIP ======== */}
+                                    <div className="border-t border-primary/20 pt-4">
                                         <p className="text-xs text-muted-foreground flex gap-2">
-                                            <span className="shrink-0">💡</span>
+                                            <span className="shrink-0">⏱️</span>
                                             <span>
-                                                <strong>{t('domainsDashboard.guide.tip', 'Consejo Pro')}:</strong> {t('domainsDashboard.guide.tipDesc', 'La propagación DNS puede tardar entre 5 minutos y 48 horas. Si la verificación falla, espera un poco y vuelve a intentarlo.')}
+                                                <strong>¿Cuánto tarda?</strong> Normalmente los cambios se activan en 15-30 minutos, aunque puede tardar hasta 48 horas. Si después de 1 hora no funciona, verifica que los registros estén correctos y vuelve a intentar la verificación.
                                             </span>
+                                        </p>
+                                    </div>
+
+                                    {/* ======== CTA BUTTON - Connect Domain ======== */}
+                                    <div className="flex flex-col items-center pt-2">
+                                        <button
+                                            onClick={() => customDomainsAllowed ? setIsConnectModalOpen(true) : handleDomainUpgrade()}
+                                            className="flex items-center gap-2.5 px-8 py-3.5 bg-primary text-primary-foreground rounded-xl font-bold text-base shadow-lg hover:shadow-xl hover:opacity-90 transition-all transform hover:scale-[1.02] active:scale-[0.98]"
+                                        >
+                                            {!customDomainsAllowed && <Crown className="w-5 h-5 text-yellow-300" />}
+                                            <Link2 size={20} />
+                                            Conectar Mi Dominio
+                                        </button>
+                                        <p className="text-xs text-muted-foreground mt-2 text-center">
+                                            Haz clic aquí después de haber configurado los registros DNS en tu proveedor
                                         </p>
                                     </div>
                                 </div>
