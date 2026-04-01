@@ -76,6 +76,9 @@ export interface Domain {
         aRecord: string;
         cnameRecord: string;
     };
+    // Agency Landing Page binding (alternative to projectId)
+    // When set, the SSR server should serve the agency landing page for this tenant
+    agencyLandingTenantId?: string;
 }
 
 // =============================================================================
@@ -105,6 +108,8 @@ export interface CustomDomainMapping {
     // Cloud Run specific
     cloudRunService?: string;
     cloudRunRegion?: string;
+    // Agency Landing Page binding (alternative to projectId)
+    agencyLandingTenantId?: string;
 }
 
 // =============================================================================

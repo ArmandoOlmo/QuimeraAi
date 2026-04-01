@@ -161,6 +161,7 @@ export const AgencyWebEditorProvider: React.FC<AgencyWebEditorProviderProps> = (
     // Construct the customized Editor Context
     const customEditorCtx: any = {
         ...parentEditorCtx,
+        view: 'editor' as const, // CRITICAL: ChatbotWidget uses this to portal into #browser-preview-overlay
         data,
         setData: setData as any,
         theme,

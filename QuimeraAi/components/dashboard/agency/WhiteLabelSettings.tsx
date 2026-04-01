@@ -12,6 +12,7 @@ import { storage } from '../../../firebase';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import ColorControl from '../../ui/ColorControl';
 import { toast } from 'react-hot-toast';
+import AgencyDomainPanel from './AgencyDomainPanel';
 import {
     Shield,
     Upload,
@@ -424,7 +425,7 @@ export function WhiteLabelSettings() {
             </div>
 
             {/* ================================================================= */}
-            {/* SECTION 4: Custom Domain */}
+            {/* SECTION 4: Custom Domain — Full Panel */}
             {/* ================================================================= */}
             <div className="bg-card border border-border rounded-xl overflow-hidden">
                 <div className="px-6 py-4 border-b border-border bg-muted/30">
@@ -433,62 +434,8 @@ export function WhiteLabelSettings() {
                         {t('dashboard.agency.whiteLabel.customDomain')}
                     </h3>
                 </div>
-                <div className="p-6 space-y-4">
-                    <div>
-                        <label className="block text-sm font-medium text-foreground mb-1.5">
-                            {t('dashboard.agency.whiteLabel.domainLabel')}
-                        </label>
-                        <div className="flex items-center gap-3">
-                            <input
-                                type="text"
-                                value={branding.customDomain || ''}
-                                onChange={(e) => updateField('customDomain', e.target.value)}
-                                placeholder="app.tuagencia.com"
-                                className="flex-1 px-4 py-2.5 rounded-lg border border-input bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all"
-                            />
-                            {branding.customDomain && (
-                                <div className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium ${branding.customDomainVerified
-                                    ? 'bg-green-500/10 text-green-600'
-                                    : 'bg-yellow-500/10 text-yellow-600'
-                                    }`}>
-                                    {branding.customDomainVerified ? (
-                                        <>
-                                            <CheckCircle className="h-3.5 w-3.5" />
-                                            {t('dashboard.agency.whiteLabel.verified')}
-                                        </>
-                                    ) : (
-                                        <>
-                                            <AlertCircle className="h-3.5 w-3.5" />
-                                            {t('dashboard.agency.whiteLabel.pending')}
-                                        </>
-                                    )}
-                                </div>
-                            )}
-                        </div>
-                    </div>
-
-                    {branding.customDomain && !branding.customDomainVerified && (
-                        <div className="bg-muted/30 border border-border rounded-xl p-4 space-y-3">
-                            <h4 className="text-sm font-semibold text-foreground">
-                                {t('dashboard.agency.whiteLabel.dnsInstructions')}
-                            </h4>
-                            <p className="text-xs text-muted-foreground">
-                                {t('dashboard.agency.whiteLabel.dnsDescription')}
-                            </p>
-                            <div className="bg-background rounded-lg p-3 border border-border font-mono text-xs text-foreground">
-                                <div className="grid grid-cols-3 gap-2 text-muted-foreground mb-2">
-                                    <span>{t('dashboard.agency.whiteLabel.dnsType')}</span>
-                                    <span>{t('dashboard.agency.whiteLabel.dnsName')}</span>
-                                    <span>{t('dashboard.agency.whiteLabel.dnsValue')}</span>
-                                </div>
-                                <div className="grid grid-cols-3 gap-2">
-                                    <span>CNAME</span>
-                                    <span>{branding.customDomain}</span>
-                                    <span>quimera.ai</span>
-                                </div>
-                            </div>
-                        </div>
-                    )}
+                <div className="p-6">
+                    <AgencyDomainPanel />
                 </div>
             </div>
 

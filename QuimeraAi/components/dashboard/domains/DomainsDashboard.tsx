@@ -160,6 +160,7 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
     };
 
     const connectedProject = projects.find(p => p.id === domain.projectId);
+    const isAgencyLandingDomain = !!(domain as any).agencyLandingTenantId;
     const deploymentLogs = getDomainDeploymentLogs(domain.id);
     const isDeploymentInProgress = false; // Desbloqueado forzosamente para permitir cambios
 
@@ -219,6 +220,11 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
                                 </button>
                             )}
                             <span className="text-xs text-muted-foreground">• {domain.provider}</span>
+                            {isAgencyLandingDomain && (
+                                <span className="text-xs font-bold text-indigo-500 flex items-center bg-indigo-500/10 px-2 py-0.5 rounded-full border border-indigo-500/20">
+                                    🏢 Agency Landing
+                                </span>
+                            )}
                             {domain.sslStatus === 'active' && (
                                 <span className="text-xs font-bold text-green-500 flex items-center bg-green-500/10 px-2 py-0.5 rounded-full border border-green-500/20">
                                     🔒 SSL

@@ -39,6 +39,8 @@ export interface DomainResolutionResult {
     domain: string;
     status: 'active' | 'pending' | 'verifying' | 'ssl_pending' | 'error';
     sslStatus: 'pending' | 'active' | 'error';
+    /** When set, this domain serves an agency landing page instead of a project */
+    agencyLandingTenantId?: string;
     storeData?: {
         name: string;
         theme?: any;
@@ -85,7 +87,8 @@ export async function resolveDomainToProject(domain: string): Promise<DomainReso
             userId: data.userId,
             domain: data.domain,
             status: data.status || 'pending',
-            sslStatus: data.sslStatus || 'pending'
+            sslStatus: data.sslStatus || 'pending',
+            agencyLandingTenantId: data.agencyLandingTenantId || undefined,
         };
 
         // If domain is active, also fetch basic store data for SEO

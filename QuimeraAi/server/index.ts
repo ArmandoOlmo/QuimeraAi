@@ -12,6 +12,13 @@ import fs from 'fs';
 import { resolveDomainToProject, DomainResolutionResult } from './domainResolver';
 import { extractUserSubdomain, resolveUserSubdomain } from './subdomainResolver';
 import { renderStorefront } from './ssrRenderer';
+import {
+    isAgencyLandingSubdomain,
+    extractSubdomain,
+    resolveAgencyLanding,
+    resolveAgencyLandingByDomain,
+    AgencyLandingResolutionResult,
+} from './portalResolver';
 
 // Only import vite types - actual import is dynamic in development only
 type ViteDevServer = import('vite').ViteDevServer;
@@ -106,14 +113,70 @@ async function createServer() {
             }
 
             // -----------------------------------------------------------
+            // CHECK 0.5: Agency landing subdomain (agency.quimera.ai)
+            // -----------------------------------------------------------
+            if (!projectId && isAgencyLandingSubdomain(hostname)) {
+                const subdomain = extractSubdomain(hostname);
+                if (subdomain) {
+                    console.log(`[SSR] Agency landing subdomain detected: ${subdomain}`);
+                    const landingResult = await resolveAgencyLanding(subdomain);
+                    if (landingResult) {
+                        console.log(`[SSR] Agency landing resolved: ${subdomain} -> Tenant ${landingResult.tenantId}`);
+                        return res.status(200).set({ 'Content-Type': 'text/html' }).send(
+                            getAgencyLandingRedirectPage(landingResult)
+                        );
+                    }
+                }
+            }
+
+            // -----------------------------------------------------------
             // CHECK 1: Custom domain (existing behavior)
             // -----------------------------------------------------------
             if (!projectId && isCustomDomain) {
-                // Resolve custom domain to project
+                // ===================================================
+                // CHECK 1a: Agency landing by custom domain
+                // (from customDomains.agencyLandingTenantId or 
+                //  agencyLandings.customDomain)
+                // ===================================================
+                const agencyLanding = await resolveAgencyLandingByDomain(hostname);
+                if (agencyLanding) {
+                    console.log(`[SSR] Agency landing domain resolved: ${hostname} -> Tenant ${agencyLanding.tenantId}`);
+                    return res.status(200).set({ 'Content-Type': 'text/html' }).send(
+                        getAgencyLandingRedirectPage(agencyLanding)
+                    );
+                }
+
+                // ===================================================
+                // CHECK 1b: Project domain (original behavior)
+                // ===================================================
                 domainInfo = await resolveDomainToProject(hostname);
                 
-                if (!domainInfo || !domainInfo.projectId) {
-                    // Domain not found or not configured
+                if (!domainInfo) {
+                    // Domain not found
+                    return res.status(404).send(getDomainNotFoundPage(hostname));
+                }
+
+                // If domain has agencyLandingTenantId, serve agency landing
+                if (domainInfo.agencyLandingTenantId && !domainInfo.projectId) {
+                    console.log(`[SSR] Custom domain ${hostname} -> Agency Landing (tenant: ${domainInfo.agencyLandingTenantId})`);
+                    // Try to resolve the agency landing config
+                    const { getFirestore: getFs } = await import('firebase-admin/firestore');
+                    const adminDb = getFs();
+                    const landingDoc = await adminDb.collection('agencyLandings').doc(domainInfo.agencyLandingTenantId).get();
+                    if (landingDoc.exists) {
+                        return res.status(200).set({ 'Content-Type': 'text/html' }).send(
+                            getAgencyLandingRedirectPage({
+                                tenantId: domainInfo.agencyLandingTenantId,
+                                landingId: landingDoc.id,
+                                customDomain: hostname,
+                                isAgencyLanding: true,
+                                config: landingDoc.data(),
+                            })
+                        );
+                    }
+                }
+
+                if (!domainInfo.projectId) {
                     return res.status(404).send(getDomainNotFoundPage(hostname));
                 }
 
@@ -124,7 +187,7 @@ async function createServer() {
 
                 projectId = domainInfo.projectId;
                 console.log(`[SSR] Custom domain ${hostname} -> Project ${projectId}`);
-            } else {
+            } else if (!projectId) {
                 // Regular app request - check if it's a store route
                 const storeMatch = url.match(/^\/store\/([^\/]+)/);
                 if (storeMatch) {
@@ -264,6 +327,89 @@ function getErrorPage(error: Error): string {
     </div>
 </body>
 </html>`;
+}
+
+/**
+ * Generate agency landing page HTML
+ * Serves the agency landing with its config injected for client-side hydration
+ */
+function getAgencyLandingRedirectPage(landing: AgencyLandingResolutionResult): string {
+    const config = landing.config || {};
+    const companyName = config?.branding?.companyName || config?.hero?.headline || 'Agency';
+    const description = config?.hero?.subheadline || config?.seo?.description || `Bienvenido a ${companyName}`;
+    const primaryColor = config?.theme?.primaryColor || config?.branding?.primaryColor || '#4f46e5';
+    const logoUrl = config?.branding?.logoUrl || config?.header?.logoUrl || '';
+    const faviconUrl = config?.branding?.faviconUrl || '/favicon.ico';
+
+    // Safely serialize the landing config for client-side (JSON-escaped + HTML-safe)
+    let serializedConfig = '{}';
+    try {
+        serializedConfig = JSON.stringify({
+            tenantId: landing.tenantId,
+            landingId: landing.landingId,
+            config: config,
+        }).replace(/</g, '\\u003c').replace(/>/g, '\\u003e');
+    } catch (e) {
+        console.error('[SSR] Error serializing agency landing config:', e);
+    }
+
+    return `
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${escapeHtmlBasic(companyName)}</title>
+    <meta name="description" content="${escapeHtmlBasic(description)}">
+    <meta property="og:title" content="${escapeHtmlBasic(companyName)}">
+    <meta property="og:description" content="${escapeHtmlBasic(description)}">
+    <meta property="og:type" content="website">
+    <meta name="theme-color" content="${escapeHtmlBasic(primaryColor)}">
+    ${logoUrl ? `<meta property="og:image" content="${escapeHtmlBasic(logoUrl)}">` : ''}
+    <link rel="icon" href="${escapeHtmlBasic(faviconUrl)}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', system-ui, sans-serif; }
+        .agency-loading { 
+            display: flex; align-items: center; justify-content: center; 
+            min-height: 100vh; background: linear-gradient(135deg, ${primaryColor}08, ${primaryColor}15);
+        }
+        .agency-loading .spinner {
+            width: 48px; height: 48px; border: 3px solid #e5e7eb; 
+            border-top-color: ${primaryColor}; border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <div id="root" class="agency-loading">
+        <div class="spinner"></div>
+    </div>
+    <script>
+        window.__AGENCY_LANDING_DATA__ = ${serializedConfig};
+        // Redirect to main app with agency landing route
+        // The Quimera SPA will detect __AGENCY_LANDING_DATA__ and render the landing page
+        window.location.href = 'https://quimera.ai/agency-landing/' + ${JSON.stringify(landing.tenantId)};
+    </script>
+</body>
+</html>`;
+}
+
+/**
+ * Basic HTML escaping for template injection
+ */
+function escapeHtmlBasic(str: string): string {
+    if (!str) return '';
+    return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
 }
 
 createServer();

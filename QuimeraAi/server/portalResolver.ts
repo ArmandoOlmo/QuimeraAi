@@ -470,6 +470,7 @@ export async function resolveAgencyLanding(subdomain: string): Promise<AgencyLan
 
 /**
  * Resolve agency landing by custom domain
+ * Checks both the agencyLandings collection and the customDomains collection
  */
 export async function resolveAgencyLandingByDomain(domain: string): Promise<AgencyLandingResolutionResult | null> {
     const normalized = normalizeDomain(domain);
@@ -481,6 +482,9 @@ export async function resolveAgencyLandingByDomain(domain: string): Promise<Agen
     }
 
     try {
+        // ===================================================================
+        // CHECK 1: Try agencyLandings collection (legacy path - customDomain field)
+        // ===================================================================
         const landingQuery = await db.collection('agencyLandings')
             .where('customDomain', '==', normalized)
             .where('customDomainVerified', '==', true)
@@ -489,25 +493,62 @@ export async function resolveAgencyLandingByDomain(domain: string): Promise<Agen
             .limit(1)
             .get();
 
-        if (landingQuery.empty) {
-            landingCache.set(cacheKey, { data: null, timestamp: Date.now() });
-            return null;
+        if (!landingQuery.empty) {
+            const landingDoc = landingQuery.docs[0];
+            const landingData = landingDoc.data();
+
+            const result: AgencyLandingResolutionResult = {
+                tenantId: landingData.tenantId,
+                landingId: landingDoc.id,
+                subdomain: landingData.subdomain,
+                customDomain: landingData.customDomain,
+                isAgencyLanding: true,
+                config: landingData,
+            };
+
+            landingCache.set(cacheKey, { data: result, timestamp: Date.now() });
+            console.log(`[PortalResolver] Resolved landing by domain (agencyLandings): ${normalized} -> Tenant ${result.tenantId}`);
+            return result;
         }
 
-        const landingDoc = landingQuery.docs[0];
-        const landingData = landingDoc.data();
+        // ===================================================================
+        // CHECK 2: Try customDomains collection (new path - agencyLandingTenantId)
+        // This is set by AgencyDomainPanel via DomainsContext.addDomain()
+        // ===================================================================
+        const customDomainDoc = await db.collection('customDomains').doc(normalized).get();
+        if (customDomainDoc.exists) {
+            const cdData = customDomainDoc.data()!;
+            
+            if (cdData.agencyLandingTenantId) {
+                console.log(`[PortalResolver] Found agencyLandingTenantId in customDomains: ${cdData.agencyLandingTenantId}`);
+                
+                // Fetch the agency landing config
+                const tenantId = cdData.agencyLandingTenantId;
+                const landingDoc = await db.collection('agencyLandings').doc(tenantId).get();
+                
+                if (landingDoc.exists) {
+                    const landingData = landingDoc.data()!;
+                    
+                    const result: AgencyLandingResolutionResult = {
+                        tenantId,
+                        landingId: landingDoc.id,
+                        subdomain: landingData.subdomain,
+                        customDomain: normalized,
+                        isAgencyLanding: true,
+                        config: landingData,
+                    };
 
-        const result: AgencyLandingResolutionResult = {
-            tenantId: landingData.tenantId,
-            landingId: landingDoc.id,
-            subdomain: landingData.subdomain,
-            customDomain: landingData.customDomain,
-            isAgencyLanding: true,
-            config: landingData,
-        };
+                    landingCache.set(cacheKey, { data: result, timestamp: Date.now() });
+                    console.log(`[PortalResolver] Resolved landing by domain (customDomains): ${normalized} -> Tenant ${tenantId}`);
+                    return result;
+                } else {
+                    console.warn(`[PortalResolver] agencyLandings/${tenantId} not found for customDomain ${normalized}`);
+                }
+            }
+        }
 
-        landingCache.set(cacheKey, { data: result, timestamp: Date.now() });
-        return result;
+        landingCache.set(cacheKey, { data: null, timestamp: Date.now() });
+        return null;
 
     } catch (error) {
         console.error(`[PortalResolver] Error resolving landing by domain ${domain}:`, error);

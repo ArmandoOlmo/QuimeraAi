@@ -24,12 +24,10 @@ export const AgencyLandingEditor: React.FC = () => {
                     </Suspense>
 
                     {/* Preview Area */}
-                    <main className="flex-1 min-h-0 p-4 sm:p-8 flex justify-center overflow-auto hidden md:flex">
+                    <main className="flex-1 min-h-0 p-4 sm:p-8 flex justify-center overflow-hidden hidden md:flex">
                         <Suspense fallback={<QuimeraLoader />}>
                             <BrowserPreview ref={previewRef}>
-                                <div className="h-full w-full overflow-auto pointer-events-auto">
-                                    <LandingPage />
-                                </div>
+                                <LandingPage />
                             </BrowserPreview>
                         </Suspense>
                     </main>

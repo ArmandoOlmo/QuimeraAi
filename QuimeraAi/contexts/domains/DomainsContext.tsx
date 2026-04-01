@@ -160,11 +160,14 @@ export const DomainsProvider: React.FC<{ children: ReactNode }> = ({ children })
             const normalizedDomain = domain.name.toLowerCase().replace(/^www\./, '');
             const domainId = normalizedDomain; // Use the domain itself as ID to prevent duplicates
 
+            const agencyLandingTenantId = domain.agencyLandingTenantId || null;
+
             await setDoc(doc(db, 'users', user.uid, 'domains', domainId), {
                 ...domainDataWithoutId,
                 projectId: projectIdToUse,
                 projectUserId: projectUserIdToUse,
                 projectTenantId: projectTenantIdToUse,
+                agencyLandingTenantId,
                 createdAt: new Date().toISOString(),
                 status: 'ssl_pending', // Start with SSL pending since we're creating mapping
             }, { merge: true });
@@ -191,6 +194,7 @@ export const DomainsProvider: React.FC<{ children: ReactNode }> = ({ children })
                 projectId: projectIdToUse || null,
                 projectUserId: projectUserIdToUse,
                 projectTenantId: projectTenantIdToUse,
+                agencyLandingTenantId: agencyLandingTenantId || null,
                 userId: user.uid, // Who created the domain entry
                 status: 'ssl_pending',
                 sslStatus: 'provisioning',
@@ -278,6 +282,10 @@ export const DomainsProvider: React.FC<{ children: ReactNode }> = ({ children })
                 }
                 if (data.projectTenantId !== undefined) {
                     syncData.projectTenantId = data.projectTenantId;
+                }
+                // Sync agency landing tenant ID
+                if (data.agencyLandingTenantId !== undefined) {
+                    syncData.agencyLandingTenantId = data.agencyLandingTenantId;
                 }
 
                 await setDoc(doc(db, 'customDomains', normalizedDomain), syncData, { merge: true });
