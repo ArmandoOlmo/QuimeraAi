@@ -23,6 +23,10 @@ import {
     DEFAULT_DATA_DELETION,
     DEFAULT_TERMS_OF_SERVICE,
     DEFAULT_COOKIE_POLICY,
+    DEFAULT_PRIVACY_POLICY_EN,
+    DEFAULT_DATA_DELETION_EN,
+    DEFAULT_TERMS_OF_SERVICE_EN,
+    DEFAULT_COOKIE_POLICY_EN,
 } from '../../types/appContent';
 import {
     db,
@@ -374,15 +378,23 @@ export const AppContentProvider: React.FC<{ children: ReactNode }> = ({ children
     }, []);
 
     // Get legal page by type
-    const getLegalPageByType = useCallback((type: LegalPageType): LegalPage | undefined => {
-        const page = legalPages.find(p => p.type === type && p.status === 'published');
+    const getLegalPageByType = useCallback((type: LegalPageType, language?: string): LegalPage | undefined => {
+        const targetLang = language || 'es'; // Default to 'es' as per existing content
+        const page = legalPages.find(p => p.type === type && p.language === targetLang && p.status === 'published');
 
         // Return defaults if not found
         if (!page) {
-            if (type === 'privacy-policy') return DEFAULT_PRIVACY_POLICY;
-            if (type === 'data-deletion') return DEFAULT_DATA_DELETION;
-            if (type === 'terms-of-service') return DEFAULT_TERMS_OF_SERVICE;
-            if (type === 'cookie-policy') return DEFAULT_COOKIE_POLICY;
+            if (targetLang === 'en') {
+                if (type === 'privacy-policy') return DEFAULT_PRIVACY_POLICY_EN;
+                if (type === 'data-deletion') return DEFAULT_DATA_DELETION_EN;
+                if (type === 'terms-of-service') return DEFAULT_TERMS_OF_SERVICE_EN;
+                if (type === 'cookie-policy') return DEFAULT_COOKIE_POLICY_EN;
+            } else {
+                if (type === 'privacy-policy') return DEFAULT_PRIVACY_POLICY;
+                if (type === 'data-deletion') return DEFAULT_DATA_DELETION;
+                if (type === 'terms-of-service') return DEFAULT_TERMS_OF_SERVICE;
+                if (type === 'cookie-policy') return DEFAULT_COOKIE_POLICY;
+            }
         }
 
         return page;
@@ -395,10 +407,12 @@ export const AppContentProvider: React.FC<{ children: ReactNode }> = ({ children
             const now = new Date().toISOString();
 
             // Use type as document ID for easy retrieval
-            const pageRef = doc(db, COLLECTIONS.LEGAL_PAGES, page.type);
+            // Use type-lang as document ID for easy retrieval and multi-language support
+            const docId = `${page.type}_${page.language || 'es'}`;
+            const pageRef = doc(db, COLLECTIONS.LEGAL_PAGES, docId);
             await setDoc(pageRef, {
                 ...data,
-                id: page.type,
+                id: docId,
                 lastUpdated: now,
                 updatedAt: now,
                 createdAt: page.createdAt || now

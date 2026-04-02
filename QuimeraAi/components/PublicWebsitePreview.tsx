@@ -130,32 +130,37 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
   const [activeCategorySlug, setActiveCategorySlug] = useState<string | null>(null);
   const [loadingPost, setLoadingPost] = useState(false);
 
-  // Override overflow:hidden from index.html to allow native page scrolling
-  useEffect(() => {
-    const html = document.documentElement;
-    const body = document.body;
-    const root = document.getElementById('root');
+    // Override overflow:hidden from index.html to allow native page scrolling
+    useEffect(() => {
+      const html = document.documentElement;
+      const body = document.body;
+      const root = document.getElementById('root');
 
-    html.style.overflow = 'auto';
-    html.style.height = 'auto';
-    body.style.overflow = 'auto';
-    body.style.height = 'auto';
-    if (root) {
-      root.style.overflow = 'visible';
-      root.style.height = 'auto';
-    }
-
-    return () => {
-      html.style.overflow = '';
-      html.style.height = '';
-      body.style.overflow = '';
-      body.style.height = '';
+      html.style.overflow = 'auto';
+      html.style.height = 'auto';
+      body.style.overflow = 'auto';
+      body.style.height = 'auto';
       if (root) {
-        root.style.overflow = '';
-        root.style.height = '';
+        root.style.overflow = 'visible';
+        root.style.height = 'auto';
       }
-    };
-  }, []);
+
+      // Remove SSR branded skeleton (smooth fade-out)
+      if (typeof (window as any).__removeSkeleton === 'function') {
+        (window as any).__removeSkeleton();
+      }
+
+      return () => {
+        html.style.overflow = '';
+        html.style.height = '';
+        body.style.overflow = '';
+        body.style.height = '';
+        if (root) {
+          root.style.overflow = '';
+          root.style.height = '';
+        }
+      };
+    }, []);
 
   // Consume prefetched tenant branding (already started before React mounted)
   useEffect(() => {
@@ -1225,25 +1230,12 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
   // Check if project uses multi-page architecture
   const useMultiPageArchitecture = project?.pages && project.pages.length > 0;
 
-  // Loading state — show agency branding if available, otherwise generic spinner
+  // Loading state — invisible placeholder, SSR skeleton already provides the visual loading
   if (loading) {
+    const domainConfig = typeof window !== 'undefined' ? (window as any).__DOMAIN_CONFIG__ : null;
+    const bgColor = domainConfig?.backgroundColor || '#0f172a';
     return (
-      <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center gap-4">
-        {brandingLogoUrl ? (
-          <div className="relative flex items-center justify-center">
-            <div className="absolute w-24 h-24 rounded-full animate-ping" style={{ animationDuration: '2s', backgroundColor: 'rgba(255,255,255,0.1)' }} />
-            <div className="absolute w-20 h-20 rounded-full animate-ping" style={{ animationDuration: '1.5s', animationDelay: '0.2s', backgroundColor: 'rgba(255,255,255,0.15)' }} />
-            <div className="relative z-10 w-16 h-16 rounded-full bg-slate-800 shadow-2xl flex items-center justify-center border border-white/10">
-              <img src={brandingLogoUrl} alt="Loading..." className="w-12 h-12 object-contain animate-pulse rounded-full" style={{ animationDuration: '1.5s' }} />
-            </div>
-          </div>
-        ) : (
-          <Loader2 className="w-10 h-10 text-white/60 animate-spin" />
-        )}
-        <p className="text-white/40 text-sm">
-          {brandingCompanyName ? `Cargando ${brandingCompanyName}...` : 'Loading...'}
-        </p>
-      </div>
+      <div style={{ minHeight: '100vh', background: bgColor }} />
     );
   }
 

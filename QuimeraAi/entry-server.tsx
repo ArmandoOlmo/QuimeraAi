@@ -219,16 +219,17 @@ function render404(project: ProjectData): string {
 }
 
 /**
- * Render error page
+ * Render fallback placeholder (invisible)
+ * 
+ * When SSR renderToString fails (e.g., "document is not defined"),
+ * we return an invisible placeholder instead of a visible error.
+ * The client-side React will mount and render the page correctly.
+ * This prevents a brief flash of "Error del servidor" before hydration.
  */
 function renderError(): string {
     return `
-        <div style="min-height: 100vh; display: flex; align-items: center; justify-content: center; background: #1f2937; color: #9ca3af; font-family: system-ui, sans-serif;">
-            <div style="text-align: center; padding: 2rem;">
-                <h1 style="color: #f87171; margin-bottom: 1rem;">⚠️ Error del servidor</h1>
-                <p>Ocurrió un error al procesar tu solicitud.</p>
-                <p>Por favor, intenta de nuevo más tarde.</p>
-            </div>
+        <div style="min-height: 100vh; background: #0f172a;">
+            <!-- SSR render skipped, client-side React will handle rendering -->
         </div>
     `;
 }

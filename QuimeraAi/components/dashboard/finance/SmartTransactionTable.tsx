@@ -17,6 +17,7 @@ import { generateContentViaProxy, extractTextFromResponse } from '../../../utils
 import { logApiCall } from '../../../services/apiLoggingService';
 import { Skeleton } from '../../ui/skeleton';
 import ConfirmationModal from '../../ui/ConfirmationModal';
+import DashboardSelect from '../../ui/DashboardSelect';
 import type { Transaction, TransactionType } from '../../../types/finance';
 
 interface SmartTransactionTableProps {
@@ -240,37 +241,36 @@ Respond ONLY with the JSON object, no markdown, no explanation.`;
 
                 {/* Filters row */}
                 <div className="flex items-center gap-2 flex-wrap">
-                    <select
+                    <DashboardSelect
                         value={filterType}
-                        onChange={(e) => setFilterType(e.target.value as any)}
-                        className="h-10 px-3 rounded-xl border border-border/60 bg-secondary/30 text-sm text-foreground focus:ring-2 focus:ring-primary/40 transition-all"
-                    >
-                        <option value="all">{t('accounting.allTypes', 'All Types')}</option>
-                        <option value="income">{t('accounting.income', 'Income')}</option>
-                        <option value="expense">{t('accounting.expense', 'Expense')}</option>
-                    </select>
+                        onChange={(val) => setFilterType(val as any)}
+                        options={[
+                            { value: 'all', label: t('accounting.allTypes', 'All Types') },
+                            { value: 'income', label: t('accounting.income', 'Income') },
+                            { value: 'expense', label: t('accounting.expense', 'Expense') },
+                        ]}
+                        className="min-w-[120px]"
+                    />
 
-                    <select
+                    <DashboardSelect
                         value={filterCategory}
-                        onChange={(e) => setFilterCategory(e.target.value)}
-                        className="h-10 px-3 rounded-xl border border-border/60 bg-secondary/30 text-sm text-foreground focus:ring-2 focus:ring-primary/40 transition-all"
-                    >
-                        <option value="all">{t('accounting.allCategories', 'All Categories')}</option>
-                        {categories.map((cat) => (
-                            <option key={cat} value={cat}>{cat}</option>
-                        ))}
-                    </select>
+                        onChange={(val) => setFilterCategory(val)}
+                        options={[
+                            { value: 'all', label: t('accounting.allCategories', 'All Categories') },
+                            ...categories.map((cat) => ({ value: cat, label: cat })),
+                        ]}
+                        className="min-w-[140px]"
+                    />
 
-                    <select
+                    <DashboardSelect
                         value={filterAccount}
-                        onChange={(e) => setFilterAccount(e.target.value)}
-                        className="h-10 px-3 rounded-xl border border-border/60 bg-secondary/30 text-sm text-foreground focus:ring-2 focus:ring-primary/40 transition-all"
-                    >
-                        <option value="all">{t('accounting.allAccounts', 'All Accounts')}</option>
-                        {accounts.map((acc) => (
-                            <option key={acc} value={acc}>{acc}</option>
-                        ))}
-                    </select>
+                        onChange={(val) => setFilterAccount(val)}
+                        options={[
+                            { value: 'all', label: t('accounting.allAccounts', 'All Accounts') },
+                            ...accounts.map((acc) => ({ value: acc, label: acc })),
+                        ]}
+                        className="min-w-[140px]"
+                    />
 
                     {/* AI Verified Toggle */}
                     <button
@@ -320,11 +320,14 @@ Respond ONLY with the JSON object, no markdown, no explanation.`;
                         <input type="number" value={formData.amount || ''} onChange={(e) => setFormData((f) => ({ ...f, amount: parseFloat(e.target.value) || 0 }))}
                             placeholder={t('accounting.amount', 'Amount')} min={0} step="0.01"
                             className="h-10 px-3 rounded-xl border border-border/60 bg-secondary/30 text-sm text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/40" />
-                        <select value={formData.type} onChange={(e) => setFormData((f) => ({ ...f, type: e.target.value as TransactionType }))}
-                            className="h-10 px-3 rounded-xl border border-border/60 bg-secondary/30 text-sm text-foreground focus:ring-2 focus:ring-primary/40">
-                            <option value="income">{t('accounting.income', 'Income')}</option>
-                            <option value="expense">{t('accounting.expense', 'Expense')}</option>
-                        </select>
+                        <DashboardSelect
+                            value={formData.type}
+                            onChange={(val) => setFormData((f) => ({ ...f, type: val as TransactionType }))}
+                            options={[
+                                { value: 'income', label: t('accounting.income', 'Income') },
+                                { value: 'expense', label: t('accounting.expense', 'Expense') },
+                            ]}
+                        />
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">

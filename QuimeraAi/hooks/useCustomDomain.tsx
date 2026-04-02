@@ -77,32 +77,38 @@ declare global {
  * Hook to detect and resolve custom domains
  */
 export function useCustomDomain(): CustomDomainState {
-    const [state, setState] = useState<CustomDomainState>({
-        isCustomDomain: false,
-        isLoading: true,
-        projectId: null,
-        userId: null,
-        domain: null,
-        error: null,
-        projectData: null,
-    });
+    // Check for SSR-injected config SYNCHRONOUSLY to avoid any loading flash
+    const serverConfig = typeof window !== 'undefined' ? window.__DOMAIN_CONFIG__ : null;
 
-    useEffect(() => {
-        // PRIORITY 1: Check for server-injected domain config (from SSR server)
-        // This is the fastest path - no Firestore call needed
-        const serverConfig = typeof window !== 'undefined' ? window.__DOMAIN_CONFIG__ : null;
-
-        if (serverConfig?.isCustomDomain && serverConfig.projectId && serverConfig.userId) {
-            console.log(`[CustomDomain] Using server-injected config for ${serverConfig.domain}`);
-            setState({
+    const [state, setState] = useState<CustomDomainState>(() => {
+        // If SSR server injected domain config, use it immediately — no loading state
+        if (serverConfig?.isCustomDomain && serverConfig.projectId) {
+            console.log(`[CustomDomain] Instant resolution from SSR config: ${serverConfig.domain}`);
+            return {
                 isCustomDomain: true,
                 isLoading: false,
                 projectId: serverConfig.projectId,
-                userId: serverConfig.userId,
+                userId: serverConfig.userId || null,
                 domain: serverConfig.domain,
                 error: null,
-                projectData: null, // Will be loaded by PublicWebsitePreview
-            });
+                projectData: null,
+            };
+        }
+        // No SSR config — start in loading state for client-side resolution
+        return {
+            isCustomDomain: false,
+            isLoading: true,
+            projectId: null,
+            userId: null,
+            domain: null,
+            error: null,
+            projectData: null,
+        };
+    });
+
+    useEffect(() => {
+        // If already resolved from SSR config, skip all resolution
+        if (serverConfig?.isCustomDomain && serverConfig.projectId) {
             return;
         }
 
@@ -316,32 +322,20 @@ export function DomainNotConfiguredPage({ domain }: { domain: string }) {
 
 /**
  * Component to display while loading domain info
- * Uses a generic spinner (no Quimera branding) for public domains
- * Optionally uses project colors if available from SSR config
+ * Shows nothing visible — just a dark background matching the project theme.
+ * React will immediately replace this when it mounts.
+ * NO Quimera branding, NO blue backgrounds, NO logos.
  */
 export function DomainLoadingPage() {
-    // Try to get colors from SSR-injected config
     const serverConfig = typeof window !== 'undefined' ? window.__DOMAIN_CONFIG__ : null;
-    const primaryColor = serverConfig?.primaryColor || '#ffffff';
     const backgroundColor = serverConfig?.backgroundColor || '#0f172a';
-    const trackColor = `${primaryColor}33`; // 20% opacity
 
     return (
         <div
-            className="flex items-center justify-center min-h-screen"
-            style={{ background: backgroundColor }}
-        >
-            <div className="text-center">
-                <div className="mb-6">
-                    <img
-                        src="https://firebasestorage.googleapis.com/v0/b/quimeraai.firebasestorage.app/o/quimera%2Fquimeralogo.png?alt=media&token=82368c1c-0f63-42b7-831f-72780006f032"
-                        alt="Loading..."
-                        className="w-16 h-16 object-contain animate-pulse"
-                    />
-                </div>
-            </div>
-
-
-        </div>
+            style={{
+                minHeight: '100vh',
+                background: backgroundColor,
+            }}
+        />
     );
 }

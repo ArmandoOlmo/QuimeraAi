@@ -14,6 +14,7 @@ import { generateContentViaProxy, extractTextFromResponse } from '../../../utils
 import { logApiCall } from '../../../services/apiLoggingService';
 import { Skeleton } from '../../ui/skeleton';
 import ConfirmationModal from '../../ui/ConfirmationModal';
+import DashboardSelect from '../../ui/DashboardSelect';
 import type { Invoice, InvoiceItem, InvoiceStatus } from '../../../types/finance';
 
 interface InvoiceManagerProps {
@@ -175,9 +176,18 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
                 <div className="relative flex-1 w-full"><Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" /><input type="text" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder={t('accounting.searchInvoices', 'Search invoices...')} className="w-full h-10 pl-9 pr-4 rounded-xl border border-border/60 bg-secondary/30 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40" /></div>
                 <div className="flex items-center gap-2">
-                    <select value={filterStatus} onChange={e => setFilterStatus(e.target.value as any)} className="h-10 px-3 rounded-xl border border-border/60 bg-secondary/30 text-sm text-foreground focus:ring-2 focus:ring-primary/40">
-                        <option value="all">{t('accounting.allStatuses', 'All')}</option><option value="draft">{t('accounting.draft', 'Draft')}</option><option value="sent">{t('accounting.sent', 'Sent')}</option><option value="paid">{t('accounting.paid', 'Paid')}</option><option value="overdue">{t('accounting.overdue', 'Overdue')}</option>
-                    </select>
+                    <DashboardSelect
+                        value={filterStatus}
+                        onChange={val => setFilterStatus(val as any)}
+                        options={[
+                            { value: 'all', label: t('accounting.allStatuses', 'All') },
+                            { value: 'draft', label: t('accounting.draft', 'Draft') },
+                            { value: 'sent', label: t('accounting.sent', 'Sent') },
+                            { value: 'paid', label: t('accounting.paid', 'Paid') },
+                            { value: 'overdue', label: t('accounting.overdue', 'Overdue') },
+                        ]}
+                        className="min-w-[120px]"
+                    />
                     <button onClick={() => { resetForm(); setView('form'); }} className="h-10 px-4 rounded-xl bg-gradient-to-r from-primary to-primary/80 text-white text-sm font-semibold shadow-lg shadow-primary/25 hover:shadow-primary/40 hover:scale-105 transition-all flex items-center gap-2"><Plus size={16} />{t('accounting.newInvoice', 'New Invoice')}</button>
                 </div>
             </div>

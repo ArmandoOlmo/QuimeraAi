@@ -201,6 +201,7 @@ async function createServer() {
                     projectId,
                     url,
                     hostname: isCustomDomain ? hostname : undefined,
+                    userId: domainInfo?.userId,
                     isProduction,
                     vite
                 });
@@ -310,24 +311,18 @@ function getErrorPage(error: Error): string {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Error</title>
+    <title>Loading...</title>
     <style>
-        body { font-family: system-ui, sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; background: #fef2f2; }
-        .container { text-align: center; padding: 2rem; background: white; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); max-width: 500px; }
-        h1 { color: #991b1b; margin-bottom: 0.5rem; }
-        p { color: #6b7280; }
-        pre { background: #fee2e2; padding: 1rem; border-radius: 8px; text-align: left; overflow-x: auto; font-size: 0.75rem; color: #991b1b; }
+        body { font-family: system-ui, sans-serif; margin: 0; background: #0f172a; min-height: 100vh; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>❌ Error del servidor</h1>
-        <p>Ha ocurrido un error al procesar tu solicitud.</p>
-        ${process.env.NODE_ENV !== 'production' ? `<pre>${error.stack}</pre>` : ''}
-    </div>
+    <!-- SSR error fallback - invisible placeholder, client-side React takes over -->
+    <div id="root"></div>
 </body>
 </html>`;
 }
+
 
 /**
  * Generate agency landing page HTML

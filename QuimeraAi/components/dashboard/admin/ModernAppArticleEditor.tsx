@@ -5,6 +5,7 @@
  */
 
 import React, { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useEditor, EditorContent } from '@tiptap/react';
 import { StarterKit } from '@tiptap/starter-kit';
 import '../../cms/modern/editor-styles.css';
@@ -59,6 +60,7 @@ const CATEGORIES: { value: AppArticleCategory; label: string }[] = [
 ];
 
 const ModernAppArticleEditor: React.FC<ModernAppArticleEditorProps> = ({ article, onClose }) => {
+    const { t } = useTranslation();
     const { user } = useAuth();
     const { saveArticle, loadArticles } = useAppContent();
     const { getPrompt } = useAdmin();
@@ -79,6 +81,7 @@ const ModernAppArticleEditor: React.FC<ModernAppArticleEditorProps> = ({ article
     const [showAuthor, setShowAuthor] = useState(article?.showAuthor !== false);
     const [showDate, setShowDate] = useState(article?.showDate !== false);
     const [publishedAt, setPublishedAt] = useState(article?.publishedAt || '');
+    const [language, setLanguage] = useState<'es' | 'en'>(article?.language || 'es');
 
     // SEO
     const [metaTitle, setMetaTitle] = useState(article?.seo?.metaTitle || '');
@@ -123,7 +126,7 @@ const ModernAppArticleEditor: React.FC<ModernAppArticleEditorProps> = ({ article
                 multicolor: true
             }),
             Placeholder.configure({
-                placeholder: 'Empieza a escribir algo increíble... Escribe "/" para comandos',
+                placeholder: t('contentManagement.editor.placeholder', 'Empieza a escribir algo increíble... Escribe "/" para comandos'),
             }),
             Table.configure({
                 resizable: true,
@@ -280,6 +283,7 @@ const ModernAppArticleEditor: React.FC<ModernAppArticleEditorProps> = ({ article
                 createdAt: article?.createdAt || new Date().toISOString(),
                 updatedAt: new Date().toISOString(),
                 publishedAt: publishedAt || (status === 'published' && !article?.publishedAt ? new Date().toISOString() : article?.publishedAt),
+                language,
                 seo: {
                     metaTitle: metaTitle || title,
                     metaDescription: metaDescription || excerpt,
@@ -558,11 +562,11 @@ Text to format:
                             </span>
                         )}
                         <div className="flex items-center bg-secondary rounded-lg p-1 text-xs font-medium">
-                            <button onClick={() => setStatus('draft')} className={`px-3 py-1.5 rounded-md transition-all ${status === 'draft' ? 'bg-background shadow text-foreground' : 'text-muted-foreground hover:text-foreground'}`}>Borrador</button>
-                            <button onClick={() => setStatus('published')} className={`px-3 py-1.5 rounded-md transition-all ${status === 'published' ? 'bg-green-500/20 text-green-400' : 'text-muted-foreground hover:text-foreground'}`}>Publicado</button>
+                            <button onClick={() => setStatus('draft')} className={`px-3 py-1.5 rounded-md transition-all ${status === 'draft' ? 'bg-background shadow text-foreground' : 'text-muted-foreground hover:text-foreground'}`}>{t('contentManagement.status.draft', 'Borrador')}</button>
+                            <button onClick={() => setStatus('published')} className={`px-3 py-1.5 rounded-md transition-all ${status === 'published' ? 'bg-green-500/20 text-green-400' : 'text-muted-foreground hover:text-foreground'}`}>{t('contentManagement.status.published', 'Publicado')}</button>
                         </div>
                         <button onClick={handleSave} disabled={isSaving} className="flex items-center gap-2 bg-primary text-primary-foreground px-5 py-2 rounded-lg font-bold hover:opacity-90 transition-all disabled:opacity-50 shadow-md">
-                            {isSaving ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />} Guardar
+                            {isSaving ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />} {t('common.save', 'Guardar')}
                         </button>
                         <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className={`p-2 rounded-lg transition-colors ${isSidebarOpen ? 'bg-accent text-accent-foreground' : 'text-muted-foreground hover:bg-secondary'}`}>
                             <MoreVertical size={20} />
@@ -601,20 +605,38 @@ Text to format:
                     {isSidebarOpen && (
                         <aside className="w-80 bg-card border-l border-border overflow-y-auto p-6 shrink-0 shadow-xl">
                             <div className="mb-6">
-                                <h3 className="font-bold text-lg mb-1 flex items-center"><Type className="mr-2 text-primary" /> Configuración</h3>
-                                <p className="text-xs text-muted-foreground">Configura metadata y apariencia del artículo.</p>
+                                <h3 className="font-bold text-lg mb-1 flex items-center"><Type className="mr-2 text-primary" /> {t('common.configuration', 'Configuración')}</h3>
+                                <p className="text-xs text-muted-foreground">{t('contentManagement.editor.configDescription', 'Configura metadata y apariencia del artículo.')}</p>
                             </div>
 
                             <div className="space-y-6">
+                                {/* Language */}
+                                <div>
+                                    <label className="block text-xs font-bold text-muted-foreground uppercase mb-2">{t('contentManagement.filters.language', 'Idioma')}</label>
+                                    <div className="flex items-center bg-secondary rounded-lg p-1 text-xs font-medium">
+                                        <button 
+                                            onClick={() => setLanguage('es')} 
+                                            className={`flex-1 py-1.5 rounded-md transition-all ${language === 'es' ? 'bg-background shadow text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+                                        >
+                                            Español
+                                        </button>
+                                        <button 
+                                            onClick={() => setLanguage('en')} 
+                                            className={`flex-1 py-1.5 rounded-md transition-all ${language === 'en' ? 'bg-background shadow text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+                                        >
+                                            English
+                                        </button>
+                                    </div>
+                                </div>
                                 {/* URL Slug */}
                                 <div>
-                                    <label className="block text-xs font-bold text-muted-foreground uppercase mb-2">URL Slug</label>
+                                    <label className="block text-xs font-bold text-muted-foreground uppercase mb-2">{t('contentManagement.editor.urlSlug', 'URL Slug')}</label>
                                     <input value={slug} onChange={(e) => setSlug(e.target.value)} className="w-full bg-secondary/50 border border-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-primary outline-none text-foreground" />
                                 </div>
 
                                 {/* Category */}
                                 <div>
-                                    <label className="block text-xs font-bold text-muted-foreground uppercase mb-2">Categoría</label>
+                                    <label className="block text-xs font-bold text-muted-foreground uppercase mb-2">{t('contentManagement.editor.category', 'Categoría')}</label>
                                     <select
                                         value={category}
                                         onChange={(e) => setCategory(e.target.value as AppArticleCategory)}
@@ -628,25 +650,25 @@ Text to format:
 
                                 {/* Featured Image */}
                                 <div>
-                                    <label className="block text-xs font-bold text-muted-foreground uppercase mb-2">Imagen Destacada</label>
+                                    <label className="block text-xs font-bold text-muted-foreground uppercase mb-2">{t('contentManagement.editor.featuredImage', 'Imagen Destacada')}</label>
                                     <ImagePicker label="" value={featuredImage} onChange={setFeaturedImage} />
                                 </div>
 
                                 {/* Excerpt */}
                                 <div>
-                                    <label className="block text-xs font-bold text-muted-foreground uppercase mb-2">Extracto</label>
-                                    <textarea value={excerpt} onChange={(e) => setExcerpt(e.target.value)} rows={4} className="w-full bg-secondary/50 border border-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-primary outline-none resize-none text-foreground" placeholder="Resumen corto para listados..." />
+                                    <label className="block text-xs font-bold text-muted-foreground uppercase mb-2">{t('contentManagement.editor.excerpt', 'Extracto')}</label>
+                                    <textarea value={excerpt} onChange={(e) => setExcerpt(e.target.value)} rows={4} className="w-full bg-secondary/50 border border-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-primary outline-none resize-none text-foreground" placeholder={t('contentManagement.editor.excerptPlaceholder', 'Resumen corto para listados...')} />
                                 </div>
 
                                 {/* Author */}
                                 <div>
-                                    <label className="block text-xs font-bold text-muted-foreground uppercase mb-2">Autor</label>
+                                    <label className="block text-xs font-bold text-muted-foreground uppercase mb-2">{t('contentManagement.editor.author', 'Autor')}</label>
                                     <input value={author} onChange={(e) => setAuthor(e.target.value)} className="w-full bg-secondary/50 border border-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-primary outline-none text-foreground" />
                                 </div>
 
                                 {/* Publication Date */}
                                 <div>
-                                    <label className="block text-xs font-bold text-muted-foreground uppercase mb-2">Fecha de Publicación</label>
+                                    <label className="block text-xs font-bold text-muted-foreground uppercase mb-2">{t('contentManagement.editor.publicationDate', 'Fecha de Publicación')}</label>
                                     <input
                                         type="datetime-local"
                                         value={publishedAt ? new Date(publishedAt).toISOString().slice(0, 16) : ''}
@@ -659,7 +681,7 @@ Text to format:
                                 <div className="flex items-center justify-between p-3 bg-secondary/30 border border-border rounded-lg">
                                     <div className="flex items-center gap-2">
                                         <User size={14} className="text-muted-foreground" />
-                                        <span className="text-sm font-medium">Mostrar Autor</span>
+                                        <span className="text-sm font-medium">{t('contentManagement.editor.showAuthor', 'Mostrar Autor')}</span>
                                     </div>
                                     <label className="relative inline-flex items-center cursor-pointer">
                                         <input
@@ -676,7 +698,7 @@ Text to format:
                                 <div className="flex items-center justify-between p-3 bg-secondary/30 border border-border rounded-lg">
                                     <div className="flex items-center gap-2">
                                         <Calendar size={14} className="text-muted-foreground" />
-                                        <span className="text-sm font-medium">Mostrar Fecha</span>
+                                        <span className="text-sm font-medium">{t('contentManagement.editor.showDate', 'Mostrar Fecha')}</span>
                                     </div>
                                     <label className="relative inline-flex items-center cursor-pointer">
                                         <input
@@ -691,7 +713,7 @@ Text to format:
 
                                 {/* Tags */}
                                 <div>
-                                    <label className="block text-xs font-bold text-muted-foreground uppercase mb-2">Tags</label>
+                                    <label className="block text-xs font-bold text-muted-foreground uppercase mb-2">{t('contentManagement.editor.tags', 'Etiquetas')}</label>
                                     <div className="flex flex-wrap gap-2 mb-2">
                                         {tags.map(tag => (
                                             <span
@@ -732,8 +754,8 @@ Text to format:
                                     <div className="flex items-center gap-3">
                                         <Star className="text-yellow-500" size={18} />
                                         <div>
-                                            <p className="text-sm font-medium">Artículo Destacado</p>
-                                            <p className="text-xs text-muted-foreground">Mostrar en homepage</p>
+                                            <p className="text-sm font-medium">{t('contentManagement.editor.featuredArticle', 'Artículo Destacado')}</p>
+                                            <p className="text-xs text-muted-foreground">{t('contentManagement.editor.featuredArticleDescription', 'Mostrar en homepage')}</p>
                                         </div>
                                     </div>
                                     <label className="relative inline-flex items-center cursor-pointer">
@@ -751,7 +773,7 @@ Text to format:
                                 <div className="pt-6 border-t border-border">
                                     <div className="flex justify-between items-center mb-4">
                                         <h4 className="font-bold text-sm flex items-center"><Globe size={16} className="mr-2" /> SEO</h4>
-                                        <button onClick={generateSEO} disabled={isAiWorking} className="text-xs font-bold text-yellow-400 hover:text-yellow-300 flex items-center"><Sparkles size={12} className="mr-1" /> Auto-Gen</button>
+                                        <button onClick={generateSEO} disabled={isAiWorking} className="text-xs font-bold text-yellow-400 hover:text-yellow-300 flex items-center"><Sparkles size={12} className="mr-1" /> {t('contentManagement.editor.autoGen', 'Auto-Gen')}</button>
                                     </div>
 
                                     <div className="space-y-4">

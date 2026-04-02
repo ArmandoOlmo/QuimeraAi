@@ -842,47 +842,49 @@ const Controls: React.FC = () => {
       <div className="space-y-4">
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{t('editor.controls.header.layout')}</label>
-            <select
+            <Select
+              label={t('editor.controls.header.layout')}
               value={data.header.layout}
-              onChange={(e) => setNestedData('header.layout', e.target.value)}
-              className="w-full bg-editor-panel-bg border border-editor-border rounded-md px-2 py-2 text-sm text-editor-text-primary"
-            >
-              <option value="minimal">{t('editor.controls.header.minimal')}</option>
-              <option value="classic">Classic</option>
-              <option value="center">Center</option>
-              <option value="stack">Stack</option>
-            </select>
+              onChange={(val) => setNestedData('header.layout', val)}
+              options={[
+                { value: 'minimal', label: t('editor.controls.header.minimal') },
+                { value: 'classic', label: 'Classic' },
+                { value: 'center', label: 'Center' },
+                { value: 'stack', label: 'Stack' },
+              ]}
+              noMargin
+            />
           </div>
           <div>
-            <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{t('editor.controls.header.style')}</label>
-            <select
+            <Select
+              label={t('editor.controls.header.style')}
               value={data.header.style}
-              onChange={(e) => setNestedData('header.style', e.target.value)}
-              className="w-full bg-editor-panel-bg border border-editor-border rounded-md px-2 py-2 text-sm text-editor-text-primary"
-            >
-              <optgroup label={`── ${t('editor.controls.header.classic')} ──`}>
-                <option value="sticky-solid">Solid</option>
-                <option value="sticky-transparent">Transparent</option>
-                <option value="floating">Floating</option>
-              </optgroup>
-              <optgroup label="── Edge-to-Edge ──">
-                <option value="edge-solid">Edge Solid</option>
-                <option value="edge-minimal">Edge Minimal</option>
-                <option value="edge-bordered">Edge Bordered</option>
-              </optgroup>
-              <optgroup label="── Floating ──">
-                <option value="floating-pill">Floating Pill</option>
-                <option value="floating-glass">{t('editor.controls.header.glass')}</option>
-                <option value="floating-shadow">Floating Shadow</option>
-              </optgroup>
-              <optgroup label="── Gradient ──">
-                <option value="transparent-blur">Gradient Blur</option>
-                <option value="transparent-bordered">Gradient Bordered</option>
-                <option value="transparent-gradient">Gradient Fade</option>
-                <option value="transparent-gradient-dark">Gradient Dark</option>
-              </optgroup>
-            </select>
+              onChange={(val) => setNestedData('header.style', val)}
+              groups={[
+                { label: t('editor.controls.header.classic'), options: [
+                  { value: 'sticky-solid', label: 'Solid' },
+                  { value: 'sticky-transparent', label: 'Transparent' },
+                  { value: 'floating', label: 'Floating' },
+                ]},
+                { label: 'Edge-to-Edge', options: [
+                  { value: 'edge-solid', label: 'Edge Solid' },
+                  { value: 'edge-minimal', label: 'Edge Minimal' },
+                  { value: 'edge-bordered', label: 'Edge Bordered' },
+                ]},
+                { label: 'Floating', options: [
+                  { value: 'floating-pill', label: 'Floating Pill' },
+                  { value: 'floating-glass', label: t('editor.controls.header.glass') },
+                  { value: 'floating-shadow', label: 'Floating Shadow' },
+                ]},
+                { label: 'Gradient', options: [
+                  { value: 'transparent-blur', label: 'Gradient Blur' },
+                  { value: 'transparent-bordered', label: 'Gradient Bordered' },
+                  { value: 'transparent-gradient', label: 'Gradient Fade' },
+                  { value: 'transparent-gradient-dark', label: 'Gradient Dark' },
+                ]},
+              ]}
+              noMargin
+            />
           </div>
         </div>
 
@@ -1045,19 +1047,15 @@ const Controls: React.FC = () => {
         <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
           <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{t('editor.controls.navigation.source')}</label>
           <div className="flex gap-2 mb-3">
-            <select
+            <Select
               value={activeMenuId}
-              onChange={(e) => {
-                const val = e.target.value;
-                setNestedData('header.menuId', val === '' ? undefined : val);
-              }}
-              className="w-full bg-editor-panel-bg border border-editor-border rounded-md px-2 py-2 text-sm text-editor-text-primary focus:ring-1 focus:ring-editor-accent focus:outline-none"
-            >
-              <option value="">{t('editor.controls.navigation.manual')}</option>
-              {menus.map(menu => (
-                <option key={menu.id} value={menu.id}>{menu.title}</option>
-              ))}
-            </select>
+              onChange={(val) => setNestedData('header.menuId', val === '' ? undefined : val)}
+              options={[
+                { value: '', label: t('editor.controls.navigation.manual') },
+                ...menus.map(menu => ({ value: menu.id, label: menu.title })),
+              ]}
+              noMargin
+            />
             <button
               onClick={() => navigate(ROUTES.NAVIGATION)}
               className="p-2 bg-editor-bg border border-editor-border rounded text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-panel-bg"
@@ -1762,17 +1760,16 @@ const Controls: React.FC = () => {
 
         {/* Specific Controls for some sections */}
         {sectionKey === 'howItWorks' && (
-          <div>
-            <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{t('editor.controls.list.stepsCount')}</label>
-            <select
-              value={sectionData.steps}
-              onChange={(e) => setNestedData(`${sectionKey}.steps`, parseInt(e.target.value))}
-              className="w-full bg-editor-panel-bg border border-editor-border rounded-md px-3 py-2 text-sm text-editor-text-primary"
-            >
-              <option value={3}>3 {t('editor.controls.list.steps') || 'Steps'}</option>
-              <option value={4}>4 {t('editor.controls.list.steps') || 'Steps'}</option>
-            </select>
-          </div>
+            <Select
+              label={t('editor.controls.list.stepsCount')}
+              value={String(sectionData.steps)}
+              onChange={(val) => setNestedData(`${sectionKey}.steps`, parseInt(val))}
+              options={[
+                { value: '3', label: `3 ${t('editor.controls.list.steps') || 'Steps'}` },
+                { value: '4', label: `4 ${t('editor.controls.list.steps') || 'Steps'}` },
+              ]}
+              noMargin
+            />
         )}
 
 
@@ -1826,13 +1823,12 @@ const Controls: React.FC = () => {
                     size="sm"
                   />
                 ) : field.type === 'select' ? (
-                  <select
+                  <Select
                     value={item[field.key]}
-                    onChange={(e) => setNestedData(`${sectionKey}.items.${index}.${field.key}`, e.target.value)}
-                    className="w-full bg-editor-panel-bg border border-editor-border rounded px-2 py-1 text-xs text-editor-text-primary focus:outline-none focus:border-editor-accent"
-                  >
-                    {field.options?.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                  </select>
+                    onChange={(val) => setNestedData(`${sectionKey}.items.${index}.${field.key}`, val)}
+                    options={field.options?.map(opt => ({ value: opt, label: opt })) || []}
+                    noMargin
+                  />
                 ) : field.type === 'image' ? (
                   <ImagePicker
                     label={field.label}
@@ -2233,16 +2229,17 @@ const Controls: React.FC = () => {
         <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">Animation</label>
 
         <div>
-          <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">Transition Effect</label>
-          <select
+          <Select
+            label="Transition Effect"
             value={data.slideshow.transitionEffect || 'slide'}
-            onChange={(e) => setNestedData('slideshow.transitionEffect', e.target.value)}
-            className="w-full bg-editor-panel-bg border border-editor-border rounded-md px-3 py-2 text-sm text-editor-text-primary focus:outline-none focus:ring-1 focus:ring-editor-accent"
-          >
-            <option value="slide">Slide</option>
-            <option value="fade">Fade</option>
-            <option value="zoom">Zoom</option>
-          </select>
+            onChange={(val) => setNestedData('slideshow.transitionEffect', val)}
+            options={[
+              { value: 'slide', label: 'Slide' },
+              { value: 'fade', label: 'Fade' },
+              { value: 'zoom', label: 'Zoom' },
+            ]}
+            noMargin
+          />
         </div>
 
         <div>
@@ -2273,16 +2270,17 @@ const Controls: React.FC = () => {
 
         {(data.slideshow.slideshowVariant === 'kenburns') && (
           <div>
-            <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">Ken Burns Intensity</label>
-            <select
+            <Select
+              label="Ken Burns Intensity"
               value={data.slideshow.kenBurnsIntensity || 'medium'}
-              onChange={(e) => setNestedData('slideshow.kenBurnsIntensity', e.target.value)}
-              className="w-full bg-editor-panel-bg border border-editor-border rounded-md px-3 py-2 text-sm text-editor-text-primary focus:outline-none focus:ring-1 focus:ring-editor-accent"
-            >
-              <option value="low">Low (5% zoom)</option>
-              <option value="medium">Medium (10% zoom)</option>
-              <option value="high">High (25% zoom)</option>
-            </select>
+              onChange={(val) => setNestedData('slideshow.kenBurnsIntensity', val)}
+              options={[
+                { value: 'low', label: 'Low (5% zoom)' },
+                { value: 'medium', label: 'Medium (10% zoom)' },
+                { value: 'high', label: 'High (25% zoom)' },
+              ]}
+              noMargin
+            />
           </div>
         )}
 
@@ -2310,35 +2308,33 @@ const Controls: React.FC = () => {
         </div>
 
         {(data.slideshow.showArrows ?? true) && (
-          <div>
-            <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">Arrow Style</label>
-            <select
+            <Select
+              label="Arrow Style"
               value={data.slideshow.arrowStyle || 'rounded'}
-              onChange={(e) => setNestedData('slideshow.arrowStyle', e.target.value)}
-              className="w-full bg-editor-panel-bg border border-editor-border rounded-md px-3 py-2 text-sm text-editor-text-primary focus:outline-none focus:ring-1 focus:ring-editor-accent"
-            >
-              <option value="rounded">Rounded</option>
-              <option value="square">Square</option>
-              <option value="minimal">Minimal</option>
-              <option value="floating">Floating</option>
-            </select>
-          </div>
+              onChange={(val) => setNestedData('slideshow.arrowStyle', val)}
+              options={[
+                { value: 'rounded', label: 'Rounded' },
+                { value: 'square', label: 'Square' },
+                { value: 'minimal', label: 'Minimal' },
+                { value: 'floating', label: 'Floating' },
+              ]}
+              noMargin
+            />
         )}
 
         {(data.slideshow.showDots ?? true) && (
-          <div>
-            <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">Dot Style</label>
-            <select
+            <Select
+              label="Dot Style"
               value={data.slideshow.dotStyle || 'circle'}
-              onChange={(e) => setNestedData('slideshow.dotStyle', e.target.value)}
-              className="w-full bg-editor-panel-bg border border-editor-border rounded-md px-3 py-2 text-sm text-editor-text-primary focus:outline-none focus:ring-1 focus:ring-editor-accent"
-            >
-              <option value="circle">Circle</option>
-              <option value="line">Line</option>
-              <option value="square">Square</option>
-              <option value="pill">Pill</option>
-            </select>
-          </div>
+              onChange={(val) => setNestedData('slideshow.dotStyle', val)}
+              options={[
+                { value: 'circle', label: 'Circle' },
+                { value: 'line', label: 'Line' },
+                { value: 'square', label: 'Square' },
+                { value: 'pill', label: 'Pill' },
+              ]}
+              noMargin
+            />
         )}
 
         <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
@@ -2444,16 +2440,17 @@ const Controls: React.FC = () => {
         <FontSizeSelector label={t('editor.controls.common.descriptionSize')} value={data.video.descriptionFontSize || 'md'} onChange={(v) => setNestedData('video.descriptionFontSize', v)} />
 
         <div>
-          <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">Source</label>
-          <select
+          <Select
+            label="Source"
             value={data.video.source}
-            onChange={(e) => setNestedData('video.source', e.target.value)}
-            className="w-full bg-editor-panel-bg border border-editor-border rounded-md px-3 py-2 text-sm text-editor-text-primary focus:outline-none focus:ring-1 focus:ring-editor-accent"
-          >
-            <option value="youtube">YouTube</option>
-            <option value="vimeo">Vimeo</option>
-            <option value="upload">Direct URL</option>
-          </select>
+            onChange={(val) => setNestedData('video.source', val)}
+            options={[
+              { value: 'youtube', label: 'YouTube' },
+              { value: 'vimeo', label: 'Vimeo' },
+              { value: 'upload', label: 'Direct URL' },
+            ]}
+            noMargin
+          />
         </div>
         {data.video.source === 'upload' ? (
           <Input label="Video URL" value={data.video.videoUrl} onChange={(e) => setNestedData('video.videoUrl', e.target.value)} />
@@ -2555,19 +2552,15 @@ const Controls: React.FC = () => {
               </div>
 
               {/* Menu Selector per Column */}
-              <select
+              <Select
                 value={col.menuId || ''}
-                onChange={(e) => {
-                  const val = e.target.value;
-                  setNestedData(`footer.linkColumns.${colIndex}.menuId`, val === '' ? undefined : val);
-                }}
-                className="w-full bg-editor-panel-bg border border-editor-border rounded px-2 py-1 text-xs text-editor-text-primary mb-2"
-              >
-                <option value="">Manual Links</option>
-                {menus.map(menu => (
-                  <option key={menu.id} value={menu.id}>{menu.title}</option>
-                ))}
-              </select>
+                onChange={(val) => setNestedData(`footer.linkColumns.${colIndex}.menuId`, val === '' ? undefined : val)}
+                options={[
+                  { value: '', label: 'Manual Links' },
+                  ...menus.map(menu => ({ value: menu.id, label: menu.title })),
+                ]}
+                noMargin
+              />
 
               {/* Conditional Link List */}
               {col.menuId ? (
@@ -3485,35 +3478,34 @@ const Controls: React.FC = () => {
 
           {/* Section Selector */}
           {(data.hero.primaryCtaLinkType || 'section') === 'section' && (
-            <div>
-              <select
+              <Select
                 value={data.hero.primaryCtaLink || '/#cta'}
-                onChange={(e) => setNestedData('hero.primaryCtaLink', e.target.value)}
-                className="w-full bg-editor-panel-bg border border-editor-border rounded-md px-3 py-2 text-sm text-editor-text-primary focus:outline-none focus:ring-1 focus:ring-editor-accent"
-              >
-                <option value="/">Inicio</option>
-                <option value="/#features">Features</option>
-                <option value="/#services">Services</option>
-                <option value="/#pricing">Pricing</option>
-                <option value="/#testimonials">Testimonials</option>
-                <option value="/#team">Team</option>
-                <option value="/#faq">FAQ</option>
-                <option value="/#contact">Contact</option>
-                <option value="/#cta">CTA</option>
-                <option value="/#portfolio">Portfolio</option>
-                <option value="/#heroSplit">Hero Split</option>
-                <option value="/#leads">Leads</option>
-                <option value="/#newsletter">Newsletter</option>
-                <option value="/#howItWorks">How It Works</option>
-                <option value="/#video">Video</option>
-                <option value="/#slideshow">Slideshow</option>
-                <option value="/#map">Map</option>
-                <option value="/#menu">Menu</option>
-                <option value="/#banner">Banner</option>
-                <option value="/#products">Products</option>
-                <option value="/tienda">Tienda</option>
-              </select>
-            </div>
+                onChange={(val) => setNestedData('hero.primaryCtaLink', val)}
+                options={[
+                  { value: '/', label: 'Inicio' },
+                  { value: '/#features', label: 'Features' },
+                  { value: '/#services', label: 'Services' },
+                  { value: '/#pricing', label: 'Pricing' },
+                  { value: '/#testimonials', label: 'Testimonials' },
+                  { value: '/#team', label: 'Team' },
+                  { value: '/#faq', label: 'FAQ' },
+                  { value: '/#contact', label: 'Contact' },
+                  { value: '/#cta', label: 'CTA' },
+                  { value: '/#portfolio', label: 'Portfolio' },
+                  { value: '/#heroSplit', label: 'Hero Split' },
+                  { value: '/#leads', label: 'Leads' },
+                  { value: '/#newsletter', label: 'Newsletter' },
+                  { value: '/#howItWorks', label: 'How It Works' },
+                  { value: '/#video', label: 'Video' },
+                  { value: '/#slideshow', label: 'Slideshow' },
+                  { value: '/#map', label: 'Map' },
+                  { value: '/#menu', label: 'Menu' },
+                  { value: '/#banner', label: 'Banner' },
+                  { value: '/#products', label: 'Products' },
+                  { value: '/tienda', label: 'Tienda' },
+                ]}
+                noMargin
+              />
           )}
 
           {/* Manual URL Input */}
@@ -3614,35 +3606,34 @@ const Controls: React.FC = () => {
 
           {/* Section Selector */}
           {(data.hero.secondaryCtaLinkType || 'section') === 'section' && (
-            <div>
-              <select
+              <Select
                 value={data.hero.secondaryCtaLink || '/#features'}
-                onChange={(e) => setNestedData('hero.secondaryCtaLink', e.target.value)}
-                className="w-full bg-editor-panel-bg border border-editor-border rounded-md px-3 py-2 text-sm text-editor-text-primary focus:outline-none focus:ring-1 focus:ring-editor-accent"
-              >
-                <option value="/">Inicio</option>
-                <option value="/#features">Features</option>
-                <option value="/#services">Services</option>
-                <option value="/#pricing">Pricing</option>
-                <option value="/#testimonials">Testimonials</option>
-                <option value="/#team">Team</option>
-                <option value="/#faq">FAQ</option>
-                <option value="/#contact">Contact</option>
-                <option value="/#cta">CTA</option>
-                <option value="/#portfolio">Portfolio</option>
-                <option value="/#heroSplit">Hero Split</option>
-                <option value="/#leads">Leads</option>
-                <option value="/#newsletter">Newsletter</option>
-                <option value="/#howItWorks">How It Works</option>
-                <option value="/#video">Video</option>
-                <option value="/#slideshow">Slideshow</option>
-                <option value="/#map">Map</option>
-                <option value="/#menu">Menu</option>
-                <option value="/#banner">Banner</option>
-                <option value="/#products">Products</option>
-                <option value="/tienda">Tienda</option>
-              </select>
-            </div>
+                onChange={(val) => setNestedData('hero.secondaryCtaLink', val)}
+                options={[
+                  { value: '/', label: 'Inicio' },
+                  { value: '/#features', label: 'Features' },
+                  { value: '/#services', label: 'Services' },
+                  { value: '/#pricing', label: 'Pricing' },
+                  { value: '/#testimonials', label: 'Testimonials' },
+                  { value: '/#team', label: 'Team' },
+                  { value: '/#faq', label: 'FAQ' },
+                  { value: '/#contact', label: 'Contact' },
+                  { value: '/#cta', label: 'CTA' },
+                  { value: '/#portfolio', label: 'Portfolio' },
+                  { value: '/#heroSplit', label: 'Hero Split' },
+                  { value: '/#leads', label: 'Leads' },
+                  { value: '/#newsletter', label: 'Newsletter' },
+                  { value: '/#howItWorks', label: 'How It Works' },
+                  { value: '/#video', label: 'Video' },
+                  { value: '/#slideshow', label: 'Slideshow' },
+                  { value: '/#map', label: 'Map' },
+                  { value: '/#menu', label: 'Menu' },
+                  { value: '/#banner', label: 'Banner' },
+                  { value: '/#products', label: 'Products' },
+                  { value: '/tienda', label: 'Tienda' },
+                ]}
+                noMargin
+              />
           )}
 
           {/* Manual URL Input */}
@@ -5534,15 +5525,16 @@ const Controls: React.FC = () => {
           </label>
           {/* Steps Count */}
           <div className="mb-3">
-            <label className="block text-xs font-medium text-editor-text-secondary mb-1">Steps Count</label>
-            <select
-              value={data?.howItWorks?.steps || 3}
-              onChange={(e) => setNestedData('howItWorks.steps', parseInt(e.target.value))}
-              className="w-full bg-editor-panel-bg border border-editor-border rounded-md px-3 py-2 text-sm text-editor-text-primary"
-            >
-              <option value={3}>3 Steps</option>
-              <option value={4}>4 Steps</option>
-            </select>
+            <Select
+              label="Steps Count"
+              value={String(data?.howItWorks?.steps || 3)}
+              onChange={(val) => setNestedData('howItWorks.steps', parseInt(val))}
+              options={[
+                { value: '3', label: '3 Steps' },
+                { value: '4', label: '4 Steps' },
+              ]}
+              noMargin
+            />
           </div>
         {(data?.howItWorks?.items || []).map((item: any, index: number) => (
           <div key={index} className="bg-editor-bg p-3 rounded-lg border border-editor-border mb-3 group">
@@ -5571,13 +5563,12 @@ const Controls: React.FC = () => {
               rows={2}
               className="w-full bg-editor-panel-bg border border-editor-border rounded px-2 py-1 text-xs text-editor-text-primary focus:outline-none focus:border-editor-accent mb-2"
             />
-            <select
+            <Select
               value={item.icon}
-              onChange={(e) => setNestedData(`howItWorks.items.${index}.icon`, e.target.value)}
-              className="w-full bg-editor-panel-bg border border-editor-border rounded px-2 py-1 text-xs text-editor-text-primary focus:outline-none focus:border-editor-accent"
-            >
-              {['upload', 'process', 'magic-wand', 'download', 'share', 'search'].map(opt => <option key={opt} value={opt}>{opt}</option>)}
-            </select>
+              onChange={(val) => setNestedData(`howItWorks.items.${index}.icon`, val)}
+              options={['upload', 'process', 'magic-wand', 'download', 'share', 'search'].map(opt => ({ value: opt, label: opt }))}
+              noMargin
+            />
           </div>
         ))}
         <button
@@ -6274,17 +6265,18 @@ const Controls: React.FC = () => {
 
 
         <div>
-          <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">Style Variant</label>
-          <select
+          <Select
+            label="Style Variant"
             value={data.slideshow.slideshowVariant || 'classic'}
-            onChange={(e) => setNestedData('slideshow.slideshowVariant', e.target.value)}
-            className="w-full bg-editor-panel-bg border border-editor-border rounded-md px-3 py-2 text-sm text-editor-text-primary focus:outline-none focus:ring-1 focus:ring-editor-accent"
-          >
-            <option value="classic">Classic Slide</option>
-            <option value="kenburns">Ken Burns Effect</option>
-            <option value="cards3d">3D Cards Stack</option>
-            <option value="thumbnails">Thumbnail Gallery</option>
-          </select>
+            onChange={(val) => setNestedData('slideshow.slideshowVariant', val)}
+            options={[
+              { value: 'classic', label: 'Classic Slide' },
+              { value: 'kenburns', label: 'Ken Burns Effect' },
+              { value: 'cards3d', label: '3D Cards Stack' },
+              { value: 'thumbnails', label: 'Thumbnail Gallery' },
+            ]}
+            noMargin
+          />
         </div>
 
 
@@ -6345,16 +6337,17 @@ const Controls: React.FC = () => {
           <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Animation</label>
 
           <div>
-            <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">Transition Effect</label>
-            <select
+            <Select
+              label="Transition Effect"
               value={data.slideshow.transitionEffect || 'slide'}
-              onChange={(e) => setNestedData('slideshow.transitionEffect', e.target.value)}
-              className="w-full bg-editor-panel-bg border border-editor-border rounded-md px-3 py-2 text-sm text-editor-text-primary focus:outline-none focus:ring-1 focus:ring-editor-accent"
-            >
-              <option value="slide">Slide</option>
-              <option value="fade">Fade</option>
-              <option value="zoom">Zoom</option>
-            </select>
+              onChange={(val) => setNestedData('slideshow.transitionEffect', val)}
+              options={[
+                { value: 'slide', label: 'Slide' },
+                { value: 'fade', label: 'Fade' },
+                { value: 'zoom', label: 'Zoom' },
+              ]}
+              noMargin
+            />
           </div>
 
           <div>
@@ -6385,16 +6378,17 @@ const Controls: React.FC = () => {
 
           {(data.slideshow.slideshowVariant === 'kenburns') && (
             <div>
-              <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">Ken Burns Intensity</label>
-              <select
+              <Select
+                label="Ken Burns Intensity"
                 value={data.slideshow.kenBurnsIntensity || 'medium'}
-                onChange={(e) => setNestedData('slideshow.kenBurnsIntensity', e.target.value)}
-                className="w-full bg-editor-panel-bg border border-editor-border rounded-md px-3 py-2 text-sm text-editor-text-primary focus:outline-none focus:ring-1 focus:ring-editor-accent"
-              >
-                <option value="low">Low (5% zoom)</option>
-                <option value="medium">Medium (10% zoom)</option>
-                <option value="high">High (25% zoom)</option>
-              </select>
+                onChange={(val) => setNestedData('slideshow.kenBurnsIntensity', val)}
+                options={[
+                  { value: 'low', label: 'Low (5% zoom)' },
+                  { value: 'medium', label: 'Medium (10% zoom)' },
+                  { value: 'high', label: 'High (25% zoom)' },
+                ]}
+                noMargin
+              />
             </div>
           )}
 
@@ -6425,33 +6419,35 @@ const Controls: React.FC = () => {
 
         {(data.slideshow.showArrows ?? true) && (
           <div>
-            <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">Arrow Style</label>
-            <select
+            <Select
+              label="Arrow Style"
               value={data.slideshow.arrowStyle || 'rounded'}
-              onChange={(e) => setNestedData('slideshow.arrowStyle', e.target.value)}
-              className="w-full bg-editor-panel-bg border border-editor-border rounded-md px-3 py-2 text-sm text-editor-text-primary focus:outline-none focus:ring-1 focus:ring-editor-accent"
-            >
-              <option value="rounded">Rounded</option>
-              <option value="square">Square</option>
-              <option value="minimal">Minimal</option>
-              <option value="floating">Floating</option>
-            </select>
+              onChange={(val) => setNestedData('slideshow.arrowStyle', val)}
+              options={[
+                { value: 'rounded', label: 'Rounded' },
+                { value: 'square', label: 'Square' },
+                { value: 'minimal', label: 'Minimal' },
+                { value: 'floating', label: 'Floating' },
+              ]}
+              noMargin
+            />
           </div>
         )}
 
         {(data.slideshow.showDots ?? true) && (
           <div>
-            <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">Dot Style</label>
-            <select
+            <Select
+              label="Dot Style"
               value={data.slideshow.dotStyle || 'circle'}
-              onChange={(e) => setNestedData('slideshow.dotStyle', e.target.value)}
-              className="w-full bg-editor-panel-bg border border-editor-border rounded-md px-3 py-2 text-sm text-editor-text-primary focus:outline-none focus:ring-1 focus:ring-editor-accent"
-            >
-              <option value="circle">Circle</option>
-              <option value="line">Line</option>
-              <option value="square">Square</option>
-              <option value="pill">Pill</option>
-            </select>
+              onChange={(val) => setNestedData('slideshow.dotStyle', val)}
+              options={[
+                { value: 'circle', label: 'Circle' },
+                { value: 'line', label: 'Line' },
+                { value: 'square', label: 'Square' },
+                { value: 'pill', label: 'Pill' },
+              ]}
+              noMargin
+            />
           </div>
         )}
 
@@ -6531,16 +6527,17 @@ const Controls: React.FC = () => {
 
 
         <div>
-          <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">Source</label>
-          <select
+          <Select
+            label="Source"
             value={data.video.source}
-            onChange={(e) => setNestedData('video.source', e.target.value)}
-            className="w-full bg-editor-panel-bg border border-editor-border rounded-md px-3 py-2 text-sm text-editor-text-primary focus:outline-none focus:ring-1 focus:ring-editor-accent"
-          >
-            <option value="youtube">YouTube</option>
-            <option value="vimeo">Vimeo</option>
-            <option value="upload">Direct URL</option>
-          </select>
+            onChange={(val) => setNestedData('video.source', val)}
+            options={[
+              { value: 'youtube', label: 'YouTube' },
+              { value: 'vimeo', label: 'Vimeo' },
+              { value: 'upload', label: 'Direct URL' },
+            ]}
+            noMargin
+          />
         </div>
         {data.video.source === 'upload' ? (
           <Input label="Video URL" value={data.video.videoUrl} onChange={(e) => setNestedData('video.videoUrl', e.target.value)} />
@@ -6789,19 +6786,15 @@ const Controls: React.FC = () => {
           <div className="space-y-2">
             <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{t('editor.controls.navigation.source')}</label>
             <div className="flex gap-2 mb-3">
-              <select
+              <Select
                 value={activeMenuId}
-                onChange={(e) => {
-                  const val = e.target.value;
-                  setNestedData('header.menuId', val === '' ? undefined : val);
-                }}
-                className="w-full bg-editor-bg border border-editor-border rounded-md px-2 py-2 text-sm text-editor-text-primary focus:ring-1 focus:ring-editor-accent focus:outline-none"
-              >
-                <option value="">{t('editor.controls.navigation.manual')}</option>
-                {menus.map(menu => (
-                  <option key={menu.id} value={menu.id}>{menu.title}</option>
-                ))}
-              </select>
+                onChange={(val) => setNestedData('header.menuId', val === '' ? undefined : val)}
+                options={[
+                  { value: '', label: t('editor.controls.navigation.manual') },
+                  ...menus.map(menu => ({ value: menu.id, label: menu.title })),
+                ]}
+                noMargin
+              />
               <button
                 onClick={() => navigate(ROUTES.NAVIGATION)}
                 className="p-2 bg-editor-bg border border-editor-border rounded text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-panel-bg"
@@ -6920,47 +6913,49 @@ const Controls: React.FC = () => {
           </label>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{t('editor.controls.header.layout')}</label>
-              <select
+              <Select
+                label={t('editor.controls.header.layout')}
                 value={data.header.layout}
-                onChange={(e) => setNestedData('header.layout', e.target.value)}
-                className="w-full bg-editor-bg border border-editor-border rounded-md px-2 py-2 text-sm text-editor-text-primary"
-              >
-                <option value="minimal">{t('editor.controls.header.minimal')}</option>
-                <option value="classic">Classic</option>
-                <option value="center">Center</option>
-                <option value="stack">Stack</option>
-              </select>
+                onChange={(val) => setNestedData('header.layout', val)}
+                options={[
+                  { value: 'minimal', label: t('editor.controls.header.minimal') },
+                  { value: 'classic', label: 'Classic' },
+                  { value: 'center', label: 'Center' },
+                  { value: 'stack', label: 'Stack' },
+                ]}
+                noMargin
+              />
             </div>
             <div>
-              <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{t('editor.controls.header.style')}</label>
-              <select
+              <Select
+                label={t('editor.controls.header.style')}
                 value={data.header.style}
-                onChange={(e) => setNestedData('header.style', e.target.value)}
-                className="w-full bg-editor-bg border border-editor-border rounded-md px-2 py-2 text-sm text-editor-text-primary"
-              >
-                <optgroup label={`── ${t('editor.controls.header.classic')} ──`}>
-                  <option value="sticky-solid">Solid</option>
-                  <option value="sticky-transparent">Transparent</option>
-                  <option value="floating">Floating</option>
-                </optgroup>
-                <optgroup label="── Edge-to-Edge ──">
-                  <option value="edge-solid">Edge Solid</option>
-                  <option value="edge-minimal">Edge Minimal</option>
-                  <option value="edge-bordered">Edge Bordered</option>
-                </optgroup>
-                <optgroup label="── Floating ──">
-                  <option value="floating-pill">Floating Pill</option>
-                  <option value="floating-glass">{t('editor.controls.header.glass')}</option>
-                  <option value="floating-shadow">Floating Shadow</option>
-                </optgroup>
-                <optgroup label="── Gradient ──">
-                  <option value="transparent-blur">Gradient Blur</option>
-                  <option value="transparent-bordered">Gradient Bordered</option>
-                  <option value="transparent-gradient">Gradient Fade</option>
-                  <option value="transparent-gradient-dark">Gradient Dark</option>
-                </optgroup>
-              </select>
+                onChange={(val) => setNestedData('header.style', val)}
+                groups={[
+                  { label: t('editor.controls.header.classic'), options: [
+                    { value: 'sticky-solid', label: 'Solid' },
+                    { value: 'sticky-transparent', label: 'Transparent' },
+                    { value: 'floating', label: 'Floating' },
+                  ]},
+                  { label: 'Edge-to-Edge', options: [
+                    { value: 'edge-solid', label: 'Edge Solid' },
+                    { value: 'edge-minimal', label: 'Edge Minimal' },
+                    { value: 'edge-bordered', label: 'Edge Bordered' },
+                  ]},
+                  { label: 'Floating', options: [
+                    { value: 'floating-pill', label: 'Floating Pill' },
+                    { value: 'floating-glass', label: t('editor.controls.header.glass') },
+                    { value: 'floating-shadow', label: 'Floating Shadow' },
+                  ]},
+                  { label: 'Gradient', options: [
+                    { value: 'transparent-blur', label: 'Gradient Blur' },
+                    { value: 'transparent-bordered', label: 'Gradient Bordered' },
+                    { value: 'transparent-gradient', label: 'Gradient Fade' },
+                    { value: 'transparent-gradient-dark', label: 'Gradient Dark' },
+                  ]},
+                ]}
+                noMargin
+              />
             </div>
           </div>
         </div>
@@ -7145,19 +7140,15 @@ const Controls: React.FC = () => {
                 }} className="text-red-400 hover:text-red-500 flex-shrink-0 hover:bg-red-500/10 rounded p-1 transition-colors"><Trash2 size={14} /></button>
               </div>
 
-              <select
+              <Select
                 value={col.menuId || ''}
-                onChange={(e) => {
-                  const val = e.target.value;
-                  setNestedData(`footer.linkColumns.${colIndex}.menuId`, val === '' ? undefined : val);
-                }}
-                className="w-full bg-editor-panel-bg border border-editor-border rounded px-2 py-1 text-xs text-editor-text-primary mb-2"
-              >
-                <option value="">Manual Links</option>
-                {menus.map(menu => (
-                  <option key={menu.id} value={menu.id}>{menu.title}</option>
-                ))}
-              </select>
+                onChange={(val) => setNestedData(`footer.linkColumns.${colIndex}.menuId`, val === '' ? undefined : val)}
+                options={[
+                  { value: '', label: 'Manual Links' },
+                  ...menus.map(menu => ({ value: menu.id, label: menu.title })),
+                ]}
+                noMargin
+              />
 
               {col.menuId ? (
                 <p className="text-[10px] text-editor-text-secondary italic">Using links from menu: {menus.find(m => m.id === col.menuId)?.title}</p>
@@ -7378,44 +7369,47 @@ const Controls: React.FC = () => {
           </label>
           <div className="space-y-3">
             <div>
-              <label className="block text-xs text-editor-text-secondary mb-1">Style</label>
-              <select
+              <Select
+                label="Style"
                 value={data?.products?.style || 'modern'}
-                onChange={(e) => setNestedData('products.style', e.target.value)}
-                className="w-full bg-editor-panel-bg border border-editor-border rounded px-2 py-1.5 text-xs text-editor-text-primary"
-              >
-                <option value="minimal">Minimal</option>
-                <option value="modern">Modern</option>
-                <option value="elegant">Elegant</option>
-                <option value="dark">Dark</option>
-              </select>
+                onChange={(val) => setNestedData('products.style', val)}
+                options={[
+                  { value: 'minimal', label: 'Minimal' },
+                  { value: 'modern', label: 'Modern' },
+                  { value: 'elegant', label: 'Elegant' },
+                  { value: 'dark', label: 'Dark' },
+                ]}
+                noMargin
+              />
             </div>
             <div>
-              <label className="block text-xs text-editor-text-secondary mb-1">Columns</label>
-              <select
-                value={data?.products?.columns || 4}
-                onChange={(e) => setNestedData('products.columns', parseInt(e.target.value))}
-                className="w-full bg-editor-panel-bg border border-editor-border rounded px-2 py-1.5 text-xs text-editor-text-primary"
-              >
-                <option value={2}>2 Columns</option>
-                <option value={3}>3 Columns</option>
-                <option value={4}>4 Columns</option>
-                <option value={5}>5 Columns</option>
-                <option value={6}>6 Columns</option>
-              </select>
+              <Select
+                label="Columns"
+                value={String(data?.products?.columns || 4)}
+                onChange={(val) => setNestedData('products.columns', parseInt(val))}
+                options={[
+                  { value: '2', label: '2 Columns' },
+                  { value: '3', label: '3 Columns' },
+                  { value: '4', label: '4 Columns' },
+                  { value: '5', label: '5 Columns' },
+                  { value: '6', label: '6 Columns' },
+                ]}
+                noMargin
+              />
             </div>
             <div>
-              <label className="block text-xs text-editor-text-secondary mb-1">Products Per Page</label>
-              <select
-                value={data?.products?.productsPerPage || 12}
-                onChange={(e) => setNestedData('products.productsPerPage', parseInt(e.target.value))}
-                className="w-full bg-editor-panel-bg border border-editor-border rounded px-2 py-1.5 text-xs text-editor-text-primary"
-              >
-                <option value={8}>8</option>
-                <option value={12}>12</option>
-                <option value={16}>16</option>
-                <option value={24}>24</option>
-              </select>
+              <Select
+                label="Products Per Page"
+                value={String(data?.products?.productsPerPage || 12)}
+                onChange={(val) => setNestedData('products.productsPerPage', parseInt(val))}
+                options={[
+                  { value: '8', label: '8' },
+                  { value: '12', label: '12' },
+                  { value: '16', label: '16' },
+                  { value: '24', label: '24' },
+                ]}
+                noMargin
+              />
             </div>
           </div>
         </div>

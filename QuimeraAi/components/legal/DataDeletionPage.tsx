@@ -3,14 +3,17 @@
  * Public page explaining how users can request deletion of their data
  * Required by Meta for Facebook/Instagram app integration
  * Content is managed from Super Admin Content Management
+ * Uses LegalPageLayout for consistent branding with the landing page
  */
 
 import React, { useEffect, useState } from 'react';
 import { sanitizeHtml } from '../../utils/sanitize';
-import { ArrowLeft, Trash2, Shield, Mail, CheckCircle, AlertTriangle, Clock, FileText, Settings, Loader2, Globe, Database, Eye, Users, Lock } from 'lucide-react';
+import { Trash2, Shield, Mail, CheckCircle, AlertTriangle, Clock, FileText, Settings, Loader2, Globe, Database, Eye, Users, Lock } from 'lucide-react';
 import { useSafeAppContent } from '../../contexts/appContent';
-import { LegalPage, DEFAULT_DATA_DELETION } from '../../types/appContent';
+import { LegalPage, getDefaultLegalPage } from '../../types/appContent';
 import { useTranslation } from 'react-i18next';
+import LegalPageLayout from './LegalPageLayout';
+import i18n from '../../i18n';
 
 // Icon mapping
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string; size?: number }>> = {
@@ -42,19 +45,15 @@ const DataDeletionPage: React.FC = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     useEffect(() => {
-        // Try to get data from context, otherwise use defaults
+        const defaultPage = getDefaultLegalPage('data-deletion', i18n.language);
         if (appContent) {
-            const page = appContent.getLegalPageByType('data-deletion');
-            setPageData(page || DEFAULT_DATA_DELETION);
+            const page = appContent.getLegalPageByType('data-deletion', i18n.language as 'es' | 'en');
+            setPageData(page || defaultPage);
         } else {
-            setPageData(DEFAULT_DATA_DELETION);
+            setPageData(defaultPage);
         }
         setIsLoading(false);
-    }, [appContent]);
-
-    const handleBack = () => {
-        window.history.back();
-    };
+    }, [appContent, i18n.language]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -79,8 +78,8 @@ const DataDeletionPage: React.FC = () => {
                     <ul key={`list-${elements.length}`} className="space-y-2 ml-4 mb-4">
                         {listItems.map((item, i) => (
                             <li key={i} className="flex items-start gap-3">
-                                <CheckCircle className="text-green-400 mt-0.5 flex-shrink-0" size={18} />
-                                <span dangerouslySetInnerHTML={{ __html: sanitizeHtml(item.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')) }} />
+                                <CheckCircle className="text-yellow-400 mt-0.5 flex-shrink-0" size={18} />
+                                <span className="text-gray-400" dangerouslySetInnerHTML={{ __html: sanitizeHtml(item.replace(/\*\*(.*?)\*\*/g, '<strong class="text-white">$1</strong>')) }} />
                             </li>
                         ))}
                     </ul>
@@ -97,14 +96,14 @@ const DataDeletionPage: React.FC = () => {
             } else if (trimmed.startsWith('**') && trimmed.endsWith('**')) {
                 flushList();
                 elements.push(
-                    <h4 key={index} className="font-semibold text-white mb-2 mt-4">
+                    <h4 key={index} className="font-semibold text-yellow-400/90 mb-2 mt-4">
                         {trimmed.replace(/\*\*/g, '')}
                     </h4>
                 );
             } else if (trimmed) {
                 flushList();
                 elements.push(
-                    <p key={index} className="mb-3" dangerouslySetInnerHTML={{ 
+                    <p key={index} className="mb-3 text-gray-400" dangerouslySetInnerHTML={{ 
                         __html: sanitizeHtml(trimmed.replace(/\*\*(.*?)\*\*/g, '<strong class="text-white">$1</strong>'))
                     }} />
                 );
@@ -117,72 +116,60 @@ const DataDeletionPage: React.FC = () => {
 
     if (isLoading) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
-                <Loader2 className="w-8 h-8 animate-spin text-indigo-500" />
-            </div>
+            <LegalPageLayout>
+                <div className="flex items-center justify-center py-32">
+                    <Loader2 className="w-8 h-8 animate-spin text-yellow-400" />
+                </div>
+            </LegalPageLayout>
         );
     }
 
     if (!pageData) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
-                <div className="text-center">
-                    <FileText className="w-16 h-16 mx-auto text-slate-600 mb-4" />
-                    <h1 className="text-2xl font-bold text-white mb-2">{t('legal.pageNotFound')}</h1>
-                    <p className="text-slate-400">{t('legal.notConfigured')}</p>
+            <LegalPageLayout>
+                <div className="flex items-center justify-center py-32">
+                    <div className="text-center">
+                        <FileText className="w-16 h-16 mx-auto text-gray-700 mb-4" />
+                        <h1 className="text-2xl font-bold text-white mb-2">{t('legal.pageNotFound')}</h1>
+                        <p className="text-gray-500">{t('legal.notConfigured')}</p>
+                    </div>
                 </div>
-            </div>
+            </LegalPageLayout>
         );
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-            {/* Header */}
-            <header className="sticky top-0 z-50 bg-slate-900/80 backdrop-blur-lg border-b border-slate-700/50">
-                <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
-                    <button
-                        onClick={handleBack}
-                        className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors"
-                    >
-                        <ArrowLeft size={20} />
-                        <span>{t('legal.back')}</span>
-                    </button>
-                    <div className="flex items-center gap-2">
-                        <Shield className="text-indigo-500" size={24} />
-                        <span className="font-bold text-white">Quimera AI</span>
-                    </div>
-                </div>
-            </header>
-
-            {/* Content */}
-            <main className="max-w-4xl mx-auto px-6 py-12">
+        <LegalPageLayout>
+            <main className="max-w-4xl mx-auto px-4 sm:px-6 py-12">
                 {/* Title Section */}
                 <div className="text-center mb-12">
-                    <div className="inline-flex items-center justify-center w-16 h-16 bg-red-500/20 rounded-2xl mb-6">
+                    <div className="inline-flex items-center justify-center w-16 h-16 bg-red-500/10 border border-red-500/20 rounded-2xl mb-6">
                         <Trash2 className="text-red-400" size={32} />
                     </div>
-                    <h1 className="text-4xl font-bold text-white mb-4">{pageData.title}</h1>
+                    <h1 className="text-4xl md:text-5xl font-bold text-white mb-4 bg-gradient-to-r from-white via-yellow-100 to-yellow-200 bg-clip-text text-transparent">
+                        {pageData.title}
+                    </h1>
                     {pageData.subtitle && (
-                        <p className="text-slate-400 max-w-2xl mx-auto">{pageData.subtitle}</p>
+                        <p className="text-gray-400 max-w-2xl mx-auto text-lg">{pageData.subtitle}</p>
                     )}
                 </div>
 
                 {/* Info Cards */}
                 <div className="grid md:grid-cols-3 gap-4 mb-12">
-                    <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-5 text-center">
-                        <Clock className="mx-auto mb-3 text-indigo-400" size={24} />
+                    <div className="bg-white/[0.03] border border-white/[0.08] rounded-xl p-5 text-center hover:border-yellow-400/20 transition-colors">
+                        <Clock className="mx-auto mb-3 text-yellow-400" size={24} />
                         <h3 className="font-semibold text-white mb-1">{t('legal.processTime')}</h3>
-                        <p className="text-sm text-slate-400">{t('legal.upTo30Days')}</p>
+                        <p className="text-sm text-gray-500">{t('legal.upTo30Days')}</p>
                     </div>
-                    <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-5 text-center">
+                    <div className="bg-white/[0.03] border border-white/[0.08] rounded-xl p-5 text-center hover:border-yellow-400/20 transition-colors">
                         <Shield className="mx-auto mb-3 text-green-400" size={24} />
                         <h3 className="font-semibold text-white mb-1">{t('legal.completeDeletion')}</h3>
-                        <p className="text-sm text-slate-400">{t('legal.allDataDeleted')}</p>
+                        <p className="text-sm text-gray-500">{t('legal.allDataDeleted')}</p>
                     </div>
-                    <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-5 text-center">
-                        <Mail className="mx-auto mb-3 text-blue-400" size={24} />
+                    <div className="bg-white/[0.03] border border-white/[0.08] rounded-xl p-5 text-center hover:border-yellow-400/20 transition-colors">
+                        <Mail className="mx-auto mb-3 text-yellow-400" size={24} />
                         <h3 className="font-semibold text-white mb-1">{t('legal.confirmation')}</h3>
-                        <p className="text-sm text-slate-400">{t('legal.emailConfirmation')}</p>
+                        <p className="text-sm text-gray-500">{t('legal.emailConfirmation')}</p>
                     </div>
                 </div>
 
@@ -199,15 +186,17 @@ const DataDeletionPage: React.FC = () => {
                                     key={section.id} 
                                     className={`rounded-2xl p-6 ${
                                         isWarning 
-                                            ? 'bg-amber-500/10 border border-amber-500/30' 
-                                            : 'bg-slate-800/50 border border-slate-700/50'
+                                            ? 'bg-yellow-400/5 border border-yellow-400/20' 
+                                            : 'bg-white/[0.03] border border-white/[0.08] hover:border-yellow-400/20 transition-colors'
                                     }`}
                                 >
-                                    <h2 className={`text-lg font-bold mb-3 flex items-center gap-2 ${isWarning ? 'text-amber-400' : 'text-white'}`}>
-                                        <IconComponent size={20} />
+                                    <h2 className={`text-lg font-bold mb-3 flex items-center gap-3 ${isWarning ? 'text-yellow-400' : 'text-white'}`}>
+                                        <span className="flex items-center justify-center w-8 h-8 bg-yellow-400/10 rounded-lg">
+                                            <IconComponent className="text-yellow-400" size={18} />
+                                        </span>
                                         {section.title}
                                     </h2>
-                                    <div className={`text-sm leading-relaxed ${isWarning ? 'text-slate-300' : 'text-slate-300'}`}>
+                                    <div className="text-sm leading-relaxed">
                                         {parseContent(section.content)}
                                     </div>
                                 </section>
@@ -218,15 +207,17 @@ const DataDeletionPage: React.FC = () => {
                     {/* Request Form */}
                     <div>
                         {!submitted ? (
-                            <div className="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-6 sticky top-24">
-                                <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-                                    <Mail className="text-indigo-400" size={20} />
-                                    Solicitar Eliminación
+                            <div className="bg-white/[0.03] border border-white/[0.08] rounded-2xl p-6 sticky top-24">
+                                <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-3">
+                                    <span className="flex items-center justify-center w-8 h-8 bg-yellow-400/10 rounded-lg">
+                                        <Mail className="text-yellow-400" size={18} />
+                                    </span>
+                                    {t('legal.requestDeletionButton')}
                                 </h2>
                                 
                                 <form onSubmit={handleSubmit} className="space-y-5">
                                     <div>
-                                        <label className="block text-sm font-medium text-slate-300 mb-2">
+                                        <label className="block text-sm font-medium text-gray-300 mb-2">
                                             {t('legal.accountEmail')}
                                         </label>
                                         <input
@@ -234,16 +225,16 @@ const DataDeletionPage: React.FC = () => {
                                             value={email}
                                             onChange={(e) => setEmail(e.target.value)}
                                             required
-                                            placeholder="tu@email.com"
-                                            className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-xl text-white placeholder-slate-400 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                                            placeholder={t('legal.emailPlaceholder')}
+                                            className="w-full px-4 py-3 bg-white/[0.05] border border-white/[0.1] rounded-xl text-white placeholder-gray-600 focus:ring-2 focus:ring-yellow-400/50 focus:border-yellow-400/50 transition-all"
                                         />
-                                        <p className="text-xs text-slate-500 mt-1">
+                                        <p className="text-xs text-gray-600 mt-1">
                                             {t('legal.enterAccountEmail')}
                                         </p>
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm font-medium text-slate-300 mb-2">
+                                        <label className="block text-sm font-medium text-gray-300 mb-2">
                                             {t('legal.reasonOptional')}
                                         </label>
                                         <textarea
@@ -251,18 +242,18 @@ const DataDeletionPage: React.FC = () => {
                                             onChange={(e) => setReason(e.target.value)}
                                             rows={4}
                                             placeholder={t('legal.reasonPlaceholder')}
-                                            className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-xl text-white placeholder-slate-400 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all resize-none"
+                                            className="w-full px-4 py-3 bg-white/[0.05] border border-white/[0.1] rounded-xl text-white placeholder-gray-600 focus:ring-2 focus:ring-yellow-400/50 focus:border-yellow-400/50 transition-all resize-none"
                                         />
                                     </div>
 
-                                    <div className="flex items-start gap-3 p-4 bg-slate-700/30 rounded-xl">
+                                    <div className="flex items-start gap-3 p-4 bg-white/[0.03] rounded-xl border border-white/[0.05]">
                                         <input
                                             type="checkbox"
                                             id="confirm"
                                             required
-                                            className="mt-1 rounded border-slate-500 text-indigo-500 focus:ring-indigo-500"
+                                            className="mt-1 rounded border-gray-600 text-yellow-400 focus:ring-yellow-400"
                                         />
-                                        <label htmlFor="confirm" className="text-sm text-slate-300">
+                                        <label htmlFor="confirm" className="text-sm text-gray-400">
                                             {t('legal.confirmPermanent')}
                                         </label>
                                     </div>
@@ -280,7 +271,7 @@ const DataDeletionPage: React.FC = () => {
                                         ) : (
                                             <>
                                                 <Trash2 size={18} />
-                                                Solicitar Eliminación
+                                                {t('legal.requestDeletionButton')}
                                             </>
                                         )}
                                     </button>
@@ -292,14 +283,12 @@ const DataDeletionPage: React.FC = () => {
                                     <CheckCircle className="text-green-400" size={32} />
                                 </div>
                                 <h2 className="text-2xl font-bold text-white mb-4">{t('legal.requestReceived')}</h2>
-                                <p className="text-slate-300 mb-6">
-                                    Hemos recibido su solicitud de eliminación de datos. 
-                                    Recibirá un email de confirmación en <strong>{email}</strong> 
-                                    con los próximos pasos.
+                                <p className="text-gray-400 mb-6">
+                                    {t('legal.requestReceivedConfirmation')} <strong className="text-white">{email}</strong> {t('legal.requestReceivedNextSteps')}
                                 </p>
-                                <div className="bg-slate-800/50 rounded-xl p-4 text-left">
+                                <div className="bg-white/[0.03] rounded-xl p-4 text-left">
                                     <h3 className="font-semibold text-white mb-2">{t('legal.nextSteps')}</h3>
-                                    <ol className="text-sm text-slate-300 space-y-2 list-decimal list-inside">
+                                    <ol className="text-sm text-gray-400 space-y-2 list-decimal list-inside">
                                         <li>{t('legal.step1')}</li>
                                         <li>{t('legal.step2')}</li>
                                         <li>{t('legal.step3')}</li>
@@ -312,14 +301,14 @@ const DataDeletionPage: React.FC = () => {
 
                 {/* Contact Section */}
                 {pageData.contactEmail && (
-                    <section className="mt-12 bg-indigo-500/20 border border-indigo-500/30 rounded-2xl p-6 text-center">
+                    <section className="mt-12 bg-yellow-400/5 border border-yellow-400/20 rounded-2xl p-6 text-center">
                         <h2 className="text-xl font-bold text-white mb-3">{t('legal.needHelp')}</h2>
-                        <p className="text-slate-300 mb-4">
+                        <p className="text-gray-400 mb-4">
                             {t('legal.deletionContactText')}
                         </p>
                         <a 
                             href={`mailto:${pageData.contactEmail}`}
-                            className="inline-flex items-center gap-2 text-indigo-400 hover:text-indigo-300 font-medium"
+                            className="inline-flex items-center gap-2 text-yellow-400 hover:text-yellow-300 font-medium"
                         >
                             <Mail size={18} />
                             {pageData.contactEmail}
@@ -327,17 +316,7 @@ const DataDeletionPage: React.FC = () => {
                     </section>
                 )}
             </main>
-
-            {/* Footer */}
-            <footer className="border-t border-slate-700/50 py-8 mt-12">
-                <div className="max-w-4xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-slate-400 text-sm">
-                    <p>© {new Date().getFullYear()} Quimera AI. {t('legal.allRightsReserved')}</p>
-                    <a href="/privacy-policy" className="hover:text-white transition-colors">
-                        Política de Privacidad
-                    </a>
-                </div>
-            </footer>
-        </div>
+        </LegalPageLayout>
     );
 };
 

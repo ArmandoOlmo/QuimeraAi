@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import Modal from '../../ui/Modal';
 import { CustomComponent, EditableComponentID } from '../../../types';
 import { X } from 'lucide-react';
+import DashboardSelect from '../../ui/DashboardSelect';
 
 interface CreateComponentModalProps {
     isOpen: boolean;
@@ -81,16 +82,11 @@ const CreateComponentModal: React.FC<CreateComponentModalProps> = ({ isOpen, onC
                     
                     <div>
                         <label htmlFor="base-component-type" className="block text-sm font-medium text-editor-text-secondary mb-1">Base Component Type</label>
-                        <select 
-                            id="base-component-type" 
-                            value={baseComponent} 
-                            onChange={(e) => setBaseComponent(e.target.value as EditableComponentID)} 
-                            className="w-full bg-editor-bg text-white p-2 rounded-md border border-editor-border focus:ring-2 focus:ring-editor-accent focus:outline-none"
-                        >
-                            {componentOptions.map(opt => (
-                                <option key={opt.id} value={opt.id}>{opt.name}</option>
-                            ))}
-                        </select>
+                        <DashboardSelect
+                            value={baseComponent}
+                            onChange={(val) => setBaseComponent(val as EditableComponentID)}
+                            options={componentOptions.map(opt => ({ value: opt.id, label: opt.name }))}
+                        />
                     </div>
                 </div>
 

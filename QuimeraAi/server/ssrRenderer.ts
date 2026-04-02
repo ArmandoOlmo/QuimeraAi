@@ -30,6 +30,7 @@ export interface SSRRenderOptions {
     projectId: string;
     url: string;
     hostname?: string; // Custom domain hostname
+    userId?: string; // Domain owner's userId for __DOMAIN_CONFIG__
     isProduction: boolean;
     vite: ViteDevServer | null;
 }
@@ -61,11 +62,15 @@ export interface ProjectData {
  * Render storefront with SSR
  */
 export async function renderStorefront(options: SSRRenderOptions): Promise<string> {
-    const { projectId, url, hostname, isProduction, vite } = options;
+    const { projectId, url, hostname, userId, isProduction, vite } = options;
 
     console.log(`[SSR] renderStorefront called for project: ${projectId}, url: ${url}`);
 
-    // Fetch project data for SSR
+    // =========================================================================
+    // STEP 1: Fetch project data from Firestore (server-side, cached)
+    // This is the key value-add: the client gets data instantly via __INITIAL_DATA__
+    // without making its own Firestore call.
+    // =========================================================================
     let projectData: ProjectData | null = null;
     try {
         projectData = await fetchProjectData(projectId);
@@ -79,88 +84,163 @@ export async function renderStorefront(options: SSRRenderOptions): Promise<strin
         throw new Error(`Project ${projectId} not found`);
     }
 
-    // Generate the HTML with injected data
+    // =========================================================================
+    // STEP 2: Load the HTML template (SPA shell)
+    // =========================================================================
     let template: string;
-    let render: (options: { url: string; project: ProjectData }) => Promise<{ html: string; head: string; statusCode?: number }>;
 
     if (isProduction) {
-        // Production: use pre-built files
-        // In Docker: __dirname = /app/server/dist, so we need to go up 2 levels to /app
         template = fs.readFileSync(
             path.resolve(__dirname, '../../dist/client/index.html'),
             'utf-8'
         );
-        
-        // Import the server entry
-        const serverModule = await import(path.resolve(__dirname, '../../dist/server/entry-server.js'));
-        render = serverModule.render;
     } else {
-        // Development: use Vite's transform
-        // In dev: __dirname = /app/server, so we need to go up 1 level to /app
         template = fs.readFileSync(
             path.resolve(__dirname, '../index.html'),
             'utf-8'
         );
         template = await vite!.transformIndexHtml(url, template);
-        
-        const serverModule = await vite!.ssrLoadModule('/entry-server.tsx');
-        render = serverModule.render;
     }
 
-    // Render the app - use the new RenderOptions format
-    console.log(`[SSR] Starting React render...`);
-    let renderResult;
-    try {
-        renderResult = await render({ url, project: projectData });
-        console.log(`[SSR] React render completed`);
-    } catch (renderError) {
-        console.error(`[SSR] React render failed:`, renderError);
-        throw renderError;
-    }
-    const { html: appHtml, head: headTags } = renderResult;
-
-    // Generate SEO meta tags
+    // =========================================================================
+    // STEP 3: Generate SEO meta tags (server-side — critical for crawlers)
+    // =========================================================================
     const seoTags = generateSEOTags(projectData, hostname);
 
-    // Sanitize and serialize project data for client
-    console.log(`[SSR] Sanitizing project data for client...`);
+    // =========================================================================
+    // STEP 4: Sanitize & serialize project data for client-side hydration
+    // PublicWebsitePreview.tsx reads window.__INITIAL_DATA__ and renders
+    // immediately without making a Firestore call.
+    // =========================================================================
     let sanitizedData;
     try {
         sanitizedData = sanitizeForClient(projectData);
-        console.log(`[SSR] Data sanitized, serializing...`);
     } catch (sanitizeError) {
         console.error(`[SSR] Sanitization failed:`, sanitizeError);
         throw sanitizeError;
     }
 
-    let serializedState;
-    try {
-        serializedState = JSON.stringify({
-            projectId,
-            projectData: sanitizedData,
-            hostname
-        }).replace(/</g, '\\u003c');
-        console.log(`[SSR] Serialization successful`);
-    } catch (serializeError) {
-        console.error(`[SSR] JSON serialization failed:`, serializeError);
-        throw serializeError;
-    }
+    // =========================================================================
+    // STEP 5: Generate branded skeleton HTML
+    // Uses the project's own theme colors and logo so the user sees
+    // their brand while React loads — instead of a blank screen or error.
+    // =========================================================================
+    const skeletonHtml = generateBrandedSkeleton(projectData);
 
-    // Inject the rendered HTML and data into the template
+    // =========================================================================
+    // STEP 6: Assemble final HTML
+    // =========================================================================
+    const domainConfig = hostname ? JSON.stringify({
+        domain: hostname,
+        projectId,
+        userId: userId || '',
+        isCustomDomain: true,
+        primaryColor: projectData.theme?.globalColors?.primary,
+        backgroundColor: projectData.theme?.pageBackground || projectData.theme?.globalColors?.background,
+        projectName: projectData.name,
+    }).replace(/</g, '\\u003c') : null;
+
+    const initialDataScript = `<script>window.__INITIAL_DATA__ = { project: ${JSON.stringify(sanitizedData).replace(/</g, '\\u003c')}, projectId: "${projectId}" };${domainConfig ? `\nwindow.__DOMAIN_CONFIG__ = ${domainConfig};` : ''}</script>`;
+
     const finalHtml = template
-        // Replace placeholder for SSR content
-        .replace('<!--ssr-outlet-->', appHtml)
+        // Inject branded skeleton into the root element
+        .replace('<!--ssr-outlet-->', skeletonHtml)
         // Inject SEO tags in head
-        .replace('</head>', `${seoTags}\n${headTags}\n</head>`)
-        // Inject initial state for hydration
-    // CRITICAL: Use __INITIAL_DATA__ to match what PublicWebsitePreview.tsx expects
-        .replace(
-            '</body>',
-            `<script>window.__INITIAL_DATA__ = { project: ${JSON.stringify(sanitizedData).replace(/</g, '\\u003c')}, projectId: "${projectId}" };</script>\n</body>`
-        );
+        .replace('</head>', `${seoTags}\n</head>`)
+        // Inject initial state for instant client-side hydration
+        .replace('</body>', `${initialDataScript}\n</body>`);
     
-    console.log(`[SSR] HTML generation completed`);
+    console.log(`[SSR] SPA Shell generated with branded skeleton for "${projectData.name}"`);
     return finalHtml;
+}
+
+/**
+ * Generate a branded loading skeleton using the project's theme
+ * 
+ * This is shown briefly while React loads client-side. It uses the project's
+ * own colors and logo so the user sees their brand — not a blank screen or error.
+ * React will replace this entirely when it mounts.
+ */
+function generateBrandedSkeleton(project: ProjectData): string {
+    const theme = project.theme || {};
+    const globalColors = theme.globalColors || {};
+    const bgColor = theme.pageBackground || globalColors.background || '#0f172a';
+    const primaryColor = globalColors.primary || '#6366f1';
+    const textColor = globalColors.heading || '#f8fafc';
+    
+    // Try to find a logo from various sources
+    const logoUrl = project.data?.header?.logoUrl 
+        || project.data?.header?.logoImage
+        || project.brandIdentity?.logoUrl
+        || project.faviconUrl
+        || '';
+    
+    const projectName = project.name || '';
+
+    // Build the skeleton: logo + subtle pulse animation
+    // Matches the project's visual identity for a seamless loading experience
+    return `
+    <div id="ssr-skeleton" style="
+        min-height: 100vh;
+        background: ${bgColor};
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        font-family: system-ui, -apple-system, sans-serif;
+        transition: opacity 0.3s ease;
+    ">
+        <style>
+            @keyframes ssr-pulse {
+                0%, 100% { opacity: 1; }
+                50% { opacity: 0.5; }
+            }
+            @keyframes ssr-spin {
+                to { transform: rotate(360deg); }
+            }
+            #ssr-skeleton .ssr-logo {
+                animation: ssr-pulse 2s ease-in-out infinite;
+            }
+            #ssr-skeleton .ssr-spinner {
+                width: 32px;
+                height: 32px;
+                border: 2px solid ${primaryColor}33;
+                border-top-color: ${primaryColor};
+                border-radius: 50%;
+                animation: ssr-spin 0.8s linear infinite;
+            }
+        </style>
+        ${logoUrl ? `
+        <div style="margin-bottom: 24px;">
+            <img 
+                src="${escapeHtml(logoUrl)}" 
+                alt="${escapeHtml(projectName)}"
+                class="ssr-logo"
+                style="max-width: 120px; max-height: 80px; object-fit: contain;"
+                onerror="this.style.display='none'"
+            />
+        </div>
+        ` : ''}
+        <div class="ssr-spinner"></div>
+        ${projectName ? `
+        <p style="
+            color: ${textColor}88;
+            font-size: 0.875rem;
+            margin-top: 16px;
+            letter-spacing: 0.025em;
+        ">${escapeHtml(projectName)}</p>
+        ` : ''}
+    </div>
+    <script>
+        // Remove skeleton smoothly when React takes over
+        window.__removeSkeleton = function() {
+            var el = document.getElementById('ssr-skeleton');
+            if (el) {
+                el.style.opacity = '0';
+                setTimeout(function() { el.remove(); }, 300);
+            }
+        };
+    </script>`;
 }
 
 /**

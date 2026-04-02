@@ -5,6 +5,7 @@ import Modal from '../../ui/Modal';
 import { LLMPrompt } from '../../../types';
 import { X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import DashboardSelect from '../../ui/DashboardSelect';
 
 interface PromptEditorModalProps {
     isOpen: boolean;
@@ -104,13 +105,17 @@ const PromptEditorModal: React.FC<PromptEditorModalProps> = ({ isOpen, onClose, 
                         </div>
                         <div>
                             <label htmlFor="prompt-area" className="block text-sm font-medium text-editor-text-secondary mb-1">{t('superadmin.areaCategory')}</label>
-                            <select id="prompt-area" name="area" value={formData.area} onChange={handleChange} className="w-full bg-editor-bg text-white p-2 rounded-md border border-editor-border focus:ring-2 focus:ring-editor-accent focus:outline-none">
-                                <option>{t('superadmin.promptOnboarding')}</option>
-                                <option>{t('superadmin.promptContentGen')}</option>
-                                <option>{t('superadmin.promptImageGen')}</option>
-                                <option>{t('superadmin.promptFileManagement')}</option>
-                                <option>{t('superadmin.promptOther')}</option>
-                            </select>
+                            <DashboardSelect
+                                value={formData.area}
+                                onChange={(val) => setFormData(prev => ({ ...prev, area: val as any }))}
+                                options={[
+                                    { value: 'Onboarding', label: t('superadmin.promptOnboarding') },
+                                    { value: 'Content Generation', label: t('superadmin.promptContentGen') },
+                                    { value: 'Image Generation', label: t('superadmin.promptImageGen') },
+                                    { value: 'File Management', label: t('superadmin.promptFileManagement') },
+                                    { value: 'Other', label: t('superadmin.promptOther') },
+                                ]}
+                            />
                         </div>
                     </div>
 
@@ -126,18 +131,22 @@ const PromptEditorModal: React.FC<PromptEditorModalProps> = ({ isOpen, onClose, 
                     <div className="grid grid-cols-2 gap-4">
                         <div>
                             <label htmlFor="prompt-model" className="block text-sm font-medium text-editor-text-secondary mb-1">{t('superadmin.model')}</label>
-                            <select id="prompt-model" name="model" value={formData.model} onChange={handleChange} className="w-full bg-editor-bg text-white p-2 rounded-md border border-editor-border focus:ring-2 focus:ring-editor-accent focus:outline-none">
-                                <option value="gemini-3-pro-preview">Gemini 3 Pro (Recommended)</option>
-                                <option value="gemini-3-flash-preview">Gemini 3 Flash</option>
-                                <option value="imagen-4.0-nano-banana-002">Quimera Nano Banana 2</option>
-                                <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
-                                <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
-                                <option value="gemini-2.5-flash-image">Gemini 2.5 Flash Image</option>
-                                <option value="imagen-4.0-generate-001">Imagen 4.0 Standard</option>
-                                <option value="imagen-4.0-ultra-generate-001">Imagen 4.0 Ultra</option>
-                                <option value="imagen-4.0-fast-generate-001">Imagen 4.0 Fast</option>
-                                <option value="veo-3.1-fast-generate-preview">Veo Fast (Video)</option>
-                            </select>
+                            <DashboardSelect
+                                value={formData.model}
+                                onChange={(val) => setFormData(prev => ({ ...prev, model: val }))}
+                                options={[
+                                    { value: 'gemini-3-pro-preview', label: 'Gemini 3 Pro (Recommended)' },
+                                    { value: 'gemini-3-flash-preview', label: 'Gemini 3 Flash' },
+                                    { value: 'imagen-4.0-nano-banana-002', label: 'Quimera Nano Banana 2' },
+                                    { value: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash' },
+                                    { value: 'gemini-2.5-pro', label: 'Gemini 2.5 Pro' },
+                                    { value: 'gemini-2.5-flash-image', label: 'Gemini 2.5 Flash Image' },
+                                    { value: 'imagen-4.0-generate-001', label: 'Imagen 4.0 Standard' },
+                                    { value: 'imagen-4.0-ultra-generate-001', label: 'Imagen 4.0 Ultra' },
+                                    { value: 'imagen-4.0-fast-generate-001', label: 'Imagen 4.0 Fast' },
+                                    { value: 'veo-3.1-fast-generate-preview', label: 'Veo Fast (Video)' },
+                                ]}
+                            />
                         </div>
                         <div>
                             <label htmlFor="prompt-version" className="block text-sm font-medium text-editor-text-secondary mb-1">{t('superadmin.version')}</label>

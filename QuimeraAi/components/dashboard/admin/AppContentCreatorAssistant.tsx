@@ -43,6 +43,7 @@ const AppContentCreatorAssistant: React.FC<AppContentCreatorAssistantProps> = ({
     const [audience, setAudience] = useState('');
     const [tone, setTone] = useState('Profesional');
     const [category, setCategory] = useState<AppArticleCategory>('blog');
+    const [language, setLanguage] = useState<'es' | 'en'>('es');
     const [generatedArticle, setGeneratedArticle] = useState<Partial<AppArticle> | null>(null);
     const [isGenerating, setIsGenerating] = useState(false);
 
@@ -52,7 +53,7 @@ const AppContentCreatorAssistant: React.FC<AppContentCreatorAssistantProps> = ({
         setIsGenerating(true);
         setStep('generating');
 
-        let modelToUse = 'gemini-2.5-flash';
+        let modelToUse = 'gemini-2.0-flash';
 
         try {
             // Get dynamic prompt
@@ -63,9 +64,10 @@ const AppContentCreatorAssistant: React.FC<AppContentCreatorAssistantProps> = ({
             if (promptTemplate) {
                 promptText = promptTemplate.template
                     .replace('{{topic}}', topic)
-                    .replace('{{audience}}', audience || 'General audience')
+                    .replace('{{audience}}', audience || (language === 'es' ? 'Audiencia general' : 'General audience'))
                     .replace('{{tone}}', tone)
-                    .replace('{{category}}', category);
+                    .replace('{{category}}', category)
+                    .replace('{{language}}', language === 'es' ? 'Español' : 'English');
                 modelToUse = promptTemplate.model;
             } else {
                 // Fallback prompt for app content
@@ -74,21 +76,22 @@ const AppContentCreatorAssistant: React.FC<AppContentCreatorAssistantProps> = ({
                 Create a blog article structure based on the following inputs:
                 
                 - Topic: ${topic}
-                - Target Audience: ${audience || 'General audience interested in AI and web development'}
+                - Target Audience: ${audience || (language === 'es' ? 'Audiencia general' : 'General audience')}
                 - Tone: ${tone}
                 - Category: ${category}
+                - Language: ${language === 'es' ? 'Spanish (Español)' : 'English'}
 
                 Return a JSON object with the following fields:
-                - title: A catchy, SEO-friendly title for the article (in Spanish if the topic is in Spanish, otherwise in English)
+                - title: A catchy, SEO-friendly title for the article (in ${language === 'es' ? 'Spanish' : 'English'})
                 - slug: A SEO-friendly slug (kebab-case, lowercase)
-                - excerpt: A compelling summary for meta description and card preview (150-160 characters)
-                - content: The HTML content of the article. It should be well-structured with <h2>, <h3>, <p>, <ul>/<li>, and <blockquote> tags. The content should be comprehensive, detailed, and valuable (at least 1000 words). Include practical examples and actionable tips where appropriate.
-                - tags: An array of 3-5 relevant tags/keywords for the article
+                - excerpt: A compelling summary for meta description and card preview (150-160 characters, in ${language === 'es' ? 'Spanish' : 'English'})
+                - content: The HTML content of the article (in ${language === 'es' ? 'Spanish' : 'English'}). It should be well-structured with <h2>, <h3>, <p>, <ul>/<li>, and <blockquote> tags. The content should be comprehensive, detailed, and valuable (at least 1000 words). Include practical examples and actionable tips where appropriate.
+                - tags: An array of 3-5 relevant tags/keywords for the article (in ${language === 'es' ? 'Spanish' : 'English'})
                 - readTime: Estimated read time in minutes (integer)
                 - seo: An object containing:
-                  - metaTitle: SEO optimized title (55-60 characters max)
-                  - metaDescription: SEO optimized description (150-155 characters max)
-                  - metaKeywords: Array of SEO keywords
+                  - metaTitle: SEO optimized title (55-60 characters max, in ${language === 'es' ? 'Spanish' : 'English'})
+                  - metaDescription: SEO optimized description (150-155 characters max, in ${language === 'es' ? 'Spanish' : 'English'})
+                  - metaKeywords: Array of SEO keywords (in ${language === 'es' ? 'Spanish' : 'English'})
 
                 The article should:
                 - Be engaging and provide real value to readers
@@ -159,7 +162,7 @@ const AppContentCreatorAssistant: React.FC<AppContentCreatorAssistantProps> = ({
                 });
             }
             console.error("❌ Error generating content:", error);
-            alert("Hubo un error generando el contenido. Por favor intenta de nuevo.");
+            alert(t('common.error', 'Hubo un error. Por favor intenta de nuevo.'));
             setStep('details');
         } finally {
             setIsGenerating(false);
@@ -197,6 +200,7 @@ const AppContentCreatorAssistant: React.FC<AppContentCreatorAssistantProps> = ({
                 views: 0,
                 createdAt: new Date().toISOString(),
                 updatedAt: new Date().toISOString(),
+                language: language,
                 seo: generatedArticle.seo || {
                     metaTitle: generatedArticle.title || '',
                     metaDescription: generatedArticle.excerpt || '',
@@ -215,7 +219,7 @@ const AppContentCreatorAssistant: React.FC<AppContentCreatorAssistantProps> = ({
             onArticleCreated(newArticle);
         } catch (error) {
             console.error("❌ Error in handleConfirm:", error);
-            alert("Error al crear el artículo. Por favor intenta de nuevo.");
+            alert(t('common.error', 'Error al crear el artículo. Por favor intenta de nuevo.'));
         }
     };
 
@@ -244,13 +248,13 @@ const AppContentCreatorAssistant: React.FC<AppContentCreatorAssistantProps> = ({
                         <div className="space-y-6 animate-fade-in-up">
                             <div className="text-center space-y-2 mb-8">
                                 <h3 className="text-2xl font-bold">{t('contentManagement.whatToWrite', '¿Sobre qué quieres escribir?')}</h3>
-                                <p className="text-muted-foreground">Describe el tema, idea o título provisional para el artículo.</p>
+                                <p className="text-muted-foreground">{t('contentManagement.topicDesc', 'Describe el tema, idea o título provisional para el artículo.')}</p>
                             </div>
                             <textarea
                                 autoFocus
                                 value={topic}
                                 onChange={(e) => setTopic(e.target.value)}
-                                placeholder="Ej: Cómo la IA está revolucionando la creación de sitios web en 2025..."
+                                placeholder={t('contentManagement.topicPlaceholder', 'Ej: Cómo la IA está revolucionando la creación de sitios web en 2025...')}
                                 className="w-full h-32 bg-secondary/30 border border-border rounded-xl p-4 text-lg focus:ring-2 focus:ring-primary/50 outline-none resize-none"
                             />
                             <div className="flex justify-end">
@@ -293,9 +297,28 @@ const AppContentCreatorAssistant: React.FC<AppContentCreatorAssistantProps> = ({
                                     type="text"
                                     value={audience}
                                     onChange={(e) => setAudience(e.target.value)}
-                                    placeholder="Ej: Emprendedores, Desarrolladores, Marketers..."
+                                    placeholder={t('contentManagement.audiencePlaceholder', 'Ej: Emprendedores, Desarrolladores, Marketers...')}
                                     className="w-full bg-secondary/30 border border-border rounded-lg p-3 outline-none focus:border-primary transition-colors"
                                 />
+                            </div>
+
+                            {/* Language Selection */}
+                            <div className="space-y-4">
+                                <label className="block font-medium">{t('contentManagement.filters.language', 'Idioma del contenido')}</label>
+                                <div className="flex gap-3">
+                                    <button 
+                                        onClick={() => setLanguage('es')}
+                                        className={`flex-1 p-3 rounded-lg border text-sm font-medium transition-all ${language === 'es' ? 'bg-primary text-primary-foreground border-primary' : 'bg-card border-border hover:border-primary/50'}`}
+                                    >
+                                        Español
+                                    </button>
+                                    <button 
+                                        onClick={() => setLanguage('en')}
+                                        className={`flex-1 p-3 rounded-lg border text-sm font-medium transition-all ${language === 'en' ? 'bg-primary text-primary-foreground border-primary' : 'bg-card border-border hover:border-primary/50'}`}
+                                    >
+                                        English
+                                    </button>
+                                </div>
                             </div>
 
                             {/* Tone */}
@@ -319,7 +342,7 @@ const AppContentCreatorAssistant: React.FC<AppContentCreatorAssistantProps> = ({
 
                             <div className="flex justify-between pt-4">
                                 <button onClick={() => setStep('topic')} className="text-muted-foreground hover:text-foreground font-medium px-4 transition-colors">
-                                    {t('common.back', 'Atrás')}
+                                    {t('common.back', 'Volver')}
                                 </button>
                                 <button
                                     onClick={handleGenerate}
@@ -340,7 +363,7 @@ const AppContentCreatorAssistant: React.FC<AppContentCreatorAssistantProps> = ({
                             <div>
                                 <h3 className="text-xl font-bold mb-2">{t('contentManagement.aiWriting', 'La IA está escribiendo...')}</h3>
                                 <p className="text-muted-foreground max-w-xs mx-auto">
-                                    Estamos estructurando tu artículo, creando títulos atractivos y redactando contenido de calidad.
+                                    {t('contentManagement.aiWritingDesc', 'Estamos estructurando tu artículo, creando títulos atractivos y redactando contenido de calidad.')}
                                 </p>
                             </div>
                         </div>
@@ -352,14 +375,14 @@ const AppContentCreatorAssistant: React.FC<AppContentCreatorAssistantProps> = ({
                                 <CheckCircle className="text-green-500 shrink-0 mt-0.5" size={20} />
                                 <div>
                                     <p className="font-bold text-green-600">{t('contentManagement.contentGenerated', '¡Contenido generado con éxito!')}</p>
-                                    <p className="text-xs text-green-600/80">Revisa el resumen antes de llevarlo al editor.</p>
+                                    <p className="text-xs text-green-600/80">{t('contentManagement.reviewBeforeEditor', 'Revisa el resumen antes de llevarlo al editor.')}</p>
                                 </div>
                             </div>
 
                             <div className="space-y-4 flex-1 overflow-y-auto pr-2 custom-scrollbar">
                                 <div>
-                                    <span className="text-xs font-bold text-muted-foreground uppercase">{t('contentManagement.title', 'Título')}</span>
-                                    <h3 className="text-xl font-bold">{generatedArticle.title || 'Sin título'}</h3>
+                                    <span className="text-xs font-bold text-muted-foreground uppercase">{t('contentManagement.editor.title', 'Título')}</span>
+                                    <h3 className="text-xl font-bold">{generatedArticle.title || t('contentManagement.noTitle', 'Sin título')}</h3>
                                 </div>
 
                                 <div className="flex gap-2 flex-wrap">
@@ -368,14 +391,14 @@ const AppContentCreatorAssistant: React.FC<AppContentCreatorAssistantProps> = ({
                                     </span>
                                     {generatedArticle.readTime && (
                                         <span className="px-2 py-1 text-xs font-medium bg-secondary text-muted-foreground rounded-full">
-                                            {generatedArticle.readTime} min read
+                                            {generatedArticle.readTime} {t('contentManagement.minRead', 'min de lectura')}
                                         </span>
                                     )}
                                 </div>
 
                                 <div>
-                                    <span className="text-xs font-bold text-muted-foreground uppercase">{t('contentManagement.excerpt', 'Resumen')}</span>
-                                    <p className="text-muted-foreground">{generatedArticle.excerpt || 'Sin resumen'}</p>
+                                    <span className="text-xs font-bold text-muted-foreground uppercase">{t('contentManagement.editor.excerpt', 'Resumen')}</span>
+                                    <p className="text-muted-foreground">{generatedArticle.excerpt || t('contentManagement.noExcerpt', 'Sin resumen')}</p>
                                 </div>
 
                                 {generatedArticle.tags && generatedArticle.tags.length > 0 && (
@@ -397,14 +420,14 @@ const AppContentCreatorAssistant: React.FC<AppContentCreatorAssistantProps> = ({
                                         {generatedArticle.content ? (
                                             <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(generatedArticle.content) }} />
                                         ) : (
-                                            <p className="text-muted-foreground italic">Sin contenido generado</p>
+                                            <p className="text-muted-foreground italic">{t('contentManagement.noContentGenerated', 'Sin contenido generado')}</p>
                                         )}
                                     </div>
                                 </div>
 
                                 {/* Debug info */}
                                 <details className="text-xs text-muted-foreground">
-                                    <summary className="cursor-pointer">Debug Info (click para ver)</summary>
+                                    <summary className="cursor-pointer">{t('common.debugInfo', 'Debug Info')} (click)</summary>
                                     <pre className="mt-2 p-2 bg-secondary/30 rounded overflow-auto max-h-40">
                                         {JSON.stringify(generatedArticle, null, 2)}
                                     </pre>
@@ -431,7 +454,3 @@ const AppContentCreatorAssistant: React.FC<AppContentCreatorAssistantProps> = ({
 };
 
 export default AppContentCreatorAssistant;
-
-
-
-

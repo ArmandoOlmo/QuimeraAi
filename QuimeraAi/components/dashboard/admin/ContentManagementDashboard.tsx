@@ -12,6 +12,7 @@ import ConfirmationModal from '../../ui/ConfirmationModal';
 import ModernAppArticleEditor from './ModernAppArticleEditor';
 import LegalPageEditor from './LegalPageEditor';
 import AppContentCreatorAssistant from './AppContentCreatorAssistant';
+import i18n from '../../../i18n';
 import {
     Menu,
     Plus,
@@ -81,6 +82,7 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
     const [dateRange, setDateRange] = useState<'all' | 'today' | 'week' | 'month'>('all');
+    const [languageFilter, setLanguageFilter] = useState<'all' | 'es' | 'en'>('all');
     const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
 
     // Quick preview
@@ -138,7 +140,7 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
         const duplicatedArticle: AppArticle = {
             ...article,
             id: '',
-            title: `${article.title} (Copia)`,
+            title: `${article.title} ${t('contentManagement.duplicateSuffix', '(Copia)')}`,
             slug: `${article.slug}-copy-${Date.now()}`,
             status: 'draft',
             featured: false,
@@ -241,6 +243,9 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
                 if (dateRange === 'month' && daysDiff > 30) return false;
             }
 
+            // Language filter
+            if (languageFilter !== 'all' && article.language !== languageFilter) return false;
+
             return true;
         });
 
@@ -264,7 +269,7 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
         });
 
         return result;
-    }, [articles, searchQuery, statusFilter, categoryFilter, sortBy, sortOrder, dateRange]);
+    }, [articles, searchQuery, statusFilter, categoryFilter, sortBy, sortOrder, dateRange, languageFilter]);
 
     // Metrics
     const metrics = useMemo(() => ({
@@ -320,12 +325,12 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
                         </button>
                         <div className="flex items-center gap-2">
                             <PenTool className="text-primary w-5 h-5" />
-                            <h1 className="text-lg font-semibold text-foreground hidden sm:block">{t('contentManagement.title', 'Gestor de Contenido')}</h1>
+                            <h1 className="text-lg font-semibold text-foreground hidden sm:block">{t('contentManagement.title', 'Gestión de Contenido')}</h1>
                         </div>
 
                         {/* Badge */}
                         <span className="hidden sm:inline-flex px-2 py-0.5 text-xs font-medium bg-blue-500/10 text-blue-500 rounded-full">
-                            Landing Pública
+                            {t('contentManagement.legal.metaUrls', 'Landing Pública')}
                         </span>
                     </div>
 
@@ -390,7 +395,7 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
                             <button
                                 onClick={handleExport}
                                 className="hidden sm:flex items-center justify-center h-9 w-9 rounded-md transition-colors text-muted-foreground hover:text-foreground hover:bg-muted"
-                                title="Exportar artículos"
+                                title={t('common.export', 'Exportar')}
                             >
                                 <Download className="w-4 h-4" />
                             </button>
@@ -439,7 +444,7 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
                                     }`}
                             >
                                 <FileText size={14} className="inline mr-2" />
-                                Artículos ({articles.length})
+                                {t('contentManagement.articles', 'Artículos')} ({articles.length})
                             </button>
                             <button
                                 onClick={() => setActiveTab('legal')}
@@ -449,7 +454,7 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
                                     }`}
                             >
                                 <Shield size={14} className="inline mr-2" />
-                                Páginas Legales
+                                {t('contentManagement.legalPages', 'Páginas Legales')}
                             </button>
                         </div>
 
@@ -462,11 +467,10 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
                                         <Shield className="text-amber-500 flex-shrink-0 mt-0.5" size={20} />
                                         <div>
                                             <h4 className="text-sm font-semibold text-foreground mb-1">
-                                                Páginas Legales para Meta OAuth
+                                                {t('contentManagement.legal.metaUrls', 'Páginas Legales para Meta OAuth')}
                                             </h4>
                                             <p className="text-xs text-muted-foreground">
-                                                Estas páginas son requeridas para la integración con Facebook, Instagram y WhatsApp.
-                                                Asegúrate de publicarlas antes de enviar tu app para revisión en Meta.
+                                                {t('contentManagement.legal.subtitle', 'Estas páginas son requeridas para la integración con Facebook, Instagram y WhatsApp. Asegúrate de publicarlas antes de enviar tu app para revisión en Meta.')}
                                             </p>
                                         </div>
                                     </div>
@@ -475,7 +479,7 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
                                 {/* Legal Pages Grid */}
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     {(['privacy-policy', 'data-deletion', 'terms-of-service', 'cookie-policy'] as LegalPageType[]).map(pageType => {
-                                        const page = legalPages.find(p => p.type === pageType);
+                                        const page = legalPages.find(p => p.type === pageType && p.language === i18n.language);
                                         const isPublished = page?.status === 'published';
 
                                         return (
@@ -491,7 +495,7 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
                                                                     <FileText size={20} className={isPublished ? 'text-green-500' : 'text-muted-foreground'} />}
                                                         </div>
                                                         <div>
-                                                            <h3 className="font-semibold">{LEGAL_PAGE_LABELS[pageType]}</h3>
+                                                            <h3 className="font-semibold">{t('contentManagement.legal.' + pageType)}</h3>
                                                             <p className="text-xs text-muted-foreground">/{pageType}</p>
                                                         </div>
                                                     </div>
@@ -499,13 +503,13 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
                                                         ? 'bg-green-500/10 text-green-600'
                                                         : 'bg-orange-500/10 text-orange-600'
                                                         }`}>
-                                                        {isPublished ? 'Publicado' : 'Borrador'}
+                                                        {isPublished ? t('contentManagement.published', 'Publicado') : t('contentManagement.filters.draft', 'Borrador')}
                                                     </span>
                                                 </div>
 
                                                 {page && (
                                                     <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
-                                                        {page.subtitle || `${page.sections.length} secciones`}
+                                                        {page.subtitle || t('contentManagement.legal.sectionsCount', { count: page.sections.length })}
                                                     </p>
                                                 )}
 
@@ -515,7 +519,7 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
                                                         className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-primary text-primary-foreground text-sm font-medium rounded-lg hover:bg-primary/90 transition-colors"
                                                     >
                                                         <Edit3 size={14} />
-                                                        Editar
+                                                        {t('common.edit', 'Editar')}
                                                     </button>
                                                     <a
                                                         href={`/${pageType}`}
@@ -535,13 +539,13 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
                                 <div className="bg-card border border-border rounded-xl p-6">
                                     <h3 className="font-semibold mb-4 flex items-center gap-2">
                                         <Globe size={18} className="text-primary" />
-                                        URLs para Meta Developer Console
+                                        {t('contentManagement.legal.metaUrls', 'URLs para Meta Developer Console')}
                                     </h3>
                                     <div className="space-y-3">
                                         <div className="flex items-center justify-between p-3 bg-secondary/20 rounded-lg">
                                             <div>
-                                                <span className="text-sm font-medium">Privacy Policy URL</span>
-                                                <p className="text-xs text-muted-foreground">Para Facebook, Instagram, WhatsApp</p>
+                                                <span className="text-sm font-medium">{t('contentManagement.legal.privacy-policy')} URL</span>
+                                                <p className="text-xs text-muted-foreground">{t('contentManagement.legal.privacyPolicyDesc')}</p>
                                             </div>
                                             <code className="px-2 py-1 bg-secondary/50 rounded text-xs">
                                                 https://quimera.ai/privacy-policy
@@ -549,8 +553,8 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
                                         </div>
                                         <div className="flex items-center justify-between p-3 bg-secondary/20 rounded-lg">
                                             <div>
-                                                <span className="text-sm font-medium">Data Deletion URL</span>
-                                                <p className="text-xs text-muted-foreground">Requerido por Meta</p>
+                                                <span className="text-sm font-medium">{t('contentManagement.legal.data-deletion')} URL</span>
+                                                <p className="text-xs text-muted-foreground">{t('contentManagement.legal.dataDeletionDesc')}</p>
                                             </div>
                                             <code className="px-2 py-1 bg-secondary/50 rounded text-xs">
                                                 https://quimera.ai/data-deletion
@@ -621,12 +625,13 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
                                             </span>
 
                                             {/* Active filters indicator */}
-                                            {(statusFilter !== 'all' || categoryFilter !== 'all' || dateRange !== 'all') && (
+                                            {(statusFilter !== 'all' || categoryFilter !== 'all' || dateRange !== 'all' || languageFilter !== 'all') && (
                                                 <button
                                                     onClick={() => {
                                                         setStatusFilter('all');
                                                         setCategoryFilter('all');
                                                         setDateRange('all');
+                                                        setLanguageFilter('all');
                                                     }}
                                                     className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors"
                                                 >
@@ -640,7 +645,7 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
                                             <button
                                                 onClick={() => setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')}
                                                 className="h-8 w-8 sm:h-9 sm:w-9 flex items-center justify-center rounded-md transition-colors text-muted-foreground hover:text-foreground hover:bg-border/40"
-                                                title={sortOrder === 'asc' ? 'Ascendente' : 'Descendente'}
+                                                title={sortOrder === 'asc' ? t('contentManagement.filters.ascending', 'Ascendente') : t('contentManagement.filters.descending', 'Descendente')}
                                             >
                                                 {sortOrder === 'desc' ? <ArrowDown size={14} /> : <ArrowUp size={14} />}
                                             </button>
@@ -650,21 +655,20 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
                                                 <button
                                                     onClick={() => setViewMode('grid')}
                                                     className={`h-8 w-8 sm:h-9 sm:w-9 flex items-center justify-center rounded-md transition-colors ${viewMode === 'grid' ? 'text-primary bg-primary/10' : 'text-muted-foreground hover:text-foreground hover:bg-border/40'}`}
-                                                    title="Vista en cuadrícula"
+                                                    title={t('common.gridView', 'Vista en cuadrícula')}
                                                 >
                                                     <Grid size={14} />
                                                 </button>
                                                 <button
                                                     onClick={() => setViewMode('list')}
                                                     className={`h-8 w-8 sm:h-9 sm:w-9 flex items-center justify-center rounded-md transition-colors ${viewMode === 'list' ? 'text-primary bg-primary/10' : 'text-muted-foreground hover:text-foreground hover:bg-border/40'}`}
-                                                    title="Vista en lista"
+                                                    title={t('common.listView', 'Vista en lista')}
                                                 >
                                                     <List size={14} />
                                                 </button>
                                             </div>
                                         </div>
                                     </div>
-
                                     {/* Filters row - Horizontal scroll on mobile */}
                                     <div className="flex items-center gap-2 overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 sm:overflow-visible scrollbar-hide">
                                         {/* Status filter */}
@@ -712,9 +716,19 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
                                             <option value="title">{t('contentManagement.filters.sortByTitle', 'Ordenar por título')}</option>
                                             <option value="views">{t('contentManagement.filters.sortByViews', 'Ordenar por vistas')}</option>
                                         </select>
+
+                                        {/* Language filter */}
+                                        <select
+                                            value={languageFilter}
+                                            onChange={(e) => setLanguageFilter(e.target.value as any)}
+                                            className="px-3 py-1.5 text-xs bg-secondary/30 border border-border rounded-lg focus:ring-2 focus:ring-primary/50 outline-none flex-shrink-0"
+                                        >
+                                            <option value="all">{t('contentManagement.filters.language', 'Idioma')}: {t('common.all', 'Todos')}</option>
+                                            <option value="es">Español</option>
+                                            <option value="en">English</option>
+                                        </select>
                                     </div>
                                 </div>
-
                                 {isLoading ? (
                                     <div className="flex justify-center items-center h-64">
                                         <Loader2 className="animate-spin w-10 h-10 text-primary" />
@@ -808,7 +822,7 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
                                                                     ? 'bg-green-500/10 text-green-500'
                                                                     : 'bg-yellow-500/10 text-yellow-500'
                                                                     }`}>
-                                                                    {article.status === 'published' ? 'Publicado' : 'Borrador'}
+                                                                    {article.status === 'published' ? t('contentManagement.status.published', 'Publicado') : t('contentManagement.status.draft', 'Borrador')}
                                                                 </span>
                                                             </td>
                                                             <td className="p-4 text-sm text-muted-foreground">
@@ -816,7 +830,7 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
                                                                 {article.readTime && (
                                                                     <div className="text-xs flex items-center gap-1 mt-0.5">
                                                                         <Clock size={10} />
-                                                                        {article.readTime} min
+                                                                        {article.readTime} {t('common.minutesShort', 'min')}
                                                                     </div>
                                                                 )}
                                                             </td>
@@ -825,28 +839,28 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
                                                                     <button
                                                                         onClick={() => handleQuickPreview(article)}
                                                                         className="p-2 text-muted-foreground hover:text-blue-500 hover:bg-blue-500/10 rounded-md transition-all"
-                                                                        title="Vista rápida"
+                                                                        title={t('contentManagement.actions.quickPreview', 'Vista rápida')}
                                                                     >
                                                                         <Eye size={14} />
                                                                     </button>
                                                                     <button
                                                                         onClick={() => handleEdit(article)}
                                                                         className="p-2 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-md transition-all"
-                                                                        title="Editar"
+                                                                        title={t('common.edit', 'Editar')}
                                                                     >
                                                                         <Edit2 size={14} />
                                                                     </button>
                                                                     <button
                                                                         onClick={() => handleDuplicate(article)}
                                                                         className="p-2 text-muted-foreground hover:text-green-500 hover:bg-green-500/10 rounded-md transition-all"
-                                                                        title="Duplicar"
+                                                                        title={t('common.duplicate', 'Duplicar')}
                                                                     >
                                                                         <Copy size={14} />
                                                                     </button>
                                                                     <button
                                                                         onClick={() => handleDelete(article.id)}
                                                                         className="p-2 text-muted-foreground hover:text-red-500 hover:bg-red-500/10 rounded-md transition-all"
-                                                                        title="Eliminar"
+                                                                        title={t('common.delete', 'Eliminar')}
                                                                     >
                                                                         <Trash2 size={14} />
                                                                     </button>
@@ -886,7 +900,7 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
                                                                     ? 'bg-green-500/10 text-green-500'
                                                                     : 'bg-yellow-500/10 text-yellow-500'
                                                                     }`}>
-                                                                    {article.status === 'published' ? 'Publicado' : 'Borrador'}
+                                                                    {article.status === 'published' ? t('contentManagement.status.published', 'Publicado') : t('contentManagement.status.draft', 'Borrador')}
                                                                 </span>
                                                             </div>
                                                             <p className="text-xs text-muted-foreground line-clamp-1 mb-2">{article.excerpt || t('contentManagement.noExcerpt', 'Sin extracto')}</p>
@@ -947,14 +961,13 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
                                                             <FileText size={60} className="hidden sm:block text-muted-foreground opacity-20" />
                                                         </div>
                                                     )}
-
                                                     {/* Dark Gradient Overlay */}
                                                     <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-black/20" />
 
                                                     {/* Top Section: Status Badge & Category */}
                                                     <div className="absolute top-3 left-3 sm:top-4 sm:left-4 z-20 flex items-center gap-2">
                                                         <span className={`px-2 py-0.5 sm:px-3 sm:py-1 text-[10px] sm:text-xs font-bold uppercase tracking-wider rounded-md sm:rounded-lg border backdrop-blur-md shadow-lg ${article.status === 'published' ? 'bg-green-500/20 text-green-400 border-green-500/30' : 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30'}`}>
-                                                            {article.status === 'published' ? 'Publicado' : 'Borrador'}
+                                                            {article.status === 'published' ? t('contentManagement.status.published', 'Publicado') : t('contentManagement.status.draft', 'Borrador')}
                                                         </span>
                                                         {article.featured && (
                                                             <span className="px-2 py-0.5 sm:px-2 sm:py-1 text-[10px] sm:text-xs font-bold bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 rounded-md sm:rounded-lg backdrop-blur-md">
@@ -984,28 +997,28 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
                                                         <button
                                                             onClick={(e) => { e.stopPropagation(); handleQuickPreview(article); }}
                                                             className="bg-white text-blue-500 p-3 rounded-full hover:scale-110 transition-transform shadow-2xl"
-                                                            title="Vista rápida"
+                                                            title={t('contentManagement.actions.quickPreview', 'Vista rápida')}
                                                         >
                                                             <Eye size={20} />
                                                         </button>
                                                         <button
                                                             onClick={(e) => { e.stopPropagation(); handleEdit(article); }}
                                                             className="bg-white text-black p-3 rounded-full hover:scale-110 transition-transform shadow-2xl"
-                                                            title="Editar"
+                                                            title={t('common.edit', 'Editar')}
                                                         >
                                                             <Edit3 size={20} />
                                                         </button>
                                                         <button
                                                             onClick={(e) => { e.stopPropagation(); handleDuplicate(article); }}
                                                             className="bg-white text-green-600 p-3 rounded-full hover:scale-110 transition-transform shadow-2xl"
-                                                            title="Duplicar"
+                                                            title={t('common.duplicate', 'Duplicar')}
                                                         >
                                                             <Copy size={20} />
                                                         </button>
                                                         <button
                                                             onClick={(e) => { e.stopPropagation(); handleDelete(article.id); }}
                                                             className="bg-white text-red-500 p-3 rounded-full hover:scale-110 transition-transform shadow-2xl"
-                                                            title="Eliminar"
+                                                            title={t('common.delete', 'Eliminar')}
                                                         >
                                                             <Trash2 size={20} />
                                                         </button>
@@ -1028,7 +1041,7 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
                                                                 </span>
                                                             </div>
                                                             {article.status === 'published' && (
-                                                                <div title="Publicado">
+                                                                <div title={t('contentManagement.status.published', 'Publicado')}>
                                                                     <Globe size={14} className="sm:hidden text-green-400" />
                                                                     <Globe size={16} className="hidden sm:block text-green-400" />
                                                                 </div>
@@ -1056,7 +1069,7 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
                                                 <div className="flex-1 min-w-0 pr-2">
                                                     <h3 className="font-bold text-base sm:text-lg line-clamp-1">{previewArticle.title}</h3>
                                                     <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5 sm:mt-1">
-                                                        {new Date(previewArticle.updatedAt).toLocaleDateString()} • {previewArticle.status === 'published' ? 'Publicado' : 'Borrador'} • {CATEGORY_LABELS[previewArticle.category]}
+                                                        {new Date(previewArticle.updatedAt).toLocaleDateString()} • {previewArticle.status === 'published' ? t('contentManagement.status.published', 'Publicado') : t('contentManagement.status.draft', 'Borrador')} • {CATEGORY_LABELS[previewArticle.category]}
                                                     </p>
                                                 </div>
                                                 <div className="flex items-center gap-1 sm:gap-2 shrink-0">
@@ -1067,7 +1080,7 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
                                                         }}
                                                         className="px-2.5 py-1.5 sm:px-3 text-xs bg-primary text-primary-foreground rounded-lg hover:opacity-90 transition-opacity font-medium"
                                                     >
-                                                        Editar
+                                                        {t('common.edit', 'Editar')}
                                                     </button>
                                                     <button
                                                         onClick={() => setPreviewArticle(null)}

@@ -1,6 +1,6 @@
 
-import React from 'react';
-import { ChevronDown } from 'lucide-react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { ChevronDown, Check } from 'lucide-react';
 
 // --- Editor Control Primitives ---
 // Extracted from Controls.tsx for reusability across the editor
@@ -25,26 +25,119 @@ export const TextArea = ({ label, className, ...props }: React.TextareaHTMLAttri
   </div>
 );
 
-export const Select = ({ label, options, value, onChange, className, ...props }: React.SelectHTMLAttributes<HTMLSelectElement> & { label?: string, options: { value: string, label: string }[], value: string, onChange: (value: string) => void }) => (
-  <div className={`mb-3 ${className || ''}`}>
-    {label && <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{label}</label>}
-    <div className="relative">
-      <select
-        {...props}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="w-full bg-editor-panel-bg border border-editor-border rounded-md px-3 py-2 text-sm text-editor-text-primary focus:outline-none focus:ring-1 focus:ring-editor-accent appearance-none transition-all pr-8"
+export interface SelectGroup {
+  label: string;
+  options: { value: string; label: string }[];
+}
+
+export const Select = ({ label, options, groups, value, onChange, className, noMargin }: { label?: string, options?: { value: string, label: string }[], groups?: SelectGroup[], value: string, onChange: (value: string) => void, className?: string, noMargin?: boolean }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
+
+  // Build flat options list for lookup
+  const allOptions = groups
+    ? groups.flatMap(g => g.options)
+    : (options || []);
+
+  // Close on click outside
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleClick = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [isOpen]);
+
+  // Close on Escape
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setIsOpen(false);
+    };
+    document.addEventListener('keydown', handleKey);
+    return () => document.removeEventListener('keydown', handleKey);
+  }, [isOpen]);
+
+  // Auto-scroll to selected option
+  useEffect(() => {
+    if (isOpen) {
+      requestAnimationFrame(() => {
+        const selectedEl = listRef.current?.querySelector('[data-selected="true"]');
+        if (selectedEl) selectedEl.scrollIntoView({ block: 'center', behavior: 'instant' });
+      });
+    }
+  }, [isOpen]);
+
+  const handleSelect = useCallback((val: string) => {
+    onChange(val);
+    setIsOpen(false);
+  }, [onChange]);
+
+  const selectedOption = allOptions.find(opt => opt.value === value);
+
+  const renderOptions = (opts: { value: string; label: string }[]) =>
+    opts.map(opt => {
+      const isSelected = opt.value === value;
+      return (
+        <button
+          key={opt.value}
+          type="button"
+          data-selected={isSelected}
+          onClick={() => handleSelect(opt.value)}
+          className={`w-full flex items-center gap-2 px-3 py-2 text-left transition-colors ${
+            isSelected
+              ? 'bg-editor-accent/15 text-editor-accent'
+              : 'text-editor-text-primary hover:bg-editor-bg'
+          }`}
+        >
+          <span className="flex-1 text-xs truncate">{opt.label}</span>
+          {isSelected && <Check className="h-3.5 w-3.5 flex-shrink-0 text-editor-accent" />}
+        </button>
+      );
+    });
+
+  return (
+    <div className={`${noMargin ? '' : 'mb-3'} ${className || ''}`} ref={containerRef}>
+      {label && <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{label}</label>}
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className={`w-full flex items-center justify-between bg-editor-panel-bg border rounded-md px-3 py-2 text-sm text-editor-text-primary transition-all cursor-pointer ${
+          isOpen
+            ? 'border-editor-accent ring-1 ring-editor-accent'
+            : 'border-editor-border hover:border-editor-accent/50'
+        }`}
       >
-        {options.map((opt) => (
-          <option key={opt.value} value={opt.value}>
-            {opt.label}
-          </option>
-        ))}
-      </select>
-      <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-editor-text-secondary pointer-events-none" size={14} />
+        <span className="truncate">{selectedOption?.label || value}</span>
+        <ChevronDown className={`h-3.5 w-3.5 text-editor-text-secondary flex-shrink-0 ml-2 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+      </button>
+      {isOpen && (
+        <div className="relative z-[999]">
+          <div className="absolute top-1 left-0 right-0 bg-editor-panel-bg border border-editor-border rounded-lg shadow-xl overflow-hidden">
+            <div ref={listRef} className="max-h-56 overflow-y-auto overscroll-contain">
+              {groups ? (
+                groups.map((group, gi) => (
+                  <div key={gi}>
+                    <div className="px-3 py-1.5 text-[10px] font-bold text-editor-text-secondary uppercase tracking-wider bg-editor-bg/50 border-b border-editor-border/30 sticky top-0">
+                      {group.label}
+                    </div>
+                    {renderOptions(group.options)}
+                  </div>
+                ))
+              ) : (
+                renderOptions(options || [])
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
-  </div>
-);
+  );
+};
 
 export const ToggleControl = ({ label, checked, onChange }: { label?: string, checked: boolean, onChange: (checked: boolean) => void }) => (
   <div className={`flex items-center ${label ? 'justify-between mb-3' : ''}`}>

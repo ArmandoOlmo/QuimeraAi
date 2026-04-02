@@ -33,11 +33,9 @@ const StorefrontApp = lazyWithRetry(() => import('./components/ecommerce/Storefr
 const PublicBioPage = lazyWithRetry(() => import('./components/PublicBioPage'));
 const AgencyCheckoutPage = lazyWithRetry(() => import('./components/checkout/AgencyCheckoutPage'));
 
-// Minimal loading fallback for lazy components — brandless spinner (no Quimera logo)
+// Minimal loading fallback for lazy components — invisible (no spinner, no branding)
 const MinimalLoader = () => (
-  <div className="flex items-center justify-center min-h-screen bg-background">
-    <div className="w-10 h-10 border-2 border-white/20 border-t-white/60 rounded-full animate-spin" />
-  </div>
+  <div className="min-h-screen bg-background" />
 );
 
 // =============================================================================

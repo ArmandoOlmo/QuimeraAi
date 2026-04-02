@@ -73,7 +73,7 @@ export const GoogleCalendarConnect: React.FC<GoogleCalendarConnectProps> = ({
     const [showSettings, setShowSettings] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [showDisconnectConfirm, setShowDisconnectConfirm] = useState(false);
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
 
     const handleConnect = async () => {
         setIsLoading(true);
@@ -81,7 +81,7 @@ export const GoogleCalendarConnect: React.FC<GoogleCalendarConnectProps> = ({
         try {
             await onConnect();
         } catch (err: any) {
-            setError(err.message || 'Error al conectar con Google Calendar');
+            setError(err.message || t('appointments.google.errorConnect'));
         } finally {
             setIsLoading(false);
         }
@@ -93,7 +93,7 @@ export const GoogleCalendarConnect: React.FC<GoogleCalendarConnectProps> = ({
         try {
             await onDisconnect();
         } catch (err: any) {
-            setError(err.message || 'Error al desconectar');
+            setError(err.message || t('appointments.google.errorDisconnect'));
         } finally {
             setIsLoading(false);
         }
@@ -105,7 +105,7 @@ export const GoogleCalendarConnect: React.FC<GoogleCalendarConnectProps> = ({
         try {
             await onSync();
         } catch (err: any) {
-            setError(err.message || 'Error al sincronizar');
+            setError(err.message || t('appointments.google.errorSync'));
         } finally {
             setIsSyncing(false);
         }
@@ -114,13 +114,13 @@ export const GoogleCalendarConnect: React.FC<GoogleCalendarConnectProps> = ({
     const getSyncStatusInfo = () => {
         switch (syncStatus) {
             case 'synced':
-                return { color: 'text-green-500', bg: 'bg-green-500/10', label: 'Sincronizado', icon: CheckCircle2 };
+                return { color: 'text-green-500', bg: 'bg-green-500/10', label: t('appointments.google.synced'), icon: CheckCircle2 };
             case 'pending':
-                return { color: 'text-yellow-500', bg: 'bg-yellow-500/10', label: 'Pendiente', icon: Clock };
+                return { color: 'text-yellow-500', bg: 'bg-yellow-500/10', label: t('appointments.google.pending'), icon: Clock };
             case 'error':
-                return { color: 'text-red-500', bg: 'bg-red-500/10', label: 'Error', icon: AlertCircle };
+                return { color: 'text-red-500', bg: 'bg-red-500/10', label: t('appointments.google.error'), icon: AlertCircle };
             default:
-                return { color: 'text-muted-foreground', bg: 'bg-muted', label: 'No sincronizado', icon: Calendar };
+                return { color: 'text-muted-foreground', bg: 'bg-muted', label: t('appointments.google.notSynced'), icon: Calendar };
         }
     };
 
@@ -139,7 +139,7 @@ export const GoogleCalendarConnect: React.FC<GoogleCalendarConnectProps> = ({
                         <div>
                             <h3 className="font-bold text-foreground text-lg">Google Calendar</h3>
                             <p className="text-sm text-muted-foreground">
-                                Sincroniza tus citas automáticamente
+                                {t('appointments.google.syncAutoDesc')}
                             </p>
                         </div>
                     </div>
@@ -147,15 +147,15 @@ export const GoogleCalendarConnect: React.FC<GoogleCalendarConnectProps> = ({
                     <div className="space-y-3 mb-6">
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
                             <Check size={16} className="text-green-500" />
-                            Sincronización bidireccional
+                            {t('appointments.google.bidirectionalSync')}
                         </div>
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
                             <Check size={16} className="text-green-500" />
-                            Notificaciones automáticas
+                            {t('appointments.google.autoNotifications')}
                         </div>
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
                             <Check size={16} className="text-green-500" />
-                            Crear Google Meet automáticamente
+                            {t('appointments.google.autoGoogleMeet')}
                         </div>
                     </div>
 
@@ -179,12 +179,12 @@ export const GoogleCalendarConnect: React.FC<GoogleCalendarConnectProps> = ({
                             <GoogleCalendarIcon className="w-5 h-5" />
                         )}
                         <span className="text-gray-800">
-                            {isLoading ? 'Conectando...' : 'Conectar con Google Calendar'}
+                            {isLoading ? t('appointments.google.connecting') : t('appointments.google.connectWithGoogle')}
                         </span>
                     </button>
 
                     <p className="text-xs text-muted-foreground text-center mt-3">
-                        Usamos OAuth 2.0 para una conexión segura
+                        {t('appointments.google.oauthSecure')}
                     </p>
                 </div>
             </div>
@@ -223,7 +223,7 @@ export const GoogleCalendarConnect: React.FC<GoogleCalendarConnectProps> = ({
                             onClick={handleSync}
                             disabled={isSyncing}
                             className="p-2 text-muted-foreground hover:text-foreground hover:bg-secondary rounded-lg transition-colors disabled:opacity-50"
-                            title="Sincronizar ahora"
+                            title={t('appointments.google.syncNow')}
                         >
                             {isSyncing ? (
                                 <Loader2 size={18} className="animate-spin" />
@@ -254,9 +254,9 @@ export const GoogleCalendarConnect: React.FC<GoogleCalendarConnectProps> = ({
                             {/* Sync toggle */}
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <p className="font-medium text-foreground text-sm">Sincronización automática</p>
+                                    <p className="font-medium text-foreground text-sm">{t('appointments.google.autoSync')}</p>
                                     <p className="text-xs text-muted-foreground">
-                                        Mantén tus citas sincronizadas automáticamente
+                                        {t('appointments.google.autoSyncDesc')}
                                     </p>
                                 </div>
                                 <label className="relative inline-flex items-center cursor-pointer">
@@ -279,14 +279,14 @@ export const GoogleCalendarConnect: React.FC<GoogleCalendarConnectProps> = ({
                             {/* Calendar selector */}
                             <div>
                                 <label className="block text-sm font-medium text-foreground mb-2">
-                                    Calendario
+                                    {t('appointments.google.calendarLabel')}
                                 </label>
                                 <select
                                     value={config?.calendarId || 'primary'}
                                     onChange={() => { }}
                                     className="w-full h-10 bg-secondary/50 border border-border rounded-lg px-3 text-sm outline-none focus:ring-2 focus:ring-primary/50"
                                 >
-                                    <option value="primary">Calendario principal</option>
+                                    <option value="primary">{t('appointments.google.primaryCalendar')}</option>
                                 </select>
                             </div>
 
@@ -301,7 +301,7 @@ export const GoogleCalendarConnect: React.FC<GoogleCalendarConnectProps> = ({
                                 ) : (
                                     <Unlink size={16} />
                                 )}
-                                Desconectar
+                                {t('appointments.google.disconnect')}
                             </button>
                         </div>
                     </div>
@@ -319,16 +319,16 @@ export const GoogleCalendarConnect: React.FC<GoogleCalendarConnectProps> = ({
                     )}
 
                     <div className="flex items-center justify-between text-sm">
-                        <span className="text-muted-foreground">Última sincronización:</span>
+                        <span className="text-muted-foreground">{t('appointments.google.lastSync')}</span>
                         <span className="text-foreground">
                             {lastSyncTime
-                                ? lastSyncTime.toLocaleString('es-ES', {
+                                ? lastSyncTime.toLocaleString(i18n.language === 'es' ? 'es-ES' : 'en-US', {
                                     day: 'numeric',
                                     month: 'short',
                                     hour: '2-digit',
                                     minute: '2-digit'
                                 })
-                                : 'Nunca'
+                                : t('appointments.google.never')
                             }
                         </span>
                     </div>
@@ -339,7 +339,7 @@ export const GoogleCalendarConnect: React.FC<GoogleCalendarConnectProps> = ({
                         rel="noopener noreferrer"
                         className="mt-3 flex items-center justify-center gap-2 text-sm text-primary hover:underline"
                     >
-                        Abrir Google Calendar
+                        {t('appointments.google.openGoogleCalendar')}
                         <ExternalLink size={14} />
                     </a>
                 </div>

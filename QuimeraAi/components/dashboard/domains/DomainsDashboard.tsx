@@ -11,7 +11,7 @@ import { ROUTES } from '../../../routes/config';
 import DashboardSidebar from '../DashboardSidebar';
 import DashboardWaveRibbons from '../DashboardWaveRibbons';
 import ConfirmationModal from '../../ui/ConfirmationModal';
-import { Menu, Search, Plus, Link2, CheckCircle, AlertTriangle, Clock, Copy, Globe, ShoppingCart, ExternalLink, RefreshCw, Loader2, X, Trash2, Settings, ArrowLeft, Crown, Zap, ChevronDown, ChevronUp } from 'lucide-react';
+import { Menu, Search, Plus, Link2, CheckCircle, AlertTriangle, Clock, Copy, Globe, ShoppingCart, ExternalLink, RefreshCw, Loader2, X, Trash2, Settings, ArrowLeft, Crown, Zap, ChevronDown, ChevronUp, Building2, Lock, ClipboardList, ShieldCheck, XCircle, User, Server, Sparkles, Timer } from 'lucide-react';
 import Modal from '../../ui/Modal';
 import { Domain } from '../../../types';
 
@@ -70,7 +70,7 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
     const [showLogs, setShowLogs] = useState(false);
     const [isExpanded, setIsExpanded] = useState(false);
     const [deployProvider] = useState<'vercel' | 'cloudflare' | 'netlify' | 'cloud_run'>('cloud_run');
-    const [verificationMessage, setVerificationMessage] = useState<string | null>(null);
+    const [verificationMessage, setVerificationMessage] = useState<{ text: string; status: 'success' | 'error' | 'pending' } | null>(null);
 
     // Check if domain has Cloudflare nameservers (simplified flow)
     const hasCloudflareSetup = !!(domain as any).cloudflareNameservers?.length;
@@ -88,10 +88,10 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
                 const result = await verifyExternalDomainNameservers(domain.name);
 
                 if (result.verified) {
-                    setVerificationMessage('✅ ' + result.message);
+                    setVerificationMessage({ text: result.message, status: 'success' });
                     await refetch(); // Refresh domain list
                 } else {
-                    setVerificationMessage('⏳ ' + result.message);
+                    setVerificationMessage({ text: result.message, status: 'pending' });
                 }
             } else {
                 // Legacy verification for domains without Cloudflare
@@ -99,7 +99,7 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
             }
         } catch (error: any) {
             console.error('[DomainCard] Verification error:', error);
-            setVerificationMessage('❌ ' + (error.message || t('domainsDashboard.domainErrorMessage')));
+            setVerificationMessage({ text: error.message || t('domainsDashboard.domainErrorMessage'), status: 'error' });
         } finally {
             setIsVerifying(false);
         }
@@ -112,15 +112,15 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
     const confirmDelete = async () => {
         setIsDeleting(true);
         try {
-            console.log(`🗑️ [DomainCard] === STARTING DELETE ===`);
-            console.log(`🗑️ [DomainCard] Domain: ${domain.name} (ID: ${domain.id})`);
+            console.log(`[DomainCard] === STARTING DELETE ===`);
+            console.log(`[DomainCard] Domain: ${domain.name} (ID: ${domain.id})`);
 
             await deleteDomain(domain.id);
 
-            console.log(`✅ [DomainCard] Delete completed`);
+            console.log(`[DomainCard] Delete completed`);
         } catch (error: any) {
-            console.error('❌ [DomainCard] Delete FAILED:', error);
-            alert(`❌ Error:\n\n${error?.message || t('domainsDashboard.errorUnknown')}\n\nRevisa la consola para más detalles.`);
+            console.error('[DomainCard] Delete FAILED:', error);
+            alert(`Error:\n\n${error?.message || t('domainsDashboard.errorUnknown')}\n\nRevisa la consola para más detalles.`);
         } finally {
             setIsDeleting(false);
             setDeleteConfirmOpen(false);
@@ -222,12 +222,12 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
                             <span className="text-xs text-muted-foreground">• {domain.provider}</span>
                             {isAgencyLandingDomain && (
                                 <span className="text-xs font-bold text-indigo-500 flex items-center bg-indigo-500/10 px-2 py-0.5 rounded-full border border-indigo-500/20">
-                                    🏢 Agency Landing
+                                    <Building2 size={12} className="mr-1" /> Agency Landing
                                 </span>
                             )}
                             {domain.sslStatus === 'active' && (
                                 <span className="text-xs font-bold text-green-500 flex items-center bg-green-500/10 px-2 py-0.5 rounded-full border border-green-500/20">
-                                    🔒 SSL
+                                    <Lock size={12} className="mr-1" /> SSL
                                 </span>
                             )}
                             {domain.sslStatus === 'provisioning' && (
@@ -237,8 +237,8 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
                             )}
                         </div>
                         {!isExpanded && domain.deployment?.deploymentUrl && (
-                            <p className="text-xs text-muted-foreground mt-1">
-                                🌐 {domain.deployment.deploymentUrl}
+                            <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+                                <Globe size={12} /> {domain.deployment.deploymentUrl}
                             </p>
                         )}
                     </div>
@@ -331,28 +331,28 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
 
                     {/* Status Messages */}
                     {!domain.projectId && (
-                        <p className="text-xs text-yellow-600 bg-yellow-500/10 p-2 rounded">
-                            ⚠️ {t('domainsDashboard.selectProjectWarning')}
+                        <p className="text-xs text-yellow-600 bg-yellow-500/10 p-2 rounded flex items-center gap-1.5">
+                            <AlertTriangle size={14} className="shrink-0" /> {t('domainsDashboard.selectProjectWarning')}
                         </p>
                     )}
                     {domain.projectId && domain.status === 'pending' && !hasCloudflareSetup && (
-                        <p className="text-xs text-blue-600 bg-blue-500/10 p-2 rounded">
-                            📋 {t('domainsDashboard.configureDnsWarning')}
+                        <p className="text-xs text-blue-600 bg-blue-500/10 p-2 rounded flex items-center gap-1.5">
+                            <ClipboardList size={14} className="shrink-0" /> {t('domainsDashboard.configureDnsWarning')}
                         </p>
                     )}
                     {domain.status === 'ssl_pending' && (
-                        <p className="text-xs text-purple-600 bg-purple-500/10 p-2 rounded">
-                            🔐 {t('domainsDashboard.sslGenerating')}
+                        <p className="text-xs text-purple-600 bg-purple-500/10 p-2 rounded flex items-center gap-1.5">
+                            <ShieldCheck size={14} className="shrink-0" /> {t('domainsDashboard.sslGenerating')}
                         </p>
                     )}
                     {domain.status === 'active' && (
-                        <p className="text-xs text-green-600 bg-green-500/10 p-2 rounded">
-                            ✅ {t('domainsDashboard.domainActiveMessage')} <a href={`https://${domain.name}`} target="_blank" rel="noreferrer" className="underline font-bold">{domain.name}</a>
+                        <p className="text-xs text-green-600 bg-green-500/10 p-2 rounded flex items-center gap-1.5">
+                            <CheckCircle size={14} className="shrink-0" /> {t('domainsDashboard.domainActiveMessage')} <a href={`https://${domain.name}`} target="_blank" rel="noreferrer" className="underline font-bold">{domain.name}</a>
                         </p>
                     )}
                     {domain.status === 'error' && (
-                        <p className="text-xs text-red-500 bg-red-500/10 p-2 rounded">
-                            ❌ Error: {domain.deployment?.error || t('domainsDashboard.domainErrorMessage')}
+                        <p className="text-xs text-red-500 bg-red-500/10 p-2 rounded flex items-center gap-1.5">
+                            <XCircle size={14} className="shrink-0" /> Error: {domain.deployment?.error || t('domainsDashboard.domainErrorMessage')}
                         </p>
                     )}
 
@@ -542,13 +542,16 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
 
                         {/* Verification message */}
                         {verificationMessage && (
-                            <div className={`p-3 rounded-lg text-sm mb-4 ${verificationMessage.startsWith('✅')
+                            <div className={`p-3 rounded-lg text-sm mb-4 flex items-center gap-2 ${verificationMessage.status === 'success'
                                 ? 'bg-green-500/10 border border-green-500/20 text-green-600'
-                                : verificationMessage.startsWith('❌')
+                                : verificationMessage.status === 'error'
                                     ? 'bg-red-500/10 border border-red-500/20 text-red-500'
                                     : 'bg-yellow-500/10 border border-yellow-500/20 text-yellow-600'
                                 }`}>
-                                {verificationMessage}
+                                {verificationMessage.status === 'success' && <CheckCircle size={16} className="shrink-0" />}
+                                {verificationMessage.status === 'error' && <XCircle size={16} className="shrink-0" />}
+                                {verificationMessage.status === 'pending' && <Clock size={16} className="shrink-0" />}
+                                {verificationMessage.text}
                             </div>
                         )}
 
@@ -1072,8 +1075,8 @@ const DomainSearch: React.FC<{ onClose: () => void }> = ({ onClose }) => {
 
             {/* Error message */}
             {error && (
-                <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-500 text-sm">
-                    ❌ {error}
+                <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-500 text-sm flex items-center gap-1.5">
+                    <XCircle size={16} className="shrink-0" /> {error}
                 </div>
             )}
 
@@ -1381,7 +1384,7 @@ const DomainsDashboard: React.FC = () => {
                                             {/* Row 1: User */}
                                             <div className="flex items-center gap-3 bg-blue-500/10 border border-blue-500/20 rounded-xl px-5 py-3 w-full max-w-md">
                                                 <div className="w-10 h-10 bg-blue-500/20 rounded-full flex items-center justify-center shrink-0">
-                                                    <span className="text-xl">👤</span>
+                                                    <User size={20} className="text-blue-500" />
                                                 </div>
                                                 <div>
                                                     <p className="font-bold text-foreground text-sm">{t('domainsDashboard.guide.diagramClientTypes')}</p>
@@ -1396,7 +1399,7 @@ const DomainsDashboard: React.FC = () => {
                                             {/* Row 2: DNS */}
                                             <div className="flex items-center gap-3 bg-amber-500/10 border border-amber-500/20 rounded-xl px-5 py-3 w-full max-w-md">
                                                 <div className="w-10 h-10 bg-amber-500/20 rounded-full flex items-center justify-center shrink-0">
-                                                    <span className="text-xl">🌐</span>
+                                                    <Globe size={20} className="text-amber-500" />
                                                 </div>
                                                 <div>
                                                     <p className="font-bold text-foreground text-sm">{t('domainsDashboard.guide.diagramDnsLookup')}</p>
@@ -1411,7 +1414,7 @@ const DomainsDashboard: React.FC = () => {
                                             {/* Row 3: Our Server */}
                                             <div className="flex items-center gap-3 bg-green-500/10 border border-green-500/20 rounded-xl px-5 py-3 w-full max-w-md">
                                                 <div className="w-10 h-10 bg-green-500/20 rounded-full flex items-center justify-center shrink-0">
-                                                    <span className="text-xl">🖥️</span>
+                                                    <Server size={20} className="text-green-500" />
                                                 </div>
                                                 <div>
                                                     <p className="font-bold text-foreground text-sm">{t('domainsDashboard.guide.diagramServerShows')}</p>
@@ -1426,7 +1429,7 @@ const DomainsDashboard: React.FC = () => {
                                             {/* Row 4: Result */}
                                             <div className="flex items-center gap-3 bg-purple-500/10 border border-purple-500/20 rounded-xl px-5 py-3 w-full max-w-md">
                                                 <div className="w-10 h-10 bg-purple-500/20 rounded-full flex items-center justify-center shrink-0">
-                                                    <span className="text-xl">✨</span>
+                                                    <Sparkles size={20} className="text-purple-500" />
                                                 </div>
                                                 <div>
                                                     <p className="font-bold text-foreground text-sm">{t('domainsDashboard.guide.diagramResult')}</p>
@@ -1663,8 +1666,8 @@ const DomainsDashboard: React.FC = () => {
 
                                     {/* ======== PRO TIP ======== */}
                                     <div className="border-t border-primary/20 pt-4">
-                                        <p className="text-xs text-muted-foreground flex gap-2">
-                                            <span className="shrink-0">⏱️</span>
+                                        <p className="text-xs text-muted-foreground flex items-start gap-2">
+                                            <Timer size={14} className="shrink-0 mt-0.5" />
                                             <span dangerouslySetInnerHTML={{ __html: t('domainsDashboard.guide.proTip') }} />
                                         </p>
                                     </div>
@@ -1745,8 +1748,8 @@ const DomainsDashboard: React.FC = () => {
 
                         {/* Error message */}
                         {cloudflareError && (
-                            <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-500 text-sm">
-                                ❌ {cloudflareError}
+                            <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-500 text-sm flex items-center gap-1.5">
+                                <XCircle size={16} className="shrink-0" /> {cloudflareError}
                             </div>
                         )}
 

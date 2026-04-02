@@ -866,18 +866,14 @@ function getErrorPage(): string {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Error</title>
+    <title>Loading...</title>
     <style>
-        body { font-family: system-ui, sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; background: #1f2937; color: #9ca3af; }
-        .container { text-align: center; padding: 3rem; }
-        h1 { color: #f87171; margin-bottom: 1rem; }
+        body { margin: 0; background: #0f172a; min-height: 100vh; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>⚠️ Error del servidor</h1>
-        <p>Ocurrió un error al procesar tu solicitud. Por favor, intenta de nuevo.</p>
-    </div>
+    <!-- SSR error fallback - client-side React takes over -->
+    <div id="root"></div>
 </body>
 </html>`;
 }

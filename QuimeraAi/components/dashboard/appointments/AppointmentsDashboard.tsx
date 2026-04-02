@@ -83,6 +83,7 @@ import {
     getSavedConnectionState,
     syncAppointmentToGoogle,
     getCalendarEvents,
+    importGoogleEvents,
 } from '../../../utils/googleCalendarService';
 
 // =============================================================================
@@ -230,8 +231,19 @@ const AppointmentsDashboard: React.FC = () => {
                 const syncResult = await syncAppointmentToGoogle(createdAppointment, 'primary', true);
 
                 if (syncResult.syncStatus === 'synced') {
-                    await updateAppointment(createdAppointment.id, { googleSync: syncResult });
-                    console.log('✅ Auto-synced to Google Calendar!');
+                    // Check if Google created a Meet link we should save back
+                    const meetUrl = (syncResult as any)._meetUrl;
+                    const updates: Partial<Appointment> = { googleSync: syncResult };
+                    if (meetUrl && !createdAppointment.location?.meetingUrl) {
+                        updates.location = {
+                            ...createdAppointment.location,
+                            type: 'virtual',
+                            meetingUrl: meetUrl,
+                            platform: 'google_meet',
+                        };
+                    }
+                    await updateAppointment(createdAppointment.id, updates);
+                    console.log('✅ Auto-synced to Google Calendar!' + (meetUrl ? ' (Meet link saved)' : ''));
                 } else {
                     console.warn('⚠️ Sync completed with status:', syncResult.syncStatus);
                 }
@@ -327,6 +339,8 @@ const AppointmentsDashboard: React.FC = () => {
     // Google Calendar state
     const [isGoogleLoading, setIsGoogleLoading] = useState(false);
     const [googleError, setGoogleError] = useState<string | null>(null);
+    const [lastSyncTime, setLastSyncTime] = useState<Date | undefined>();
+    const [syncStatus, setSyncStatus] = useState<'synced' | 'pending' | 'error' | 'not_synced'>('not_synced');
 
     // Check if Google Client ID is configured
     const hasGoogleCredentials = !!import.meta.env.VITE_GOOGLE_CLIENT_ID;
@@ -353,17 +367,35 @@ const AppointmentsDashboard: React.FC = () => {
                     }
                 );
 
-                // Check if already authenticated or was previously connected
+                // Check if was previously connected — but only trust it if there's an actual token
                 const wasConnected = getSavedConnectionState();
-                if (isAuthenticated() || wasConnected) {
-                    console.log('📌 Restoring previous connection state');
+                if (isAuthenticated()) {
+                    console.log('📌 Restoring connection: token is still valid');
                     setIsGoogleConnected(true);
+                } else if (wasConnected) {
+                    // Token expired but user was previously connected
+                    // Try silent re-auth using prompt: ''
+                    console.log('📌 Previous connection detected, attempting silent re-auth...');
+                    try {
+                        const token = await requestAuthorization();
+                        if (token) {
+                            console.log('✅ Silent re-auth successful');
+                            setIsGoogleConnected(true);
+                        } else {
+                            console.log('⚠️ Silent re-auth failed, user needs to re-connect');
+                            setIsGoogleConnected(false);
+                        }
+                    } catch (reAuthError: any) {
+                        console.log('⚠️ Silent re-auth failed:', reAuthError.message);
+                        // Don't show error, just mark as disconnected
+                        setIsGoogleConnected(false);
+                    }
                 }
 
                 console.log('✅ Google Calendar API initialized');
             } catch (error: any) {
                 console.error('❌ Error initializing Google API:', error);
-                setGoogleError('Error al inicializar Google API');
+                setGoogleError(t('appointments.google.errorInitApi'));
             }
         };
 
@@ -373,7 +405,7 @@ const AppointmentsDashboard: React.FC = () => {
     // Google Calendar handlers
     const handleGoogleConnect = useCallback(async () => {
         if (!hasGoogleCredentials) {
-            setGoogleError('Google Calendar no está configurado. Agrega VITE_GOOGLE_CLIENT_ID a tu archivo .env.local');
+            setGoogleError(t('appointments.google.notConfigured'));
             return;
         }
 
@@ -382,7 +414,8 @@ const AppointmentsDashboard: React.FC = () => {
 
         try {
             console.log('🔗 Connecting to Google Calendar...');
-            const token = await requestAuthorization();
+            // Force consent on explicit connect to ensure fresh permissions
+            const token = await requestAuthorization(true);
             console.log('✅ Connected! Token received:', token ? 'Yes' : 'No');
             setIsGoogleConnected(true);
             setGoogleError(null);
@@ -390,9 +423,9 @@ const AppointmentsDashboard: React.FC = () => {
             console.error('❌ Error connecting to Google:', error);
             // Check for popup blocked
             if (error.message?.includes('popup')) {
-                setGoogleError('Por favor, permite las ventanas emergentes para conectar con Google Calendar');
+                setGoogleError(t('appointments.google.allowPopups'));
             } else {
-                setGoogleError(error.message || 'Error al conectar con Google Calendar');
+                setGoogleError(error.message || t('appointments.google.errorConnect'));
             }
             setIsGoogleConnected(false);
         } finally {
@@ -415,56 +448,139 @@ const AppointmentsDashboard: React.FC = () => {
 
     const handleGoogleSync = useCallback(async () => {
         if (!isGoogleConnected) {
-            setGoogleError('Primero conecta con Google Calendar');
+            setGoogleError(t('appointments.google.connectFirst'));
             return;
         }
 
         setIsGoogleLoading(true);
         setGoogleError(null);
+        setSyncStatus('pending');
 
         try {
-            console.log('🔄 Syncing appointments to Google Calendar...');
+            // Ensure we have a valid token before syncing
+            if (!isAuthenticated()) {
+                console.log('🔐 Token expired, re-authenticating before sync...');
+                try {
+                    await requestAuthorization();
+                    console.log('✅ Re-authenticated successfully');
+                } catch (authError: any) {
+                    console.error('❌ Re-auth failed:', authError);
+                    setIsGoogleConnected(false);
+                    setSyncStatus('error');
+                    setGoogleError(t('appointments.google.connectFirst'));
+                    setIsGoogleLoading(false);
+                    return;
+                }
+            }
 
-            // Sync each appointment to Google Calendar
-            let syncedCount = 0;
-            let errorCount = 0;
+            let pushSyncedCount = 0;
+            let pushErrorCount = 0;
+
+            // ═══════════════════════════════════════════════════
+            // PHASE 1: PUSH — Quimera → Google Calendar
+            // ═══════════════════════════════════════════════════
+            console.log('🔄 Phase 1: Pushing Quimera appointments to Google Calendar...');
+            console.log(`📊 Total appointments to push: ${appointments.length}`);
 
             for (const appointment of appointments) {
                 try {
-                    console.log(`📅 Syncing: ${appointment.title}`);
+                    console.log(`📤 Pushing: ${appointment.title}`);
                     const syncResult = await syncAppointmentToGoogle(appointment, 'primary', true);
 
                     if (syncResult.syncStatus === 'synced') {
-                        // Update the appointment with Google sync info
-                        await updateAppointment(appointment.id, {
-                            googleSync: syncResult,
-                        });
-                        syncedCount++;
-                        console.log(`✅ Synced: ${appointment.title}`);
+                        // Check if Google created a Meet link
+                        const meetUrl = (syncResult as any)._meetUrl;
+                        const updates: Partial<Appointment> = { googleSync: syncResult };
+                        if (meetUrl && !appointment.location?.meetingUrl) {
+                            updates.location = {
+                                ...appointment.location,
+                                type: 'virtual',
+                                meetingUrl: meetUrl,
+                                platform: 'google_meet',
+                            };
+                        }
+                        await updateAppointment(appointment.id, updates);
+                        pushSyncedCount++;
+                        console.log(`✅ Pushed: ${appointment.title}`);
                     } else {
-                        errorCount++;
-                        console.error(`❌ Error syncing: ${appointment.title}`, syncResult.errorMessage);
+                        pushErrorCount++;
+                        console.error(`❌ Error pushing: ${appointment.title}`, syncResult.errorMessage);
                     }
-                } catch (err) {
-                    errorCount++;
-                    console.error(`❌ Error syncing appointment ${appointment.title}:`, err);
+                } catch (err: any) {
+                    pushErrorCount++;
+                    console.error(`❌ Error pushing appointment ${appointment.title}:`, err);
+                    if (err?.message?.includes('Not authenticated')) {
+                        console.error('🔑 Auth issue detected. Token may have expired.');
+                        setIsGoogleConnected(false);
+                        setSyncStatus('error');
+                        setGoogleError(t('appointments.google.connectFirst'));
+                        setIsGoogleLoading(false);
+                        return;
+                    }
                 }
+            }
+
+            // ═══════════════════════════════════════════════════
+            // PHASE 2: PULL — Google Calendar → Quimera
+            // ═══════════════════════════════════════════════════
+            console.log('🔄 Phase 2: Pulling Google Calendar events into Quimera...');
+
+            let pullNewCount = 0;
+            let pullUpdatedCount = 0;
+
+            try {
+                const importResult = await importGoogleEvents(appointments, 'primary', 30, 90);
+
+                // Create new appointments from Google events
+                for (const newEvent of importResult.newEvents) {
+                    try {
+                        await createAppointment(newEvent);
+                        pullNewCount++;
+                        console.log(`📥 Imported: ${newEvent.title}`);
+                    } catch (createErr) {
+                        console.error(`❌ Error importing: ${newEvent.title}`, createErr);
+                    }
+                }
+
+                // Update existing appointments with Google changes
+                for (const update of importResult.updatedEvents) {
+                    try {
+                        await updateAppointment(update.appointmentId, update.updates);
+                        pullUpdatedCount++;
+                        console.log(`🔄 Updated from Google: ${update.updates.title || update.appointmentId}`);
+                    } catch (updateErr) {
+                        console.error(`❌ Error updating: ${update.appointmentId}`, updateErr);
+                    }
+                }
+
+                console.log(`📊 Pull results: ${pullNewCount} imported, ${pullUpdatedCount} updated, ${importResult.stats.unchanged} unchanged`);
+            } catch (pullError: any) {
+                console.error('❌ Error during pull phase:', pullError);
+                // Don't fail the entire sync for pull errors
             }
 
             await refresh();
 
-            if (errorCount > 0) {
-                setGoogleError(`Sincronización completada con ${errorCount} errores`);
+            // ═══════════════════════════════════════════════════
+            // PHASE 3: Report results
+            // ═══════════════════════════════════════════════════
+            const totalErrors = pushErrorCount;
+            if (totalErrors > 0) {
+                setGoogleError(t('appointments.google.syncCompleteWithErrors', { count: totalErrors }));
+                setSyncStatus('error');
             } else {
-                console.log(`✅ All ${syncedCount} appointments synced successfully!`);
+                console.log(`✅ Bidirectional sync complete! Pushed: ${pushSyncedCount}, Imported: ${pullNewCount}, Updated: ${pullUpdatedCount}`);
+                setSyncStatus('synced');
+                setLastSyncTime(new Date());
             }
         } catch (error: any) {
             console.error('❌ Sync error:', error);
-            setGoogleError(error.message || 'Error al sincronizar con Google Calendar');
+            setGoogleError(error.message || t('appointments.google.errorSyncCalendar'));
+            setSyncStatus('error');
         } finally {
             setIsGoogleLoading(false);
         }
-    }, [isGoogleConnected, appointments, updateAppointment, refresh]);
+    }, [isGoogleConnected, appointments, updateAppointment, createAppointment, refresh, t]);
 
     // Search filter
     const displayedAppointments = useMemo(() => {
@@ -501,7 +617,7 @@ const AppointmentsDashboard: React.FC = () => {
             case 'month':
                 return currentDate.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });
             default:
-                return 'Todas las citas';
+                return t('appointments.allAppointments');
         }
     };
 
@@ -535,7 +651,7 @@ const AppointmentsDashboard: React.FC = () => {
                                 <Calendar className="text-primary w-4 h-4 sm:w-5 sm:h-5" />
                             </div>
                             <div>
-                                <h1 className="text-base sm:text-lg font-bold text-foreground">Citas</h1>
+                                <h1 className="text-base sm:text-lg font-bold text-foreground">{t('appointments.title')}</h1>
                             </div>
                         </div>
                     </div>
@@ -545,13 +661,13 @@ const AppointmentsDashboard: React.FC = () => {
                         <div className="hidden lg:flex items-center gap-6 mr-4 pr-4 border-r border-border">
                             <div className="text-right">
                                 <p className="text-[10px] text-muted-foreground uppercase font-semibold tracking-wider">
-                                    Completadas
+                                    {t('appointments.completedLabel')}
                                 </p>
                                 <p className="text-lg font-bold text-green-500">{analytics.completedAppointments}</p>
                             </div>
                             <div className="text-right">
                                 <p className="text-[10px] text-muted-foreground uppercase font-semibold tracking-wider">
-                                    Tasa éxito
+                                    {t('appointments.successRate')}
                                 </p>
                                 <p className="text-lg font-bold text-foreground">{analytics.completionRate.toFixed(0)}%</p>
                             </div>
@@ -570,7 +686,7 @@ const AppointmentsDashboard: React.FC = () => {
                         >
                             <Calendar className="w-4 h-4" />
                             <span className="hidden lg:inline">
-                                {isGoogleConnected ? 'Sincronizado' : 'Google'}
+                                {isGoogleConnected ? t('appointments.google.syncButton') : t('appointments.google.googleButton')}
                             </span>
                         </button>
                     </div>
@@ -609,7 +725,7 @@ const AppointmentsDashboard: React.FC = () => {
                             {/* Status filters */}
                             <div>
                                 <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block">
-                                    Estado
+                                    {t('appointments.statusFilter')}
                                 </label>
                                 <div className="flex flex-wrap gap-1">
                                     {Object.entries(APPOINTMENT_STATUS_CONFIGS).map(([key, config]) => {
@@ -644,7 +760,7 @@ const AppointmentsDashboard: React.FC = () => {
                             {/* Type filters */}
                             <div>
                                 <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block">
-                                    Tipo
+                                    {t('appointments.typeFilter')}
                                 </label>
                                 <div className="flex flex-wrap gap-1">
                                     {Object.entries(APPOINTMENT_TYPE_CONFIGS).map(([key, config]) => {
@@ -682,7 +798,7 @@ const AppointmentsDashboard: React.FC = () => {
                                     onClick={clearFilters}
                                     className="text-xs text-muted-foreground hover:text-foreground hover:underline"
                                 >
-                                    Limpiar filtros
+                                    {t('appointments.clearFilters')}
                                 </button>
                             </div>
                         </div>
@@ -697,7 +813,7 @@ const AppointmentsDashboard: React.FC = () => {
                             <div className="h-full flex items-center justify-center">
                                 <div className="text-center">
                                     <Loader2 className="w-10 h-10 text-primary animate-spin mx-auto mb-4" />
-                                    <p className="text-sm text-muted-foreground">Cargando citas...</p>
+                                    <p className="text-sm text-muted-foreground">{t('appointments.loadingAppointments')}</p>
                                 </div>
                             </div>
                         ) : (
@@ -770,6 +886,8 @@ const AppointmentsDashboard: React.FC = () => {
                                 onConnect={handleGoogleConnect}
                                 onDisconnect={handleGoogleDisconnect}
                                 onSync={handleGoogleSync}
+                                syncStatus={syncStatus}
+                                lastSyncTime={lastSyncTime}
                             />
                         </div>
                     )}

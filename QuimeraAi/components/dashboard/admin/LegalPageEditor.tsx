@@ -68,7 +68,7 @@ const LegalPageEditor: React.FC<LegalPageEditorProps> = ({ pageType, onClose }) 
     const [formData, setFormData] = useState<LegalPage>({
         id: pageType,
         type: pageType,
-        title: LEGAL_PAGE_LABELS[pageType],
+        title: t(`contentManagement.legal.${pageType}`, LEGAL_PAGE_LABELS[pageType]),
         subtitle: '',
         lastUpdated: new Date().toISOString(),
         contactEmail: 'privacy@quimera.ai',
@@ -76,15 +76,23 @@ const LegalPageEditor: React.FC<LegalPageEditorProps> = ({ pageType, onClose }) 
         sections: [],
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
+        language: 'es',
     });
 
     // Load existing page data
     useEffect(() => {
-        const existingPage = getLegalPageByType(pageType);
+        const existingPage = getLegalPageByType(pageType, formData.language);
         if (existingPage) {
             setFormData(existingPage);
+        } else {
+            // Reset to defaults for the selected language if not found
+            setFormData(prev => ({
+                ...prev,
+                sections: [],
+                title: t(`contentManagement.legal.${pageType}`, LEGAL_PAGE_LABELS[pageType]),
+            }));
         }
-    }, [pageType, getLegalPageByType]);
+    }, [pageType, getLegalPageByType, formData.language]);
 
     const handleSave = async () => {
         setIsSaving(true);
@@ -95,10 +103,10 @@ const LegalPageEditor: React.FC<LegalPageEditorProps> = ({ pageType, onClose }) 
                 lastUpdated: new Date().toISOString(),
             });
             setHasChanges(false);
-            showToast('Página legal guardada correctamente', 'success');
+            showToast(t('contentManagement.legal.saveSuccess', 'Página legal guardada correctamente'), 'success');
         } catch (error) {
             console.error('Error saving legal page:', error);
-            showToast('Error al guardar la página', 'error');
+            showToast(t('contentManagement.legal.saveError', 'Error al guardar la página'), 'error');
         } finally {
             setIsSaving(false);
         }
@@ -113,7 +121,7 @@ const LegalPageEditor: React.FC<LegalPageEditorProps> = ({ pageType, onClose }) 
     const addSection = () => {
         const newSection: LegalPageSection = {
             id: `section_${Date.now()}`,
-            title: 'Nueva Sección',
+            title: t('contentManagement.legal.newSection', 'Nueva Sección'),
             icon: 'FileText',
             content: '',
         };
@@ -159,27 +167,43 @@ const LegalPageEditor: React.FC<LegalPageEditorProps> = ({ pageType, onClose }) 
                         className="flex items-center gap-2 text-editor-text-secondary hover:text-editor-text-primary transition-colors"
                     >
                         <ArrowLeft size={18} />
-                        Volver
+                        {t('common.back', 'Volver')}
                     </button>
                     <div className="flex items-center gap-2">
                         <Shield className="text-editor-accent" size={20} />
                         <h1 className="text-lg font-semibold text-editor-text-primary">
-                            {LEGAL_PAGE_LABELS[pageType]}
+                            {t(`contentManagement.legal.${pageType}`, LEGAL_PAGE_LABELS[pageType])}
                         </h1>
                     </div>
                 </div>
                 <div className="flex items-center gap-3">
                     {hasChanges && (
-                        <span className="text-xs text-orange-500 font-medium">Cambios sin guardar</span>
+                        <span className="text-xs text-orange-500 font-medium">{t('contentManagement.legal.unsavedChanges', 'Cambios sin guardar')}</span>
                     )}
+                    <div className="flex items-center gap-3">
+                    <div className="flex items-center bg-secondary rounded-lg p-1 text-xs font-medium">
+                        <button 
+                            onClick={() => setFormData(prev => ({ ...prev, language: 'es' }))} 
+                            className={`px-3 py-1.5 rounded-md transition-all ${formData.language === 'es' ? 'bg-background shadow text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+                        >
+                            Español
+                        </button>
+                        <button 
+                            onClick={() => setFormData(prev => ({ ...prev, language: 'en' }))} 
+                            className={`px-3 py-1.5 rounded-md transition-all ${formData.language === 'en' ? 'bg-background shadow text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+                        >
+                            English
+                        </button>
+                    </div>
                     <button
                         onClick={handleSave}
                         disabled={isSaving || !hasChanges}
-                        className="flex items-center gap-2 px-4 py-1.5 bg-primary text-primary-foreground text-sm font-medium rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50"
+                        className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-lg font-bold hover:opacity-90 transition-all disabled:opacity-50 shadow-md whitespace-nowrap"
                     >
-                        {isSaving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
-                        Guardar
+                        {isSaving ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}
+                        <span className="hidden sm:inline">{t('common.saveChanges', 'Guardar Cambios')}</span>
                     </button>
+                </div>
                 </div>
             </header>
 
@@ -188,11 +212,11 @@ const LegalPageEditor: React.FC<LegalPageEditorProps> = ({ pageType, onClose }) 
                 <div className="max-w-4xl mx-auto space-y-6">
                     {/* Basic Info */}
                     <div className="bg-card border border-border rounded-xl p-6">
-                        <h2 className="font-semibold mb-4">Información General</h2>
+                        <h2 className="font-semibold mb-4">{t('contentManagement.editor.generalInfo', 'Información General')}</h2>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label className="block text-sm font-medium text-muted-foreground mb-2">
-                                    Título
+                                    {t('contentManagement.editor.title', 'Título')}
                                 </label>
                                 <input
                                     type="text"
@@ -203,7 +227,7 @@ const LegalPageEditor: React.FC<LegalPageEditorProps> = ({ pageType, onClose }) 
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-muted-foreground mb-2">
-                                    Email de Contacto
+                                    {t('contentManagement.editor.contactEmail', 'Email de Contacto')}
                                 </label>
                                 <input
                                     type="email"
@@ -215,27 +239,27 @@ const LegalPageEditor: React.FC<LegalPageEditorProps> = ({ pageType, onClose }) 
                             </div>
                             <div className="md:col-span-2">
                                 <label className="block text-sm font-medium text-muted-foreground mb-2">
-                                    Subtítulo / Descripción
+                                    {t('contentManagement.editor.subtitleDescription', 'Subtítulo / Descripción')}
                                 </label>
                                 <input
                                     type="text"
                                     value={formData.subtitle || ''}
                                     onChange={(e) => updateForm('subtitle', e.target.value)}
                                     className="w-full px-3 py-2 bg-secondary/30 border border-border rounded-lg outline-none focus:border-primary"
-                                    placeholder="Breve descripción de la página"
+                                    placeholder={t('contentManagement.editor.subtitlePlaceholder', 'Breve descripción de la página')}
                                 />
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-muted-foreground mb-2">
-                                    Estado
+                                    {t('contentManagement.editor.status', 'Estado')}
                                 </label>
                                 <select
                                     value={formData.status}
                                     onChange={(e) => updateForm('status', e.target.value as 'published' | 'draft')}
                                     className="w-full px-3 py-2 bg-secondary/30 border border-border rounded-lg outline-none focus:border-primary"
                                 >
-                                    <option value="draft">Borrador</option>
-                                    <option value="published">Publicado</option>
+                                    <option value="draft">{t('contentManagement.status.draft', 'Borrador')}</option>
+                                    <option value="published">{t('contentManagement.status.published', 'Publicado')}</option>
                                 </select>
                             </div>
                         </div>
@@ -244,22 +268,22 @@ const LegalPageEditor: React.FC<LegalPageEditorProps> = ({ pageType, onClose }) 
                     {/* Sections */}
                     <div className="bg-card border border-border rounded-xl p-6">
                         <div className="flex items-center justify-between mb-4">
-                            <h2 className="font-semibold">Secciones del Documento</h2>
+                            <h2 className="font-semibold">{t('contentManagement.legal.sections', 'Secciones del Documento')}</h2>
                             <button
                                 onClick={addSection}
                                 className="flex items-center gap-2 px-3 py-1.5 text-sm text-primary hover:bg-primary/10 rounded-lg transition-colors"
                             >
                                 <Plus size={14} />
-                                Añadir Sección
+                                {t('contentManagement.legal.addSection', 'Añadir Sección')}
                             </button>
                         </div>
 
                         {formData.sections.length === 0 ? (
                             <div className="text-center py-12 bg-secondary/20 rounded-lg">
                                 <FileText className="w-12 h-12 mx-auto text-muted-foreground opacity-30 mb-3" />
-                                <p className="text-muted-foreground mb-2">No hay secciones</p>
+                                <p className="text-muted-foreground mb-2">{t('contentManagement.legal.noSections', 'No hay secciones')}</p>
                                 <p className="text-sm text-muted-foreground">
-                                    Añade secciones para estructurar el contenido de esta página legal.
+                                    {t('contentManagement.legal.noSectionsDescription', 'Añade secciones para estructurar el contenido de esta página legal.')}
                                 </p>
                             </div>
                         ) : (
@@ -314,7 +338,7 @@ const LegalPageEditor: React.FC<LegalPageEditorProps> = ({ pageType, onClose }) 
                                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                         <div>
                                                             <label className="block text-sm font-medium text-muted-foreground mb-2">
-                                                                Título de la Sección
+                                                                {t('contentManagement.legal.sectionTitle', 'Título de la Sección')}
                                                             </label>
                                                             <input
                                                                 type="text"
@@ -325,7 +349,7 @@ const LegalPageEditor: React.FC<LegalPageEditorProps> = ({ pageType, onClose }) 
                                                         </div>
                                                         <div>
                                                             <label className="block text-sm font-medium text-muted-foreground mb-2">
-                                                                Icono
+                                                                {t('contentManagement.legal.icon', 'Icono')}
                                                             </label>
                                                             <select
                                                                 value={section.icon || 'FileText'}
@@ -340,17 +364,17 @@ const LegalPageEditor: React.FC<LegalPageEditorProps> = ({ pageType, onClose }) 
                                                     </div>
                                                     <div>
                                                         <label className="block text-sm font-medium text-muted-foreground mb-2">
-                                                            Contenido (Markdown soportado)
+                                                            {t('contentManagement.legal.contentMarkdown', 'Contenido (Markdown soportado)')}
                                                         </label>
                                                         <textarea
                                                             value={section.content}
                                                             onChange={(e) => updateSection(section.id, { content: e.target.value })}
                                                             rows={8}
                                                             className="w-full px-3 py-2 bg-background border border-border rounded-lg outline-none focus:border-primary font-mono text-sm resize-y"
-                                                            placeholder="Escribe el contenido de esta sección. Puedes usar markdown para formatear."
+                                                            placeholder={t('contentManagement.legal.contentPlaceholder', 'Escribe el contenido de esta sección. Puedes usar markdown para formatear.')}
                                                         />
                                                         <p className="text-xs text-muted-foreground mt-1">
-                                                            Usa **texto** para negrita, - para listas, \n para saltos de línea
+                                                            {t('contentManagement.legal.markdownHint', 'Usa **texto** para negrita, - para listas, \\n para saltos de línea')}
                                                         </p>
                                                     </div>
                                                 </div>
@@ -364,7 +388,7 @@ const LegalPageEditor: React.FC<LegalPageEditorProps> = ({ pageType, onClose }) 
 
                     {/* Preview Link */}
                     <div className="bg-card border border-border rounded-xl p-6">
-                        <h2 className="font-semibold mb-4">Vista Previa</h2>
+                        <h2 className="font-semibold mb-4">{t('common.preview', 'Vista Previa')}</h2>
                         <div className="flex items-center gap-4">
                             <a
                                 href={`/${pageType}`}
@@ -373,7 +397,7 @@ const LegalPageEditor: React.FC<LegalPageEditorProps> = ({ pageType, onClose }) 
                                 className="flex items-center gap-2 px-4 py-2 bg-secondary/30 hover:bg-secondary/50 rounded-lg transition-colors"
                             >
                                 <Eye size={16} />
-                                Ver página pública
+                                {t('contentManagement.legal.viewPublicPage', 'Ver página pública')}
                             </a>
                             <span className="text-sm text-muted-foreground">
                                 URL: /{pageType}
@@ -387,8 +411,8 @@ const LegalPageEditor: React.FC<LegalPageEditorProps> = ({ pageType, onClose }) 
                 isOpen={!!pendingDeleteSectionId}
                 onConfirm={confirmDeleteSection}
                 onCancel={() => setPendingDeleteSectionId(null)}
-                title="¿Eliminar sección?"
-                message="¿Estás seguro de eliminar esta sección? Esta acción no se puede deshacer."
+                title={t('contentManagement.legal.deleteSectionTitle', '¿Eliminar sección?')}
+                message={t('contentManagement.legal.deleteSectionMessage', '¿Estás seguro de eliminar esta sección? Esta acción no se puede deshacer.')}
                 variant="danger"
             />
         </div>
