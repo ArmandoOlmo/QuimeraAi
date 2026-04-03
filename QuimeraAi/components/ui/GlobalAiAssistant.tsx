@@ -2462,18 +2462,11 @@ const GlobalAiAssistant: React.FC = () => {
                 config: {
                     responseModalities: [Modality.AUDIO],
                     speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: globalAssistantConfig.voiceName } } },
-                    tools: [{ functionDeclarations: TOOLS }],
-                    systemInstruction: getEffectiveSystemInstruction('voice'),
-                    // Gemini 3.1 Flash Live: Unlimited session duration
-                    contextWindowCompression: { slidingWindow: {} },
-                    // Gemini 3.1 Flash Live: Auto-reconnect on WebSocket drop
-                    sessionResumption: {},
-                    // NOTE: enableAffectiveDialog omitted — SDK serializes it into
-                    // generationConfig where the Live API server rejects it (SDK bug).
-                    // Will re-enable when SDK fix ships.
-                    // Transcription support
-                    inputAudioTranscription: {},
-                    outputAudioTranscription: {},
+                    // DEBUG: Stripped to minimum config to isolate "invalid argument" error
+                    // tools: [{ functionDeclarations: TOOLS }],
+                    // systemInstruction: getEffectiveSystemInstruction('voice'),
+                    // inputAudioTranscription: {},
+                    // outputAudioTranscription: {},
                 },
                 callbacks: {
                     onopen: async () => {
@@ -2482,24 +2475,26 @@ const GlobalAiAssistant: React.FC = () => {
                         setIsLiveActive(true);
                         isConnectedRef.current = true;
 
-                        // Capture and send initial visual context
-                        captureCurrentView().then(screenCapture => {
-                            if (screenCapture && isConnectedRef.current) {
-                                console.log('[Voice Mode] Sending initial screen context...');
-                                sessionPromise.then(session => {
-                                    try {
-                                        session.sendRealtimeInput({
-                                            video: {
-                                                mimeType: "image/jpeg",
-                                                data: screenCapture
-                                            }
-                                        });
-                                    } catch (e) {
-                                        console.error('[Voice Mode] Failed to send initial screen context:', e);
-                                    }
-                                });
+                        // Capture and send initial visual context FIRST (non-blocking)
+                        // Delay slightly to let the connection fully stabilize
+                        const sendScreenContext = async () => {
+                            try {
+                                const screenCapture = await captureCurrentView();
+                                if (screenCapture && isConnectedRef.current) {
+                                    console.log('[Voice Mode] Sending initial screen context...');
+                                    const session = await sessionPromise;
+                                    session.sendRealtimeInput({
+                                        video: {
+                                            mimeType: "image/jpeg",
+                                            data: screenCapture
+                                        }
+                                    });
+                                    console.log('[Voice Mode] ✅ Screen context sent successfully');
+                                }
+                            } catch (e) {
+                                console.warn('[Voice Mode] Failed to send initial screen context (non-fatal):', e);
                             }
-                        });
+                        };
 
                         // Set up audio processing with the already-granted microphone stream
                         const source = inputCtx.createMediaStreamSource(micStream);
@@ -2531,41 +2526,29 @@ const GlobalAiAssistant: React.FC = () => {
                         source.connect(processor);
                         processor.connect(inputCtx.destination);
 
-                        // TRIGGER INITIAL GREETING AFTER 2 SECONDS
-                        setTimeout(() => {
-                            if (!isConnectedRef.current) return;
-                            sessionPromise.then(session => {
-                                console.log('[Voice Mode] 🤖 Triggering initial greeting...');
-
-                                try {
-                                    // Detect Language (User preference or Browser default)
-                                    const userLang = navigator.language || 'es-ES';
-                                    const isSpanish = userLang.toLowerCase().includes('es');
-
-                                    const greetingPrompt = isSpanish
-                                        ? "La sesión ha iniciado. IMPORTANTE: Saluda al usuario corta y amablemente en ESPAÑOL y pregúntale qué desea hacer hoy."
-                                        : "Voice session started. IMPORTANT: Greet the user briefly in ENGLISH and ask what they want to do today.";
-
-                                    // Try standard 'send' method first
-                                    if (typeof (session as any).send === 'function') {
-                                        console.log(`[Voice Mode] Sending greeting prompt (${isSpanish ? 'ES' : 'EN'})...`);
-                                        (session as any).send({
-                                            clientContent: {
-                                                turns: [{
-                                                    role: 'user',
-                                                    parts: [{ text: greetingPrompt }]
-                                                }],
-                                                turnComplete: true
-                                            }
-                                        });
-                                    } else {
-                                        console.warn('[Voice Mode] session.send not found!');
-                                    }
-                                } catch (err) {
-                                    console.error('[Voice Mode] Failed to trigger greeting:', err);
-                                }
-                            });
-                        }, 2000);
+                        // DEBUG: Greeting disabled to test pure audio streaming
+                        // setTimeout(async () => {
+                        //     if (!isConnectedRef.current) return;
+                        //     try {
+                        //         const session = await sessionPromise;
+                        //         console.log('[Voice Mode] 🤖 Triggering initial greeting...');
+                        //         const userLang = navigator.language || 'es-ES';
+                        //         const isSpanish = userLang.toLowerCase().includes('es');
+                        //         const greetingPrompt = isSpanish
+                        //             ? "La sesión ha iniciado. IMPORTANTE: Saluda al usuario corta y amablemente en ESPAÑOL y pregúntale qué desea hacer hoy."
+                        //             : "Voice session started. IMPORTANT: Greet the user briefly in ENGLISH and ask what they want to do today.";
+                        //         console.log(`[Voice Mode] Sending greeting prompt (${isSpanish ? 'ES' : 'EN'})...`);
+                        //         session.sendClientContent({
+                        //             turns: [{ role: 'user', parts: [{ text: greetingPrompt }] }],
+                        //             turnComplete: true
+                        //         });
+                        //         console.log('[Voice Mode] ✅ Greeting sent successfully');
+                        //         setTimeout(() => sendScreenContext(), 1000);
+                        //     } catch (err) {
+                        //         console.error('[Voice Mode] Failed to trigger greeting:', err);
+                        //     }
+                        // }, 2000);
+                        console.log('[Voice Mode] ⏳ Audio streaming started (greeting disabled for debug)');
                     },
                     onmessage: async (message: LiveServerMessage) => {
                         // Debug: log all message types

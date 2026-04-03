@@ -27,11 +27,13 @@ import { useAppContent } from '../../../contexts/appContent';
 import { useAdmin } from '../../../contexts/admin';
 import { useToast } from '../../../contexts/ToastContext';
 import { useFiles } from '../../../contexts/files';
+import { useUI } from '../../../contexts/core/UIContext';
 import { AppArticle, AppArticleCategory } from '../../../types/appContent';
+import { PreviewDevice } from '../../../types';
 import {
     ArrowLeft, Save, Globe, Type, Loader2, Sparkles,
     MoreVertical, Calendar, Check, X as XIcon, Link as LinkIcon,
-    Star, Tag, User
+    Star, Tag, User, Shield, LayoutDashboard, Monitor, Smartphone
 } from 'lucide-react';
 
 import EditorMenuBar from '../../cms/modern/EditorMenuBar';
@@ -39,7 +41,8 @@ import EditorBubbleMenu from '../../cms/modern/EditorBubbleMenu';
 import SlashCommands from '../../cms/modern/SlashCommands';
 import ImagePicker from '../../ui/ImagePicker';
 import { generateContentViaProxy, extractTextFromResponse } from '../../../utils/geminiProxyClient';
-import SimpleEditorHeader from '../../SimpleEditorHeader';
+import { useRouter } from '../../../hooks/useRouter';
+import { ROUTES } from '../../../routes/config';
 import DashboardSidebar from '../DashboardSidebar';
 import { logApiCall } from '../../../services/apiLoggingService';
 
@@ -66,6 +69,8 @@ const ModernAppArticleEditor: React.FC<ModernAppArticleEditorProps> = ({ article
     const { getPrompt } = useAdmin();
     const { showToast } = useToast();
     const { uploadImageAndGetURL } = useFiles();
+    const { navigate } = useRouter();
+    const { previewDevice, setPreviewDevice } = useUI();
 
     // Form State
     const [title, setTitle] = useState(article?.title || '');
@@ -489,8 +494,57 @@ Text to format:
 
             {/* Main Content Area */}
             <div className="flex flex-col flex-1 min-w-0">
-                {/* Use the same SimpleEditorHeader as the rest of the app */}
-                <SimpleEditorHeader showSaveButton={false} showPublishButton={false} />
+                {/* Admin-specific header - NO project name, shows "Contenido App" */}
+                <header className="h-14 px-3 md:px-6 border-b border-border bg-background flex items-center justify-between z-20 sticky top-0 relative" role="banner">
+                    <div className="flex items-center gap-2 md:gap-4 min-w-0">
+                        <button
+                            onClick={() => navigate(ROUTES.DASHBOARD)}
+                            className="h-10 w-10 md:h-9 md:w-9 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors touch-manipulation"
+                            title={t('editor.goToDashboard')}
+                        >
+                            <LayoutDashboard className="w-5 h-5 md:w-4 md:h-4" />
+                        </button>
+                        <div className="hidden md:flex items-center gap-2">
+                            <Shield className="text-primary" size={20} />
+                            <span className="text-lg font-bold text-foreground">{t('contentManagement.appContent', 'Contenido App')}</span>
+                        </div>
+                    </div>
+
+                    {/* CENTER - Device Preview Controls */}
+                    <div className="hidden md:flex items-center gap-2 bg-secondary/50 rounded-lg p-1 absolute left-1/2 -translate-x-1/2">
+                        {([
+                            { name: 'desktop' as PreviewDevice, icon: <Monitor className="w-4 h-4" />, label: t('editor.desktop') },
+                            { name: 'mobile' as PreviewDevice, icon: <Smartphone className="w-4 h-4" />, label: t('editor.mobile') },
+                        ]).map(({ name, icon, label }) => (
+                            <button
+                                key={name}
+                                title={t(`editor.previewOn${name.charAt(0).toUpperCase() + name.slice(1)}`)}
+                                onClick={() => setPreviewDevice(name)}
+                                className={`
+                                    flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all
+                                    ${previewDevice === name
+                                        ? 'bg-primary text-primary-foreground'
+                                        : 'text-muted-foreground hover:text-foreground hover:bg-background/50'
+                                    }
+                                `}
+                            >
+                                {icon}
+                                <span className="capitalize">{label}</span>
+                            </button>
+                        ))}
+                    </div>
+
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                        <button
+                            onClick={onClose}
+                            className="flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all text-muted-foreground hover:text-foreground hover:bg-secondary/50"
+                            aria-label={t('common.back')}
+                        >
+                            <ArrowLeft className="w-4 h-4" />
+                            <span className="hidden sm:inline">{t('common.back')}</span>
+                        </button>
+                    </div>
+                </header>
 
                 <input
                     type="file"
