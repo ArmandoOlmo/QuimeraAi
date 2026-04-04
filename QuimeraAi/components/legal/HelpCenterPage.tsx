@@ -6,7 +6,7 @@
  * Conectado con el sistema de artículos de AppContent
  */
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Search,
@@ -29,17 +29,13 @@ import {
   Settings,
   FileText,
   Sparkles,
-  Menu,
-  X,
   Clock,
-  Eye
+  Eye,
+  X
 } from 'lucide-react';
-import LanguageSelector from '../ui/LanguageSelector';
+import MarketingLayout from '../marketing/MarketingLayout';
 import { useSafeAppContent } from '../../contexts/appContent';
-import { AppNavItem, DEFAULT_APP_NAVIGATION, AppArticle } from '../../types/appContent';
-
-// Brand Assets
-const QUIMERA_LOGO = "https://firebasestorage.googleapis.com/v0/b/quimeraai.firebasestorage.app/o/quimera%2Fquimeralogo.png?alt=media&token=82368c1c-0f63-42b7-831f-72780006f032";
+import { AppArticle } from '../../types/appContent';
 
 // Icon mapping for categories
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string; size?: number }>> = {
@@ -89,31 +85,10 @@ const HelpCenterPage: React.FC = () => {
   const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState('');
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-
-  // Unlock overflow so this standalone public page can scroll
-  useEffect(() => {
-    const html = document.documentElement;
-    const body = document.body;
-    const root = document.getElementById('root');
-    html.style.overflow = 'auto';
-    html.style.height = 'auto';
-    body.style.overflow = 'auto';
-    body.style.height = 'auto';
-    if (root) { root.style.overflow = 'visible'; root.style.height = 'auto'; }
-    return () => {
-      html.style.overflow = '';
-      html.style.height = '';
-      body.style.overflow = '';
-      body.style.height = '';
-      if (root) { root.style.overflow = ''; root.style.height = ''; }
-    };
-  }, []);
 
   // Get dynamic content from AppContent context
   const appContent = useSafeAppContent();
-  const navigation = appContent?.navigation || DEFAULT_APP_NAVIGATION;
 
   // Obtener artículos de ayuda (categoría 'help', 'guide', o 'tutorial')
   const helpArticles = useMemo(() => {
@@ -156,24 +131,6 @@ const HelpCenterPage: React.FC = () => {
     window.history.pushState(null, '', path);
     window.dispatchEvent(new PopStateEvent('popstate'));
   };
-
-  // Handle navigation item click
-  const handleNavItemClick = (item: AppNavItem) => {
-    setIsMobileMenuOpen(false);
-    if (item.type === 'anchor') {
-      // Go to landing page and scroll to section
-      navigateTo('/');
-    } else if (item.href === '/blog') {
-      navigateTo('/blog');
-    } else if (item.href.startsWith('/')) {
-      navigateTo(item.href);
-    } else if (item.href.startsWith('http')) {
-      window.open(item.href, item.target || '_blank');
-    }
-  };
-
-  const handleNavigateToLogin = () => navigateTo('/login');
-  const handleNavigateToRegister = () => navigateTo('/register');
 
   // Navegar a artículo
   const handleArticleClick = (article: AppArticle) => {
@@ -322,7 +279,11 @@ const HelpCenterPage: React.FC = () => {
   );
 
   return (
-    <div className="min-h-screen bg-[#0A0A0A] text-white">
+    <MarketingLayout
+      onNavigateToHome={() => navigateTo('/')}
+      onNavigateToLogin={() => navigateTo('/login')}
+      onNavigateToRegister={() => navigateTo('/register')}
+    >
       {/* Gradient Background - Quimera Yellow Theme */}
       <div className="fixed inset-0 pointer-events-none">
         <div className="absolute top-0 left-1/4 w-96 h-96 bg-yellow-400/10 rounded-full blur-[128px]" />
@@ -330,113 +291,8 @@ const HelpCenterPage: React.FC = () => {
         <div className="absolute bottom-1/4 left-1/3 w-72 h-72 bg-amber-500/5 rounded-full blur-[90px]" />
       </div>
 
-      {/* === HEADER (Same as Landing Page) === */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-[#0A0A0A]/95 backdrop-blur-sm border-b border-white/5">
-        <div className="container mx-auto px-4 sm:px-6 py-3 sm:py-4">
-          <div className="flex items-center justify-between">
-            {/* Logo */}
-            <a href="/" className="flex items-center gap-2 sm:gap-3">
-              <img
-                src={navigation.header.logo?.imageUrl || QUIMERA_LOGO}
-                alt={navigation.header.logo?.text || "Quimera.ai"}
-                className="w-8 h-8 sm:w-10 sm:h-10"
-              />
-              <span className="text-lg sm:text-xl font-bold text-white">
-                {navigation.header.logo?.text?.split('.')[0] || 'Quimera'}
-                <span className="text-yellow-400">.ai</span>
-              </span>
-            </a>
-
-            {/* Navigation - Desktop */}
-            <nav className="hidden md:flex items-center gap-8">
-              {navigation.header.items.map((item) => (
-                <button
-                  key={item.id}
-                  onClick={() => handleNavItemClick(item)}
-                  className="text-sm text-gray-400 hover:text-white transition-colors flex items-center gap-1"
-                >
-                  {item.label}
-                  {item.isNew && (
-                    <span className="px-1.5 py-0.5 text-[10px] bg-yellow-400 text-black rounded-full font-bold">NEW</span>
-                  )}
-                </button>
-              ))}
-            </nav>
-
-            {/* CTA Buttons - Desktop */}
-            <div className="hidden md:flex items-center gap-4">
-              <LanguageSelector variant="minimal" />
-              <button
-                onClick={handleNavigateToLogin}
-                className="text-sm text-gray-300 hover:text-white transition-colors"
-              >
-                {navigation.header.cta?.loginText || t('landing.login')}
-              </button>
-              <button
-                onClick={handleNavigateToRegister}
-                className="px-5 py-2.5 bg-yellow-400 text-black font-semibold rounded-xl hover:bg-yellow-300 transition-colors"
-              >
-                {navigation.header.cta?.registerText || t('landing.register')}
-              </button>
-            </div>
-
-            {/* Mobile Menu Button */}
-            <div className="flex items-center gap-3 md:hidden">
-              <LanguageSelector variant="minimal" />
-              <button
-                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className="p-2 text-gray-300 hover:text-white transition-colors"
-                aria-label="Toggle menu"
-              >
-                {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-              </button>
-            </div>
-          </div>
-
-          {/* Mobile Menu */}
-          {isMobileMenuOpen && (
-            <div className="md:hidden mt-4 pb-4 border-t border-white/10 pt-4 animate-in slide-in-from-top duration-200">
-              <nav className="flex flex-col gap-4 mb-6">
-                {navigation.header.items.map((item) => (
-                  <button
-                    key={item.id}
-                    onClick={() => handleNavItemClick(item)}
-                    className="text-gray-300 hover:text-white transition-colors py-2 text-left flex items-center gap-2"
-                  >
-                    {item.label}
-                    {item.isNew && (
-                      <span className="px-1.5 py-0.5 text-[10px] bg-yellow-400 text-black rounded-full font-bold">NEW</span>
-                    )}
-                  </button>
-                ))}
-              </nav>
-              <div className="flex flex-col gap-3">
-                <button
-                  onClick={() => {
-                    setIsMobileMenuOpen(false);
-                    handleNavigateToLogin();
-                  }}
-                  className="w-full py-3 text-center text-gray-300 hover:text-white border border-white/10 rounded-xl transition-colors"
-                >
-                  {navigation.header.cta?.loginText || t('landing.login')}
-                </button>
-                <button
-                  onClick={() => {
-                    setIsMobileMenuOpen(false);
-                    handleNavigateToRegister();
-                  }}
-                  className="w-full py-3 bg-yellow-400 text-black font-semibold rounded-xl hover:bg-yellow-300 transition-colors"
-                >
-                  {navigation.header.cta?.registerText || t('landing.register')}
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-      </header>
-
-      {/* Hero Section - with padding for fixed header */}
-      <section className="relative pt-28 sm:pt-32 pb-20 px-6">
+      {/* Hero Section */}
+      <section className="relative pt-12 sm:pt-16 pb-20 px-6">
         <div className="max-w-4xl mx-auto text-center">
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-yellow-400/10 border border-yellow-400/20 rounded-full mb-6">
             <Sparkles className="text-yellow-400" size={16} />
@@ -696,28 +552,7 @@ const HelpCenterPage: React.FC = () => {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="border-t border-white/5 py-8">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <p className="text-gray-500 text-sm">
-              © {new Date().getFullYear()} Quimera AI. {t('helpCenter.footer.rights')}
-            </p>
-            <div className="flex items-center gap-6">
-              <a href="/privacy-policy" className="text-sm text-gray-400 hover:text-white transition-colors">
-                {t('helpCenter.footer.privacy')}
-              </a>
-              <a href="/terms-of-service" className="text-sm text-gray-400 hover:text-white transition-colors">
-                {t('helpCenter.footer.terms')}
-              </a>
-              <a href="/cookie-policy" className="text-sm text-gray-400 hover:text-white transition-colors">
-                {t('helpCenter.footer.cookies')}
-              </a>
-            </div>
-          </div>
-        </div>
-      </footer>
-    </div>
+    </MarketingLayout>
   );
 };
 

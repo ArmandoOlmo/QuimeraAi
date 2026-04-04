@@ -19,6 +19,7 @@ import { useSafeUpgrade } from '../../contexts/UpgradeContext';
 import { useCreditsUsage } from '../../hooks/useCreditsUsage';
 import { useAuth } from '../../contexts/core/AuthContext';
 import { SUBSCRIPTION_PLANS } from '../../types/subscription';
+import { useCanAccessService } from '../../hooks/useServiceAvailability';
 
 interface UpgradeBannerProps {
     variant?: 'full' | 'compact';
@@ -34,6 +35,7 @@ const UpgradeBanner: React.FC<UpgradeBannerProps> = ({
     const upgradeContext = useSafeUpgrade();
     const { usage, isLoading } = useCreditsUsage();
     const { canAccessSuperAdmin } = useAuth();
+    const canAccessEcommerce = useCanAccessService('ecommerce');
 
     const handleUpgradeClick = () => {
         if (upgradeContext) {
@@ -204,7 +206,7 @@ const UpgradeBanner: React.FC<UpgradeBannerProps> = ({
                                     <span className="w-1.5 h-1.5 rounded-full bg-primary" />
                                     {nextPlan.limits.maxProjects} {t('settings.subscription.projects')}
                                 </li>
-                                {nextPlan.features.ecommerceEnabled && (
+                                {nextPlan.features.ecommerceEnabled && canAccessEcommerce && (
                                     <li className="text-sm text-muted-foreground flex items-center gap-2">
                                         <span className="w-1.5 h-1.5 rounded-full bg-primary" />
                                         {t('dashboard.ecommerceIncluded')}

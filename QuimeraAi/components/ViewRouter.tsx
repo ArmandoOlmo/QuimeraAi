@@ -9,6 +9,10 @@
 import React, { lazy, Suspense } from 'react';
 import { View, UserDocument, PageData } from '../types';
 import { useSafeTenant } from '../contexts/tenant/TenantContext';
+import { useServiceAvailability } from '../hooks/useServiceAvailability';
+import { useRouter } from '../hooks/useRouter';
+import { ROUTES } from '../routes/config';
+import { PlatformServiceId } from '../types/serviceAvailability';
 
 // Core components - imported synchronously (always needed)
 import DashboardSidebar from './dashboard/DashboardSidebar';
@@ -92,8 +96,25 @@ const VIEW_COMPONENTS: Record<string, React.LazyExoticComponent<React.ComponentT
 };
 
 /**
+ * Map of view names to their required global service.
+ * Views not listed here have no service requirement (always accessible).
+ */
+const VIEW_SERVICE_MAP: Partial<Record<View, PlatformServiceId>> = {
+    'ecommerce': 'ecommerce',
+    'cms': 'cms',
+    'leads': 'crm',
+    'ai-assistant': 'chatbot',
+    'email': 'emailMarketing',
+    'appointments': 'appointments',
+    'domains': 'domains',
+    'finance': 'finance',
+};
+
+/**
  * ViewRouter - Componente de enrutamiento principal
  * Uses React.lazy + Suspense for code-splitting
+ * Includes global service availability guard: if a view's service is disabled,
+ * the user is automatically redirected to the dashboard.
  */
 const ViewRouter: React.FC<ViewRouterProps> = ({
     view,
@@ -107,6 +128,19 @@ const ViewRouter: React.FC<ViewRouterProps> = ({
     const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
     const tenantContext = useSafeTenant();
     const agencyLogoUrl = tenantContext?.currentTenant?.branding?.logoUrl;
+    const { canAccessService, isLoading: isLoadingServices } = useServiceAvailability();
+    const { replace } = useRouter();
+
+    // ── Service Availability Guard ──────────────────────────────────────────
+    // If the current view requires a service that is globally disabled,
+    // redirect to the dashboard. Skip during initial loading to avoid flicker.
+    const requiredService = VIEW_SERVICE_MAP[view];
+    React.useEffect(() => {
+        if (isLoadingServices) return; // Wait for Firestore data
+        if (requiredService && !canAccessService(requiredService)) {
+            replace(ROUTES.DASHBOARD);
+        }
+    }, [view, requiredService, canAccessService, isLoadingServices, replace]);
 
     // SuperAdmin View
     if (view === 'superadmin' && hasAdminAccess(userDocument?.role)) {
@@ -115,6 +149,11 @@ const ViewRouter: React.FC<ViewRouterProps> = ({
                 <SuperAdminDashboard />
             </Suspense>
         );
+    }
+
+    // ── Block disabled-service views (prevent flash before redirect) ────────
+    if (requiredService && !isLoadingServices && !canAccessService(requiredService)) {
+        return <ViewLoading logoUrl={agencyLogoUrl} />;
     }
 
     // Simple Dashboard Views (mapped components)

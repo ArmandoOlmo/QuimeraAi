@@ -310,7 +310,6 @@ export const DEFAULT_APP_NAVIGATION: AppNavigation = {
         items: [
           { id: '1', label: 'Features', href: '/features', type: 'link' },
           { id: '2', label: 'Pricing', href: '/pricing', type: 'link' },
-          { id: '3', label: 'Templates', href: '/templates', type: 'link' },
         ]
       },
       {

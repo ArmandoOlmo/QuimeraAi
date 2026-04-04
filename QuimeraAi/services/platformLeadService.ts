@@ -23,7 +23,7 @@ export interface PlatformLeadData {
     phone?: string;
     company?: string;
     message?: string;
-    source: 'contact-page' | 'landing-chatbot' | 'manual' | 'api';
+    source: 'contact-page' | 'landing-chatbot' | 'newsletter' | 'manual' | 'api';
     status: 'new' | 'contacted' | 'qualified' | 'lost';
     score: number;
     tags: string[];

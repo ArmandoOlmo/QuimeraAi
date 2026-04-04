@@ -38,6 +38,7 @@ import { AppArticle, AppNavItem, DEFAULT_APP_NAVIGATION } from '../types/appCont
 import { useLandingPlans } from '../hooks/useLandingPlans';
 import { doc, getDoc } from '../firebase';
 import { db } from '../firebase';
+import { savePlatformLead } from '../services/platformLeadService';
 
 // --- Brand Assets ---
 import { QUIMERA_DEFAULT_LOGO } from '../hooks/useAppLogo';
@@ -2035,16 +2036,47 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
                     {navigation.footer.newsletterDescription || 'Get the latest news and updates'}
                   </p>
                 </div>
-                <div className="flex gap-2">
+                <form
+                  onSubmit={async (e) => {
+                    e.preventDefault();
+                    const form = e.currentTarget;
+                    const emailInput = form.querySelector('input[type="email"]') as HTMLInputElement;
+                    const email = emailInput?.value?.trim();
+                    if (!email) return;
+                    const btn = form.querySelector('button[type="submit"]') as HTMLButtonElement;
+                    const originalText = btn.textContent;
+                    try {
+                      btn.disabled = true;
+                      btn.textContent = '...';
+                      await savePlatformLead({
+                        name: email.split('@')[0],
+                        email,
+                        source: 'newsletter',
+                        status: 'new',
+                        score: 30,
+                        tags: ['newsletter', 'landing'],
+                      });
+                      emailInput.value = '';
+                      btn.textContent = '✓';
+                      setTimeout(() => { btn.textContent = originalText; btn.disabled = false; }, 2000);
+                    } catch (err) {
+                      console.error('[Newsletter] Error saving lead:', err);
+                      btn.textContent = 'Error';
+                      setTimeout(() => { btn.textContent = originalText; btn.disabled = false; }, 2000);
+                    }
+                  }}
+                  className="flex gap-2"
+                >
                   <input
                     type="email"
+                    required
                     placeholder="Enter your email"
                     className="px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white placeholder:text-gray-500 focus:outline-none focus:border-yellow-400/50"
                   />
-                  <button className="px-4 py-2 bg-yellow-400 text-black font-semibold rounded-lg hover:bg-yellow-300 transition-colors text-sm">
+                  <button type="submit" className="px-4 py-2 bg-yellow-400 text-black font-semibold rounded-lg hover:bg-yellow-300 transition-colors text-sm">
                     Subscribe
                   </button>
-                </div>
+                </form>
               </div>
             </div>
           )}
@@ -2056,12 +2088,25 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
             </div>
 
             <div className="flex flex-wrap justify-center gap-4 sm:gap-6 text-xs sm:text-sm text-gray-500">
-              <a href="/changelog" className="hover:text-white transition-colors">{t('landing.footerChangelog', 'Changelog')}</a>
-              <a href="/help-center" className="hover:text-white transition-colors">{t('landing.footerHelpCenter', 'Centro de Ayuda')}</a>
-              <a href="/privacy-policy" className="hover:text-white transition-colors">{t('landing.footerPrivacy', 'Política de Privacidad')}</a>
-              <a href="/terms-of-service" className="hover:text-white transition-colors">{t('landing.footerTerms', 'Términos de Servicio')}</a>
-              <a href="/cookie-policy" className="hover:text-white transition-colors">{t('landing.footerCookies', 'Política de Cookies')}</a>
-              <a href="/data-deletion" className="hover:text-white transition-colors">{t('landing.footerDataDeletion', 'Eliminación de Datos')}</a>
+              {[
+                { href: '/changelog', label: t('landing.footerChangelog', 'Changelog') },
+                { href: '/help-center', label: t('landing.footerHelpCenter', 'Centro de Ayuda') },
+                { href: '/privacy-policy', label: t('landing.footerPrivacy', 'Política de Privacidad') },
+                { href: '/terms-of-service', label: t('landing.footerTerms', 'Términos de Servicio') },
+                { href: '/cookie-policy', label: t('landing.footerCookies', 'Política de Cookies') },
+                { href: '/data-deletion', label: t('landing.footerDataDeletion', 'Eliminación de Datos') },
+              ].map((link) => (
+                <button
+                  key={link.href}
+                  onClick={() => {
+                    window.history.pushState(null, '', link.href);
+                    window.dispatchEvent(new PopStateEvent('popstate'));
+                  }}
+                  className="hover:text-white transition-colors"
+                >
+                  {link.label}
+                </button>
+              ))}
             </div>
           </div>
         </div>

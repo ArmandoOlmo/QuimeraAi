@@ -32,6 +32,8 @@ import {
   Check,
 } from 'lucide-react';
 import MarketingLayout from './MarketingLayout';
+import { useServiceAvailability } from '../../hooks/useServiceAvailability';
+import type { PlatformServiceId } from '../../types/serviceAvailability';
 
 // =============================================================================
 // FEATURE DATA — organised by category with Lucide icons + i18n keys
@@ -43,6 +45,7 @@ interface Feature {
   nameFallback: string;
   descKey: string;
   descFallback: string;
+  serviceId?: PlatformServiceId; // If set, feature is hidden when this service is disabled
 }
 
 interface FeatureGroup {
@@ -50,6 +53,7 @@ interface FeatureGroup {
   titleFallback: string;
   subtitleKey: string;
   subtitleFallback: string;
+  serviceId?: PlatformServiceId; // If set, entire group is hidden when this service is disabled
   features: Feature[];
 }
 
@@ -124,6 +128,7 @@ const FEATURE_GROUPS: FeatureGroup[] = [
         nameFallback: 'Online Store',
         descKey: 'features.onlineStoreDesc',
         descFallback: 'Product catalog, cart, Stripe checkout, order tracking, and inventory management.',
+        serviceId: 'ecommerce',
       },
       {
         icon: <BarChart3 size={28} />,
@@ -131,6 +136,7 @@ const FEATURE_GROUPS: FeatureGroup[] = [
         nameFallback: 'Analytics',
         descKey: 'features.analyticsDesc',
         descFallback: 'Traffic metrics, conversions, user behavior tracking, and automated reporting.',
+        serviceId: 'analytics',
       },
       {
         icon: <Mail size={28} />,
@@ -138,6 +144,7 @@ const FEATURE_GROUPS: FeatureGroup[] = [
         nameFallback: 'Email Marketing',
         descKey: 'features.emailMarketingDesc',
         descFallback: 'Automated campaigns, segmentation, templates, and open/click rate analysis.',
+        serviceId: 'emailMarketing',
       },
     ],
   },
@@ -182,12 +189,12 @@ const STATS = [
 
 // Additional highlights
 const HIGHLIGHTS = [
-  { icon: <MessageSquare size={20} />, key: 'features.highlightChatbot', fallback: 'AI Chatbot with voice for every site' },
+  { icon: <MessageSquare size={20} />, key: 'features.highlightChatbot', fallback: 'AI Chatbot with voice for every site', serviceId: 'chatbot' as PlatformServiceId },
   { icon: <Search size={20} />, key: 'features.highlightSEO', fallback: 'Automatic SEO & schema markup' },
   { icon: <Shield size={20} />, key: 'features.highlightSSL', fallback: 'Free SSL certificates on all plans' },
-  { icon: <Layers size={20} />, key: 'features.highlightTemplates', fallback: 'Premium templates & presets' },
+  { icon: <Layers size={20} />, key: 'features.highlightTemplates', fallback: 'Premium templates & presets', serviceId: 'templates' as PlatformServiceId },
   { icon: <Users size={20} />, key: 'features.highlightTeam', fallback: 'Team collaboration & roles' },
-  { icon: <Wand2 size={20} />, key: 'features.highlightAIImages', fallback: 'AI-generated 4K images' },
+  { icon: <Wand2 size={20} />, key: 'features.highlightAIImages', fallback: 'AI-generated 4K images', serviceId: 'aiFeatures' as PlatformServiceId },
 ];
 
 // =============================================================================
@@ -207,6 +214,27 @@ const FeaturesPage: React.FC<FeaturesPageProps> = ({
 }) => {
   const { t } = useTranslation();
   const [activeGroup, setActiveGroup] = useState(0);
+  const { isServicePublic, isLoading: isLoadingServices } = useServiceAvailability();
+
+  // Filter feature groups and individual features by service availability
+  const filteredGroups = React.useMemo(() => {
+    if (isLoadingServices) return FEATURE_GROUPS;
+    return FEATURE_GROUPS
+      .filter(g => !g.serviceId || isServicePublic(g.serviceId))
+      .map(g => ({
+        ...g,
+        features: g.features.filter(f => !f.serviceId || isServicePublic(f.serviceId)),
+      }))
+      .filter(g => g.features.length > 0); // Remove groups with no visible features
+  }, [isLoadingServices, isServicePublic]);
+
+  const filteredHighlights = React.useMemo(() => {
+    if (isLoadingServices) return HIGHLIGHTS;
+    return HIGHLIGHTS.filter(h => !h.serviceId || isServicePublic(h.serviceId));
+  }, [isLoadingServices, isServicePublic]);
+
+  // Clamp activeGroup if filtering reduced the list
+  const safeActiveGroup = activeGroup >= filteredGroups.length ? 0 : activeGroup;
 
   return (
     <MarketingLayout
@@ -283,12 +311,12 @@ const FeaturesPage: React.FC<FeaturesPageProps> = ({
 
             {/* Category Tabs */}
             <div className="flex flex-wrap justify-center gap-3 mb-16">
-              {FEATURE_GROUPS.map((group, i) => (
+              {filteredGroups.map((group, i) => (
                 <button
                   key={i}
                   onClick={() => setActiveGroup(i)}
                   className={`px-5 py-2.5 rounded-xl text-sm font-medium transition-all duration-300 ${
-                    activeGroup === i
+                    safeActiveGroup === i
                       ? 'bg-yellow-400 text-black shadow-lg shadow-yellow-400/20'
                       : 'bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white border border-white/5'
                   }`}
@@ -299,18 +327,20 @@ const FeaturesPage: React.FC<FeaturesPageProps> = ({
             </div>
 
             {/* Active Group Header */}
+            {filteredGroups[safeActiveGroup] && (
             <div className="text-center mb-12">
               <h2 className="text-3xl sm:text-4xl font-bold mb-4">
-                {t(FEATURE_GROUPS[activeGroup].titleKey, FEATURE_GROUPS[activeGroup].titleFallback)}
+                {t(filteredGroups[safeActiveGroup].titleKey, filteredGroups[safeActiveGroup].titleFallback)}
               </h2>
               <p className="text-gray-400 text-lg max-w-xl mx-auto">
-                {t(FEATURE_GROUPS[activeGroup].subtitleKey, FEATURE_GROUPS[activeGroup].subtitleFallback)}
+                {t(filteredGroups[safeActiveGroup].subtitleKey, filteredGroups[safeActiveGroup].subtitleFallback)}
               </p>
             </div>
+            )}
 
             {/* Feature Cards */}
             <div className="grid md:grid-cols-3 gap-6">
-              {FEATURE_GROUPS[activeGroup].features.map((feature, fi) => (
+              {(filteredGroups[safeActiveGroup]?.features ?? []).map((feature, fi) => (
                 <div
                   key={fi}
                   className="group p-8 rounded-2xl bg-white/[0.03] border border-white/5 hover:border-yellow-400/20 transition-all duration-500 hover:bg-white/[0.06]"
@@ -346,7 +376,7 @@ const FeaturesPage: React.FC<FeaturesPageProps> = ({
             </div>
 
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {FEATURE_GROUPS.flatMap((g) => g.features).map((feature, i) => (
+              {filteredGroups.flatMap((g) => g.features).map((feature, i) => (
                 <div
                   key={i}
                   className="flex items-start gap-3 p-4 rounded-xl bg-white/[0.03] border border-white/5 hover:border-yellow-400/10 transition-all duration-300"
@@ -381,7 +411,7 @@ const FeaturesPage: React.FC<FeaturesPageProps> = ({
             </div>
 
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {HIGHLIGHTS.map((h, i) => (
+              {filteredHighlights.map((h, i) => (
                 <div
                   key={i}
                   className="flex items-center gap-3 p-5 rounded-xl bg-white/[0.03] border border-white/5 hover:border-yellow-400/10 transition-all duration-300"

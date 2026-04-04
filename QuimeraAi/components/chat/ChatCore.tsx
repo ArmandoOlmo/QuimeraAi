@@ -15,6 +15,7 @@ import { useEcommerceChat } from './hooks/useEcommerceChat';
 import { useWebChatConversation } from './hooks/useWebChatConversation';
 import { getGlobalChatbotPrompts, getDefaultPrompts, applyPromptTemplate } from '../../utils/globalChatbotPrompts';
 import type { GlobalChatbotPrompts } from '../../types';
+import { useCanAccessService } from '../../hooks/useServiceAvailability';
 
 // =============================================================================
 // INTERFACES
@@ -376,7 +377,8 @@ const ChatCore: React.FC<ChatCoreProps> = ({
     const shouldHidePoweredBy = hidePoweredBy || autoHidePoweredBy;
 
     // Ecommerce chat hook for order lookups and product info
-    const isEcommerceEnabled = !!(project as any)?.ecommerceEnabled || !!(activeProject as any)?.ecommerceEnabled;
+    const canAccessEcommerce = useCanAccessService('ecommerce');
+    const isEcommerceEnabled = canAccessEcommerce && (!!(project as any)?.ecommerceEnabled || !!(activeProject as any)?.ecommerceEnabled);
     const projectOwnerId = project?.userId || (activeProject as any)?.userId || user?.uid;
     const {
         checkOrderStatus,

@@ -24,6 +24,8 @@ import { db, collection, doc, addDoc, updateDoc, deleteDoc, getDoc, setDoc, serv
 import { Timestamp } from 'firebase/firestore';
 import { dateToTimestamp } from '../dashboard/appointments/utils/appointmentHelpers';
 import { useTranslation } from 'react-i18next';
+import { useServiceAvailability } from '../../hooks/useServiceAvailability';
+import type { PlatformServiceId } from '../../types/serviceAvailability';
 // ... existing imports ...
 
 // --- Types ---
@@ -621,6 +623,38 @@ const TOOLS: FunctionDeclaration[] = [
 
 const TOOL_NAMES = TOOLS.map(tool => tool.name);
 
+/**
+ * Maps tool names to their required PlatformServiceId.
+ * Tools not listed here have no service requirement (always available).
+ * Also maps change_view viewName values to services.
+ */
+const TOOL_SERVICE_MAP: Record<string, PlatformServiceId> = {
+    // Tool-level gate
+    ecommerce_project: 'ecommerce',
+    ecommerce_product: 'ecommerce',
+    ecommerce_order: 'ecommerce',
+    manage_cms_post: 'cms',
+    manage_lead: 'crm',
+    update_chat_config: 'chatbot',
+    email_settings: 'emailMarketing',
+    email_campaign: 'emailMarketing',
+    manage_appointment: 'appointments',
+    manage_domain: 'domains',
+    finance_expense: 'finance',
+};
+
+/** Maps change_view enum values to their required service */
+const VIEW_SERVICE_MAP: Record<string, PlatformServiceId> = {
+    ecommerce: 'ecommerce',
+    cms: 'cms',
+    leads: 'crm',
+    'ai-assistant': 'chatbot',
+    email: 'emailMarketing',
+    appointments: 'appointments',
+    domains: 'domains',
+    finance: 'finance',
+};
+
 const DATA_SCHEMA_HINT = `
 *** COMPLETE PATHS GUIDE (update_site_content) ***
 
@@ -869,6 +903,7 @@ const GlobalAiAssistant: React.FC = () => {
     const { cmsPosts, saveCMSPost, deleteCMSPost } = useCMS();
     const { aiAssistantConfig, saveAiAssistantConfig, generateImage } = useAI();
     const { domains, addDomain, deleteDomain, verifyDomain } = useDomains();
+    const { canAccessService, isLoading: isLoadingServices } = useServiceAvailability();
 
     // Global kill switch (Super Admin)
     if (globalAssistantConfig?.isEnabled === false) return null;
@@ -3201,8 +3236,36 @@ Usuario: ${userMsg}`;
                 };
                 console.log(`[Global Assistant] Using model: ${chatModel}, temp: ${proxyConfig.temperature}, maxTokens: ${proxyConfig.maxOutputTokens}`);
 
-                // Prepare TOOLS for the REST API (wrap FunctionDeclarations)
-                const restTools = [{ functionDeclarations: TOOLS }];
+                // Prepare TOOLS for the REST API — filter by service availability
+                const availableTools = isLoadingServices
+                    ? TOOLS
+                    : TOOLS.filter(tool => {
+                        const requiredService = TOOL_SERVICE_MAP[tool.name];
+                        return !requiredService || canAccessService(requiredService);
+                    }).map(tool => {
+                        // Dynamically filter the change_view enum to exclude disabled views
+                        if (tool.name === 'change_view') {
+                            const viewNameProp = tool.parameters?.properties?.viewName;
+                            if (viewNameProp && 'enum' in viewNameProp && Array.isArray(viewNameProp.enum)) {
+                                const filteredEnum = viewNameProp.enum.filter((v: string) => {
+                                    const svc = VIEW_SERVICE_MAP[v];
+                                    return !svc || canAccessService(svc);
+                                });
+                                return {
+                                    ...tool,
+                                    parameters: {
+                                        ...tool.parameters,
+                                        properties: {
+                                            ...tool.parameters?.properties,
+                                            viewName: { ...viewNameProp, enum: filteredEnum },
+                                        },
+                                    },
+                                };
+                            }
+                        }
+                        return tool;
+                    });
+                const restTools = [{ functionDeclarations: availableTools }];
 
                 console.time('[Global Assistant] LLM Response');
                 let response;

@@ -7,6 +7,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { getActivePlans, StoredPlan } from '../services/plansService';
 import { SUBSCRIPTION_PLANS } from '../types/subscription';
+import { useServiceAvailability } from './useServiceAvailability';
 
 // =============================================================================
 // TYPES
@@ -41,10 +42,35 @@ interface UseLandingPlansReturn {
 // =============================================================================
 
 /**
- * Construye una lista de features legibles para mostrar en el landing
+ * Maps plan feature keys to their corresponding global PlatformServiceId.
+ * Features not listed here have no service requirement (always shown).
  */
-function buildFeaturesList(plan: StoredPlan): string[] {
+const FEATURE_SERVICE_MAP: Record<string, string> = {
+    ecommerceEnabled: 'ecommerce',
+    chatbotEnabled: 'chatbot',
+    emailMarketing: 'emailMarketing',
+    crmEnabled: 'crm',
+    cmsEnabled: 'cms',
+};
+
+/**
+ * Construye una lista de features legibles para mostrar en el landing.
+ * If isServiceAvailable is provided, features whose global service is disabled
+ * are silently filtered out.
+ */
+function buildFeaturesList(
+    plan: StoredPlan,
+    isServiceAvailable?: (serviceId: string) => boolean,
+): string[] {
     const features: string[] = [];
+
+    // Helper to check if a service-gated feature should be shown
+    const shouldShow = (featureKey: string): boolean => {
+        if (!isServiceAvailable) return true; // No filter ⇒ show all
+        const serviceId = FEATURE_SERVICE_MAP[featureKey];
+        if (!serviceId) return true; // No service mapping ⇒ always show
+        return isServiceAvailable(serviceId);
+    };
 
     // Límites
     if (plan.limits?.maxProjects) {
@@ -68,24 +94,24 @@ function buildFeaturesList(plan: StoredPlan): string[] {
         features.push(users);
     }
 
-    // Features
-    if (plan.features?.customDomains) {
+    // Features (filtered by service availability)
+    if (plan.features?.customDomains && shouldShow('customDomains')) {
         features.push('Dominios personalizados');
     }
 
-    if (plan.features?.ecommerceEnabled) {
+    if (plan.features?.ecommerceEnabled && shouldShow('ecommerceEnabled')) {
         features.push('E-commerce integrado');
     }
 
-    if (plan.features?.chatbotEnabled) {
+    if (plan.features?.chatbotEnabled && shouldShow('chatbotEnabled')) {
         features.push('AI Chatbot');
     }
 
-    if (plan.features?.emailMarketing) {
+    if (plan.features?.emailMarketing && shouldShow('emailMarketing')) {
         features.push('Email Marketing');
     }
 
-    if (plan.features?.crmEnabled) {
+    if (plan.features?.crmEnabled && shouldShow('crmEnabled')) {
         features.push('CRM integrado');
     }
 
@@ -139,7 +165,10 @@ function getPlanOrder(planId: string): number {
 /**
  * Transforma un StoredPlan al formato LandingPlan
  */
-function transformPlanForLanding(plan: StoredPlan): LandingPlan {
+function transformPlanForLanding(
+    plan: StoredPlan,
+    isServiceAvailable?: (serviceId: string) => boolean,
+): LandingPlan {
     const priceValue = plan.price?.monthly ?? 0;
     const annualPriceValue = plan.price?.annually ?? priceValue;
 
@@ -152,7 +181,7 @@ function transformPlanForLanding(plan: StoredPlan): LandingPlan {
         annualPriceValue,
         period: priceValue === 0 ? '' : '/mes',
         description: plan.description,
-        features: buildFeaturesList(plan),
+        features: buildFeaturesList(plan, isServiceAvailable),
         featured: plan.isFeatured ?? false,
         isPopular: plan.isPopular ?? false,
         color: plan.color || '#6b7280',
@@ -174,6 +203,7 @@ export function useLandingPlans(options?: {
     fallbackToAll?: boolean;
 }): UseLandingPlansReturn {
     const { fallbackToAll = true } = options ?? {};
+    const { isServicePublic, isLoading: isLoadingServices } = useServiceAvailability();
 
     const [rawPlans, setRawPlans] = useState<StoredPlan[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -236,10 +266,12 @@ export function useLandingPlans(options?: {
         }
 
         // Transformar y ordenar por landingOrder
+        // Pass isServicePublic so plan features referencing disabled services are hidden
+        const serviceFilter = isLoadingServices ? undefined : isServicePublic;
         return landingPlans
-            .map(transformPlanForLanding)
+            .map(p => transformPlanForLanding(p, serviceFilter))
             .sort((a, b) => a.landingOrder - b.landingOrder);
-    }, [rawPlans, fallbackToAll]);
+    }, [rawPlans, fallbackToAll, isServicePublic, isLoadingServices]);
 
     return {
         plans,
