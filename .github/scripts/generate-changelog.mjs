@@ -204,7 +204,7 @@ async function writeToFirestore(entry, accessToken) {
       description: { stringValue: entry.description_es },
       description_en: { stringValue: entry.description_en },
       features: { arrayValue: { values: features } },
-      isPublished: { booleanValue: false },
+      isPublished: { booleanValue: true },
       createdAt: { stringValue: now },
       updatedAt: { stringValue: now },
       slug: { stringValue: slug },
@@ -270,15 +270,6 @@ async function main() {
     const accessToken = await getFirebaseAccessToken();
     console.log('✅ Authenticated');
 
-    // Check for duplicate entry today
-    console.log('\n🔍 Checking for existing entry today...');
-    const hasDuplicate = await checkDuplicateToday(accessToken);
-    if (hasDuplicate) {
-      console.log('⏭️ Changelog entry already exists for today. Skipping.');
-      process.exit(0);
-    }
-    console.log('✅ No duplicate found');
-
     console.log('\n🤖 Generating changelog with Gemini...');
     const entry = await generateWithGemini(commits);
     console.log('✅ Generated entry:');
@@ -290,8 +281,7 @@ async function main() {
     console.log('\n📝 Writing to Firestore (as draft)...');
     const docId = await writeToFirestore(entry, accessToken);
     console.log(`✅ Created changelog entry: ${docId}`);
-    console.log('   Status: DRAFT (isPublished: false)');
-    console.log('   → Review and publish from the Admin Dashboard');
+    console.log('   Status: PUBLISHED (isPublished: true)');
 
     console.log('\n🎉 Auto-changelog complete!');
   } catch (error) {
