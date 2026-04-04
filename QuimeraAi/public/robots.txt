@@ -1,0 +1,72 @@
+# Quimera.ai Robots.txt
+# Last updated: 2026-04-04
+
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /dashboard/
+Disallow: /editor/
+Disallow: /settings/
+Disallow: /cms/
+Disallow: /navigation/
+Disallow: /ai-assistant/
+Disallow: /leads/
+Disallow: /appointments/
+Disallow: /domains/
+Disallow: /seo/
+Disallow: /finance/
+Disallow: /ecommerce/
+Disallow: /email/
+Disallow: /biopage/
+Disallow: /assets/
+Disallow: /templates/
+Disallow: /websites/
+Disallow: /login
+Disallow: /register
+Disallow: /verify-email
+Disallow: /auth/
+
+# AI Crawlers
+User-agent: GPTBot
+Allow: /
+Allow: /blog/
+Allow: /about
+Allow: /pricing
+Allow: /features
+Allow: /contact
+Allow: /changelog
+Allow: /help-center
+Disallow: /admin/
+Disallow: /dashboard/
+Disallow: /editor/
+Disallow: /settings/
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+Disallow: /admin/
+Disallow: /dashboard/
+
+User-agent: anthropic-ai
+Allow: /
+Disallow: /admin/
+Disallow: /dashboard/
+
+User-agent: Applebot-Extended
+Allow: /
+Disallow: /admin/
+Disallow: /dashboard/
+
+User-agent: PerplexityBot
+Allow: /
+Disallow: /admin/
+Disallow: /dashboard/
+
+User-agent: cohere-ai
+Allow: /
+Disallow: /admin/
+Disallow: /dashboard/
+
+Sitemap: https://quimera.ai/sitemap.xml

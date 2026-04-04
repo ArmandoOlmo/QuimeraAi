@@ -624,7 +624,7 @@ const pageData: PageData = {
       {
         title: 'Quick Links',
         links: [
-          { text: 'Home', href: '#' },
+          { text: 'Home', href: '/' },
           { text: 'About', href: '#about' },
           { text: 'Contact', href: '#contact' },
         ],
@@ -633,23 +633,23 @@ const pageData: PageData = {
         title: 'Resources',
         links: [
           { text: 'FAQ', href: '#faq' },
-          { text: 'Support', href: '#' },
-          { text: 'Blog', href: '#' },
+          { text: 'Support', href: '/contact' },
+          { text: 'Blog', href: '/blog' },
           { text: 'Changelog', href: '/changelog' },
         ],
       },
       {
         title: 'Legal',
         links: [
-          { text: 'Privacy Policy', href: '#' },
-          { text: 'Terms of Service', href: '#' },
+          { text: 'Privacy Policy', href: '/privacy-policy' },
+          { text: 'Terms of Service', href: '/terms-of-service' },
         ],
       },
     ],
     socialLinks: [
-      { platform: 'twitter', href: '#' },
-      { platform: 'github', href: '#' },
-      { platform: 'facebook', href: '#' },
+      { platform: 'twitter', href: 'https://twitter.com' },
+      { platform: 'github', href: 'https://github.com' },
+      { platform: 'facebook', href: 'https://facebook.com' },
     ],
     copyrightText: '© {YEAR} Your Brand. All rights reserved.',
     colors: {

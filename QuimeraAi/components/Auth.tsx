@@ -418,9 +418,9 @@ const Auth: React.FC<AuthProps> = ({ onVerificationEmailSent }) => {
                 <div className="container mx-auto px-6 flex justify-between items-center">
                     <Logo />
                     <div className="hidden md:flex items-center space-x-8 text-sm font-medium text-gray-300">
-                        <a href="#features" className="hover:text-white transition-colors">{t('auth.navFeatures')}</a>
-                        <a href="#showcase" className="hover:text-white transition-colors">{t('auth.navShowcase')}</a>
-                        <a href="#faq" className="hover:text-white transition-colors">{t('auth.navFAQ')}</a>
+                        <button onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })} className="hover:text-white transition-colors cursor-pointer bg-transparent border-none">{t('auth.navFeatures')}</button>
+                        <button onClick={() => document.getElementById('showcase')?.scrollIntoView({ behavior: 'smooth' })} className="hover:text-white transition-colors cursor-pointer bg-transparent border-none">{t('auth.navShowcase')}</button>
+                        <button onClick={() => document.getElementById('faq')?.scrollIntoView({ behavior: 'smooth' })} className="hover:text-white transition-colors cursor-pointer bg-transparent border-none">{t('auth.navFAQ')}</button>
                     </div>
                     <div className="flex items-center space-x-3 sm:space-x-4">
                         <LanguageSelector variant="minimal" />
@@ -614,10 +614,10 @@ const Auth: React.FC<AuthProps> = ({ onVerificationEmailSent }) => {
                         <span className="text-gray-500">© 2024 Quimera Inc.</span>
                     </div>
                     <div className="flex space-x-8 text-gray-500">
-                        <a href="#" className="hover:text-white transition-colors">{t('auth.privacy')}</a>
-                        <a href="#" className="hover:text-white transition-colors">{t('auth.terms')}</a>
-                        <a href="#" className="hover:text-white transition-colors">{t('auth.twitter')}</a>
-                        <a href="#" className="hover:text-white transition-colors">{t('auth.instagram')}</a>
+                        <a href="/privacy-policy" className="hover:text-white transition-colors">{t('auth.privacy')}</a>
+                        <a href="/terms-of-service" className="hover:text-white transition-colors">{t('auth.terms')}</a>
+                        <a href="https://twitter.com/quimeraai" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">{t('auth.twitter')}</a>
+                        <a href="https://instagram.com/quimeraai" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">{t('auth.instagram')}</a>
                     </div>
                 </div>
             </footer>

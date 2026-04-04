@@ -290,8 +290,8 @@ export const DEFAULT_APP_NAVIGATION: AppNavigation = {
       href: '/'
     },
     items: [
-      { id: '1', label: 'Features', href: '#features', type: 'anchor' },
-      { id: '2', label: 'Pricing', href: '#pricing', type: 'anchor' },
+      { id: '1', label: 'Features', href: '/features', type: 'link' },
+      { id: '2', label: 'Pricing', href: '/pricing', type: 'link' },
       { id: '3', label: 'Blog', href: '/blog', type: 'link' },
       { id: '4', label: 'Help', href: '/help-center', type: 'link' },
     ],
@@ -308,8 +308,8 @@ export const DEFAULT_APP_NAVIGATION: AppNavigation = {
         id: 'product',
         title: 'Product',
         items: [
-          { id: '1', label: 'Features', href: '#features', type: 'anchor' },
-          { id: '2', label: 'Pricing', href: '#pricing', type: 'anchor' },
+          { id: '1', label: 'Features', href: '/features', type: 'link' },
+          { id: '2', label: 'Pricing', href: '/pricing', type: 'link' },
           { id: '3', label: 'Templates', href: '/templates', type: 'link' },
         ]
       },
@@ -318,8 +318,8 @@ export const DEFAULT_APP_NAVIGATION: AppNavigation = {
         title: 'Resources',
         items: [
           { id: '1', label: 'Blog', href: '/blog', type: 'link' },
-          { id: '2', label: 'Documentation', href: '/docs', type: 'link' },
-          { id: '3', label: 'Help Center', href: '/help-center', type: 'link' },
+          { id: '2', label: 'Help Center', href: '/help-center', type: 'link' },
+          { id: '3', label: 'Changelog', href: '/changelog', type: 'link' },
         ]
       },
       {

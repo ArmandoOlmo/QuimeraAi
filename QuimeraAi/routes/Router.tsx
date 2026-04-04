@@ -7,6 +7,7 @@
 
 import React, { useEffect, useMemo, Suspense } from 'react';
 import { useRouter } from '../hooks/useRouter';
+import { useRouteSEO } from '../hooks/useRouteSEO';
 import { ROUTES, hasRouteAccess } from './config';
 import { View, AdminView } from '../types/ui';
 import { lazyWithRetry } from '../utils/lazyWithRetry';
@@ -42,6 +43,9 @@ const AgencyLandingPreview = lazyWithRetry(() => import('../components/AgencyLan
 
 // Agency Signup (Public page for agency plan registration)
 const AgencySignup = lazyWithRetry(() => import('../components/AgencySignup'));
+
+// Auth error pages
+const MetaOAuthError = lazyWithRetry(() => import('../components/auth/MetaOAuthError'));
 
 // Marketing pages (Public)
 const PricingPage = lazyWithRetry(() => import('../components/marketing/PricingPage'));
@@ -112,6 +116,9 @@ const Router: React.FC<RouterProps> = ({
     isAdminRoute,
     isPreviewRoute,
   } = useRouter();
+
+  // Apply per-route SEO meta tags
+  useRouteSEO(path);
 
   // =========================================================================
   // COMPUTED AUTH STATE
@@ -367,6 +374,15 @@ const Router: React.FC<RouterProps> = ({
     );
   }
 
+  // Meta OAuth Error page (public)
+  if (path === '/auth/meta/error') {
+    return (
+      <Suspense fallback={<LoadingScreen />}>
+        <MetaOAuthError />
+      </Suspense>
+    );
+  }
+
 
   // Landing page (for unauthenticated users OR when preview=landing param is present)
   // The preview=landing param allows the Landing Page Editor to show the landing page in an iframe
@@ -534,6 +550,12 @@ const Router: React.FC<RouterProps> = ({
         />
       </Suspense>
     );
+  }
+
+  // Redirect /docs to /help-center (canonical documentation page)
+  if (path === '/docs') {
+    navigate('/help-center');
+    return <LoadingScreen />;
   }
 
   // Admin: Seed Help Center Articles (temporary)

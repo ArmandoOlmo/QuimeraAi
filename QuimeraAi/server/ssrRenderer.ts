@@ -105,7 +105,7 @@ export async function renderStorefront(options: SSRRenderOptions): Promise<strin
     // =========================================================================
     // STEP 3: Generate SEO meta tags (server-side — critical for crawlers)
     // =========================================================================
-    const seoTags = generateSEOTags(projectData, hostname);
+    const seoTags = generateSEOTags(projectData, hostname, url);
 
     // =========================================================================
     // STEP 4: Sanitize & serialize project data for client-side hydration
@@ -403,14 +403,72 @@ function generateFontTags(project: ProjectData): string {
 /**
  * Generate SEO meta tags based on project data
  */
-function generateSEOTags(project: ProjectData, hostname?: string): string {
+function generateSEOTags(project: ProjectData, hostname?: string, url?: string): string {
     const seo = project.seoConfig || {};
     const brand = project.brandIdentity || {};
+    const siteName = brand.name || project.name || 'Tienda Online';
+    const baseUrl = hostname ? `https://${hostname}` : '';
     
-    const title = seo.title || project.name || 'Tienda Online';
-    const description = seo.description || brand.tagline || `Bienvenido a ${project.name}`;
-    const image = seo.ogImage || brand.logoUrl || '';
-    const url = hostname ? `https://${hostname}` : '';
+    // =========================================================================
+    // Per-page SEO: Match the current URL to a project page for specific meta
+    // =========================================================================
+    let pageTitle = seo.title || project.name || 'Tienda Online';
+    let pageDescription = seo.description || brand.tagline || `Bienvenido a ${project.name}`;
+    let pageImage = seo.ogImage || brand.logoUrl || '';
+    let pageType = seo.ogType || 'website';
+    let pageUrl = baseUrl;
+    let breadcrumbs: Array<{ name: string; url: string }> = [
+        { name: 'Home', url: baseUrl || '/' },
+    ];
+    
+    if (url && url !== '/' && project.pages) {
+        const pathSlug = url.replace(/^\//, '').replace(/\/$/, '').split('?')[0];
+        
+        // Check for blog post: /blog/:slug
+        if (pathSlug.startsWith('blog/')) {
+            const postSlug = pathSlug.replace('blog/', '');
+            pageTitle = `${postSlug} | Blog | ${siteName}`;
+            pageDescription = `Read ${postSlug} on ${siteName}`;
+            pageType = 'article';
+            pageUrl = `${baseUrl}/blog/${postSlug}`;
+            breadcrumbs.push({ name: 'Blog', url: `${baseUrl}/blog` });
+            breadcrumbs.push({ name: postSlug, url: pageUrl });
+        }
+        // Check for store: /tienda/...
+        else if (pathSlug.startsWith('tienda')) {
+            pageTitle = `Tienda | ${siteName}`;
+            pageDescription = `Explora los productos de ${siteName}`;
+            pageUrl = `${baseUrl}/tienda`;
+            breadcrumbs.push({ name: 'Tienda', url: pageUrl });
+            
+            if (pathSlug.startsWith('tienda/producto/')) {
+                const productSlug = pathSlug.replace('tienda/producto/', '');
+                pageTitle = `${productSlug} | ${siteName}`;
+                pageType = 'product';
+                pageUrl = `${baseUrl}/tienda/producto/${productSlug}`;
+                breadcrumbs.push({ name: productSlug, url: pageUrl });
+            } else if (pathSlug.startsWith('tienda/categoria/')) {
+                const catSlug = pathSlug.replace('tienda/categoria/', '');
+                pageTitle = `${catSlug} | ${siteName}`;
+                pageUrl = `${baseUrl}/tienda/categoria/${catSlug}`;
+                breadcrumbs.push({ name: catSlug, url: pageUrl });
+            }
+        }
+        // Match against project pages
+        else {
+            const matchedPage = project.pages.find((p: any) => {
+                const slug = (p.slug || '').replace(/^\//, '').replace(/\/$/, '');
+                return slug === pathSlug && !p.isHomePage;
+            });
+            if (matchedPage) {
+                pageTitle = matchedPage.seo?.title || `${matchedPage.title} | ${siteName}`;
+                pageDescription = matchedPage.seo?.description || pageDescription;
+                pageImage = matchedPage.seo?.image || pageImage;
+                pageUrl = `${baseUrl}/${matchedPage.slug}`;
+                breadcrumbs.push({ name: matchedPage.title, url: pageUrl });
+            }
+        }
+    }
     
     // Get font tags first
     const fontTags = generateFontTags(project);
@@ -420,30 +478,30 @@ function generateSEOTags(project: ProjectData, hostname?: string): string {
         fontTags,
         
         // Basic SEO
-        `<title>${escapeHtml(title)}</title>`,
-        `<meta name="description" content="${escapeHtml(description)}">`,
+        `<title>${escapeHtml(pageTitle)}</title>`,
+        `<meta name="description" content="${escapeHtml(pageDescription)}">`,
         seo.keywords?.length ? `<meta name="keywords" content="${escapeHtml(seo.keywords.join(', '))}">` : '',
         seo.author ? `<meta name="author" content="${escapeHtml(seo.author)}">` : '',
         
         // Open Graph
-        `<meta property="og:type" content="${seo.ogType || 'website'}">`,
-        `<meta property="og:title" content="${escapeHtml(seo.ogTitle || title)}">`,
-        `<meta property="og:description" content="${escapeHtml(seo.ogDescription || description)}">`,
-        image ? `<meta property="og:image" content="${escapeHtml(image)}">` : '',
+        `<meta property="og:type" content="${pageType}">`,
+        `<meta property="og:title" content="${escapeHtml(pageTitle)}">`,
+        `<meta property="og:description" content="${escapeHtml(pageDescription)}">`,
+        pageImage ? `<meta property="og:image" content="${escapeHtml(pageImage)}">` : '',
         seo.ogImageAlt ? `<meta property="og:image:alt" content="${escapeHtml(seo.ogImageAlt)}">` : '',
-        url ? `<meta property="og:url" content="${escapeHtml(url)}">` : '',
-        `<meta property="og:site_name" content="${escapeHtml(seo.ogSiteName || project.name)}">`,
+        pageUrl ? `<meta property="og:url" content="${escapeHtml(pageUrl)}">` : '',
+        `<meta property="og:site_name" content="${escapeHtml(siteName)}">`,
         
         // Twitter Card
         `<meta name="twitter:card" content="${seo.twitterCard || 'summary_large_image'}">`,
-        `<meta name="twitter:title" content="${escapeHtml(seo.twitterTitle || title)}">`,
-        `<meta name="twitter:description" content="${escapeHtml(seo.twitterDescription || description)}">`,
-        image ? `<meta name="twitter:image" content="${escapeHtml(seo.twitterImage || image)}">` : '',
+        `<meta name="twitter:title" content="${escapeHtml(pageTitle)}">`,
+        `<meta name="twitter:description" content="${escapeHtml(pageDescription)}">`,
+        pageImage ? `<meta name="twitter:image" content="${escapeHtml(seo.twitterImage || pageImage)}">` : '',
         seo.twitterSite ? `<meta name="twitter:site" content="${escapeHtml(seo.twitterSite)}">` : '',
         seo.twitterCreator ? `<meta name="twitter:creator" content="${escapeHtml(seo.twitterCreator)}">` : '',
         
-        // Canonical URL (important for custom domains)
-        (seo.canonical || url) ? `<link rel="canonical" href="${escapeHtml(seo.canonical || url)}">` : '',
+        // Canonical URL (critical for custom domains — prevents duplicate content)
+        pageUrl ? `<link rel="canonical" href="${escapeHtml(pageUrl)}">` : '',
         
         // Robots
         `<meta name="robots" content="${seo.robots || 'index, follow'}">`,
@@ -453,26 +511,55 @@ function generateSEOTags(project: ProjectData, hostname?: string): string {
         seo.bingVerification ? `<meta name="msvalidate.01" content="${escapeHtml(seo.bingVerification)}">` : '',
         
         // AI Bot Optimization
-        seo.aiCrawlable ? `<meta name="ai:crawlable" content="true">` : '',
+        `<meta name="ai:crawlable" content="${seo.aiCrawlable !== false ? 'true' : 'false'}">`,
         seo.aiDescription ? `<meta name="ai:description" content="${escapeHtml(seo.aiDescription)}">` : '',
         seo.aiKeyTopics?.length ? `<meta name="ai:topics" content="${escapeHtml(seo.aiKeyTopics.join(', '))}">` : '',
+        // AI page type based on URL
+        `<meta name="ai:page_type" content="${getAiPageType(url || '/')}">`,
     ];
 
-    // Add Schema.org JSON-LD
+    // Add Schema.org JSON-LD (WebSite + page)
     const schemaType = seo.schemaType || 'WebSite';
     const schema = {
         '@context': 'https://schema.org',
         '@type': schemaType,
-        'name': project.name,
-        'description': description,
-        'url': url || undefined,
-        'image': image || undefined,
+        'name': siteName,
+        'description': pageDescription,
+        'url': pageUrl || baseUrl || undefined,
+        'image': pageImage || undefined,
         ...(seo.schemaData || {}),
     };
-
     tags.push(`<script type="application/ld+json">${JSON.stringify(schema)}</script>`);
 
+    // Add BreadcrumbList JSON-LD for sub-pages
+    if (breadcrumbs.length > 1) {
+        const breadcrumbSchema = {
+            '@context': 'https://schema.org',
+            '@type': 'BreadcrumbList',
+            'itemListElement': breadcrumbs.map((bc, i) => ({
+                '@type': 'ListItem',
+                'position': i + 1,
+                'name': bc.name,
+                'item': bc.url,
+            })),
+        };
+        tags.push(`<script type="application/ld+json">${JSON.stringify(breadcrumbSchema)}</script>`);
+    }
+
     return tags.filter(Boolean).join('\n    ');
+}
+
+/**
+ * Get AI page type from URL path
+ */
+function getAiPageType(url: string): string {
+    if (url === '/' || url === '') return 'homepage';
+    if (url.startsWith('/blog/')) return 'article';
+    if (url === '/blog') return 'blog_listing';
+    if (url.startsWith('/tienda/producto/')) return 'product';
+    if (url.startsWith('/tienda/categoria/')) return 'category';
+    if (url.startsWith('/tienda')) return 'store';
+    return 'page';
 }
 
 /**

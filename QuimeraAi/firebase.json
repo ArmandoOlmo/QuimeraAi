@@ -74,6 +74,10 @@
       ],
       "rewrites": [
         {
+          "source": "/sitemap.xml",
+          "function": "generateSitemap"
+        },
+        {
           "source": "/api/gemini/generate",
           "function": "gemini-generate"
         },

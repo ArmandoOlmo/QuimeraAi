@@ -104,7 +104,7 @@ const LandingNavigationManagement: React.FC<LandingNavigationManagementProps> = 
         const newItem: AppNavItem = {
             id: `nav_${Date.now()}`,
             label: 'New Link',
-            href: '#',
+            href: '/',
             type: 'link'
         };
         updateLocalNav({
@@ -177,7 +177,7 @@ const LandingNavigationManagement: React.FC<LandingNavigationManagementProps> = 
         const newItem: AppNavItem = {
             id: `item_${Date.now()}`,
             label: 'New Link',
-            href: '#',
+            href: '/',
             type: 'link'
         };
         updateLocalNav({

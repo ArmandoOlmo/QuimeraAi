@@ -607,3 +607,7 @@ export { twilioVoiceWebhook };
 
 // Outbound call functions (Quibo initiates calls via ElevenLabs)
 export { outboundCall, outboundCallStatus };
+
+// Sitemap generator (dynamic XML sitemap for SEO)
+import { generateSitemap } from './sitemap';
+export { generateSitemap };

@@ -669,10 +669,10 @@ export const elitePageData: PageData = {
             {
                 title: 'Descubrir',
                 links: [
-                    { text: 'Nuestra Historia', href: '#' },
+                    { text: 'Nuestra Historia', href: '/about' },
                     { text: 'El Chef', href: '#team' },
-                    { text: 'Filosofía Sostenible', href: '#' },
-                    { text: 'Blog Culinario', href: '#' },
+                    { text: 'Filosofía Sostenible', href: '/about' },
+                    { text: 'Blog Culinario', href: '/blog' },
                 ],
             },
             {
@@ -681,22 +681,22 @@ export const elitePageData: PageData = {
                     { text: 'Menú Degustación', href: '#pricing' },
                     { text: 'Carta de Vinos', href: '#menu' },
                     { text: 'Eventos Privados', href: '#services' },
-                    { text: 'Tarjetas Regalo', href: '#' },
+                    { text: 'Tarjetas Regalo', href: '/contact' },
                 ],
             },
             {
                 title: 'Horario',
                 links: [
-                    { text: 'Mar - Jue: 19:00 - 23:00', href: '#' },
-                    { text: 'Vie - Sáb: 19:00 - 00:00', href: '#' },
-                    { text: 'Dom: 13:00 - 16:00', href: '#' },
-                    { text: 'Cerrado los Lunes', href: '#' },
+                    { text: 'Mar - Jue: 19:00 - 23:00', href: '/contact' },
+                    { text: 'Vie - Sáb: 19:00 - 00:00', href: '/contact' },
+                    { text: 'Dom: 13:00 - 16:00', href: '/contact' },
+                    { text: 'Cerrado los Lunes', href: '/contact' },
                 ],
             },
         ],
         socialLinks: [
-            { platform: 'instagram', href: '#' },
-            { platform: 'facebook', href: '#' },
+            { platform: 'instagram', href: 'https://instagram.com' },
+            { platform: 'facebook', href: 'https://facebook.com' },
         ],
         copyrightText: '© {YEAR} L\'Élite Restaurant. Todos los derechos reservados.',
         colors: {

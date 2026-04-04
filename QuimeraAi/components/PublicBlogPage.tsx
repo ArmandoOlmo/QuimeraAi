@@ -20,10 +20,8 @@ import {
 } from 'lucide-react';
 import { useSafeAppContent } from '../contexts/appContent';
 import { AppArticle, AppArticleCategory, DEFAULT_APP_NAVIGATION } from '../types/appContent';
-import LanguageSelector from './ui/LanguageSelector';
-
-// --- Brand Assets ---
 import { QUIMERA_DEFAULT_LOGO } from '../hooks/useAppLogo';
+import MarketingLayout from './marketing/MarketingLayout';
 
 interface PublicBlogPageProps {
   onNavigateToHome: () => void;
@@ -108,70 +106,18 @@ const PublicBlogPage: React.FC<PublicBlogPageProps> = ({
     return Array.from(tags).slice(0, 10);
   }, [publishedArticles]);
 
-  // Override overflow:hidden from index.html to allow native page scrolling
-  useEffect(() => {
-    const html = document.documentElement;
-    const body = document.body;
-    const root = document.getElementById('root');
-
-    html.style.overflow = 'auto';
-    html.style.height = 'auto';
-    body.style.overflow = 'auto';
-    body.style.height = 'auto';
-    if (root) {
-      root.style.overflow = 'visible';
-      root.style.height = 'auto';
-    }
-
-    return () => {
-      html.style.overflow = '';
-      html.style.height = '';
-      body.style.overflow = '';
-      body.style.height = '';
-      if (root) {
-        root.style.overflow = '';
-        root.style.height = '';
-      }
-    };
-  }, []);
 
   return (
-    <div className="min-h-screen bg-[#0A0A0A] text-white selection:bg-yellow-400 selection:text-black">
-      {/* Cinematic Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-[#0A0A0A]/80 backdrop-blur-xl border-b border-white/5 transition-all duration-300">
-        <div className="container mx-auto px-4 sm:px-6 py-4">
-          <div className="flex items-center justify-between">
-            {/* Logo */}
-            <button onClick={onNavigateToHome} className="flex items-center gap-2 sm:gap-3 group">
-              <img src={QUIMERA_DEFAULT_LOGO} alt="Quimera.ai" className="w-8 h-8 sm:w-10 sm:h-10 transition-transform group-hover:scale-110 duration-300" />
-              <span className="text-lg sm:text-xl font-bold text-white tracking-tight">
-                Quimera<span className="text-yellow-400">.ai</span>
-              </span>
-            </button>
+    <MarketingLayout
+      onNavigateToHome={onNavigateToHome}
+      onNavigateToLogin={onNavigateToLogin}
+      onNavigateToRegister={onNavigateToRegister}
+    >
+      <div className="bg-[#0A0A0A] text-white selection:bg-yellow-400 selection:text-black">
 
-            {/* Actions */}
-            <div className="flex items-center gap-4">
-              <LanguageSelector variant="minimal" />
-              <button
-                onClick={onNavigateToLogin}
-                className="hidden sm:block text-sm font-medium text-gray-400 hover:text-white transition-colors"
-              >
-                {t('landing.login', 'Login')}
-              </button>
-              <button
-                onClick={onNavigateToRegister}
-                className="px-5 py-2.5 bg-white text-black font-bold tracking-wide rounded-full hover:scale-105 transition-transform shadow-[0_0_20px_rgba(255,255,255,0.1)] text-sm"
-              >
-                {t('landing.register', 'Get Started')}
-              </button>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      <main className="relative">
-        {/* Cinematic Hero Section */}
-        <section className="relative pt-32 pb-24 sm:pt-48 sm:pb-32 overflow-hidden border-b border-white/5">
+        <main className="relative">
+          {/* Cinematic Hero Section */}
+          <section className="relative pt-24 pb-16 sm:pt-32 sm:pb-24 overflow-hidden border-b border-white/5">
           {/* Ambient Dark Glow */}
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-yellow-400/10 blur-[120px] rounded-full pointer-events-none opacity-50" />
           <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 brightness-100 contrast-150 mix-blend-overlay pointer-events-none" />
@@ -457,26 +403,8 @@ const PublicBlogPage: React.FC<PublicBlogPageProps> = ({
         </div>
       </main>
 
-      {/* Footer */}
-      <footer className="py-12 border-t border-white/5 bg-[#050505]">
-        <div className="container mx-auto px-4 sm:px-6">
-          <div className="flex flex-col items-center gap-6 md:flex-row md:justify-between">
-            <button onClick={onNavigateToHome} className="flex items-center gap-3 group">
-              <img src={QUIMERA_DEFAULT_LOGO} alt="Quimera.ai" className="w-8 h-8 group-hover:scale-110 transition-transform" />
-              <span className="font-bold text-base tracking-tight">Quimera<span className="text-yellow-400">.ai</span></span>
-            </button>
-            <div className="flex items-center gap-6 text-sm text-gray-500 font-medium">
-              <a href="#" className="hover:text-white transition-colors">Twitter</a>
-              <a href="#" className="hover:text-white transition-colors">LinkedIn</a>
-              <a href="#" className="hover:text-white transition-colors">GitHub</a>
-            </div>
-            <div className="text-sm text-gray-600 font-medium">
-              © {new Date().getFullYear()} Quimera.ai. All rights reserved.
-            </div>
-          </div>
-        </div>
-      </footer>
-    </div>
+      </div>
+    </MarketingLayout>
   );
 };
 

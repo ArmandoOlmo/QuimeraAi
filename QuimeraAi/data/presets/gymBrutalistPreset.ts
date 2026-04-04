@@ -658,23 +658,23 @@ export const gymPageData: PageData = {
             {
                 title: 'LEGAL',
                 links: [
-                    { text: 'Terms of Service', href: '#' },
-                    { text: 'Privacy Policy', href: '#' },
-                    { text: 'Waiver', href: '#' },
+                    { text: 'Terms of Service', href: '/terms-of-service' },
+                    { text: 'Privacy Policy', href: '/privacy-policy' },
+                    { text: 'Waiver', href: '/terms-of-service' },
                 ],
             },
             {
                 title: 'CONNECT',
                 links: [
-                    { text: 'Instagram', href: '#' },
-                    { text: 'YouTube', href: '#' },
-                    { text: 'Discord', href: '#' },
+                    { text: 'Instagram', href: 'https://instagram.com' },
+                    { text: 'YouTube', href: 'https://youtube.com' },
+                    { text: 'Discord', href: 'https://discord.com' },
                 ],
             },
         ],
         socialLinks: [
-            { platform: 'instagram', href: '#' },
-            { platform: 'youtube', href: '#' },
+            { platform: 'instagram', href: 'https://instagram.com' },
+            { platform: 'youtube', href: 'https://youtube.com' },
         ],
         copyrightText: '© {YEAR} IRON TEMPLE. ALL RIGHTS RESERVED. NO PAIN, NO REIGN.',
         colors: {

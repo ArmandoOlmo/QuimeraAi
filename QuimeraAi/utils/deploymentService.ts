@@ -30,7 +30,7 @@ const generateStaticHTML = (project: Project): string => {
                     <nav class="hidden md:flex gap-8">
                         ${(d.links || []).map((l: any) => `<a href="${l.href}" class="text-sm font-medium hover:opacity-80 transition-opacity" style="color: ${d.colors?.text || '#fff'}">${l.text}</a>`).join('')}
                     </nav>
-                    ${d.showCta ? `<a href="#" class="px-5 py-2 rounded-lg font-bold text-sm transition-transform hover:scale-105" style="background-color: ${d.colors?.accent || primaryColor}; color: ${getContrastingText(d.colors?.accent || primaryColor)}">${d.ctaText || 'Get Started'}</a>` : ''}
+                    ${d.showCta ? `<a href="${d.ctaUrl || '#cta'}" class="px-5 py-2 rounded-lg font-bold text-sm transition-transform hover:scale-105" style="background-color: ${d.colors?.accent || primaryColor}; color: ${getContrastingText(d.colors?.accent || primaryColor)}">${d.ctaText || 'Get Started'}</a>` : ''}
                 </div>
             </header>
         `,
@@ -116,7 +116,7 @@ const generateStaticHTML = (project: Project): string => {
                             <h2 class="text-4xl font-bold mb-4" style="color: ${d.colors?.heading || '#fff'}">${d.title || d.headline || 'Featured Products'}</h2>
                             <p class="opacity-70 max-w-xl" style="color: ${d.colors?.text || '#fff'}">${d.description || d.subheadline || 'Explore our best sellers and new arrivals.'}</p>
                         </div>
-                        <a href="#" class="text-sm font-bold uppercase tracking-widest hover:opacity-70 transition-opacity" style="color: ${d.colors?.accent || primaryColor}">View All Products →</a>
+                        <a href="/tienda" class="text-sm font-bold uppercase tracking-widest hover:opacity-70 transition-opacity" style="color: ${d.colors?.accent || primaryColor}">View All Products →</a>
                     </div>
                     <div class="grid md:grid-cols-4 gap-6">
                         ${(d.products || d.items || []).map((p: any) => `

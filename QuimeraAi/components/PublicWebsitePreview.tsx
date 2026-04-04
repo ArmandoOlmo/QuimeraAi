@@ -130,6 +130,72 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
   const [activeCategorySlug, setActiveCategorySlug] = useState<string | null>(null);
   const [loadingPost, setLoadingPost] = useState(false);
 
+  /**
+   * Update the browser URL via pushState and update SEO meta tags.
+   * This enables shareable URLs, proper back-button behavior, 
+   * and allows crawlers to discover sub-pages.
+   */
+  const updateBrowserUrl = useCallback((newPath: string) => {
+    // Only pushState if the path actually changed
+    if (window.location.pathname !== newPath) {
+      window.history.pushState(null, '', newPath);
+    }
+  }, []);
+
+  /**
+   * Update SEO meta tags dynamically when navigating within a user project.
+   */
+  const updatePageSEO = useCallback((opts: {
+    title?: string;
+    description?: string;
+    image?: string;
+    type?: string;
+    path?: string;
+  }) => {
+    const siteName = project?.brandIdentity?.name || project?.name || '';
+    const pageTitle = opts.title ? `${opts.title} | ${siteName}` : siteName;
+    document.title = pageTitle;
+
+    // Helper to upsert a meta tag
+    const setMeta = (sel: string, content: string, attr: 'name' | 'property' = 'name') => {
+      if (!content) return;
+      let el = document.querySelector(sel) as HTMLMetaElement;
+      if (!el) {
+        el = document.createElement('meta');
+        el.setAttribute(attr, sel.replace(`[${attr}="`, '').replace('"]', ''));
+        document.head.appendChild(el);
+      }
+      el.content = content;
+    };
+
+    if (opts.description) setMeta('[name="description"]', opts.description);
+    if (opts.title) {
+      setMeta('[property="og:title"]', pageTitle, 'property');
+      setMeta('[name="twitter:title"]', pageTitle);
+    }
+    if (opts.description) {
+      setMeta('[property="og:description"]', opts.description, 'property');
+      setMeta('[name="twitter:description"]', opts.description);
+    }
+    if (opts.image) {
+      setMeta('[property="og:image"]', opts.image, 'property');
+      setMeta('[name="twitter:image"]', opts.image);
+    }
+    if (opts.type) setMeta('[property="og:type"]', opts.type, 'property');
+    if (opts.path) {
+      const url = `${window.location.origin}${opts.path}`;
+      setMeta('[property="og:url"]', url, 'property');
+      // Update canonical
+      let canonical = document.querySelector('link[rel="canonical"]') as HTMLLinkElement;
+      if (!canonical) {
+        canonical = document.createElement('link');
+        canonical.rel = 'canonical';
+        document.head.appendChild(canonical);
+      }
+      canonical.href = url;
+    }
+  }, [project]);
+
     // Override overflow:hidden from index.html to allow native page scrolling
     useEffect(() => {
       const html = document.documentElement;
@@ -793,6 +859,8 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
       setStoreView({ type: 'none' });
       setActivePage(null);
       setActiveCategorySlug(null);
+      updateBrowserUrl('/');
+      updatePageSEO({ title: undefined, path: '/' });
       window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
@@ -832,6 +900,8 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
       setActivePage(null);
       setActivePost(null);
       setActiveCategorySlug(slug);
+      updateBrowserUrl(`/blog/categoria/${slug}`);
+      updatePageSEO({ title: `Category: ${slug}`, type: 'website', path: `/blog/categoria/${slug}` });
       window.scrollTo(0, 0);
       return;
     }
@@ -848,6 +918,8 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
         setActivePage(null);
         setActiveCategorySlug(null);
         setActivePost(post);
+        updateBrowserUrl(`/blog/${slug}`);
+        updatePageSEO({ title: post.title, description: post.excerpt, image: post.featuredImage, type: 'article', path: `/blog/${slug}` });
         window.scrollTo(0, 0);
       } else if (project?.id) {
         console.log('[PublicWebsitePreview] Post not in loaded list, fetching directly...');
@@ -864,6 +936,8 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
             setActivePage(null);
             setActiveCategorySlug(null);
             setActivePost(fetchedPost);
+            updateBrowserUrl(`/blog/${slug}`);
+            updatePageSEO({ title: fetchedPost.title, description: fetchedPost.excerpt, image: fetchedPost.featuredImage, type: 'article', path: `/blog/${slug}` });
             window.scrollTo(0, 0);
           } else {
             console.warn('[PublicWebsitePreview] Blog post not found directly for slug:', slug);
@@ -884,6 +958,8 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
       setActivePost(null);
       setActivePage(null);
       setStoreView({ type: 'store' });
+      updateBrowserUrl('/tienda');
+      updatePageSEO({ title: 'Tienda', type: 'website', path: '/tienda' });
       window.scrollTo(0, 0);
       return;
     }
@@ -894,6 +970,8 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
       setActivePost(null);
       setActivePage(null);
       setStoreView({ type: 'category', slug });
+      updateBrowserUrl(`/tienda/categoria/${slug}`);
+      updatePageSEO({ title: `Categoría: ${slug}`, type: 'website', path: `/tienda/categoria/${slug}` });
       window.scrollTo(0, 0);
       return;
     }
@@ -904,6 +982,8 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
       setActivePost(null);
       setActivePage(null);
       setStoreView({ type: 'product', slug });
+      updateBrowserUrl(`/tienda/producto/${slug}`);
+      updatePageSEO({ title: slug, type: 'product', path: `/tienda/producto/${slug}` });
       window.scrollTo(0, 0);
       return;
     }
@@ -975,6 +1055,8 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
         setActivePost(null);
         setStoreView({ type: 'none' });
         setActivePage(matchedPage);
+        updateBrowserUrl(`/${matchedPage.slug}`);
+        updatePageSEO({ title: matchedPage.seo?.title || matchedPage.title, description: matchedPage.seo?.description, type: 'website', path: `/${matchedPage.slug}` });
         window.scrollTo(0, 0);
         return;
       }
@@ -987,7 +1069,7 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
     } else {
       console.warn('[PublicWebsitePreview] No page or element found for href:', href);
     }
-  }, [cmsPosts, project, activePost, activePage, storeView]);
+  }, [cmsPosts, project, activePost, activePage, storeView, updateBrowserUrl, updatePageSEO]);
 
   // Inject font CSS variables AND load Google Fonts dynamically
   useEffect(() => {

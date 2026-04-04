@@ -649,9 +649,9 @@ export const digitalEdgePageData: PageData = {
             {
                 title: 'Agencia',
                 links: [
-                    { text: 'Sobre Nosotros', href: '#' },
+                    { text: 'Sobre Nosotros', href: '/about' },
                     { text: 'Equipo', href: '#team' },
-                    { text: 'Carreras', href: '#' },
+                    { text: 'Carreras', href: '/contact' },
                 ],
             },
             {
@@ -665,17 +665,17 @@ export const digitalEdgePageData: PageData = {
             {
                 title: 'Legal',
                 links: [
-                    { text: 'Privacidad', href: '#' },
-                    { text: 'Términos', href: '#' },
-                    { text: 'Cookies', href: '#' },
+                    { text: 'Privacidad', href: '/privacy-policy' },
+                    { text: 'Términos', href: '/terms-of-service' },
+                    { text: 'Cookies', href: '/privacy-policy' },
                 ],
             },
         ],
         socialLinks: [
-            { platform: 'facebook', href: '#' },
-            { platform: 'instagram', href: '#' },
-            { platform: 'twitter', href: '#' },
-            { platform: 'linkedin', href: '#' },
+            { platform: 'facebook', href: 'https://facebook.com' },
+            { platform: 'instagram', href: 'https://instagram.com' },
+            { platform: 'twitter', href: 'https://twitter.com' },
+            { platform: 'linkedin', href: 'https://linkedin.com' },
         ],
         copyrightText: '© {YEAR} Digital Edge. Todos los derechos reservados.',
         colors: {

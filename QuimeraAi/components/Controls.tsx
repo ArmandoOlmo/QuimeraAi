@@ -1088,7 +1088,7 @@ const Controls: React.FC = () => {
                 </div>
               ))}
               <button
-                onClick={() => setNestedData('header.links', [...(data.header.links || []), { text: 'New Link', href: '#' }])}
+                onClick={() => setNestedData('header.links', [...(data.header.links || []), { text: 'New Link', href: '/' }])}
                 className="text-xs text-editor-accent hover:underline flex items-center mt-1"
               >
                 <Plus size={12} className="mr-1" /> {t('editor.controls.navigation.addLink')}
@@ -2578,7 +2578,7 @@ const Controls: React.FC = () => {
                     </div>
                   ))}
                   <button onClick={() => {
-                    const newLinks = [...(col.links || []), { text: 'New Link', href: '#' }];
+                    const newLinks = [...(col.links || []), { text: 'New Link', href: '/' }];
                     setNestedData(`footer.linkColumns.${colIndex}.links`, newLinks);
                   }} className="text-xs text-editor-accent hover:underline mt-1">+ Add Link</button>
                 </>
@@ -6827,7 +6827,7 @@ const Controls: React.FC = () => {
                   </div>
                 ))}
                 <button
-                  onClick={() => setNestedData('header.links', [...(data.header.links || []), { text: 'New Link', href: '#' }])}
+                  onClick={() => setNestedData('header.links', [...(data.header.links || []), { text: 'New Link', href: '/' }])}
                   className="text-xs text-editor-accent hover:underline flex items-center mt-1"
                 >
                   <Plus size={12} className="mr-1" /> {t('editor.controls.navigation.addLink')}
@@ -7165,7 +7165,7 @@ const Controls: React.FC = () => {
                     </div>
                   ))}
                   <button onClick={() => {
-                    const newLinks = [...(col.links || []), { text: 'New Link', href: '#' }];
+                    const newLinks = [...(col.links || []), { text: 'New Link', href: '/' }];
                     setNestedData(`footer.linkColumns.${colIndex}.links`, newLinks);
                   }} className="text-xs text-editor-accent hover:underline mt-1">+ Add Link</button>
                 </>
