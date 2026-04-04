@@ -10,11 +10,13 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import ReactDOM from 'react-dom';
 import ReactMarkdown from 'react-markdown';
-import { MessageSquare, X, Send, Loader2, Bot, HelpCircle, Sparkles } from 'lucide-react';
+import { MessageSquare, X, Send, Loader2, Bot, HelpCircle, Sparkles, Mic, PhoneOff, Minus, ChevronDown, Maximize2, Minimize2 } from 'lucide-react';
+import { Modality, LiveServerMessage } from '@google/genai';
 import { useSafeAdmin } from '../contexts/admin';
 import { LandingChatbotConfig, defaultLandingChatbotConfig, LandingChatMessage, LandingChatbotColors, defaultChatbotColors } from '../types/landingChatbot';
 import { db, collection, addDoc, serverTimestamp } from '../firebase';
-import { isProxyMode } from '../utils/genAiClient';
+import { savePlatformLead } from '../services/platformLeadService';
+import { isProxyMode, getGoogleGenAI } from '../utils/genAiClient';
 import { generateContentViaProxy, extractTextFromResponse } from '../utils/geminiProxyClient';
 
 // =============================================================================
@@ -36,15 +38,63 @@ interface LeadFormData {
 }
 
 // =============================================================================
-// HELPER FUNCTIONS
+// AUDIO HELPER FUNCTIONS (matching GlobalAiAssistant)
 // =============================================================================
+
+function floatTo16BitPCM(float32Array: Float32Array): ArrayBuffer {
+    const buffer = new ArrayBuffer(float32Array.length * 2);
+    const view = new DataView(buffer);
+    let offset = 0;
+    for (let i = 0; i < float32Array.length; i++, offset += 2) {
+        let s = Math.max(-1, Math.min(1, float32Array[i]));
+        view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7fff, true);
+    }
+    return buffer;
+}
+
+function base64ToBytes(base64: string) {
+    const binaryString = atob(base64);
+    const length = binaryString.length;
+    const bytes = new Uint8Array(length);
+    for (let i = 0; i < length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+    }
+    return bytes;
+}
+
+function bytesToBase64(bytes: Uint8Array) {
+    let binary = '';
+    const len = bytes.byteLength;
+    for (let i = 0; i < len; i++) {
+        binary += String.fromCharCode(bytes[i]);
+    }
+    return btoa(binary);
+}
+
+async function decodeAudioData(
+    data: Uint8Array,
+    ctx: AudioContext,
+    sampleRate: number,
+    numChannels: number
+): Promise<AudioBuffer> {
+    const dataInt16 = new Int16Array(data.buffer);
+    const frameCount = dataInt16.length / numChannels;
+    const buffer = ctx.createBuffer(numChannels, frameCount, sampleRate);
+    for (let channel = 0; channel < numChannels; channel++) {
+        const channelData = buffer.getChannelData(channel);
+        for (let i = 0; i < frameCount; i++) {
+            channelData[i] = dataInt16[i * numChannels + channel] / 32768.0;
+        }
+    }
+    return buffer;
+}
 
 const generateMessageId = () => `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 const generateSessionId = () => `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
 // Helper to convert hex color to rgba with opacity
 const hexToRgba = (hex: string, alpha: number): string => {
-    const cleanHex = hex?.replace('#', '') || '0f172a';
+    const cleanHex = hex?.replace('#', '') || '000000';
     const r = parseInt(cleanHex.substring(0, 2), 16);
     const g = parseInt(cleanHex.substring(2, 4), 16);
     const b = parseInt(cleanHex.substring(4, 6), 16);
@@ -128,6 +178,8 @@ Personalidad:
 
     // State
     const [isOpen, setIsOpen] = useState(false);
+    const [isMinimized, setIsMinimized] = useState(false);
+    const [isExpanded, setIsExpanded] = useState(false);
     const [messages, setMessages] = useState<Message[]>([]);
     const [inputValue, setInputValue] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -137,32 +189,51 @@ Personalidad:
     const [sessionId] = useState(generateSessionId);
     const [hasShownProactive, setHasShownProactive] = useState(false);
 
+    // Voice State - matching GlobalAiAssistant
+    const [isLiveActive, setIsLiveActive] = useState(false);
+    const [isConnecting, setIsConnecting] = useState(false);
+    const [visualizerLevels, setVisualizerLevels] = useState([1, 1, 1, 1]);
+
     // Refs
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
     const proactiveTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+    // Audio Refs - matching GlobalAiAssistant
+    const audioContextRef = useRef<AudioContext | null>(null);
+    const inputAudioContextRef = useRef<AudioContext | null>(null);
+    const processorRef = useRef<ScriptProcessorNode | null>(null);
+    const streamRef = useRef<MediaStream | null>(null);
+    const nextStartTimeRef = useRef<number>(0);
+    const activeSourcesRef = useRef<AudioBufferSourceNode[]>([]);
+    const sessionRef = useRef<any>(null);
+    const visualizerIntervalRef = useRef<number | null>(null);
+    const isConnectedRef = useRef(false);
 
     // Determine color source (support both new and legacy format)
     const colorSource = (config.appearance as any).colorSource || ((config.appearance as any).useAppColors ? 'app' : 'custom');
     const customColors: LandingChatbotColors = config.appearance.customColors || defaultChatbotColors;
 
     // Derived colors from design tokens or custom
-    const colors: LandingChatbotColors = colorSource === 'app' && designTokens?.colors
+    // When colorSource === 'app', map design tokens to match GlobalAiAssistant's
+    // Tailwind class mapping (bg-primary → header, bg-card → bubbles, bg-background → container)
+    const dtColors = designTokens?.colors as any;
+    const colors: LandingChatbotColors = colorSource === 'app' && dtColors
         ? {
-            headerBackground: designTokens.colors?.primary || '#6366f1',
-            headerText: '#ffffff',
-            botBubbleBackground: designTokens.colors?.muted || '#f4f4f5',
-            botBubbleText: designTokens.colors?.foreground || '#09090b',
-            userBubbleBackground: designTokens.colors?.primary || '#6366f1',
-            userBubbleText: '#ffffff',
-            background: designTokens.colors?.background || '#ffffff',
-            inputBackground: designTokens.colors?.muted || '#f4f4f5',
-            inputBorder: designTokens.colors?.border || '#e4e4e7',
-            inputText: designTokens.colors?.foreground || '#09090b',
-            buttonBackground: designTokens.colors?.primary || '#6366f1',
-            buttonIcon: '#ffffff',
-            primary: designTokens.colors?.primary || '#6366f1',
-            mutedText: designTokens.colors['muted-foreground'] || '#71717a',
+            headerBackground: dtColors?.primary || '#FBB92B',
+            headerText: dtColors?.['primary-foreground'] || '#0a0a0a',
+            botBubbleBackground: dtColors?.card || '#111111',
+            botBubbleText: dtColors?.foreground || '#f5f5f5',
+            userBubbleBackground: dtColors?.primary || '#FBB92B',
+            userBubbleText: dtColors?.['primary-foreground'] || '#0a0a0a',
+            background: dtColors?.background || '#000000',
+            inputBackground: dtColors?.card || '#111111',
+            inputBorder: dtColors?.border || '#222222',
+            inputText: dtColors?.foreground || '#f5f5f5',
+            buttonBackground: dtColors?.primary || '#FBB92B',
+            buttonIcon: dtColors?.['primary-foreground'] || '#0a0a0a',
+            primary: dtColors?.primary || '#FBB92B',
+            mutedText: dtColors?.['muted-foreground'] || '#737373',
         }
         : customColors;
 
@@ -373,7 +444,7 @@ Asistente:`;
                 const result = await generateContentViaProxy(
                     'quimera-chat-landing', // Use pattern that's allowed in Cloud Function
                     fullPrompt,
-                    'gemini-2.5-flash',
+                    'gemini-3-flash-preview',
                     {
                         temperature: config.behavior.temperature,
                         maxOutputTokens: config.behavior.maxTokens,
@@ -387,7 +458,7 @@ Asistente:`;
                     throw new Error('API key not configured');
                 }
                 const model = genAI.getGenerativeModel({
-                    model: 'gemini-2.5-flash',
+                    model: 'gemini-3-flash-preview',
                     systemInstruction: systemPrompt
                 });
                 const chat = model.startChat({
@@ -430,13 +501,12 @@ Asistente:`;
         }
     };
 
-    // Handle lead form submission
     const handleLeadSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!leadFormData.email) return;
 
         try {
-            // Save lead to Firestore
+            // 1. Save to legacy landingChatbot collection
             await addDoc(collection(db, 'landingChatbot', 'leads', 'items'), {
                 ...leadFormData,
                 source: 'landing-chatbot',
@@ -446,6 +516,22 @@ Asistente:`;
                 conversationPreview: messages.slice(-3).map(m => m.content).join(' | '),
                 tags: ['landing', 'chatbot'],
                 createdAt: serverTimestamp(),
+            });
+
+            // 2. Also save to root-level platformLeads for the admin dashboard
+            await savePlatformLead({
+                name: leadFormData.name,
+                email: leadFormData.email,
+                phone: leadFormData.phone,
+                company: leadFormData.company,
+                source: 'landing-chatbot',
+                status: 'new',
+                score: 50,
+                tags: ['landing', 'chatbot'],
+                metadata: {
+                    sessionId,
+                    conversationPreview: messages.slice(-3).map(m => m.content).join(' | '),
+                },
             });
 
             setLeadCaptured(true);
@@ -471,6 +557,206 @@ Asistente:`;
             sendMessage(inputValue);
         }
     };
+
+    // =========================================================================
+    // VOICE MODE - Gemini Live API (matching GlobalAiAssistant)
+    // =========================================================================
+
+    const stopLiveSession = useCallback(() => {
+        isConnectedRef.current = false;
+        if (streamRef.current) {
+            streamRef.current.getTracks().forEach(t => t.stop());
+            streamRef.current = null;
+        }
+        if (processorRef.current && inputAudioContextRef.current) {
+            processorRef.current.disconnect();
+            processorRef.current = null;
+        }
+        if (inputAudioContextRef.current) {
+            inputAudioContextRef.current.close();
+            inputAudioContextRef.current = null;
+        }
+        activeSourcesRef.current.forEach(source => { try { source.stop(); } catch (e) { /* already stopped */ } });
+        activeSourcesRef.current = [];
+        if (audioContextRef.current) {
+            audioContextRef.current.close();
+            audioContextRef.current = null;
+        }
+        if (sessionRef.current) {
+            try {
+                const session = sessionRef.current;
+                if (session && typeof session.then === 'function') {
+                    session.then((s: any) => { try { s.close?.(); } catch (e) { /* ignore */ } }).catch(() => { });
+                } else if (session && typeof session.close === 'function') {
+                    session.close();
+                }
+            } catch (e) {
+                console.warn('[Landing Voice] Error closing session:', e);
+            }
+            sessionRef.current = null;
+        }
+        setIsLiveActive(false);
+        setIsConnecting(false);
+        nextStartTimeRef.current = 0;
+    }, []);
+
+    const startLiveSession = useCallback(async () => {
+        setIsConnecting(true);
+
+        try {
+            // STEP 1: Request microphone permission
+            console.log('[Landing Voice] Requesting microphone permission...');
+            let micStream: MediaStream;
+            try {
+                micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                console.log('[Landing Voice] Microphone access granted');
+            } catch (micErr: any) {
+                console.error('[Landing Voice] Microphone access denied:', micErr);
+                setIsConnecting(false);
+                alert(`No se pudo acceder al micrófono: ${micErr?.message || 'Permiso denegado'}. Por favor, permite el acceso al micrófono en tu navegador.`);
+                return;
+            }
+
+            // STEP 2: Set up audio contexts
+            const ai = await getGoogleGenAI();
+            const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+            const outputCtx = new AudioContextClass({ sampleRate: 24000 });
+            const inputCtx = new AudioContextClass({ sampleRate: 16000 });
+            audioContextRef.current = outputCtx;
+            inputAudioContextRef.current = inputCtx;
+            nextStartTimeRef.current = outputCtx.currentTime;
+            streamRef.current = micStream;
+
+            // Voice system prompt for the landing chatbot
+            const voiceSystemPrompt = config.personality.systemPrompt || 
+                'Eres Quibo, el asistente de voz de Quimera.ai. Responde de forma breve, amigable y natural.';
+
+            // STEP 3: Connect to WebSocket
+            const sessionPromise = ai.live.connect({
+                model: 'gemini-3.1-flash-live-preview',
+                config: {
+                    responseModalities: [Modality.AUDIO],
+                    speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: config.voice.voiceName || 'Kore' } } },
+                    systemInstruction: voiceSystemPrompt,
+                },
+                callbacks: {
+                    onopen: async () => {
+                        console.log('[Landing Voice] WebSocket connected');
+                        setIsConnecting(false);
+                        setIsLiveActive(true);
+                        isConnectedRef.current = true;
+
+                        // Set up audio processing
+                        const source = inputCtx.createMediaStreamSource(micStream);
+                        const processor = inputCtx.createScriptProcessor(4096, 1, 1);
+                        processorRef.current = processor;
+                        let audioSendCount = 0;
+                        processor.onaudioprocess = (e) => {
+                            if (!isConnectedRef.current) return;
+                            if (inputCtx.state === 'suspended') {
+                                inputCtx.resume();
+                            }
+                            const inputData = e.inputBuffer.getChannelData(0);
+                            const pcm16 = floatTo16BitPCM(inputData);
+                            const base64Data = bytesToBase64(new Uint8Array(pcm16));
+                            sessionPromise.then(session => {
+                                if (!isConnectedRef.current) return;
+                                try {
+                                    session.sendRealtimeInput({ audio: { mimeType: 'audio/pcm;rate=16000', data: base64Data } });
+                                    audioSendCount++;
+                                    if (audioSendCount % 100 === 0) {
+                                        console.log(`[Landing Voice] 🎤 Audio chunks sent: ${audioSendCount}`);
+                                    }
+                                } catch (err) {
+                                    console.error('[Landing Voice] ❌ Error sending audio chunk:', err);
+                                }
+                            });
+                        };
+                        source.connect(processor);
+                        processor.connect(inputCtx.destination);
+                        console.log('[Landing Voice] ⏳ Audio streaming started');
+                    },
+                    onmessage: async (message: LiveServerMessage) => {
+                        const sc = message.serverContent;
+
+                        if (sc?.interrupted) {
+                            activeSourcesRef.current.forEach(source => { try { source.stop(); } catch (e) { } });
+                            activeSourcesRef.current = [];
+                            if (audioContextRef.current) nextStartTimeRef.current = audioContextRef.current.currentTime;
+                            return;
+                        }
+
+                        // Resume output audio context if suspended
+                        if (audioContextRef.current?.state === 'suspended') {
+                            await audioContextRef.current.resume();
+                        }
+
+                        // Handle audio data
+                        const parts = sc?.modelTurn?.parts || [];
+                        for (const part of parts) {
+                            const audioData = (part as any)?.inlineData?.data;
+                            if (audioData && audioContextRef.current) {
+                                const ctx = audioContextRef.current;
+                                try {
+                                    const bytes = base64ToBytes(audioData);
+                                    const buffer = await decodeAudioData(bytes, ctx, 24000, 1);
+                                    const src = ctx.createBufferSource();
+                                    src.buffer = buffer;
+                                    src.connect(ctx.destination);
+                                    const startTime = Math.max(nextStartTimeRef.current, ctx.currentTime);
+                                    src.start(startTime);
+                                    nextStartTimeRef.current = startTime + buffer.duration;
+                                    activeSourcesRef.current.push(src);
+                                    src.onended = () => { activeSourcesRef.current = activeSourcesRef.current.filter(s => s !== src); };
+                                } catch (audioErr) {
+                                    console.error('[Landing Voice] Error playing audio chunk:', audioErr);
+                                }
+                            }
+                        }
+
+                        if (sc?.turnComplete) {
+                            console.log('[Landing Voice] ✅ Model turn complete');
+                        }
+                    },
+                    onclose: (e: any) => {
+                        console.log('[Landing Voice] WebSocket closed:', e?.reason || 'unknown');
+                        stopLiveSession();
+                    },
+                    onerror: (e: any) => {
+                        console.error('[Landing Voice] WebSocket error:', e);
+                        if (!isConnectedRef.current) return;
+                        stopLiveSession();
+                    }
+                }
+            });
+            sessionRef.current = sessionPromise;
+        } catch (error: any) {
+            console.error('[Landing Voice] Failed to start session:', error);
+            setIsConnecting(false);
+            alert(`Error al iniciar sesión de voz: ${error?.message || 'Error desconocido'}. Por favor, intenta de nuevo.`);
+        }
+    }, [config.personality.systemPrompt, config.voice.voiceName, stopLiveSession]);
+
+    // Visualizer animation - matching GlobalAiAssistant
+    useEffect(() => {
+        if (isLiveActive) {
+            visualizerIntervalRef.current = window.setInterval(() => {
+                setVisualizerLevels([
+                    Math.random() * 20 + 10,
+                    Math.random() * 40 + 10,
+                    Math.random() * 30 + 10,
+                    Math.random() * 20 + 10,
+                ]);
+            }, 100);
+        } else {
+            if (visualizerIntervalRef.current) clearInterval(visualizerIntervalRef.current);
+            setVisualizerLevels([4, 4, 4, 4]);
+        }
+        return () => { if (visualizerIntervalRef.current) clearInterval(visualizerIntervalRef.current); };
+    }, [isLiveActive]);
+
+    // Cleanup voice on unmount
+    useEffect(() => { return () => stopLiveSession(); }, [stopLiveSession]);
 
     // Get position styles
     const getPositionStyle = () => {
@@ -519,46 +805,166 @@ Asistente:`;
 
     const sizeClasses = getSizeClasses();
 
-    // Closed state - Floating button like GlobalAiAssistant
-    if (!isOpen) {
-        return ReactDOM.createPortal(
+    // =========================================================================
+    // FOOTER TRIGGER BAR (Dynamic: Center Bar OR Side Bubble)
+    // =========================================================================
+    const footerTriggerContent = isMinimized ? (
+        // MODE 1: MINIMIZED BUBBLE (Bottom-Right)
+        <div className="fixed bottom-6 right-6 z-[9999] pointer-events-none" style={{ animation: 'fadeIn 0.3s ease' }}>
             <button
-                onClick={() => setIsOpen(true)}
-                className={`fixed z-[9999] p-3 shadow-2xl hover:scale-110 transition-transform border-4 border-white/20 flex items-center justify-center group ${getButtonStyleClasses()} ${config.appearance.pulseEffect ? 'animate-pulse' : ''}`}
+                onClick={() => { setIsMinimized(false); setIsOpen(true); }}
+                className={`pointer-events-auto flex items-center justify-center w-14 h-14 rounded-full shadow-xl transition-all hover:scale-105 active:scale-95 border ${isLiveActive ? 'animate-pulse' : ''}`}
                 style={{
-                    ...getPositionStyle(),
-                    backgroundColor: colors?.buttonBackground
+                    backgroundColor: colors?.botBubbleBackground || '#111111',
+                    borderColor: isLiveActive ? '#ef4444' : colors?.inputBorder || '#222222',
+                    borderWidth: isLiveActive ? '2px' : '1px',
                 }}
-                title={`Chat con ${config.agentName}`}
             >
-                {getCustomButtonIcon()}
-                {/* Online indicator */}
-                <div className="absolute top-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
-            </button>,
-            document.body
-        );
-    }
+                <div className="relative flex items-center justify-center w-full h-full">
+                    <img src={QUIMERA_LOGO} alt="Quibo" className={`w-8 h-8 object-contain ${isLiveActive ? 'animate-pulse' : ''}`} />
+                    {isLiveActive ? (
+                        <div className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-red-500 border-2 animate-pulse" style={{ borderColor: colors?.botBubbleBackground || '#111111' }} />
+                    ) : (
+                        <div className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-green-500 border-2" style={{ borderColor: colors?.botBubbleBackground || '#111111' }} />
+                    )}
+                </div>
+            </button>
+        </div>
+    ) : (
+        // MODE 2: DEFAULT CENTER BAR (Bottom-Center)
+        <div className="fixed bottom-6 inset-x-0 z-[9999] px-6 pointer-events-none" style={{ animation: 'fadeIn 0.3s ease' }}>
+            <div
+                className={`assistant-footer-trigger pointer-events-auto mx-auto flex items-center gap-3 px-5 py-3 border rounded-full shadow-xl transition-all max-w-md w-full ${isLiveActive ? 'animate-pulse' : ''}`}
+                style={{
+                    backgroundColor: isLiveActive ? hexToRgba(colors?.primary || '#FBB92B', 0.15) : hexToRgba(colors?.botBubbleBackground || '#111111', 0.95),
+                    borderColor: isLiveActive ? hexToRgba(colors?.primary || '#FBB92B', 0.5) : colors?.inputBorder || '#222222',
+                    backdropFilter: 'blur(12px)',
+                }}
+            >
+                {/* Logo with status indicator */}
+                <div className="relative shrink-0">
+                    <img src={QUIMERA_LOGO} alt="Quibo" className={`w-9 h-9 object-contain transition-transform ${isLiveActive ? 'scale-110' : ''}`} />
+                    <div className={`absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 ${isLiveActive ? 'bg-red-500 animate-pulse' : 'bg-green-500'}`} style={{ borderColor: colors?.botBubbleBackground || '#111111' }} />
+                </div>
 
-    // Open state - Chat window with Glassmorphism style matching landing page
-    const widgetContent = (
+                {/* Content area */}
+                <div className="flex-1">
+                    {isLiveActive ? (
+                        <div className="flex items-center gap-2">
+                            <div className="flex items-end gap-0.5 h-5">
+                                {visualizerLevels.slice(0, 8).map((height, i) => (
+                                    <div
+                                        key={i}
+                                        className="w-1 rounded-full transition-all duration-75"
+                                        style={{ height: `${Math.max(4, height / 3)}px`, backgroundColor: colors?.primary || '#FBB92B' }}
+                                    />
+                                ))}
+                            </div>
+                            <span className="text-sm font-medium flex items-center gap-1.5" style={{ color: colors?.primary || '#FBB92B' }}>
+                                <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+                                Escuchando...
+                            </span>
+                        </div>
+                    ) : (
+                        <button onClick={() => setIsOpen(true)} className="flex-1 min-w-0 text-left group mx-2">
+                            <p className="text-sm transition-colors truncate" style={{ color: colors?.mutedText || '#737373' }}>
+                                Pregunta a {config.agentName}...
+                            </p>
+                        </button>
+                    )}
+                </div>
+
+                {/* Action buttons */}
+                <div className="flex items-center gap-2 shrink-0 self-center">
+                    {/* Voice toggle */}
+                    {config.voice.enabled && (
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                if (isLiveActive) { stopLiveSession(); } 
+                                else { startLiveSession(); }
+                            }}
+                            className="shrink-0 flex items-center justify-center rounded-full transition-all"
+                            style={{
+                                width: '36px', height: '36px', minWidth: '36px',
+                                backgroundColor: isLiveActive ? 'rgba(239,68,68,0.2)' : 'transparent',
+                                color: isLiveActive ? '#ef4444' : colors?.mutedText || '#737373',
+                            }}
+                            onMouseEnter={(e) => { if (!isLiveActive) e.currentTarget.style.color = colors?.primary || '#FBB92B'; }}
+                            onMouseLeave={(e) => { if (!isLiveActive) e.currentTarget.style.color = colors?.mutedText || '#737373'; }}
+                        >
+                            {isConnecting ? (
+                                <img src={QUIMERA_LOGO} alt="..." className="w-5 h-5 object-contain animate-pulse" />
+                            ) : isLiveActive ? <PhoneOff size={18} /> : <Mic size={18} />}
+                        </button>
+                    )}
+                    {/* Minimize bar → bubble */}
+                    <button
+                        onClick={(e) => { e.stopPropagation(); setIsMinimized(true); }}
+                        className="shrink-0 flex items-center justify-center rounded-full transition-colors"
+                        style={{
+                            width: '36px', height: '36px', minWidth: '36px',
+                            color: colors?.mutedText || '#737373',
+                        }}
+                        onMouseEnter={(e) => { e.currentTarget.style.color = colors?.primary || '#FBB92B'; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.color = colors?.mutedText || '#737373'; }}
+                        title="Minimizar"
+                    >
+                        <Minus size={18} />
+                    </button>
+                    {/* Open drawer */}
+                    {!isLiveActive && (
+                        <button
+                            onClick={() => setIsOpen(true)}
+                            className="shrink-0 flex items-center justify-center rounded-full shadow-sm transition-colors"
+                            style={{
+                                width: '36px', height: '36px', minWidth: '36px',
+                                backgroundColor: hexToRgba(colors?.primary || '#FBB92B', 0.1),
+                                color: colors?.primary || '#FBB92B',
+                            }}
+                        >
+                            <Send size={16} />
+                        </button>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+
+    // =========================================================================
+    // MODE 3: DRAWER CONTENT (Full chat panel)
+    // =========================================================================
+    const drawerContent = (
         <div
-            className="fixed z-[9999] backdrop-blur-xl border border-white/10 shadow-2xl shadow-black/50 transition-all duration-300 flex flex-col overflow-hidden rounded-3xl"
+            className={`fixed z-[10000] border shadow-2xl rounded-3xl flex flex-col overflow-hidden transition-all duration-300 ${isExpanded ? 'inset-4' : 'bottom-6 left-4 right-4 md:left-auto md:right-6 md:w-[420px] h-[65vh] md:h-[550px]'}`}
             style={{
-                ...getPositionStyle(),
-                width: sizeClasses.width.includes('[') ? sizeClasses.width.match(/\d+/)?.[0] + 'px' : '400px',
-                height: sizeClasses.height.includes('[') ? sizeClasses.height.match(/\d+/)?.[0] + 'px' : '600px',
-                backgroundColor: hexToRgba(colors?.background || '#0f172a', 0.95),
+                backgroundColor: colors?.background || '#000000',
+                borderColor: colors?.inputBorder || '#222222',
+                animation: 'slideUp 0.3s ease',
             }}
         >
-            {/* Header - Glassmorphism style */}
+            {/* Drawer Header */}
             <div
-                className="p-4 flex justify-between items-center shrink-0 cursor-pointer backdrop-blur-sm border-b border-white/10"
-                style={{ backgroundColor: hexToRgba(colors?.headerBackground || '#0f172a', 0.8) }}
+                className="p-4 flex justify-between items-center shrink-0 select-none"
+                style={{ backgroundColor: colors?.headerBackground }}
             >
                 <div className="flex items-center gap-3">
+                    {/* Minimize button → sends to bubble */}
+                    <button
+                        onClick={() => { setIsMinimized(true); setIsOpen(false); }}
+                        className="p-1.5 rounded-md transition-colors"
+                        style={{ color: colors?.headerText }}
+                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = `${colors?.headerText}15`}
+                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                        title="Minimizar a burbuja"
+                    >
+                        <Minus size={20} />
+                    </button>
+
                     <div className="relative">
                         <div
-                            className="w-10 h-10 rounded-full flex items-center justify-center bg-white/5 border border-white/20 overflow-hidden backdrop-blur-sm"
+                            className="w-10 h-10 rounded-full flex items-center justify-center overflow-hidden border"
+                            style={{ backgroundColor: `${colors?.headerText}10`, borderColor: `${colors?.headerText}20` }}
                         >
                             {config.appearance.avatarUrl ? (
                                 <img src={config.appearance.avatarUrl} alt={config.agentName} className="w-full h-full object-cover" />
@@ -566,31 +972,44 @@ Asistente:`;
                                 <Bot size={24} style={{ color: colors?.headerText }} />
                             )}
                         </div>
-                        {/* Status indicator */}
-                        <div className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 bg-green-400 border-slate-900"></div>
+                        <div className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 ${isLiveActive ? 'bg-red-500 animate-pulse' : 'bg-green-400'}`} style={{ borderColor: colors?.headerBackground }}></div>
                     </div>
                     <div>
                         <h3 className="font-bold text-sm leading-tight" style={{ color: colors?.headerText }}>
                             {config.agentName}
                         </h3>
-                        <p className="text-[10px] opacity-80 font-medium text-white/70">
-                            {isLoading ? 'Escribiendo...' : 'En línea'}
+                        <p className="text-[10px] opacity-90 font-medium" style={{ color: colors?.headerText }}>
+                            {isLiveActive ? '🎤 Escuchando...' : isLoading ? 'Escribiendo...' : 'En línea'}
                         </p>
                     </div>
                 </div>
                 <div className="flex gap-1 items-center">
+                    {/* Expand/collapse toggle */}
                     <button
-                        onClick={() => setIsOpen(false)}
-                        className="p-1.5 hover:bg-white/10 rounded-lg transition-colors"
+                        onClick={() => setIsExpanded(!isExpanded)}
+                        className="p-1.5 rounded-md transition-colors hidden md:flex"
+                        style={{ color: colors?.headerText }}
+                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = `${colors?.headerText}20`}
+                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                     >
-                        <X size={18} style={{ color: colors?.headerText }} />
+                        {isExpanded ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
+                    </button>
+                    {/* Close → back to center bar */}
+                    <button
+                        onClick={() => { setIsOpen(false); setIsMinimized(false); stopLiveSession(); }}
+                        className="p-1.5 rounded-md transition-colors"
+                        style={{ color: colors?.headerText }}
+                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = `${colors?.headerText}20`}
+                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                    >
+                        <ChevronDown size={18} />
                     </button>
                 </div>
             </div>
 
-            {/* Messages area - Glassmorphism style */}
+            {/* Messages area */}
             <div className="flex-1 flex flex-col overflow-hidden relative" style={{ backgroundColor: 'transparent' }}>
-                <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar" style={{ backgroundColor: hexToRgba(colors?.botBubbleBackground || '#1e293b', 0.5) }}>
+                <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar" style={{ backgroundColor: hexToRgba(colors?.background || '#000000', 0.5) }}>
                     {messages.map((message) => (
                         <div
                             key={message.id}
@@ -603,22 +1022,23 @@ Asistente:`;
                                     style={{ backgroundColor: `${colors?.primary}10`, borderColor: `${colors?.primary}20` }}
                                 >
                                     {config.appearance.avatarUrl ? (
-                                        <img src={config.appearance.avatarUrl} alt={config.agentName} className="w-full h-full object-cover" />
+                                        <img src={config.appearance.avatarUrl} alt={config.agentName} className="w-5 h-5 object-contain" />
                                     ) : (
                                         <Bot size={16} style={{ color: colors?.primary }} />
                                     )}
                                 </div>
                             )}
 
-                            {/* Message bubble - Glassmorphism style */}
+                            {/* Message bubble */}
                             <div
-                                className={`max-w-[80%] p-3.5 rounded-2xl text-sm leading-relaxed shadow-lg ${message.role === 'user'
-                                    ? 'rounded-tr-sm shadow-yellow-500/10'
-                                    : 'rounded-tl-sm border border-white/10 backdrop-blur-sm'
+                                className={`max-w-[85%] p-3.5 rounded-2xl text-sm leading-relaxed shadow-sm ${message.role === 'user'
+                                    ? 'rounded-tr-sm'
+                                    : 'rounded-tl-sm border'
                                     }`}
                                 style={{
-                                    backgroundColor: message.role === 'user' ? colors?.userBubbleBackground : hexToRgba(colors?.botBubbleBackground || '#1e293b', 0.8),
+                                    backgroundColor: message.role === 'user' ? colors?.userBubbleBackground : colors?.botBubbleBackground,
                                     color: message.role === 'user' ? colors?.userBubbleText : colors?.botBubbleText,
+                                    borderColor: message.role === 'user' ? 'transparent' : colors?.inputBorder,
                                 }}
                             >
                                 <ReactMarkdown
@@ -657,7 +1077,7 @@ Asistente:`;
                         </div>
                     ))}
 
-                    {/* Loading indicator - Like GlobalAiAssistant */}
+                    {/* Loading indicator */}
                     {isLoading && (
                         <div className="flex justify-start">
                             <div
@@ -665,16 +1085,16 @@ Asistente:`;
                                 style={{ backgroundColor: `${colors?.primary}10`, borderColor: `${colors?.primary}20` }}
                             >
                                 {config.appearance.avatarUrl ? (
-                                    <img src={config.appearance.avatarUrl} alt={config.agentName} className="w-full h-full object-cover animate-pulse" />
+                                    <img src={config.appearance.avatarUrl} alt={config.agentName} className="w-5 h-5 object-contain animate-pulse" />
                                 ) : (
                                     <Bot size={16} style={{ color: colors?.primary }} className="animate-pulse" />
                                 )}
                             </div>
                             <div
-                                className="px-4 py-3 rounded-2xl rounded-tl-sm shadow-lg flex items-center gap-2 text-sm border border-white/10 backdrop-blur-sm"
-                                style={{ backgroundColor: hexToRgba(colors?.botBubbleBackground || '#1e293b', 0.8), color: colors?.mutedText }}
+                                className="px-4 py-3 rounded-2xl rounded-tl-sm shadow-sm flex items-center gap-2 text-sm border"
+                                style={{ backgroundColor: colors?.botBubbleBackground, color: colors?.mutedText, borderColor: colors?.inputBorder }}
                             >
-                                <Loader2 size={14} className="animate-spin" style={{ color: colors?.primary }} />
+                                <img src={QUIMERA_LOGO} alt="Loading..." className="w-4 h-4 object-contain animate-pulse" />
                                 <span>Pensando...</span>
                             </div>
                         </div>
@@ -683,8 +1103,8 @@ Asistente:`;
                     {/* Lead capture form */}
                     {showLeadForm && (
                         <div
-                            className="p-4 rounded-2xl border border-white/10 shadow-lg backdrop-blur-sm"
-                            style={{ backgroundColor: hexToRgba(colors?.botBubbleBackground || '#1e293b', 0.9) }}
+                            className="p-4 rounded-2xl border shadow-sm"
+                            style={{ backgroundColor: colors?.botBubbleBackground, borderColor: colors?.inputBorder }}
                         >
                             <h4 className="font-semibold mb-3" style={{ color: colors?.botBubbleText }}>
                                 {t('landingChatbot.leadForm.title', '¿Te gustaría que te contactemos?')}
@@ -751,23 +1171,50 @@ Asistente:`;
                     <div ref={messagesEndRef} />
                 </div>
 
-                {/* Input area - Glassmorphism style */}
+                {/* Input area */}
                 <div
-                    className="p-4 border-t border-white/10 shrink-0 backdrop-blur-sm"
-                    style={{ backgroundColor: hexToRgba(colors?.headerBackground || '#0f172a', 0.8) }}
+                    className="p-4 border-t shrink-0"
+                    style={{ backgroundColor: colors?.botBubbleBackground, borderColor: colors?.inputBorder }}
                 >
+                    {/* Voice active overlay */}
+                    {isLiveActive ? (
+                        <div className="flex items-center gap-3 justify-center py-2">
+                            <div className="flex items-end gap-1 h-8">
+                                {visualizerLevels.map((height, i) => (
+                                    <div
+                                        key={i}
+                                        className="w-1.5 rounded-full transition-all duration-75"
+                                        style={{ height: `${Math.max(4, height)}px`, backgroundColor: colors?.primary }}
+                                    />
+                                ))}
+                            </div>
+                            <span className="text-sm font-medium flex items-center gap-1.5" style={{ color: colors?.primary }}>
+                                <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+                                Escuchando...
+                            </span>
+                            <button
+                                onClick={stopLiveSession}
+                                className="shrink-0 w-9 h-9 flex items-center justify-center rounded-full bg-red-500/20 text-red-500 hover:bg-red-500/30 transition-all"
+                            >
+                                <PhoneOff size={18} />
+                            </button>
+                        </div>
+                    ) : (
                     <div
-                        className="flex items-center gap-2 p-1.5 rounded-full border border-white/20 transition-all focus-within:ring-2 focus-within:ring-yellow-500/30 backdrop-blur-sm"
+                        className="flex items-center gap-2 p-1.5 rounded-full border transition-all"
                         style={{
-                            backgroundColor: hexToRgba(colors?.inputBackground || '#1e293b', 0.6),
+                            backgroundColor: hexToRgba(colors?.inputBackground || '#111111', 0.3),
+                            borderColor: colors?.inputBorder,
                         }}
                     >
-                        {/* Clear chat button */}
+                        {/* Clear chat */}
                         <button
                             onClick={() => setMessages([])}
-                            className="p-2 rounded-full transition-colors hover:bg-white/10"
+                            className="p-2 rounded-full transition-colors"
                             style={{ color: colors?.mutedText }}
                             title="Limpiar chat"
+                            onMouseEnter={(e) => e.currentTarget.style.color = '#ef4444'}
+                            onMouseLeave={(e) => e.currentTarget.style.color = colors?.mutedText || '#737373'}
                         >
                             <X size={18} />
                         </button>
@@ -779,29 +1226,49 @@ Asistente:`;
                             onChange={(e) => setInputValue(e.target.value)}
                             onKeyPress={handleKeyPress}
                             placeholder={config.inputPlaceholder}
-                            disabled={isLoading}
-                            className="flex-1 bg-transparent px-2 text-sm outline-none placeholder:text-white/40"
-                            style={{ color: colors?.inputText }}
+                            disabled={isLoading || isLiveActive}
+                            className="flex-1 bg-transparent px-2 text-sm outline-none"
+                            style={{ color: colors?.inputText, '--tw-placeholder-opacity': '0.5' } as any}
                         />
+
+                        {/* Voice button */}
+                        {config.voice.enabled && (
+                            <button
+                                onClick={startLiveSession}
+                                disabled={isConnecting || isLiveActive}
+                                className="p-2 rounded-full transition-all"
+                                style={{ color: colors?.mutedText }}
+                                onMouseEnter={(e) => { if (!isConnecting) e.currentTarget.style.color = colors?.primary || '#FBB92B'; }}
+                                onMouseLeave={(e) => { e.currentTarget.style.color = colors?.mutedText || '#737373'; }}
+                                title="Modo voz"
+                            >
+                                {isConnecting ? (
+                                    <img src={QUIMERA_LOGO} alt="Connecting..." className="w-5 h-5 object-contain animate-pulse" />
+                                ) : (
+                                    <Mic size={20} />
+                                )}
+                            </button>
+                        )}
 
                         {/* Send button */}
                         <button
                             onClick={() => sendMessage(inputValue)}
-                            disabled={isLoading || !inputValue.trim()}
-                            className="p-2 rounded-full shadow-lg shadow-yellow-500/20 transition-all hover:scale-105 hover:shadow-yellow-500/30 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
-                            style={{ backgroundColor: colors?.buttonBackground, color: colors?.buttonIcon }}
+                            disabled={isLoading || !inputValue.trim() || isLiveActive}
+                            className="shrink-0 flex items-center justify-center rounded-full shadow-md transition-all hover:opacity-90 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+                            style={{ width: '36px', height: '36px', minWidth: '36px', minHeight: '36px', maxWidth: '36px', maxHeight: '36px', aspectRatio: '1 / 1', backgroundColor: colors?.buttonBackground, color: colors?.buttonIcon }}
                         >
                             <Send size={18} />
                         </button>
                     </div>
+                    )}
 
-                    {/* Footer info */}
+                    {/* Footer status bar */}
                     <div className="mt-2 flex justify-between items-center px-2">
-                        <p className="text-[10px] flex items-center text-white/50">
-                            <span className="w-1.5 h-1.5 rounded-full bg-green-500 mr-1.5"></span>
-                            {config.agentRole}
+                        <p className="text-[10px] flex items-center" style={{ color: colors?.mutedText }}>
+                            <span className={`w-1.5 h-1.5 rounded-full mr-1.5 ${isLiveActive ? 'bg-red-500 animate-pulse' : 'bg-green-500'}`}></span>
+                            {isLiveActive ? '🎤 Voz activa' : config.agentRole}
                         </p>
-                        <p className="text-[10px] text-white/50">
+                        <p className="text-[10px]" style={{ color: colors?.mutedText }}>
                             Powered by <span style={{ color: colors?.primary }} className="font-medium">Quimera.ai</span>
                         </p>
                     </div>
@@ -810,9 +1277,32 @@ Asistente:`;
         </div>
     );
 
-    // Render using portal
+    // =========================================================================
+    // MAIN RENDER
+    // =========================================================================
     return typeof document !== 'undefined'
-        ? ReactDOM.createPortal(widgetContent, document.body)
+        ? ReactDOM.createPortal(
+            <>
+                {/* Footer Trigger - Center Bar or Bubble (when drawer is closed) */}
+                {!isOpen && footerTriggerContent}
+
+                {/* Drawer - Full chat panel (when open) */}
+                {isOpen && drawerContent}
+
+                {/* CSS Keyframes for animations */}
+                <style>{`
+                    @keyframes fadeIn {
+                        from { opacity: 0; transform: scale(0.95); }
+                        to { opacity: 1; transform: scale(1); }
+                    }
+                    @keyframes slideUp {
+                        from { opacity: 0; transform: translateY(20px); }
+                        to { opacity: 1; transform: translateY(0); }
+                    }
+                `}</style>
+            </>,
+            document.body
+        )
         : null;
 };
 

@@ -118,22 +118,23 @@ export interface LandingChatbotColors {
     mutedText: string;
 }
 
-// Quimera.ai brand colors: Yellow/Gold primary, Dark blue backgrounds
+// Quimera.ai brand colors: Cadmium Yellow primary, OLED Black backgrounds
+// Matches the GlobalAiAssistant design system (bg-primary, bg-card, bg-background)
 export const defaultChatbotColors: LandingChatbotColors = {
-    headerBackground: '#0f172a',      // Dark blue (slate-900)
-    headerText: '#facc15',            // Yellow/Gold
-    botBubbleBackground: '#1e293b',   // Slate-800
-    botBubbleText: '#f1f5f9',         // Slate-100
-    userBubbleBackground: '#facc15',  // Yellow/Gold primary
-    userBubbleText: '#0f172a',        // Dark text on yellow
-    background: '#0f172a',            // Dark blue background
-    inputBackground: '#1e293b',       // Slate-800
-    inputBorder: '#334155',           // Slate-700
-    inputText: '#f1f5f9',             // Slate-100
-    buttonBackground: '#facc15',      // Yellow/Gold
-    buttonIcon: '#0f172a',            // Dark icon on yellow button
-    primary: '#facc15',               // Yellow/Gold
-    mutedText: '#94a3b8',             // Slate-400
+    headerBackground: '#FBB92B',      // Cadmium Yellow — matches GlobalAiAssistant bg-primary header
+    headerText: '#0a0a0a',            // Near-black text on yellow header
+    botBubbleBackground: '#111111',   // OLED card — matches bg-card in black mode
+    botBubbleText: '#f5f5f5',         // Light text on dark bubble
+    userBubbleBackground: '#FBB92B',  // Cadmium Yellow — matches bg-primary user bubble
+    userBubbleText: '#0a0a0a',        // Dark text on yellow bubble
+    background: '#000000',            // OLED Black — matches bg-background in black mode
+    inputBackground: '#111111',       // Dark card surface — matches bg-card
+    inputBorder: '#222222',           // Subtle border — matches border in black mode
+    inputText: '#f5f5f5',             // Light text on dark input
+    buttonBackground: '#FBB92B',      // Cadmium Yellow — matches bg-primary
+    buttonIcon: '#0a0a0a',            // Dark icon on yellow button
+    primary: '#FBB92B',               // Cadmium Yellow — matches --primary
+    mutedText: '#737373',             // Neutral muted — matches muted-foreground
 };
 
 export interface LandingChatbotAppearance {
@@ -515,7 +516,7 @@ export const defaultLandingChatbotConfig: LandingChatbotConfig = {
 
     voice: {
         enabled: true,
-        voiceName: 'Kore',
+        voiceName: 'Puck',
         autoPlayGreeting: false,
     },
 

@@ -3388,7 +3388,7 @@ Usuario: ${userMsg}`;
                         <button
                             onClick={() => setIsOpen(true)}
                             className="shrink-0 self-center flex items-center justify-center rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors shadow-sm"
-                            style={{ width: '36px', height: '36px', minWidth: '36px', minHeight: '36px', maxHeight: '36px' }}
+                            style={{ width: '36px', height: '36px', minWidth: '36px', minHeight: '36px', maxWidth: '36px', maxHeight: '36px', aspectRatio: '1 / 1' }}
                         >
                             <Send size={16} />
                         </button>
@@ -3554,7 +3554,8 @@ Usuario: ${userMsg}`;
                     <button
                         onClick={handleTextSend}
                         disabled={!input.trim() || isThinking || isLiveActive}
-                        className="shrink-0 w-9 h-9 aspect-square flex items-center justify-center bg-primary text-primary-foreground rounded-full hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed shadow-md transition-all hover:scale-105"
+                        className="shrink-0 flex items-center justify-center bg-primary text-primary-foreground rounded-full hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed shadow-md transition-all hover:scale-105"
+                        style={{ width: '36px', height: '36px', minWidth: '36px', minHeight: '36px', maxWidth: '36px', maxHeight: '36px', aspectRatio: '1 / 1' }}
                     >
                         <Send size={18} />
                     </button>

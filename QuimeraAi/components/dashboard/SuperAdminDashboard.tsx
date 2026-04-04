@@ -9,7 +9,7 @@ import {
     ArrowLeft, Menu, Image, MessageSquare, PackageSearch, Palette,
     FlaskConical, Languages, Search, FileText, FolderOpen,
     Navigation, Star, Settings, Grid3x3, List, X, Sparkles, Zap, Newspaper, Layout,
-    Loader2, DollarSign, Globe
+    Loader2, DollarSign, Globe, UserPlus, CalendarDays
 } from 'lucide-react';
 import DashboardSidebar from './DashboardSidebar';
 import MobileSearchModal from '../ui/MobileSearchModal';
@@ -44,6 +44,8 @@ const NewsManagement = React.lazy(() => import('./admin/NewsManagement'));
 const LandingPageEditor = React.lazy(() => import('./admin/LandingPageEditor'));
 const ServiceAvailabilityControl = React.lazy(() => import('./admin/ServiceAvailabilityControl'));
 const SubdomainManagement = React.lazy(() => import('./admin/SubdomainManagement'));
+const AdminLeadsDashboard = React.lazy(() => import('./admin/AdminLeadsDashboard'));
+const AdminAppointmentsDashboard = React.lazy(() => import('./admin/AdminAppointmentsDashboard'));
 
 // Loading skeleton for admin panels
 const AdminPanelLoader = () => (
@@ -96,6 +98,8 @@ const ADMIN_ROUTES: Record<string, string> = {
     'landing-editor': ROUTES.ADMIN_LANDING_EDITOR,
     'service-availability': ROUTES.ADMIN_SERVICE_AVAILABILITY,
     'subdomains': ROUTES.ADMIN_SUBDOMAINS,
+    'admin-leads': ROUTES.ADMIN_LEADS,
+    'admin-appointments': ROUTES.ADMIN_APPOINTMENTS,
 };
 
 // Components
@@ -278,6 +282,8 @@ const SuperAdminDashboard = () => {
         { id: 'landing-chatbot', title: t('superadmin.landingChatbot', 'Landing Chatbot'), description: t('superadmin.landingChatbotDesc', 'Configurar chatbot para la landing page pública'), icon: <Bot size={24} />, category: 'core', route: ROUTES.ADMIN_LANDING_CHATBOT, isNew: true, allowedRoles: ['owner', 'superadmin', 'admin'] },
         { id: 'prompts', title: t('superadmin.llmPrompts'), description: t('superadmin.llmPromptsDesc'), icon: <Bot size={24} />, category: 'system', route: ROUTES.ADMIN_PROMPTS, allowedRoles: ['owner', 'superadmin', 'admin'] },
         { id: 'chatbot-prompts', title: 'Prompts de Chatbot', description: 'Configurar instrucciones globales para todos los chatbots de proyectos', icon: <MessageSquare size={24} />, category: 'system', route: ROUTES.ADMIN_CHATBOT_PROMPTS, isNew: true, allowedRoles: ['owner', 'superadmin'] },
+        { id: 'admin-leads', title: t('superadmin.platformLeads', 'Leads de Plataforma'), description: t('superadmin.platformLeadsDesc', 'Gestionar leads recibidos desde la landing page, formulario de contacto y chatbot'), icon: <UserPlus size={24} />, category: 'core', route: ROUTES.ADMIN_LEADS, isNew: true, allowedRoles: ['owner', 'superadmin'] },
+        { id: 'admin-appointments', title: t('superadmin.platformAppointments', 'Citas de Plataforma'), description: t('superadmin.platformAppointmentsDesc', 'Gestionar citas agendadas a nivel de plataforma'), icon: <CalendarDays size={24} />, category: 'core', route: ROUTES.ADMIN_APPOINTMENTS, isNew: true, allowedRoles: ['owner', 'superadmin'] },
         { id: 'global-seo', title: t('superadmin.globalSEO'), description: t('superadmin.globalSEODesc'), icon: <Search size={24} />, category: 'system', route: ROUTES.ADMIN_GLOBAL_SEO, allowedRoles: ['owner', 'superadmin', 'admin'] },
         { id: 'execution-mode', title: '⚡ Execution Mode (Coming Soon)', description: 'Configure assistant execution behavior (feature in development)', icon: <Zap size={24} />, category: 'system', route: ROUTES.ADMIN_EXECUTION_MODE, isNew: true, allowedRoles: ['owner', 'superadmin'] },
     ];
@@ -347,6 +353,18 @@ const SuperAdminDashboard = () => {
             case 'service-availability': return <ServiceAvailabilityControl onBack={handleBack} />;
             case 'subdomains': return <SubdomainManagement onBack={handleBack} />;
             case 'finances': return <FinancialDashboard onBack={handleBack} />;
+            case 'admin-leads': return (
+                <div className="flex h-screen bg-background text-foreground">
+                    <DashboardSidebar isMobileOpen={false} onClose={() => {}} />
+                    <AdminLeadsDashboard onBack={handleBack} />
+                </div>
+            );
+            case 'admin-appointments': return (
+                <div className="flex h-screen bg-background text-foreground">
+                    <DashboardSidebar isMobileOpen={false} onClose={() => {}} />
+                    <AdminAppointmentsDashboard onBack={handleBack} />
+                </div>
+            );
             case 'design-tokens': return <AdminViewLayout title={t('superadmin.designTokensTitle')} onBack={handleBack}><DesignTokensEditor /></AdminViewLayout>;
             case 'analytics': return <AdminViewLayout title={t('superadmin.componentAnalyticsTitle')} onBack={handleBack} noPadding><AnalyticsDashboard /></AdminViewLayout>;
             default: return null;

@@ -154,6 +154,8 @@ export const ROUTES = {
   ADMIN_FINANCES: '/admin/finances',
   ADMIN_SUBDOMAINS: '/admin/subdomains',
   ADMIN_DIAGNOSE: '/admin/diagnose',
+  ADMIN_LEADS: '/admin/leads',
+  ADMIN_APPOINTMENTS: '/admin/appointments',
 } as const;
 
 // =============================================================================
@@ -986,6 +988,28 @@ export const routeConfigs: RouteConfig[] = [
     adminView: 'finances',
     type: 'admin',
     title: 'Finanzas & MRR',
+    requiresAuth: true,
+    requiresEmailVerified: true,
+    roles: ['owner', 'superadmin'],
+    parent: ROUTES.SUPERADMIN,
+  },
+  {
+    path: ROUTES.ADMIN_LEADS,
+    view: 'superadmin',
+    adminView: 'admin-leads',
+    type: 'admin',
+    title: 'Platform Leads',
+    requiresAuth: true,
+    requiresEmailVerified: true,
+    roles: ['owner', 'superadmin'],
+    parent: ROUTES.SUPERADMIN,
+  },
+  {
+    path: ROUTES.ADMIN_APPOINTMENTS,
+    view: 'superadmin',
+    adminView: 'admin-appointments',
+    type: 'admin',
+    title: 'Platform Appointments',
     requiresAuth: true,
     requiresEmailVerified: true,
     roles: ['owner', 'superadmin'],

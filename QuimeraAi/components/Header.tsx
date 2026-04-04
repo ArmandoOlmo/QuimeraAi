@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
+import { useTranslation } from 'react-i18next';
 import { HeaderData, NavLink, BorderRadiusSize, NavbarLayout, NavLinkHoverStyle } from '../types';
 import { useSafeProject } from '../contexts/project';
 import { Menu, X, ArrowRight, ShoppingCart } from 'lucide-react';
@@ -79,6 +80,29 @@ interface NavLinksProps {
 }
 
 const NavLinks: React.FC<NavLinksProps> = ({ links, textColor, accentColor, hoverStyle, className, isMobile, onLinkClick, onNavigate, linkFontSize = 14 }) => {
+  const { t } = useTranslation();
+
+  // Helper to translate navigation labels dynamically
+  const getTranslatedLabel = (label: string) => {
+    if (!label) return label;
+    const normalized = label.trim().toLowerCase();
+    switch (normalized) {
+      case 'features': return t('landing.navFeatures', 'Características');
+      case 'pricing': return t('landing.navPricing', 'Precios');
+      case 'blog': return t('landing.navBlog', 'Blog');
+      case 'help': return t('landing.navHelp', 'Ayuda');
+      case 'templates': return t('landing.navTemplates', 'Plantillas');
+      case 'documentation': return t('landing.navDocumentation', 'Documentación');
+      case 'help center': return t('landing.navHelpCenter', 'Centro de Ayuda');
+      case 'about': return t('landing.navAbout', 'Nosotros');
+      case 'contact': return t('landing.navContact', 'Contacto');
+      case 'product': return t('landing.navProduct', 'Producto');
+      case 'resources': return t('landing.navResources', 'Recursos');
+      case 'company': return t('landing.navCompany', 'Empresa');
+      case 'legal': return t('landing.navLegal', 'Legal');
+      default: return label;
+    }
+  };
 
   const getHoverClass = () => {
     if (isMobile) return '';
@@ -133,7 +157,7 @@ const NavLinks: React.FC<NavLinksProps> = ({ links, textColor, accentColor, hove
               letterSpacing: 'var(--navlinks-spacing, normal)'
             }}
           >
-            {link.text}
+            {getTranslatedLabel(link.text)}
           </a>
         </li>
       ))}

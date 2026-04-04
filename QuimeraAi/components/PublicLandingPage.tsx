@@ -184,6 +184,30 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
   const featuredArticles = appContent?.featuredArticles || [];
   const isLoadingContent = appContent?.isLoadingNavigation || false;
 
+  // Helper to translate well-known navigation labels dynamically
+  const getTranslatedLabel = (label: string) => {
+    if (!label) return label;
+    const normalized = label.trim().toLowerCase();
+    switch (normalized) {
+      case 'features': return t('landing.navFeatures', 'Características');
+      case 'pricing': return t('landing.navPricing', 'Precios');
+      case 'blog': return t('landing.navBlog', 'Blog');
+      case 'help': return t('landing.navHelp', 'Ayuda');
+      case 'templates': return t('landing.navTemplates', 'Plantillas');
+      case 'documentation': return t('landing.navDocumentation', 'Documentación');
+      case 'help center': return t('landing.navHelpCenter', 'Centro de Ayuda');
+      case 'about': return t('landing.navAbout', 'Nosotros');
+      case 'contact': return t('landing.navContact', 'Contacto');
+      case 'product': return t('landing.navProduct', 'Producto');
+      case 'resources': return t('landing.navResources', 'Recursos');
+      case 'company': return t('landing.navCompany', 'Empresa');
+      case 'legal': return t('landing.navLegal', 'Legal');
+      case 'login': return t('landing.login', 'Iniciar Sesión');
+      case 'get started': return t('landing.register', 'Registrarse');
+      default: return label;
+    }
+  };
+
   // Default features (can be made dynamic later)
   const features = [
     {
@@ -1822,7 +1846,7 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
                     textTransform: navLinksCaps ? 'uppercase' : 'none',
                   }}
                 >
-                  {item.label}
+                  {getTranslatedLabel(item.label)}
                   {item.isNew && (
                     <span className="px-1.5 py-0.5 text-[10px] bg-yellow-400 text-black rounded-full font-bold">NEW</span>
                   )}
@@ -1879,7 +1903,7 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
                     onClick={() => handleNavItemClick(item)}
                     className="text-gray-300 hover:text-white transition-colors py-2 text-left flex items-center gap-2"
                   >
-                    {item.label}
+                    {getTranslatedLabel(item.label)}
                     {item.isNew && (
                       <span className="px-1.5 py-0.5 text-[10px] bg-yellow-400 text-black rounded-full font-bold">NEW</span>
                     )}
@@ -1971,7 +1995,7 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
               {/* Dynamic Columns */}
               {navigation.footer.columns.map((column) => (
                 <div key={column.id}>
-                  <h4 className="font-semibold text-white mb-4">{column.title}</h4>
+                  <h4 className="font-semibold text-white mb-4">{getTranslatedLabel(column.title)}</h4>
                   <ul className="space-y-2">
                     {column.items.map((item) => (
                       <li key={item.id}>
@@ -1979,7 +2003,7 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
                           onClick={() => handleNavItemClick(item)}
                           className="text-sm text-gray-500 hover:text-white transition-colors"
                         >
-                          {item.label}
+                          {getTranslatedLabel(item.label)}
                         </button>
                       </li>
                     ))}

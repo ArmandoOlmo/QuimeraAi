@@ -513,6 +513,33 @@ service cloud.firestore {
       allow write: if false; // Only admin SDK
     }
 
+    // ============================================
+    // PLATFORM LEADS (Super Admin CRM)
+    // Public create for contact form & chatbot, admin read/update/delete
+    // ============================================
+    match /platformLeads/{leadId} {
+      // Anyone can create a lead (unauthenticated contact form / chatbot)
+      allow create: if true;
+      // Only authenticated admin can read, update, delete
+      allow read, update, delete: if request.auth != null && isSuperAdminOrOwner();
+    }
+
+    // Platform Lead Activities & Tasks (admin-only)
+    match /platformLeadActivities/{activityId} {
+      allow read, write: if request.auth != null && isSuperAdminOrOwner();
+    }
+    match /platformLeadTasks/{taskId} {
+      allow read, write: if request.auth != null && isSuperAdminOrOwner();
+    }
+
+    // ============================================
+    // PLATFORM APPOINTMENTS (Super Admin Calendar)
+    // Admin-only access for platform-level appointments
+    // ============================================
+    match /platformAppointments/{appointmentId} {
+      allow read, write: if request.auth != null && isSuperAdminOrOwner();
+    }
+
     // Default: admin-only safety net for uncovered collections
     // New collections SHOULD have explicit rules above
     match /{document=**} {

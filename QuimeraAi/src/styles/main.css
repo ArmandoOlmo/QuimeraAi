@@ -1225,10 +1225,15 @@ span.rounded-full.w-4 {
 /* Mobile-first button reset for better touch targets */
 @media (max-width: 767px) {
 
-  /* Ensure minimum touch target size for buttons/links - exclude switches */
-  button:not(.no-min-touch):not([role="switch"]),
-  [role="button"]:not(.no-min-touch):not([role="switch"]) {
+  /* Ensure minimum touch target size for buttons/links - exclude switches and assistant footer buttons */
+  button:not(.no-min-touch):not([role="switch"]):not(.assistant-footer-trigger button):not(.assistant-footer-trigger *),
+  [role="button"]:not(.no-min-touch):not([role="switch"]):not(.assistant-footer-trigger *) {
     min-height: 44px;
+  }
+
+  /* Assistant footer bar buttons should respect their own explicit sizing */
+  .assistant-footer-trigger button {
+    min-height: unset !important;
   }
 
   /* Larger touch targets on mobile for nav items */

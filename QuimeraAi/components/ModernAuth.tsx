@@ -538,7 +538,7 @@ const ModernAuth: React.FC<ModernAuthProps> = ({ onVerificationEmailSent, initia
 
                 {/* Content */}
                 <div className="relative z-10 flex flex-col justify-center p-12 xl:p-16">
-                    <div className="mb-10">
+                    <div className="mb-10 text-center">
                         <h2 className="text-4xl xl:text-5xl font-bold mb-4 text-white">
                             {t('auth.featuresTitle')}
                         </h2>
@@ -572,8 +572,8 @@ const ModernAuth: React.FC<ModernAuthProps> = ({ onVerificationEmailSent, initia
                     </div>
 
                     {/* Bottom tagline */}
-                    <div className="mt-8 pt-6 border-t border-white/10 text-center">
-                        <p className="text-sm text-white/50 font-medium">
+                    <div className="mt-8 pt-6 border-t border-white/10 w-full">
+                        <p className="text-sm text-white/50 font-medium text-center w-full">
                             {t('auth.joinCreators')}
                         </p>
                     </div>
