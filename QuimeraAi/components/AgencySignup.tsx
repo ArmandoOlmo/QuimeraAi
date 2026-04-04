@@ -49,7 +49,7 @@ type BillingCycle = 'monthly' | 'annually';
 // CONSTANTS
 // =============================================================================
 
-import { QUIMERA_DEFAULT_LOGO } from '../hooks/useAppLogo';
+import { QUIMERA_DEFAULT_LOGO, QUIMERA_FULL_LOGO } from '../hooks/useAppLogo';
 
 const SOCIAL_ICONS: Record<string, React.ReactNode> = {
     twitter: <Twitter size={18} />,
@@ -261,16 +261,12 @@ const AgencySignup: React.FC = () => {
                 <div className="container mx-auto px-4 sm:px-6 py-3 sm:py-4">
                     <div className="flex items-center justify-between">
                         {/* Logo */}
-                        <a href="/" className="flex items-center gap-2 sm:gap-3">
+                        <a href="/" className="flex items-center">
                             <img
-                                src={navigation.header.logo?.imageUrl || QUIMERA_DEFAULT_LOGO}
-                                alt={navigation.header.logo?.text || "Quimera.ai"}
-                                className="w-8 h-8 sm:w-10 sm:h-10"
+                                src={QUIMERA_FULL_LOGO}
+                                alt="Quimera.ai"
+                                className="h-8 sm:h-10 w-auto"
                             />
-                            <span className="text-lg sm:text-xl font-bold text-white">
-                                {(navigation.header.logo?.text || 'Quimera.ai').split('.')[0] || 'Quimera'}
-                                <span className="text-yellow-400">.ai</span>
-                            </span>
                         </a>
 
                         {/* Navigation - Desktop */}
@@ -616,15 +612,11 @@ const AgencySignup: React.FC = () => {
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
                         {/* Logo Column */}
                         <div className="col-span-2 md:col-span-1">
-                            <div className="flex items-center gap-2 mb-4">
-                                <img src={QUIMERA_DEFAULT_LOGO} alt="Quimera.ai" className="w-8 h-8" />
-                                <span className="font-bold">
-                                    Quimera
-                                    <span className="text-yellow-400">.ai</span>
-                                </span>
+                            <div className="flex items-center mb-4">
+                                <img src={QUIMERA_FULL_LOGO} alt="Quimera.ai" className="h-8 w-auto" />
                             </div>
                             <p className="text-sm mb-4 text-gray-500">
-                                Build amazing websites with AI
+                                {t('landing.footerTagline', 'Build amazing websites with AI')}
                             </p>
 
                             {/* Social Links */}
@@ -668,7 +660,7 @@ const AgencySignup: React.FC = () => {
                     {/* Bottom Bar */}
                     <div className="flex flex-col items-center gap-4 pt-8 border-t border-white/10 md:flex-row md:justify-between">
                         <div className="text-xs sm:text-sm text-gray-500">
-                            © {new Date().getFullYear()} Quimera.ai. All rights reserved.
+                            © {new Date().getFullYear()} Quimera.ai. {t('landing.footerRights', 'Todos los derechos reservados.')}
                         </div>
 
                         <div className="flex flex-wrap justify-center gap-4 sm:gap-6 text-xs sm:text-sm text-gray-500">

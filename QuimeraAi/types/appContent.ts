@@ -343,10 +343,10 @@ export const DEFAULT_APP_NAVIGATION: AppNavigation = {
       { id: '1', platform: 'twitter', url: 'https://twitter.com/quimeraai' },
       { id: '2', platform: 'linkedin', url: 'https://linkedin.com/company/quimeraai' },
     ],
-    bottomText: '© 2024 Quimera.ai. All rights reserved.',
+    bottomText: '',
     showNewsletter: true,
-    newsletterTitle: 'Stay updated',
-    newsletterDescription: 'Get the latest news and updates from Quimera.'
+    newsletterTitle: '',
+    newsletterDescription: ''
   },
   updatedAt: new Date().toISOString()
 };

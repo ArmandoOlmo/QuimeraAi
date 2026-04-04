@@ -12,7 +12,7 @@ import React, { useEffect } from 'react';
 import { ArrowLeft, Menu, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import LanguageSelector from '../ui/LanguageSelector';
-import { QUIMERA_DEFAULT_LOGO } from '../../hooks/useAppLogo';
+import { QUIMERA_DEFAULT_LOGO, QUIMERA_FULL_LOGO } from '../../hooks/useAppLogo';
 
 interface LegalPageLayoutProps {
     children: React.ReactNode;
@@ -67,15 +67,12 @@ const LegalPageLayout: React.FC<LegalPageLayoutProps> = ({ children }) => {
                 <div className="container mx-auto px-4 sm:px-6 py-3 sm:py-4">
                     <div className="flex items-center justify-between">
                         {/* Logo */}
-                        <a href="/" className="flex items-center gap-2 sm:gap-3">
+                        <a href="/" className="flex items-center">
                             <img
-                                src={QUIMERA_DEFAULT_LOGO}
+                                src={QUIMERA_FULL_LOGO}
                                 alt="Quimera.ai"
-                                className="w-8 h-8 sm:w-10 sm:h-10"
+                                className="h-8 sm:h-10 w-auto"
                             />
-                            <span className="text-lg sm:text-xl font-bold text-white">
-                                Quimera<span className="text-yellow-400">.ai</span>
-                            </span>
                         </a>
 
                         {/* Navigation — Desktop */}
@@ -204,11 +201,8 @@ const LegalPageLayout: React.FC<LegalPageLayoutProps> = ({ children }) => {
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
                         {/* Logo Column */}
                         <div className="col-span-2 md:col-span-1">
-                            <div className="flex items-center gap-2 mb-4">
-                                <img src={QUIMERA_DEFAULT_LOGO} alt="Quimera.ai" className="w-8 h-8" />
-                                <span className="font-bold text-white">
-                                    Quimera<span className="text-yellow-400">.ai</span>
-                                </span>
+                            <div className="flex items-center mb-4">
+                                <img src={QUIMERA_FULL_LOGO} alt="Quimera.ai" className="h-8 w-auto" />
                             </div>
                             <p className="text-sm text-gray-500 mb-4">
                                 {t('landing.footerTagline', 'Build amazing websites with AI')}

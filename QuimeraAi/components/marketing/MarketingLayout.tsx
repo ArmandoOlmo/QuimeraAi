@@ -18,7 +18,7 @@ import {
 import LanguageSelector from '../ui/LanguageSelector';
 import { useSafeAppContent } from '../../contexts/appContent';
 import { AppNavItem, DEFAULT_APP_NAVIGATION } from '../../types/appContent';
-import { QUIMERA_DEFAULT_LOGO } from '../../hooks/useAppLogo';
+import { QUIMERA_DEFAULT_LOGO, QUIMERA_FULL_LOGO } from '../../hooks/useAppLogo';
 import { savePlatformLead } from '../../services/platformLeadService';
 
 // Social icons mapping
@@ -68,6 +68,8 @@ const MarketingLayout: React.FC<MarketingLayoutProps> = ({
       case 'resources': return t('landing.navResources', 'Recursos');
       case 'company': return t('landing.navCompany', 'Empresa');
       case 'legal': return t('landing.navLegal', 'Legal');
+      case 'login': return t('landing.login', 'Iniciar Sesión');
+      case 'get started': return t('landing.register', 'Registrarse');
       default: return label;
     }
   };
@@ -142,17 +144,13 @@ const MarketingLayout: React.FC<MarketingLayoutProps> = ({
                 e.preventDefault();
                 onNavigateToHome?.();
               }}
-              className="flex items-center gap-2 sm:gap-3"
+              className="flex items-center"
             >
               <img
-                src={navigation.header.logo?.imageUrl || QUIMERA_DEFAULT_LOGO}
-                alt={navigation.header.logo?.text || 'Quimera.ai'}
-                className="w-8 h-8 sm:w-10 sm:h-10"
+                src={QUIMERA_FULL_LOGO}
+                alt="Quimera.ai"
+                className="h-8 sm:h-10 w-auto"
               />
-              <span className="text-lg sm:text-xl font-bold text-white">
-                {(navigation.header.logo?.text || 'Quimera.ai').split('.')[0] || 'Quimera'}
-                <span className="text-yellow-400">.ai</span>
-              </span>
             </a>
 
             {/* Navigation - Desktop */}
@@ -180,13 +178,13 @@ const MarketingLayout: React.FC<MarketingLayoutProps> = ({
                 onClick={onNavigateToLogin}
                 className="text-sm text-gray-300 hover:text-white transition-colors"
               >
-                {navigation.header.cta?.loginText || t('landing.login')}
+                {getTranslatedLabel(navigation.header.cta?.loginText || t('landing.login'))}
               </button>
               <button
                 onClick={onNavigateToRegister}
                 className="px-5 py-2.5 bg-yellow-400 text-black font-semibold rounded-xl hover:bg-yellow-300 transition-colors"
               >
-                {navigation.header.cta?.registerText || t('landing.register')}
+                {getTranslatedLabel(navigation.header.cta?.registerText || t('landing.register'))}
               </button>
             </div>
 
@@ -230,7 +228,7 @@ const MarketingLayout: React.FC<MarketingLayoutProps> = ({
                   }}
                   className="w-full py-3 text-center text-gray-300 hover:text-white border border-white/10 rounded-xl transition-colors"
                 >
-                  {navigation.header.cta?.loginText || t('landing.login')}
+                  {getTranslatedLabel(navigation.header.cta?.loginText || t('landing.login'))}
                 </button>
                 <button
                   onClick={() => {
@@ -239,7 +237,7 @@ const MarketingLayout: React.FC<MarketingLayoutProps> = ({
                   }}
                   className="w-full py-3 bg-yellow-400 text-black font-semibold rounded-xl hover:bg-yellow-300 transition-colors"
                 >
-                  {navigation.header.cta?.registerText || t('landing.register')}
+                  {getTranslatedLabel(navigation.header.cta?.registerText || t('landing.register'))}
                 </button>
               </div>
             </div>
@@ -265,15 +263,11 @@ const MarketingLayout: React.FC<MarketingLayoutProps> = ({
         <div className="container mx-auto px-4 sm:px-6">
           {/* Footer Columns */}
           {navigation.footer.columns.length > 0 && (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-8 mb-12">
               {/* Logo Column */}
               <div className="col-span-2 md:col-span-1">
-                <div className="flex items-center gap-2 mb-4">
-                  <img src={QUIMERA_DEFAULT_LOGO} alt="Quimera.ai" className="w-8 h-8" />
-                  <span className="font-bold text-white">
-                    Quimera
-                    <span className="text-yellow-400">.ai</span>
-                  </span>
+                <div className="flex items-center mb-4">
+                  <img src={QUIMERA_FULL_LOGO} alt="Quimera.ai" className="h-8 w-auto" />
                 </div>
                 <p className="text-sm mb-4 text-gray-500">
                   {t('landing.footerTagline', 'Build amazing websites with AI')}
@@ -324,10 +318,10 @@ const MarketingLayout: React.FC<MarketingLayoutProps> = ({
               <div className="max-w-md mx-auto text-center md:text-left md:max-w-none md:flex md:items-center md:justify-between">
                 <div className="mb-4 md:mb-0">
                   <h4 className="font-semibold text-white mb-1">
-                    {navigation.footer.newsletterTitle || 'Stay updated'}
+                    {navigation.footer.newsletterTitle || t('landing.footerNewsletterTitle', 'Mantente al día')}
                   </h4>
                   <p className="text-sm text-gray-500">
-                    {navigation.footer.newsletterDescription || 'Get the latest news and updates'}
+                    {navigation.footer.newsletterDescription || t('landing.footerNewsletterDesc', 'Recibe las últimas noticias y actualizaciones')}
                   </p>
                 </div>
                 <form
@@ -364,11 +358,11 @@ const MarketingLayout: React.FC<MarketingLayoutProps> = ({
                   <input
                     type="email"
                     required
-                    placeholder="Enter your email"
+                    placeholder={t('landing.footerEmailPlaceholder', 'Ingresa tu email')}
                     className="px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white placeholder:text-gray-500 focus:outline-none focus:border-yellow-400/50"
                   />
                   <button type="submit" className="px-4 py-2 bg-yellow-400 text-black font-semibold rounded-lg hover:bg-yellow-300 transition-colors text-sm">
-                    Subscribe
+                    {t('landing.footerSubscribe', 'Suscribirse')}
                   </button>
                 </form>
               </div>
@@ -378,7 +372,7 @@ const MarketingLayout: React.FC<MarketingLayoutProps> = ({
           {/* Bottom Bar */}
           <div className="flex flex-col items-center gap-4 pt-8 border-t border-white/10 md:flex-row md:justify-between">
             <div className="text-xs sm:text-sm text-gray-500">
-              {navigation.footer.bottomText || `© ${new Date().getFullYear()} Quimera.ai. All rights reserved.`}
+              {navigation.footer.bottomText || `© ${new Date().getFullYear()} Quimera.ai. ${t('landing.footerRights', 'Todos los derechos reservados.')}`}
             </div>
 
             <div className="flex flex-wrap justify-center gap-4 sm:gap-6 text-xs sm:text-sm text-gray-500">

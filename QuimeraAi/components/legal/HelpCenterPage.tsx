@@ -535,13 +535,6 @@ const HelpCenterPage: React.FC = () => {
                   <Mail size={20} />
                   {t('helpCenter.contact.emailUs')}
                 </a>
-                <a
-                  href="#chat"
-                  className="inline-flex items-center gap-2 px-6 py-3 bg-white/5 text-white font-semibold rounded-xl border border-white/10 hover:bg-white/10 hover:border-yellow-400/30 transition-colors"
-                >
-                  <MessageCircle size={20} />
-                  {t('helpCenter.contact.liveChat')}
-                </a>
               </div>
 
               <p className="mt-6 text-sm text-gray-500">

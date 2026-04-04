@@ -3,6 +3,9 @@ import { db, doc, onSnapshot } from '../firebase';
 
 const DEFAULT_LOGO_URL = 'https://firebasestorage.googleapis.com/v0/b/quimeraai.firebasestorage.app/o/quimera%2Fquimeralogo.png?alt=media&token=82368c1c-0f63-42b7-831f-72780006f032';
 
+/** Full logo with "Quimera.ai" text integrated — used in header and sidebar */
+const FULL_LOGO_URL = 'https://storage.googleapis.com/quimeraai.firebasestorage.app/quimera/logo_quimera_app.png';
+
 // Module-level cache to avoid multiple Firestore listeners
 let cachedLogoUrl: string | null = null;
 let listeners: Array<(url: string) => void> = [];
@@ -66,5 +69,8 @@ export function useAppLogo(): { logoUrl: string; isLoading: boolean } {
 
 /** Default logo URL constant for non-hook usage (static contexts, SSR, etc.) */
 export const QUIMERA_DEFAULT_LOGO = DEFAULT_LOGO_URL;
+
+/** Full logo with integrated text — for sidebar use */
+export const QUIMERA_FULL_LOGO = FULL_LOGO_URL;
 
 export default useAppLogo;

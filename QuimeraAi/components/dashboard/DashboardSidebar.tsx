@@ -15,7 +15,7 @@ import ProgressBar3D from '../ui/ProgressBar3D';
 import { useSafeTenant } from '../../contexts/tenant';
 import { useSafeUpgrade } from '../../contexts/UpgradeContext';
 import { useCreditsUsage } from '../../hooks/useCreditsUsage';
-import { useAppLogo } from '../../hooks/useAppLogo';
+import { useAppLogo, QUIMERA_FULL_LOGO } from '../../hooks/useAppLogo';
 import { usePlanAccess } from '../../hooks/usePlanFeatures';
 import { useServiceAvailability } from '../../hooks/useServiceAvailability';
 import { PlatformServiceId } from '../../types/serviceAvailability';
@@ -553,20 +553,16 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
             >
               {/* Logo - Always show Quimera.ai branding in dashboard sidebar.
                   White Label branding (tenant.branding) is only for client-facing views
-                  (checkout page, agency landing, client portal). */}
+                  (checkout page, agency landing, client portal).
+                  Uses QUIMERA_FULL_LOGO (image with integrated text). */}
               <img
-                src={appLogoUrl}
-                alt="Quimera Logo"
-                className="w-10 h-10 object-contain flex-shrink-0"
-                width={40}
+                src={QUIMERA_FULL_LOGO}
+                alt="Quimera.ai"
+                className={`object-contain flex-shrink-0 transition-all duration-300 ${isCollapsed && !isMobileOpen ? 'w-10 h-10' : 'h-10 w-auto max-w-[180px]'}`}
                 height={40}
                 loading="eager"
                 decoding="async"
               />
-              {/* Text Logo (Hidden when collapsed on desktop) */}
-              <span className={`text-xl md:text-2xl font-extrabold tracking-tight text-foreground whitespace-nowrap transition-opacity duration-300 ${isCollapsed ? 'md:opacity-0 md:hidden' : 'opacity-100'}`}>
-                <>Quimera<span className="text-primary">.ai</span></>
-              </span>
             </div>
 
             {/* Mobile Close Button - Touch optimized (min 44px) */}

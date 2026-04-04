@@ -205,9 +205,6 @@ const ModernAuth: React.FC<ModernAuthProps> = ({ onVerificationEmailSent, initia
                                     className="relative w-full h-full object-contain drop-shadow-[0_0_30px_rgba(250,204,21,0.6)]"
                                 />
                             </div>
-                            <h1 className="text-3xl font-bold text-white">
-                                Quimera<span className="text-yellow-400">.ai</span>
-                            </h1>
                         </div>
 
                         {/* Form Title */}
@@ -525,16 +522,7 @@ const ModernAuth: React.FC<ModernAuthProps> = ({ onVerificationEmailSent, initia
                     </svg>
                 </div>
 
-                {/* Action Button - Top Right */}
-                <div className="absolute top-6 right-6 z-20">
-                    <button
-                        onClick={() => window.open('https://quimera.ai', '_blank')}
-                        className="bg-yellow-500 text-black px-5 py-2.5 rounded-full font-bold text-sm hover:bg-yellow-400 transition-all shadow-lg hover:shadow-xl hover:scale-105 flex items-center gap-2 group"
-                    >
-                        {t('auth.exploreDemo')}
-                        <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                    </button>
-                </div>
+
 
                 {/* Content */}
                 <div className="relative z-10 flex flex-col justify-center p-12 xl:p-16">
