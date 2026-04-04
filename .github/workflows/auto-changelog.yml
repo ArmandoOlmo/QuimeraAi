@@ -1,0 +1,67 @@
+name: Auto Changelog
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - '*.md'
+      - '.github/**'
+      - '.gitignore'
+      - 'LICENSE'
+
+jobs:
+  generate-changelog:
+    runs-on: ubuntu-latest
+    # Don't run on merge commits with no real changes
+    if: github.event.head_commit.message != ''
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 50 # Enough history to get commits since last push
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Collect commits
+        id: commits
+        run: |
+          # Get commits from this push
+          BEFORE="${{ github.event.before }}"
+          AFTER="${{ github.event.after }}"
+          
+          # If before is all zeros (first push), use last 5 commits
+          if [[ "$BEFORE" == "0000000000000000000000000000000000000000" ]]; then
+            COMMITS=$(git log --pretty=format:"%h|%s|%an" -n 5 "$AFTER")
+          else
+            COMMITS=$(git log --pretty=format:"%h|%s|%an" "$BEFORE".."$AFTER" 2>/dev/null || git log --pretty=format:"%h|%s|%an" -n 10 "$AFTER")
+          fi
+          
+          # Filter out noise commits
+          FILTERED=$(echo "$COMMITS" | grep -viE "^.+\|(Merge|merge|bump|chore\(deps\)|Update .+\.md$|ci:|docs:)" || true)
+          
+          # Count meaningful commits
+          COUNT=$(echo "$FILTERED" | grep -c '.' || echo 0)
+          
+          echo "count=$COUNT" >> $GITHUB_OUTPUT
+          
+          # Save commits to file for the script
+          echo "$FILTERED" > /tmp/commits.txt
+          
+          echo "📝 Found $COUNT meaningful commits"
+          echo "$FILTERED"
+
+      - name: Generate changelog entry
+        if: steps.commits.outputs.count >= 2
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          COMMIT_DATA: /tmp/commits.txt
+        run: node .github/scripts/generate-changelog.mjs
+
+      - name: Skip - too few commits
+        if: steps.commits.outputs.count < 2
+        run: echo "⏭️ Only ${{ steps.commits.outputs.count }} meaningful commit(s). Skipping changelog generation (minimum 2)."

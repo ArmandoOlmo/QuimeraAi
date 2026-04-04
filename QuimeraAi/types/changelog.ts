@@ -42,7 +42,9 @@ export const CHANGELOG_TAG_LABELS: Record<ChangelogTag, { en: string; es: string
 export interface ChangelogFeature {
   id: string;
   title: string;
+  title_en?: string;
   description: string;
+  description_en?: string;
 }
 
 // Entrada individual del changelog
@@ -51,7 +53,9 @@ export interface ChangelogEntry {
   date: string; // ISO date string
   tag: ChangelogTag;
   title: string;
+  title_en?: string;
   description: string;
+  description_en?: string;
   features: ChangelogFeature[];
   imageUrl?: string;
   imageAlt?: string;

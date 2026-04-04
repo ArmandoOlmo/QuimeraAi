@@ -9168,6 +9168,16 @@
     "shareTwitter": "Compartir en Twitter",
     "shareLinkedin": "Compartir en LinkedIn",
     "collapse": "Colapsar",
-    "expand": "Expandir"
+    "expand": "Expandir",
+    "tags": {
+      "new": "Nuevo",
+      "improvement": "Mejora",
+      "fix": "Corrección",
+      "breaking": "Cambio Mayor",
+      "security": "Seguridad",
+      "performance": "Rendimiento",
+      "deprecated": "Obsoleto",
+      "beta": "Beta"
+    }
   }
 }

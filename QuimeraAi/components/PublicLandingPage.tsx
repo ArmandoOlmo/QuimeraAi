@@ -76,6 +76,7 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
 }) => {
   const { t } = useTranslation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isAnnualBilling, setIsAnnualBilling] = useState(false);
 
   // Preview mode - listens for postMessage from Landing Page Editor
   const [isPreviewMode, setIsPreviewMode] = useState(false);
@@ -1210,15 +1211,22 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
                 {/* Billing Toggle - Monthly/Annual */}
                 {showBillingToggle && (
                   <div className="flex items-center justify-center gap-4 mt-6">
-                    <span className="text-sm" style={{ color: `${pricingTextColor}99` }}>{t('landing.monthly', 'Mensual')}</span>
+                    <span className="text-sm" style={{ color: !isAnnualBilling ? pricingTextColor : `${pricingTextColor}99`, fontWeight: !isAnnualBilling ? 600 : 400, transition: 'all 0.3s' }}>{t('landing.monthly', 'Mensual')}</span>
                     <button
+                      onClick={() => setIsAnnualBilling(!isAnnualBilling)}
                       className="relative w-12 h-6 rounded-full transition-colors"
-                      style={{ backgroundColor: `${pricingAccentColor}33` }}
+                      style={{ backgroundColor: isAnnualBilling ? pricingAccentColor : `${pricingAccentColor}33` }}
                       aria-label={t('landing.toggleBilling', 'Cambiar facturación')}
                     >
-                      <span className="absolute left-1 top-1 w-4 h-4 rounded-full transition-transform" style={{ backgroundColor: pricingAccentColor }} />
+                      <span
+                        className="absolute top-1 w-4 h-4 rounded-full transition-all duration-300"
+                        style={{
+                          backgroundColor: isAnnualBilling ? pricingBackgroundColor : pricingAccentColor,
+                          left: isAnnualBilling ? 'calc(100% - 20px)' : '4px',
+                        }}
+                      />
                     </button>
-                    <span className="text-sm" style={{ color: `${pricingTextColor}99` }}>
+                    <span className="text-sm" style={{ color: isAnnualBilling ? pricingTextColor : `${pricingTextColor}99`, fontWeight: isAnnualBilling ? 600 : 400, transition: 'all 0.3s' }}>
                       {t('landing.annual', 'Anual')}
                       <span className="ml-2 px-2 py-0.5 text-xs font-bold text-green-400 bg-green-400/10 rounded-full">
                         {t('landing.savePercent', '-20%')}
@@ -1270,9 +1278,11 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
                         <h3 className="text-xl sm:text-2xl font-bold mb-2 mt-2 sm:mt-0" style={{ color: pricingTextColor }}>{plan.name}</h3>
                         <p className="text-xs sm:text-sm mb-4 sm:mb-6" style={{ color: `${pricingTextColor}99` }}>{plan.description}</p>
                         <div className="mb-4 sm:mb-6">
-                          <span className="text-3xl sm:text-4xl font-black" style={{ color: pricingTextColor }}>{plan.price}</span>
+                          <span className="text-3xl sm:text-4xl font-black" style={{ color: pricingTextColor }}>
+                            {isAnnualBilling ? plan.annualPrice : plan.price}
+                          </span>
                           <span className="text-sm sm:text-base" style={{ color: `${pricingTextColor}66` }}>{plan.period}</span>
-                          {plan.priceValue > 0 && (
+                          {plan.priceValue > 0 && !isAnnualBilling && plan.annualPriceValue < plan.priceValue && (
                             <span className="ml-2 px-2 py-0.5 text-xs font-bold text-green-400 bg-green-400/10 rounded-full">
                               {t('landing.saveAnnually', 'Ahorra 20%')}
                             </span>

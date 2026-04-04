@@ -9168,6 +9168,16 @@
     "shareTwitter": "Share on Twitter",
     "shareLinkedin": "Share on LinkedIn",
     "collapse": "Collapse",
-    "expand": "Expand"
+    "expand": "Expand",
+    "tags": {
+      "new": "New",
+      "improvement": "Improvement",
+      "fix": "Fix",
+      "breaking": "Breaking Change",
+      "security": "Security",
+      "performance": "Performance",
+      "deprecated": "Deprecated",
+      "beta": "Beta"
+    }
   }
 }

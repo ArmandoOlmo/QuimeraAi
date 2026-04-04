@@ -17,6 +17,8 @@ export interface LandingPlan {
     name: string;
     price: string;
     priceValue: number;
+    annualPrice: string;
+    annualPriceValue: number;
     period: string;
     description: string;
     features: string[];
@@ -139,12 +141,15 @@ function getPlanOrder(planId: string): number {
  */
 function transformPlanForLanding(plan: StoredPlan): LandingPlan {
     const priceValue = plan.price?.monthly ?? 0;
+    const annualPriceValue = plan.price?.annually ?? priceValue;
 
     return {
         id: plan.id,
         name: plan.name,
         price: priceValue === 0 ? 'Gratis' : `$${priceValue}`,
         priceValue,
+        annualPrice: priceValue === 0 ? 'Gratis' : `$${annualPriceValue}`,
+        annualPriceValue,
         period: priceValue === 0 ? '' : '/mes',
         description: plan.description,
         features: buildFeaturesList(plan),

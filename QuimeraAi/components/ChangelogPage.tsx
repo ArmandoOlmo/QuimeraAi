@@ -18,24 +18,21 @@ import {
   MessageCircle,
   Calendar,
   Tag,
-  ArrowLeft,
   X,
   Check,
   Sparkles,
+  ArrowLeft,
   ArrowRight,
-  Menu
 } from 'lucide-react';
 import { useChangelog } from '../hooks/useChangelog';
 import { 
   ChangelogEntry, 
   ChangelogTag, 
   CHANGELOG_TAG_COLORS, 
-  CHANGELOG_TAG_LABELS,
   ChangelogFilters
 } from '../types/changelog';
 
-// Brand assets
-import { QUIMERA_DEFAULT_LOGO } from '../hooks/useAppLogo';
+import MarketingLayout from './marketing/MarketingLayout';
 
 interface ChangelogPageProps {
   onNavigateToHome: () => void;
@@ -45,9 +42,8 @@ interface ChangelogPageProps {
 
 // Tag Badge Component
 const TagBadge: React.FC<{ tag: ChangelogTag; size?: 'sm' | 'md' }> = ({ tag, size = 'md' }) => {
-    const { t } = useTranslation();
+  const { t } = useTranslation();
   const colors = CHANGELOG_TAG_COLORS[tag];
-  const labels = CHANGELOG_TAG_LABELS[tag];
   
   return (
     <span 
@@ -57,7 +53,7 @@ const TagBadge: React.FC<{ tag: ChangelogTag; size?: 'sm' | 'md' }> = ({ tag, si
         ${size === 'sm' ? 'px-2 py-0.5 text-[10px]' : 'px-3 py-1 text-xs'}
       `}
     >
-      {labels.es}
+      {t(`changelog.tags.${tag}`)}
     </span>
   );
 };
@@ -69,6 +65,7 @@ const EntryCard: React.FC<{
   onToggle: () => void;
   language: string;
 }> = ({ entry, isExpanded, onToggle, language }) => {
+  const { t } = useTranslation();
   const [copied, setCopied] = useState(false);
   
   const formattedDate = useMemo(() => {
@@ -173,12 +170,12 @@ const EntryCard: React.FC<{
 
         {/* Title */}
         <h2 className="text-xl md:text-2xl font-bold text-white mb-3 group-hover:text-yellow-400 transition-colors">
-          {entry.title}
+          {language === 'en' && entry.title_en ? entry.title_en : entry.title}
         </h2>
 
         {/* Description */}
         <p className="text-gray-400 leading-relaxed mb-4">
-          {entry.description}
+          {language === 'en' && entry.description_en ? entry.description_en : entry.description}
         </p>
 
         {/* Expandable Content */}
@@ -194,8 +191,12 @@ const EntryCard: React.FC<{
                 <li key={feature.id} className="flex gap-3">
                   <div className="w-1.5 h-1.5 rounded-full bg-yellow-400 mt-2 flex-shrink-0" />
                   <div>
-                    <span className="font-semibold text-white">{feature.title}</span>
-                    <span className="text-gray-400"> – {feature.description}</span>
+                    <span className="font-semibold text-white">
+                      {language === 'en' && feature.title_en ? feature.title_en : feature.title}
+                    </span>
+                    <span className="text-gray-400">
+                      {' – '}{language === 'en' && feature.description_en ? feature.description_en : feature.description}
+                    </span>
                   </div>
                 </li>
               ))}
@@ -226,6 +227,7 @@ const FilterDropdown: React.FC<{
   onClear: () => void;
   tagCounts: Record<ChangelogTag, number>;
 }> = ({ selectedTags, onTagToggle, onClear, tagCounts }) => {
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   
   const allTags: ChangelogTag[] = ['new', 'improvement', 'fix', 'performance', 'security', 'breaking', 'deprecated', 'beta'];
@@ -267,7 +269,7 @@ const FilterDropdown: React.FC<{
                   onClick={onClear}
                   className="text-xs text-gray-500 hover:text-white transition-colors"
                 >
-                  Limpiar todo
+                  {t('changelog.clearAll')}
                 </button>
               )}
             </div>
@@ -275,7 +277,6 @@ const FilterDropdown: React.FC<{
               {allTags.map((tag) => {
                 const isSelected = selectedTags.includes(tag);
                 const colors = CHANGELOG_TAG_COLORS[tag];
-                const labels = CHANGELOG_TAG_LABELS[tag];
                 const count = tagCounts[tag];
                 
                 return (
@@ -298,7 +299,7 @@ const FilterDropdown: React.FC<{
                       }`}>
                         {isSelected && <Check size={10} />}
                       </div>
-                      <span className="font-medium">{labels.es}</span>
+                      <span className="font-medium">{t(`changelog.tags.${tag}`)}</span>
                     </div>
                     <span className="text-xs opacity-60">{count}</span>
                   </button>
@@ -323,7 +324,6 @@ const ChangelogPage: React.FC<ChangelogPageProps> = ({
   const [selectedTags, setSelectedTags] = useState<ChangelogTag[]>([]);
   const [expandedEntries, setExpandedEntries] = useState<Set<string>>(new Set());
   const [currentPage, setCurrentPage] = useState(1);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const entriesPerPage = 5;
 
   // Build filters
@@ -394,80 +394,13 @@ const ChangelogPage: React.FC<ChangelogPageProps> = ({
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#0A0A0A] text-white">
-      {/* === HEADER === */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-[#0A0A0A]/95 backdrop-blur-sm border-b border-white/5">
-        <div className="container mx-auto px-4 sm:px-6 py-3 sm:py-4">
-          <div className="flex items-center justify-between">
-            {/* Logo */}
-            <button onClick={onNavigateToHome} className="flex items-center gap-2 sm:gap-3 hover:opacity-80 transition-opacity">
-              <img src={QUIMERA_DEFAULT_LOGO} alt="Quimera.ai" className="w-8 h-8 sm:w-10 sm:h-10" />
-              <span className="text-lg sm:text-xl font-bold text-white">
-                Quimera<span className="text-yellow-400">.ai</span>
-              </span>
-            </button>
-
-            {/* Navigation - Desktop */}
-            <nav className="hidden md:flex items-center gap-8">
-              <button onClick={onNavigateToHome} className="text-sm text-gray-400 hover:text-white transition-colors">
-                {t('changelog.home')}
-              </button>
-              <span className="text-sm text-white font-medium">
-                Changelog
-              </span>
-            </nav>
-
-            {/* CTA Buttons - Desktop */}
-            <div className="hidden md:flex items-center gap-4">
-              <button 
-                onClick={onNavigateToLogin}
-                className="text-sm text-gray-300 hover:text-white transition-colors"
-              >
-                {t('changelog.login')}
-              </button>
-              <button 
-                onClick={onNavigateToRegister}
-                className="px-5 py-2.5 bg-yellow-400 text-black font-semibold rounded-xl hover:bg-yellow-300 transition-colors"
-              >
-                {t('changelog.register')}
-              </button>
-            </div>
-
-            {/* Mobile Menu Button */}
-            <button
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="md:hidden p-2 text-gray-300 hover:text-white transition-colors"
-            >
-              {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-            </button>
-          </div>
-
-          {/* Mobile Menu */}
-          {isMobileMenuOpen && (
-            <div className="md:hidden mt-4 pb-4 border-t border-white/10 pt-4">
-              <nav className="flex flex-col gap-4 mb-6">
-                <button onClick={() => { setIsMobileMenuOpen(false); onNavigateToHome(); }} className="text-gray-300 hover:text-white py-2 text-left">
-                  {t('changelog.home')}
-                </button>
-                <span className="text-white font-medium py-2">
-                  Changelog
-                </span>
-              </nav>
-              <div className="flex flex-col gap-3">
-                <button onClick={() => { setIsMobileMenuOpen(false); onNavigateToLogin(); }} className="w-full py-3 text-center text-gray-300 border border-white/10 rounded-xl">
-                  {t('changelog.login')}
-                </button>
-                <button onClick={() => { setIsMobileMenuOpen(false); onNavigateToRegister(); }} className="w-full py-3 bg-yellow-400 text-black font-semibold rounded-xl">
-                  {t('changelog.register')}
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-      </header>
-
+    <MarketingLayout
+      onNavigateToHome={onNavigateToHome}
+      onNavigateToLogin={onNavigateToLogin}
+      onNavigateToRegister={onNavigateToRegister}
+    >
       {/* === MAIN CONTENT === */}
-      <main className="pt-20 pb-16">
+      <div>
         {/* Hero Section */}
         <section className="py-12 md:py-20 border-b border-white/5">
           <div className="container mx-auto px-4 sm:px-6">
@@ -538,7 +471,7 @@ const ChangelogPage: React.FC<ChangelogPageProps> = ({
                     onClick={() => toggleTag(tag)}
                     className={`flex items-center gap-1 px-2 py-1 rounded-full text-sm ${CHANGELOG_TAG_COLORS[tag].bg} ${CHANGELOG_TAG_COLORS[tag].text}`}
                   >
-                    {CHANGELOG_TAG_LABELS[tag].es}
+                    {t(`changelog.tags.${tag}`)}
                     <X size={14} />
                   </button>
                 ))}
@@ -546,7 +479,7 @@ const ChangelogPage: React.FC<ChangelogPageProps> = ({
                   onClick={clearFilters}
                   className="text-sm text-gray-500 hover:text-white ml-2"
                 >
-                  Limpiar todo
+                  {t('changelog.clearAll')}
                 </button>
               </div>
             )}
@@ -676,34 +609,15 @@ const ChangelogPage: React.FC<ChangelogPageProps> = ({
                 onClick={onNavigateToRegister}
                 className="inline-flex items-center gap-2 px-8 py-4 bg-yellow-400 text-black font-bold rounded-xl hover:bg-yellow-300 active:scale-[0.98] transition-all"
               >
-                Comenzar Gratis
+                {t('changelog.startFree')}
                 <ArrowRight size={20} />
               </button>
               <p className="text-gray-600 text-sm mt-3">{t('changelog.noCreditCard')}</p>
             </div>
           </div>
         </section>
-      </main>
-
-      {/* === FOOTER === */}
-      <footer className="py-8 border-t border-white/10">
-        <div className="container mx-auto px-4 sm:px-6">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-2">
-              <img src={QUIMERA_DEFAULT_LOGO} alt="Quimera.ai" className="w-6 h-6" />
-              <span className="text-sm text-gray-500">
-                © {new Date().getFullYear()} Quimera.ai. {t('changelog.allRightsReserved')}
-              </span>
-            </div>
-            <div className="flex items-center gap-6 text-sm text-gray-500">
-              <a href="/privacy-policy" className="hover:text-white transition-colors">{t('changelog.privacy')}</a>
-              <a href="/terms-of-service" className="hover:text-white transition-colors">{t('changelog.terms')}</a>
-              <a href="/help-center" className="hover:text-white transition-colors">{t('changelog.help')}</a>
-            </div>
-          </div>
-        </div>
-      </footer>
-    </div>
+      </div>
+    </MarketingLayout>
   );
 };
 
