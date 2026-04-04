@@ -5,9 +5,9 @@ on:
     branches: [main]
     paths-ignore:
       - '*.md'
-      - '.github/**'
       - '.gitignore'
       - 'LICENSE'
+  workflow_dispatch:
 
 jobs:
   generate-changelog:
