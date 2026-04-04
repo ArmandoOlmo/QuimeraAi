@@ -246,6 +246,7 @@ const NewsManagement: React.FC<NewsManagementProps> = ({ onBack }) => {
                 </header>
 
                 <main className="flex-1 p-6 sm:p-8 overflow-y-auto">
+                  <div className="max-w-7xl mx-auto">
                     {/* Stats Cards */}
                     <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-6">
                         <div className="bg-editor-panel-bg border border-editor-border rounded-lg p-4">
@@ -633,6 +634,7 @@ const NewsManagement: React.FC<NewsManagementProps> = ({ onBack }) => {
                             ))}
                         </div>
                     )}
+                  </div>
                 </main>
             </div>
 

@@ -9179,5 +9179,34 @@
       "deprecated": "Obsoleto",
       "beta": "Beta"
     }
+  },
+  "about": {
+    "badge": "Quimera.ai",
+    "heroTitle": "Sobre Quimera AI",
+    "heroSubtitle": "Quimera nace de la visión de democratizar la creación web con inteligencia artificial. Creemos que cada persona y negocio merece una presencia digital profesional, sin barreras técnicas.",
+    "statSites": "Sitios creados",
+    "statCountries": "Países",
+    "statUptime": "Uptime",
+    "statRating": "Valoración",
+    "pillarMissionTitle": "Misión",
+    "pillarMissionDesc": "Empoderar a cada persona y negocio para crear una presencia digital profesional, eliminando las barreras técnicas con inteligencia artificial.",
+    "pillarVisionTitle": "Visión",
+    "pillarVisionDesc": "Un mundo donde cualquier idea puede convertirse en una experiencia web extraordinaria, sin importar el nivel técnico del creador.",
+    "pillarCommitmentTitle": "Compromiso",
+    "pillarCommitmentDesc": "Innovación continua, transparencia total y soporte excepcional para cada uno de nuestros usuarios en cada etapa de su viaje.",
+    "valuesTitle": "Nuestros valores",
+    "valuesSubtitle": "Los principios que guían todo lo que construimos.",
+    "valueAiTitle": "IA al servicio del creador",
+    "valueAiDesc": "Potenciamos la creatividad humana con inteligencia artificial, sin reemplazarla.",
+    "valueSpeedTitle": "Velocidad sin compromisos",
+    "valueSpeedDesc": "Sitios ultra-rápidos con SSR, CDN global y optimización automática de imágenes.",
+    "valueDesignTitle": "Diseño sin límites",
+    "valueDesignDesc": "Libertad creativa total con un editor visual potente y componentes profesionales.",
+    "valueSecurityTitle": "Seguridad primero",
+    "valueSecurityDesc": "SSL, backups automáticos, autenticación avanzada y cumplimiento de privacidad.",
+    "ctaTitle": "¿Listo para crear?",
+    "ctaSubtitle": "Únete a miles de creadores que construyen sus sitios web con Quimera AI.",
+    "ctaButton": "Comienza gratis",
+    "ctaNote": "Sin tarjeta de crédito requerida"
   }
 }

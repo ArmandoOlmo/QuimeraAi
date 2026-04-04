@@ -500,13 +500,15 @@ const Router: React.FC<RouterProps> = ({
 
   if (path === '/about') {
     return (
-      <Suspense fallback={<LoadingScreen />}>
-        <AboutPage
-          onNavigateToHome={() => navigate(ROUTES.LANDING)}
-          onNavigateToLogin={() => navigate(ROUTES.LOGIN)}
-          onNavigateToRegister={() => navigate(ROUTES.REGISTER)}
-        />
-      </Suspense>
+      <AppContentProvider>
+        <Suspense fallback={<LoadingScreen />}>
+          <AboutPage
+            onNavigateToHome={() => navigate(ROUTES.LANDING)}
+            onNavigateToLogin={() => navigate(ROUTES.LOGIN)}
+            onNavigateToRegister={() => navigate(ROUTES.REGISTER)}
+          />
+        </Suspense>
+      </AppContentProvider>
     );
   }
 

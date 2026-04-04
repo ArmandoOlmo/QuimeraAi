@@ -196,9 +196,46 @@ interface ColorControlProps {
     paletteColors?: string[];
     /** Paletas usadas recientemente para acceso rápido */
     recentPalettes?: RecentPalette[];
+    /** Visual variant: 'editor' uses editor-* classes, 'dashboard' uses standard theme classes */
+    variant?: 'editor' | 'dashboard';
 }
 
-const ColorControl: React.FC<ColorControlProps> = ({ label, value, onChange, paletteColors: propPaletteColors, recentPalettes }) => {
+// Style maps per variant
+const variantStyles = {
+    editor: {
+        input: 'w-full bg-editor-bg text-editor-text-primary p-2 rounded-md border border-editor-border focus:ring-2 focus:ring-editor-accent/50 focus:border-editor-accent focus:outline-none transition-all text-xs font-mono',
+        label: 'block text-[10px] font-bold text-editor-text-secondary mb-1.5 uppercase tracking-wider flex items-center gap-1',
+        popover: 'z-[9999] bg-editor-panel-bg border border-editor-border rounded-xl shadow-2xl shadow-black/30 p-3.5 overflow-y-auto max-h-[85vh]',
+        trigger: 'w-full flex items-center gap-2.5 bg-editor-bg border border-editor-border rounded-lg px-2.5 py-2 text-sm text-editor-text-primary hover:border-editor-accent/60 hover:shadow-sm transition-all group',
+        swatch: 'w-7 h-7 rounded-md border border-editor-border/80 shadow-inner flex items-center justify-center overflow-hidden bg-checkered flex-shrink-0',
+        hexText: 'flex-1 text-left font-mono text-xs text-editor-text-primary/80',
+        chevron: 'text-editor-text-secondary group-hover:text-editor-text-primary',
+        presetBtn: 'rounded border border-editor-border hover:scale-110 transition-transform',
+        rgbInput: 'flex-1 bg-editor-bg text-editor-text-primary p-1.5 rounded-md border border-editor-border focus:ring-1 focus:ring-editor-accent/50 focus:border-editor-accent focus:outline-none text-xs font-mono',
+        rgbLabel: 'text-[10px] text-editor-text-secondary uppercase font-bold w-4 text-center flex-shrink-0',
+        sectionLabel: 'block text-[10px] font-bold text-editor-text-secondary mb-1.5 uppercase tracking-wider',
+        paletteLabel: 'text-[10px] text-editor-text-secondary truncate max-w-[60px] shrink-0',
+        paletteRow: 'flex items-center gap-1 p-1 rounded bg-editor-border/30 hover:bg-editor-border/50 transition-colors min-w-0',
+    },
+    dashboard: {
+        input: 'w-full bg-background text-foreground p-2 rounded-md border border-border focus:ring-2 focus:ring-primary/50 focus:border-primary focus:outline-none transition-all text-xs font-mono',
+        label: 'block text-[10px] font-bold text-muted-foreground mb-1.5 uppercase tracking-wider flex items-center gap-1',
+        popover: 'z-[9999] bg-card border border-border rounded-xl shadow-2xl shadow-black/30 p-3.5 overflow-y-auto max-h-[85vh]',
+        trigger: 'w-full flex items-center gap-2.5 bg-background border border-border rounded-lg px-2.5 py-2.5 text-sm text-foreground hover:border-primary/60 hover:shadow-sm transition-all group',
+        swatch: 'w-7 h-7 rounded-md border border-border/80 shadow-inner flex items-center justify-center overflow-hidden bg-checkered flex-shrink-0',
+        hexText: 'flex-1 text-left font-mono text-xs text-foreground/80',
+        chevron: 'text-muted-foreground group-hover:text-foreground',
+        presetBtn: 'rounded border border-border hover:scale-110 transition-transform',
+        rgbInput: 'flex-1 bg-background text-foreground p-1.5 rounded-md border border-border focus:ring-1 focus:ring-primary/50 focus:border-primary focus:outline-none text-xs font-mono',
+        rgbLabel: 'text-[10px] text-muted-foreground uppercase font-bold w-4 text-center flex-shrink-0',
+        sectionLabel: 'block text-[10px] font-bold text-muted-foreground mb-1.5 uppercase tracking-wider',
+        paletteLabel: 'text-[10px] text-muted-foreground truncate max-w-[60px] shrink-0',
+        paletteRow: 'flex items-center gap-1 p-1 rounded bg-secondary/30 hover:bg-secondary/50 transition-colors min-w-0',
+    },
+};
+
+const ColorControl: React.FC<ColorControlProps> = ({ label, value, onChange, paletteColors: propPaletteColors, recentPalettes, variant = 'editor' }) => {
+    const styles = variantStyles[variant];
     // Obtener los colores de la paleta del tema global si no se pasan como prop
     const project = useSafeProject();
     const paletteColors = propPaletteColors ?? project?.theme?.paletteColors;
@@ -347,7 +384,7 @@ const ColorControl: React.FC<ColorControlProps> = ({ label, value, onChange, pal
         <div
             ref={popoverRef}
             style={popoverStyle}
-            className="z-[9999] bg-editor-panel-bg border border-editor-border rounded-xl shadow-2xl shadow-black/30 p-3.5 overflow-y-auto max-h-[85vh]"
+            className={styles.popover}
         >
             {/* Custom Saturation Area */}
             <div
@@ -382,7 +419,7 @@ const ColorControl: React.FC<ColorControlProps> = ({ label, value, onChange, pal
 
             {/* Hue Slider */}
             <div className="mb-3">
-                <Label>Hue</Label>
+                <label className={styles.label}>Hue</label>
                 <input
                     type="range"
                     min="0"
@@ -398,7 +435,7 @@ const ColorControl: React.FC<ColorControlProps> = ({ label, value, onChange, pal
 
             {/* Alpha slider */}
             <div className="mb-3">
-                <Label>Opacity: {Math.round(alpha * 100)}%</Label>
+                <label className={styles.label}>Opacity: {Math.round(alpha * 100)}%</label>
                 <input
                     type="range"
                     min="0"
@@ -415,8 +452,8 @@ const ColorControl: React.FC<ColorControlProps> = ({ label, value, onChange, pal
 
             {/* Hex input */}
             <div className="mb-3">
-                <Label>HEX</Label>
-                <Input
+                <label className={styles.label}>HEX</label>
+                <input
                     type="text"
                     value={hexInputValue}
                     onChange={(e) => {
@@ -438,16 +475,17 @@ const ColorControl: React.FC<ColorControlProps> = ({ label, value, onChange, pal
                         }
                     }}
                     placeholder="#000000"
+                    className={styles.input}
                 />
             </div>
 
             {/* RGB Inputs */}
             <div className="mb-3">
-                <Label>RGB</Label>
+                <label className={styles.label}>RGB</label>
                 <div className="space-y-1.5">
                     {(['r', 'g', 'b'] as const).map((k) => (
-                        <div key={k} className="flex items-center gap-2">
-                            <span className="text-[10px] text-editor-text-secondary uppercase font-bold w-4 text-center flex-shrink-0">{k}</span>
+                        <div key={k} className="flex items-center gap-2" id={`color-rgb-${k}`}>
+                            <span className={styles.rgbLabel}>{k}</span>
                             <input
                                 type="number"
                                 min="0"
@@ -468,7 +506,7 @@ const ColorControl: React.FC<ColorControlProps> = ({ label, value, onChange, pal
                                     const newHex = `#${newRgb.r.toString(16).padStart(2, '0')}${newRgb.g.toString(16).padStart(2, '0')}${newRgb.b.toString(16).padStart(2, '0')}`;
                                     handleColorChange(formatColor({ hex: newHex, alpha }));
                                 }}
-                                className="flex-1 bg-editor-bg text-editor-text-primary p-1.5 rounded-md border border-editor-border focus:ring-1 focus:ring-editor-accent/50 focus:border-editor-accent focus:outline-none text-xs font-mono"
+                                className={styles.rgbInput}
                             />
                         </div>
                     ))}
@@ -478,13 +516,13 @@ const ColorControl: React.FC<ColorControlProps> = ({ label, value, onChange, pal
             {/* Palette colors from theme */}
             {paletteColors && paletteColors.length > 0 && (
                 <div className="mb-3">
-                    <Label><Palette size={12} className="inline mr-1" />Theme Palette</Label>
+                    <label className={styles.label}><Palette size={12} className="inline mr-1" />Theme Palette</label>
                     <div className="flex flex-wrap gap-1">
                         {paletteColors.map((color, i) => (
                             <button
                                 key={`palette-${i}`}
                                 onClick={() => handleColorChange(color)}
-                                className="rounded border border-editor-border hover:scale-110 transition-transform"
+                                className={styles.presetBtn}
                                 style={{ backgroundColor: color, width: 24, height: 24, minWidth: 24, minHeight: 24, maxWidth: 24, maxHeight: 24 }}
                                 title={color}
                             />
@@ -496,11 +534,11 @@ const ColorControl: React.FC<ColorControlProps> = ({ label, value, onChange, pal
             {/* Recent palettes */}
             {recentPalettes && recentPalettes.length > 0 && (
                 <div className="mb-3">
-                    <Label><History size={12} className="inline mr-1" />Recent Palettes</Label>
+                    <label className={styles.label}><History size={12} className="inline mr-1" />Recent Palettes</label>
                     <div className="space-y-1">
                         {recentPalettes.slice(0, 5).map((palette) => (
-                            <div key={palette.id} className="flex items-center gap-1 p-1 rounded bg-editor-border/30 hover:bg-editor-border/50 transition-colors min-w-0">
-                                <span className="text-[10px] text-editor-text-secondary truncate max-w-[60px] shrink-0" title={palette.name}>
+                            <div key={palette.id} className={styles.paletteRow}>
+                                <span className={styles.paletteLabel} title={palette.name}>
                                     {palette.name}:
                                 </span>
                                 <div className="flex gap-0.5 flex-1 min-w-0">
@@ -508,7 +546,7 @@ const ColorControl: React.FC<ColorControlProps> = ({ label, value, onChange, pal
                                         <button
                                             key={`${palette.id}-${idx}`}
                                             onClick={() => handleColorChange(color)}
-                                            className="w-5 h-5 shrink-0 rounded border border-editor-border hover:scale-110 transition-transform"
+                                            className={`w-5 h-5 shrink-0 ${styles.presetBtn}`}
                                             style={{ backgroundColor: color }}
                                             title={`${palette.name}: ${color}`}
                                         />
@@ -522,13 +560,13 @@ const ColorControl: React.FC<ColorControlProps> = ({ label, value, onChange, pal
 
             {/* Preset colors */}
             <div className="mb-3">
-                <Label><Sparkles size={12} className="inline mr-1" />Presets</Label>
+                <label className={styles.label}><Sparkles size={12} className="inline mr-1" />Presets</label>
                 <div className="flex flex-wrap gap-1">
                     {PRESET_COLORS.map((color, i) => (
                         <button
                             key={`preset-${i}`}
                             onClick={() => handleColorChange(color)}
-                            className="rounded border border-editor-border hover:scale-110 transition-transform"
+                            className={styles.presetBtn}
                             style={{ backgroundColor: color, width: 24, height: 24, minWidth: 24, minHeight: 24, maxWidth: 24, maxHeight: 24 }}
                             title={color}
                         />
@@ -539,13 +577,13 @@ const ColorControl: React.FC<ColorControlProps> = ({ label, value, onChange, pal
             {/* Recent colors */}
             {recentColors.length > 0 && (
                 <div>
-                    <Label><History size={12} className="inline mr-1" />Recent</Label>
+                    <label className={styles.label}><History size={12} className="inline mr-1" />Recent</label>
                     <div className="flex flex-wrap gap-1">
                         {recentColors.map((color, i) => (
                             <button
                                 key={`recent-${i}`}
                                 onClick={() => handleColorChange(color)}
-                                className="rounded border border-editor-border hover:scale-110 transition-transform"
+                                className={styles.presetBtn}
                                 style={{ backgroundColor: color, width: 24, height: 24, minWidth: 24, minHeight: 24, maxWidth: 24, maxHeight: 24 }}
                                 title={color}
                             />
@@ -558,18 +596,18 @@ const ColorControl: React.FC<ColorControlProps> = ({ label, value, onChange, pal
 
     return (
         <div className="mb-2">
-            {label && <label className="block text-[10px] font-bold text-editor-text-secondary mb-1.5 uppercase tracking-wider">{label}</label>}
+            {label && <label className={styles.sectionLabel}>{label}</label>}
             <div className="relative">
                 <button
                     ref={triggerRef}
                     onClick={() => setIsOpen(!isOpen)}
-                    className="w-full flex items-center gap-2.5 bg-editor-bg border border-editor-border rounded-lg px-2.5 py-2 text-sm text-editor-text-primary hover:border-editor-accent/60 hover:shadow-sm transition-all group"
+                    className={styles.trigger}
                 >
-                    <div className="w-7 h-7 rounded-md border border-editor-border/80 shadow-inner flex items-center justify-center overflow-hidden bg-checkered flex-shrink-0">
+                    <div className={styles.swatch}>
                         <div className="w-full h-full rounded-[3px]" style={{ backgroundColor: safeValue }} />
                     </div>
-                    <span className="flex-1 text-left font-mono text-xs text-editor-text-primary/80">{safeValue.toUpperCase()}</span>
-                    <ChevronDown size={14} className={`text-editor-text-secondary group-hover:text-editor-text-primary transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                    <span className={styles.hexText}>{safeValue.toUpperCase()}</span>
+                    <ChevronDown size={14} className={`${styles.chevron} transition-transform ${isOpen ? 'rotate-180' : ''}`} />
                 </button>
                 {isOpen && portalContainer && createPortal(PopoverContent, portalContainer)}
             </div>

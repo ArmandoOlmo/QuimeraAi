@@ -55,13 +55,13 @@ jobs:
           echo "$FILTERED"
 
       - name: Generate changelog entry
-        if: steps.commits.outputs.count >= 2
+        if: steps.commits.outputs.count >= 1
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
           COMMIT_DATA: /tmp/commits.txt
         run: node .github/scripts/generate-changelog.mjs
 
-      - name: Skip - too few commits
-        if: steps.commits.outputs.count < 2
-        run: echo "⏭️ Only ${{ steps.commits.outputs.count }} meaningful commit(s). Skipping changelog generation (minimum 2)."
+      - name: Skip - no meaningful commits
+        if: steps.commits.outputs.count < 1
+        run: echo "⏭️ No meaningful commits found. Skipping changelog generation."

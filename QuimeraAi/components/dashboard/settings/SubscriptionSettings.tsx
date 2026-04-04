@@ -1,6 +1,6 @@
 /**
  * SubscriptionSettings
- * Component to display current subscription plan and allow upgrades
+ * Modern subscription UI with hero plan card, animated usage bar, and plan comparison
  */
 
 import React, { useState, useEffect } from 'react';
@@ -9,7 +9,6 @@ import {
     Crown,
     Sparkles,
     Check,
-    ArrowRight,
     Zap,
     Rocket,
     Building2,
@@ -22,9 +21,8 @@ import {
     XCircle,
     RotateCcw,
     Heart,
-    ChevronDown,
-    ChevronUp,
-    Info,
+    Star,
+    ArrowRight,
 } from 'lucide-react';
 import ConfirmationModal from '../../ui/ConfirmationModal';
 import { usePlans } from '../../../contexts/PlansContext';
@@ -48,6 +46,16 @@ const PLAN_ICONS: Record<SubscriptionPlanId, React.ElementType> = {
     enterprise: Crown,
 };
 
+// Plan gradient accents
+const PLAN_GRADIENTS: Record<string, string> = {
+    free: 'from-gray-400 to-gray-500',
+    individual: 'from-pink-500 to-rose-500',
+    agency_starter: 'from-blue-500 to-cyan-500',
+    agency_pro: 'from-violet-500 to-purple-500',
+    agency_scale: 'from-amber-500 to-yellow-500',
+    enterprise: 'from-amber-500 to-yellow-500',
+};
+
 interface SubscriptionDetails {
     stripe?: {
         currentPeriodStart: string;
@@ -64,7 +72,6 @@ const SubscriptionSettings: React.FC = () => {
     const { isUserOwner, user } = useAuth();
     const { plansArray, getPlan } = usePlans();
     const upgradeContext = useSafeUpgrade();
-    // Use useTenant to get the full context - we're in the dashboard where TenantProvider is always available
     const tenantContext = useTenant();
     const { currentTenant, isLoadingTenant } = tenantContext;
     const { usage, isLoading: isLoadingUsage, refresh } = useCreditsUsage();
@@ -73,7 +80,6 @@ const SubscriptionSettings: React.FC = () => {
     const [subscriptionDetails, setSubscriptionDetails] = useState<SubscriptionDetails | null>(null);
     const [isCancelling, setIsCancelling] = useState(false);
     const [isReactivating, setIsReactivating] = useState(false);
-    const [instructionsCollapsed, setInstructionsCollapsed] = useState(true);
     const [cancelConfirmOpen, setCancelConfirmOpen] = useState(false);
     const [pendingCancelImmediately, setPendingCancelImmediately] = useState(false);
 
@@ -103,20 +109,14 @@ const SubscriptionSettings: React.FC = () => {
     useEffect(() => {
         const urlParams = new URLSearchParams(window.location.search);
         const isSuccess = urlParams.get('success') === 'true';
-        const planParam = urlParams.get('plan');
 
         if (isSuccess) {
-            // Clean URL params
             const newUrl = window.location.pathname;
             window.history.replaceState({}, '', newUrl);
 
-            // Force refresh data after successful checkout
             const refreshAfterCheckout = async () => {
-                // Wait a moment for webhook to process
                 await new Promise(resolve => setTimeout(resolve, 2000));
                 refresh();
-
-                // Retry refresh after more time in case webhook is slow
                 setTimeout(() => refresh(), 5000);
                 setTimeout(() => refresh(), 10000);
             };
@@ -127,11 +127,10 @@ const SubscriptionSettings: React.FC = () => {
 
     // Get current plan from usage or default to free
     const currentPlanId: SubscriptionPlanId = usage?.planId || 'free';
-    // Try to get from context first, otherwise fallback to hardcoded
     const currentPlan = getPlan(currentPlanId) || SUBSCRIPTION_PLANS[currentPlanId] || SUBSCRIPTION_PLANS.free;
     const IconComponent = PLAN_ICONS[currentPlanId] || Sparkles;
-    // Safety check to ensure we always have a valid component
     const PlanIcon = IconComponent || (() => <div className="w-7 h-7 bg-muted rounded-full" />);
+    const currentGradient = PLAN_GRADIENTS[currentPlanId] || PLAN_GRADIENTS.free;
 
     const handleUpgradeClick = (trigger: 'generic' | 'credits' = 'generic') => {
         if (upgradeContext) {
@@ -147,15 +146,10 @@ const SubscriptionSettings: React.FC = () => {
         refresh();
     };
 
-    /**
-     * Handle plan selection - upgrade/downgrade or new checkout
-     */
     const handleSelectPlan = async (planId: SubscriptionPlanId, billingCycle: 'monthly' | 'annually' = 'monthly') => {
-        // Use currentTenant.id if available, otherwise construct from userId
         let tenantId = currentTenant?.id;
 
         if (!tenantId && user?.uid) {
-            // Fallback: construct tenantId from userId using the standard pattern
             tenantId = `tenant_${user.uid}`;
         }
 
@@ -170,17 +164,13 @@ const SubscriptionSettings: React.FC = () => {
         try {
             const functions = await getFunctionsInstance();
 
-            // If user already has a paid subscription, try to update it
             if (currentPlanId !== 'free') {
-                console.log('[SubscriptionSettings] User has paid plan, trying to update subscription...');
-                // Try to update existing subscription
                 const updateSub = httpsCallable<
                     { tenantId: string; newPlanId: string; billingCycle?: string },
                     { success: boolean; subscription?: any; proration?: any; error?: string }
                 >(functions, 'updateSubscription');
 
                 try {
-                    console.log('[SubscriptionSettings] Calling updateSubscription...');
                     const result = await updateSub({
                         tenantId,
                         newPlanId: planId,
@@ -188,23 +178,19 @@ const SubscriptionSettings: React.FC = () => {
                     });
 
                     if (result.data.success) {
-                        // Show proration info if any
                         if (result.data.proration && result.data.proration.amount !== 0) {
                             alert(result.data.proration.description);
                         }
-                        // Refresh to show updated plan
                         refresh();
                         return;
                     }
                 } catch (updateError: any) {
-                    // If update fails because no Stripe subscription exists, fall through to checkout
                     if (!updateError.message?.includes('No active Stripe subscription')) {
                         throw updateError;
                     }
                 }
             }
 
-            // Create new checkout session (for free users or if update failed)
             const createCheckout = httpsCallable<
                 { tenantId: string; planId: string; billingCycle: string; successUrl: string; cancelUrl: string },
                 { sessionId: string; url: string }
@@ -220,11 +206,9 @@ const SubscriptionSettings: React.FC = () => {
 
             const result = await createCheckout(checkoutParams);
 
-            // Redirect to Stripe Checkout
             if (result.data.url) {
                 window.location.href = result.data.url;
             } else {
-                console.error('Failed to get checkout URL');
                 setCheckoutError(t('settings.subscription.checkoutError', 'Failed to create checkout session'));
             }
         } catch (error: any) {
@@ -235,9 +219,6 @@ const SubscriptionSettings: React.FC = () => {
         }
     };
 
-    /**
-     * Handle subscription cancellation
-     */
     const handleCancelSubscription = (immediately: boolean = false) => {
         if (!currentTenant?.id) return;
         setPendingCancelImmediately(immediately);
@@ -265,7 +246,6 @@ const SubscriptionSettings: React.FC = () => {
             alert(result.data.message);
             refresh();
 
-            // Refresh subscription details
             const getDetails = httpsCallable<
                 { tenantId: string },
                 { subscription: SubscriptionDetails; invoices: any[] }
@@ -281,9 +261,6 @@ const SubscriptionSettings: React.FC = () => {
         }
     };
 
-    /**
-     * Handle subscription reactivation
-     */
     const handleReactivateSubscription = async () => {
         if (!currentTenant?.id) return;
 
@@ -299,7 +276,6 @@ const SubscriptionSettings: React.FC = () => {
             alert(result.data.message);
             refresh();
 
-            // Refresh subscription details
             const getDetails = httpsCallable<
                 { tenantId: string },
                 { subscription: SubscriptionDetails; invoices: any[] }
@@ -315,319 +291,390 @@ const SubscriptionSettings: React.FC = () => {
         }
     };
 
-    // Get list of plans for comparison
     const allPlans = plansArray;
     const currentPlanIndex = allPlans.findIndex(p => p.id === currentPlanId);
 
+    // Determine "recommended" plan: next tier above current
+    const recommendedPlanId = currentPlanIndex < allPlans.length - 1
+        ? allPlans[currentPlanIndex + 1]?.id
+        : null;
+
+    const usagePercentage = usage?.percentage || 0;
+
     return (
-        <div className="space-y-8">
-            {/* Header */}
-            <div>
-                <h2 className="text-xl font-semibold text-foreground mb-1">
-                    {t('settings.subscription.title')}
-                </h2>
-                <p className="text-sm text-muted-foreground">
-                    {t('settings.subscription.description')}
-                </p>
-            </div>
+        <div className="space-y-6">
+            {/* ═══════════════════════════════════════════════ */}
+            {/* HERO: Current Plan + Usage                     */}
+            {/* ═══════════════════════════════════════════════ */}
+            <div className="relative bg-card border border-border rounded-2xl overflow-hidden">
+                {/* Gradient accent strip */}
+                <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${currentGradient}`} />
 
-            {/* Top Grid: Instructions & Usage */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Collapsible Instructions */}
-                <div className="lg:col-span-2 bg-blue-500/10 border border-blue-500/30 rounded-xl overflow-hidden self-start">
-                    <button
-                        onClick={() => setInstructionsCollapsed(!instructionsCollapsed)}
-                        className="w-full p-4 flex items-center justify-between hover:bg-blue-500/5 transition-colors"
-                    >
-                        <h4 className="font-semibold text-blue-500 flex items-center gap-2">
-                            <Info className="w-4 h-4" />
-                            {t('settings.subscription.howItWorks', '¿Cómo funciona tu plan?')}
-                        </h4>
-                        {instructionsCollapsed ? (
-                            <ChevronDown className="w-5 h-5 text-blue-500" />
-                        ) : (
-                            <ChevronUp className="w-5 h-5 text-blue-500" />
-                        )}
-                    </button>
-                    {!instructionsCollapsed && (
-                        <div className="px-4 pb-4 space-y-3">
-                            <ul className="list-none space-y-2 text-sm text-muted-foreground">
-                                <li className="flex items-start gap-2">
-                                    <Sparkles className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
-                                    <span><strong className="text-foreground">{t('settings.subscription.aiCredits')}:</strong> {t('settings.subscription.aiCreditsDesc', 'Se renuevan cada mes. Úsalos para generar contenido, imágenes y más con IA.')}</span>
-                                </li>
-                                <li className="flex items-start gap-2">
-                                    <Rocket className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
-                                    <span><strong className="text-foreground">{t('settings.subscription.projects')}:</strong> {t('settings.subscription.projectsDesc', 'Número de sitios web que puedes crear y publicar.')}</span>
-                                </li>
-                                <li className="flex items-start gap-2">
-                                    <Gift className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
-                                    <span><strong className="text-foreground">{t('settings.subscription.storage')}:</strong> {t('settings.subscription.storageDesc', 'Espacio para guardar imágenes, videos y archivos.')}</span>
-                                </li>
-                                <li className="flex items-start gap-2">
-                                    <Crown className="w-4 h-4 text-amber-500 mt-0.5 flex-shrink-0" />
-                                    <span><strong className="text-foreground">Upgrade:</strong> {t('settings.subscription.upgradeDesc', 'Mejora tu plan para desbloquear más recursos y funcionalidades premium.')}</span>
-                                </li>
-                            </ul>
-                        </div>
-                    )}
-                </div>
-
-                {/* Current Usage Details - Compact Card */}
-                <div className="bg-card rounded-xl border border-border overflow-hidden self-start">
-                    <div className="p-3 border-b border-border bg-secondary/10 flex items-center justify-between">
-                        <h4 className="font-medium text-foreground text-sm flex items-center gap-2">
-                            <Zap className="w-4 h-4 text-amber-500" />
-                            {t('settings.subscription.usageStatus', 'Estado de Uso')}
-                        </h4>
-                        <button
-                            onClick={handleRefresh}
-                            disabled={isLoadingUsage}
-                            className="p-1 rounded-md hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
-                        >
-                            <RefreshCw className={`w-3.5 h-3.5 ${isLoadingUsage ? 'animate-spin' : ''}`} />
-                        </button>
-                    </div>
-
-                    <div className="p-4">
-                        {isLoadingUsage ? (
-                            <div className="animate-pulse space-y-3">
-                                <div className="h-2 bg-secondary rounded-full" />
-                                <div className="h-3 bg-secondary rounded w-1/3" />
-                            </div>
-                        ) : (
-                            <>
-                                {/* Progress Bar */}
-                                <div className="h-2.5 bg-secondary rounded-full overflow-hidden mb-2">
-                                    <div
-                                        className="h-full rounded-full transition-all duration-500"
-                                        style={{
-                                            width: `${usage?.percentage || 0}%`,
-                                            backgroundColor: usage?.color || 'hsl(var(--primary))',
-                                        }}
-                                    />
+                <div className="p-6">
+                    <div className="flex flex-col lg:flex-row lg:items-start gap-6">
+                        {/* Plan info */}
+                        <div className="flex-1">
+                            <div className="flex items-center gap-4 mb-4">
+                                <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${currentGradient} flex items-center justify-center shadow-lg`}>
+                                    <PlanIcon className="w-7 h-7 text-white" />
                                 </div>
-
-                                {/* Stats */}
-                                <div className="flex items-center justify-between text-xs mb-3">
-                                    <span className="text-muted-foreground">
-                                        {t('settings.subscription.used')}: <span className="font-medium text-foreground">{usage?.used || 0}</span>
-                                    </span>
-                                    <span className="text-muted-foreground">
-                                        {t('settings.subscription.limit')}: <span className="font-medium text-foreground">{usage?.limit || 0}</span>
-                                    </span>
-                                </div>
-
-                                {/* Remaining */}
-                                <div className="p-2 rounded-lg bg-secondary/50 flex items-center justify-between">
-                                    <span className="text-xs text-muted-foreground">
-                                        {t('settings.subscription.remaining')}
-                                    </span>
-                                    <span
-                                        className="text-sm font-bold"
-                                        style={{ color: usage?.color || 'hsl(var(--primary))' }}
-                                    >
-                                        {usage?.remaining || 0}
-                                    </span>
-                                </div>
-
-                                {/* Warnings (Compact) */}
-                                {(usage?.isNearLimit || usage?.hasExceededLimit) && !isUserOwner && (
-                                    <div className={`mt-3 p-2 rounded-lg border flex items-start gap-2 ${usage?.hasExceededLimit
-                                        ? 'bg-red-500/5 border-red-500/10'
-                                        : 'bg-amber-500/5 border-amber-500/10'
-                                        }`}>
-                                        <AlertTriangle className={`w-3.5 h-3.5 mt-0.5 ${usage?.hasExceededLimit ? 'text-red-500' : 'text-amber-500'
-                                            }`} />
-                                        <div className="flex-1">
-                                            <p className={`text-xs font-medium ${usage?.hasExceededLimit
-                                                ? 'text-red-600 dark:text-red-400'
-                                                : 'text-amber-600 dark:text-amber-400'
-                                                }`}>
-                                                {usage?.hasExceededLimit
-                                                    ? t('settings.subscription.exceededLimit')
-                                                    : t('settings.subscription.nearLimit')
-                                                }
-                                            </p>
-                                            {usage?.hasExceededLimit && (
-                                                <button
-                                                    onClick={() => handleUpgradeClick('credits')}
-                                                    className="mt-1.5 w-full py-1 text-[10px] font-medium bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
-                                                >
-                                                    {t('settings.subscription.upgradeNow')}
-                                                </button>
-                                            )}
-                                        </div>
+                                <div>
+                                    <div className="flex items-center gap-2">
+                                        <h2 className="text-xl font-bold text-foreground">
+                                            {currentPlan.name}
+                                        </h2>
+                                        <span className={`px-2.5 py-0.5 text-xs font-bold rounded-full bg-gradient-to-r ${currentGradient} text-white`}>
+                                            {t('settings.subscription.activePlan', 'Activo')}
+                                        </span>
                                     </div>
-                                )}
-                            </>
-                        )}
+                                    <p className="text-sm text-muted-foreground mt-0.5">
+                                        {currentPlan.description}
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* Plan features mini grid */}
+                            <div className="grid grid-cols-3 gap-3">
+                                <div className="p-3 rounded-xl bg-secondary/30 border border-border">
+                                    <Sparkles size={14} className="text-primary mb-1" />
+                                    <p className="text-lg font-bold text-foreground">{currentPlan.limits.maxAiCredits.toLocaleString()}</p>
+                                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider">
+                                        {t('settings.subscription.aiCredits', 'Créditos IA')}
+                                    </p>
+                                </div>
+                                <div className="p-3 rounded-xl bg-secondary/30 border border-border">
+                                    <Rocket size={14} className="text-primary mb-1" />
+                                    <p className="text-lg font-bold text-foreground">
+                                        {currentPlan.limits.maxProjects === -1 ? '∞' : currentPlan.limits.maxProjects}
+                                    </p>
+                                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider">
+                                        {t('settings.subscription.projects', 'Proyectos')}
+                                    </p>
+                                </div>
+                                <div className="p-3 rounded-xl bg-secondary/30 border border-border">
+                                    <Gift size={14} className="text-primary mb-1" />
+                                    <p className="text-lg font-bold text-foreground">{currentPlan.limits.maxStorageGB} GB</p>
+                                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider">
+                                        {t('settings.subscription.storage', 'Almacenamiento')}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Usage card */}
+                        <div className="lg:w-80 bg-background rounded-2xl border border-border p-5">
+                            <div className="flex items-center justify-between mb-4">
+                                <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                                    <Zap size={14} className="text-amber-500" />
+                                    {t('settings.subscription.usageStatus', 'Uso de Créditos')}
+                                </h4>
+                                <button
+                                    onClick={handleRefresh}
+                                    disabled={isLoadingUsage}
+                                    className="p-1.5 rounded-lg hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
+                                >
+                                    <RefreshCw className={`w-3.5 h-3.5 ${isLoadingUsage ? 'animate-spin' : ''}`} />
+                                </button>
+                            </div>
+
+                            {isLoadingUsage ? (
+                                <div className="animate-pulse space-y-3">
+                                    <div className="h-3 bg-secondary rounded-full" />
+                                    <div className="h-4 bg-secondary rounded w-1/3" />
+                                </div>
+                            ) : (
+                                <>
+                                    {/* Animated progress bar with gradient */}
+                                    <div className="relative h-3 bg-secondary rounded-full overflow-hidden mb-3">
+                                        <div
+                                            className="absolute inset-y-0 left-0 rounded-full transition-all duration-1000 ease-out"
+                                            style={{
+                                                width: `${usagePercentage}%`,
+                                                background: usagePercentage > 90
+                                                    ? 'linear-gradient(90deg, #ef4444, #f87171)'
+                                                    : usagePercentage > 70
+                                                        ? 'linear-gradient(90deg, #f59e0b, #fbbf24)'
+                                                        : `linear-gradient(90deg, hsl(var(--primary)), hsl(var(--primary) / 0.7))`,
+                                            }}
+                                        />
+                                        {/* Shimmer effect */}
+                                        <div
+                                            className="absolute inset-y-0 left-0 rounded-full opacity-30"
+                                            style={{
+                                                width: `${usagePercentage}%`,
+                                                background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.4) 50%, transparent 100%)',
+                                                animation: 'shimmer 2s infinite',
+                                            }}
+                                        />
+                                    </div>
+
+                                    {/* Stats row */}
+                                    <div className="flex items-center justify-between text-xs mb-3">
+                                        <span className="text-muted-foreground">
+                                            {t('settings.subscription.used', 'Usado')}: <span className="font-semibold text-foreground">{usage?.used || 0}</span>
+                                        </span>
+                                        <span className="text-muted-foreground">
+                                            {t('settings.subscription.limit', 'Límite')}: <span className="font-semibold text-foreground">{usage?.limit || 0}</span>
+                                        </span>
+                                    </div>
+
+                                    {/* Remaining highlight */}
+                                    <div className="flex items-center justify-between p-3 rounded-xl bg-secondary/50 border border-border">
+                                        <span className="text-sm text-muted-foreground">
+                                            {t('settings.subscription.remaining', 'Restante')}
+                                        </span>
+                                        <span
+                                            className="text-lg font-bold"
+                                            style={{ color: usage?.color || 'hsl(var(--primary))' }}
+                                        >
+                                            {usage?.remaining || 0}
+                                        </span>
+                                    </div>
+
+                                    {/* Warnings */}
+                                    {(usage?.isNearLimit || usage?.hasExceededLimit) && !isUserOwner && (
+                                        <div className={`mt-3 p-3 rounded-xl border flex items-start gap-2 ${usage?.hasExceededLimit
+                                            ? 'bg-red-500/5 border-red-500/20'
+                                            : 'bg-amber-500/5 border-amber-500/20'
+                                            }`}>
+                                            <AlertTriangle className={`w-4 h-4 mt-0.5 flex-shrink-0 ${usage?.hasExceededLimit ? 'text-red-500' : 'text-amber-500'
+                                                }`} />
+                                            <div className="flex-1">
+                                                <p className={`text-xs font-semibold ${usage?.hasExceededLimit
+                                                    ? 'text-red-600 dark:text-red-400'
+                                                    : 'text-amber-600 dark:text-amber-400'
+                                                    }`}>
+                                                    {usage?.hasExceededLimit
+                                                        ? t('settings.subscription.exceededLimit')
+                                                        : t('settings.subscription.nearLimit')
+                                                    }
+                                                </p>
+                                                {usage?.hasExceededLimit && (
+                                                    <button
+                                                        onClick={() => handleUpgradeClick('credits')}
+                                                        className="mt-2 w-full py-1.5 text-xs font-semibold bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+                                                    >
+                                                        {t('settings.subscription.upgradeNow')}
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+                                </>
+                            )}
+                        </div>
                     </div>
                 </div>
             </div>
 
-            {/* =============================================== */}
-            {/* COMPREHENSIVE PLANS COMPARISON */}
-            {/* =============================================== */}
+            {/* ═══════════════════════════════════════════════ */}
+            {/* PLANS COMPARISON                               */}
+            {/* ═══════════════════════════════════════════════ */}
             <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                    <div>
-                        <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
-                            {t('settings.subscription.availablePlans', 'Planes Disponibles')}
-                        </h3>
-                    </div>
+                    <h3 className="text-lg font-semibold text-foreground">
+                        {t('settings.subscription.availablePlans', 'Planes Disponibles')}
+                    </h3>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-4 gap-4">
                     {allPlans.map((plan) => {
-                        const IconComponent = PLAN_ICONS[plan.id] || Sparkles;
-                        const Icon = IconComponent || (() => <div className="w-5 h-5 bg-muted rounded-full" />);
+                        const PlanIconComp = PLAN_ICONS[plan.id] || Sparkles;
+                        const Icon = PlanIconComp || (() => <div className="w-5 h-5 bg-muted rounded-full" />);
                         const isCurrentPlan = plan.id === currentPlanId;
                         const isUpgrade = allPlans.findIndex(p => p.id === plan.id) > currentPlanIndex;
+                        const isRecommended = plan.id === recommendedPlanId;
                         const isLoading = loadingPlanId === plan.id;
+                        const gradient = PLAN_GRADIENTS[plan.id] || PLAN_GRADIENTS.free;
 
                         return (
                             <div
                                 key={plan.id}
-                                className={`flex flex-col p-5 rounded-xl border transition-all duration-200 ${isCurrentPlan
-                                    ? 'bg-primary/5 border-primary shadow-sm'
-                                    : 'bg-card border-border hover:border-primary/50 hover:shadow-sm'
+                                className={`relative flex flex-col rounded-2xl border overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 ${isCurrentPlan
+                                    ? 'bg-primary/5 border-primary/50 shadow-md shadow-primary/10'
+                                    : isRecommended
+                                        ? 'bg-card border-amber-500/50 shadow-md shadow-amber-500/10'
+                                        : 'bg-card border-border hover:border-primary/30'
                                     }`}
                             >
-                                {/* Header */}
-                                <div className="flex items-start justify-between mb-4">
-                                    <div className="flex items-center gap-3">
-                                        <div
-                                            className="w-10 h-10 rounded-lg flex items-center justify-center"
-                                            style={{ backgroundColor: `${plan.color}15` }}
-                                        >
-                                            <Icon className="w-5 h-5" style={{ color: plan.color }} />
-                                        </div>
-                                        <div>
-                                            <h4 className="font-semibold text-foreground">{plan.name}</h4>
-                                            {isCurrentPlan && (
-                                                <span className="text-[10px] font-medium text-primary bg-primary/10 px-1.5 py-0.5 rounded-full">
-                                                    Actual
-                                                </span>
-                                            )}
-                                        </div>
+                                {/* Recommended badge */}
+                                {isRecommended && !isCurrentPlan && (
+                                    <div className="absolute -top-0 left-1/2 -translate-x-1/2 z-10 -translate-y-1/2">
+                                        <span className="inline-flex items-center gap-1 px-3 py-1 text-xs font-bold bg-gradient-to-r from-amber-500 to-yellow-500 text-white rounded-full shadow-lg">
+                                            <Star size={11} />
+                                            {t('settings.subscription.recommended', 'Recomendado')}
+                                        </span>
                                     </div>
-                                </div>
-
-                                {/* Price */}
-                                <div className="mb-4">
-                                    <div className="flex items-baseline gap-1">
-                                        <span className="text-2xl font-bold text-foreground">${plan.price.monthly}</span>
-                                        <span className="text-sm text-muted-foreground">/mes</span>
-                                    </div>
-                                    <p className="text-xs text-muted-foreground mt-1 line-clamp-2 min-h-[2.5em]">
-                                        {plan.description}
-                                    </p>
-                                </div>
-
-                                {/* Features */}
-                                <ul className="space-y-2 mb-6 flex-grow">
-                                    <li className="flex items-center gap-2 text-xs text-muted-foreground">
-                                        <Sparkles className="w-3.5 h-3.5 text-primary flex-shrink-0" />
-                                        <span>
-                                            <strong className="text-foreground">{plan.limits.maxAiCredits.toLocaleString()}</strong> créditos IA
-                                        </span>
-                                    </li>
-                                    <li className="flex items-center gap-2 text-xs text-muted-foreground">
-                                        <Rocket className="w-3.5 h-3.5 text-primary flex-shrink-0" />
-                                        <span>
-                                            <strong className="text-foreground">
-                                                {plan.limits.maxProjects === -1 ? 'Ilimitados' : plan.limits.maxProjects}
-                                            </strong> proyectos
-                                        </span>
-                                    </li>
-                                    <li className="flex items-center gap-2 text-xs text-muted-foreground">
-                                        <Gift className="w-3.5 h-3.5 text-primary flex-shrink-0" />
-                                        <span>
-                                            <strong className="text-foreground">{plan.limits.maxStorageGB} GB</strong> almacenamiento
-                                        </span>
-                                    </li>
-                                </ul>
-
-                                {/* Action Button */}
-                                {isCurrentPlan ? (
-                                    <button
-                                        disabled
-                                        className="w-full py-2 rounded-lg bg-primary/10 text-primary text-xs font-semibold flex items-center justify-center gap-2 cursor-default"
-                                    >
-                                        <Check className="w-3.5 h-3.5" />
-                                        Plan Actual
-                                    </button>
-                                ) : (
-                                    <button
-                                        type="button"
-                                        onClick={() => {
-                                            console.log('[SubscriptionSettings] Button clicked for plan:', plan.id);
-                                            handleSelectPlan(plan.id);
-                                        }}
-                                        disabled={isLoading || loadingPlanId !== null}
-                                        className={`w-full py-2 rounded-lg text-xs font-medium transition-colors flex items-center justify-center gap-2 disabled:opacity-50 ${isUpgrade
-                                            ? 'bg-primary text-primary-foreground hover:bg-primary/90'
-                                            : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
-                                            }`}
-                                    >
-                                        {isLoading ? (
-                                            <>
-                                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                                                Procesando...
-                                            </>
-                                        ) : isUpgrade ? (
-                                            <>
-                                                Mejorar Plan
-                                                <TrendingUp className="w-3.5 h-3.5" />
-                                            </>
-                                        ) : (
-                                            <>
-                                                Cambiar Plan
-                                            </>
-                                        )}
-                                    </button>
                                 )}
+
+                                {/* Gradient top strip */}
+                                <div className={`h-1.5 bg-gradient-to-r ${gradient}`} />
+
+                                <div className="p-5 flex flex-col flex-1">
+                                    {/* Header */}
+                                    <div className="flex items-start justify-between mb-4">
+                                        <div className="flex items-center gap-3">
+                                            <div
+                                                className={`w-10 h-10 rounded-xl flex items-center justify-center bg-gradient-to-br ${gradient} shadow-lg`}
+                                            >
+                                                <Icon className="w-5 h-5 text-white" />
+                                            </div>
+                                            <div>
+                                                <h4 className="font-semibold text-foreground">{plan.name}</h4>
+                                                {isCurrentPlan && (
+                                                    <span className="text-[10px] font-bold text-primary bg-primary/10 px-1.5 py-0.5 rounded-full">
+                                                        {t('settings.subscription.current', 'Actual')}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Price */}
+                                    <div className="mb-4">
+                                        <div className="flex items-baseline gap-1">
+                                            <span className="text-3xl font-extrabold text-foreground">${plan.price.monthly}</span>
+                                            <span className="text-sm text-muted-foreground">/mes</span>
+                                        </div>
+                                        <p className="text-xs text-muted-foreground mt-1 line-clamp-2 min-h-[2.5em]">
+                                            {plan.description}
+                                        </p>
+                                    </div>
+
+                                    {/* Features */}
+                                    <ul className="space-y-2.5 mb-6 flex-grow">
+                                        <li className="flex items-center gap-2.5 text-xs text-muted-foreground">
+                                            <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                                                <Sparkles className="w-3 h-3 text-primary" />
+                                            </div>
+                                            <span>
+                                                <strong className="text-foreground">{plan.limits.maxAiCredits.toLocaleString()}</strong> créditos IA
+                                            </span>
+                                        </li>
+                                        <li className="flex items-center gap-2.5 text-xs text-muted-foreground">
+                                            <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                                                <Rocket className="w-3 h-3 text-primary" />
+                                            </div>
+                                            <span>
+                                                <strong className="text-foreground">
+                                                    {plan.limits.maxProjects === -1 ? 'Ilimitados' : plan.limits.maxProjects}
+                                                </strong> proyectos
+                                            </span>
+                                        </li>
+                                        <li className="flex items-center gap-2.5 text-xs text-muted-foreground">
+                                            <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                                                <Gift className="w-3 h-3 text-primary" />
+                                            </div>
+                                            <span>
+                                                <strong className="text-foreground">{plan.limits.maxStorageGB} GB</strong> almacenamiento
+                                            </span>
+                                        </li>
+                                    </ul>
+
+                                    {/* Action Button */}
+                                    {isCurrentPlan ? (
+                                        <button
+                                            disabled
+                                            className="w-full py-2.5 rounded-xl bg-primary/10 text-primary text-sm font-semibold flex items-center justify-center gap-2 cursor-default"
+                                        >
+                                            <Check className="w-4 h-4" />
+                                            {t('settings.subscription.currentPlan', 'Plan Actual')}
+                                        </button>
+                                    ) : (
+                                        <button
+                                            type="button"
+                                            onClick={() => handleSelectPlan(plan.id)}
+                                            disabled={isLoading || loadingPlanId !== null}
+                                            className={`w-full py-2.5 rounded-xl text-sm font-semibold transition-all flex items-center justify-center gap-2 disabled:opacity-50 ${isUpgrade
+                                                ? `bg-gradient-to-r ${gradient} text-white hover:shadow-lg hover:shadow-primary/25`
+                                                : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
+                                                }`}
+                                        >
+                                            {isLoading ? (
+                                                <>
+                                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                                    {t('common.processing', 'Procesando...')}
+                                                </>
+                                            ) : isUpgrade ? (
+                                                <>
+                                                    {t('settings.subscription.upgrade', 'Mejorar Plan')}
+                                                    <ArrowRight className="w-4 h-4" />
+                                                </>
+                                            ) : (
+                                                <>
+                                                    {t('settings.subscription.changePlan', 'Cambiar Plan')}
+                                                </>
+                                            )}
+                                        </button>
+                                    )}
+                                </div>
                             </div>
                         );
                     })}
                 </div>
             </div>
 
-
-
-            {/* Billing Period & Subscription Management (for paid plans) */}
+            {/* ═══════════════════════════════════════════════ */}
+            {/* BILLING & MANAGEMENT                           */}
+            {/* ═══════════════════════════════════════════════ */}
             {currentPlanId !== 'free' && subscriptionDetails?.stripe && (
-                <div className="bg-card rounded-xl border border-border p-6">
-                    <h4 className="font-medium text-foreground mb-4 flex items-center gap-2">
-                        <Calendar className="w-4 h-4 text-primary" />
-                        {t('settings.subscription.billingPeriod', 'Período de Facturación')}
-                    </h4>
+                <div className="bg-card rounded-2xl border border-border overflow-hidden">
+                    <div className="p-5 border-b border-border flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                            <Calendar className="w-5 h-5 text-primary" />
+                        </div>
+                        <div>
+                            <h4 className="font-semibold text-foreground">
+                                {t('settings.subscription.billingPeriod', 'Período de Facturación')}
+                            </h4>
+                            <p className="text-sm text-muted-foreground">
+                                {t('settings.subscription.billingDesc', 'Detalles de tu ciclo de facturación actual')}
+                            </p>
+                        </div>
+                    </div>
 
-                    <div className="space-y-4">
-                        {/* Billing Dates */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            <div className="p-3 rounded-lg bg-secondary/30">
-                                <span className="text-xs text-muted-foreground block mb-1">
-                                    {t('settings.subscription.periodStart', 'Inicio del período')}
-                                </span>
-                                <span className="text-sm font-medium text-foreground">
-                                    {new Date(subscriptionDetails.stripe.currentPeriodStart).toLocaleDateString()}
-                                </span>
+                    <div className="p-5 space-y-4">
+                        {/* Timeline */}
+                        <div className="relative">
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="p-4 rounded-xl bg-secondary/30 border border-border">
+                                    <span className="text-xs text-muted-foreground block mb-1">
+                                        {t('settings.subscription.periodStart', 'Inicio del período')}
+                                    </span>
+                                    <span className="text-sm font-semibold text-foreground">
+                                        {new Date(subscriptionDetails.stripe.currentPeriodStart).toLocaleDateString()}
+                                    </span>
+                                </div>
+                                <div className="p-4 rounded-xl bg-secondary/30 border border-border">
+                                    <span className="text-xs text-muted-foreground block mb-1">
+                                        {t('settings.subscription.periodEnd', 'Próxima renovación')}
+                                    </span>
+                                    <span className="text-sm font-semibold text-foreground">
+                                        {new Date(subscriptionDetails.stripe.currentPeriodEnd).toLocaleDateString()}
+                                    </span>
+                                </div>
                             </div>
-                            <div className="p-3 rounded-lg bg-secondary/30">
-                                <span className="text-xs text-muted-foreground block mb-1">
-                                    {t('settings.subscription.periodEnd', 'Próxima renovación')}
-                                </span>
-                                <span className="text-sm font-medium text-foreground">
-                                    {new Date(subscriptionDetails.stripe.currentPeriodEnd).toLocaleDateString()}
-                                </span>
-                            </div>
+
+                            {/* Timeline bar between dates */}
+                            {(() => {
+                                const start = new Date(subscriptionDetails.stripe!.currentPeriodStart).getTime();
+                                const end = new Date(subscriptionDetails.stripe!.currentPeriodEnd).getTime();
+                                const now = Date.now();
+                                const progress = Math.min(100, Math.max(0, ((now - start) / (end - start)) * 100));
+                                return (
+                                    <div className="mt-3 h-1.5 bg-secondary rounded-full overflow-hidden">
+                                        <div
+                                            className={`h-full rounded-full bg-gradient-to-r ${currentGradient} transition-all duration-500`}
+                                            style={{ width: `${progress}%` }}
+                                        />
+                                    </div>
+                                );
+                            })()}
                         </div>
 
                         {/* Cancellation Warning */}
                         {subscriptionDetails.stripe.cancelAtPeriodEnd && (
-                            <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                            <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20">
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-2">
                                         <AlertTriangle className="w-4 h-4 text-amber-500" />
@@ -638,12 +685,12 @@ const SubscriptionSettings: React.FC = () => {
                                     <button
                                         onClick={handleReactivateSubscription}
                                         disabled={isReactivating}
-                                        className="px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center gap-1"
+                                        className="px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center gap-1.5"
                                     >
                                         {isReactivating ? (
-                                            <Loader2 className="w-3 h-3 animate-spin" />
+                                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
                                         ) : (
-                                            <RotateCcw className="w-3 h-3" />
+                                            <RotateCcw className="w-3.5 h-3.5" />
                                         )}
                                         {t('settings.subscription.reactivate', 'Reactivar')}
                                     </button>
@@ -657,7 +704,7 @@ const SubscriptionSettings: React.FC = () => {
                                 <button
                                     onClick={() => handleCancelSubscription(false)}
                                     disabled={isCancelling}
-                                    className="text-sm text-red-500 hover:text-red-600 dark:hover:text-red-400 flex items-center gap-2 disabled:opacity-50"
+                                    className="text-sm text-red-500 hover:text-red-600 dark:hover:text-red-400 flex items-center gap-2 disabled:opacity-50 transition-colors"
                                 >
                                     {isCancelling ? (
                                         <Loader2 className="w-4 h-4 animate-spin" />
@@ -678,7 +725,7 @@ const SubscriptionSettings: React.FC = () => {
                     <div className="flex items-start gap-2">
                         <AlertTriangle className="w-4 h-4 text-red-500 mt-0.5" />
                         <div>
-                            <p className="text-sm text-red-600 dark:text-red-400 font-medium">
+                            <p className="text-sm text-red-600 dark:text-red-400 font-semibold">
                                 {t('settings.subscription.checkoutErrorTitle', 'Error al procesar')}
                             </p>
                             <p className="text-xs text-red-600/80 dark:text-red-400/80 mt-1">
@@ -701,27 +748,16 @@ const SubscriptionSettings: React.FC = () => {
                 }
                 variant="danger"
             />
+
+            {/* Shimmer animation style */}
+            <style>{`
+                @keyframes shimmer {
+                    0% { transform: translateX(-100%); }
+                    100% { transform: translateX(200%); }
+                }
+            `}</style>
         </div>
     );
 };
-
-// Helper component for feature items
-const FeatureItem: React.FC<{ label: string; value: string; included?: boolean }> = ({
-    label,
-    value,
-    included
-}) => (
-    <div className="flex items-center justify-between py-2 px-3 rounded-lg bg-secondary/30">
-        <span className="text-sm text-muted-foreground">{label}</span>
-        <span className={`text-sm font-medium ${included === false
-            ? 'text-muted-foreground/50'
-            : included === true
-                ? 'text-green-600 dark:text-green-400'
-                : 'text-foreground'
-            }`}>
-            {value}
-        </span>
-    </div>
-);
 
 export default SubscriptionSettings;

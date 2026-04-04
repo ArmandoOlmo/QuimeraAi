@@ -9179,5 +9179,34 @@
       "deprecated": "Deprecated",
       "beta": "Beta"
     }
+  },
+  "about": {
+    "badge": "Quimera.ai",
+    "heroTitle": "About Quimera AI",
+    "heroSubtitle": "Quimera was born from the vision of democratizing web creation with artificial intelligence. We believe every person and business deserves a professional digital presence, without technical barriers.",
+    "statSites": "Sites created",
+    "statCountries": "Countries",
+    "statUptime": "Uptime",
+    "statRating": "Rating",
+    "pillarMissionTitle": "Mission",
+    "pillarMissionDesc": "Empower every person and business to create a professional digital presence, eliminating technical barriers with artificial intelligence.",
+    "pillarVisionTitle": "Vision",
+    "pillarVisionDesc": "A world where any idea can become an extraordinary web experience, regardless of the creator's technical level.",
+    "pillarCommitmentTitle": "Commitment",
+    "pillarCommitmentDesc": "Continuous innovation, total transparency, and exceptional support for each of our users at every stage of their journey.",
+    "valuesTitle": "Our values",
+    "valuesSubtitle": "The principles that guide everything we build.",
+    "valueAiTitle": "AI at the creator's service",
+    "valueAiDesc": "We empower human creativity with artificial intelligence, without replacing it.",
+    "valueSpeedTitle": "Speed without compromise",
+    "valueSpeedDesc": "Ultra-fast sites with SSR, global CDN, and automatic image optimization.",
+    "valueDesignTitle": "Limitless design",
+    "valueDesignDesc": "Total creative freedom with a powerful visual editor and professional components.",
+    "valueSecurityTitle": "Security first",
+    "valueSecurityDesc": "SSL, automatic backups, advanced authentication, and privacy compliance.",
+    "ctaTitle": "Ready to create?",
+    "ctaSubtitle": "Join thousands of creators building their websites with Quimera AI.",
+    "ctaButton": "Start for free",
+    "ctaNote": "No credit card required"
   }
 }

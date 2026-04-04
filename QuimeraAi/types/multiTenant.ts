@@ -603,7 +603,7 @@ export const AGENCY_ROLE_DESCRIPTIONS: Record<AgencyRole, string> = {
 };
 
 export const AGENCY_ROLE_COLORS: Record<AgencyRole, string> = {
-    agency_owner: 'bg-gradient-to-r from-yellow-500 to-orange-500 text-white',
+    agency_owner: 'bg-amber-500/15 text-amber-400 border-amber-500/30',
     agency_admin: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
     agency_member: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
     client: 'bg-green-500/20 text-green-400 border-green-500/30',
