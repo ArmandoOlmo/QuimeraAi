@@ -11,7 +11,8 @@ import {
     Eye, EyeOff, Plus, Trash2, GripVertical, ChevronDown, ChevronUp,
     Sparkles, Link2, Upload, Bold, Italic, Underline, List,
     LayoutGrid, Columns, Rows, Clock, Play, Pause, Settings, ImageIcon,
-    RotateCcw, Info, Loader2, Grid, Check, FileText
+    RotateCcw, Info, Loader2, Grid, Check, FileText,
+    Waves, Wind, Flame, Droplets
 } from 'lucide-react';
 import ImagePicker from '../../ui/ImagePicker';
 import ImagePickerModal from '../../ui/ImagePickerModal';
@@ -206,6 +207,145 @@ const PaddingSelector: React.FC<{
     );
 };
 
+// Link Picker — dropdown for selecting internal routes, section anchors, articles, or custom URLs
+const LINK_CATEGORIES = [
+    {
+        label: 'Páginas Públicas',
+        items: [
+            { value: '/pricing', label: 'Precios' },
+            { value: '/features', label: 'Características' },
+            { value: '/about', label: 'Nosotros' },
+            { value: '/contact', label: 'Contacto' },
+            { value: '/blog', label: 'Blog' },
+            { value: '/help-center', label: 'Centro de Ayuda' },
+            { value: '/changelog', label: 'Changelog' },
+        ],
+    },
+    {
+        label: 'Secciones del Landing',
+        items: [
+            { value: '#hero', label: '↑ Hero' },
+            { value: '#features', label: '↓ Features' },
+            { value: '#pricing', label: '↓ Precios' },
+            { value: '#testimonials', label: '↓ Testimonios' },
+            { value: '#faq', label: '↓ FAQ' },
+            { value: '#cta', label: '↓ CTA' },
+        ],
+    },
+    {
+        label: 'Autenticación',
+        items: [
+            { value: '/register', label: 'Registrarse' },
+            { value: '/login', label: 'Iniciar Sesión' },
+        ],
+    },
+    {
+        label: 'Legal',
+        items: [
+            { value: '/privacy-policy', label: 'Privacidad' },
+            { value: '/terms-of-service', label: 'Términos' },
+            { value: '/cookie-policy', label: 'Cookies' },
+            { value: '/data-deletion', label: 'Eliminación de Datos' },
+        ],
+    },
+];
+
+const LinkPicker: React.FC<{
+    value: string;
+    onChange: (value: string) => void;
+    placeholder?: string;
+}> = ({ value, onChange, placeholder }) => {
+    const { t } = useTranslation();
+    const [isOpen, setIsOpen] = useState(false);
+    const [customUrl, setCustomUrl] = useState('');
+    const [mode, setMode] = useState<'preset' | 'custom'>(
+        value && !LINK_CATEGORIES.flatMap(c => c.items).some(i => i.value === value) && value !== ''
+            ? 'custom'
+            : 'preset'
+    );
+
+    // Find label for current value
+    const currentLabel = LINK_CATEGORIES.flatMap(c => c.items).find(i => i.value === value)?.label;
+
+    return (
+        <div className="space-y-2">
+            {/* Mode toggle */}
+            <div className="flex bg-editor-panel-bg p-0.5 rounded-md border border-editor-border">
+                <button
+                    onClick={() => setMode('preset')}
+                    className={`flex-1 py-1 text-[10px] font-bold uppercase tracking-wider rounded-sm transition-colors ${mode === 'preset' ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:text-editor-text-primary'}`}
+                >
+                    {t('landingEditor.linkPages', 'Páginas')}
+                </button>
+                <button
+                    onClick={() => setMode('custom')}
+                    className={`flex-1 py-1 text-[10px] font-bold uppercase tracking-wider rounded-sm transition-colors ${mode === 'custom' ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:text-editor-text-primary'}`}
+                >
+                    {t('landingEditor.linkCustom', 'URL Manual')}
+                </button>
+            </div>
+
+            {mode === 'preset' ? (
+                <div className="relative">
+                    <button
+                        onClick={() => setIsOpen(!isOpen)}
+                        className="w-full flex items-center justify-between px-3 py-2 rounded-lg border border-editor-border bg-editor-bg text-sm hover:border-editor-accent/50 transition-colors"
+                    >
+                        <span className={value && currentLabel ? 'text-editor-text-primary' : 'text-editor-text-secondary'}>
+                            {currentLabel || (value ? value : t('landingEditor.selectLink', 'Seleccionar destino...'))}
+                        </span>
+                        <ChevronDown size={14} className={`text-editor-text-secondary transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                    </button>
+
+                    {isOpen && (
+                        <div className="absolute top-full left-0 right-0 mt-1 bg-editor-bg border border-editor-border rounded-lg shadow-xl z-50 max-h-64 overflow-y-auto">
+                            {LINK_CATEGORIES.map((category) => (
+                                <div key={category.label}>
+                                    <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-editor-text-secondary bg-editor-panel-bg/80 sticky top-0">
+                                        {category.label}
+                                    </div>
+                                    {category.items.map((item) => (
+                                        <button
+                                            key={item.value}
+                                            onClick={() => {
+                                                onChange(item.value);
+                                                setIsOpen(false);
+                                            }}
+                                            className={`w-full text-left px-3 py-2 text-sm hover:bg-editor-accent/10 transition-colors flex items-center justify-between ${value === item.value ? 'bg-editor-accent/10 text-editor-accent' : 'text-editor-text-primary'}`}
+                                        >
+                                            <span>{item.label}</span>
+                                            <span className="text-[10px] text-editor-text-secondary font-mono">{item.value}</span>
+                                        </button>
+                                    ))}
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            ) : (
+                <input
+                    type="text"
+                    value={value || customUrl}
+                    onChange={(e) => {
+                        setCustomUrl(e.target.value);
+                        onChange(e.target.value);
+                    }}
+                    placeholder={placeholder || 'https://... o /ruta-interna'}
+                    className="w-full px-3 py-2 rounded-lg border border-editor-border bg-editor-bg text-sm focus:outline-none focus:ring-2 focus:ring-editor-accent/50 font-mono"
+                />
+            )}
+
+            {/* Current value indicator */}
+            {value && (
+                <div className="flex items-center gap-1.5 text-[10px] text-editor-text-secondary">
+                    <Link2 size={10} />
+                    <span className="font-mono truncate">{value}</span>
+                </div>
+            )}
+        </div>
+    );
+};
+
 // ============================================================================
 // SECTION CONTROLS
 // ============================================================================
@@ -386,10 +526,27 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
         <div className="space-y-4">
             {activeTab === 'content' && (
                 <>
+                    <ControlGroup label={t('landingEditor.heroImage', 'Imagen del Hero')}>
+                        <Toggle
+                            label={t('landingEditor.showHeroImage', 'Mostrar Imagen')}
+                            checked={data.heroImageVisible !== false}
+                            onChange={(v) => updateData('heroImageVisible', v)}
+                        />
+                        {data.heroImageVisible !== false && (
+                            <ImagePicker
+                                label="Hero Image"
+                                value={data.heroImage || data.imageUrl || ''}
+                                onChange={(url) => updateData('heroImage', url)}
+                                destination="global"
+                                generationContext="background"
+                            />
+                        )}
+                    </ControlGroup>
+
                     <ControlGroup label={t('landingEditor.heroTitle', 'Título Principal')}>
                         <TextInput
-                            value={data.headline || ''}
-                            onChange={(v) => updateData('headline', v)}
+                            value={data.title || data.headline || ''}
+                            onChange={(v) => updateData('title', v)}
                             placeholder="Ej: Crea tu Sitio Web con IA"
                         />
                         <FontSizeSelector
@@ -401,8 +558,8 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
 
                     <ControlGroup label={t('landingEditor.heroSubtitle', 'Subtítulo')}>
                         <TextInput
-                            value={data.subheadline || ''}
-                            onChange={(v) => updateData('subheadline', v)}
+                            value={data.subtitle || data.subheadline || ''}
+                            onChange={(v) => updateData('subtitle', v)}
                             placeholder="Ej: La forma más rápida de crear sitios web profesionales"
                             multiline
                         />
@@ -415,14 +572,13 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
 
                     <ControlGroup label={t('landingEditor.primaryButton', 'Botón Principal')}>
                         <TextInput
-                            value={data.primaryCta || ''}
-                            onChange={(v) => updateData('primaryCta', v)}
+                            value={data.primaryButtonText || data.primaryCta || ''}
+                            onChange={(v) => updateData('primaryButtonText', v)}
                             placeholder="Ej: Comenzar Gratis"
                         />
-                        <TextInput
-                            value={data.primaryCtaLink || ''}
+                        <LinkPicker
+                            value={data.primaryCtaLink || '/register'}
                             onChange={(v) => updateData('primaryCtaLink', v)}
-                            placeholder="/register o https://..."
                         />
                     </ControlGroup>
 
@@ -435,44 +591,188 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                         {data.showSecondaryButton !== false && (
                             <>
                                 <TextInput
-                                    value={data.secondaryCta || ''}
-                                    onChange={(v) => updateData('secondaryCta', v)}
+                                    value={data.secondaryButtonText || data.secondaryCta || ''}
+                                    onChange={(v) => updateData('secondaryButtonText', v)}
                                     placeholder="Ej: Ver Demo"
                                 />
-                                <TextInput
-                                    value={data.secondaryCtaLink || ''}
+                                <LinkPicker
+                                    value={data.secondaryCtaLink || '#features'}
                                     onChange={(v) => updateData('secondaryCtaLink', v)}
-                                    placeholder="/demo o https://..."
                                 />
                             </>
                         )}
-                    </ControlGroup>
-
-                    <ControlGroup label={t('landingEditor.heroImage', 'Imagen de Fondo')}>
-                        <ImagePicker
-                            label="Hero Image"
-                            value={data.imageUrl || ''}
-                            onChange={(url) => updateData('imageUrl', url)}
-                        />
                     </ControlGroup>
                 </>
             )}
             {activeTab === 'style' && (
                 <>
+                    {/* Animation Controls */}
+                    <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-4">
+                        <Toggle
+                            label={t('landingEditor.heroAnimation', 'Animación de Fondo')}
+                            checked={data.heroAnimationEnabled !== false}
+                            onChange={(v) => updateData('heroAnimationEnabled', v)}
+                        />
+                        {data.heroAnimationEnabled !== false && (
+                            <div className="space-y-2">
+                                <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider block">
+                                    {t('landingEditor.animationType', 'Tipo de Animación')}
+                                </label>
+                                <div className="grid grid-cols-2 gap-2">
+                                    {[
+                                        { id: 'goldRibbons', icon: Waves, label: 'Gold Ribbons' },
+                                        { id: 'auroraGlow', icon: Wind, label: 'Aurora Glow' },
+                                        { id: 'particleField', icon: Sparkles, label: 'Particle Field' },
+                                        { id: 'liquidMetal', icon: Droplets, label: 'Liquid Metal' },
+                                    ].map((anim) => (
+                                        <button
+                                            key={anim.id}
+                                            onClick={() => updateData('heroAnimationType', anim.id)}
+                                            className={`flex flex-col items-center justify-center p-3 rounded-lg border transition-all gap-1.5 ${(data.heroAnimationType || 'goldRibbons') === anim.id
+                                                ? 'bg-editor-accent/10 border-editor-accent text-editor-accent'
+                                                : 'bg-editor-panel-bg border-editor-border hover:border-editor-accent/50 text-editor-text-secondary'
+                                            }`}
+                                            title={anim.label}
+                                        >
+                                            <anim.icon size={20} />
+                                            <span className="text-[10px] font-semibold uppercase tracking-wide">{anim.label}</span>
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Background Image Controls */}
+                    <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-4">
+                        <Toggle
+                            label={t('landingEditor.heroBgImage', 'Imagen de Fondo del Hero')}
+                            checked={data.heroBgImageEnabled || false}
+                            onChange={(v) => updateData('heroBgImageEnabled', v)}
+                        />
+                        {data.heroBgImageEnabled && (
+                            <div className="space-y-4 animate-fade-in-up">
+                                <ImagePicker
+                                    label="Background Image"
+                                    value={data.heroBgImageUrl || ''}
+                                    onChange={(url) => updateData('heroBgImageUrl', url)}
+                                    destination="global"
+                                    generationContext="background"
+                                />
+
+                                {/* Object Fit */}
+                                <div>
+                                    <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider block mb-2">
+                                        {t('landingEditor.bgObjectFit', 'Ajuste de Imagen')}
+                                    </label>
+                                    <div className="grid grid-cols-4 gap-1 bg-editor-bg p-1 rounded-md border border-editor-border">
+                                        {[
+                                            { id: 'cover', label: 'Cover' },
+                                            { id: 'contain', label: 'Contain' },
+                                            { id: 'fill', label: 'Fill' },
+                                            { id: 'none', label: 'Original' },
+                                        ].map((opt) => (
+                                            <button
+                                                key={opt.id}
+                                                onClick={() => updateData('heroBgObjectFit', opt.id)}
+                                                className={`px-2 py-1.5 text-[10px] font-semibold rounded-sm transition-colors uppercase tracking-wide ${(data.heroBgObjectFit || 'cover') === opt.id
+                                                    ? 'bg-editor-accent text-editor-bg'
+                                                    : 'text-editor-text-secondary hover:bg-editor-border'
+                                                }`}
+                                            >
+                                                {opt.label}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Background Position */}
+                                <div>
+                                    <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider block mb-2">
+                                        {t('landingEditor.bgPosition', 'Posición')}
+                                    </label>
+                                    <div className="grid grid-cols-3 gap-1 bg-editor-bg p-1.5 rounded-md border border-editor-border w-fit mx-auto">
+                                        {[
+                                            { id: 'top left', label: '↖' },
+                                            { id: 'top center', label: '↑' },
+                                            { id: 'top right', label: '↗' },
+                                            { id: 'center left', label: '←' },
+                                            { id: 'center center', label: '●' },
+                                            { id: 'center right', label: '→' },
+                                            { id: 'bottom left', label: '↙' },
+                                            { id: 'bottom center', label: '↓' },
+                                            { id: 'bottom right', label: '↘' },
+                                        ].map((pos) => (
+                                            <button
+                                                key={pos.id}
+                                                onClick={() => updateData('heroBgPosition', pos.id)}
+                                                className={`w-8 h-8 flex items-center justify-center rounded-sm transition-all text-sm ${(data.heroBgPosition || 'center center') === pos.id
+                                                    ? 'bg-editor-accent text-editor-bg shadow-md scale-110'
+                                                    : 'text-editor-text-secondary hover:bg-editor-border hover:text-editor-text-primary'
+                                                }`}
+                                                title={pos.id}
+                                            >
+                                                {pos.label}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Blur */}
+                                <div>
+                                    <div className="flex justify-between items-center mb-1">
+                                        <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
+                                            {t('landingEditor.bgBlur', 'Desenfoque')}
+                                        </label>
+                                        <span className="text-xs font-mono text-editor-text-primary">{data.heroBgBlur || 0}px</span>
+                                    </div>
+                                    <input
+                                        type="range"
+                                        min="0"
+                                        max="20"
+                                        step="1"
+                                        value={data.heroBgBlur || 0}
+                                        onChange={(e) => updateData('heroBgBlur', parseInt(e.target.value))}
+                                        className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
+                                    />
+                                </div>
+
+                                {/* Image Opacity */}
+                                <div>
+                                    <div className="flex justify-between items-center mb-1">
+                                        <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
+                                            {t('landingEditor.bgOpacity', 'Opacidad de Imagen')}
+                                        </label>
+                                        <span className="text-xs font-mono text-editor-text-primary">{data.heroBgOpacity ?? 100}%</span>
+                                    </div>
+                                    <input
+                                        type="range"
+                                        min="0"
+                                        max="100"
+                                        step="5"
+                                        value={data.heroBgOpacity ?? 100}
+                                        onChange={(e) => updateData('heroBgOpacity', parseInt(e.target.value))}
+                                        className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
+                                    />
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
                     <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-4">
                         <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider block">
                             {t('landingEditor.layout', 'DISEÑO Y ESTRUCTURA')}
                         </label>
                         <div className="grid grid-cols-3 gap-2">
                             {[
-                                { id: 'center', icon: AlignCenter, label: 'Centrado' },
-                                { id: 'left-top', icon: AlignLeft, label: 'Izquierda' },
-                                { id: 'right-bottom', icon: AlignRight, label: 'Derecha' }
+                                { id: 'centered', icon: AlignCenter, label: 'Centrado' },
+                                { id: 'left', icon: AlignLeft, label: 'Izquierda' },
+                                { id: 'right', icon: AlignRight, label: 'Derecha' }
                             ].map((option) => (
                                 <button
                                     key={option.id}
-                                    onClick={() => updateData('textLayout', option.id)}
-                                    className={`flex flex-col items-center justify-center p-3 rounded-lg border transition-all ${data.textLayout === option.id || (!data.textLayout && option.id === 'center')
+                                    onClick={() => updateData('layout', option.id)}
+                                    className={`flex flex-col items-center justify-center p-3 rounded-lg border transition-all ${(data.layout || 'centered') === option.id
                                         ? 'bg-editor-accent/10 border-editor-accent text-primary'
                                         : 'bg-editor-panel-bg border-editor-border hover:border-editor-accent/50 text-editor-text-secondary'
                                         }`}
@@ -1099,14 +1399,13 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                                             }}
                                             placeholder={t('landingEditor.buttonText', 'Texto del botón')}
                                         />
-                                        <TextInput
-                                            value={tier.buttonLink || ''}
+                                        <LinkPicker
+                                            value={tier.buttonLink || '/register'}
                                             onChange={(v) => {
                                                 const newTiers = [...tiers];
                                                 newTiers[idx] = { ...newTiers[idx], buttonLink: v };
                                                 updateData('tiers', newTiers);
                                             }}
-                                            placeholder={t('landingEditor.buttonLink', 'Enlace del botón')}
                                         />
                                     </div>
 
@@ -1827,53 +2126,13 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                         />
                     </ControlGroup>
 
-                    {/* Link Type Selector */}
-                    <ControlGroup label={t('landingEditor.linkType', 'Tipo de Enlace')}>
-                        <div className="flex bg-editor-panel-bg/50 rounded-md border border-editor-border p-1">
-                            {[
-                                { value: 'manual', label: 'URL' },
-                                { value: 'section', label: 'Sección' },
-                            ].map((type) => (
-                                <button
-                                    key={type.value}
-                                    onClick={() => updateData('linkType', type.value)}
-                                    className={`flex-1 py-1.5 text-xs font-medium rounded-sm transition-colors ${(data.linkType || 'manual') === type.value
-                                        ? 'bg-editor-accent text-editor-bg'
-                                        : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-panel-bg'
-                                        }`}
-                                >
-                                    {type.label}
-                                </button>
-                            ))}
-                        </div>
+                    {/* Button Link */}
+                    <ControlGroup label={t('landingEditor.buttonLink', 'Enlace del Botón')}>
+                        <LinkPicker
+                            value={data.buttonLink || data.buttonUrl || '/register'}
+                            onChange={(v) => updateData('buttonLink', v)}
+                        />
                     </ControlGroup>
-
-                    {/* Button Link based on type */}
-                    {(data.linkType === 'manual' || !data.linkType) && (
-                        <ControlGroup label={t('landingEditor.buttonUrl', 'URL del Botón')}>
-                            <TextInput
-                                value={data.buttonUrl || data.buttonLink || ''}
-                                onChange={(v) => updateData('buttonUrl', v)}
-                                placeholder="https://example.com"
-                            />
-                            <p className="text-xs text-editor-text-secondary mt-1">
-                                Usa URLs para enlaces externos o rutas relativas (/registro)
-                            </p>
-                        </ControlGroup>
-                    )}
-
-                    {data.linkType === 'section' && (
-                        <ControlGroup label={t('landingEditor.sectionAnchor', 'Ancla de Sección')}>
-                            <TextInput
-                                value={data.buttonUrl || data.buttonLink || ''}
-                                onChange={(v) => updateData('buttonUrl', v)}
-                                placeholder="#contacto"
-                            />
-                            <p className="text-xs text-editor-text-secondary mt-1">
-                                Usa # seguido del ID de la sección (ej: #contacto, #precios)
-                            </p>
-                        </ControlGroup>
-                    )}
                 </>
             )}
 
@@ -4767,38 +5026,46 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                 <>
                     <ControlGroup label={t('landingEditor.headline', 'Título Principal')}>
                         <TextInput
-                            value={data.headline || ''}
-                            onChange={(v) => updateData('headline', v)}
+                            value={data.title || data.headline || ''}
+                            onChange={(v) => updateData('title', v)}
                             placeholder={t('landingEditor.headlinePlaceholder', 'Tu título aquí')}
                         />
                     </ControlGroup>
                     <ControlGroup label={t('landingEditor.subheadline', 'Subtítulo')}>
                         <TextInput
-                            value={data.subheadline || ''}
-                            onChange={(v) => updateData('subheadline', v)}
+                            value={data.subtitle || data.subheadline || ''}
+                            onChange={(v) => updateData('subtitle', v)}
                             placeholder={t('landingEditor.subheadlinePlaceholder', 'Descripción breve')}
                             multiline
                         />
                     </ControlGroup>
                     <ControlGroup label={t('landingEditor.primaryCta', 'Botón Principal')}>
                         <TextInput
-                            value={data.primaryCta || ''}
-                            onChange={(v) => updateData('primaryCta', v)}
+                            value={data.primaryButtonText || data.primaryCta || ''}
+                            onChange={(v) => updateData('primaryButtonText', v)}
                             placeholder={t('landingEditor.ctaPlaceholder', 'Comenzar')}
+                        />
+                        <LinkPicker
+                            value={data.primaryCtaLink || '/register'}
+                            onChange={(v) => updateData('primaryCtaLink', v)}
                         />
                     </ControlGroup>
                     <ControlGroup label={t('landingEditor.secondaryCta', 'Botón Secundario')}>
                         <TextInput
-                            value={data.secondaryCta || ''}
-                            onChange={(v) => updateData('secondaryCta', v)}
+                            value={data.secondaryButtonText || data.secondaryCta || ''}
+                            onChange={(v) => updateData('secondaryButtonText', v)}
                             placeholder={t('landingEditor.ctaSecondaryPlaceholder', 'Saber más')}
+                        />
+                        <LinkPicker
+                            value={data.secondaryCtaLink || '#features'}
+                            onChange={(v) => updateData('secondaryCtaLink', v)}
                         />
                     </ControlGroup>
                     <ControlGroup label={t('landingEditor.image', 'Imagen')}>
                         <ImagePicker
-                            currentImage={data.imageUrl || ''}
-                            onSelectImage={(url) => updateData('imageUrl', url)}
-                            prompt={data.headline || 'hero image'}
+                            label="Hero Image"
+                            value={data.heroImage || data.imageUrl || ''}
+                            onChange={(url) => updateData('heroImage', url)}
                         />
                     </ControlGroup>
                 </>

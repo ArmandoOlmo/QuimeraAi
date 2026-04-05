@@ -399,6 +399,30 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
     setIsMobileMenuOpen(false);
   };
 
+  // Generic link navigation for CTA buttons — handles anchors, internal routes, external URLs
+  const navigateToLink = (href: string) => {
+    if (!href) return;
+    if (href.startsWith('#')) {
+      // Anchor scroll
+      const anchorId = href.slice(1);
+      const element =
+        document.getElementById(`section-${anchorId}`) ||
+        document.getElementById(anchorId);
+      element?.scrollIntoView({ behavior: 'smooth' });
+    } else if (href === '/register') {
+      onNavigateToRegister();
+    } else if (href === '/login') {
+      onNavigateToLogin();
+    } else if (href === '/blog' && onNavigateToBlog) {
+      onNavigateToBlog();
+    } else if (href.startsWith('/')) {
+      window.history.pushState(null, '', href);
+      window.dispatchEvent(new PopStateEvent('popstate'));
+    } else if (href.startsWith('http')) {
+      window.open(href, '_blank');
+    }
+  };
+
   // Article Card Component
   const ArticleCard: React.FC<{ article: AppArticle; onClick: () => void }> = ({ article, onClick }) => (
     <div
@@ -472,6 +496,14 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
         const gradientDirection = currentSectionData?.gradientDirection || 'to bottom';
         const gradientStart = currentSectionData?.gradientStart || (sectionType === 'heroGradient' ? '#ff0080' : '#000000');
         const gradientEnd = currentSectionData?.gradientEnd || (sectionType === 'heroGradient' ? '#7928ca' : 'transparent');
+        const heroAnimationEnabled = currentSectionData?.heroAnimationEnabled !== false;
+        const heroAnimationType = currentSectionData?.heroAnimationType || 'goldRibbons';
+        const heroBgImageEnabled = currentSectionData?.heroBgImageEnabled || false;
+        const heroBgImageUrl = currentSectionData?.heroBgImageUrl || '';
+        const heroBgObjectFit = currentSectionData?.heroBgObjectFit || 'cover';
+        const heroBgPosition = currentSectionData?.heroBgPosition || 'center center';
+        const heroBgBlur = currentSectionData?.heroBgBlur || 0;
+        const heroBgOpacity = (currentSectionData?.heroBgOpacity ?? 100) / 100;
 
         const heroAlignmentClasses = heroLayout === 'left' ? 'items-start text-left'
           : heroLayout === 'right' ? 'items-end text-right'
@@ -504,7 +536,26 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
               className={`min-h-screen flex flex-col justify-center pt-16 sm:pt-20 px-4 sm:px-6 relative overflow-hidden ${heroAlignmentClasses}`}
               style={sectionStyle}
             >
-              {/* Flowing Gold Liquid 3D Background */}
+              {/* Hero Background Image */}
+              {heroBgImageEnabled && heroBgImageUrl && (
+                <div className="absolute inset-0 z-0 pointer-events-none">
+                  <img
+                    src={heroBgImageUrl}
+                    alt=""
+                    className="w-full h-full"
+                    style={{
+                      objectFit: heroBgObjectFit as any,
+                      objectPosition: heroBgPosition,
+                      filter: heroBgBlur > 0 ? `blur(${heroBgBlur}px)` : undefined,
+                      opacity: heroBgOpacity,
+                      transform: heroBgBlur > 0 ? 'scale(1.05)' : undefined,
+                    }}
+                  />
+                </div>
+              )}
+              {/* Hero Background Animations */}
+              {heroAnimationEnabled && heroAnimationType === 'goldRibbons' && (
+              <>
               <div className="absolute inset-0 z-0 pointer-events-none">
                 {/* Deep warm ambient glow layers */}
                 <div className="absolute inset-0" style={{
@@ -940,27 +991,172 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
                   }
                 `}</style>
               </div>
+              </>
+              )}
+
+              {/* Aurora Glow Animation */}
+              {heroAnimationEnabled && heroAnimationType === 'auroraGlow' && (
+              <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+                <div className="absolute" style={{ width: '50%', height: '50%', left: '5%', top: '10%', background: 'radial-gradient(ellipse, rgba(218,165,32,0.25) 0%, transparent 70%)', filter: 'blur(100px)', animation: 'auroraMove1 18s ease-in-out infinite' }} />
+                <div className="absolute" style={{ width: '45%', height: '45%', right: '5%', top: '5%', background: 'radial-gradient(ellipse, rgba(255,220,80,0.2) 0%, transparent 70%)', filter: 'blur(120px)', animation: 'auroraMove2 22s ease-in-out infinite' }} />
+                <div className="absolute" style={{ width: '40%', height: '55%', left: '30%', bottom: '10%', background: 'radial-gradient(ellipse, rgba(180,130,20,0.2) 0%, transparent 70%)', filter: 'blur(90px)', animation: 'auroraMove3 25s ease-in-out infinite' }} />
+                <div className="absolute" style={{ width: '35%', height: '40%', left: '55%', top: '25%', background: 'radial-gradient(ellipse, rgba(255,200,50,0.15) 0%, transparent 70%)', filter: 'blur(110px)', animation: 'auroraMove4 20s ease-in-out infinite' }} />
+                <div className="absolute" style={{ width: '30%', height: '35%', left: '10%', top: '40%', background: 'radial-gradient(ellipse, rgba(200,150,30,0.12) 0%, transparent 70%)', filter: 'blur(100px)', animation: 'auroraMove5 28s ease-in-out infinite' }} />
+                <style>{`
+                  @keyframes auroraMove1 { 0%,100%{transform:translate(0,0) scale(1)} 25%{transform:translate(80px,-60px) scale(1.15)} 50%{transform:translate(-40px,50px) scale(0.9)} 75%{transform:translate(60px,30px) scale(1.1)} }
+                  @keyframes auroraMove2 { 0%,100%{transform:translate(0,0) scale(1)} 30%{transform:translate(-70px,40px) scale(1.2)} 60%{transform:translate(50px,-50px) scale(0.85)} 80%{transform:translate(-30px,-20px) scale(1.05)} }
+                  @keyframes auroraMove3 { 0%,100%{transform:translate(0,0) scale(1)} 20%{transform:translate(60px,-70px) scale(1.1)} 50%{transform:translate(-80px,30px) scale(1.2)} 80%{transform:translate(40px,50px) scale(0.9)} }
+                  @keyframes auroraMove4 { 0%,100%{transform:translate(0,0) scale(1)} 35%{transform:translate(-50px,-40px) scale(1.15)} 65%{transform:translate(70px,60px) scale(0.95)} 85%{transform:translate(-20px,30px) scale(1.05)} }
+                  @keyframes auroraMove5 { 0%,100%{transform:translate(0,0) scale(1)} 40%{transform:translate(50px,40px) scale(1.1)} 70%{transform:translate(-60px,-30px) scale(1.2)} }
+                `}</style>
+              </div>
+              )}
+
+              {/* Particle Field Animation */}
+              {heroAnimationEnabled && heroAnimationType === 'particleField' && (
+              <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+                <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse 100% 70% at 50% 50%, rgba(218,165,32,0.08) 0%, transparent 70%)' }} />
+                {Array.from({length: 24}).map((_, i) => {
+                  const x = (i * 17 + 7) % 100;
+                  const y = (i * 23 + 11) % 80 + 5;
+                  const size = 2 + (i % 4);
+                  const dur = 12 + (i % 8) * 2;
+                  const delay = (i * 0.7) % 6;
+                  const orbitRadius = 20 + (i % 5) * 15;
+                  return (
+                    <div key={`pf-${i}`} className="absolute" style={{ left: `${x}%`, top: `${y}%`, width: `${size}px`, height: `${size}px`, borderRadius: '50%', background: `radial-gradient(circle, rgba(255,220,80,${0.6 + (i%3)*0.15}) 0%, rgba(218,165,32,0.2) 100%)`, boxShadow: `0 0 ${size*3}px rgba(218,165,32,0.4), 0 0 ${size*6}px rgba(218,165,32,0.15)`, animation: `particleOrbit${i%6} ${dur}s ease-in-out ${delay}s infinite` }} />
+                  );
+                })}
+                <style>{`
+                  @keyframes particleOrbit0 { 0%,100%{transform:translate(0,0) scale(1);opacity:.4} 25%{transform:translate(25px,-35px) scale(1.3);opacity:.8} 50%{transform:translate(-15px,-55px) scale(.7);opacity:.3} 75%{transform:translate(30px,-20px) scale(1.1);opacity:.7} }
+                  @keyframes particleOrbit1 { 0%,100%{transform:translate(0,0) scale(1);opacity:.5} 30%{transform:translate(-30px,20px) scale(1.4);opacity:.9} 60%{transform:translate(20px,-40px) scale(.8);opacity:.3} 85%{transform:translate(-10px,15px) scale(1.2);opacity:.6} }
+                  @keyframes particleOrbit2 { 0%,100%{transform:translate(0,0) scale(1);opacity:.3} 20%{transform:translate(35px,25px) scale(1.2);opacity:.7} 55%{transform:translate(-25px,-30px) scale(.9);opacity:.4} 80%{transform:translate(15px,35px) scale(1.3);opacity:.8} }
+                  @keyframes particleOrbit3 { 0%,100%{transform:translate(0,0) scale(1);opacity:.45} 35%{transform:translate(-20px,-45px) scale(1.5);opacity:.85} 65%{transform:translate(30px,15px) scale(.6);opacity:.25} 90%{transform:translate(-15px,-10px) scale(1.1);opacity:.6} }
+                  @keyframes particleOrbit4 { 0%,100%{transform:translate(0,0) scale(1);opacity:.35} 25%{transform:translate(40px,-15px) scale(1.2);opacity:.75} 50%{transform:translate(-30px,35px) scale(.85);opacity:.3} 75%{transform:translate(10px,-40px) scale(1.4);opacity:.8} }
+                  @keyframes particleOrbit5 { 0%,100%{transform:translate(0,0) scale(1);opacity:.5} 30%{transform:translate(-35px,-25px) scale(1.3);opacity:.7} 60%{transform:translate(25px,40px) scale(.75);opacity:.35} 85%{transform:translate(-20px,10px) scale(1.15);opacity:.65} }
+                `}</style>
+              </div>
+              )}
+
+              {/* Liquid Metal Animation */}
+              {heroAnimationEnabled && heroAnimationType === 'liquidMetal' && (
+              <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden" style={{ filter: 'url(#gooey-metal)' }}>
+                {/* SVG Filter for Gooey Metaball Effect */}
+                <svg className="absolute hidden">
+                  <defs>
+                    <filter id="gooey-metal">
+                      <feGaussianBlur in="SourceGraphic" stdDeviation="15" result="blur" />
+                      <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 40 -15" result="gooey" />
+                      <feBlend in="SourceGraphic" in2="gooey" />
+                    </filter>
+                  </defs>
+                </svg>
+
+                {/* Metallic Drops */}
+                <div className="absolute inset-0 z-0 opacity-80">
+                  <div className="absolute w-40 h-40 rounded-full left-1/4 top-1/3" style={{ background: 'radial-gradient(circle at 30% 30%, #fffde7, #fbc02d, #f57f17)', boxShadow: 'inset -15px -15px 30px rgba(130,100,0,0.8), 0 20px 40px rgba(0,0,0,0.3)', animation: 'dropFloat1 15s infinite alternate ease-in-out' }} />
+                  <div className="absolute w-60 h-60 rounded-full left-1/2 top-1/2" style={{ background: 'radial-gradient(circle at 30% 30%, #fffde7, #fbc02d, #f57f17)', boxShadow: 'inset -20px -20px 40px rgba(130,100,0,0.8), 0 20px 50px rgba(0,0,0,0.3)', animation: 'dropFloat2 20s infinite alternate ease-in-out' }} />
+                  <div className="absolute w-32 h-32 rounded-full left-2/3 top-1/4" style={{ background: 'radial-gradient(circle at 30% 30%, #fffde7, #ffb300, #ff6f00)', boxShadow: 'inset -10px -10px 20px rgba(130,100,0,0.8), 0 10px 30px rgba(0,0,0,0.2)', animation: 'dropFloat3 18s infinite alternate ease-in-out' }} />
+                  <div className="absolute w-48 h-48 rounded-full left-1/3 top-2/3" style={{ background: 'radial-gradient(circle at 30% 30%, #fffde7, #fbc02d, #f57f17)', boxShadow: 'inset -18px -18px 35px rgba(130,100,0,0.8), 0 15px 40px rgba(0,0,0,0.3)', animation: 'dropFloat4 22s infinite alternate ease-in-out' }} />
+                  <div className="absolute w-24 h-24 rounded-full left-3/4 top-2/3" style={{ background: 'radial-gradient(circle at 30% 30%, #fffde7, #ffb300, #ff6f00)', boxShadow: 'inset -8px -8px 15px rgba(130,100,0,0.8), 0 10px 20px rgba(0,0,0,0.2)', animation: 'dropFloat5 16s infinite alternate ease-in-out' }} />
+                  
+                  {/* Additional Drops for Richer Effect */}
+                  <div className="absolute w-20 h-20 rounded-full left-1/5 top-1/5" style={{ background: 'radial-gradient(circle at 30% 30%, #fffde7, #fbc02d, #f57f17)', boxShadow: 'inset -10px -10px 20px rgba(130,100,0,0.8), 0 10px 20px rgba(0,0,0,0.2)', animation: 'dropFloat6 14s infinite alternate ease-in-out' }} />
+                  <div className="absolute w-52 h-52 rounded-full left-3/5 top-1/6" style={{ background: 'radial-gradient(circle at 30% 30%, #fffde7, #ffb300, #ff6f00)', boxShadow: 'inset -16px -16px 30px rgba(130,100,0,0.8), 0 15px 35px rgba(0,0,0,0.3)', animation: 'dropFloat7 24s infinite alternate ease-in-out' }} />
+                  <div className="absolute w-36 h-36 rounded-full left-4/5 top-1/2" style={{ background: 'radial-gradient(circle at 30% 30%, #fffde7, #fbc02d, #f57f17)', boxShadow: 'inset -12px -12px 25px rgba(130,100,0,0.8), 0 15px 25px rgba(0,0,0,0.25)', animation: 'dropFloat8 19s infinite alternate ease-in-out' }} />
+                  <div className="absolute w-28 h-28 rounded-full left-1/6 top-3/4" style={{ background: 'radial-gradient(circle at 30% 30%, #fffde7, #ffb300, #ff6f00)', boxShadow: 'inset -10px -10px 20px rgba(130,100,0,0.8), 0 10px 30px rgba(0,0,0,0.2)', animation: 'dropFloat9 17s infinite alternate ease-in-out' }} />
+                  <div className="absolute w-16 h-16 rounded-full left-1/2 top-4/5" style={{ background: 'radial-gradient(circle at 30% 30%, #fffde7, #fbc02d, #f57f17)', boxShadow: 'inset -6px -6px 12px rgba(130,100,0,0.8), 0 5px 15px rgba(0,0,0,0.2)', animation: 'dropFloat10 13s infinite alternate ease-in-out' }} />
+                </div>
+                
+                <style>{`
+                  @keyframes dropFloat1 {
+                    0% { transform: translate(0, 0) scale(1) rotate(0deg); }
+                    33% { transform: translate(150px, -100px) scale(1.1) rotate(45deg); }
+                    66% { transform: translate(50px, 150px) scale(0.9) rotate(90deg); }
+                    100% { transform: translate(-100px, 50px) scale(1.05) rotate(135deg); }
+                  }
+                  @keyframes dropFloat2 {
+                    0% { transform: translate(0, 0) scale(1) rotate(0deg); }
+                    33% { transform: translate(-100px, 150px) scale(0.95) rotate(-45deg); }
+                    66% { transform: translate(-200px, -50px) scale(1.15) rotate(-90deg); }
+                    100% { transform: translate(100px, -100px) scale(0.85) rotate(-135deg); }
+                  }
+                  @keyframes dropFloat3 {
+                    0% { transform: translate(0, 0) scale(1.1) rotate(0deg); }
+                    33% { transform: translate(-150px, -150px) scale(0.9) rotate(60deg); }
+                    66% { transform: translate(100px, 50px) scale(1.2) rotate(120deg); }
+                    100% { transform: translate(-50px, 150px) scale(0.95) rotate(180deg); }
+                  }
+                  @keyframes dropFloat4 {
+                    0% { transform: translate(0, 0) scale(0.9) rotate(0deg); }
+                    33% { transform: translate(200px, -50px) scale(1.1) rotate(-60deg); }
+                    66% { transform: translate(-50px, -150px) scale(0.95) rotate(-120deg); }
+                    100% { transform: translate(-150px, 100px) scale(1.05) rotate(-180deg); }
+                  }
+                  @keyframes dropFloat5 {
+                    0% { transform: translate(0, 0) scale(1) rotate(0deg); }
+                    33% { transform: translate(-100px, -100px) scale(1.2) rotate(90deg); }
+                    66% { transform: translate(-250px, 50px) scale(0.8) rotate(180deg); }
+                    100% { transform: translate(50px, -50px) scale(1.1) rotate(270deg); }
+                  }
+                  @keyframes dropFloat6 {
+                    0% { transform: translate(0, 0) scale(1) rotate(0deg); }
+                    40% { transform: translate(120px, 120px) scale(1.3) rotate(60deg); }
+                    80% { transform: translate(-80px, 180px) scale(0.8) rotate(120deg); }
+                    100% { transform: translate(-40px, -40px) scale(1.1) rotate(180deg); }
+                  }
+                  @keyframes dropFloat7 {
+                    0% { transform: translate(0, 0) scale(0.85) rotate(0deg); }
+                    33% { transform: translate(-180px, 80px) scale(1) rotate(-30deg); }
+                    66% { transform: translate(-50px, 200px) scale(1.2) rotate(-90deg); }
+                    100% { transform: translate(150px, 50px) scale(0.9) rotate(-150deg); }
+                  }
+                  @keyframes dropFloat8 {
+                    0% { transform: translate(0, 0) scale(1.1) rotate(0deg); }
+                    35% { transform: translate(-100px, -150px) scale(0.9) rotate(45deg); }
+                    70% { transform: translate(-250px, -50px) scale(1.15) rotate(135deg); }
+                    100% { transform: translate(-50px, 100px) scale(1) rotate(225deg); }
+                  }
+                  @keyframes dropFloat9 {
+                    0% { transform: translate(0, 0) scale(0.95) rotate(0deg); }
+                    30% { transform: translate(180px, -120px) scale(1.2) rotate(-60deg); }
+                    65% { transform: translate(250px, 80px) scale(0.85) rotate(-120deg); }
+                    100% { transform: translate(80px, -80px) scale(1.05) rotate(-200deg); }
+                  }
+                  @keyframes dropFloat10 {
+                    0% { transform: translate(0, 0) scale(1.2) rotate(0deg); }
+                    30% { transform: translate(-150px, -80px) scale(0.8) rotate(70deg); }
+                    60% { transform: translate(100px, -200px) scale(1.3) rotate(140deg); }
+                    100% { transform: translate(50px, -100px) scale(0.9) rotate(240deg); }
+                  }
+                `}</style>
+              </div>
+              )}
 
               {overlayComponent}
               <div className={`w-full max-w-7xl mx-auto relative z-10 ${heroLayout === 'split' ? 'grid grid-cols-1 lg:grid-cols-2 gap-12 items-center' : ''}`}>
                 <div className={`${heroLayout === 'centered' ? 'mx-auto max-w-4xl' : heroLayout === 'left' ? 'mr-auto max-w-4xl' : heroLayout === 'right' ? 'ml-auto max-w-4xl' : ''}`}>
                   {/* Logo/Image (Visible in centered/left/right) */}
-                  {heroLayout !== 'split' && (
+                  {heroLayout !== 'split' && currentSectionData?.heroImageVisible !== false && (
                     <div className={`w-28 h-28 sm:w-36 sm:h-36 md:w-48 md:h-48 mb-6 sm:mb-8 ${heroLayout === 'centered' ? 'mx-auto' : heroLayout === 'right' ? 'ml-auto' : ''}`}>
                       <img src={currentSectionData?.heroImage || QUIMERA_DEFAULT_LOGO} alt="Quimera AI" className="w-full h-full object-contain drop-shadow-[0_0_30px_rgba(250,204,21,0.5)] sm:drop-shadow-[0_0_50px_rgba(250,204,21,0.6)]" />
                     </div>
                   )}
 
-                  <h1 className="text-3xl sm:text-5xl md:text-7xl font-black leading-tight mb-4 sm:mb-6 px-2" style={{ color: heroTextColor, fontFamily: `var(--font-heading)`, textTransform: headingsCaps ? 'uppercase' : 'none' }}>
+                  <h1 className={`font-black leading-tight mb-4 sm:mb-6 px-2 ${
+                    ({'sm':'text-2xl sm:text-3xl md:text-4xl','md':'text-3xl sm:text-4xl md:text-5xl','lg':'text-3xl sm:text-5xl md:text-7xl','xl':'text-4xl sm:text-6xl md:text-8xl'})[currentSectionData?.headlineFontSize || 'lg'] || 'text-3xl sm:text-5xl md:text-7xl'
+                  }`} style={{ color: heroTextColor, fontFamily: `var(--font-heading)`, textTransform: headingsCaps ? 'uppercase' : 'none' }}>
                     {currentSectionData?.title || t('landing.heroTitle1')}
                     <span className="block" style={{ color: currentSectionData?.accentColor || '#facc15' }}>{currentSectionData?.subtitle ? '' : t('landing.heroTitle2')}</span>
                   </h1>
-                  <p className="text-base sm:text-lg md:text-xl max-w-2xl mb-8 sm:mb-10 leading-relaxed px-2" style={{ color: `${heroTextColor}99`, marginLeft: heroLayout === 'centered' ? 'auto' : '0', marginRight: heroLayout === 'centered' ? 'auto' : '0' }}>
+                  <p className={`max-w-2xl mb-8 sm:mb-10 leading-relaxed px-2 ${
+                    ({'sm':'text-sm sm:text-base','md':'text-base sm:text-lg md:text-xl','lg':'text-lg sm:text-xl md:text-2xl','xl':'text-xl sm:text-2xl md:text-3xl'})[currentSectionData?.subheadlineFontSize || 'md'] || 'text-base sm:text-lg md:text-xl'
+                  }`} style={{ color: `${heroTextColor}99`, marginLeft: heroLayout === 'centered' ? 'auto' : '0', marginRight: heroLayout === 'centered' ? 'auto' : '0' }}>
                     {currentSectionData?.subtitle || t('landing.heroSubtitle')}
                   </p>
                   <div className={`flex flex-col sm:flex-row gap-3 sm:gap-4 mb-12 sm:mb-16 px-4 sm:px-0 ${heroLayout === 'centered' ? 'justify-center' : heroLayout === 'left' || heroLayout === 'split' ? 'justify-start' : 'justify-end'}`}>
                     <button
-                      onClick={onNavigateToRegister}
+                      onClick={() => navigateToLink(currentSectionData?.primaryCtaLink || '/register')}
                       className="w-full sm:w-auto px-6 sm:px-8 py-3.5 sm:py-4 font-bold rounded-xl hover:opacity-90 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
                       style={{
                         backgroundColor: currentSectionData?.accentColor || '#facc15',
@@ -973,14 +1169,14 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
                       <ArrowRight className="w-5 h-5" />
                     </button>
                     {currentSectionData?.showSecondaryButton !== false && (
-                      <button onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })} className="w-full sm:w-auto px-6 sm:px-8 py-3.5 sm:py-4 bg-white/5 border border-white/10 font-semibold rounded-xl hover:bg-white/10 active:scale-[0.98] transition-all" style={{ color: heroTextColor, fontFamily: `var(--font-button)`, textTransform: buttonsCaps ? 'uppercase' : 'none' }}>
+                      <button onClick={() => navigateToLink(currentSectionData?.secondaryCtaLink || '#features')} className="w-full sm:w-auto px-6 sm:px-8 py-3.5 sm:py-4 bg-white/5 border border-white/10 font-semibold rounded-xl hover:bg-white/10 active:scale-[0.98] transition-all" style={{ color: heroTextColor, fontFamily: `var(--font-button)`, textTransform: buttonsCaps ? 'uppercase' : 'none' }}>
                         {currentSectionData?.secondaryButtonText || t('landing.viewFeatures')}
                       </button>
                     )}
                   </div>
                 </div>
 
-                {heroLayout === 'split' && (
+                {heroLayout === 'split' && currentSectionData?.heroImageVisible !== false && (
                   <div className="flex items-center justify-center">
                     <img
                       src={currentSectionData?.heroImage || QUIMERA_DEFAULT_LOGO}
@@ -1006,6 +1202,23 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
               className="min-h-screen flex items-center justify-center relative overflow-hidden"
               style={sectionStyle}
             >
+              {/* Hero Background Image */}
+              {heroBgImageEnabled && heroBgImageUrl && (
+                <div className="absolute inset-0 z-0 pointer-events-none">
+                  <img
+                    src={heroBgImageUrl}
+                    alt=""
+                    className="w-full h-full"
+                    style={{
+                      objectFit: heroBgObjectFit as any,
+                      objectPosition: heroBgPosition,
+                      filter: heroBgBlur > 0 ? `blur(${heroBgBlur}px)` : undefined,
+                      opacity: heroBgOpacity,
+                      transform: heroBgBlur > 0 ? 'scale(1.05)' : undefined,
+                    }}
+                  />
+                </div>
+              )}
               <div className="absolute inset-0 z-0 text-center">
                 {currentSectionData?.heroImage && (
                   <img src={currentSectionData.heroImage} alt="Background" className="w-full h-full object-cover opacity-30 blur-sm scale-110" />
@@ -1023,13 +1236,13 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
                       {currentSectionData?.subtitle || t('landing.heroSubtitle')}
                     </p>
                     <div className={`flex flex-col sm:flex-row gap-4 pt-4 ${isReversed ? 'lg:justify-end' : isCentered ? 'justify-center' : 'justify-start'}`}>
-                      <button onClick={onNavigateToRegister} className="px-8 py-4 bg-white text-black font-bold rounded-full hover:bg-white/90 transition-all flex items-center justify-center gap-2" style={{ fontFamily: `var(--font-button)`, textTransform: buttonsCaps ? 'uppercase' : 'none' }}>
+                      <button onClick={() => navigateToLink(currentSectionData?.primaryCtaLink || '/register')} className="px-8 py-4 bg-white text-black font-bold rounded-full hover:bg-white/90 transition-all flex items-center justify-center gap-2" style={{ fontFamily: `var(--font-button)`, textTransform: buttonsCaps ? 'uppercase' : 'none' }}>
                         {currentSectionData?.primaryButtonText || t('landing.startFree')}
                         <ArrowRight className="w-5 h-5" />
                       </button>
                     </div>
                   </div>
-                  {!isCentered && (
+                  {!isCentered && currentSectionData?.heroImageVisible !== false && (
                     <div className={`flex items-center justify-center relative ${isReversed ? 'lg:order-1' : ''}`}>
                       <div className="absolute inset-0 bg-gradient-to-tr from-primary/20 to-purple-500/20 rounded-full blur-3xl animate-pulse" />
                       <img src={currentSectionData?.heroImage || QUIMERA_DEFAULT_LOGO} alt="Hero Visual" className="relative w-full max-w-md object-contain drop-shadow-[0_20px_50px_rgba(0,0,0,0.5)] transform hover:scale-105 transition-transform duration-700" />
@@ -1053,6 +1266,23 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
               className={`min-h-screen flex flex-col relative overflow-hidden ${isLeft ? 'items-start text-left' : isRight ? 'items-end text-right' : 'items-center text-center'} ${heroPadding < 100 ? 'pt-24' : ''} justify-end`}
               style={sectionStyle}
             >
+              {/* Hero Background Image */}
+              {heroBgImageEnabled && heroBgImageUrl && (
+                <div className="absolute inset-0 z-0 pointer-events-none">
+                  <img
+                    src={heroBgImageUrl}
+                    alt=""
+                    className="w-full h-full"
+                    style={{
+                      objectFit: heroBgObjectFit as any,
+                      objectPosition: heroBgPosition,
+                      filter: heroBgBlur > 0 ? `blur(${heroBgBlur}px)` : undefined,
+                      opacity: heroBgOpacity,
+                      transform: heroBgBlur > 0 ? 'scale(1.05)' : undefined,
+                    }}
+                  />
+                </div>
+              )}
               <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 brightness-100 contrast-150 mix-blend-overlay"></div>
               {overlayComponent}
               <div className={`relative z-10 w-full max-w-7xl px-4 sm:px-6 ${isLeft ? 'mr-auto' : isRight ? 'ml-auto' : 'mx-auto'}`}>
@@ -1066,7 +1296,7 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
                   {currentSectionData?.subtitle || t('landing.heroSubtitle')}
                 </p>
                 <div className={`flex flex-col sm:flex-row gap-5 ${isLeft ? 'justify-start' : isRight ? 'justify-end' : 'justify-center'}`}>
-                  <button onClick={onNavigateToRegister} className="px-8 py-4 bg-black text-white font-bold rounded-xl hover:scale-105 transition-transform shadow-xl flex items-center justify-center gap-2" style={{ fontFamily: `var(--font-button)`, textTransform: buttonsCaps ? 'uppercase' : 'none' }}>
+                  <button onClick={() => navigateToLink(currentSectionData?.primaryCtaLink || '/register')} className="px-8 py-4 bg-black text-white font-bold rounded-xl hover:scale-105 transition-transform shadow-xl flex items-center justify-center gap-2" style={{ fontFamily: `var(--font-button)`, textTransform: buttonsCaps ? 'uppercase' : 'none' }}>
                     {currentSectionData?.primaryButtonText || t('landing.startFree')}
                     <Zap className="w-5 h-5 fill-current" />
                   </button>
@@ -1298,7 +1528,7 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
                           ))}
                         </ul>
                         <button
-                          onClick={onNavigateToRegister}
+                          onClick={() => navigateToLink('/register')}
                           className="w-full py-2.5 sm:py-3 rounded-xl font-semibold transition-all active:scale-[0.98]"
                           style={{
                             background: isPlanPopular ? `linear-gradient(90deg, ${pricingAccentColor}, ${pricingAccentColor}dd)` : `${pricingTextColor}15`,
@@ -1631,7 +1861,7 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
                   {ctaPreview?.subtitle || t('landing.ctaSubtitle')}
                 </p>
                 <button
-                  onClick={onNavigateToRegister}
+                  onClick={() => navigateToLink(ctaPreview?.buttonLink || '/register')}
                   className="w-full sm:w-auto px-8 sm:px-10 py-4 sm:py-5 font-bold text-base sm:text-lg rounded-xl hover:opacity-90 active:scale-[0.98] transition-all inline-flex items-center justify-center gap-2 sm:gap-3 mx-4 sm:mx-0"
                   style={{
                     backgroundColor: ctaAccentColor,
@@ -1977,8 +2207,8 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
                   {footerPreview?.tagline || t('landing.footerTagline', 'Build amazing websites with AI')}
                 </p>
 
-                {/* Social Links */}
-                {navigation.footer.socialLinks && navigation.footer.socialLinks.length > 0 && (
+                {/* Social Links - controlled by editor's showSocialLinks toggle */}
+                {(footerPreview?.showSocialLinks !== false) && navigation.footer.socialLinks && navigation.footer.socialLinks.length > 0 && (
                   <div className="flex items-center gap-3">
                     {navigation.footer.socialLinks.map((social) => (
                       <a
@@ -2079,6 +2309,8 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
               {footerPreview?.copyright || navigation.footer.bottomText || `© ${new Date().getFullYear()} Quimera.ai. ${t('landing.footerRights', 'Todos los derechos reservados.')}`}
             </div>
 
+            {/* Legal Links - controlled by editor's showLegalLinks toggle */}
+            {(footerPreview?.showLegalLinks !== false) && (
             <div className="flex flex-wrap justify-center gap-4 sm:gap-6 text-xs sm:text-sm text-gray-500">
               {[
                 { href: '/changelog', label: t('landing.footerChangelog', 'Changelog') },
@@ -2100,6 +2332,7 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
                 </button>
               ))}
             </div>
+            )}
           </div>
         </div>
       </footer>

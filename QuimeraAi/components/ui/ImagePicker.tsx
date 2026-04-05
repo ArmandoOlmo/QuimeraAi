@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useFiles } from '../../contexts/files';
 import { useProject } from '../../contexts/project';
@@ -36,7 +36,7 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
     const { t } = useTranslation();
     const {
         files, uploadFile,
-        globalFiles, uploadGlobalFile,
+        globalFiles, uploadGlobalFile, fetchGlobalFiles,
         isFilesLoading, isGlobalFilesLoading
     } = useFiles();
     const { activeProjectId, activeProject } = useProject();
@@ -51,6 +51,13 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
             onClose();
         }
     };
+
+    // Fetch global files when library opens in global mode
+    useEffect(() => {
+        if (destination === 'global' && isLibraryOpen) {
+            fetchGlobalFiles();
+        }
+    }, [destination, isLibraryOpen]);
 
     // Product images - only fetch if storeId is provided
     const { products: storeProducts, isLoading: isLoadingProducts } = usePublicProducts(
