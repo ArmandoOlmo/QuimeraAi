@@ -12,7 +12,7 @@ import {
     Sparkles, Link2, Upload, Bold, Italic, Underline, List,
     LayoutGrid, Columns, Rows, Clock, Play, Pause, Settings, ImageIcon,
     RotateCcw, Info, Loader2, Grid, Check, FileText,
-    Waves, Wind, Flame, Droplets
+    Waves, Wind, Flame, Droplets, Mountain, CloudFog, Zap, Paintbrush, Radio
 } from 'lucide-react';
 import ImagePicker from '../../ui/ImagePicker';
 import ImagePickerModal from '../../ui/ImagePickerModal';
@@ -618,12 +618,17 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                                 <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider block">
                                     {t('landingEditor.animationType', 'Tipo de Animación')}
                                 </label>
-                                <div className="grid grid-cols-2 gap-2">
+                                <div className="grid grid-cols-3 gap-2">
                                     {[
                                         { id: 'goldRibbons', icon: Waves, label: 'Gold Ribbons' },
                                         { id: 'auroraGlow', icon: Wind, label: 'Aurora Glow' },
                                         { id: 'particleField', icon: Sparkles, label: 'Particle Field' },
                                         { id: 'liquidMetal', icon: Droplets, label: 'Liquid Metal' },
+                                        { id: 'topoMesh', icon: Mountain, label: 'Topo Mesh' },
+                                        { id: 'nebulaDrift', icon: CloudFog, label: 'Nebula' },
+                                        { id: 'electricStorm', icon: Zap, label: 'Electric' },
+                                        { id: 'inkDiffusion', icon: Paintbrush, label: 'Ink Flow' },
+                                        { id: 'waveRipples', icon: Radio, label: 'Ripples' },
                                     ].map((anim) => (
                                         <button
                                             key={anim.id}
@@ -653,11 +658,13 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                         {data.heroBgImageEnabled && (
                             <div className="space-y-4 animate-fade-in-up">
                                 <ImagePicker
-                                    label="Background Image"
+                                    label=""
                                     value={data.heroBgImageUrl || ''}
                                     onChange={(url) => updateData('heroBgImageUrl', url)}
+                                    onRemove={() => updateData('heroBgImageUrl', '')}
                                     destination="global"
                                     generationContext="background"
+                                    hideUrlInput={true}
                                 />
 
                                 {/* Object Fit */}

@@ -1133,6 +1133,494 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
               </div>
               )}
 
+              {/* Topographic Mesh Animation */}
+              {heroAnimationEnabled && heroAnimationType === 'topoMesh' && (
+              <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+                <svg className="absolute inset-0 w-full h-full" viewBox="0 0 1200 800" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+                  <defs>
+                    <linearGradient id="topoStroke1" x1="0%" y1="0%" x2="100%" y2="0%">
+                      <stop offset="0%" stopColor="rgba(218,165,32,0)" />
+                      <stop offset="30%" stopColor="rgba(218,165,32,0.4)" />
+                      <stop offset="50%" stopColor="rgba(255,220,80,0.6)" />
+                      <stop offset="70%" stopColor="rgba(218,165,32,0.4)" />
+                      <stop offset="100%" stopColor="rgba(218,165,32,0)" />
+                    </linearGradient>
+                    <linearGradient id="topoStroke2" x1="0%" y1="0%" x2="100%" y2="0%">
+                      <stop offset="0%" stopColor="rgba(180,130,20,0)" />
+                      <stop offset="25%" stopColor="rgba(180,130,20,0.25)" />
+                      <stop offset="50%" stopColor="rgba(218,165,32,0.4)" />
+                      <stop offset="75%" stopColor="rgba(180,130,20,0.25)" />
+                      <stop offset="100%" stopColor="rgba(180,130,20,0)" />
+                    </linearGradient>
+                    <filter id="topoGlow">
+                      <feGaussianBlur stdDeviation="3" result="blur" />
+                      <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+                    </filter>
+                  </defs>
+
+                  {/* Contour Ring 1 — outermost */}
+                  <path fill="none" stroke="url(#topoStroke2)" strokeWidth="1.5" opacity="0.3" filter="url(#topoGlow)">
+                    <animate attributeName="d" dur="30s" repeatCount="indefinite" values="
+                      M100,400 C200,200 400,150 600,300 C800,450 1000,200 1100,400;
+                      M100,350 C250,180 450,250 600,350 C750,450 950,180 1100,350;
+                      M100,420 C200,250 350,180 600,280 C850,380 1050,250 1100,420;
+                      M100,400 C200,200 400,150 600,300 C800,450 1000,200 1100,400
+                    " />
+                  </path>
+
+                  {/* Contour Ring 2 */}
+                  <path fill="none" stroke="url(#topoStroke1)" strokeWidth="1.8" opacity="0.4" filter="url(#topoGlow)">
+                    <animate attributeName="d" dur="28s" repeatCount="indefinite" values="
+                      M150,400 C270,230 420,180 600,320 C780,460 950,230 1050,400;
+                      M150,370 C280,210 440,260 600,360 C760,460 930,210 1050,370;
+                      M150,430 C260,260 400,200 600,300 C800,400 960,260 1050,430;
+                      M150,400 C270,230 420,180 600,320 C780,460 950,230 1050,400
+                    " />
+                  </path>
+
+                  {/* Contour Ring 3 */}
+                  <path fill="none" stroke="url(#topoStroke1)" strokeWidth="2" opacity="0.5" filter="url(#topoGlow)">
+                    <animate attributeName="d" dur="26s" repeatCount="indefinite" values="
+                      M200,400 C320,260 460,210 600,340 C740,470 880,260 1000,400;
+                      M200,380 C330,250 470,280 600,370 C730,460 870,250 1000,380;
+                      M200,420 C310,270 450,220 600,320 C750,420 880,270 1000,420;
+                      M200,400 C320,260 460,210 600,340 C740,470 880,260 1000,400
+                    " />
+                  </path>
+
+                  {/* Contour Ring 4 */}
+                  <path fill="none" stroke="url(#topoStroke1)" strokeWidth="2.2" opacity="0.55" filter="url(#topoGlow)">
+                    <animate attributeName="d" dur="24s" repeatCount="indefinite" values="
+                      M260,400 C360,290 490,240 600,350 C710,460 840,290 940,400;
+                      M260,385 C370,275 500,290 600,375 C700,460 830,275 940,385;
+                      M260,415 C355,300 480,250 600,335 C720,420 845,300 940,415;
+                      M260,400 C360,290 490,240 600,350 C710,460 840,290 940,400
+                    " />
+                  </path>
+
+                  {/* Contour Ring 5 — inner */}
+                  <path fill="none" stroke="url(#topoStroke1)" strokeWidth="2.5" opacity="0.6" filter="url(#topoGlow)">
+                    <animate attributeName="d" dur="22s" repeatCount="indefinite" values="
+                      M330,400 C400,310 510,270 600,360 C690,450 800,310 870,400;
+                      M330,390 C410,300 520,300 600,380 C680,460 790,300 870,390;
+                      M330,410 C395,320 505,280 600,345 C695,410 805,320 870,410;
+                      M330,400 C400,310 510,270 600,360 C690,450 800,310 870,400
+                    " />
+                  </path>
+
+                  {/* Contour Ring 6 — innermost, brightest */}
+                  <path fill="none" stroke="url(#topoStroke1)" strokeWidth="2.8" opacity="0.7" filter="url(#topoGlow)">
+                    <animate attributeName="d" dur="20s" repeatCount="indefinite" values="
+                      M400,400 C450,340 530,310 600,370 C670,430 750,340 800,400;
+                      M400,395 C455,335 535,330 600,380 C665,430 745,335 800,395;
+                      M400,405 C445,345 525,315 600,360 C675,405 755,345 800,405;
+                      M400,400 C450,340 530,310 600,370 C670,430 750,340 800,400
+                    " />
+                  </path>
+
+                  {/* Secondary contour set — offset upward */}
+                  <path fill="none" stroke="url(#topoStroke2)" strokeWidth="1.2" opacity="0.25" filter="url(#topoGlow)">
+                    <animate attributeName="d" dur="32s" repeatCount="indefinite" values="
+                      M50,250 C200,100 400,80 600,200 C800,320 1000,100 1150,250;
+                      M50,230 C220,90 420,120 600,220 C780,320 980,90 1150,230;
+                      M50,270 C190,110 380,90 600,190 C820,290 1010,110 1150,270;
+                      M50,250 C200,100 400,80 600,200 C800,320 1000,100 1150,250
+                    " />
+                  </path>
+                  <path fill="none" stroke="url(#topoStroke2)" strokeWidth="1.4" opacity="0.3" filter="url(#topoGlow)">
+                    <animate attributeName="d" dur="29s" repeatCount="indefinite" values="
+                      M120,260 C260,130 430,110 600,220 C770,330 940,130 1080,260;
+                      M120,245 C270,120 440,140 600,235 C760,330 930,120 1080,245;
+                      M120,275 C250,140 420,115 600,210 C780,305 945,140 1080,275;
+                      M120,260 C260,130 430,110 600,220 C770,330 940,130 1080,260
+                    " />
+                  </path>
+
+                  {/* Lower contour set */}
+                  <path fill="none" stroke="url(#topoStroke2)" strokeWidth="1.2" opacity="0.2" filter="url(#topoGlow)">
+                    <animate attributeName="d" dur="34s" repeatCount="indefinite" values="
+                      M50,580 C200,700 400,720 600,600 C800,480 1000,700 1150,580;
+                      M50,600 C220,710 420,680 600,580 C780,480 980,710 1150,600;
+                      M50,560 C190,690 380,710 600,610 C820,510 1010,690 1150,560;
+                      M50,580 C200,700 400,720 600,600 C800,480 1000,700 1150,580
+                    " />
+                  </path>
+                </svg>
+
+                {/* Ambient glow at center */}
+                <div className="absolute" style={{ width: '40%', height: '40%', left: '30%', top: '25%', background: 'radial-gradient(circle, rgba(218,165,32,0.08) 0%, transparent 70%)', filter: 'blur(80px)', animation: 'topoGlowPulse 15s ease-in-out infinite' }} />
+                <style>{`
+                  @keyframes topoGlowPulse { 0%,100%{opacity:.4;transform:scale(1)} 50%{opacity:.7;transform:scale(1.1)} }
+                `}</style>
+              </div>
+              )}
+
+              {/* Nebula / Cosmic Smoke Animation */}
+              {heroAnimationEnabled && heroAnimationType === 'nebulaDrift' && (
+              <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+                {/* SVG Turbulence Filter — creates organic smoke texture */}
+                <svg className="absolute w-0 h-0">
+                  <defs>
+                    <filter id="nebula-turbulence" x="0%" y="0%" width="100%" height="100%">
+                      <feTurbulence type="fractalNoise" baseFrequency="0.015" numOctaves="4" seed="2" result="noise">
+                        <animate attributeName="seed" values="2;50;2" dur="20s" repeatCount="indefinite" />
+                      </feTurbulence>
+                      <feDisplacementMap in="SourceGraphic" in2="noise" scale="120" xChannelSelector="R" yChannelSelector="G" />
+                    </filter>
+                    <filter id="nebula-glow">
+                      <feGaussianBlur stdDeviation="30" />
+                    </filter>
+                  </defs>
+                </svg>
+
+                {/* Nebula Layers — smoke/gas clouds with turbulence filter */}
+                <div className="absolute inset-0" style={{ filter: 'url(#nebula-turbulence)' }}>
+                  {/* Primary cloud */}
+                  <div className="absolute" style={{
+                    width: '70%', height: '70%', left: '15%', top: '10%',
+                    background: 'radial-gradient(ellipse at 40% 40%, rgba(255,220,80,0.35) 0%, rgba(218,165,32,0.15) 40%, transparent 70%)',
+                    filter: 'blur(60px)',
+                    animation: 'nebulaFloat1 25s ease-in-out infinite',
+                  }} />
+                  {/* Secondary cloud */}
+                  <div className="absolute" style={{
+                    width: '60%', height: '65%', right: '5%', top: '15%',
+                    background: 'radial-gradient(ellipse at 60% 50%, rgba(200,150,30,0.3) 0%, rgba(180,130,20,0.1) 45%, transparent 70%)',
+                    filter: 'blur(70px)',
+                    animation: 'nebulaFloat2 30s ease-in-out infinite',
+                  }} />
+                  {/* Tertiary cloud — deeper/warmer */}
+                  <div className="absolute" style={{
+                    width: '55%', height: '50%', left: '25%', bottom: '5%',
+                    background: 'radial-gradient(ellipse at 50% 60%, rgba(160,100,10,0.25) 0%, rgba(140,80,5,0.1) 50%, transparent 70%)',
+                    filter: 'blur(50px)',
+                    animation: 'nebulaFloat3 22s ease-in-out infinite',
+                  }} />
+                  {/* Bright core glow */}
+                  <div className="absolute" style={{
+                    width: '35%', height: '35%', left: '32%', top: '28%',
+                    background: 'radial-gradient(circle, rgba(255,240,150,0.2) 0%, rgba(255,220,80,0.08) 50%, transparent 70%)',
+                    filter: 'blur(40px)',
+                    animation: 'nebulaPulse 12s ease-in-out infinite',
+                  }} />
+                </div>
+
+                {/* Subtle star-like specks scattered across */}
+                {Array.from({length: 16}).map((_, i) => {
+                  const x = (i * 19 + 5) % 90 + 5;
+                  const y = (i * 29 + 13) % 80 + 5;
+                  const size = 1.5 + (i % 3);
+                  const delay = (i * 0.8) % 5;
+                  return (
+                    <div key={`neb-star-${i}`} className="absolute rounded-full" style={{
+                      left: `${x}%`, top: `${y}%`, width: `${size}px`, height: `${size}px`,
+                      background: `radial-gradient(circle, rgba(255,240,180,${0.5 + (i%3)*0.15}) 0%, transparent 100%)`,
+                      boxShadow: `0 0 ${size*2}px rgba(255,220,80,0.3)`,
+                      animation: `nebulaSparkle ${3 + (i%4)}s ease-in-out ${delay}s infinite`,
+                    }} />
+                  );
+                })}
+
+                <style>{`
+                  @keyframes nebulaFloat1 {
+                    0%,100% { transform: translate(0,0) scale(1) rotate(0deg); }
+                    25% { transform: translate(60px,-40px) scale(1.1) rotate(2deg); }
+                    50% { transform: translate(-30px,50px) scale(0.95) rotate(-1deg); }
+                    75% { transform: translate(40px,20px) scale(1.05) rotate(1deg); }
+                  }
+                  @keyframes nebulaFloat2 {
+                    0%,100% { transform: translate(0,0) scale(1) rotate(0deg); }
+                    30% { transform: translate(-50px,30px) scale(1.08) rotate(-2deg); }
+                    60% { transform: translate(40px,-40px) scale(0.92) rotate(1.5deg); }
+                    85% { transform: translate(-20px,-15px) scale(1.03) rotate(-0.5deg); }
+                  }
+                  @keyframes nebulaFloat3 {
+                    0%,100% { transform: translate(0,0) scale(1); }
+                    35% { transform: translate(45px,-35px) scale(1.12); }
+                    65% { transform: translate(-55px,25px) scale(0.9); }
+                    90% { transform: translate(20px,40px) scale(1.06); }
+                  }
+                  @keyframes nebulaPulse {
+                    0%,100% { opacity: 0.5; transform: scale(1); }
+                    50% { opacity: 0.9; transform: scale(1.15); }
+                  }
+                  @keyframes nebulaSparkle {
+                    0%,100% { opacity: 0.2; transform: scale(0.8); }
+                    50% { opacity: 0.9; transform: scale(1.3); }
+                  }
+                `}</style>
+              </div>
+              )}
+
+              {/* Electric Storm Animation */}
+              {heroAnimationEnabled && heroAnimationType === 'electricStorm' && (
+              <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+                <svg className="absolute inset-0 w-full h-full" viewBox="0 0 1200 800" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+                  <defs>
+                    <linearGradient id="boltGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="rgba(255,240,150,0.9)" />
+                      <stop offset="50%" stopColor="rgba(255,220,80,0.7)" />
+                      <stop offset="100%" stopColor="rgba(218,165,32,0.3)" />
+                    </linearGradient>
+                    <linearGradient id="boltGrad2" x1="100%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" stopColor="rgba(255,250,200,0.8)" />
+                      <stop offset="100%" stopColor="rgba(218,165,32,0.2)" />
+                    </linearGradient>
+                    <filter id="boltGlow">
+                      <feGaussianBlur stdDeviation="4" result="blur" />
+                      <feMerge><feMergeNode in="blur" /><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+                    </filter>
+                    <filter id="boltGlowWide">
+                      <feGaussianBlur stdDeviation="12" result="blur" />
+                      <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+                    </filter>
+                  </defs>
+
+                  {/* Main lightning bolt 1 */}
+                  <polyline fill="none" stroke="url(#boltGrad1)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" filter="url(#boltGlow)" opacity="0">
+                    <animate attributeName="points" dur="8s" repeatCount="indefinite" values="
+                      100,50 180,150 150,180 250,300 220,320 350,500 300,520 420,700;
+                      120,40 200,160 170,190 280,310 240,340 370,510 320,540 440,720;
+                      90,60 170,140 140,170 240,290 210,310 340,490 290,510 410,690;
+                      100,50 180,150 150,180 250,300 220,320 350,500 300,520 420,700
+                    " />
+                    <animate attributeName="opacity" dur="8s" repeatCount="indefinite" values="0;0;0.8;1;0.6;0;0;0" />
+                  </polyline>
+
+                  {/* Lightning bolt 1 — wide glow */}
+                  <polyline fill="none" stroke="rgba(255,220,80,0.15)" strokeWidth="20" strokeLinecap="round" strokeLinejoin="round" filter="url(#boltGlowWide)" opacity="0">
+                    <animate attributeName="points" dur="8s" repeatCount="indefinite" values="
+                      100,50 180,150 150,180 250,300 220,320 350,500 300,520 420,700;
+                      120,40 200,160 170,190 280,310 240,340 370,510 320,540 440,720;
+                      90,60 170,140 140,170 240,290 210,310 340,490 290,510 410,690;
+                      100,50 180,150 150,180 250,300 220,320 350,500 300,520 420,700
+                    " />
+                    <animate attributeName="opacity" dur="8s" repeatCount="indefinite" values="0;0;0.4;0.6;0.3;0;0;0" />
+                  </polyline>
+
+                  {/* Branch from bolt 1 */}
+                  <polyline fill="none" stroke="url(#boltGrad2)" strokeWidth="1.5" strokeLinecap="round" filter="url(#boltGlow)" opacity="0">
+                    <animate attributeName="points" dur="8s" repeatCount="indefinite" values="
+                      250,300 300,280 340,310 400,260;
+                      280,310 330,290 370,320 430,270;
+                      240,290 290,270 330,300 390,250;
+                      250,300 300,280 340,310 400,260
+                    " />
+                    <animate attributeName="opacity" dur="8s" repeatCount="indefinite" values="0;0;0.6;0.8;0.4;0;0;0" />
+                  </polyline>
+
+                  {/* Main lightning bolt 2 */}
+                  <polyline fill="none" stroke="url(#boltGrad1)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" filter="url(#boltGlow)" opacity="0">
+                    <animate attributeName="points" dur="11s" repeatCount="indefinite" values="
+                      800,80 750,180 780,210 700,350 730,380 650,520 680,560 600,720;
+                      820,70 770,190 800,220 720,360 750,390 670,530 700,570 620,730;
+                      790,90 740,170 770,200 690,340 720,370 640,510 670,550 590,710;
+                      800,80 750,180 780,210 700,350 730,380 650,520 680,560 600,720
+                    " />
+                    <animate attributeName="opacity" dur="11s" repeatCount="indefinite" values="0;0;0;0.7;1;0.5;0;0;0" />
+                  </polyline>
+
+                  {/* Main lightning bolt 3 — center horizontal */}
+                  <polyline fill="none" stroke="url(#boltGrad2)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" filter="url(#boltGlow)" opacity="0">
+                    <animate attributeName="points" dur="14s" repeatCount="indefinite" values="
+                      200,400 320,380 350,420 480,370 510,410 650,360 680,400 820,380 850,410 1000,390;
+                      220,410 340,390 370,430 500,380 530,420 670,370 700,410 840,390 870,420 1020,400;
+                      190,390 310,370 340,410 470,360 500,400 640,350 670,390 810,370 840,400 990,380;
+                      200,400 320,380 350,420 480,370 510,410 650,360 680,400 820,380 850,410 1000,390
+                    " />
+                    <animate attributeName="opacity" dur="14s" repeatCount="indefinite" values="0;0;0;0;0.6;0.9;0.7;0;0;0;0" />
+                  </polyline>
+
+                  {/* Small spark cluster */}
+                  <polyline fill="none" stroke="url(#boltGrad1)" strokeWidth="1.2" strokeLinecap="round" filter="url(#boltGlow)" opacity="0">
+                    <animate attributeName="points" dur="6s" repeatCount="indefinite" values="
+                      500,200 520,180 540,210 560,190;
+                      510,190 530,170 550,200 570,180;
+                      490,210 510,190 530,220 550,200;
+                      500,200 520,180 540,210 560,190
+                    " />
+                    <animate attributeName="opacity" dur="6s" repeatCount="indefinite" values="0;0.9;0;0;0.7;0" />
+                  </polyline>
+
+                  {/* Small spark cluster 2 */}
+                  <polyline fill="none" stroke="url(#boltGrad2)" strokeWidth="1" strokeLinecap="round" filter="url(#boltGlow)" opacity="0">
+                    <animate attributeName="points" dur="9s" repeatCount="indefinite" values="
+                      900,500 920,480 940,510 960,490 980,520;
+                      910,490 930,470 950,500 970,480 990,510;
+                      890,510 910,490 930,520 950,500 970,530;
+                      900,500 920,480 940,510 960,490 980,520
+                    " />
+                    <animate attributeName="opacity" dur="9s" repeatCount="indefinite" values="0;0;0;0.8;0;0;0.6;0;0" />
+                  </polyline>
+                </svg>
+
+                {/* Ambient flash glow */}
+                <div className="absolute" style={{ width: '30%', height: '40%', left: '5%', top: '10%', background: 'radial-gradient(circle, rgba(255,220,80,0.1) 0%, transparent 70%)', filter: 'blur(60px)', animation: 'stormFlash1 8s ease-in-out infinite' }} />
+                <div className="absolute" style={{ width: '25%', height: '35%', right: '10%', top: '15%', background: 'radial-gradient(circle, rgba(255,240,150,0.08) 0%, transparent 70%)', filter: 'blur(50px)', animation: 'stormFlash2 11s ease-in-out infinite' }} />
+                <style>{`
+                  @keyframes stormFlash1 { 0%,30%,100%{opacity:0} 32%{opacity:.6} 34%{opacity:0} 36%{opacity:.8} 38%{opacity:0} }
+                  @keyframes stormFlash2 { 0%,50%,100%{opacity:0} 52%{opacity:.5} 54%{opacity:0} 55%{opacity:.7} 57%{opacity:0} }
+                `}</style>
+              </div>
+              )}
+
+              {/* Ink Diffusion Animation */}
+              {heroAnimationEnabled && heroAnimationType === 'inkDiffusion' && (
+              <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+                {/* Ink drop 1 — large center */}
+                <div className="absolute" style={{
+                  width: '500px', height: '500px', left: '30%', top: '15%', transform: 'translate(-50%, -10%)',
+                  background: 'radial-gradient(circle at 45% 45%, rgba(255,220,80,0.4) 0%, rgba(218,165,32,0.2) 25%, rgba(180,130,20,0.08) 50%, transparent 70%)',
+                  filter: 'blur(30px)',
+                  borderRadius: '40% 60% 55% 45% / 50% 40% 60% 50%',
+                  animation: 'inkExpand1 20s ease-in-out infinite',
+                }} />
+                {/* Ink drop 2 — right side */}
+                <div className="absolute" style={{
+                  width: '400px', height: '400px', right: '5%', top: '25%',
+                  background: 'radial-gradient(circle at 55% 40%, rgba(200,150,30,0.35) 0%, rgba(180,130,20,0.15) 30%, rgba(160,110,20,0.05) 55%, transparent 70%)',
+                  filter: 'blur(35px)',
+                  borderRadius: '55% 45% 50% 50% / 45% 55% 45% 55%',
+                  animation: 'inkExpand2 25s ease-in-out infinite',
+                }} />
+                {/* Ink drop 3 — bottom left */}
+                <div className="absolute" style={{
+                  width: '450px', height: '450px', left: '5%', bottom: '0%',
+                  background: 'radial-gradient(circle at 40% 55%, rgba(255,200,50,0.3) 0%, rgba(218,165,32,0.12) 35%, rgba(160,100,10,0.04) 60%, transparent 70%)',
+                  filter: 'blur(25px)',
+                  borderRadius: '50% 50% 40% 60% / 55% 45% 55% 45%',
+                  animation: 'inkExpand3 22s ease-in-out infinite',
+                }} />
+                {/* Ink drop 4 — small accent */}
+                <div className="absolute" style={{
+                  width: '250px', height: '250px', left: '55%', top: '50%',
+                  background: 'radial-gradient(circle, rgba(255,240,150,0.25) 0%, rgba(218,165,32,0.1) 40%, transparent 70%)',
+                  filter: 'blur(20px)',
+                  borderRadius: '45% 55% 60% 40% / 50% 50% 50% 50%',
+                  animation: 'inkExpand4 18s ease-in-out infinite',
+                }} />
+                {/* Ink bleed tendrils — simulated with elongated shapes */}
+                <div className="absolute" style={{
+                  width: '300px', height: '80px', left: '35%', top: '35%',
+                  background: 'linear-gradient(90deg, transparent, rgba(218,165,32,0.15), rgba(255,220,80,0.2), rgba(218,165,32,0.15), transparent)',
+                  filter: 'blur(15px)',
+                  borderRadius: '50%',
+                  animation: 'inkTendril1 15s ease-in-out infinite',
+                  transformOrigin: 'left center',
+                }} />
+                <div className="absolute" style={{
+                  width: '250px', height: '60px', right: '20%', top: '55%',
+                  background: 'linear-gradient(90deg, transparent, rgba(200,150,30,0.12), rgba(218,165,32,0.18), rgba(200,150,30,0.12), transparent)',
+                  filter: 'blur(12px)',
+                  borderRadius: '50%',
+                  animation: 'inkTendril2 18s ease-in-out infinite',
+                  transformOrigin: 'right center',
+                }} />
+
+                <style>{`
+                  @keyframes inkExpand1 {
+                    0%,100% { transform: translate(-50%,-10%) scale(0.8) rotate(0deg); opacity: 0.5; border-radius: 40% 60% 55% 45% / 50% 40% 60% 50%; }
+                    25% { transform: translate(-48%,-8%) scale(1.1) rotate(5deg); opacity: 0.8; border-radius: 50% 50% 45% 55% / 55% 45% 50% 50%; }
+                    50% { transform: translate(-52%,-12%) scale(1.25) rotate(-3deg); opacity: 0.6; border-radius: 45% 55% 60% 40% / 45% 55% 55% 45%; }
+                    75% { transform: translate(-49%,-9%) scale(1) rotate(2deg); opacity: 0.7; border-radius: 55% 45% 50% 50% / 50% 50% 45% 55%; }
+                  }
+                  @keyframes inkExpand2 {
+                    0%,100% { transform: scale(0.7) rotate(0deg); opacity: 0.4; border-radius: 55% 45% 50% 50% / 45% 55% 45% 55%; }
+                    30% { transform: scale(1.15) rotate(-4deg); opacity: 0.75; border-radius: 45% 55% 55% 45% / 55% 45% 50% 50%; }
+                    60% { transform: scale(1.3) rotate(3deg); opacity: 0.5; border-radius: 50% 50% 40% 60% / 45% 55% 55% 45%; }
+                    85% { transform: scale(0.9) rotate(-1deg); opacity: 0.65; border-radius: 60% 40% 50% 50% / 50% 50% 40% 60%; }
+                  }
+                  @keyframes inkExpand3 {
+                    0%,100% { transform: scale(0.75) rotate(0deg); opacity: 0.45; }
+                    35% { transform: scale(1.2) rotate(6deg); opacity: 0.7; }
+                    65% { transform: scale(1.1) rotate(-2deg); opacity: 0.55; }
+                    90% { transform: scale(0.85) rotate(3deg); opacity: 0.6; }
+                  }
+                  @keyframes inkExpand4 {
+                    0%,100% { transform: scale(0.6); opacity: 0.3; }
+                    40% { transform: scale(1.3); opacity: 0.7; }
+                    70% { transform: scale(1); opacity: 0.4; }
+                  }
+                  @keyframes inkTendril1 {
+                    0%,100% { transform: scaleX(0.5) rotate(-5deg); opacity: 0.3; }
+                    50% { transform: scaleX(1.5) rotate(10deg); opacity: 0.7; }
+                  }
+                  @keyframes inkTendril2 {
+                    0%,100% { transform: scaleX(0.6) rotate(5deg); opacity: 0.25; }
+                    50% { transform: scaleX(1.4) rotate(-8deg); opacity: 0.6; }
+                  }
+                `}</style>
+              </div>
+              )}
+
+              {/* Wave Ripples Animation */}
+              {heroAnimationEnabled && heroAnimationType === 'waveRipples' && (
+              <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+                {/* Ripple Source 1 — center-left */}
+                {Array.from({length: 5}).map((_, i) => (
+                  <div key={`rip1-${i}`} className="absolute rounded-full" style={{
+                    left: '30%', top: '40%',
+                    width: '0px', height: '0px',
+                    border: `${1.5 - i * 0.15}px solid rgba(218,165,32,${0.4 - i * 0.06})`,
+                    boxShadow: `0 0 ${10 - i * 1.5}px rgba(255,220,80,${0.15 - i * 0.02}), inset 0 0 ${8 - i}px rgba(218,165,32,${0.08 - i * 0.01})`,
+                    animation: `rippleExpand ${6 + i * 0.8}s ease-out ${i * 1.2}s infinite`,
+                    transform: 'translate(-50%, -50%)',
+                  }} />
+                ))}
+
+                {/* Ripple Source 2 — right */}
+                {Array.from({length: 5}).map((_, i) => (
+                  <div key={`rip2-${i}`} className="absolute rounded-full" style={{
+                    left: '70%', top: '35%',
+                    width: '0px', height: '0px',
+                    border: `${1.3 - i * 0.12}px solid rgba(255,220,80,${0.35 - i * 0.05})`,
+                    boxShadow: `0 0 ${8 - i}px rgba(218,165,32,${0.12 - i * 0.02})`,
+                    animation: `rippleExpand ${7 + i * 0.9}s ease-out ${i * 1.4 + 2}s infinite`,
+                    transform: 'translate(-50%, -50%)',
+                  }} />
+                ))}
+
+                {/* Ripple Source 3 — bottom center */}
+                {Array.from({length: 4}).map((_, i) => (
+                  <div key={`rip3-${i}`} className="absolute rounded-full" style={{
+                    left: '50%', top: '65%',
+                    width: '0px', height: '0px',
+                    border: `${1.2 - i * 0.1}px solid rgba(200,150,30,${0.3 - i * 0.05})`,
+                    boxShadow: `0 0 ${6 - i * 0.8}px rgba(218,165,32,${0.1 - i * 0.02})`,
+                    animation: `rippleExpand ${8 + i * 1}s ease-out ${i * 1.6 + 1}s infinite`,
+                    transform: 'translate(-50%, -50%)',
+                  }} />
+                ))}
+
+                {/* Ripple Source 4 — top left accent */}
+                {Array.from({length: 3}).map((_, i) => (
+                  <div key={`rip4-${i}`} className="absolute rounded-full" style={{
+                    left: '15%', top: '20%',
+                    width: '0px', height: '0px',
+                    border: `${1 - i * 0.1}px solid rgba(255,240,150,${0.25 - i * 0.05})`,
+                    animation: `rippleExpand ${9 + i * 1.2}s ease-out ${i * 2 + 3}s infinite`,
+                    transform: 'translate(-50%, -50%)',
+                  }} />
+                ))}
+
+                {/* Central ambient glow */}
+                <div className="absolute" style={{ width: '8px', height: '8px', left: '30%', top: '40%', transform: 'translate(-50%,-50%)', borderRadius: '50%', background: 'radial-gradient(circle, rgba(255,220,80,0.6) 0%, rgba(218,165,32,0.2) 50%, transparent 100%)', boxShadow: '0 0 20px rgba(218,165,32,0.4)', animation: 'rippleCorePulse 3s ease-in-out infinite' }} />
+                <div className="absolute" style={{ width: '6px', height: '6px', left: '70%', top: '35%', transform: 'translate(-50%,-50%)', borderRadius: '50%', background: 'radial-gradient(circle, rgba(255,240,150,0.5) 0%, rgba(218,165,32,0.15) 50%, transparent 100%)', boxShadow: '0 0 15px rgba(218,165,32,0.3)', animation: 'rippleCorePulse 4s ease-in-out 1s infinite' }} />
+                <div className="absolute" style={{ width: '5px', height: '5px', left: '50%', top: '65%', transform: 'translate(-50%,-50%)', borderRadius: '50%', background: 'radial-gradient(circle, rgba(200,150,30,0.5) 0%, transparent 100%)', boxShadow: '0 0 12px rgba(218,165,32,0.25)', animation: 'rippleCorePulse 3.5s ease-in-out 0.5s infinite' }} />
+
+                <style>{`
+                  @keyframes rippleExpand {
+                    0% { width: 0; height: 0; opacity: 1; }
+                    100% { width: 600px; height: 600px; opacity: 0; }
+                  }
+                  @keyframes rippleCorePulse {
+                    0%,100% { transform: translate(-50%,-50%) scale(1); opacity: 0.5; }
+                    50% { transform: translate(-50%,-50%) scale(1.8); opacity: 1; }
+                  }
+                `}</style>
+              </div>
+              )}
+
               {overlayComponent}
               <div className={`w-full max-w-7xl mx-auto relative z-10 ${heroLayout === 'split' ? 'grid grid-cols-1 lg:grid-cols-2 gap-12 items-center' : ''}`}>
                 <div className={`${heroLayout === 'centered' ? 'mx-auto max-w-4xl' : heroLayout === 'left' ? 'mr-auto max-w-4xl' : heroLayout === 'right' ? 'ml-auto max-w-4xl' : ''}`}>
