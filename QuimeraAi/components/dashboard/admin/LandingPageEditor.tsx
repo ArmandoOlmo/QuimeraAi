@@ -381,6 +381,34 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
                     if (data.sections && Array.isArray(data.sections)) {
                         // Ensure required structure sections exist
                         const mergedSections = ensureStructureSections(data.sections);
+
+                        // Hydrate features section if it has no features array
+                        const featuresIdx = mergedSections.findIndex(s => s.type === 'features');
+                        if (featuresIdx !== -1) {
+                            const fd = mergedSections[featuresIdx].data || {};
+                            // Migration: if old 'items' key exists but 'features' doesn't, copy items -> features
+                            if (!fd.features && fd.items) {
+                                fd.features = fd.items;
+                            }
+                            // If still no features array, populate with defaults
+                            if (!fd.features || fd.features.length === 0) {
+                                fd.features = [
+                                    { title: 'Generación Instantánea', description: 'Crea sitios web completos en menos de 30 segundos con IA', imageUrl: '' },
+                                    { title: 'Imágenes con IA', description: 'Genera imágenes 4K profesionales directamente desde tu editor', imageUrl: '' },
+                                    { title: 'Componentes Profesionales', description: 'Más de 20 componentes modernos listos para usar', imageUrl: '' },
+                                    { title: 'Sistema de Diseño Global', description: 'Cambia colores, fuentes y estilos en todo tu sitio con un clic', imageUrl: '' },
+                                    { title: 'Chatbot IA Integrado', description: 'Asistente conversacional para tus visitantes con voz', imageUrl: '' },
+                                    { title: 'SEO Optimizado', description: 'Herramientas automáticas para posicionar tu sitio', imageUrl: '' },
+                                ];
+                            }
+                            // Ensure flat color keys exist for PublicLandingPage compatibility
+                            if (!fd.backgroundColor) fd.backgroundColor = fd.colors?.background || '#0A0A0A';
+                            if (!fd.textColor) fd.textColor = fd.colors?.heading || '#ffffff';
+                            if (!fd.accentColor) fd.accentColor = fd.colors?.accent || '#facc15';
+                            if (!fd.columns) fd.columns = fd.gridColumns || 3;
+                            mergedSections[featuresIdx] = { ...mergedSections[featuresIdx], data: fd };
+                        }
+
                         setSections(mergedSections);
                         savedSectionsRef.current = JSON.parse(JSON.stringify(mergedSections)); // Deep copy for reset
                         if (data.lastUpdated) {
@@ -398,7 +426,23 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
             const defaultSections: LandingSection[] = [
                 ...defaultStructureSections,
                 { id: 'hero', type: 'hero', enabled: true, order: 1, data: {} },
-                { id: 'features', type: 'features', enabled: true, order: 2, data: {} },
+                { id: 'features', type: 'features', enabled: true, order: 2, data: {
+                    title: '',
+                    subtitle: '',
+                    backgroundColor: '#0A0A0A',
+                    textColor: '#ffffff',
+                    accentColor: '#facc15',
+                    columns: 3,
+                    showIcons: true,
+                    features: [
+                        { title: 'Generación Instantánea', description: 'Crea sitios web completos en menos de 30 segundos con IA', imageUrl: '' },
+                        { title: 'Imágenes con IA', description: 'Genera imágenes 4K profesionales directamente desde tu editor', imageUrl: '' },
+                        { title: 'Componentes Profesionales', description: 'Más de 20 componentes modernos listos para usar', imageUrl: '' },
+                        { title: 'Sistema de Diseño Global', description: 'Cambia colores, fuentes y estilos en todo tu sitio con un clic', imageUrl: '' },
+                        { title: 'Chatbot IA Integrado', description: 'Asistente conversacional para tus visitantes con voz', imageUrl: '' },
+                        { title: 'SEO Optimizado', description: 'Herramientas automáticas para posicionar tu sitio', imageUrl: '' },
+                    ],
+                } },
                 { id: 'pricing', type: 'pricing', enabled: true, order: 3, data: {} },
                 { id: 'testimonials', type: 'testimonials', enabled: true, order: 4, data: {} },
                 { id: 'faq', type: 'faq', enabled: true, order: 5, data: {} },

@@ -144,6 +144,8 @@ const ALLOWED_MODELS = [
     'gemini-3-pro-image-preview',
     // Gemini 3.1 Live API (real-time voice/audio)
     'gemini-3.1-flash-live-preview',
+    // Gemini 3.1 Flash-Lite (cost-efficient, thinking levels)
+    'gemini-3.1-flash-lite-preview',
     // Legacy native audio models (kept for backwards compatibility)
     'gemini-2.5-flash-native-audio-preview-12-2025',
     'gemini-2.5-flash-native-audio-preview-09-2025',
@@ -402,6 +404,8 @@ const MODEL_TOKEN_MULTIPLIERS: Record<string, number> = {
     'gemini-2.0-flash-exp': 1,
     'gemini-3-flash-preview': 1,
     'gemini-1.5-flash': 1,
+    // Gemini 3.1 Flash-Lite: 1x multiplier (most economical)
+    'gemini-3.1-flash-lite-preview': 1,
     // Gemini 3.1 Live API (real-time voice): 2x multiplier
     'gemini-3.1-flash-live-preview': 2,
     'gemini-2.5-flash-native-audio-preview-12-2025': 2,
@@ -856,6 +860,10 @@ export const generateContent = functions.https.onRequest(async (req, res) => {
 
         console.log(`[gemini-generate] Making request to model: ${model}, prompt length: ${prompt.length}, images: ${images.length}`);
 
+        // MULTI-TURN: Check if conversation history is provided
+        const history: Array<{ role: string; text: string }> = Array.isArray(req.body.history) ? req.body.history : [];
+        const systemInstruction: string | undefined = sanitizeString(req.body.systemInstruction, 100000);
+
         // Build content parts (text + optional images)
         const parts: Array<{ text: string } | { inlineData: { mimeType: string; data: string } }> = [];
 
@@ -875,16 +883,39 @@ export const generateContent = functions.https.onRequest(async (req, res) => {
         // TOOLS: Get optional tools array for function calling
         const tools: any[] | undefined = req.body.tools;
 
+        // Build contents: either multi-turn (with history) or single-turn
+        let contents: any[];
+        if (history.length > 0) {
+            // Multi-turn: build full conversation history + current message
+            contents = history.map((msg: { role: string; text: string }) => ({
+                role: msg.role === 'model' ? 'model' : 'user',
+                parts: [{ text: sanitizeString(msg.text, 50000) }]
+            }));
+            // Append current prompt as the latest user message
+            contents.push({ role: 'user', parts });
+            console.log(`[gemini-generate] Multi-turn request with ${history.length} history messages`);
+        } else {
+            // Single-turn: standard behavior
+            contents = [{ parts }];
+        }
+
+        // Build generationConfig with optional thinkingLevel
+        const generationConfig: Record<string, any> = {
+            temperature: Math.min(Math.max(config.temperature || 0.7, 0), 2),
+            topK: Math.min(Math.max(config.topK || 40, 1), 100),
+            topP: Math.min(Math.max(config.topP || 0.95, 0), 1),
+            maxOutputTokens: Math.min(config.maxOutputTokens || 8192, 32000),
+        };
+
+        // Gemini 3.1 thinking level support
+        if (config.thinkingLevel && ['minimal', 'low', 'medium', 'high'].includes(config.thinkingLevel)) {
+            generationConfig.thinkingConfig = { thinkingLevel: config.thinkingLevel.toUpperCase() };
+            console.log(`[gemini-generate] Thinking level: ${config.thinkingLevel}`);
+        }
+
         const requestBody: Record<string, any> = {
-            contents: [{
-                parts
-            }],
-            generationConfig: {
-                temperature: Math.min(Math.max(config.temperature || 0.7, 0), 2),
-                topK: Math.min(Math.max(config.topK || 40, 1), 100),
-                topP: Math.min(Math.max(config.topP || 0.95, 0), 1),
-                maxOutputTokens: Math.min(config.maxOutputTokens || 8192, 32000),
-            },
+            contents,
+            generationConfig,
             safetySettings: [
                 { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_ONLY_HIGH' },
                 { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_ONLY_HIGH' },
@@ -892,6 +923,11 @@ export const generateContent = functions.https.onRequest(async (req, res) => {
                 { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_ONLY_HIGH' }
             ]
         };
+
+        // Add system instruction if provided
+        if (systemInstruction) {
+            requestBody.system_instruction = { parts: [{ text: systemInstruction }] };
+        }
 
         // Add tools for function calling if provided (max 64 declarations)
         if (Array.isArray(tools) && tools.length > 0) {

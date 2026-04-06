@@ -916,8 +916,8 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
 
                         <ControlGroup label={t('landingEditor.sectionSubtitle', 'Descripción')}>
                             <TextInput
-                                value={data.description || ''}
-                                onChange={(v) => updateData('description', v)}
+                                value={data.subtitle || data.description || ''}
+                                onChange={(v) => { updateData('description', v); updateData('subtitle', v); }}
                                 placeholder="Ej: Todo lo que necesitas para tener éxito"
                                 multiline
                             />
@@ -930,15 +930,15 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
 
                         <ControlGroup label={t('landingEditor.features', 'Características')}>
                             <div className="space-y-3 mt-2">
-                                {(data.items || []).map((feature: any, idx: number) => (
+                                {(data.features || []).map((feature: any, idx: number) => (
                                     <div key={idx} className="p-3 bg-editor-panel-bg/50 rounded-lg border border-editor-border space-y-2">
                                         <div className="flex items-center justify-between">
                                             <span className="text-xs font-medium text-editor-text-secondary">#{idx + 1}</span>
                                             <button
                                                 onClick={() => {
-                                                    const newItems = [...(data.items || [])];
+                                                    const newItems = [...(data.features || [])];
                                                     newItems.splice(idx, 1);
-                                                    updateData('items', newItems);
+                                                    updateData('features', newItems);
                                                 }}
                                                 className="p-1 text-destructive hover:bg-destructive/10 rounded"
                                             >
@@ -948,18 +948,18 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                                         <TextInput
                                             value={feature.title || ''}
                                             onChange={(v) => {
-                                                const newItems = [...(data.items || [])];
+                                                const newItems = [...(data.features || [])];
                                                 newItems[idx] = { ...newItems[idx], title: v };
-                                                updateData('items', newItems);
+                                                updateData('features', newItems);
                                             }}
                                             placeholder="Título"
                                         />
                                         <TextInput
                                             value={feature.description || ''}
                                             onChange={(v) => {
-                                                const newItems = [...(data.items || [])];
+                                                const newItems = [...(data.features || [])];
                                                 newItems[idx] = { ...newItems[idx], description: v };
-                                                updateData('items', newItems);
+                                                updateData('features', newItems);
                                             }}
                                             placeholder="Descripción"
                                             multiline
@@ -974,7 +974,7 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                                                 )}
                                             </div>
                                             <button
-                                                onClick={() => { setImageTargetField('items'); setImageTargetIndex(idx); setIsImagePickerOpen(true); }}
+                                                onClick={() => { setImageTargetField('features'); setImageTargetIndex(idx); setIsImagePickerOpen(true); }}
                                                 className="shrink-0 p-1.5 rounded bg-editor-panel-bg hover:bg-editor-bg transition-colors"
                                                 title={t('landingEditor.selectFromLibrary', 'Seleccionar imagen')}
                                             >
@@ -983,9 +983,9 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                                             {feature.imageUrl && (
                                                 <button
                                                     onClick={() => {
-                                                        const newItems = [...(data.items || [])];
+                                                        const newItems = [...(data.features || [])];
                                                         newItems[idx] = { ...newItems[idx], imageUrl: '' };
-                                                        updateData('items', newItems);
+                                                        updateData('features', newItems);
                                                     }}
                                                     className="p-1 text-destructive hover:bg-destructive/10 rounded"
                                                 >
@@ -997,8 +997,8 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                                 ))}
                                 <button
                                     onClick={() => {
-                                        const newItems = [...(data.items || []), { title: '', description: '', imageUrl: '' }];
-                                        updateData('items', newItems);
+                                        const newItems = [...(data.features || []), { title: '', description: '', imageUrl: '' }];
+                                        updateData('features', newItems);
                                     }}
                                     className="w-full py-2 px-4 rounded-lg border border-dashed border-editor-border text-sm text-editor-text-secondary hover:border-editor-accent hover:text-editor-accent transition-colors flex items-center justify-center gap-2"
                                 >
@@ -1043,6 +1043,13 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                                 {currentVariant === 'image-overlay' && '🖼️ Imágenes con texto superpuesto'}
                             </p>
                         </div>
+
+                        {/* === SHOW ICONS TOGGLE === */}
+                        <Toggle
+                            label={t('landingEditor.showIcons', 'Mostrar iconos')}
+                            checked={data.showIcons !== false}
+                            onChange={(v) => updateData('showIcons', v)}
+                        />
 
                         {/* === OVERLAY-SPECIFIC CONTROLS === */}
                         {currentVariant === 'image-overlay' && (
@@ -1094,7 +1101,7 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                                 {[2, 3, 4].map((cols) => (
                                     <button
                                         key={cols}
-                                        onClick={() => updateData('gridColumns', cols)}
+                                        onClick={() => { updateData('gridColumns', cols); updateData('columns', cols); }}
                                         className={`flex-1 px-3 py-1.5 text-sm font-medium rounded transition-colors ${(data.gridColumns || 3) === cols
                                             ? 'bg-editor-accent text-editor-bg'
                                             : 'text-editor-text-secondary hover:bg-editor-bg'
@@ -1173,14 +1180,14 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                             <div className="grid grid-cols-2 gap-3">
                                 <ColorControl
                                     label={t('landingEditor.backgroundColor', 'Fondo')}
-                                    value={data.colors?.background || '#1e293b'}
-                                    onChange={(v) => updateData('colors', { ...data.colors, background: v })}
+                                    value={data.backgroundColor || data.colors?.background || '#0A0A0A'}
+                                    onChange={(v) => { updateData('colors', { ...data.colors, background: v }); updateData('backgroundColor', v); }}
                                     paletteColors={getSelectedPaletteColors()}
                                 />
                                 <ColorControl
                                     label={t('landingEditor.headingColor', 'Título')}
-                                    value={data.colors?.heading || '#f1f5f9'}
-                                    onChange={(v) => updateData('colors', { ...data.colors, heading: v })}
+                                    value={data.textColor || data.colors?.heading || '#ffffff'}
+                                    onChange={(v) => { updateData('colors', { ...data.colors, heading: v }); updateData('textColor', v); }}
                                     paletteColors={getSelectedPaletteColors()}
                                 />
                             </div>
@@ -1193,8 +1200,8 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                                 />
                                 <ColorControl
                                     label={t('landingEditor.accentColor', 'Acento')}
-                                    value={data.colors?.accent || '#6366f1'}
-                                    onChange={(v) => updateData('colors', { ...data.colors, accent: v })}
+                                    value={data.accentColor || data.colors?.accent || '#facc15'}
+                                    onChange={(v) => { updateData('colors', { ...data.colors, accent: v }); updateData('accentColor', v); }}
                                     paletteColors={getSelectedPaletteColors()}
                                 />
                             </div>
@@ -5204,12 +5211,12 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                             } else {
                                 console.error('Target index out of bounds:', imageTargetIndex);
                             }
-                        } else if (imageTargetField === 'items' && imageTargetIndex !== null) {
+                        } else if (imageTargetField === 'features' && imageTargetIndex !== null) {
                             // Handle feature items image update
-                            const currentItems = [...(data.items || [])];
+                            const currentItems = [...(data.features || [])];
                             if (currentItems[imageTargetIndex]) {
                                 currentItems[imageTargetIndex] = { ...currentItems[imageTargetIndex], imageUrl: url };
-                                updateData('items', currentItems);
+                                updateData('features', currentItems);
                             } else {
                                 console.error('Target index out of bounds:', imageTargetIndex);
                             }

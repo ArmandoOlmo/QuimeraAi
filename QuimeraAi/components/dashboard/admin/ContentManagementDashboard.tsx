@@ -11,7 +11,7 @@ import DashboardSidebar from '../DashboardSidebar';
 import ConfirmationModal from '../../ui/ConfirmationModal';
 import ModernAppArticleEditor from './ModernAppArticleEditor';
 import LegalPageEditor from './LegalPageEditor';
-import AppContentCreatorAssistant from './AppContentCreatorAssistant';
+import AIContentStudio from './AIContentStudio';
 import i18n from '../../../i18n';
 import {
     Menu,
@@ -305,9 +305,9 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
 
     return (
         <div className="flex h-screen bg-background text-foreground">
-            {/* AI Assistant Modal */}
+            {/* AI Content Studio Modal */}
             {isAiAssistantOpen && (
-                <AppContentCreatorAssistant
+                <AIContentStudio
                     onClose={() => setIsAiAssistantOpen(false)}
                     onArticleCreated={handleArticleCreatedFromAi}
                 />

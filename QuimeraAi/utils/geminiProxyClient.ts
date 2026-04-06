@@ -138,6 +138,91 @@ export async function generateContentViaProxy(
 }
 
 /**
+ * Chat message for multi-turn conversations
+ */
+export interface ChatMessage {
+    role: 'user' | 'model';
+    text: string;
+}
+
+/**
+ * Extended config that includes thinkingLevel for Gemini 3.1 models
+ */
+export interface GeminiChatConfig extends GeminiProxyConfig {
+    thinkingLevel?: 'minimal' | 'low' | 'medium' | 'high';
+}
+
+/**
+ * Generate content with multi-turn conversation history via the Gemini proxy.
+ * Used by the AI Content Studio for stateful chat sessions.
+ * Supports system instruction injection and Gemini 3.1 thinking levels.
+ * Includes automatic fallback from gemini-3 to gemini-2.5 on capacity errors.
+ */
+export async function generateChatContentViaProxy(
+    projectId: string,
+    history: ChatMessage[],
+    currentMessage: string,
+    systemInstruction: string,
+    model: string = 'gemini-3.1-flash-lite-preview',
+    config: GeminiChatConfig = {},
+    userId?: string
+): Promise<GeminiProxyResponse> {
+    // Apply Gemini 3 optimizations (temperature = 1.0)
+    const optimizedConfig = applyGemini3Optimizations(model, config);
+
+    try {
+        const body: Record<string, any> = {
+            projectId,
+            prompt: currentMessage,
+            history: history.map(m => ({ role: m.role, text: m.text })),
+            systemInstruction,
+            userId,
+            model,
+            config: {
+                ...optimizedConfig,
+                thinkingLevel: config.thinkingLevel,
+            }
+        };
+
+        const response = await fetch(`${PROXY_BASE_URL}-generate`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(body)
+        });
+
+        // Check for 503 capacity error and try fallback
+        if (response.status === 503) {
+            const fallbackModel = getFallbackModel(model);
+            if (fallbackModel) {
+                console.warn(`[Gemini Chat] Model ${model} unavailable (503), falling back to ${fallbackModel}`);
+                return generateChatContentViaProxy(projectId, history, currentMessage, systemInstruction, fallbackModel, config, userId);
+            }
+        }
+
+        if (!response.ok) {
+            const errorData: GeminiProxyError = await response.json();
+            throw new Error(errorData.error || `Proxy error: ${response.status}`);
+        }
+
+        const data: GeminiProxyResponse = await response.json();
+        return data;
+    } catch (error) {
+        // Also catch network-level 503 errors
+        if (error instanceof Error && error.message.includes('503')) {
+            const fallbackModel = getFallbackModel(model);
+            if (fallbackModel) {
+                console.warn(`[Gemini Chat] Model ${model} capacity error, falling back to ${fallbackModel}`);
+                return generateChatContentViaProxy(projectId, history, currentMessage, systemInstruction, fallbackModel, config, userId);
+            }
+        }
+        console.error('Gemini chat proxy error:', error);
+        throw error;
+    }
+}
+
+/**
  * Media data for multimodal requests (images and videos)
  */
 export interface ImageInput {

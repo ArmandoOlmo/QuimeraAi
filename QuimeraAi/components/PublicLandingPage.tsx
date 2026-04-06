@@ -1829,70 +1829,191 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
         return null;
       }
 
-      case 'features':
+      case 'features': {
         // Get Features section style values from section data
-        const featuresPreview = section.data || {};
-        const featuresBackgroundColor = featuresPreview?.backgroundColor || '#0A0A0A';
-        const featuresTextColor = featuresPreview?.textColor || '#ffffff';
-        const featuresAccentColor = featuresPreview?.accentColor || '#facc15'; // yellow-400
-        const featuresPadding = featuresPreview?.padding || 80;
+        const fp = section.data || {};
+        const fBg = fp.backgroundColor || '#0A0A0A';
+        const fText = fp.textColor || '#ffffff';
+        const fAccent = fp.accentColor || '#facc15';
+        const fVariant = fp.featuresVariant || 'classic';
+        const fCols = fp.columns || fp.gridColumns || 3;
+        const fShowIcons = fp.showIcons !== false;
+        const fShowHeader = fp.showSectionHeader !== false;
+        const fImgHeight = fp.imageHeight || 200;
+        const fImgFit = fp.imageObjectFit || 'cover';
+        const fAnimEnabled = fp.enableCardAnimation !== false;
+        const fAnimType = fp.animationType || 'fade-in-up';
+        const fOverlayAlign = fp.overlayTextAlignment || 'left';
+
+        // Card colors
+        const fCardBg = fp.colors?.cardBackground || `${fText}08`;
+        const fCardHeading = fp.colors?.cardHeading || fText;
+        const fCardText = fp.colors?.cardText || `${fText}99`;
+        const fCardBorder = fp.colors?.borderColor || `${fText}15`;
+        const fDescColor = fp.colors?.description || `${fText}99`;
+
+        // Padding: support both numeric `padding` and string `paddingY`/`paddingX`
+        const paddingMap: Record<string, string> = { none: '0px', sm: '32px', md: '48px', lg: '80px', xl: '120px' };
+        const fPadY = fp.paddingY ? (paddingMap[fp.paddingY] || '80px') : (fp.padding ? `${fp.padding}px` : '80px');
+        const fPadX = fp.paddingX ? (paddingMap[fp.paddingX] || '24px') : '24px';
+
+        // Title font size
+        const titleSizeMap: Record<string, string> = { sm: '1.5rem', md: '2.25rem', lg: '3rem', xl: '3.75rem' };
+        const fTitleSize = titleSizeMap[fp.titleFontSize || 'md'] || '2.25rem';
+        const descSizeMap: Record<string, string> = { sm: '0.75rem', md: '1rem', lg: '1.125rem', xl: '1.25rem' };
+        const fDescSize = descSizeMap[fp.descriptionFontSize || 'md'] || '1rem';
+
+        const featureItems = fp.features || features;
+
+        // Animation CSS helper
+        const getAnimStyle = (index: number) => {
+          if (!fAnimEnabled || fAnimType === 'none') return {};
+          const delay = `${index * 0.1}s`;
+          const base = { animationDelay: delay, animationDuration: '0.6s', animationFillMode: 'both' as const };
+          switch (fAnimType) {
+            case 'fade-in': return { ...base, animation: `fadeIn 0.6s ease ${delay} both` };
+            case 'fade-in-up': return { ...base, animation: `fadeInUp 0.6s ease ${delay} both` };
+            case 'fade-in-down': return { ...base, animation: `fadeInDown 0.6s ease ${delay} both` };
+            case 'slide-up': return { ...base, animation: `slideUp 0.6s ease ${delay} both` };
+            case 'scale-in': return { ...base, animation: `scaleIn 0.6s ease ${delay} both` };
+            case 'bounce-in': return { ...base, animation: `bounceIn 0.8s ease ${delay} both` };
+            default: return {};
+          }
+        };
+
+        // Render a single feature card based on variant
+        const renderFeatureCard = (feature: any, index: number) => {
+          if (fVariant === 'image-overlay') {
+            // Image Overlay variant
+            return (
+              <div
+                key={index}
+                className="relative rounded-xl sm:rounded-2xl overflow-hidden group hover:scale-[1.02] active:scale-[0.99] transition-all"
+                style={{ ...getAnimStyle(index), height: `${fImgHeight + 100}px` }}
+              >
+                {feature.imageUrl && (
+                  <img
+                    src={feature.imageUrl}
+                    alt={feature.title || ''}
+                    className="absolute inset-0 w-full h-full transition-transform duration-500 group-hover:scale-110"
+                    style={{ objectFit: fImgFit as any }}
+                  />
+                )}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+                <div
+                  className={`absolute bottom-0 left-0 right-0 p-5 sm:p-6 ${
+                    fOverlayAlign === 'center' ? 'text-center' : fOverlayAlign === 'right' ? 'text-right' : 'text-left'
+                  }`}
+                >
+                  <h3 className="text-lg sm:text-xl font-bold mb-1 sm:mb-2" style={{ color: fCardHeading }}>
+                    {feature.title || (feature.titleKey ? t(feature.titleKey) : '')}
+                  </h3>
+                  <p className="text-sm sm:text-base leading-relaxed" style={{ color: fCardText }}>
+                    {feature.description || (feature.descKey ? t(feature.descKey) : '')}
+                  </p>
+                </div>
+              </div>
+            );
+          }
+
+          // Classic / Bento / Premium variants
+          return (
+            <div
+              key={index}
+              className={`rounded-xl sm:rounded-2xl overflow-hidden hover:scale-[1.02] active:scale-[0.99] transition-all ${
+                fVariant === 'bento-premium' && index === 0 ? 'sm:col-span-2 sm:row-span-2' : ''
+              }`}
+              style={{
+                backgroundColor: fCardBg,
+                borderWidth: '1px',
+                borderStyle: 'solid',
+                borderColor: fCardBorder,
+                ...getAnimStyle(index),
+              }}
+            >
+              {/* Feature image */}
+              {feature.imageUrl && (
+                <div style={{ height: `${fImgHeight}px`, overflow: 'hidden' }}>
+                  <img
+                    src={feature.imageUrl}
+                    alt={feature.title || ''}
+                    className="w-full h-full transition-transform duration-500 hover:scale-110"
+                    style={{ objectFit: fImgFit as any }}
+                  />
+                </div>
+              )}
+              <div className="p-5 sm:p-8">
+                {fShowIcons && (
+                  <div
+                    className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl flex items-center justify-center mb-4 sm:mb-6"
+                    style={{ backgroundColor: `${fAccent}15`, color: fAccent }}
+                  >
+                    {feature.icon || <Zap className="w-6 h-6" />}
+                  </div>
+                )}
+                <h3 className="text-lg sm:text-xl font-bold mb-2 sm:mb-3" style={{ color: fCardHeading }}>
+                  {feature.title || (feature.titleKey ? t(feature.titleKey) : '')}
+                </h3>
+                <p className="text-sm sm:text-base leading-relaxed" style={{ color: fCardText }}>
+                  {feature.description || (feature.descKey ? t(feature.descKey) : '')}
+                </p>
+              </div>
+            </div>
+          );
+        };
+
+        // Grid class based on variant
+        const gridClass = fVariant === 'modern'
+          ? `grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-${fCols} gap-4 sm:gap-6 auto-rows-auto`
+          : fVariant === 'bento-premium'
+          ? `grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-${fCols} gap-4 sm:gap-6`
+          : `grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-${fCols} gap-4 sm:gap-6`;
 
         return (
           <section
             key={section.id}
             id={`section-${sectionType}`}
             data-section-id={section.id}
-            className="py-16 sm:py-20 md:py-24"
             style={{
-              backgroundColor: featuresBackgroundColor,
-              color: featuresTextColor,
-              paddingTop: `${featuresPadding}px`,
-              paddingBottom: `${featuresPadding}px`,
+              backgroundColor: fBg,
+              color: fText,
+              paddingTop: fPadY,
+              paddingBottom: fPadY,
+              paddingLeft: fPadX,
+              paddingRight: fPadX,
             }}
           >
+            {/* Animation keyframes */}
+            {fAnimEnabled && fAnimType !== 'none' && (
+              <style>{`
+                @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+                @keyframes fadeInUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+                @keyframes fadeInDown { from { opacity: 0; transform: translateY(-24px); } to { opacity: 1; transform: translateY(0); } }
+                @keyframes slideUp { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: translateY(0); } }
+                @keyframes scaleIn { from { opacity: 0; transform: scale(0.85); } to { opacity: 1; transform: scale(1); } }
+                @keyframes bounceIn { 0% { opacity: 0; transform: scale(0.3); } 50% { opacity: 1; transform: scale(1.05); } 70% { transform: scale(0.9); } 100% { transform: scale(1); } }
+              `}</style>
+            )}
             <div className="container mx-auto px-4 sm:px-6">
-              <div className="text-center mb-10 sm:mb-16">
-                <h2 className="text-2xl sm:text-4xl md:text-5xl font-bold mb-3 sm:mb-4 px-2" style={{ color: featuresTextColor, fontFamily: `var(--font-heading)`, textTransform: headingsCaps ? 'uppercase' : 'none' }}>
-                  {featuresPreview?.title || t('landing.featuresTitle')}
-                  <span style={{ color: featuresAccentColor }}> {featuresPreview?.title ? '' : t('landing.featuresTitleHighlight')}</span>
-                </h2>
-                <p className="text-sm sm:text-base max-w-2xl mx-auto px-2" style={{ color: `${featuresTextColor}99` }}>
-                  {featuresPreview?.subtitle || t('landing.featuresSubtitle')}
-                </p>
-              </div>
+              {fShowHeader && (
+                <div className="text-center mb-10 sm:mb-16">
+                  <h2 className="font-bold mb-3 sm:mb-4 px-2" style={{ color: fText, fontFamily: `var(--font-heading)`, textTransform: headingsCaps ? 'uppercase' : 'none', fontSize: fTitleSize }}>
+                    {fp.title || t('landing.featuresTitle')}
+                    <span style={{ color: fAccent }}> {fp.title ? '' : t('landing.featuresTitleHighlight')}</span>
+                  </h2>
+                  <p className="max-w-2xl mx-auto px-2" style={{ color: fDescColor, fontSize: fDescSize }}>
+                    {fp.subtitle || t('landing.featuresSubtitle')}
+                  </p>
+                </div>
+              )}
 
-              <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-${featuresPreview?.columns || 3} gap-4 sm:gap-6`}>
-                {(featuresPreview?.features || features).map((feature: any, index: number) => (
-                  <div
-                    key={index}
-                    className="p-5 sm:p-8 rounded-xl sm:rounded-2xl hover:scale-[1.02] active:scale-[0.99] transition-all"
-                    style={{
-                      backgroundColor: `${featuresTextColor}08`,
-                      borderWidth: '1px',
-                      borderStyle: 'solid',
-                      borderColor: `${featuresTextColor}15`,
-                    }}
-                  >
-                    {(featuresPreview?.showIcons !== false) && (
-                      <div
-                        className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl flex items-center justify-center mb-4 sm:mb-6"
-                        style={{ backgroundColor: `${featuresAccentColor}15`, color: featuresAccentColor }}
-                      >
-                        {feature.icon || <Zap className="w-6 h-6" />}
-                      </div>
-                    )}
-                    <h3 className="text-lg sm:text-xl font-bold mb-2 sm:mb-3" style={{ color: featuresTextColor }}>
-                      {feature.title || (feature.titleKey ? t(feature.titleKey) : '')}
-                    </h3>
-                    <p className="text-sm sm:text-base leading-relaxed" style={{ color: `${featuresTextColor}99` }}>
-                      {feature.description || (feature.descKey ? t(feature.descKey) : '')}
-                    </p>
-                  </div>
-                ))}
+              <div className={gridClass}>
+                {featureItems.map((feature: any, index: number) => renderFeatureCard(feature, index))}
               </div>
             </div>
           </section>
         );
+      }
 
       case 'pricing':
         // Get Pricing section style values from section data
