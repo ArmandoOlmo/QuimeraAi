@@ -705,7 +705,7 @@ Text to format:
                                 {/* Featured Image */}
                                 <div>
                                     <label className="block text-xs font-bold text-muted-foreground uppercase mb-2">{t('contentManagement.editor.featuredImage', 'Imagen Destacada')}</label>
-                                    <ImagePicker label="" value={featuredImage} onChange={setFeaturedImage} />
+                                    <ImagePicker label="" value={featuredImage} onChange={setFeaturedImage} destination="global" />
                                 </div>
 
                                 {/* Excerpt */}

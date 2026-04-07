@@ -44,6 +44,23 @@ import {
 } from '../../firebase';
 
 // =============================================================================
+// UTILITY: Strip undefined values (Firestore rejects them)
+// =============================================================================
+
+function stripUndefined<T extends Record<string, any>>(obj: T): T {
+    const result: Record<string, any> = {};
+    for (const [key, value] of Object.entries(obj)) {
+        if (value === undefined) continue;
+        if (value !== null && typeof value === 'object' && !Array.isArray(value) && !(value instanceof Date)) {
+            result[key] = stripUndefined(value);
+        } else {
+            result[key] = value;
+        }
+    }
+    return result as T;
+}
+
+// =============================================================================
 // FIREBASE PATHS (Global, not per-user)
 // =============================================================================
 
@@ -155,18 +172,18 @@ export const AppContentProvider: React.FC<{ children: ReactNode }> = ({ children
             if (id && id.length > 0) {
                 // Update existing (using setDoc with merge to also handle pre-generated IDs)
                 const articleRef = doc(db, COLLECTIONS.ARTICLES, id);
-                await setDoc(articleRef, {
+                await setDoc(articleRef, stripUndefined({
                     ...data,
                     id,
                     readTime,
                     updatedAt: now,
                     publishedAt: article.status === 'published' && !article.publishedAt ? now : article.publishedAt
-                }, { merge: true });
+                }), { merge: true });
             } else {
                 // Create new
                 const newId = `article_${Date.now()}`;
                 const articleRef = doc(db, COLLECTIONS.ARTICLES, newId);
-                await setDoc(articleRef, {
+                await setDoc(articleRef, stripUndefined({
                     ...data,
                     id: newId,
                     readTime,
@@ -174,7 +191,7 @@ export const AppContentProvider: React.FC<{ children: ReactNode }> = ({ children
                     createdAt: now,
                     updatedAt: now,
                     publishedAt: article.status === 'published' ? now : null
-                });
+                }));
             }
         } catch (error) {
             console.error("Error saving app article:", error);
@@ -244,10 +261,10 @@ export const AppContentProvider: React.FC<{ children: ReactNode }> = ({ children
     const saveNavigation = useCallback(async (nav: AppNavigation) => {
         try {
             const navRef = doc(db, COLLECTIONS.NAVIGATION, 'main');
-            await setDoc(navRef, {
+            await setDoc(navRef, stripUndefined({
                 ...nav,
                 updatedAt: new Date().toISOString()
-            });
+            }));
         } catch (error) {
             console.error("Error saving app navigation:", error);
             throw error;
@@ -304,10 +321,10 @@ export const AppContentProvider: React.FC<{ children: ReactNode }> = ({ children
     const saveLandingConfig = useCallback(async (config: AppLandingConfig) => {
         try {
             const configRef = doc(db, COLLECTIONS.LANDING_CONFIG, 'landing');
-            await setDoc(configRef, {
+            await setDoc(configRef, stripUndefined({
                 ...config,
                 updatedAt: new Date().toISOString()
-            });
+            }));
         } catch (error) {
             console.error("Error saving landing config:", error);
             throw error;
@@ -410,13 +427,13 @@ export const AppContentProvider: React.FC<{ children: ReactNode }> = ({ children
             // Use type-lang as document ID for easy retrieval and multi-language support
             const docId = `${page.type}_${page.language || 'es'}`;
             const pageRef = doc(db, COLLECTIONS.LEGAL_PAGES, docId);
-            await setDoc(pageRef, {
+            await setDoc(pageRef, stripUndefined({
                 ...data,
                 id: docId,
                 lastUpdated: now,
                 updatedAt: now,
                 createdAt: page.createdAt || now
-            });
+            }));
         } catch (error) {
             console.error("Error saving legal page:", error);
             throw error;
