@@ -199,6 +199,12 @@ export const AppContentProvider: React.FC<{ children: ReactNode }> = ({ children
         }
     }, []);
 
+    // Get translations for an article by translationGroup
+    const getArticleTranslations = useCallback((translationGroup: string): AppArticle[] => {
+        if (!translationGroup) return [];
+        return articles.filter(a => a.translationGroup === translationGroup);
+    }, [articles]);
+
     // Delete article
     const deleteArticle = useCallback(async (id: string) => {
         try {
@@ -464,6 +470,7 @@ export const AppContentProvider: React.FC<{ children: ReactNode }> = ({ children
         getArticleBySlug,
         saveArticle,
         deleteArticle,
+        getArticleTranslations,
 
         // Navigation
         navigation,

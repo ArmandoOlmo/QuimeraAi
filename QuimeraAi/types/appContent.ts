@@ -29,6 +29,10 @@ export interface AppArticle {
   publishedAt?: string;
   language: 'es' | 'en';
   seo?: AppArticleSEO;
+  // Translation system
+  translationGroup?: string;     // Shared ID linking translations of the same content
+  translatedFrom?: string;       // ID of the source article this was translated from
+  translationStatus?: 'original' | 'auto-translated' | 'reviewed'; // Translation quality
 }
 
 export type AppArticleCategory =
@@ -255,6 +259,7 @@ export interface AppContentContextType {
   getArticleBySlug: (slug: string) => AppArticle | undefined;
   saveArticle: (article: AppArticle) => Promise<void>;
   deleteArticle: (id: string) => Promise<void>;
+  getArticleTranslations: (translationGroup: string) => AppArticle[];
 
   // Navigation
   navigation: AppNavigation | null;

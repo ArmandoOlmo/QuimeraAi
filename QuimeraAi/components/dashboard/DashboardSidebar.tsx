@@ -15,7 +15,7 @@ import ProgressBar3D from '../ui/ProgressBar3D';
 import { useSafeTenant } from '../../contexts/tenant';
 import { useSafeUpgrade } from '../../contexts/UpgradeContext';
 import { useCreditsUsage } from '../../hooks/useCreditsUsage';
-import { useAppLogo, QUIMERA_FULL_LOGO } from '../../hooks/useAppLogo';
+import { useAppLogo, QUIMERA_FULL_LOGO, QUIMERA_DEFAULT_LOGO } from '../../hooks/useAppLogo';
 import { usePlanAccess } from '../../hooks/usePlanFeatures';
 import { useServiceAvailability } from '../../hooks/useServiceAvailability';
 import { PlatformServiceId } from '../../types/serviceAvailability';
@@ -554,9 +554,10 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
               {/* Logo - Always show Quimera.ai branding in dashboard sidebar.
                   White Label branding (tenant.branding) is only for client-facing views
                   (checkout page, agency landing, client portal).
-                  Uses QUIMERA_FULL_LOGO (image with integrated text). */}
+                  Collapsed: QUIMERA_DEFAULT_LOGO (icon only).
+                  Expanded: QUIMERA_FULL_LOGO (image with integrated text). */}
               <img
-                src={QUIMERA_FULL_LOGO}
+                src={isCollapsed && !isMobileOpen ? QUIMERA_DEFAULT_LOGO : QUIMERA_FULL_LOGO}
                 alt="Quimera.ai"
                 className={`object-contain flex-shrink-0 transition-all duration-300 ${isCollapsed && !isMobileOpen ? 'w-10 h-10' : 'h-10 w-auto max-w-[180px]'}`}
                 height={40}

@@ -283,11 +283,16 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
     if (isEditorOpen) {
         return (
             <ModernAppArticleEditor
+                key={editingArticle?.id || 'new'}
                 article={editingArticle}
                 onClose={() => {
                     setIsEditorOpen(false);
                     setEditingArticle(null);
                     loadArticles();
+                }}
+                onTranslationCreated={(translatedArticle) => {
+                    // Switch to editing the newly translated article
+                    setEditingArticle(translatedArticle);
                 }}
             />
         );
@@ -818,12 +823,23 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
                                                                 </span>
                                                             </td>
                                                             <td className="p-4">
-                                                                <span className={`inline-flex items-center px-2 py-1 text-xs font-medium rounded-full ${article.status === 'published'
-                                                                    ? 'bg-green-500/10 text-green-500'
-                                                                    : 'bg-yellow-500/10 text-yellow-500'
-                                                                    }`}>
-                                                                    {article.status === 'published' ? t('contentManagement.status.published', 'Publicado') : t('contentManagement.status.draft', 'Borrador')}
-                                                                </span>
+                                                                <div className="flex items-center gap-2">
+                                                                    <span className={`inline-flex items-center px-2 py-1 text-xs font-medium rounded-full ${article.status === 'published'
+                                                                        ? 'bg-green-500/10 text-green-500'
+                                                                        : 'bg-yellow-500/10 text-yellow-500'
+                                                                        }`}>
+                                                                        {article.status === 'published' ? t('contentManagement.status.published', 'Publicado') : t('contentManagement.status.draft', 'Borrador')}
+                                                                    </span>
+                                                                    <span className="text-base" title={article.language === 'es' ? 'Español' : 'English'}>
+                                                                        {article.language === 'es' ? '🇪🇸' : '🇺🇸'}
+                                                                    </span>
+                                                                    {article.translationStatus === 'auto-translated' && (
+                                                                        <span className="w-2 h-2 rounded-full bg-amber-400" title={t('contentManagement.autoTranslated', 'Auto-traducido')} />
+                                                                    )}
+                                                                    {article.translationStatus === 'reviewed' && (
+                                                                        <span className="w-2 h-2 rounded-full bg-green-400" title={t('contentManagement.reviewed', 'Revisado')} />
+                                                                    )}
+                                                                </div>
                                                             </td>
                                                             <td className="p-4 text-sm text-muted-foreground">
                                                                 <div>{new Date(article.updatedAt).toLocaleDateString()}</div>
@@ -964,11 +980,17 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
                                                     {/* Dark Gradient Overlay */}
                                                     <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-black/20" />
 
-                                                    {/* Top Section: Status Badge & Category */}
+                                                    {/* Top Section: Status Badge, Category & Language */}
                                                     <div className="absolute top-3 left-3 sm:top-4 sm:left-4 z-20 flex items-center gap-2">
                                                         <span className={`px-2 py-0.5 sm:px-3 sm:py-1 text-[10px] sm:text-xs font-bold uppercase tracking-wider rounded-md sm:rounded-lg border backdrop-blur-md shadow-lg ${article.status === 'published' ? 'bg-green-500/20 text-green-400 border-green-500/30' : 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30'}`}>
                                                             {article.status === 'published' ? t('contentManagement.status.published', 'Publicado') : t('contentManagement.status.draft', 'Borrador')}
                                                         </span>
+                                                        <span className="px-1.5 py-0.5 text-xs bg-black/40 backdrop-blur-md rounded-md border border-white/10" title={article.language === 'es' ? 'Español' : 'English'}>
+                                                            {article.language === 'es' ? '🇪🇸' : '🇺🇸'}
+                                                        </span>
+                                                        {article.translationStatus === 'auto-translated' && (
+                                                            <span className="px-1.5 py-0.5 text-[10px] font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded-md backdrop-blur-md">⚡</span>
+                                                        )}
                                                         {article.featured && (
                                                             <span className="px-2 py-0.5 sm:px-2 sm:py-1 text-[10px] sm:text-xs font-bold bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 rounded-md sm:rounded-lg backdrop-blur-md">
                                                                 <Star size={10} className="inline mr-0.5" />

@@ -33,7 +33,8 @@ import { PreviewDevice } from '../../../types';
 import {
     ArrowLeft, Save, Globe, Type, Loader2, Sparkles,
     MoreVertical, Calendar, Check, X as XIcon, Link as LinkIcon,
-    Star, Tag, User, Shield, LayoutDashboard, Monitor, Smartphone
+    Star, Tag, User, Shield, LayoutDashboard, Monitor, Smartphone,
+    Languages, ExternalLink
 } from 'lucide-react';
 
 import EditorMenuBar from '../../cms/modern/EditorMenuBar';
@@ -45,10 +46,19 @@ import { useRouter } from '../../../hooks/useRouter';
 import { ROUTES } from '../../../routes/config';
 import DashboardSidebar from '../DashboardSidebar';
 import { logApiCall } from '../../../services/apiLoggingService';
+import {
+    translateArticleContent,
+    buildTranslatedArticle,
+    getTargetLanguage,
+    getLanguageName,
+    generateTranslationGroupId,
+} from '../../../utils/articleTranslation';
+import ConfirmationModal from '../../ui/ConfirmationModal';
 
 interface ModernAppArticleEditorProps {
     article: AppArticle | null;
     onClose: () => void;
+    onTranslationCreated?: (article: AppArticle) => void;
 }
 
 const CATEGORIES: { value: AppArticleCategory; label: string }[] = [
@@ -62,10 +72,10 @@ const CATEGORIES: { value: AppArticleCategory; label: string }[] = [
     { value: 'help', label: 'Help' },
 ];
 
-const ModernAppArticleEditor: React.FC<ModernAppArticleEditorProps> = ({ article, onClose }) => {
+const ModernAppArticleEditor: React.FC<ModernAppArticleEditorProps> = ({ article, onClose, onTranslationCreated }) => {
     const { t } = useTranslation();
     const { user } = useAuth();
-    const { saveArticle, loadArticles } = useAppContent();
+    const { saveArticle, loadArticles, getArticleTranslations } = useAppContent();
     const { getPrompt } = useAdmin();
     const { showToast } = useToast();
     const { uploadImageAndGetURL } = useFiles();
@@ -98,6 +108,10 @@ const ModernAppArticleEditor: React.FC<ModernAppArticleEditorProps> = ({ article
     const [isSaving, setIsSaving] = useState(false);
     const [isAiWorking, setIsAiWorking] = useState(false);
     const [lastSaved, setLastSaved] = useState<Date | null>(null);
+
+    // Translation State
+    const [isTranslating, setIsTranslating] = useState(false);
+    const [translationConfirmOpen, setTranslationConfirmOpen] = useState(false);
 
     // Link Modal
     const [showLinkModal, setShowLinkModal] = useState(false);
@@ -483,7 +497,115 @@ Text to format:
         }
     };
 
+    // --- Translation Logic ---
+    const targetLang = getTargetLanguage(language);
+    const existingTranslations = article?.translationGroup
+        ? getArticleTranslations(article.translationGroup).filter(a => a.id !== article.id)
+        : [];
+    const hasTranslation = existingTranslations.some(a => a.language === targetLang);
+
+    const handleTranslateArticle = async () => {
+        setTranslationConfirmOpen(false);
+        if (!title || !editor) {
+            showToast('Guarda el artículo primero antes de traducir', 'warning');
+            return;
+        }
+
+        setIsTranslating(true);
+        try {
+            const currentContent = editor.getHTML() || '';
+
+            // Build the current article to save first
+            let finalSlug = slug.trim();
+            if (!finalSlug) finalSlug = title;
+            finalSlug = finalSlug.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+
+            const currentArticleData: AppArticle = {
+                id: article?.id || '',
+                title,
+                slug: finalSlug,
+                content: currentContent,
+                excerpt,
+                featuredImage,
+                status,
+                featured,
+                category,
+                tags,
+                author,
+                showAuthor,
+                showDate,
+                authorImage: article?.authorImage,
+                readTime: article?.readTime,
+                views: article?.views || 0,
+                createdAt: article?.createdAt || new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+                publishedAt: publishedAt || article?.publishedAt,
+                language,
+                seo: {
+                    metaTitle: metaTitle || title,
+                    metaDescription: metaDescription || excerpt,
+                    metaKeywords: tags,
+                },
+                // Ensure translationGroup exists on the original
+                translationGroup: article?.translationGroup || generateTranslationGroupId(),
+                translationStatus: article?.translationStatus || 'original',
+            };
+
+            // Save the original article first (to persist the translationGroup)
+            await saveArticle(currentArticleData);
+
+            // Now translate via AI
+            const translatedFields = await translateArticleContent(
+                currentArticleData,
+                targetLang,
+                user?.uid
+            );
+
+            const translatedArticle = buildTranslatedArticle(
+                { ...currentArticleData, id: currentArticleData.id || `article_${Date.now() - 1}` },
+                translatedFields,
+                targetLang
+            );
+
+            console.log('[Translation] Translated article built:', {
+                id: translatedArticle.id,
+                title: translatedArticle.title,
+                language: translatedArticle.language,
+                contentLength: translatedArticle.content?.length,
+                translationStatus: translatedArticle.translationStatus,
+                translationGroup: translatedArticle.translationGroup,
+            });
+
+            // Save the translated article
+            await saveArticle(translatedArticle);
+            await loadArticles();
+
+            showToast(
+                language === 'es'
+                    ? `¡Artículo traducido al ${getLanguageName(targetLang)}! Se abrirá en el editor.`
+                    : `Article translated to ${getLanguageName(targetLang)}! Opening in editor.`,
+                'success'
+            );
+
+            // Open the translated article in the editor
+            if (onTranslationCreated) {
+                onTranslationCreated(translatedArticle);
+            }
+        } catch (error) {
+            console.error('[Translation] Error:', error);
+            showToast(
+                language === 'es'
+                    ? 'Error al traducir el artículo. Intenta de nuevo.'
+                    : 'Error translating article. Please try again.',
+                'error'
+            );
+        } finally {
+            setIsTranslating(false);
+        }
+    };
+
     return (
+        <>
         <div className="flex h-screen bg-background text-foreground">
             {/* General App Sidebar - Collapsed by default */}
             <DashboardSidebar
@@ -844,12 +966,134 @@ Text to format:
                                         </div>
                                     </div>
                                 </div>
+
+                                {/* Translation Section */}
+                                <div className="pt-6 border-t border-border">
+                                    <h4 className="font-bold text-sm flex items-center mb-4">
+                                        <Languages size={16} className="mr-2 text-blue-400" />
+                                        {language === 'es' ? 'Traducción' : 'Translation'}
+                                    </h4>
+
+                                    {/* Translation Status Badge */}
+                                    {article?.translationStatus && (
+                                        <div className={`mb-3 px-3 py-2 rounded-lg text-xs font-medium flex items-center gap-2 ${
+                                            article.translationStatus === 'original' ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' :
+                                            article.translationStatus === 'reviewed' ? 'bg-green-500/10 text-green-400 border border-green-500/20' :
+                                            'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                                        }`}>
+                                            {article.translationStatus === 'original' && '📝'}
+                                            {article.translationStatus === 'auto-translated' && '⚡'}
+                                            {article.translationStatus === 'reviewed' && '✅'}
+                                            {article.translationStatus === 'original' ? (language === 'es' ? 'Contenido original' : 'Original content') :
+                                             article.translationStatus === 'auto-translated' ? (language === 'es' ? 'Auto-traducido (revisar)' : 'Auto-translated (review)') :
+                                             (language === 'es' ? 'Traducción revisada' : 'Reviewed translation')}
+                                        </div>
+                                    )}
+
+                                    {/* Mark as Reviewed button for auto-translated articles */}
+                                    {article?.translationStatus === 'auto-translated' && (
+                                        <button
+                                            onClick={() => {
+                                                // Will be persisted on next save
+                                                if (article) {
+                                                    article.translationStatus = 'reviewed';
+                                                    showToast(
+                                                        language === 'es' ? 'Marcado como revisado. Guarda para persistir.' : 'Marked as reviewed. Save to persist.',
+                                                        'success'
+                                                    );
+                                                }
+                                            }}
+                                            className="w-full mb-3 px-3 py-2 bg-green-500/10 text-green-400 border border-green-500/20 rounded-lg text-xs font-medium hover:bg-green-500/20 transition-colors flex items-center justify-center gap-2"
+                                        >
+                                            <Check size={14} />
+                                            {language === 'es' ? 'Marcar como revisado' : 'Mark as reviewed'}
+                                        </button>
+                                    )}
+
+                                    {/* Existing translations */}
+                                    {existingTranslations.length > 0 && (
+                                        <div className="mb-3 space-y-2">
+                                            <p className="text-xs text-muted-foreground font-medium">
+                                                {language === 'es' ? 'Traducciones vinculadas:' : 'Linked translations:'}
+                                            </p>
+                                            {existingTranslations.map(tr => (
+                                                <div key={tr.id} className="flex items-center justify-between p-2.5 bg-secondary/30 border border-border rounded-lg">
+                                                    <div className="flex items-center gap-2 min-w-0">
+                                                        <span className="text-base">{tr.language === 'es' ? '🇪🇸' : '🇺🇸'}</span>
+                                                        <span className="text-xs font-medium truncate">{tr.title}</span>
+                                                    </div>
+                                                    <div className="flex items-center gap-1 flex-shrink-0">
+                                                        <span className={`w-2 h-2 rounded-full ${
+                                                            tr.translationStatus === 'reviewed' ? 'bg-green-400' :
+                                                            tr.translationStatus === 'auto-translated' ? 'bg-amber-400' : 'bg-blue-400'
+                                                        }`} />
+                                                        <span className={`px-1.5 py-0.5 text-[10px] rounded font-medium ${
+                                                            tr.status === 'published' ? 'bg-green-500/10 text-green-400' : 'bg-secondary text-muted-foreground'
+                                                        }`}>{tr.status === 'published' ? '●' : '○'}</span>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+
+                                    {/* Translate Button */}
+                                    {!hasTranslation ? (
+                                        <button
+                                            onClick={() => {
+                                                if (!article?.id && !title) {
+                                                    showToast(language === 'es' ? 'Escribe contenido primero' : 'Write content first', 'warning');
+                                                    return;
+                                                }
+                                                setTranslationConfirmOpen(true);
+                                            }}
+                                            disabled={isTranslating || !title}
+                                            className="w-full px-4 py-3 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-xl font-bold text-sm flex items-center justify-center gap-2 hover:shadow-lg hover:shadow-blue-500/20 transition-all disabled:opacity-40 disabled:hover:shadow-none"
+                                        >
+                                            {isTranslating ? (
+                                                <>
+                                                    <Loader2 className="animate-spin" size={16} />
+                                                    {language === 'es' ? 'Traduciendo...' : 'Translating...'}
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <Languages size={16} />
+                                                    {language === 'es'
+                                                        ? `Traducir a ${getLanguageName(targetLang)}`
+                                                        : `Translate to ${getLanguageName(targetLang)}`}
+                                                </>
+                                            )}
+                                        </button>
+                                    ) : (
+                                        <p className="text-xs text-center text-muted-foreground">
+                                            {language === 'es'
+                                                ? `✅ Ya existe traducción en ${getLanguageName(targetLang)}`
+                                                : `✅ Translation in ${getLanguageName(targetLang)} already exists`}
+                                        </p>
+                                    )}
+                                </div>
                             </div>
                         </aside>
                     )}
                 </div>
             </div>
         </div>
+
+            {/* Translation Confirmation Modal */}
+            <ConfirmationModal
+                isOpen={translationConfirmOpen}
+                onConfirm={handleTranslateArticle}
+                onCancel={() => setTranslationConfirmOpen(false)}
+                title={language === 'es' ? 'Traducir artículo' : 'Translate article'}
+                message={language === 'es'
+                    ? `Se guardará el artículo actual y se creará una traducción automática al ${getLanguageName(targetLang)} usando IA. La traducción se abrirá como borrador para que puedas revisarla.`
+                    : `The current article will be saved and an automatic translation to ${getLanguageName(targetLang)} will be created using AI. The translation will open as a draft for your review.`
+                }
+                confirmText={language === 'es' ? 'Traducir' : 'Translate'}
+                cancelText={language === 'es' ? 'Cancelar' : 'Cancel'}
+                variant="info"
+                icon={<Languages size={24} />}
+            />
+        </>
     );
 };
 

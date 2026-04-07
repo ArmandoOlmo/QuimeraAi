@@ -47,21 +47,22 @@ const PublicBlogPage: React.FC<PublicBlogPageProps> = ({
   onNavigateToRegister,
   onNavigateToArticle
 }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const appContent = useSafeAppContent();
 
   const articles = appContent?.articles || [];
   const navigation = appContent?.navigation || DEFAULT_APP_NAVIGATION;
   const isLoading = appContent?.isLoadingArticles || false;
+  const currentLang = (i18n.language?.startsWith('es') ? 'es' : 'en') as 'es' | 'en';
 
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<'all' | AppArticleCategory>('all');
   const [showFilters, setShowFilters] = useState(false);
 
-  // Only published articles
+  // Only published articles in the current language
   const publishedArticles = useMemo(() => {
-    return articles.filter(a => a.status === 'published');
-  }, [articles]);
+    return articles.filter(a => a.status === 'published' && a.language === currentLang);
+  }, [articles, currentLang]);
 
   // Filtered articles
   const filteredArticles = useMemo(() => {

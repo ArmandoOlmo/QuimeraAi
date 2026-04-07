@@ -17,7 +17,8 @@ import {
   Facebook,
   Link as LinkIcon,
   Tag,
-  Check
+  Check,
+  Globe
 } from 'lucide-react';
 import { marked } from 'marked';
 import { useSafeAppContent } from '../contexts/appContent';
@@ -90,11 +91,22 @@ const PublicArticlePage: React.FC<PublicArticlePageProps> = ({
     }
   }, [article]);
 
-  // Related articles (same category, excluding current)
+  // Find linked translation (via translationGroup)
+  const linkedTranslation = useMemo(() => {
+    if (!article?.translationGroup) return null;
+    return articles.find(a =>
+      a.status === 'published' &&
+      a.translationGroup === article.translationGroup &&
+      a.id !== article.id &&
+      a.language !== article.language
+    ) || null;
+  }, [articles, article]);
+
+  // Related articles (same category + same language, excluding current)
   const relatedArticles = useMemo(() => {
     if (!article) return [];
     return articles
-      .filter(a => a.status === 'published' && a.category === article.category && a.id !== article.id)
+      .filter(a => a.status === 'published' && a.category === article.category && a.id !== article.id && a.language === article.language)
       .slice(0, 3);
   }, [articles, article]);
 
@@ -195,6 +207,15 @@ const PublicArticlePage: React.FC<PublicArticlePageProps> = ({
               </div>
 
               <div className="flex items-center gap-3">
+                {linkedTranslation && (
+                  <button
+                    onClick={() => onNavigateToArticle(linkedTranslation.slug)}
+                    className="flex items-center gap-2 px-4 py-2 bg-yellow-400/10 hover:bg-yellow-400/20 border border-yellow-400/20 rounded-full text-sm font-medium transition-colors backdrop-blur-md text-yellow-400 hover:text-yellow-300"
+                  >
+                    <Globe size={14} />
+                    {linkedTranslation.language === 'en' ? '🇺🇸 Read in English' : '🇪🇸 Leer en Español'}
+                  </button>
+                )}
                 <button
                   onClick={handleCopyLink}
                   className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full text-sm font-medium transition-colors backdrop-blur-md"
