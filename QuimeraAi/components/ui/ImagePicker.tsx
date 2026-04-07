@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { useFiles } from '../../contexts/files';
 import { useProject } from '../../contexts/project';
@@ -30,9 +31,11 @@ interface ImagePickerProps {
     hideUrlInput?: boolean;
     /** Generation context hint for AI image generator. 'background' optimizes for website section backgrounds. */
     generationContext?: 'background' | 'general';
+    /** Optional container element to portal the modal into, making it position relative to that container instead of the viewport */
+    portalContainer?: HTMLElement | null;
 }
 
-const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, storeId, defaultOpen = false, onClose, onRemove, destination = 'user', hideUrlInput = true, generationContext = 'general' }) => {
+const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, storeId, defaultOpen = false, onClose, onRemove, destination = 'user', hideUrlInput = true, generationContext = 'general', portalContainer }) => {
     const { t } = useTranslation();
     const {
         files, uploadFile,
@@ -213,15 +216,16 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
             )}
 
             {/* Main Modal (Combined Library & Generator) - Always rendered when isLibraryOpen is true */}
-            {isLibraryOpen && (
-                <div
-                    className="fixed inset-0 bg-black/60 z-[200] flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in-up"
-                    onClick={handleClose}
-                >
+            {isLibraryOpen && (() => {
+                const modalContent = (
                     <div
-                        className="bg-editor-bg w-full max-w-4xl h-[85vh] flex flex-col rounded-xl overflow-hidden shadow-2xl border border-editor-border"
-                        onClick={(e) => e.stopPropagation()}
+                        className={`${portalContainer ? 'absolute inset-0' : 'fixed inset-0'} bg-black/60 z-[200] flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in-up`}
+                        onClick={handleClose}
                     >
+                        <div
+                            className="bg-editor-bg w-full max-w-4xl h-[85vh] flex flex-col rounded-xl overflow-hidden shadow-2xl border border-editor-border"
+                            onClick={(e) => e.stopPropagation()}
+                        >
                         {/* Header */}
                         <div className="p-4 border-b border-editor-border flex justify-between items-center bg-editor-panel-bg">
                             <div className="flex gap-4">
@@ -424,9 +428,11 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
                                 />
                             )}
                         </div>
+                        </div>
                     </div>
-                </div>
-            )}
+                );
+                return portalContainer ? createPortal(modalContent, portalContainer) : modalContent;
+            })()}
 
             {/* Detailed Preview Modal */}
             {previewFile && (

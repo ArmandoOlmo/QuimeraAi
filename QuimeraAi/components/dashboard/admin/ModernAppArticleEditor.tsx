@@ -4,7 +4,7 @@
  * Idéntico al ModernCMSEditor del usuario pero para AppArticle
  */
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useEditor, EditorContent } from '@tiptap/react';
 import { StarterKit } from '@tiptap/starter-kit';
@@ -34,13 +34,15 @@ import {
     ArrowLeft, Save, Globe, Type, Loader2, Sparkles,
     MoreVertical, Calendar, Check, X as XIcon, Link as LinkIcon,
     Star, Tag, User, Shield, LayoutDashboard, Monitor, Smartphone,
-    Languages, ExternalLink
+    Languages, ExternalLink, Image as ImageIcon, Upload, Search, Grid, Trash2, Replace, Zap
 } from 'lucide-react';
+import { BRAND_ASSETS } from '../../../constants/brandAssets';
 
 import EditorMenuBar from '../../cms/modern/EditorMenuBar';
 import EditorBubbleMenu from '../../cms/modern/EditorBubbleMenu';
 import SlashCommands from '../../cms/modern/SlashCommands';
 import ImagePicker from '../../ui/ImagePicker';
+import ImageGeneratorModal from '../../ui/ImageGeneratorModal';
 import { generateContentViaProxy, extractTextFromResponse } from '../../../utils/geminiProxyClient';
 import { useRouter } from '../../../hooks/useRouter';
 import { ROUTES } from '../../../routes/config';
@@ -78,7 +80,7 @@ const ModernAppArticleEditor: React.FC<ModernAppArticleEditorProps> = ({ article
     const { saveArticle, loadArticles, getArticleTranslations } = useAppContent();
     const { getPrompt } = useAdmin();
     const { showToast } = useToast();
-    const { uploadImageAndGetURL } = useFiles();
+    const { uploadGlobalFile, globalFiles, fetchGlobalFiles, isGlobalFilesLoading } = useFiles();
     const { navigate } = useRouter();
     const { previewDevice, setPreviewDevice } = useUI();
 
@@ -119,6 +121,13 @@ const ModernAppArticleEditor: React.FC<ModernAppArticleEditorProps> = ({ article
 
     const contentFileInputRef = useRef<HTMLInputElement>(null);
     const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+    // Content Image Picker State
+    const [showContentImagePicker, setShowContentImagePicker] = useState(false);
+    const [contentImageSearch, setContentImageSearch] = useState('');
+    const [isUploadingContentImage, setIsUploadingContentImage] = useState(false);
+    const [contentImagePickerMode, setContentImagePickerMode] = useState<'insert' | 'replace'>('insert');
+    const [showContentImageGenerator, setShowContentImageGenerator] = useState(false);
 
     // TipTap Editor
     const editor = useEditor({
@@ -205,19 +214,112 @@ const ModernAppArticleEditor: React.FC<ModernAppArticleEditorProps> = ({ article
     const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file && editor) {
+            setIsUploadingContentImage(true);
             try {
-                const url = await uploadImageAndGetURL(file, 'app_content');
-                editor.chain().focus().setImage({ src: url }).run();
+                const url = await uploadGlobalFile(file);
+                if (contentImagePickerMode === 'replace') {
+                    // Replace the currently selected image
+                    editor.chain().focus().setImage({ src: url }).run();
+                } else {
+                    editor.chain().focus().setImage({ src: url }).run();
+                }
+                setShowContentImagePicker(false);
+                showToast('Imagen insertada', 'success');
             } catch (error) {
                 console.error("Image upload failed", error);
                 showToast("Error al subir la imagen", 'error');
+            } finally {
+                setIsUploadingContentImage(false);
+                // Reset the file input
+                if (contentFileInputRef.current) contentFileInputRef.current.value = '';
             }
         }
     };
 
-    const triggerImageUpload = () => {
-        contentFileInputRef.current?.click();
+    const handleContentImageUploadDirect = async (file: File) => {
+        if (!editor) return;
+        setIsUploadingContentImage(true);
+        try {
+            const url = await uploadGlobalFile(file);
+            if (contentImagePickerMode === 'replace') {
+                editor.chain().focus().setImage({ src: url }).run();
+            } else {
+                editor.chain().focus().setImage({ src: url }).run();
+            }
+            setShowContentImagePicker(false);
+            showToast('Imagen insertada', 'success');
+        } catch (error) {
+            console.error("Image upload failed", error);
+            showToast("Error al subir la imagen", 'error');
+        } finally {
+            setIsUploadingContentImage(false);
+        }
     };
+
+    const handleSelectAdminAsset = (url: string) => {
+        if (!editor) return;
+        if (contentImagePickerMode === 'replace') {
+            editor.chain().focus().setImage({ src: url }).run();
+        } else {
+            editor.chain().focus().setImage({ src: url }).run();
+        }
+        setShowContentImagePicker(false);
+        showToast('Imagen de librería insertada', 'success');
+    };
+
+    const triggerImageUpload = () => {
+        setContentImagePickerMode('insert');
+        setShowContentImagePicker(true);
+        // Fetch global files (Super Admin Library) on open
+        fetchGlobalFiles();
+    };
+
+    const handleDeleteSelectedImage = () => {
+        if (!editor) return;
+        if (editor.isActive('image')) {
+            editor.chain().focus().deleteSelection().run();
+            showToast('Imagen eliminada', 'success');
+        }
+    };
+
+    const handleReplaceSelectedImage = () => {
+        if (!editor) return;
+        if (editor.isActive('image')) {
+            setContentImagePickerMode('replace');
+            setShowContentImagePicker(true);
+            fetchGlobalFiles();
+        }
+    };
+
+    // Combine globalFiles + BRAND_ASSETS to match Super Admin Image Library
+    const allLibraryImages = useMemo(() => {
+        const brandAssetFiles = BRAND_ASSETS.filter(a => a.type.startsWith('image/')).map(asset => ({
+            id: asset.id,
+            name: asset.name,
+            downloadURL: asset.downloadURL,
+            type: asset.type,
+            folder: asset.folder,
+        }));
+
+        const userGlobalFiles = globalFiles.filter(f => f.type.startsWith('image/')).map(f => ({
+            id: f.id,
+            name: f.name,
+            downloadURL: f.downloadURL,
+            type: f.type,
+            folder: (f as any).folder || 'uploads',
+        }));
+
+        return [...brandAssetFiles, ...userGlobalFiles];
+    }, [globalFiles]);
+
+    // Filter for the content image picker search
+    const filteredLibraryImages = useMemo(() => {
+        if (!contentImageSearch) return allLibraryImages;
+        const q = contentImageSearch.toLowerCase();
+        return allLibraryImages.filter(a => 
+            a.name?.toLowerCase().includes(q) || a.folder?.toLowerCase().includes(q)
+        );
+    }, [allLibraryImages, contentImageSearch]);
 
     // --- Tag Logic ---
     const handleAddTag = () => {
@@ -296,18 +398,22 @@ const ModernAppArticleEditor: React.FC<ModernAppArticleEditorProps> = ({ article
                 author,
                 showAuthor,
                 showDate,
-                authorImage: article?.authorImage,
+                authorImage: article?.authorImage || null,
                 readTime,
                 views: article?.views || 0,
                 createdAt: article?.createdAt || new Date().toISOString(),
                 updatedAt: new Date().toISOString(),
-                publishedAt: publishedAt || (status === 'published' && !article?.publishedAt ? new Date().toISOString() : article?.publishedAt),
+                publishedAt: publishedAt || (status === 'published' && !article?.publishedAt ? new Date().toISOString() : (article?.publishedAt || null)),
                 language,
                 seo: {
                     metaTitle: metaTitle || title,
                     metaDescription: metaDescription || excerpt,
                     metaKeywords: tags,
-                }
+                },
+                // Preserve translation metadata if already present
+                ...(article?.translationGroup ? { translationGroup: article.translationGroup } : {}),
+                ...(article?.translatedFrom ? { translatedFrom: article.translatedFrom } : {}),
+                ...(article?.translationStatus ? { translationStatus: article.translationStatus } : {}),
             };
 
             await saveArticle(articleData);
@@ -534,12 +640,12 @@ Text to format:
                 author,
                 showAuthor,
                 showDate,
-                authorImage: article?.authorImage,
-                readTime: article?.readTime,
+                authorImage: article?.authorImage || null,
+                readTime: article?.readTime || 1,
                 views: article?.views || 0,
                 createdAt: article?.createdAt || new Date().toISOString(),
                 updatedAt: new Date().toISOString(),
-                publishedAt: publishedAt || article?.publishedAt,
+                publishedAt: publishedAt || article?.publishedAt || null,
                 language,
                 seo: {
                     metaTitle: metaTitle || title,
@@ -676,6 +782,167 @@ Text to format:
                     accept="image/*"
                 />
 
+                {/* Content Image Picker Modal */}
+                {showContentImagePicker && (
+                    <div className="fixed inset-0 bg-black/60 z-[200] flex items-center justify-center p-4 backdrop-blur-sm" onClick={() => setShowContentImagePicker(false)}>
+                        <div className="bg-card w-full max-w-3xl max-h-[80vh] flex flex-col rounded-2xl overflow-hidden shadow-2xl border border-border" onClick={(e) => e.stopPropagation()}>
+                            {/* Header */}
+                            <div className="p-4 border-b border-border flex justify-between items-center bg-muted/50">
+                                <div className="flex items-center gap-3">
+                                    <div className="bg-primary/10 p-2 rounded-lg">
+                                        <ImageIcon className="w-5 h-5 text-primary" />
+                                    </div>
+                                    <div>
+                                        <h3 className="font-bold text-foreground">
+                                            {contentImagePickerMode === 'replace' ? 'Reemplazar Imagen' : 'Insertar Imagen'}
+                                        </h3>
+                                        <p className="text-xs text-muted-foreground">Sube una nueva imagen o selecciona de la librería</p>
+                                    </div>
+                                </div>
+                                <button onClick={() => setShowContentImagePicker(false)} className="p-2 rounded-lg hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors">
+                                    <XIcon size={18} />
+                                </button>
+                            </div>
+
+                            {/* Upload Zone + AI Generate */}
+                            <div className="p-4 border-b border-border">
+                                <div className="flex gap-3">
+                                    {/* Upload Area */}
+                                    <div
+                                        className="flex-1 border-2 border-dashed border-border rounded-xl p-5 text-center hover:border-primary/50 hover:bg-primary/5 transition-all cursor-pointer"
+                                        onClick={() => contentFileInputRef.current?.click()}
+                                        onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                                        onDrop={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            const file = e.dataTransfer.files[0];
+                                            if (file && file.type.startsWith('image/')) handleContentImageUploadDirect(file);
+                                        }}
+                                    >
+                                        {isUploadingContentImage ? (
+                                            <div className="flex items-center justify-center gap-2">
+                                                <Loader2 className="w-5 h-5 animate-spin text-primary" />
+                                                <span className="text-sm text-muted-foreground">Subiendo imagen...</span>
+                                            </div>
+                                        ) : (
+                                            <div className="flex flex-col items-center gap-2">
+                                                <Upload className="w-7 h-7 text-muted-foreground/50" />
+                                                <p className="text-sm font-medium text-foreground">Arrastra o haz clic para subir</p>
+                                                <p className="text-xs text-muted-foreground">PNG, JPG, GIF, WebP</p>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* AI Generate Button */}
+                                    <button
+                                        onClick={() => {
+                                            setShowContentImagePicker(false);
+                                            setShowContentImageGenerator(true);
+                                        }}
+                                        className="w-44 flex-shrink-0 border-2 border-dashed border-purple-500/30 rounded-xl p-5 text-center hover:border-purple-500/60 hover:bg-purple-500/5 transition-all cursor-pointer group"
+                                    >
+                                        <div className="flex flex-col items-center gap-2">
+                                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+                                                <Zap className="w-5 h-5 text-white" />
+                                            </div>
+                                            <p className="text-sm font-bold text-purple-400">Generar con IA</p>
+                                            <p className="text-[10px] text-muted-foreground">Crea imágenes únicas</p>
+                                        </div>
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Super Admin Image Library */}
+                            <div className="flex-1 overflow-hidden flex flex-col">
+                                <div className="px-4 pt-3 pb-2 flex items-center justify-between">
+                                    <h4 className="text-sm font-bold text-foreground flex items-center gap-2">
+                                        <Grid size={14} className="text-primary" />
+                                        Librería Super Admin
+                                        <span className="text-[10px] px-1.5 py-0.5 bg-primary/10 text-primary rounded-full font-medium">
+                                            {filteredLibraryImages.length}
+                                        </span>
+                                    </h4>
+                                    <div className="flex items-center gap-1.5 bg-secondary rounded-lg px-2.5 py-1.5 w-48">
+                                        <Search size={12} className="text-muted-foreground flex-shrink-0" />
+                                        <input
+                                            type="text"
+                                            value={contentImageSearch}
+                                            onChange={(e) => setContentImageSearch(e.target.value)}
+                                            placeholder="Buscar imágenes..."
+                                            className="flex-1 bg-transparent outline-none text-xs text-foreground min-w-0"
+                                        />
+                                        {contentImageSearch && (
+                                            <button onClick={() => setContentImageSearch('')} className="text-muted-foreground hover:text-foreground flex-shrink-0">
+                                                <XIcon size={10} />
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+
+                                <div className="flex-1 overflow-y-auto px-4 pb-4">
+                                    {isGlobalFilesLoading ? (
+                                        <div className="flex items-center justify-center py-12">
+                                            <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                                        </div>
+                                    ) : filteredLibraryImages.length > 0 ? (
+                                        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
+                                            {filteredLibraryImages.map(asset => (
+                                                <button
+                                                    key={asset.id}
+                                                    onClick={() => handleSelectAdminAsset(asset.downloadURL)}
+                                                    className="aspect-square rounded-lg overflow-hidden border-2 border-transparent hover:border-primary cursor-pointer group relative transition-all bg-muted"
+                                                    title={asset.name || 'Imagen'}
+                                                >
+                                                    <img src={asset.downloadURL} alt={asset.name} className="w-full h-full object-cover transition-transform group-hover:scale-110" />
+                                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center p-1">
+                                                        <span className="text-white text-[10px] font-bold text-center line-clamp-2">{asset.name}</span>
+                                                        {asset.folder && asset.folder !== 'uploads' && (
+                                                            <span className="text-white/70 text-[9px] mt-0.5 capitalize">{asset.folder}</span>
+                                                        )}
+                                                    </div>
+                                                </button>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+                                            <ImageIcon size={40} className="mb-3 opacity-30" />
+                                            <p className="text-sm font-medium">
+                                                {contentImageSearch ? 'No se encontraron imágenes' : 'No hay imágenes en la librería'}
+                                            </p>
+                                            <p className="text-xs mt-1">Sube una imagen arriba o añade activos desde la Librería Super Admin</p>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* AI Image Generator Modal */}
+                <ImageGeneratorModal
+                    isOpen={showContentImageGenerator}
+                    onClose={() => setShowContentImageGenerator(false)}
+                    destination="global"
+                    onImageGenerated={(imageUrl: string) => {
+                        if (editor) {
+                            if (contentImagePickerMode === 'replace') {
+                                editor.chain().focus().setImage({ src: imageUrl }).run();
+                            } else {
+                                editor.chain().focus().setImage({ src: imageUrl }).run();
+                            }
+                            showToast('Imagen generada e insertada', 'success');
+                        }
+                        setShowContentImageGenerator(false);
+                    }}
+                    onUseImage={(imageUrl: string) => {
+                        if (editor) {
+                            editor.chain().focus().setImage({ src: imageUrl }).run();
+                            showToast('Imagen insertada', 'success');
+                        }
+                        setShowContentImageGenerator(false);
+                    }}
+                />
+
                 {/* Link Modal */}
                 {showLinkModal && (
                     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
@@ -761,7 +1028,7 @@ Text to format:
                         />
 
                         <div className="flex-1 overflow-y-auto p-8 flex justify-center bg-background">
-                            <div className="w-full max-w-[900px] min-h-[800px]">
+                            <div className="w-full max-w-[900px] min-h-[800px] relative">
                                 <EditorContent editor={editor} />
                                 <EditorBubbleMenu
                                     editor={editor}
@@ -773,6 +1040,27 @@ Text to format:
                                     onImageUpload={triggerImageUpload}
                                     onAICommand={handleAICommand}
                                 />
+
+                                {/* Image Action Toolbar — appears when an image node is selected */}
+                                {editor && editor.isActive('image') && (
+                                    <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 bg-card border border-border rounded-xl px-4 py-2.5 shadow-2xl animate-fade-in-up">
+                                        <span className="text-xs text-muted-foreground font-medium mr-2">Imagen seleccionada</span>
+                                        <button
+                                            onClick={handleReplaceSelectedImage}
+                                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-colors text-xs font-bold"
+                                        >
+                                            <Replace size={14} />
+                                            Reemplazar
+                                        </button>
+                                        <button
+                                            onClick={handleDeleteSelectedImage}
+                                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500/20 transition-colors text-xs font-bold"
+                                        >
+                                            <Trash2 size={14} />
+                                            Eliminar
+                                        </button>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>
@@ -827,7 +1115,7 @@ Text to format:
                                 {/* Featured Image */}
                                 <div>
                                     <label className="block text-xs font-bold text-muted-foreground uppercase mb-2">{t('contentManagement.editor.featuredImage', 'Imagen Destacada')}</label>
-                                    <ImagePicker label="" value={featuredImage} onChange={setFeaturedImage} destination="global" />
+                                    <ImagePicker label="" value={featuredImage} onChange={setFeaturedImage} destination="global" onRemove={() => setFeaturedImage('')} />
                                 </div>
 
                                 {/* Excerpt */}

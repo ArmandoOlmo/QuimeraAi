@@ -69,7 +69,7 @@ interface FilesContextType {
     globalFiles: FileRecord[];
     isGlobalFilesLoading: boolean;
     fetchGlobalFiles: () => Promise<void>;
-    uploadGlobalFile: (file: File) => Promise<void>;
+    uploadGlobalFile: (file: File) => Promise<string>;
     deleteGlobalFile: (fileId: string, storagePath: string) => Promise<void>;
 
     // Admin Assets (Super Admin - App Content Assets)
@@ -236,7 +236,10 @@ export const FilesProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
     // Upload image and get URL (helper)
     const uploadImageAndGetURL = async (file: File, path: string): Promise<string> => {
-        const storageRef = ref(storage, path);
+        const timestamp = Date.now();
+        const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+        const fullPath = `${path}/${timestamp}_${safeFileName}`;
+        const storageRef = ref(storage, fullPath);
         await uploadBytes(storageRef, file);
         return await getDownloadURL(storageRef);
     };
@@ -260,8 +263,8 @@ export const FilesProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         }
     };
 
-    const uploadGlobalFile = async (file: File) => {
-        if (!user) return;
+    const uploadGlobalFile = async (file: File): Promise<string> => {
+        if (!user) throw new Error('User not authenticated');
 
         try {
             const timestamp = Date.now();
@@ -287,6 +290,8 @@ export const FilesProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
             const newFile = { ...fileRecord, id: docRef.id } as FileRecord;
             setGlobalFiles(prev => [newFile, ...prev]);
+            
+            return downloadURL;
         } catch (error) {
             console.error("[FilesContext] Error uploading global file:", error);
             throw error;

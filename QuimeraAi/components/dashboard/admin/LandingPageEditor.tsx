@@ -258,6 +258,10 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
     // Saved sections ref for reset-all functionality
     const savedSectionsRef = useRef<LandingSection[]>([]);
 
+    // Portal ref for rendering ImagePicker modal inside the preview panel
+    const previewPortalRef = useRef<HTMLDivElement>(null);
+    const previewOverlayRef = useRef<HTMLDivElement>(null);
+
     // Send updates to preview iframe when sections change
     useEffect(() => {
         if (iframeRef.current?.contentWindow) {
@@ -1098,7 +1102,9 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
 
                     {/* Center Panel - Preview */}
                     {isPreviewVisible && (
-                        <div className="flex-1 bg-muted/30 p-4 overflow-hidden flex flex-col">
+                        <div className="flex-1 bg-muted/30 p-4 overflow-hidden flex flex-col relative">
+                            {/* Portal target for ImagePicker modals - renders on top of preview */}
+                            <div ref={previewOverlayRef} className="absolute inset-0 z-[200] pointer-events-none" />
                             <div className={`flex-1 rounded-xl shadow-2xl bg-card border border-border flex flex-col overflow-hidden mx-auto ${previewWidth} w-full transition-all duration-300`}>
                                 {/* Browser Header */}
                                 <div className="flex-shrink-0 h-12 bg-background border-b border-border flex items-center px-4 space-x-2 z-10">
@@ -1162,6 +1168,7 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
                                         onRefreshPreview={() => setPreviewKey(prev => prev + 1)}
                                         allSections={sections}
                                         onApplyGlobalColors={applyGlobalColorsToAllSections}
+                                        portalContainer={previewOverlayRef.current}
                                     />
                                 </>
                             ) : (
@@ -1178,6 +1185,7 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
                                         onRefreshPreview={() => setPreviewKey(prev => prev + 1)}
                                         allSections={sections}
                                         onApplyGlobalColors={applyGlobalColorsToAllSections}
+                                        portalContainer={previewOverlayRef.current}
                                     />
                                 </>
                             )}

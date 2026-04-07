@@ -153,6 +153,14 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
         await loadArticles();
     };
 
+    const handleToggleFeatured = async (article: AppArticle) => {
+        try {
+            await saveArticle({ ...article, featured: !article.featured });
+        } catch (error) {
+            console.error('Error toggling featured:', error);
+        }
+    };
+
     const handleQuickPreview = (article: AppArticle) => {
         setPreviewArticle(article);
     };
@@ -853,6 +861,13 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
                                                             <td className="p-4">
                                                                 <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                                                     <button
+                                                                        onClick={() => handleToggleFeatured(article)}
+                                                                        className={`p-2 rounded-md transition-all ${article.featured ? 'text-yellow-500 hover:text-yellow-600 hover:bg-yellow-500/10' : 'text-muted-foreground hover:text-yellow-500 hover:bg-yellow-500/10'}`}
+                                                                        title={article.featured ? t('contentManagement.actions.removeFeatured', 'Quitar destacado') : t('contentManagement.actions.setFeatured', 'Destacar')}
+                                                                    >
+                                                                        <Star size={14} className={article.featured ? 'fill-yellow-500' : ''} />
+                                                                    </button>
+                                                                    <button
                                                                         onClick={() => handleQuickPreview(article)}
                                                                         className="p-2 text-muted-foreground hover:text-blue-500 hover:bg-blue-500/10 rounded-md transition-all"
                                                                         title={t('contentManagement.actions.quickPreview', 'Vista rápida')}
@@ -928,6 +943,13 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
 
                                                                 {/* Quick actions */}
                                                                 <div className="flex items-center gap-0.5">
+                                                                    <button
+                                                                        onClick={(e) => { e.stopPropagation(); handleToggleFeatured(article); }}
+                                                                        className={`p-1.5 rounded transition-colors ${article.featured ? 'text-yellow-500' : 'text-muted-foreground hover:text-yellow-500'}`}
+                                                                        title={article.featured ? t('contentManagement.actions.removeFeatured', 'Quitar destacado') : t('contentManagement.actions.setFeatured', 'Destacar')}
+                                                                    >
+                                                                        <Star size={14} className={article.featured ? 'fill-yellow-500' : ''} />
+                                                                    </button>
                                                                     <button
                                                                         onClick={(e) => { e.stopPropagation(); handleQuickPreview(article); }}
                                                                         className="p-1.5 text-muted-foreground hover:text-blue-500 rounded transition-colors"
@@ -1016,6 +1038,13 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
 
                                                     {/* Desktop: Hover Actions Overlay */}
                                                     <div className="hidden sm:flex absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 items-center justify-center backdrop-blur-[2px] gap-3 z-10">
+                                                        <button
+                                                            onClick={(e) => { e.stopPropagation(); handleToggleFeatured(article); }}
+                                                            className={`p-3 rounded-full hover:scale-110 transition-transform shadow-2xl ${article.featured ? 'bg-yellow-400 text-white' : 'bg-white text-yellow-500'}`}
+                                                            title={article.featured ? t('contentManagement.actions.removeFeatured', 'Quitar destacado') : t('contentManagement.actions.setFeatured', 'Destacar')}
+                                                        >
+                                                            <Star size={20} className={article.featured ? 'fill-white' : ''} />
+                                                        </button>
                                                         <button
                                                             onClick={(e) => { e.stopPropagation(); handleQuickPreview(article); }}
                                                             className="bg-white text-blue-500 p-3 rounded-full hover:scale-110 transition-transform shadow-2xl"

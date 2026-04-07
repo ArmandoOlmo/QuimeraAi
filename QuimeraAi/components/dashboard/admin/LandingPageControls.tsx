@@ -41,6 +41,8 @@ interface LandingPageControlsProps {
     // Props para colores globales
     allSections?: LandingSection[];
     onApplyGlobalColors?: (colors: GlobalColors) => void;
+    /** Optional container element for portaling the ImagePicker modal */
+    portalContainer?: HTMLElement | null;
 }
 
 // Reusable control components
@@ -355,7 +357,8 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
     onUpdateSection,
     onRefreshPreview,
     allSections,
-    onApplyGlobalColors
+    onApplyGlobalColors,
+    portalContainer
 }) => {
     const { t } = useTranslation();
     const [activeTab, setActiveTab] = useState<'content' | 'style'>('content');
@@ -539,6 +542,7 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                                 onChange={(url) => updateData('heroImage', url)}
                                 destination="global"
                                 generationContext="background"
+                                portalContainer={portalContainer}
                             />
                         )}
                     </ControlGroup>
@@ -665,6 +669,7 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                                     destination="global"
                                     generationContext="background"
                                     hideUrlInput={true}
+                                    portalContainer={portalContainer}
                                 />
 
                                 {/* Object Fit */}

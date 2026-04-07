@@ -192,25 +192,25 @@ export function buildTranslatedArticle(
         slug: translatedFields.slug,
         content: translatedFields.content,
         excerpt: translatedFields.excerpt,
-        featuredImage: originalArticle.featuredImage, // Share the same image
+        featuredImage: originalArticle.featuredImage || '', // Share the same image
         status: 'draft', // Always start as draft for review
         featured: originalArticle.featured,
         category: originalArticle.category,
         tags: translatedFields.tags,
         author: originalArticle.author,
-        showAuthor: originalArticle.showAuthor,
-        showDate: originalArticle.showDate,
-        authorImage: originalArticle.authorImage,
-        readTime: originalArticle.readTime,
+        showAuthor: originalArticle.showAuthor ?? true,
+        showDate: originalArticle.showDate ?? true,
+        authorImage: originalArticle.authorImage || null,
+        readTime: originalArticle.readTime || 1,
         views: 0,
         createdAt: now,
         updatedAt: now,
-        publishedAt: null as any,
+        publishedAt: null as unknown as string, // Firestore accepts null to clear a field
         language: targetLang,
         seo: translatedFields.seo,
         // Translation metadata
         translationGroup,
         translatedFrom: originalArticle.id,
         translationStatus: 'auto-translated',
-    };
+    } as AppArticle;
 }
