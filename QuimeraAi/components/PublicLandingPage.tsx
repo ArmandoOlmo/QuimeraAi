@@ -2039,28 +2039,111 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
         );
       }
 
-      case 'pricing':
-        // Get Pricing section style values from section data
-        const pricingPreview = section.data || {};
-        const pricingBackgroundColor = pricingPreview?.backgroundColor || '#0A0A0A';
-        const pricingTextColor = pricingPreview?.textColor || '#ffffff';
-        const pricingAccentColor = pricingPreview?.accentColor || '#facc15'; // yellow-400
-        const pricingPadding = pricingPreview?.padding || 80;
+      case 'pricing': {
+        // Get Pricing section style values from section data — read from colors.* (written by controls)
+        const pp = section.data || {};
+        const ppColors = pp.colors || {};
+        const pricingBackgroundColor = ppColors.background || pp.backgroundColor || '#0A0A0A';
+        const pricingTextColor = ppColors.heading || pp.textColor || '#ffffff';
+        const pricingDescColor = ppColors.description || `${pricingTextColor}99`;
+        const pricingBodyText = ppColors.text || `${pricingTextColor}99`;
+        const pricingAccentColor = ppColors.accent || pp.accentColor || '#facc15';
+
+        // Card colors
+        const pCardBg = ppColors.cardBackground || `${pricingTextColor}08`;
+        const pCardHeading = ppColors.cardHeading || pricingTextColor;
+        const pCardText = ppColors.cardText || `${pricingTextColor}99`;
+        const pPriceColor = ppColors.priceColor || pricingTextColor;
+        const pBorderColor = ppColors.borderColor || `${pricingTextColor}15`;
+        const pCheckColor = ppColors.checkmarkColor || pricingAccentColor;
+
+        // Button colors
+        const pBtnBg = ppColors.buttonBackground || pricingAccentColor;
+        const pBtnText = ppColors.buttonText || pricingBackgroundColor;
+
+        // Gradient colors (for gradient variant)
+        const pGradStart = ppColors.gradientStart || '#4f46e5';
+        const pGradEnd = ppColors.gradientEnd || '#7c3aed';
+
+        // Padding: support paddingY/paddingX string tokens and numeric padding fallback
+        const pPaddingMap: Record<string, string> = { none: '0px', sm: '32px', md: '48px', lg: '80px', xl: '120px' };
+        const pPadY = pp.paddingY ? (pPaddingMap[pp.paddingY] || '80px') : (pp.padding ? `${pp.padding}px` : '80px');
+        const pPadX = pp.paddingX ? (pPaddingMap[pp.paddingX] || '24px') : '24px';
+
+        // Card border radius
+        const pRadiusMap: Record<string, string> = { none: '0px', sm: '0.375rem', md: '0.5rem', lg: '0.75rem', xl: '1rem', '2xl': '1.5rem' };
+        const pCardRadius = pRadiusMap[pp.cardBorderRadius || 'xl'] || '1rem';
+
+        // Pricing variant
+        const pVariant = pp.pricingVariant || 'classic';
+
         // Determine if we should show the popular highlight
-        const shouldHighlightPopular = pricingPreview?.highlightPopular !== false;
-        const showBillingToggle = pricingPreview?.showBillingToggle !== false;
+        const shouldHighlightPopular = pp.highlightPopular !== false;
+        const showBillingToggle = pp.showBillingToggle !== false;
+
+        // Card style based on variant
+        const getCardStyle = (isPop: boolean, idx: number) => {
+          const base: React.CSSProperties = {
+            animationDelay: `${idx * 100}ms`,
+            borderRadius: pCardRadius,
+          };
+          if (pVariant === 'gradient') {
+            return {
+              ...base,
+              background: isPop
+                ? `linear-gradient(135deg, ${pGradStart}, ${pGradEnd})`
+                : `linear-gradient(135deg, ${pCardBg}, ${pCardBg})`,
+              borderWidth: isPop ? '2px' : '1px',
+              borderStyle: 'solid' as const,
+              borderColor: isPop ? `${pricingAccentColor}50` : pBorderColor,
+              boxShadow: isPop ? `0 20px 50px ${pricingAccentColor}20` : 'none',
+            };
+          }
+          if (pVariant === 'glassmorphism') {
+            return {
+              ...base,
+              background: isPop ? `${pricingAccentColor}15` : 'rgba(255,255,255,0.05)',
+              backdropFilter: 'blur(16px)',
+              WebkitBackdropFilter: 'blur(16px)',
+              borderWidth: '1px',
+              borderStyle: 'solid' as const,
+              borderColor: isPop ? `${pricingAccentColor}40` : 'rgba(255,255,255,0.1)',
+              boxShadow: isPop ? `0 20px 50px ${pricingAccentColor}20` : '0 8px 32px rgba(0,0,0,0.1)',
+            };
+          }
+          if (pVariant === 'minimalist') {
+            return {
+              ...base,
+              backgroundColor: 'transparent',
+              borderWidth: isPop ? '2px' : '1px',
+              borderStyle: 'solid' as const,
+              borderColor: isPop ? pricingAccentColor : pBorderColor,
+              boxShadow: 'none',
+            };
+          }
+          // classic
+          return {
+            ...base,
+            backgroundColor: isPop ? `${pricingAccentColor}15` : pCardBg,
+            borderWidth: isPop ? '2px' : '1px',
+            borderStyle: 'solid' as const,
+            borderColor: isPop ? `${pricingAccentColor}50` : pBorderColor,
+            boxShadow: isPop ? `0 20px 50px ${pricingAccentColor}20` : 'none',
+          };
+        };
 
         return (
           <section
             key={section.id}
             id={`section-${sectionType}`}
             data-section-id={section.id}
-            className="py-16 sm:py-20 md:py-24"
             style={{
               backgroundColor: pricingBackgroundColor,
               color: pricingTextColor,
-              paddingTop: `${pricingPadding}px`,
-              paddingBottom: `${pricingPadding}px`,
+              paddingTop: pPadY,
+              paddingBottom: pPadY,
+              paddingLeft: pPadX,
+              paddingRight: pPadX,
               position: 'relative' as const,
               overflow: 'hidden' as const,
             }}
@@ -2069,16 +2152,16 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
             <div className="container mx-auto px-4 sm:px-6 relative z-10">
               <div className="text-center mb-10 sm:mb-16">
                 <h2 className="text-2xl sm:text-4xl md:text-5xl font-bold mb-3 sm:mb-4 px-2" style={{ color: pricingTextColor, fontFamily: `var(--font-heading)`, textTransform: headingsCaps ? 'uppercase' : 'none' }}>
-                  {pricingPreview?.title || t('landing.pricingTitle')} <span style={{ color: pricingAccentColor }}>{pricingPreview?.title ? '' : t('landing.pricingTitleHighlight')}</span>
+                  {pp.title || t('landing.pricingTitle')} <span style={{ color: pricingAccentColor }}>{pp.title ? '' : t('landing.pricingTitleHighlight')}</span>
                 </h2>
-                <p className="text-sm sm:text-base max-w-2xl mx-auto px-2" style={{ color: `${pricingTextColor}99` }}>
-                  {pricingPreview?.subtitle || t('landing.pricingSubtitle')}
+                <p className="text-sm sm:text-base max-w-2xl mx-auto px-2" style={{ color: pricingDescColor }}>
+                  {pp.subtitle || t('landing.pricingSubtitle')}
                 </p>
 
                 {/* Billing Toggle - Monthly/Annual */}
                 {showBillingToggle && (
                   <div className="flex items-center justify-center gap-4 mt-6">
-                    <span className="text-sm" style={{ color: !isAnnualBilling ? pricingTextColor : `${pricingTextColor}99`, fontWeight: !isAnnualBilling ? 600 : 400, transition: 'all 0.3s' }}>{t('landing.monthly', 'Mensual')}</span>
+                    <span className="text-sm" style={{ color: !isAnnualBilling ? pricingTextColor : pricingBodyText, fontWeight: !isAnnualBilling ? 600 : 400, transition: 'all 0.3s' }}>{t('landing.monthly', 'Mensual')}</span>
                     <button
                       onClick={() => setIsAnnualBilling(!isAnnualBilling)}
                       className="relative w-12 h-6 rounded-full transition-colors"
@@ -2093,7 +2176,7 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
                         }}
                       />
                     </button>
-                    <span className="text-sm" style={{ color: isAnnualBilling ? pricingTextColor : `${pricingTextColor}99`, fontWeight: isAnnualBilling ? 600 : 400, transition: 'all 0.3s' }}>
+                    <span className="text-sm" style={{ color: isAnnualBilling ? pricingTextColor : pricingBodyText, fontWeight: isAnnualBilling ? 600 : 400, transition: 'all 0.3s' }}>
                       {t('landing.annual', 'Anual')}
                       <span className="ml-2 px-2 py-0.5 text-xs font-bold text-green-400 bg-green-400/10 rounded-full">
                         {t('landing.savePercent', '-20%')}
@@ -2114,26 +2197,19 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
                     return (
                       <div
                         key={plan.id}
-                        className={`relative p-5 sm:p-8 rounded-xl sm:rounded-2xl transition-all hover:scale-[1.02] active:scale-[0.99] ${isPlanPopular
+                        className={`relative p-5 sm:p-8 transition-all hover:scale-[1.02] active:scale-[0.99] ${isPlanPopular
                           ? 'order-first md:order-none md:scale-105 shadow-xl'
                           : ''
                           }`}
-                        style={{
-                          animationDelay: `${index * 100}ms`,
-                          backgroundColor: isPlanPopular ? `${pricingAccentColor}15` : `${pricingTextColor}08`,
-                          borderWidth: isPlanPopular ? '2px' : '1px',
-                          borderStyle: 'solid',
-                          borderColor: isPlanPopular ? `${pricingAccentColor}50` : `${pricingTextColor}15`,
-                          boxShadow: isPlanPopular ? `0 20px 50px ${pricingAccentColor}20` : 'none',
-                        }}
+                        style={getCardStyle(isPlanPopular, index)}
                       >
                         {isPlanPopular && (
                           <div className="absolute -top-3 sm:-top-4 left-1/2 -translate-x-1/2">
                             <div
                               className="animate-pulse flex items-center gap-1.5 px-4 py-1.5 text-xs sm:text-sm font-bold rounded-full whitespace-nowrap"
                               style={{
-                                background: `linear-gradient(90deg, ${pricingAccentColor}, ${pricingAccentColor}dd)`,
-                                color: pricingBackgroundColor,
+                                background: `linear-gradient(90deg, ${pBtnBg}, ${pBtnBg}dd)`,
+                                color: pBtnText,
                                 boxShadow: `0 4px 20px ${pricingAccentColor}40`,
                               }}
                             >
@@ -2142,13 +2218,13 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
                             </div>
                           </div>
                         )}
-                        <h3 className="text-xl sm:text-2xl font-bold mb-2 mt-2 sm:mt-0" style={{ color: pricingTextColor }}>{plan.name}</h3>
-                        <p className="text-xs sm:text-sm mb-4 sm:mb-6" style={{ color: `${pricingTextColor}99` }}>{plan.description}</p>
+                        <h3 className="text-xl sm:text-2xl font-bold mb-2 mt-2 sm:mt-0" style={{ color: pCardHeading }}>{plan.name}</h3>
+                        <p className="text-xs sm:text-sm mb-4 sm:mb-6" style={{ color: pCardText }}>{plan.description}</p>
                         <div className="mb-4 sm:mb-6">
-                          <span className="text-3xl sm:text-4xl font-black" style={{ color: pricingTextColor }}>
+                          <span className="text-3xl sm:text-4xl font-black" style={{ color: pPriceColor }}>
                             {isAnnualBilling ? plan.annualPrice : plan.price}
                           </span>
-                          <span className="text-sm sm:text-base" style={{ color: `${pricingTextColor}66` }}>{plan.period}</span>
+                          <span className="text-sm sm:text-base" style={{ color: `${pPriceColor}66` }}>{plan.period}</span>
                           {plan.priceValue > 0 && !isAnnualBilling && plan.annualPriceValue < plan.priceValue && (
                             <span className="ml-2 px-2 py-0.5 text-xs font-bold text-green-400 bg-green-400/10 rounded-full">
                               {t('landing.saveAnnually', 'Ahorra 20%')}
@@ -2157,19 +2233,20 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
                         </div>
                         <ul className="space-y-2 sm:space-y-3 mb-6 sm:mb-8">
                           {plan.features.map((feature, i) => (
-                            <li key={i} className="flex items-start gap-2 sm:gap-3 text-sm sm:text-base" style={{ color: `${pricingTextColor}cc` }}>
-                              <Check className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 mt-0.5" style={{ color: pricingAccentColor }} />
+                            <li key={i} className="flex items-start gap-2 sm:gap-3 text-sm sm:text-base" style={{ color: pCardText }}>
+                              <Check className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 mt-0.5" style={{ color: pCheckColor }} />
                               <span>{feature}</span>
                             </li>
                           ))}
                         </ul>
                         <button
                           onClick={() => navigateToLink('/register')}
-                          className="w-full py-2.5 sm:py-3 rounded-xl font-semibold transition-all active:scale-[0.98]"
+                          className="w-full py-2.5 sm:py-3 font-semibold transition-all active:scale-[0.98]"
                           style={{
-                            background: isPlanPopular ? `linear-gradient(90deg, ${pricingAccentColor}, ${pricingAccentColor}dd)` : `${pricingTextColor}15`,
-                            color: isPlanPopular ? pricingBackgroundColor : pricingTextColor,
-                            boxShadow: isPlanPopular ? `0 8px 25px ${pricingAccentColor}30` : 'none',
+                            borderRadius: pCardRadius,
+                            background: isPlanPopular ? `linear-gradient(90deg, ${pBtnBg}, ${pBtnBg}dd)` : `${pBtnBg}15`,
+                            color: isPlanPopular ? pBtnText : pricingTextColor,
+                            boxShadow: isPlanPopular ? `0 8px 25px ${pBtnBg}30` : 'none',
                           }}
                         >
                           {plan.priceValue === 0 ? t('landing.startFree', 'Empieza Gratis') : t('landing.getStarted')}
@@ -2182,6 +2259,7 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
             </div>
           </section>
         );
+      }
 
       case 'testimonials': {
         // Get Testimonials section style values from section data
@@ -2460,76 +2538,149 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
         );
       }
 
-      case 'cta':
-        // Get CTA section style values from preview data
-        const ctaBackgroundColor = ctaPreview?.backgroundColor || '#050505';
-        const ctaTextColor = ctaPreview?.textColor || '#ffffff';
-        const ctaAccentColor = ctaPreview?.accentColor || '#facc15';
-        const ctaPadding = ctaPreview?.padding || 80;
+      case 'cta': {
+        // Get CTA section style values — read from colors.* (written by controls)
+        const ct = section.data || {};
+        const ctColors = ct.colors || {};
+        const ctaBgColor = ctColors.background || ct.backgroundColor || '#050505';
+        const ctaHeadingColor = ctColors.heading || ct.textColor || '#ffffff';
+        const ctaDescColor = ctColors.text || `${ctaHeadingColor}99`;
+        const ctaBtnBg = ctColors.buttonBackground || ct.accentColor || '#ffffff';
+        const ctaBtnText = ctColors.buttonText || ctaBgColor;
+        const ctaGradStart = ctColors.gradientStart || '#4f46e5';
+        const ctaGradEnd = ctColors.gradientEnd || '#7c3aed';
+
+        // Padding tokens
+        const ctPadMap: Record<string, string> = { none: '0px', sm: '32px', md: '48px', lg: '80px', xl: '120px' };
+        const ctPadY = ct.paddingY ? (ctPadMap[ct.paddingY] || '80px') : (ct.padding ? `${ct.padding}px` : '80px');
+        const ctPadX = ct.paddingX ? (ctPadMap[ct.paddingX] || '24px') : '24px';
+
+        // Corner gradient
+        const ctCorner = ct.cornerGradient || {};
+        const ctCornerEnabled = ctCorner.enabled || false;
+        const ctCornerColor = ctCorner.color || '#ffffff';
+        const ctCornerOpacity = (ctCorner.opacity ?? 20) / 100;
+        const ctCornerSize = ctCorner.size || 50;
+        const ctCornerPos = ctCorner.position || 'top-left';
+        const ctCornerPositionMap: Record<string, string> = {
+          'top-left': 'top: 0; left: 0',
+          'top-right': 'top: 0; right: 0',
+          'bottom-left': 'bottom: 0; left: 0',
+          'bottom-right': 'bottom: 0; right: 0',
+        };
+
+        // Background pattern
+        const ctShowPattern = ct.showPattern ?? false;
 
         return (
           <section
             key="cta"
             id="section-cta"
-            className="py-16 sm:py-20 md:py-24"
             style={{
-              backgroundColor: ctaBackgroundColor,
-              color: ctaTextColor,
-              paddingTop: `${ctaPadding}px`,
-              paddingBottom: `${ctaPadding}px`,
+              background: ctColors.gradientStart
+                ? `linear-gradient(135deg, ${ctaGradStart}, ${ctaGradEnd})`
+                : ctaBgColor,
+              color: ctaHeadingColor,
+              paddingTop: ctPadY,
+              paddingBottom: ctPadY,
+              paddingLeft: ctPadX,
+              paddingRight: ctPadX,
               position: 'relative' as const,
               overflow: 'hidden' as const,
             }}
           >
             <SectionBgImage sectionData={section.data || {}} />
+
+            {/* Corner gradient overlay */}
+            {ctCornerEnabled && (
+              <div
+                className="absolute pointer-events-none"
+                style={{
+                  ...Object.fromEntries(ctCornerPositionMap[ctCornerPos]?.split('; ').map(s => s.split(': ')) || []),
+                  width: `${ctCornerSize}%`,
+                  height: `${ctCornerSize}%`,
+                  background: `radial-gradient(circle at ${ctCornerPos.replace('-', ' ')}, ${ctCornerColor}${Math.round(ctCornerOpacity * 255).toString(16).padStart(2, '0')}, transparent 70%)`,
+                  zIndex: 1,
+                }}
+              />
+            )}
+
+            {/* Background pattern */}
+            {ctShowPattern && (
+              <div
+                className="absolute inset-0 pointer-events-none"
+                style={{
+                  backgroundImage: `radial-gradient(circle at 1px 1px, ${ctaHeadingColor}08 1px, transparent 0)`,
+                  backgroundSize: '32px 32px',
+                  zIndex: 1,
+                }}
+              />
+            )}
+
             <div className="container mx-auto px-4 sm:px-6 relative z-10">
               <div className="max-w-3xl mx-auto text-center">
                 <h2
                   className="text-2xl sm:text-4xl md:text-5xl font-bold mb-4 sm:mb-6 px-2"
                   style={{
-                    color: ctaTextColor,
+                    color: ctaHeadingColor,
                     fontFamily: `var(--font-heading)`,
                     textTransform: headingsCaps ? 'uppercase' : 'none',
                   }}
                 >
-                  {ctaPreview?.title || t('landing.ctaTitle')}
+                  {ct.title || t('landing.ctaTitle')}
                 </h2>
                 <p
                   className="text-base sm:text-lg md:text-xl mb-8 sm:mb-10 px-2"
-                  style={{ color: `${ctaTextColor}99` }}
+                  style={{ color: ctaDescColor }}
                 >
-                  {ctaPreview?.subtitle || t('landing.ctaSubtitle')}
+                  {ct.description || ct.subtitle || t('landing.ctaSubtitle')}
                 </p>
                 <button
-                  onClick={() => navigateToLink(ctaPreview?.buttonLink || '/register')}
+                  onClick={() => navigateToLink(ct.buttonLink || '/register')}
                   className="w-full sm:w-auto px-8 sm:px-10 py-4 sm:py-5 font-bold text-base sm:text-lg rounded-xl hover:opacity-90 active:scale-[0.98] transition-all inline-flex items-center justify-center gap-2 sm:gap-3 mx-4 sm:mx-0"
                   style={{
-                    backgroundColor: ctaAccentColor,
-                    color: ctaBackgroundColor,
+                    backgroundColor: ctaBtnBg,
+                    color: ctaBtnText,
                     fontFamily: `var(--font-button)`,
                     textTransform: buttonsCaps ? 'uppercase' : 'none',
                   }}
                 >
-                  {ctaPreview?.buttonText || t('landing.startFree')}
+                  {ct.buttonText || t('landing.startFree')}
                   <ArrowRight className="w-5 h-5 sm:w-6 sm:h-6" />
                 </button>
-                <p className="mt-3 sm:mt-4 text-xs sm:text-sm" style={{ color: `${ctaTextColor}66` }}>
+                <p className="mt-3 sm:mt-4 text-xs sm:text-sm" style={{ color: `${ctaHeadingColor}66` }}>
                   {t('landing.noCreditCard')}
                 </p>
               </div>
             </div>
           </section>
         );
+      }
 
       case 'faq': {
-        // Get FAQ section style values from preview data
-        const faqBackgroundColor = faqPreview?.backgroundColor || '#0A0A0A';
-        const faqTextColor = faqPreview?.textColor || '#ffffff';
-        const faqAccentColor = faqPreview?.accentColor || '#facc15';
-        const faqPadding = faqPreview?.padding || 80;
-        const faqStyle = faqPreview?.style || 'accordion';
-        const allowMultipleOpen = faqPreview?.allowMultipleOpen ?? false;
-        const faqs = faqPreview?.faqs || [];
+        // Get FAQ section style values — read from colors.* (written by controls)
+        const fq = section.data || {};
+        const fqColors = fq.colors || {};
+        const faqBackgroundColor = fqColors.background || fq.backgroundColor || '#0A0A0A';
+        const faqTextColor = fqColors.heading || fq.textColor || '#ffffff';
+        const faqDescColor = fqColors.description || `${faqTextColor}99`;
+        const faqAccentColor = fqColors.accent || fq.accentColor || '#facc15';
+        const faqCardBg = fqColors.cardBackground || `${faqTextColor}08`;
+        const faqQuestionColor = fqColors.text || faqTextColor;
+        const faqBorderColor = fqColors.borderColor || `${faqTextColor}15`;
+        const faqGradStart = fqColors.gradientStart || '#6366f1';
+        const faqGradEnd = fqColors.gradientEnd || '#8b5cf6';
+
+        // Padding tokens
+        const fqPadMap: Record<string, string> = { none: '0px', sm: '32px', md: '48px', lg: '80px', xl: '120px' };
+        const fqPadY = fq.paddingY ? (fqPadMap[fq.paddingY] || '80px') : (fq.padding ? `${fq.padding}px` : '80px');
+        const fqPadX = fq.paddingX ? (fqPadMap[fq.paddingX] || '24px') : '24px';
+
+        // Variant: controls write faqVariant, fallback to style
+        const faqStyle = fq.faqVariant || fq.style || 'classic';
+        const allowMultipleOpen = fq.allowMultipleOpen ?? false;
+        // Controls write to items[], legacy data may use faqs[]
+        const faqs = fq.items || fq.faqs || [];
 
         // Default FAQs if none provided
         const defaultFaqs = [
@@ -2553,16 +2704,55 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
 
         const displayFaqs = faqs.length > 0 ? faqs : defaultFaqs;
 
+        // Card style generator based on variant
+        const getFaqCardStyle = (isOpen: boolean): React.CSSProperties => {
+          if (faqStyle === 'gradient') {
+            return {
+              background: isOpen
+                ? `linear-gradient(135deg, ${faqGradStart}20, ${faqGradEnd}20)`
+                : `linear-gradient(135deg, ${faqCardBg}, ${faqCardBg})`,
+              borderWidth: '1px',
+              borderStyle: 'solid',
+              borderColor: isOpen ? `${faqAccentColor}30` : faqBorderColor,
+            };
+          }
+          if (faqStyle === 'minimal') {
+            return {
+              backgroundColor: 'transparent',
+              borderWidth: '0',
+              borderBottomWidth: '1px',
+              borderStyle: 'solid',
+              borderColor: faqBorderColor,
+            };
+          }
+          if (faqStyle === 'cards') {
+            return {
+              backgroundColor: faqCardBg,
+              borderWidth: '1px',
+              borderStyle: 'solid',
+              borderColor: faqBorderColor,
+            };
+          }
+          // classic (accordion)
+          return {
+            backgroundColor: isOpen ? `${faqAccentColor}10` : faqCardBg,
+            borderWidth: '1px',
+            borderStyle: 'solid',
+            borderColor: isOpen ? `${faqAccentColor}30` : faqBorderColor,
+          };
+        };
+
         return (
           <section
             key="faq"
             id="section-faq"
-            className="py-16 sm:py-20 md:py-24"
             style={{
               backgroundColor: faqBackgroundColor,
               color: faqTextColor,
-              paddingTop: `${faqPadding}px`,
-              paddingBottom: `${faqPadding}px`,
+              paddingTop: fqPadY,
+              paddingBottom: fqPadY,
+              paddingLeft: fqPadX,
+              paddingRight: fqPadX,
               position: 'relative' as const,
               overflow: 'hidden' as const,
             }}
@@ -2571,11 +2761,11 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
             <div className="container mx-auto px-4 sm:px-6 relative z-10">
               <div className="text-center mb-10 sm:mb-16">
                 <h2 className="text-2xl sm:text-4xl md:text-5xl font-bold mb-3 sm:mb-4 px-2" style={{ color: faqTextColor, fontFamily: `var(--font-heading)`, textTransform: headingsCaps ? 'uppercase' : 'none' }}>
-                  {faqPreview?.title || t('landing.faqTitle', 'Preguntas')}
+                  {fq.title || t('landing.faqTitle', 'Preguntas')}
                   <span style={{ color: faqAccentColor }}> {t('landing.faqTitleHighlight', 'Frecuentes')}</span>
                 </h2>
-                <p className="text-sm sm:text-base max-w-2xl mx-auto px-2" style={{ color: `${faqTextColor}99` }}>
-                  {faqPreview?.subtitle || t('landing.faqSubtitle', 'Todo lo que necesitas saber sobre Quimera.ai')}
+                <p className="text-sm sm:text-base max-w-2xl mx-auto px-2" style={{ color: faqDescColor }}>
+                  {fq.description || fq.subtitle || t('landing.faqSubtitle', 'Todo lo que necesitas saber sobre Quimera.ai')}
                 </p>
               </div>
 
@@ -2588,58 +2778,48 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
                       <div
                         key={index}
                         className="p-6 rounded-2xl"
-                        style={{
-                          backgroundColor: `${faqTextColor}08`,
-                          borderWidth: '1px',
-                          borderStyle: 'solid',
-                          borderColor: `${faqTextColor}15`,
-                        }}
+                        style={getFaqCardStyle(false)}
                       >
-                        <h3 className="text-lg font-semibold mb-3" style={{ color: faqTextColor }}>
+                        <h3 className="text-lg font-semibold mb-3" style={{ color: faqQuestionColor }}>
                           {faq.question}
                         </h3>
-                        <p className="text-sm sm:text-base leading-relaxed" style={{ color: `${faqTextColor}99` }}>
+                        <p className="text-sm sm:text-base leading-relaxed" style={{ color: faqDescColor }}>
                           {faq.answer}
                         </p>
                       </div>
                     );
                   }
 
-                  if (faqStyle === 'list') {
+                  if (faqStyle === 'minimal') {
                     return (
                       <div
                         key={index}
                         className="pb-4 mb-4"
-                        style={{ borderBottom: `1px solid ${faqTextColor}15` }}
+                        style={{ borderBottom: `1px solid ${faqBorderColor}` }}
                       >
-                        <h3 className="text-lg font-semibold mb-2" style={{ color: faqTextColor }}>
+                        <h3 className="text-lg font-semibold mb-2" style={{ color: faqQuestionColor }}>
                           {faq.question}
                         </h3>
-                        <p className="text-sm sm:text-base leading-relaxed" style={{ color: `${faqTextColor}99` }}>
+                        <p className="text-sm sm:text-base leading-relaxed" style={{ color: faqDescColor }}>
                           {faq.answer}
                         </p>
                       </div>
                     );
                   }
 
-                  // Default: accordion style
+                  // Default: accordion/classic/gradient style
                   return (
                     <div
                       key={index}
                       className="rounded-xl overflow-hidden transition-all"
-                      style={{
-                        backgroundColor: isOpen ? `${faqAccentColor}10` : `${faqTextColor}08`,
-                        borderWidth: '1px',
-                        borderStyle: 'solid',
-                        borderColor: isOpen ? `${faqAccentColor}30` : `${faqTextColor}15`,
-                      }}
+                      style={getFaqCardStyle(isOpen)}
                     >
                       <button
                         onClick={() => toggleFaq(index, allowMultipleOpen)}
                         className="w-full flex items-center justify-between p-5 text-left transition-colors"
                         aria-expanded={isOpen}
                       >
-                        <span className="text-base sm:text-lg font-semibold pr-4" style={{ color: faqTextColor }}>
+                        <span className="text-base sm:text-lg font-semibold pr-4" style={{ color: faqQuestionColor }}>
                           {faq.question}
                         </span>
                         <ChevronDownIcon
@@ -2650,7 +2830,7 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
                       {isOpen && (
                         <div
                           className="px-5 pb-5 pt-0 text-sm sm:text-base leading-relaxed animate-in slide-in-from-top-2 duration-200"
-                          style={{ color: `${faqTextColor}99` }}
+                          style={{ color: faqDescColor }}
                         >
                           {faq.answer}
                         </div>

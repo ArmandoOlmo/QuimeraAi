@@ -1049,7 +1049,7 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
                                 >
                                     <ChevronDown size={14} className={`transition-transform ${isContentExpanded ? '' : '-rotate-90'}`} />
                                     <span>{t('landingEditor.content', 'CONTENIDO')}</span>
-                                    <span className="text-muted-foreground">({sections.filter(s => s.type !== 'header' && s.type !== 'footer').length})</span>
+                                    <span className="text-muted-foreground">({sections.filter(s => s.type !== 'header' && s.type !== 'footer' && s.type !== 'typography' && s.type !== 'colors').length})</span>
                                 </button>
 
                                 {isContentExpanded && (
@@ -1060,11 +1060,11 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
                                         onDragEnd={handleDragEnd}
                                     >
                                         <SortableContext
-                                            items={sections.filter(s => s.type !== 'header' && s.type !== 'footer').map(s => s.id)}
+                                            items={sections.filter(s => s.type !== 'header' && s.type !== 'footer' && s.type !== 'typography' && s.type !== 'colors').map(s => s.id)}
                                             strategy={verticalListSortingStrategy}
                                         >
                                             <div className="mt-1 space-y-0.5 pl-2">
-                                                {sections.filter(s => s.type !== 'header' && s.type !== 'footer').map((section) => (
+                                                {sections.filter(s => s.type !== 'header' && s.type !== 'footer' && s.type !== 'typography' && s.type !== 'colors').map((section) => (
                                                     <SortableSectionItem
                                                         key={section.id}
                                                         section={section}
