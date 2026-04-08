@@ -102,18 +102,23 @@ const HelpCenterPage: React.FC = () => {
   // Función para contar artículos por categoría
   const getArticleCountForCategory = (categoryId: string): number => {
     const tags = HELP_CATEGORY_TAGS[categoryId] || [];
-    if (tags.length === 0) return 0;
     return helpArticles.filter(article =>
-      article.tags?.some(tag => tags.includes(tag.toLowerCase()))
+      // Check explicit helpCenterCategory first (new system)
+      article.helpCenterCategory === categoryId ||
+      // Fall back to tag-based matching for legacy articles
+      (article.tags?.some(tag => tags.includes(tag.toLowerCase())))
     ).length;
   };
 
-  // Filtrar artículos por categoría seleccionada (basado en tags)
+  // Filtrar artículos por categoría seleccionada (basado en helpCenterCategory + tags fallback)
   const filteredByCategory = useMemo(() => {
     if (!selectedCategory) return [];
     const tags = HELP_CATEGORY_TAGS[selectedCategory] || [];
     return helpArticles.filter(article =>
-      article.tags?.some(tag => tags.includes(tag.toLowerCase()))
+      // Check explicit helpCenterCategory first (new system)
+      article.helpCenterCategory === selectedCategory ||
+      // Fall back to tag-based matching for legacy articles (only if no helpCenterCategory set)
+      (!article.helpCenterCategory && article.tags?.some(tag => tags.includes(tag.toLowerCase())))
     );
   }, [helpArticles, selectedCategory]);
 

@@ -7,6 +7,27 @@
 // APP ARTICLES (Artículos del blog/contenido de la App)
 // =============================================================================
 
+export type HelpCenterCategory =
+  | 'getting-started'
+  | 'website-builder'
+  | 'ai-assistant'
+  | 'domains'
+  | 'billing'
+  | 'ecommerce'
+  | 'leads-crm'
+  | 'integrations';
+
+export const HELP_CENTER_CATEGORIES: { value: HelpCenterCategory; label: string; icon: string }[] = [
+  { value: 'getting-started', label: 'Primeros Pasos', icon: 'Rocket' },
+  { value: 'website-builder', label: 'Constructor de Sitios', icon: 'Palette' },
+  { value: 'ai-assistant', label: 'Asistente IA', icon: 'Bot' },
+  { value: 'domains', label: 'Dominios', icon: 'Globe' },
+  { value: 'billing', label: 'Facturación', icon: 'CreditCard' },
+  { value: 'ecommerce', label: 'E-commerce', icon: 'ShoppingBag' },
+  { value: 'leads-crm', label: 'Leads & CRM', icon: 'Users' },
+  { value: 'integrations', label: 'Integraciones', icon: 'Zap' },
+];
+
 export interface AppArticle {
   id: string;
   title: string;
@@ -17,6 +38,7 @@ export interface AppArticle {
   status: 'published' | 'draft';
   featured: boolean; // Para destacar en front page
   category: AppArticleCategory;
+  helpCenterCategory?: HelpCenterCategory; // Sección del Help Center (solo para artículos help/guide/tutorial)
   tags: string[];
   author: string;
   showAuthor?: boolean;    // Toggle author visibility on public page (default: true)

@@ -28,7 +28,7 @@ import { useAdmin } from '../../../contexts/admin';
 import { useToast } from '../../../contexts/ToastContext';
 import { useFiles } from '../../../contexts/files';
 import { useUI } from '../../../contexts/core/UIContext';
-import { AppArticle, AppArticleCategory } from '../../../types/appContent';
+import { AppArticle, AppArticleCategory, HelpCenterCategory, HELP_CENTER_CATEGORIES } from '../../../types/appContent';
 import { PreviewDevice } from '../../../types';
 import {
     ArrowLeft, Save, Globe, Type, Loader2, Sparkles,
@@ -101,6 +101,7 @@ const ModernAppArticleEditor: React.FC<ModernAppArticleEditorProps> = ({ article
     const [authorImage, setAuthorImage] = useState<string | null>(article?.authorImage || null);
     const [showAuthorImagePicker, setShowAuthorImagePicker] = useState(false);
     const [language, setLanguage] = useState<'es' | 'en'>(article?.language || 'es');
+    const [helpCenterCategory, setHelpCenterCategory] = useState<HelpCenterCategory | undefined>(article?.helpCenterCategory || undefined);
 
     // SEO
     const [metaTitle, setMetaTitle] = useState(article?.seo?.metaTitle || '');
@@ -396,6 +397,7 @@ const ModernAppArticleEditor: React.FC<ModernAppArticleEditorProps> = ({ article
                 status,
                 featured,
                 category,
+                helpCenterCategory: ['help', 'guide', 'tutorial'].includes(category) ? (helpCenterCategory || undefined) : undefined,
                 tags,
                 author,
                 showAuthor,
@@ -638,6 +640,7 @@ Text to format:
                 status,
                 featured,
                 category,
+                helpCenterCategory: ['help', 'guide', 'tutorial'].includes(category) ? (helpCenterCategory || undefined) : undefined,
                 tags,
                 author,
                 showAuthor,
@@ -1113,6 +1116,28 @@ Text to format:
                                         ))}
                                     </select>
                                 </div>
+
+                                {/* Help Center Category — only visible for help/guide/tutorial */}
+                                {['help', 'guide', 'tutorial'].includes(category) && (
+                                    <div>
+                                        <label className="block text-xs font-bold text-muted-foreground uppercase mb-2">
+                                            Sección del Help Center
+                                        </label>
+                                        <select
+                                            value={helpCenterCategory || ''}
+                                            onChange={(e) => setHelpCenterCategory((e.target.value as HelpCenterCategory) || undefined)}
+                                            className="w-full bg-secondary/50 border border-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-primary outline-none text-foreground"
+                                        >
+                                            <option value="">— Sin asignar —</option>
+                                            {HELP_CENTER_CATEGORIES.map(hc => (
+                                                <option key={hc.value} value={hc.value}>{hc.label}</option>
+                                            ))}
+                                        </select>
+                                        <p className="text-[10px] text-muted-foreground mt-1">
+                                            Define en qué sección aparece este artículo en /help-center
+                                        </p>
+                                    </div>
+                                )}
 
                                 {/* Featured Image */}
                                 <div>
