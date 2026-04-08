@@ -846,20 +846,20 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
     }, [selectedStructureItem]);
 
     // Scroll preview to section when selected
-    const scrollToSection = useCallback((sectionType: string) => {
+    const scrollToSection = useCallback((sectionId: string) => {
         if (iframeRef.current?.contentWindow) {
             iframeRef.current.contentWindow.postMessage({
                 type: 'SCROLL_TO_SECTION',
-                sectionType: sectionType
+                sectionId: sectionId
             }, window.location.origin);
         }
     }, []);
 
     // Handle section selection - select and scroll to section
-    const handleSectionSelect = useCallback((sectionId: string, sectionType: string) => {
+    const handleSectionSelect = useCallback((sectionId: string, _sectionType: string) => {
         setSelectedSection(sectionId);
         setSelectedStructureItem(null); // Clear structure selection
-        scrollToSection(sectionType);
+        scrollToSection(sectionId);
     }, [scrollToSection]);
 
     // Handle structure item selection (Colores, Tipografía, etc.)

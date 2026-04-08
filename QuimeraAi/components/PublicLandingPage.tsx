@@ -129,10 +129,12 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
 
       // Handle scroll to section request from editor
       if (event.data?.type === 'SCROLL_TO_SECTION') {
-        const sectionType = event.data.sectionType;
-        const sectionElement = document.getElementById(`section-${sectionType}`);
-        if (sectionElement) {
-          sectionElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        const sectionId = event.data.sectionId;
+        if (sectionId) {
+          const sectionElement = document.querySelector(`[data-section-id="${sectionId}"]`);
+          if (sectionElement) {
+            sectionElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
         }
       }
     };
@@ -2576,6 +2578,7 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
           <section
             key="cta"
             id="section-cta"
+            data-section-id={section.id}
             style={{
               background: ctColors.gradientStart
                 ? `linear-gradient(135deg, ${ctaGradStart}, ${ctaGradEnd})`
@@ -2746,6 +2749,7 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
           <section
             key="faq"
             id="section-faq"
+            data-section-id={section.id}
             style={{
               backgroundColor: faqBackgroundColor,
               color: faqTextColor,
