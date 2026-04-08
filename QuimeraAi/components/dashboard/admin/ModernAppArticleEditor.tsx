@@ -98,6 +98,8 @@ const ModernAppArticleEditor: React.FC<ModernAppArticleEditorProps> = ({ article
     const [showAuthor, setShowAuthor] = useState(article?.showAuthor !== false);
     const [showDate, setShowDate] = useState(article?.showDate !== false);
     const [publishedAt, setPublishedAt] = useState(article?.publishedAt || '');
+    const [authorImage, setAuthorImage] = useState<string | null>(article?.authorImage || null);
+    const [isUploadingAuthorImage, setIsUploadingAuthorImage] = useState(false);
     const [language, setLanguage] = useState<'es' | 'en'>(article?.language || 'es');
 
     // SEO
@@ -120,6 +122,7 @@ const ModernAppArticleEditor: React.FC<ModernAppArticleEditorProps> = ({ article
     const [linkUrl, setLinkUrl] = useState('');
 
     const contentFileInputRef = useRef<HTMLInputElement>(null);
+    const authorImageInputRef = useRef<HTMLInputElement>(null);
     const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
 
     // Content Image Picker State
@@ -209,6 +212,24 @@ const ModernAppArticleEditor: React.FC<ModernAppArticleEditorProps> = ({ article
             }
         };
     }, []);
+
+    // --- Author Image Upload ---
+    const handleAuthorImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        setIsUploadingAuthorImage(true);
+        try {
+            const url = await uploadGlobalFile(file);
+            setAuthorImage(url);
+            showToast('Imagen del autor actualizada', 'success');
+        } catch (error) {
+            console.error('Author image upload failed', error);
+            showToast('Error al subir la imagen del autor', 'error');
+        } finally {
+            setIsUploadingAuthorImage(false);
+            if (authorImageInputRef.current) authorImageInputRef.current.value = '';
+        }
+    };
 
     // --- Image Upload ---
     const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -398,7 +419,7 @@ const ModernAppArticleEditor: React.FC<ModernAppArticleEditorProps> = ({ article
                 author,
                 showAuthor,
                 showDate,
-                authorImage: article?.authorImage || null,
+                authorImage: authorImage || null,
                 readTime,
                 views: article?.views || 0,
                 createdAt: article?.createdAt || new Date().toISOString(),
@@ -640,7 +661,7 @@ Text to format:
                 author,
                 showAuthor,
                 showDate,
-                authorImage: article?.authorImage || null,
+                authorImage: authorImage || null,
                 readTime: article?.readTime || 1,
                 views: article?.views || 0,
                 createdAt: article?.createdAt || new Date().toISOString(),
@@ -778,6 +799,13 @@ Text to format:
                     type="file"
                     ref={contentFileInputRef}
                     onChange={handleImageUpload}
+                    className="hidden"
+                    accept="image/*"
+                />
+                <input
+                    type="file"
+                    ref={authorImageInputRef}
+                    onChange={handleAuthorImageUpload}
                     className="hidden"
                     accept="image/*"
                 />
@@ -1127,7 +1155,53 @@ Text to format:
                                 {/* Author */}
                                 <div>
                                     <label className="block text-xs font-bold text-muted-foreground uppercase mb-2">{t('contentManagement.editor.author', 'Autor')}</label>
-                                    <input value={author} onChange={(e) => setAuthor(e.target.value)} className="w-full bg-secondary/50 border border-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-primary outline-none text-foreground" />
+                                    {/* Author avatar circle + upload */}
+                                    <div className="flex items-center gap-3 mb-3">
+                                        <button
+                                            type="button"
+                                            title="Haz clic para subir foto del autor"
+                                            onClick={() => authorImageInputRef.current?.click()}
+                                            disabled={isUploadingAuthorImage}
+                                            className="relative w-10 h-10 rounded-full overflow-hidden flex-shrink-0 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 group"
+                                        >
+                                            {authorImage ? (
+                                                <img
+                                                    src={authorImage}
+                                                    alt={author}
+                                                    className="w-full h-full object-cover"
+                                                />
+                                            ) : (
+                                                <div className="w-full h-full bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center">
+                                                    <span className="text-white text-sm font-bold select-none">
+                                                        {author ? author.charAt(0).toUpperCase() : 'A'}
+                                                    </span>
+                                                </div>
+                                            )}
+                                            {/* Hover overlay */}
+                                            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-full">
+                                                {isUploadingAuthorImage
+                                                    ? <Loader2 className="w-4 h-4 text-white animate-spin" />
+                                                    : <Upload className="w-4 h-4 text-white" />
+                                                }
+                                            </div>
+                                        </button>
+                                        <div className="flex-1 min-w-0">
+                                            <input
+                                                value={author}
+                                                onChange={(e) => setAuthor(e.target.value)}
+                                                className="w-full bg-secondary/50 border border-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-primary outline-none text-foreground"
+                                            />
+                                            {authorImage && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setAuthorImage(null)}
+                                                    className="mt-1 text-[10px] text-red-400 hover:text-red-300 transition-colors"
+                                                >
+                                                    Eliminar foto
+                                                </button>
+                                            )}
+                                        </div>
+                                    </div>
                                 </div>
 
                                 {/* Publication Date */}
