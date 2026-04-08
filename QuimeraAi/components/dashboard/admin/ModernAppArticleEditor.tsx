@@ -645,7 +645,7 @@ Text to format:
                 views: article?.views || 0,
                 createdAt: article?.createdAt || new Date().toISOString(),
                 updatedAt: new Date().toISOString(),
-                publishedAt: publishedAt || article?.publishedAt || null,
+                publishedAt: publishedAt || article?.publishedAt || undefined,
                 language,
                 seo: {
                     metaTitle: metaTitle || title,
@@ -657,18 +657,18 @@ Text to format:
                 translationStatus: article?.translationStatus || 'original',
             };
 
-            // Save the original article first (to persist the translationGroup)
-            await saveArticle(currentArticleData);
+            // Save the original article first (to persist the translationGroup and get actual ID)
+            const savedOriginalArticle = await saveArticle(currentArticleData);
 
             // Now translate via AI
             const translatedFields = await translateArticleContent(
-                currentArticleData,
+                savedOriginalArticle,
                 targetLang,
                 user?.uid
             );
 
             const translatedArticle = buildTranslatedArticle(
-                { ...currentArticleData, id: currentArticleData.id || `article_${Date.now() - 1}` },
+                savedOriginalArticle,
                 translatedFields,
                 targetLang
             );
@@ -683,7 +683,7 @@ Text to format:
             });
 
             // Save the translated article
-            await saveArticle(translatedArticle);
+            const savedTranslatedArticle = await saveArticle(translatedArticle);
             await loadArticles();
 
             showToast(
@@ -695,14 +695,14 @@ Text to format:
 
             // Open the translated article in the editor
             if (onTranslationCreated) {
-                onTranslationCreated(translatedArticle);
+                onTranslationCreated(savedTranslatedArticle);
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error('[Translation] Error:', error);
             showToast(
                 language === 'es'
-                    ? 'Error al traducir el artículo. Intenta de nuevo.'
-                    : 'Error translating article. Please try again.',
+                    ? `Error al traducir el artículo: ${error?.message || 'Error desconocido'}`
+                    : `Error translating article: ${error?.message || 'Unknown error'}`,
                 'error'
             );
         } finally {

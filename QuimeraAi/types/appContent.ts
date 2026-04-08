@@ -257,7 +257,7 @@ export interface AppContentContextType {
   isLoadingArticles: boolean;
   loadArticles: () => Promise<void>;
   getArticleBySlug: (slug: string) => AppArticle | undefined;
-  saveArticle: (article: AppArticle) => Promise<void>;
+  saveArticle: (article: AppArticle) => Promise<AppArticle>;
   deleteArticle: (id: string) => Promise<void>;
   getArticleTranslations: (translationGroup: string) => AppArticle[];
 

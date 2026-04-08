@@ -205,7 +205,7 @@ export function buildTranslatedArticle(
         views: 0,
         createdAt: now,
         updatedAt: now,
-        publishedAt: null as unknown as string, // Firestore accepts null to clear a field
+        publishedAt: undefined,
         language: targetLang,
         seo: translatedFields.seo,
         // Translation metadata

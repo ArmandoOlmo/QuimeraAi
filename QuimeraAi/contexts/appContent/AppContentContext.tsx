@@ -160,7 +160,7 @@ export const AppContentProvider: React.FC<{ children: ReactNode }> = ({ children
     }, [articles]);
 
     // Save article
-    const saveArticle = useCallback(async (article: AppArticle) => {
+    const saveArticle = useCallback(async (article: AppArticle): Promise<AppArticle> => {
         try {
             const { id, ...data } = article;
             const now = new Date().toISOString();
@@ -169,30 +169,37 @@ export const AppContentProvider: React.FC<{ children: ReactNode }> = ({ children
             const wordCount = article.content.replace(/<[^>]*>/g, '').split(/\s+/).length;
             const readTime = Math.max(1, Math.ceil(wordCount / 200));
 
+            let savedArticle: AppArticle;
+
             if (id && id.length > 0) {
                 // Update existing (using setDoc with merge to also handle pre-generated IDs)
                 const articleRef = doc(db, COLLECTIONS.ARTICLES, id);
-                await setDoc(articleRef, stripUndefined({
+                savedArticle = {
                     ...data,
                     id,
                     readTime,
                     updatedAt: now,
-                    publishedAt: article.status === 'published' && !article.publishedAt ? now : article.publishedAt
-                }), { merge: true });
+                    // Treat falsy string values as undefined so they don't crash
+                    publishedAt: article.status === 'published' && !article.publishedAt ? now : (article.publishedAt || undefined)
+                } as AppArticle;
+                await setDoc(articleRef, stripUndefined(savedArticle), { merge: true });
             } else {
                 // Create new
                 const newId = `article_${Date.now()}`;
                 const articleRef = doc(db, COLLECTIONS.ARTICLES, newId);
-                await setDoc(articleRef, stripUndefined({
+                savedArticle = {
                     ...data,
                     id: newId,
                     readTime,
                     views: 0,
                     createdAt: now,
                     updatedAt: now,
-                    publishedAt: article.status === 'published' ? now : null
-                }));
+                    publishedAt: article.status === 'published' ? now : undefined
+                } as AppArticle;
+                await setDoc(articleRef, stripUndefined(savedArticle));
             }
+            
+            return savedArticle;
         } catch (error) {
             console.error("Error saving app article:", error);
             throw error;

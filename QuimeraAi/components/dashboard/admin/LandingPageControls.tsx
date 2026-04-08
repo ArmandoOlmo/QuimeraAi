@@ -1250,9 +1250,9 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                             <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
                                 {t('landingEditor.layout', 'Espaciado')}
                             </label>
-                            <div className="grid grid-cols-2 gap-3">
+                            <div className="space-y-3">
                                 <SelectControl
-                                    label={t('landingEditor.paddingY', 'Padding Vertical')}
+                                    label={t('landingEditor.paddingY', 'Vertical')}
                                     value={data.paddingY || 'lg'}
                                     options={[
                                         { value: 'none', label: 'Ninguno' },
@@ -1264,7 +1264,7 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                                     onChange={(v) => updateData('paddingY', v)}
                                 />
                                 <SelectControl
-                                    label={t('landingEditor.paddingX', 'Padding Horizontal')}
+                                    label={t('landingEditor.paddingX', 'Horizontal')}
                                     value={data.paddingX || 'lg'}
                                     options={[
                                         { value: 'none', label: 'Ninguno' },
@@ -1608,7 +1608,7 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                             <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
                                 {t('landingEditor.spacing', 'Espaciado')}
                             </label>
-                            <div className="grid grid-cols-2 gap-3">
+                            <div className="space-y-3">
                                 <SelectControl
                                     label={t('landingEditor.paddingY', 'Vertical')}
                                     value={data.paddingY || 'lg'}
