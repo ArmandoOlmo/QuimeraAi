@@ -475,6 +475,27 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
   );
 
   // Render a section by type - enables dynamic ordering
+  // Reusable background image overlay for sections
+  const SectionBgImage: React.FC<{ sectionData: Record<string, any> }> = ({ sectionData }) => {
+    if (!sectionData?.bgImageEnabled || !sectionData?.bgImageUrl) return null;
+    return (
+      <div className="absolute inset-0 z-0 pointer-events-none">
+        <img
+          src={sectionData.bgImageUrl}
+          alt=""
+          className="w-full h-full"
+          style={{
+            objectFit: (sectionData.bgObjectFit || 'cover') as any,
+            objectPosition: sectionData.bgPosition || 'center center',
+            filter: sectionData.bgBlur > 0 ? `blur(${sectionData.bgBlur}px)` : undefined,
+            opacity: (sectionData.bgOpacity ?? 100) / 100,
+            transform: sectionData.bgBlur > 0 ? 'scale(1.05)' : undefined,
+          }}
+        />
+      </div>
+    );
+  };
+
   const renderSection = (section: PreviewSection): React.ReactNode => {
     // Check visibility first
     if (section.enabled === false) return null;
@@ -1981,8 +2002,11 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
               paddingBottom: fPadY,
               paddingLeft: fPadX,
               paddingRight: fPadX,
+              position: 'relative' as const,
+              overflow: 'hidden' as const,
             }}
           >
+            <SectionBgImage sectionData={fp} />
             {/* Animation keyframes */}
             {fAnimEnabled && fAnimType !== 'none' && (
               <style>{`
@@ -1994,7 +2018,7 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
                 @keyframes bounceIn { 0% { opacity: 0; transform: scale(0.3); } 50% { opacity: 1; transform: scale(1.05); } 70% { transform: scale(0.9); } 100% { transform: scale(1); } }
               `}</style>
             )}
-            <div className="container mx-auto px-4 sm:px-6">
+            <div className="container mx-auto px-4 sm:px-6 relative z-10">
               {fShowHeader && (
                 <div className="text-center mb-10 sm:mb-16">
                   <h2 className="font-bold mb-3 sm:mb-4 px-2" style={{ color: fText, fontFamily: `var(--font-heading)`, textTransform: headingsCaps ? 'uppercase' : 'none', fontSize: fTitleSize }}>
@@ -2037,9 +2061,12 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
               color: pricingTextColor,
               paddingTop: `${pricingPadding}px`,
               paddingBottom: `${pricingPadding}px`,
+              position: 'relative' as const,
+              overflow: 'hidden' as const,
             }}
           >
-            <div className="container mx-auto px-4 sm:px-6">
+            <SectionBgImage sectionData={section.data || {}} />
+            <div className="container mx-auto px-4 sm:px-6 relative z-10">
               <div className="text-center mb-10 sm:mb-16">
                 <h2 className="text-2xl sm:text-4xl md:text-5xl font-bold mb-3 sm:mb-4 px-2" style={{ color: pricingTextColor, fontFamily: `var(--font-heading)`, textTransform: headingsCaps ? 'uppercase' : 'none' }}>
                   {pricingPreview?.title || t('landing.pricingTitle')} <span style={{ color: pricingAccentColor }}>{pricingPreview?.title ? '' : t('landing.pricingTitleHighlight')}</span>
@@ -2203,7 +2230,8 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
               paddingBottom: `${testimonialsPadding}px`,
             }}
           >
-            <div className="container mx-auto px-4 sm:px-6">
+            <SectionBgImage sectionData={section.data || {}} />
+            <div className="container mx-auto px-4 sm:px-6 relative z-10">
               <div className="text-center mb-10 sm:mb-16">
                 <h2 className="text-2xl sm:text-4xl md:text-5xl font-bold mb-3 sm:mb-4 px-2" style={{ color: testimonialsTextColor, fontFamily: `var(--font-heading)`, textTransform: headingsCaps ? 'uppercase' : 'none' }}>
                   {testimonialsPreview?.title || t('landing.testimonialsTitle', 'Lo que dicen nuestros')}
@@ -2449,9 +2477,12 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
               color: ctaTextColor,
               paddingTop: `${ctaPadding}px`,
               paddingBottom: `${ctaPadding}px`,
+              position: 'relative' as const,
+              overflow: 'hidden' as const,
             }}
           >
-            <div className="container mx-auto px-4 sm:px-6">
+            <SectionBgImage sectionData={section.data || {}} />
+            <div className="container mx-auto px-4 sm:px-6 relative z-10">
               <div className="max-w-3xl mx-auto text-center">
                 <h2
                   className="text-2xl sm:text-4xl md:text-5xl font-bold mb-4 sm:mb-6 px-2"
@@ -2532,9 +2563,12 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
               color: faqTextColor,
               paddingTop: `${faqPadding}px`,
               paddingBottom: `${faqPadding}px`,
+              position: 'relative' as const,
+              overflow: 'hidden' as const,
             }}
           >
-            <div className="container mx-auto px-4 sm:px-6">
+            <SectionBgImage sectionData={section.data || {}} />
+            <div className="container mx-auto px-4 sm:px-6 relative z-10">
               <div className="text-center mb-10 sm:mb-16">
                 <h2 className="text-2xl sm:text-4xl md:text-5xl font-bold mb-3 sm:mb-4 px-2" style={{ color: faqTextColor, fontFamily: `var(--font-heading)`, textTransform: headingsCaps ? 'uppercase' : 'none' }}>
                   {faqPreview?.title || t('landing.faqTitle', 'Preguntas')}

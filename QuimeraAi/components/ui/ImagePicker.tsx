@@ -219,7 +219,7 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
             {isLibraryOpen && (() => {
                 const modalContent = (
                     <div
-                        className={`${portalContainer ? 'absolute inset-0' : 'fixed inset-0'} bg-black/60 z-[200] flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in-up`}
+                        className="fixed inset-0 bg-black/60 z-[200] flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in-up"
                         onClick={handleClose}
                     >
                         <div
@@ -431,7 +431,7 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
                         </div>
                     </div>
                 );
-                return portalContainer ? createPortal(modalContent, portalContainer) : modalContent;
+                return createPortal(modalContent, document.getElementById('portal-root') || document.body);
             })()}
 
             {/* Detailed Preview Modal */}

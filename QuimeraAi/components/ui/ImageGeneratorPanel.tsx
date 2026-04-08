@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { useAI } from '../../contexts/ai';
 import { useFiles } from '../../contexts/files';
 import { useProject } from '../../contexts/project';
@@ -933,9 +934,9 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
 
             {/* Image Details Modal omitted for brevity, logic remains in state, but view might not be needed if it's rendered inline. To keep it functional, we can add a simple wrapper if showImageDetail is true, but the new UI design displays the tools directly on the image hover so we mapped it there. */}
 
-            {showImageDetail && generatedImage && (
+            {showImageDetail && generatedImage && createPortal(
                 <div
-                    className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in"
+                    className="fixed inset-0 z-[300] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in"
                     onClick={() => setShowImageDetail(false)}
                 >
                     <div className="bg-editor-bg border border-editor-border rounded-2xl shadow-2xl max-w-5xl w-full max-h-[90vh] overflow-hidden flex flex-col lg:flex-row relative" onClick={e => e.stopPropagation()}>
@@ -984,13 +985,14 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
                             </div>
                         </div>
                     </div>
-                </div>
+                </div>,
+                document.getElementById('portal-root') || document.body
             )}
 
             {/* Library Browser Modal */}
-            {showLibraryBrowser && (
+            {showLibraryBrowser && createPortal(
                 <div
-                    className="fixed inset-0 z-[150] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in"
+                    className="fixed inset-0 z-[300] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in"
                     onClick={() => setShowLibraryBrowser(false)}
                 >
                     <div
@@ -1112,7 +1114,8 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
                             </div>
                         </div>
                     </div>
-                </div>
+                </div>,
+                document.getElementById('portal-root') || document.body
             )}
         </div>
     );

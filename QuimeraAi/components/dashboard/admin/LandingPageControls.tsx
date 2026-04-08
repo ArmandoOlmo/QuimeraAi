@@ -525,6 +525,130 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
         }));
     };
 
+    // ========================================================================
+    // REUSABLE: Background Image Controls (shared across all sections)
+    // ========================================================================
+    const renderBgImageControls = () => (
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-4">
+            <Toggle
+                label={t('landingEditor.bgImage', 'Imagen de Fondo')}
+                checked={data.bgImageEnabled || false}
+                onChange={(v) => updateData('bgImageEnabled', v)}
+            />
+            {data.bgImageEnabled && (
+                <div className="space-y-4 animate-fade-in-up">
+                    <ImagePicker
+                        label=""
+                        value={data.bgImageUrl || ''}
+                        onChange={(url) => updateData('bgImageUrl', url)}
+                        onRemove={() => updateData('bgImageUrl', '')}
+                        destination="global"
+                        generationContext="background"
+                        hideUrlInput={true}
+                        portalContainer={portalContainer}
+                    />
+
+                    {/* Object Fit */}
+                    <div>
+                        <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider block mb-2">
+                            {t('landingEditor.bgObjectFit', 'Ajuste de Imagen')}
+                        </label>
+                        <div className="grid grid-cols-4 gap-1 bg-editor-bg p-1 rounded-md border border-editor-border">
+                            {[
+                                { id: 'cover', label: 'Cover' },
+                                { id: 'contain', label: 'Contain' },
+                                { id: 'fill', label: 'Fill' },
+                                { id: 'none', label: 'Original' },
+                            ].map((opt) => (
+                                <button
+                                    key={opt.id}
+                                    onClick={() => updateData('bgObjectFit', opt.id)}
+                                    className={`px-2 py-1.5 text-[10px] font-semibold rounded-sm transition-colors uppercase tracking-wide ${(data.bgObjectFit || 'cover') === opt.id
+                                        ? 'bg-editor-accent text-editor-bg'
+                                        : 'text-editor-text-secondary hover:bg-editor-border'
+                                    }`}
+                                >
+                                    {opt.label}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Background Position */}
+                    <div>
+                        <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider block mb-2">
+                            {t('landingEditor.bgPosition', 'Posición')}
+                        </label>
+                        <div className="grid grid-cols-3 gap-1 bg-editor-bg p-1.5 rounded-md border border-editor-border w-fit mx-auto">
+                            {[
+                                { id: 'top left', label: '↖' },
+                                { id: 'top center', label: '↑' },
+                                { id: 'top right', label: '↗' },
+                                { id: 'center left', label: '←' },
+                                { id: 'center center', label: '●' },
+                                { id: 'center right', label: '→' },
+                                { id: 'bottom left', label: '↙' },
+                                { id: 'bottom center', label: '↓' },
+                                { id: 'bottom right', label: '↘' },
+                            ].map((pos) => (
+                                <button
+                                    key={pos.id}
+                                    onClick={() => updateData('bgPosition', pos.id)}
+                                    className={`w-8 h-8 flex items-center justify-center rounded-sm transition-all text-sm ${(data.bgPosition || 'center center') === pos.id
+                                        ? 'bg-editor-accent text-editor-bg shadow-md scale-110'
+                                        : 'text-editor-text-secondary hover:bg-editor-border hover:text-editor-text-primary'
+                                    }`}
+                                    title={pos.id}
+                                >
+                                    {pos.label}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Blur */}
+                    <div>
+                        <div className="flex justify-between items-center mb-1">
+                            <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
+                                {t('landingEditor.bgBlur', 'Desenfoque')}
+                            </label>
+                            <span className="text-xs font-mono text-editor-text-primary">{data.bgBlur || 0}px</span>
+                        </div>
+                        <input
+                            type="range"
+                            min="0"
+                            max="20"
+                            step="1"
+                            value={data.bgBlur || 0}
+                            onChange={(e) => updateData('bgBlur', parseInt(e.target.value))}
+                            className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
+                        />
+                    </div>
+
+                    {/* Image Opacity */}
+                    <div>
+                        <div className="flex justify-between items-center mb-1">
+                            <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
+                                {t('landingEditor.bgOpacity', 'Opacidad de Imagen')}
+                            </label>
+                            <span className="text-xs font-mono text-editor-text-primary">{data.bgOpacity ?? 100}%</span>
+                        </div>
+                        <input
+                            type="range"
+                            min="0"
+                            max="100"
+                            step="5"
+                            value={data.bgOpacity ?? 100}
+                            onChange={(e) => updateData('bgOpacity', parseInt(e.target.value))}
+                            className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
+                        />
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+
+
     const renderHeroControls = () => (
         <div className="space-y-4">
             {activeTab === 'content' && (
@@ -1017,6 +1141,7 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
 
                 {activeTab === 'style' && (
                     <>
+                    {renderBgImageControls()}
                         {/* === VARIANT SELECTOR === */}
                         <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
                             <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
@@ -1470,6 +1595,7 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
 
                 {activeTab === 'style' && (
                     <>
+                    {renderBgImageControls()}
                         {/* Variant Selector */}
                         <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
                             <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
@@ -1811,6 +1937,7 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
 
             {activeTab === 'style' && (
                 <>
+                    {renderBgImageControls()}
                     <ColorControl
                         label={t('landingEditor.backgroundColor', 'Fondo')}
                         value={data.backgroundColor || '#050505'}
@@ -1971,6 +2098,7 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
 
             {activeTab === 'style' && (
                 <>
+                    {renderBgImageControls()}
                     {/* Section Colors */}
                     <div className="space-y-3">
                         <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
@@ -2157,6 +2285,7 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
 
             {activeTab === 'style' && (
                 <>
+                    {renderBgImageControls()}
                     {/* Spacing */}
                     <ControlGroup label={t('landingEditor.spacing', 'Espaciado')}>
                         <SelectControl
@@ -2351,6 +2480,7 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
 
             {activeTab === 'style' && (
                 <>
+                    {renderBgImageControls()}
                     <ColorControl
                         label={t('landingEditor.backgroundColor', 'Fondo')}
                         value={data.colors?.background || data.backgroundColor || '#111827'}
@@ -3518,6 +3648,7 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
             )}
             {activeTab === 'style' && (
                 <>
+                    {renderBgImageControls()}
                     {/* Section Colors */}
                     <div className="space-y-3">
                         <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
@@ -3851,6 +3982,7 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
 
                 {activeTab === 'style' && (
                     <>
+                    {renderBgImageControls()}
                         {/* Section Colors */}
                         <div className="space-y-3">
                             <h4 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
@@ -4102,6 +4234,7 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
             )}
             {activeTab === 'style' && (
                 <>
+                    {renderBgImageControls()}
                     <ControlGroup label={t('landingEditor.paddingY', 'Espaciado Vertical')}>
                         <SelectControl
                             value={data.paddingY || 'lg'}
@@ -4226,6 +4359,7 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
             )}
             {activeTab === 'style' && (
                 <>
+                    {renderBgImageControls()}
                     {/* Border Radius Controls */}
                     <div className="space-y-3">
                         <h4 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
@@ -4531,6 +4665,7 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
             )}
             {activeTab === 'style' && (
                 <>
+                    {renderBgImageControls()}
                     {/* Spacing */}
                     <ControlGroup label={t('landingEditor.paddingY', 'Espaciado Vertical')}>
                         <SelectControl
@@ -4672,6 +4807,7 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
             )}
             {activeTab === 'style' && (
                 <>
+                    {renderBgImageControls()}
                     <ControlGroup label={t('landingEditor.paddingY', 'Espaciado Vertical')}>
                         <SelectControl
                             value={data.paddingY || 'lg'}
@@ -4739,6 +4875,7 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
             )}
             {activeTab === 'style' && (
                 <>
+                    {renderBgImageControls()}
                     <ControlGroup label={t('landingEditor.autoPlaySpeed', 'Velocidad Auto-play (ms)')}>
                         <RangeControl
                             value={data.autoPlaySpeed || 5000}
@@ -4806,6 +4943,7 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
             )}
             {activeTab === 'style' && (
                 <>
+                    {renderBgImageControls()}
                     <ControlGroup label={t('landingEditor.paddingY', 'Espaciado Vertical')}>
                         <SelectControl
                             value={data.paddingY || 'lg'}
@@ -4878,6 +5016,7 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
             )}
             {activeTab === 'style' && (
                 <>
+                    {renderBgImageControls()}
                     <ControlGroup label={t('landingEditor.mapZoom', 'Zoom del Mapa')}>
                         <RangeControl
                             value={data.zoom || 15}
@@ -4959,6 +5098,7 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
             )}
             {activeTab === 'style' && (
                 <>
+                    {renderBgImageControls()}
                     <ControlGroup label={t('landingEditor.paddingY', 'Espaciado Vertical')}>
                         <SelectControl
                             value={data.paddingY || 'lg'}
@@ -5019,6 +5159,7 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
             )}
             {activeTab === 'style' && (
                 <>
+                    {renderBgImageControls()}
                     <ControlGroup label={t('landingEditor.backgroundColor', 'Color de Fondo')}>
                         <ColorControl
                             value={data.colors?.background || '#6366f1'}
@@ -5091,6 +5232,7 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
             )}
             {activeTab === 'style' && (
                 <>
+                    {renderBgImageControls()}
                     <ControlGroup label={t('landingEditor.imagePosition', 'Posición de Imagen')}>
                         <SelectControl
                             value={data.imagePosition || 'right'}
