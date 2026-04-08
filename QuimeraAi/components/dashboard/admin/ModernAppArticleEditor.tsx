@@ -99,7 +99,7 @@ const ModernAppArticleEditor: React.FC<ModernAppArticleEditorProps> = ({ article
     const [showDate, setShowDate] = useState(article?.showDate !== false);
     const [publishedAt, setPublishedAt] = useState(article?.publishedAt || '');
     const [authorImage, setAuthorImage] = useState<string | null>(article?.authorImage || null);
-    const [isUploadingAuthorImage, setIsUploadingAuthorImage] = useState(false);
+    const [showAuthorImagePicker, setShowAuthorImagePicker] = useState(false);
     const [language, setLanguage] = useState<'es' | 'en'>(article?.language || 'es');
 
     // SEO
@@ -122,7 +122,6 @@ const ModernAppArticleEditor: React.FC<ModernAppArticleEditorProps> = ({ article
     const [linkUrl, setLinkUrl] = useState('');
 
     const contentFileInputRef = useRef<HTMLInputElement>(null);
-    const authorImageInputRef = useRef<HTMLInputElement>(null);
     const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
 
     // Content Image Picker State
@@ -212,24 +211,6 @@ const ModernAppArticleEditor: React.FC<ModernAppArticleEditorProps> = ({ article
             }
         };
     }, []);
-
-    // --- Author Image Upload ---
-    const handleAuthorImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-        setIsUploadingAuthorImage(true);
-        try {
-            const url = await uploadGlobalFile(file);
-            setAuthorImage(url);
-            showToast('Imagen del autor actualizada', 'success');
-        } catch (error) {
-            console.error('Author image upload failed', error);
-            showToast('Error al subir la imagen del autor', 'error');
-        } finally {
-            setIsUploadingAuthorImage(false);
-            if (authorImageInputRef.current) authorImageInputRef.current.value = '';
-        }
-    };
 
     // --- Image Upload ---
     const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -802,13 +783,6 @@ Text to format:
                     className="hidden"
                     accept="image/*"
                 />
-                <input
-                    type="file"
-                    ref={authorImageInputRef}
-                    onChange={handleAuthorImageUpload}
-                    className="hidden"
-                    accept="image/*"
-                />
 
                 {/* Content Image Picker Modal */}
                 {showContentImagePicker && (
@@ -1155,13 +1129,12 @@ Text to format:
                                 {/* Author */}
                                 <div>
                                     <label className="block text-xs font-bold text-muted-foreground uppercase mb-2">{t('contentManagement.editor.author', 'Autor')}</label>
-                                    {/* Author avatar circle + upload */}
+                                    {/* Author avatar circle — opens admin image library */}
                                     <div className="flex items-center gap-3 mb-3">
                                         <button
                                             type="button"
-                                            title="Haz clic para subir foto del autor"
-                                            onClick={() => authorImageInputRef.current?.click()}
-                                            disabled={isUploadingAuthorImage}
+                                            title="Haz clic para seleccionar foto del autor"
+                                            onClick={() => setShowAuthorImagePicker(true)}
                                             className="relative w-10 h-10 rounded-full overflow-hidden flex-shrink-0 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 group"
                                         >
                                             {authorImage ? (
@@ -1179,10 +1152,7 @@ Text to format:
                                             )}
                                             {/* Hover overlay */}
                                             <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-full">
-                                                {isUploadingAuthorImage
-                                                    ? <Loader2 className="w-4 h-4 text-white animate-spin" />
-                                                    : <Upload className="w-4 h-4 text-white" />
-                                                }
+                                                <ImageIcon className="w-4 h-4 text-white" />
                                             </div>
                                         </button>
                                         <div className="flex-1 min-w-0">
@@ -1202,6 +1172,24 @@ Text to format:
                                             )}
                                         </div>
                                     </div>
+                                    {/* ImagePicker modal for author image */}
+                                    {showAuthorImagePicker && (
+                                        <ImagePicker
+                                            label="Foto del Autor"
+                                            value={authorImage || ''}
+                                            onChange={(url) => {
+                                                setAuthorImage(url);
+                                                setShowAuthorImagePicker(false);
+                                            }}
+                                            destination="global"
+                                            defaultOpen={true}
+                                            onClose={() => setShowAuthorImagePicker(false)}
+                                            onRemove={() => {
+                                                setAuthorImage(null);
+                                                setShowAuthorImagePicker(false);
+                                            }}
+                                        />
+                                    )}
                                 </div>
 
                                 {/* Publication Date */}
