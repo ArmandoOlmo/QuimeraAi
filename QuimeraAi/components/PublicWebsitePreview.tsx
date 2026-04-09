@@ -5,7 +5,7 @@
  * Supports store routing: #store, #store/category/slug, #store/product/slug
  */
 
-import React, { useState, useEffect, useCallback, lazy, Suspense } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, lazy, Suspense } from 'react';
 import { db, doc, getDoc, collection, getDocs, query, orderBy, where, limit } from '../firebase';
 import { Project, PageData, ThemeData, PageSection, CMSPost, CMSCategory, Menu, FooterData, FontFamily, SEOConfig, SitePage } from '../types';
 import { fontStacks, getGoogleFontsUrl, resolveFontFamily } from '../utils/fontLoader';
@@ -131,16 +131,50 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
   const [loadingPost, setLoadingPost] = useState(false);
 
   /**
+   * Preview base path — preserves /preview/{userId}/{projectId} prefix
+   * so sub-page URLs stay within the preview context and don't collide
+   * with app-level routes like /blog.
+   * For custom domains / subdomains this is empty (no prefix needed).
+   */
+  const previewBasePath = useMemo(() => {
+    const pathname = window.location.pathname;
+    if (pathname.startsWith('/preview/')) {
+      // Extract /preview/userId/projectId (first 3 segments)
+      const parts = pathname.replace('/preview/', '').split('/');
+      if (parts.length >= 2) {
+        return `/preview/${parts[0]}/${parts[1]}`;
+      }
+      if (parts.length === 1 && parts[0]) {
+        return `/preview/${parts[0]}`;
+      }
+    }
+    return '';
+  }, []);
+
+  /**
+   * Strips the preview base path from a full pathname to get the
+   * logical route (e.g. /blog/slug, /tienda, etc.).
+   */
+  const getLogicalPath = useCallback((fullPath: string): string => {
+    if (previewBasePath && fullPath.startsWith(previewBasePath)) {
+      return fullPath.slice(previewBasePath.length) || '/';
+    }
+    return fullPath;
+  }, [previewBasePath]);
+
+  /**
    * Update the browser URL via pushState and update SEO meta tags.
    * This enables shareable URLs, proper back-button behavior, 
    * and allows crawlers to discover sub-pages.
+   * Preserves the preview prefix for /preview/ routes.
    */
   const updateBrowserUrl = useCallback((newPath: string) => {
+    const fullPath = previewBasePath ? `${previewBasePath}${newPath}` : newPath;
     // Only pushState if the path actually changed
-    if (window.location.pathname !== newPath) {
-      window.history.pushState(null, '', newPath);
+    if (window.location.pathname !== fullPath) {
+      window.history.pushState(null, '', fullPath);
     }
-  }, []);
+  }, [previewBasePath]);
 
   /**
    * Update SEO meta tags dynamically when navigating within a user project.
@@ -610,7 +644,8 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
   // Supports both real paths (/tienda, /blog/slug) and anchor scrolling (/#features)
   useEffect(() => {
     const handleNavigation = async () => {
-      const path = window.location.pathname;
+      // Strip preview base path to get the logical route for matching
+      const path = getLogicalPath(window.location.pathname);
       const hash = window.location.hash;
       const decodedHash = decodeURIComponent(hash);
 
@@ -837,7 +872,7 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
       window.removeEventListener('hashchange', handleNavigation);
       window.removeEventListener('popstate', handleNavigation);
     };
-  }, [cmsPosts, project]);
+  }, [cmsPosts, project, getLogicalPath]);
 
   // Universal navigation handler for Header links
   const handleLinkNavigation = useCallback(async (href: string) => {
@@ -1276,26 +1311,17 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
   // Navigation handlers - MUST be before any conditional returns to avoid React hooks error #310
   // Note: Using propUserId/propProjectId directly to avoid stale closure issues with getIdsFromURL
   const handleBackToHome = useCallback(() => {
-    // For custom domains, clear hash entirely to go to home
-    // For preview URLs, reconstruct the preview hash
-    if (propUserId && propProjectId) {
-      // Custom domain - just clear the hash
-      window.location.hash = '';
-    } else {
-      // Preview URL - reconstruct from URL
-      const pathname = window.location.pathname;
-      if (pathname.startsWith('/preview/')) {
-        const parts = pathname.replace('/preview/', '').split('/');
-        if (parts[0] && parts[1]) {
-          window.location.hash = '';
-        }
-      }
+    // Navigate back to the preview base or root
+    const homePath = previewBasePath || '/';
+    if (window.location.pathname !== homePath) {
+      window.history.pushState(null, '', homePath);
     }
+    window.location.hash = '';
     setActivePost(null);
     setStoreView({ type: 'none' });
     setActivePage(null);
     setActiveCategorySlug(null);
-  }, [propUserId, propProjectId]);
+  }, [previewBasePath]);
 
   const handleNavigateToStore = useCallback(() => {
     window.location.hash = 'store';
