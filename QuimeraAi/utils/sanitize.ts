@@ -24,9 +24,6 @@ const ALLOWED_TAGS = new Set([
     // Images (src will be validated)
     'img',
     
-    // Video & audio embeds
-    'video', 'source', 'iframe',
-    
     // Tables
     'table', 'thead', 'tbody', 'tfoot', 'tr', 'th', 'td', 'caption',
     
@@ -40,43 +37,11 @@ const ALLOWED_TAGS = new Set([
     'figure', 'figcaption',
 ]);
 
-// Trusted embed domains for iframe sources (video embeds)
-const TRUSTED_EMBED_DOMAINS = [
-    'youtube.com',
-    'www.youtube.com',
-    'youtube-nocookie.com',
-    'www.youtube-nocookie.com',
-    'player.vimeo.com',
-    'vimeo.com',
-    'www.loom.com',
-    'loom.com',
-    'fast.wistia.net',
-    'www.dailymotion.com',
-    'dailymotion.com',
-    'drive.google.com',
-    'firebasestorage.googleapis.com',
-];
-
-/**
- * Check if an iframe src is from a trusted embed domain
- */
-function isTrustedEmbedSrc(src: string): boolean {
-    try {
-        const url = new URL(src);
-        return TRUSTED_EMBED_DOMAINS.some(domain => url.hostname === domain || url.hostname.endsWith('.' + domain));
-    } catch {
-        return false;
-    }
-}
-
 // Allowed attributes per tag
 const ALLOWED_ATTRIBUTES: Record<string, Set<string>> = {
     '*': new Set(['class', 'id', 'style', 'title']),
     'a': new Set(['href', 'target', 'rel']),
     'img': new Set(['src', 'alt', 'width', 'height', 'loading']),
-    'video': new Set(['src', 'controls', 'autoplay', 'muted', 'loop', 'playsinline', 'preload', 'poster', 'width', 'height']),
-    'source': new Set(['src', 'type']),
-    'iframe': new Set(['src', 'width', 'height', 'frameborder', 'allow', 'allowfullscreen', 'referrerpolicy', 'loading']),
     'td': new Set(['colspan', 'rowspan']),
     'th': new Set(['colspan', 'rowspan', 'scope']),
     'ol': new Set(['start', 'type']),
@@ -147,24 +112,6 @@ function sanitizeStyle(style: string): string {
  */
 function sanitizeElement(element: Element): void {
     const tagName = element.tagName.toLowerCase();
-    
-    // Special handling for iframes: only allow from trusted sources
-    if (tagName === 'iframe') {
-        const src = element.getAttribute('src') || '';
-        if (!isTrustedEmbedSrc(src)) {
-            element.parentNode?.removeChild(element);
-            return;
-        }
-        // Wrap iframe in a responsive container for mobile
-        if (!element.parentElement?.classList.contains('video-embed-wrapper')) {
-            const wrapper = document.createElement('div');
-            wrapper.className = 'video-embed-wrapper';
-            wrapper.style.cssText = 'position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:100%;margin:1rem 0;border-radius:0.75rem;';
-            (element as HTMLElement).style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;border:0;border-radius:0.75rem;';
-            element.parentNode?.insertBefore(wrapper, element);
-            wrapper.appendChild(element);
-        }
-    }
     
     // Remove disallowed tags
     if (!ALLOWED_TAGS.has(tagName)) {
@@ -254,8 +201,8 @@ export function sanitizeHtml(html: string): string {
     const styles = content.querySelectorAll('style');
     styles.forEach(style => style.remove());
     
-    // Remove dangerous elements (but keep iframes — they are filtered by domain in sanitizeElement)
-    const dangerous = content.querySelectorAll('embed, object, applet, form, input, button, textarea, select');
+    // Remove iframe, embed, object, etc.
+    const dangerous = content.querySelectorAll('iframe, embed, object, applet, form, input, button, textarea, select');
     dangerous.forEach(el => el.remove());
     
     // Sanitize all elements
