@@ -638,7 +638,7 @@ const Dashboard: React.FC = () => {
                                     draggable
                                     onDragStart={() => handleDragStart(sectionId)}
                                     onDragEnd={handleDragEnd}
-                                    className="opacity-0 group-hover/drag:opacity-100 focus-within:opacity-100 transition-opacity duration-200 cursor-grab active:cursor-grabbing flex-shrink-0 absolute left-0 top-1/2 -translate-y-1/2 -ml-8"
+                                    className="opacity-0 group-hover/drag:opacity-100 focus-within:opacity-100 transition-opacity duration-200 cursor-grab active:cursor-grabbing flex-shrink-0 absolute left-0 top-1 -ml-8"
                                     title={t('dashboard.dragToReorder', 'Arrastra para reordenar')}
                                     aria-label={t('dashboard.dragToReorder', 'Arrastra para reordenar')}
                                     role="button"
