@@ -659,8 +659,9 @@ const Dashboard: React.FC = () => {
                                         onDragOver={(e) => handleDragOver(e, 'projects')}
                                         onDragLeave={handleDragLeave}
                                     >
+                                        {dragHandle}
                                         <section className="relative z-[1]">
-                                            <div className={`flex items-center justify-between relative ${projectsCollapsed ? 'mb-0' : 'mb-6'}`}>
+                                            <div className={`flex items-center justify-between ${projectsCollapsed ? 'mb-0' : 'mb-6'}`}>
                                                 <div className="flex items-center gap-0">
                                                     <button
                                                         onClick={toggleProjectsCollapsed}
@@ -672,7 +673,6 @@ const Dashboard: React.FC = () => {
                                                         <ChevronDown size={20} className={`text-muted-foreground transition-transform duration-300 ${projectsCollapsed ? '-rotate-90' : 'rotate-0'}`} />
                                                     </button>
                                                 </div>
-                                                {dragHandle}
                                                 {!projectsCollapsed && allUserProjects.length > 0 && (
                                                     <button onClick={() => navigate(ROUTES.WEBSITES)} className="text-sm font-semibold text-yellow-400 hover:text-yellow-300 transition-colors flex items-center">
                                                         {t('dashboard.viewAll')} <Globe size={14} className="ml-1" />
@@ -736,8 +736,9 @@ const Dashboard: React.FC = () => {
                                         onDragOver={(e) => handleDragOver(e, 'templates')}
                                         onDragLeave={handleDragLeave}
                                     >
+                                        {dragHandle}
                                         <section>
-                                            <div className={`flex items-center justify-between relative ${templatesCollapsed ? 'mb-0' : 'mb-6'}`}>
+                                            <div className={`flex items-center justify-between ${templatesCollapsed ? 'mb-0' : 'mb-6'}`}>
                                                 <div className="flex items-center gap-0">
                                                     <button
                                                         onClick={toggleTemplatesCollapsed}
@@ -749,7 +750,6 @@ const Dashboard: React.FC = () => {
                                                         <ChevronDown size={20} className={`text-muted-foreground transition-transform duration-300 ${templatesCollapsed ? '-rotate-90' : 'rotate-0'}`} />
                                                     </button>
                                                 </div>
-                                                {dragHandle}
                                                 {!templatesCollapsed && (
                                                     <div className="flex items-center gap-1 bg-secondary/40 rounded-lg p-1" role="group" aria-label={t('dashboard.templateSize', 'Tamaño de plantillas')}>
                                                         <button
@@ -794,8 +794,9 @@ const Dashboard: React.FC = () => {
                                         onDragOver={(e) => handleDragOver(e, 'leads')}
                                         onDragLeave={handleDragLeave}
                                     >
+                                        {dragHandle}
                                         <section className="w-full">
-                                            <div className={`flex items-center justify-between relative ${leadsCollapsed ? 'mb-0' : 'mb-6'}`}>
+                                            <div className={`flex items-center justify-between ${leadsCollapsed ? 'mb-0' : 'mb-6'}`}>
                                                 <div className="flex items-center gap-0">
                                                     <button
                                                         onClick={toggleLeadsCollapsed}
@@ -807,7 +808,6 @@ const Dashboard: React.FC = () => {
                                                         <ChevronDown size={20} className={`text-muted-foreground transition-transform duration-300 ${leadsCollapsed ? '-rotate-90' : 'rotate-0'}`} />
                                                     </button>
                                                 </div>
-                                                {dragHandle}
                                                 {!leadsCollapsed && (
                                                     <button
                                                         onClick={() => navigate(ROUTES.LEADS)}
@@ -836,8 +836,9 @@ const Dashboard: React.FC = () => {
                                         onDragOver={(e) => handleDragOver(e, 'news')}
                                         onDragLeave={handleDragLeave}
                                     >
+                                        {dragHandle}
                                         <section className="w-full">
-                                            <div className={`flex items-center justify-between relative ${newsCollapsed ? 'mb-0' : 'mb-0'}`}>
+                                            <div className={`flex items-center justify-between ${newsCollapsed ? 'mb-0' : 'mb-0'}`}>
                                                 <div className="flex items-center gap-0">
                                                     <button
                                                         onClick={toggleNewsCollapsed}
@@ -849,7 +850,6 @@ const Dashboard: React.FC = () => {
                                                         <ChevronDown size={20} className={`text-muted-foreground transition-transform duration-300 ${newsCollapsed ? '-rotate-90' : 'rotate-0'}`} />
                                                     </button>
                                                 </div>
-                                                {dragHandle}
                                             </div>
                                             {!newsCollapsed && (
                                                 <div className="animate-fade-in-up">
