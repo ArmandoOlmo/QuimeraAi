@@ -638,7 +638,7 @@ const Dashboard: React.FC = () => {
                                     draggable
                                     onDragStart={() => handleDragStart(sectionId)}
                                     onDragEnd={handleDragEnd}
-                                    className="opacity-0 group-hover/drag:opacity-100 focus-within:opacity-100 transition-opacity duration-200 cursor-grab active:cursor-grabbing flex-shrink-0 ml-2"
+                                    className="opacity-0 group-hover/drag:opacity-100 focus-within:opacity-100 transition-opacity duration-200 cursor-grab active:cursor-grabbing flex-shrink-0 absolute right-0 top-1/2 -translate-y-1/2 mr-2"
                                     title={t('dashboard.dragToReorder', 'Arrastra para reordenar')}
                                     aria-label={t('dashboard.dragToReorder', 'Arrastra para reordenar')}
                                     role="button"
@@ -660,7 +660,7 @@ const Dashboard: React.FC = () => {
                                         onDragLeave={handleDragLeave}
                                     >
                                         <section className="relative z-[1]">
-                                            <div className={`flex items-center justify-between ${projectsCollapsed ? 'mb-0' : 'mb-6'}`}>
+                                            <div className={`flex items-center justify-between relative ${projectsCollapsed ? 'mb-0' : 'mb-6'}`}>
                                                 <div className="flex items-center gap-0">
                                                     <button
                                                         onClick={toggleProjectsCollapsed}
@@ -671,8 +671,8 @@ const Dashboard: React.FC = () => {
                                                         {t('dashboard.recentProjects')}
                                                         <ChevronDown size={20} className={`text-muted-foreground transition-transform duration-300 ${projectsCollapsed ? '-rotate-90' : 'rotate-0'}`} />
                                                     </button>
-                                                    {dragHandle}
                                                 </div>
+                                                {dragHandle}
                                                 {!projectsCollapsed && allUserProjects.length > 0 && (
                                                     <button onClick={() => navigate(ROUTES.WEBSITES)} className="text-sm font-semibold text-yellow-400 hover:text-yellow-300 transition-colors flex items-center">
                                                         {t('dashboard.viewAll')} <Globe size={14} className="ml-1" />
@@ -737,7 +737,7 @@ const Dashboard: React.FC = () => {
                                         onDragLeave={handleDragLeave}
                                     >
                                         <section>
-                                            <div className={`flex items-center justify-between ${templatesCollapsed ? 'mb-0' : 'mb-6'}`}>
+                                            <div className={`flex items-center justify-between relative ${templatesCollapsed ? 'mb-0' : 'mb-6'}`}>
                                                 <div className="flex items-center gap-0">
                                                     <button
                                                         onClick={toggleTemplatesCollapsed}
@@ -748,8 +748,8 @@ const Dashboard: React.FC = () => {
                                                         {t('dashboard.startFromTemplate')}
                                                         <ChevronDown size={20} className={`text-muted-foreground transition-transform duration-300 ${templatesCollapsed ? '-rotate-90' : 'rotate-0'}`} />
                                                     </button>
-                                                    {dragHandle}
                                                 </div>
+                                                {dragHandle}
                                                 {!templatesCollapsed && (
                                                     <div className="flex items-center gap-1 bg-secondary/40 rounded-lg p-1" role="group" aria-label={t('dashboard.templateSize', 'Tamaño de plantillas')}>
                                                         <button
@@ -795,7 +795,7 @@ const Dashboard: React.FC = () => {
                                         onDragLeave={handleDragLeave}
                                     >
                                         <section className="w-full">
-                                            <div className={`flex items-center justify-between ${leadsCollapsed ? 'mb-0' : 'mb-6'}`}>
+                                            <div className={`flex items-center justify-between relative ${leadsCollapsed ? 'mb-0' : 'mb-6'}`}>
                                                 <div className="flex items-center gap-0">
                                                     <button
                                                         onClick={toggleLeadsCollapsed}
@@ -806,8 +806,8 @@ const Dashboard: React.FC = () => {
                                                         {t('dashboard.leads.title', 'Últimos Leads')}
                                                         <ChevronDown size={20} className={`text-muted-foreground transition-transform duration-300 ${leadsCollapsed ? '-rotate-90' : 'rotate-0'}`} />
                                                     </button>
-                                                    {dragHandle}
                                                 </div>
+                                                {dragHandle}
                                                 {!leadsCollapsed && (
                                                     <button
                                                         onClick={() => navigate(ROUTES.LEADS)}
@@ -837,7 +837,7 @@ const Dashboard: React.FC = () => {
                                         onDragLeave={handleDragLeave}
                                     >
                                         <section className="w-full">
-                                            <div className={`flex items-center justify-between ${newsCollapsed ? 'mb-0' : 'mb-0'}`}>
+                                            <div className={`flex items-center justify-between relative ${newsCollapsed ? 'mb-0' : 'mb-0'}`}>
                                                 <div className="flex items-center gap-0">
                                                     <button
                                                         onClick={toggleNewsCollapsed}
@@ -848,8 +848,8 @@ const Dashboard: React.FC = () => {
                                                         {t('dashboard.news.title', 'Noticias y Novedades')}
                                                         <ChevronDown size={20} className={`text-muted-foreground transition-transform duration-300 ${newsCollapsed ? '-rotate-90' : 'rotate-0'}`} />
                                                     </button>
-                                                    {dragHandle}
                                                 </div>
+                                                {dragHandle}
                                             </div>
                                             {!newsCollapsed && (
                                                 <div className="animate-fade-in-up">
