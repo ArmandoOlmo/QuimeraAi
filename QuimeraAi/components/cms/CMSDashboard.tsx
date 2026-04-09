@@ -9,7 +9,7 @@ import ConfirmationModal from '../ui/ConfirmationModal';
 import MobileSearchModal from '../ui/MobileSearchModal';
 import QuimeraLoader from '../ui/QuimeraLoader';
 import ModernCMSEditor from './modern/ModernCMSEditor';
-import ContentCreatorAssistant from './ContentCreatorAssistant';
+import CMSContentStudio from './CMSContentStudio';
 import CMSProjectSelectorPage from './CMSProjectSelectorPage';
 import { Menu, Plus, Search, FileText, Edit3, Trash2, Loader2, Calendar, Globe, PenTool, ArrowDown, ArrowUp, Grid, List, Eye, X as XIcon, Copy, Edit2, Download, Sparkles, ArrowLeft, ChevronDown, Check, Tag, FolderOpen, GripVertical, ArrowUpDown } from 'lucide-react';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, TouchSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
@@ -405,7 +405,7 @@ const CMSDashboard: React.FC = () => {
         <div className="flex h-screen bg-background text-foreground">
             {/* AI Assistant Modal */}
             {isAiAssistantOpen && (
-                <ContentCreatorAssistant
+                <CMSContentStudio
                     onClose={() => setIsAiAssistantOpen(false)}
                     onPostCreated={handlePostCreatedFromAi}
                 />
