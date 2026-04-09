@@ -36,7 +36,7 @@ import ImageCarousel from './ImageCarousel';
 import { useSafeAppContent } from '../contexts/appContent';
 import { AppArticle, AppNavItem, DEFAULT_APP_NAVIGATION } from '../types/appContent';
 import { useLandingPlans } from '../hooks/useLandingPlans';
-import { doc, getDoc } from '../firebase';
+import { doc, getDoc, collection, getDocs } from '../firebase';
 import { db } from '../firebase';
 import { savePlatformLead } from '../services/platformLeadService';
 
@@ -158,13 +158,27 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
       if (urlParams.get('preview') === 'landing') return;
 
       try {
+        // Primary: load from sub-collection (new format, no 1 MB limit)
+        const sectionsColRef = collection(db, 'globalSettings', 'landingPage', 'sections');
+        const sectionsSnap = await getDocs(sectionsColRef);
+
+        if (!sectionsSnap.empty) {
+          const loadedSections = sectionsSnap.docs
+            .map(d => d.data() as typeof previewSections[0])
+            .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+          console.log('[PublicLandingPage] Loaded from sub-collection:', loadedSections.length, 'sections');
+          setPreviewSections(loadedSections);
+          return;
+        }
+
+        // Fallback: legacy single-document format
         const settingsRef = doc(db, 'globalSettings', 'landingPage');
         const settingsSnap = await getDoc(settingsRef);
 
         if (settingsSnap.exists()) {
           const data = settingsSnap.data();
           if (data.sections && Array.isArray(data.sections)) {
-            console.log('[PublicLandingPage] Loaded saved configuration from Firestore:', data.sections.length, 'sections');
+            console.log('[PublicLandingPage] Loaded from legacy doc:', data.sections.length, 'sections');
             setPreviewSections(data.sections);
           }
         }

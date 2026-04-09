@@ -38,7 +38,7 @@ import DashboardSidebar from '../DashboardSidebar';
 import LandingPageControls from './LandingPageControls';
 import Modal from '../../ui/Modal';
 import { GlobalColors } from '../../../types';
-import { doc, setDoc, getDoc } from '../../../firebase';
+import { doc, setDoc, getDoc, collection, getDocs, writeBatch, deleteDoc } from '../../../firebase';
 import { db } from '../../../firebase';
 
 // Types for landing page sections
@@ -373,28 +373,79 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
     };
 
     // Load landing page configuration from Firestore
+    // Sections are stored individually in globalSettings/landingPage/sections/{sectionId}
+    // to avoid the Firestore 1 MB document size limit.
     useEffect(() => {
         const loadConfiguration = async () => {
             setIsLoading(true);
             try {
+                const sectionsColRef = collection(db, 'globalSettings', 'landingPage', 'sections');
+                const sectionsSnap = await getDocs(sectionsColRef);
+
+                if (!sectionsSnap.empty) {
+                    const loadedSections: LandingSection[] = sectionsSnap.docs.map(d => d.data() as LandingSection);
+
+                    // Ensure required structure sections exist
+                    const mergedSections = ensureStructureSections(loadedSections);
+
+                    // Hydrate features section if it has no features array
+                    const featuresIdx = mergedSections.findIndex(s => s.type === 'features');
+                    if (featuresIdx !== -1) {
+                        const fd = mergedSections[featuresIdx].data || {};
+                        // Migration: if old 'items' key exists but 'features' doesn't, copy items -> features
+                        if (!fd.features && fd.items) {
+                            fd.features = fd.items;
+                        }
+                        // If still no features array, populate with defaults
+                        if (!fd.features || fd.features.length === 0) {
+                            fd.features = [
+                                { title: 'Generación Instantánea', description: 'Crea sitios web completos en menos de 30 segundos con IA', imageUrl: '' },
+                                { title: 'Imágenes con IA', description: 'Genera imágenes 4K profesionales directamente desde tu editor', imageUrl: '' },
+                                { title: 'Componentes Profesionales', description: 'Más de 20 componentes modernos listos para usar', imageUrl: '' },
+                                { title: 'Sistema de Diseño Global', description: 'Cambia colores, fuentes y estilos en todo tu sitio con un clic', imageUrl: '' },
+                                { title: 'Chatbot IA Integrado', description: 'Asistente conversacional para tus visitantes con voz', imageUrl: '' },
+                                { title: 'SEO Optimizado', description: 'Herramientas automáticas para posicionar tu sitio', imageUrl: '' },
+                            ];
+                        }
+                        // Ensure flat color keys exist for PublicLandingPage compatibility
+                        if (!fd.backgroundColor) fd.backgroundColor = fd.colors?.background || '#0A0A0A';
+                        if (!fd.textColor) fd.textColor = fd.colors?.heading || '#ffffff';
+                        if (!fd.accentColor) fd.accentColor = fd.colors?.accent || '#facc15';
+                        if (!fd.columns) fd.columns = fd.gridColumns || 3;
+                        mergedSections[featuresIdx] = { ...mergedSections[featuresIdx], data: fd };
+                    }
+
+                    // Sort by order field
+                    mergedSections.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+
+                    setSections(mergedSections);
+                    savedSectionsRef.current = JSON.parse(JSON.stringify(mergedSections));
+
+                    // Try to get lastUpdated from root doc
+                    try {
+                        const rootSnap = await getDoc(doc(db, 'globalSettings', 'landingPage'));
+                        if (rootSnap.exists() && rootSnap.data().lastUpdated) {
+                            setLastSaved(new Date(rootSnap.data().lastUpdated));
+                        }
+                    } catch (_) { /* not critical */ }
+
+                    setIsLoading(false);
+                    return;
+                }
+
+                // Fallback: try legacy single-document format
                 const settingsRef = doc(db, 'globalSettings', 'landingPage');
                 const settingsSnap = await getDoc(settingsRef);
 
                 if (settingsSnap.exists()) {
                     const data = settingsSnap.data();
                     if (data.sections && Array.isArray(data.sections)) {
-                        // Ensure required structure sections exist
                         const mergedSections = ensureStructureSections(data.sections);
 
-                        // Hydrate features section if it has no features array
                         const featuresIdx = mergedSections.findIndex(s => s.type === 'features');
                         if (featuresIdx !== -1) {
                             const fd = mergedSections[featuresIdx].data || {};
-                            // Migration: if old 'items' key exists but 'features' doesn't, copy items -> features
-                            if (!fd.features && fd.items) {
-                                fd.features = fd.items;
-                            }
-                            // If still no features array, populate with defaults
+                            if (!fd.features && fd.items) fd.features = fd.items;
                             if (!fd.features || fd.features.length === 0) {
                                 fd.features = [
                                     { title: 'Generación Instantánea', description: 'Crea sitios web completos en menos de 30 segundos con IA', imageUrl: '' },
@@ -405,7 +456,6 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
                                     { title: 'SEO Optimizado', description: 'Herramientas automáticas para posicionar tu sitio', imageUrl: '' },
                                 ];
                             }
-                            // Ensure flat color keys exist for PublicLandingPage compatibility
                             if (!fd.backgroundColor) fd.backgroundColor = fd.colors?.background || '#0A0A0A';
                             if (!fd.textColor) fd.textColor = fd.colors?.heading || '#ffffff';
                             if (!fd.accentColor) fd.accentColor = fd.colors?.accent || '#facc15';
@@ -414,10 +464,8 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
                         }
 
                         setSections(mergedSections);
-                        savedSectionsRef.current = JSON.parse(JSON.stringify(mergedSections)); // Deep copy for reset
-                        if (data.lastUpdated) {
-                            setLastSaved(new Date(data.lastUpdated));
-                        }
+                        savedSectionsRef.current = JSON.parse(JSON.stringify(mergedSections));
+                        if (data.lastUpdated) setLastSaved(new Date(data.lastUpdated));
                         setIsLoading(false);
                         return;
                     }
@@ -453,29 +501,54 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
                 { id: 'cta', type: 'cta', enabled: true, order: 6, data: {} },
             ];
             setSections(defaultSections);
-            savedSectionsRef.current = JSON.parse(JSON.stringify(defaultSections)); // Deep copy for reset
+            savedSectionsRef.current = JSON.parse(JSON.stringify(defaultSections));
             setIsLoading(false);
         };
         loadConfiguration();
     }, []);
 
     // Handle save to Firestore
+    // Each section is stored as its own document in the sub-collection
+    // globalSettings/landingPage/sections/{sectionId} to avoid the 1 MB limit.
     const handleSave = useCallback(async () => {
         setIsSaving(true);
         try {
-            const settingsRef = doc(db, 'globalSettings', 'landingPage');
-            const payload = {
-                sections: sections,
-                lastUpdated: new Date().toISOString(),
-            };
-            await setDoc(settingsRef, payload, { merge: true });
+            const now = new Date().toISOString();
+            const sectionsColRef = collection(db, 'globalSettings', 'landingPage', 'sections');
+
+            // 1. Get currently persisted section IDs so we can delete removed ones
+            const existingSnap = await getDocs(sectionsColRef);
+            const existingIds = new Set(existingSnap.docs.map(d => d.id));
+            const currentIds = new Set(sections.map(s => s.id));
+
+            // Firestore batch writes are limited to 500 ops. Sections are small in count so this is fine.
+            const batch = writeBatch(db);
+
+            // 2. Upsert each section as its own document
+            for (const section of sections) {
+                const sectionRef = doc(sectionsColRef, section.id);
+                batch.set(sectionRef, section, { merge: false });
+            }
+
+            // 3. Delete sections that no longer exist
+            for (const existingId of existingIds) {
+                if (!currentIds.has(existingId)) {
+                    batch.delete(doc(sectionsColRef, existingId));
+                }
+            }
+
+            // 4. Update root doc with lightweight metadata only
+            const rootRef = doc(db, 'globalSettings', 'landingPage');
+            batch.set(rootRef, { lastUpdated: now, sectionIds: sections.map(s => s.id) }, { merge: true });
+
+            await batch.commit();
+
             setHasUnsavedChanges(false);
             setLastSaved(new Date());
-            savedSectionsRef.current = JSON.parse(JSON.stringify(sections)); // Update saved state
-            clearHistory(); // Clear undo history after save
-            // Refresh preview
+            savedSectionsRef.current = JSON.parse(JSON.stringify(sections));
+            clearHistory();
             setPreviewKey(prev => prev + 1);
-            console.log('[LandingPageEditor] Saved to Firestore successfully');
+            console.log('[LandingPageEditor] Saved to Firestore successfully (sub-collection strategy)');
         } catch (error) {
             console.error('Error saving landing page:', error);
             alert(t('common.errorSaving', { defaultValue: '❌ Error saving. Please try again.' }));
