@@ -190,7 +190,7 @@ const TenantManagement: React.FC<TenantManagementProps> = ({ onBack }) => {
                     <div className="text-center">
                         <div className="flex items-center gap-1 text-editor-text-secondary">
                             <HardDrive size={14} />
-                            <span className="text-sm">{tenant.usage.storageUsedGB.toFixed(1)} GB</span>
+                            <span className="text-sm">{(tenant.usage.storageUsedGB ?? 0).toFixed(1)} GB</span>
                         </div>
                         <span className="text-xs text-editor-text-secondary">{t('superadmin.tenant.metrics.storage', 'Almacenamiento')}</span>
                     </div>
@@ -312,7 +312,7 @@ const TenantManagement: React.FC<TenantManagementProps> = ({ onBack }) => {
                         <MetricCard
                             title={t('superadmin.tenant.activeTenants', 'Tenants Activos')}
                             value={activeCount}
-                            subtitle={`${((activeCount / tenants.length) * 100).toFixed(0)}% del total`}
+                            subtitle={`${tenants.length > 0 ? ((activeCount / tenants.length) * 100).toFixed(0) : 0}% del total`}
                             icon={<CheckCircle size={20} />}
                         />
                         <MetricCard
@@ -752,7 +752,7 @@ const TenantDetailsModal: React.FC<{
                                     <div className="bg-editor-bg p-3 rounded-lg border border-editor-border">
                                         <div className="text-xs text-editor-text-secondary mb-1">Almacenamiento</div>
                                         <div className="font-semibold text-editor-text-primary">
-                                            {tenant.usage.storageUsedGB.toFixed(1)} GB <span className="text-editor-text-secondary font-normal">/ {tenant.limits.maxStorageGB} GB</span>
+                                            {(tenant.usage.storageUsedGB ?? 0).toFixed(1)} GB <span className="text-editor-text-secondary font-normal">/ {tenant.limits.maxStorageGB} GB</span>
                                         </div>
                                     </div>
                                 </div>
