@@ -49,6 +49,7 @@ const AssetsDashboard = lazy(() => import('./dashboard/assets/AssetsDashboard'))
 const SettingsPage = lazy(() => import('./dashboard/settings/SettingsPage'));
 const AgencyDashboard = lazy(() => import('./dashboard/agency/AgencyDashboardMain'));
 const BioPageBuilder = lazy(() => import('./dashboard/BioPageBuilder'));
+const BlogHub = lazy(() => import('./dashboard/BlogHub'));
 
 // Editor components
 const Controls = lazy(() => import('./Controls'));
@@ -93,6 +94,7 @@ const VIEW_COMPONENTS: Record<string, React.LazyExoticComponent<React.ComponentT
     'settings': SettingsPage,
     'agency': AgencyDashboard,
     'biopage': BioPageBuilder,
+    'blog-hub': BlogHub,
 };
 
 /**

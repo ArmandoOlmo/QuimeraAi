@@ -93,6 +93,7 @@ export const ROUTES = {
   ECOMMERCE: '/ecommerce',
   EMAIL: '/email',
   BIOPAGE: '/biopage',
+  BLOG_HUB: '/blog-hub',
 
   // Settings Routes (Workspace/Team)
   SETTINGS: '/settings',
@@ -489,6 +490,16 @@ export const routeConfigs: RouteConfig[] = [
     requiresEmailVerified: true,
     showInNav: true,
     icon: 'Link2',
+  },
+  {
+    path: ROUTES.BLOG_HUB,
+    view: 'blog-hub',
+    type: 'private',
+    title: 'Blog',
+    requiresAuth: true,
+    requiresEmailVerified: true,
+    showInNav: true,
+    icon: 'Newspaper',
   },
 
   // =========================================================================
