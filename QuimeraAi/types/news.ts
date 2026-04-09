@@ -75,6 +75,12 @@ export interface NewsItem {
   updatedAt: string;
   createdBy: string;      // User ID
   updatedBy?: string;
+
+  // Language & Translation
+  language: 'es' | 'en';
+  translationGroup?: string;       // Shared ID linking translations of the same news
+  translatedFrom?: string;         // ID of the original news item
+  translationStatus?: 'original' | 'auto-translated' | 'reviewed';
 }
 
 // =============================================================================
@@ -137,6 +143,9 @@ export interface NewsContextType {
 
   // Stats
   getNewsStats: () => NewsStats;
+
+  // Translations
+  getNewsTranslations: (translationGroup: string) => NewsItem[];
 }
 
 export interface NewsStats {
@@ -168,6 +177,7 @@ export const DEFAULT_NEWS_ITEM: Omit<NewsItem, 'id' | 'createdAt' | 'updatedAt' 
   priority: 0,
   views: 0,
   clicks: 0,
+  language: 'es',
 };
 
 // =============================================================================

@@ -37,7 +37,7 @@ const NewsUpdates: React.FC<NewsUpdatesProps> = ({
     maxItems = 4,
     compact = false,
 }) => {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const {
         userNews,
         userNewsStates,
@@ -52,10 +52,10 @@ const NewsUpdates: React.FC<NewsUpdatesProps> = ({
     const [dismissingId, setDismissingId] = useState<string | null>(null);
     const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
 
-    // Initial load
+    // Fetch news on mount and when the app language changes
     useEffect(() => {
         fetchUserNews();
-    }, []);
+    }, [i18n.language]);
 
     // Get visible news (limited)
     const visibleNews = userNews.slice(0, maxItems);
@@ -388,7 +388,7 @@ const NewsUpdates: React.FC<NewsUpdatesProps> = ({
 
                             {/* Excerpt */}
                             {selectedNews.excerpt && (
-                                <p className="text-muted-foreground text-lg leading-relaxed mb-6">
+                                <p className="text-foreground/80 text-lg leading-relaxed mb-6">
                                     {selectedNews.excerpt}
                                 </p>
                             )}
@@ -396,7 +396,7 @@ const NewsUpdates: React.FC<NewsUpdatesProps> = ({
                             {/* Body */}
                             {selectedNews.body && (
                                 <div
-                                    className="prose prose-sm dark:prose-invert max-w-none"
+                                className="prose prose-sm prose-invert max-w-none text-foreground/90 prose-headings:text-foreground prose-strong:text-foreground prose-a:text-primary"
                                     dangerouslySetInnerHTML={{ __html: sanitizeHtml(selectedNews.body || '') }}
                                 />
                             )}

@@ -67,6 +67,7 @@ import {
     ChevronUp,
     Menu,
     Type,
+    Languages,
 } from 'lucide-react';
 
 import DashboardSidebar from '../DashboardSidebar';
@@ -78,16 +79,25 @@ import { generateContentViaProxy, extractTextFromResponse } from '../../../utils
 import { logApiCall } from '../../../services/apiLoggingService';
 import { storage } from '../../../firebase';
 import { ref as storageRef, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
+import {
+    translateNewsContent,
+    buildTranslatedNews,
+    generateNewsTranslationGroupId,
+    getNewsTargetLanguage,
+    getNewsLanguageName,
+} from '../../../utils/newsTranslation';
+import ConfirmationModal from '../../ui/ConfirmationModal';
 
 interface NewsEditorProps {
     news: NewsItem | null;
     onClose: () => void;
+    onTranslationCreated?: (translatedNews: NewsItem) => void;
 }
 
-const NewsEditor: React.FC<NewsEditorProps> = ({ news, onClose }) => {
+const NewsEditor: React.FC<NewsEditorProps> = ({ news, onClose, onTranslationCreated }) => {
     const { t } = useTranslation();
     const { user } = useAuth();
-    const { createNews, updateNews } = useNews();
+    const { createNews, updateNews, fetchNews, getNewsTranslations } = useNews();
     const { getPrompt } = useAdmin();
     const { showToast } = useToast();
     const { uploadAdminAsset } = useFiles();
@@ -129,6 +139,11 @@ const NewsEditor: React.FC<NewsEditorProps> = ({ news, onClose }) => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
     const [lastSaved, setLastSaved] = useState<Date | null>(null);
 
+    // Language & Translation State
+    const [language, setLanguage] = useState<'es' | 'en'>(news?.language || 'es');
+    const [isTranslating, setIsTranslating] = useState(false);
+    const [translationConfirmOpen, setTranslationConfirmOpen] = useState(false);
+
     // Video upload state — mirrors CMS
     const [isUploadingVideo, setIsUploadingVideo] = useState(false);
     const [uploadProgress, setUploadProgress] = useState(0);
@@ -137,6 +152,7 @@ const NewsEditor: React.FC<NewsEditorProps> = ({ news, onClose }) => {
     const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
         config: true,
         targeting: false,
+        translation: false,
         preview: true,
     });
 
@@ -521,9 +537,17 @@ Text to format:
                     plans: targetType === 'plans' ? targetPlans : undefined,
                 },
                 createdBy: news?.createdBy || user?.uid || '',
+                language,
+                // Preserve translation metadata
+                ...(news?.translationGroup ? { translationGroup: news.translationGroup } : {}),
+                ...(news?.translatedFrom ? { translatedFrom: news.translatedFrom } : {}),
+                ...(news?.translationStatus ? { translationStatus: news.translationStatus } : {}),
             };
 
-            if (isEditing && news) {
+            // Determine if this is a real Firestore document (not a synthetic ID from AI/translation creation)
+            const isRealFirestoreDoc = isEditing && news && !news.id.startsWith('news_');
+
+            if (isRealFirestoreDoc && news) {
                 await updateNews(news.id, newsData);
             } else {
                 await createNews(newsData);
@@ -553,18 +577,130 @@ Text to format:
         setTimeout(() => performSave(false), 100);
     };
 
+    // --- Translation Logic ---
+    const targetLang = getNewsTargetLanguage(language);
+    const existingTranslations = news?.translationGroup
+        ? getNewsTranslations(news.translationGroup).filter(n => n.id !== news.id)
+        : [];
+    const hasTranslation = existingTranslations.some(n => n.language === targetLang);
+
+    const handleTranslateNews = async () => {
+        setTranslationConfirmOpen(false);
+        if (!title || !editor) {
+            showToast('Guarda la noticia primero antes de traducir', 'warning');
+            return;
+        }
+
+        setIsTranslating(true);
+        try {
+            const currentBody = editor.getHTML() || '';
+
+            // Build the current news data to save first
+            const currentNewsData: Omit<NewsItem, 'id' | 'createdAt' | 'updatedAt' | 'views' | 'clicks'> = {
+                title: title.trim(),
+                excerpt: excerpt.trim(),
+                body: currentBody,
+                imageUrl: imageUrl || undefined,
+                videoUrl: videoUrl || undefined,
+                category,
+                tags,
+                status,
+                featured,
+                priority,
+                cta: ctaLabel && ctaUrl ? { label: ctaLabel, url: ctaUrl, isExternal: ctaExternal } : undefined,
+                publishAt: publishAt || undefined,
+                expireAt: expireAt || undefined,
+                targeting: {
+                    type: targetType,
+                    roles: targetType === 'roles' ? targetRoles : undefined,
+                    plans: targetType === 'plans' ? targetPlans : undefined,
+                },
+                createdBy: news?.createdBy || user?.uid || '',
+                language,
+                translationGroup: news?.translationGroup || generateNewsTranslationGroupId(),
+                translationStatus: news?.translationStatus || 'original',
+            };
+
+            // Save the original first
+            let savedId: string;
+            const isOriginalInFirestore = isEditing && news && !news.id.startsWith('news_');
+            if (isOriginalInFirestore && news) {
+                await updateNews(news.id, currentNewsData);
+                savedId = news.id;
+            } else {
+                savedId = await createNews(currentNewsData);
+            }
+
+            // Build a full NewsItem for translation
+            const savedOriginal: NewsItem = {
+                ...currentNewsData,
+                id: savedId,
+                createdAt: news?.createdAt || new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+                views: news?.views || 0,
+                clicks: news?.clicks || 0,
+            } as NewsItem;
+
+            // Translate via AI
+            const translatedFields = await translateNewsContent(
+                savedOriginal,
+                targetLang,
+                user?.uid
+            );
+
+            const translatedNews = buildTranslatedNews(
+                savedOriginal,
+                translatedFields,
+                targetLang
+            );
+
+            // Save the translated news
+            const translatedId = await createNews({
+                ...translatedNews,
+            } as Omit<NewsItem, 'id' | 'createdAt' | 'updatedAt' | 'views' | 'clicks'>);
+
+            await fetchNews();
+
+            showToast(
+                language === 'es'
+                    ? `¡Noticia traducida al ${getNewsLanguageName(targetLang)}! Se abrirá en el editor.`
+                    : `News translated to ${getNewsLanguageName(targetLang)}! Opening in editor.`,
+                'success'
+            );
+
+            // Open the translated news in the editor
+            if (onTranslationCreated) {
+                onTranslationCreated({
+                    ...translatedNews,
+                    id: translatedId,
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString(),
+                    views: 0,
+                    clicks: 0,
+                });
+            }
+        } catch (error: any) {
+            console.error('[NewsTranslation] Error:', error);
+            showToast(
+                language === 'es'
+                    ? `Error al traducir: ${error?.message || 'Error desconocido'}`
+                    : `Translation error: ${error?.message || 'Unknown error'}`,
+                'error'
+            );
+        } finally {
+            setIsTranslating(false);
+        }
+    };
+
     // Available roles and plans
     const ROLES = ['user', 'admin', 'superadmin', 'manager'];
     const PLANS = ['free', 'starter', 'pro', 'enterprise'];
 
-    // --- Sidebar Section component ---
-    const SidebarSection: React.FC<{
-        id: string;
-        title: string;
-        icon: React.ReactNode;
-        children: React.ReactNode;
-        accentColor?: string;
-    }> = ({ id, title: sectionTitle, icon, children, accentColor }) => {
+    // --- Sidebar Section component (uses stable external component) ---
+    const renderSidebarSection = (
+        id: string, sectionTitle: string, icon: React.ReactNode,
+        children: React.ReactNode, accentColor?: string
+    ) => {
         const isExpanded = expandedSections[id] !== false;
         return (
             <div className="border-b border-editor-border last:border-b-0">
@@ -588,6 +724,7 @@ Text to format:
     };
 
     return (
+        <>
         <div className="flex h-screen bg-editor-bg text-editor-text-primary">
             <DashboardSidebar
                 isMobileOpen={isMobileSidebarOpen}
@@ -775,18 +912,14 @@ Text to format:
                     {isSidebarOpen && (
                         <aside className="w-80 bg-editor-panel-bg border-l border-editor-border overflow-y-auto shrink-0">
                             {/* ── Configuration Section ── */}
-                            <SidebarSection
-                                id="config"
-                                title={t('admin.news.tabSettings', 'Configuración')}
-                                icon={<Type size={16} />}
-                            >
+                            {renderSidebarSection('config', t('admin.news.tabSettings', 'Configuración'), <Type size={16} />, <>
                                 {/* Featured Image — uses ImagePicker like CMS */}
                                 <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
                                     <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
                                         <ImageIcon size={14} />
                                         {t('admin.news.featuredImage', 'Imagen Destacada')}
                                     </label>
-                                    <ImagePicker label="" value={imageUrl} onChange={setImageUrl} hideUrlInput={true} />
+                                    <ImagePicker label="" value={imageUrl} onChange={setImageUrl} hideUrlInput={true} destination="global" />
                                 </div>
 
                                 {/* Excerpt */}
@@ -1042,15 +1175,10 @@ Text to format:
                                         </div>
                                     </div>
                                 </div>
-                            </SidebarSection>
+                            </>)}
 
                             {/* ── Targeting Section ── */}
-                            <SidebarSection
-                                id="targeting"
-                                title={t('admin.news.tabTargeting', 'Audiencia')}
-                                icon={<Target size={16} />}
-                                accentColor="text-violet-400"
-                            >
+                            {renderSidebarSection('targeting', t('admin.news.tabTargeting', 'Audiencia'), <Target size={16} />, <>
                                 {/* Target Type */}
                                 <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
                                     <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
@@ -1140,15 +1268,141 @@ Text to format:
                                         )}
                                     </p>
                                 </div>
-                            </SidebarSection>
+                            </>, 'text-violet-400')}
+
+                            {/* ── Translation Section ── */}
+                            {renderSidebarSection('translation', language === 'es' ? 'Traducción' : 'Translation', <Languages size={16} />, <>
+                                {/* Language Selector */}
+                                <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
+                                    <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+                                        <Globe size={14} />
+                                        {language === 'es' ? 'Idioma del contenido' : 'Content language'}
+                                    </label>
+                                    <div className="flex gap-2">
+                                        <button
+                                            onClick={() => setLanguage('es')}
+                                            className={`flex-1 px-3 py-2.5 rounded-lg text-sm font-bold flex items-center justify-center gap-2 transition-all ${
+                                                language === 'es'
+                                                    ? 'bg-editor-accent text-editor-bg'
+                                                    : 'bg-editor-bg border border-editor-border text-editor-text-secondary hover:text-editor-text-primary'
+                                            }`}
+                                        >
+                                            🇪🇸 Español
+                                        </button>
+                                        <button
+                                            onClick={() => setLanguage('en')}
+                                            className={`flex-1 px-3 py-2.5 rounded-lg text-sm font-bold flex items-center justify-center gap-2 transition-all ${
+                                                language === 'en'
+                                                    ? 'bg-editor-accent text-editor-bg'
+                                                    : 'bg-editor-bg border border-editor-border text-editor-text-secondary hover:text-editor-text-primary'
+                                            }`}
+                                        >
+                                            🇺🇸 English
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {/* Translation Status Badge */}
+                                {news?.translationStatus && (
+                                    <div className={`px-3 py-2 rounded-lg text-xs font-medium flex items-center gap-2 ${
+                                        news.translationStatus === 'original' ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' :
+                                        news.translationStatus === 'reviewed' ? 'bg-green-500/10 text-green-400 border border-green-500/20' :
+                                        'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                                    }`}>
+                                        {news.translationStatus === 'original' && '📝'}
+                                        {news.translationStatus === 'auto-translated' && '⚡'}
+                                        {news.translationStatus === 'reviewed' && '✅'}
+                                        {news.translationStatus === 'original'
+                                            ? (language === 'es' ? 'Contenido original' : 'Original content')
+                                            : news.translationStatus === 'auto-translated'
+                                            ? (language === 'es' ? 'Auto-traducido (revisar)' : 'Auto-translated (review)')
+                                            : (language === 'es' ? 'Traducción revisada' : 'Reviewed translation')}
+                                    </div>
+                                )}
+
+                                {/* Mark as Reviewed button */}
+                                {news?.translationStatus === 'auto-translated' && (
+                                    <button
+                                        onClick={() => {
+                                            if (news) {
+                                                news.translationStatus = 'reviewed';
+                                                showToast(
+                                                    language === 'es' ? 'Marcado como revisado. Guarda para persistir.' : 'Marked as reviewed. Save to persist.',
+                                                    'success'
+                                                );
+                                            }
+                                        }}
+                                        className="w-full px-3 py-2 bg-green-500/10 text-green-400 border border-green-500/20 rounded-lg text-xs font-medium hover:bg-green-500/20 transition-colors flex items-center justify-center gap-2"
+                                    >
+                                        <Check size={14} />
+                                        {language === 'es' ? 'Marcar como revisado' : 'Mark as reviewed'}
+                                    </button>
+                                )}
+
+                                {/* Existing translations */}
+                                {existingTranslations.length > 0 && (
+                                    <div className="space-y-2">
+                                        <p className="text-xs text-editor-text-secondary font-medium">
+                                            {language === 'es' ? 'Traducciones vinculadas:' : 'Linked translations:'}
+                                        </p>
+                                        {existingTranslations.map(tr => (
+                                            <div key={tr.id} className="flex items-center justify-between p-2.5 bg-editor-bg border border-editor-border rounded-lg">
+                                                <div className="flex items-center gap-2 min-w-0">
+                                                    <span className="text-base">{tr.language === 'es' ? '🇪🇸' : '🇺🇸'}</span>
+                                                    <span className="text-xs font-medium truncate text-editor-text-primary">{tr.title}</span>
+                                                </div>
+                                                <div className="flex items-center gap-1 flex-shrink-0">
+                                                    <span className={`w-2 h-2 rounded-full ${
+                                                        tr.translationStatus === 'reviewed' ? 'bg-green-400' :
+                                                        tr.translationStatus === 'auto-translated' ? 'bg-amber-400' : 'bg-blue-400'
+                                                    }`} />
+                                                    <span className={`px-1.5 py-0.5 text-[10px] rounded font-medium ${
+                                                        tr.status === 'published' ? 'bg-green-500/10 text-green-400' : 'bg-editor-bg text-editor-text-secondary'
+                                                    }`}>{tr.status === 'published' ? '●' : '○'}</span>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+
+                                {/* Translate Button */}
+                                {!hasTranslation ? (
+                                    <button
+                                        onClick={() => {
+                                            if (!news?.id && !title) {
+                                                showToast(language === 'es' ? 'Escribe contenido primero' : 'Write content first', 'warning');
+                                                return;
+                                            }
+                                            setTranslationConfirmOpen(true);
+                                        }}
+                                        disabled={isTranslating || !title}
+                                        className="w-full px-4 py-3 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-xl font-bold text-sm flex items-center justify-center gap-2 hover:shadow-lg hover:shadow-blue-500/20 transition-all disabled:opacity-40 disabled:hover:shadow-none"
+                                    >
+                                        {isTranslating ? (
+                                            <>
+                                                <Loader2 className="animate-spin" size={16} />
+                                                {language === 'es' ? 'Traduciendo...' : 'Translating...'}
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Languages size={16} />
+                                                {language === 'es'
+                                                    ? `Traducir a ${getNewsLanguageName(targetLang)}`
+                                                    : `Translate to ${getNewsLanguageName(targetLang)}`}
+                                            </>
+                                        )}
+                                    </button>
+                                ) : (
+                                    <p className="text-xs text-center text-editor-text-secondary">
+                                        {language === 'es'
+                                            ? `✅ Ya existe traducción en ${getNewsLanguageName(targetLang)}`
+                                            : `✅ Translation in ${getNewsLanguageName(targetLang)} already exists`}
+                                    </p>
+                                )}
+                            </>, 'text-blue-400')}
 
                             {/* ── Preview Section ── */}
-                            <SidebarSection
-                                id="preview"
-                                title={t('admin.news.preview', 'Vista previa')}
-                                icon={<Eye size={16} />}
-                                accentColor="text-emerald-400"
-                            >
+                            {renderSidebarSection('preview', t('admin.news.preview', 'Vista previa'), <Eye size={16} />, <>
                                 <div className="bg-editor-bg border border-editor-border rounded-lg overflow-hidden">
                                     {imageUrl ? (
                                         <img
@@ -1181,12 +1435,29 @@ Text to format:
                                         )}
                                     </div>
                                 </div>
-                            </SidebarSection>
+                            </>, 'text-emerald-400')}
                         </aside>
                     )}
                 </div>
             </div>
         </div>
+
+            {/* Translation Confirmation Modal */}
+            <ConfirmationModal
+                isOpen={translationConfirmOpen}
+                onConfirm={handleTranslateNews}
+                onCancel={() => setTranslationConfirmOpen(false)}
+                title={language === 'es' ? 'Traducir noticia' : 'Translate news'}
+                message={language === 'es'
+                    ? `Se guardará la noticia actual y se creará una traducción automática al ${getNewsLanguageName(targetLang)} usando IA. La traducción se abrirá como borrador para que puedas revisarla.`
+                    : `The current news will be saved and an automatic translation to ${getNewsLanguageName(targetLang)} will be created using AI. The translation will open as a draft for your review.`
+                }
+                confirmText={language === 'es' ? 'Traducir' : 'Translate'}
+                cancelText={language === 'es' ? 'Cancelar' : 'Cancel'}
+                variant="info"
+                icon={<Languages size={24} />}
+            />
+        </>
     );
 };
 

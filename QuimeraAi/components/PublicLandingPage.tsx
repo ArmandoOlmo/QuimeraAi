@@ -2180,15 +2180,18 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
                     <span className="text-sm" style={{ color: !isAnnualBilling ? pricingTextColor : pricingBodyText, fontWeight: !isAnnualBilling ? 600 : 400, transition: 'all 0.3s' }}>{t('landing.monthly', 'Mensual')}</span>
                     <button
                       onClick={() => setIsAnnualBilling(!isAnnualBilling)}
-                      className="relative w-12 h-6 rounded-full transition-colors"
-                      style={{ backgroundColor: isAnnualBilling ? pricingAccentColor : `${pricingAccentColor}33` }}
+                      className="relative w-14 h-7 rounded-full transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-offset-1"
+                      style={{
+                        backgroundColor: isAnnualBilling ? pricingAccentColor : `${pricingAccentColor}33`,
+                        '--tw-ring-color': `${pricingAccentColor}50`,
+                      } as React.CSSProperties}
                       aria-label={t('landing.toggleBilling', 'Cambiar facturación')}
                     >
                       <span
-                        className="absolute top-1 w-4 h-4 rounded-full transition-all duration-300"
+                        className="absolute top-1 w-5 h-5 rounded-full transition-all duration-300 shadow-md"
                         style={{
                           backgroundColor: isAnnualBilling ? pricingBackgroundColor : pricingAccentColor,
-                          left: isAnnualBilling ? 'calc(100% - 20px)' : '4px',
+                          left: isAnnualBilling ? 'calc(100% - 24px)' : '4px',
                         }}
                       />
                     </button>

@@ -6,7 +6,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { doc, getDoc, setDoc, onSnapshot, collection, addDoc, query, orderBy, limit, getDocs } from 'firebase/firestore';
 import { db } from '../firebase';
-import { useAuth } from '../contexts/core/AuthContext';
+import { useSafeAuth } from '../contexts/core/AuthContext';
 import {
     GlobalServiceAvailability,
     ServiceStatus,
@@ -52,7 +52,9 @@ export interface UseServiceAvailabilityReturn {
 }
 
 export function useServiceAvailability(): UseServiceAvailabilityReturn {
-    const { user, userDocument } = useAuth();
+    const authContext = useSafeAuth();
+    const user = authContext?.user ?? null;
+    const userDocument = authContext?.userDocument ?? null;
     const [availability, setAvailability] = useState<GlobalServiceAvailability | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);

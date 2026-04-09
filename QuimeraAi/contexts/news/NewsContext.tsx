@@ -68,8 +68,8 @@ export const NewsProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
       const snapshot = await getDocs(q);
       let items = snapshot.docs.map(docSnapshot => ({
-        id: docSnapshot.id,
         ...docSnapshot.data(),
+        id: docSnapshot.id, // Firestore ID always takes precedence over any 'id' field in data
       })) as NewsItem[];
 
       // Apply filters client-side (Firestore limitations)
@@ -143,6 +143,7 @@ export const NewsProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
         // Remove undefined fields before saving to Firestore
         const cleanedItem = removeUndefinedFields(newItem as Record<string, unknown>);
+        delete cleanedItem.id; // Never store 'id' as a field — Firestore uses document ID
 
         const docRef = await addDoc(collection(db, NEWS_COLLECTION), cleanedItem);
         const createdItem = { ...newItem, id: docRef.id } as NewsItem;
@@ -217,6 +218,7 @@ export const NewsProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
         // Remove undefined fields before saving to Firestore
         const cleanedDuplicate = removeUndefinedFields(duplicate as Record<string, unknown>);
+        delete cleanedDuplicate.id; // Never store 'id' as a field — Firestore uses document ID
 
         const docRef = await addDoc(collection(db, NEWS_COLLECTION), cleanedDuplicate);
         const createdItem = { ...duplicate, id: docRef.id } as NewsItem;
@@ -252,8 +254,8 @@ export const NewsProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
       const snapshot = await getDocs(q);
       let items = snapshot.docs.map(docSnapshot => ({
-        id: docSnapshot.id,
         ...docSnapshot.data(),
+        id: docSnapshot.id, // Firestore ID always takes precedence over any 'id' field in data
       })) as NewsItem[];
 
       // Filter by publish date and expiry
@@ -275,6 +277,15 @@ export const NewsProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         if (targeting.type === 'plans' && targeting.plans?.includes(userPlan)) return true;
         if (targeting.type === 'tenants' && userTenantId && targeting.tenantIds?.includes(userTenantId)) return true;
         return false;
+      });
+
+      // Filter by language — show news matching the user's current app language
+      // Uses i18next's stored language from localStorage, defaulting to 'es'
+      const storedLang = localStorage.getItem('i18nextLng') || 'es';
+      const currentLang = storedLang.startsWith('en') ? 'en' : 'es';
+      items = items.filter(item => {
+        const itemLang = item.language || 'es';
+        return itemLang === currentLang;
       });
 
       // Fetch user states
@@ -434,6 +445,14 @@ export const NewsProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, [newsItems]);
 
   // =============================================================================
+  // TRANSLATIONS
+  // =============================================================================
+
+  const getNewsTranslations = useCallback((translationGroup: string): NewsItem[] => {
+    return newsItems.filter(item => item.translationGroup === translationGroup);
+  }, [newsItems]);
+
+  // =============================================================================
   // CONTEXT VALUE
   // =============================================================================
 
@@ -459,6 +478,9 @@ export const NewsProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     // Stats
     getNewsStats,
+
+    // Translations
+    getNewsTranslations,
   };
 
   return <NewsContext.Provider value={value}>{children}</NewsContext.Provider>;

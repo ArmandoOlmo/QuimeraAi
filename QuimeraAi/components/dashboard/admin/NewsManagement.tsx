@@ -38,9 +38,11 @@ import {
     AlertCircle,
     X,
     ChevronDown,
+    Sparkles,
 } from 'lucide-react';
 import DashboardSidebar from '../DashboardSidebar';
 import NewsEditor from './NewsEditor';
+import AINewsStudio from './AINewsStudio';
 import QuimeraLoader from '@/components/ui/QuimeraLoader';
 
 interface NewsManagementProps {
@@ -72,6 +74,7 @@ const NewsManagement: React.FC<NewsManagementProps> = ({ onBack }) => {
     const [showEditor, setShowEditor] = useState(false);
     const [actionMenuId, setActionMenuId] = useState<string | null>(null);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
+    const [isAiAssistantOpen, setIsAiAssistantOpen] = useState(false);
 
     // Initial load
     useEffect(() => {
@@ -101,6 +104,20 @@ const NewsManagement: React.FC<NewsManagementProps> = ({ onBack }) => {
     const handleCreate = () => {
         setSelectedNews(null);
         setShowEditor(true);
+    };
+
+    const handleAiCreate = () => {
+        setIsAiAssistantOpen(true);
+    };
+
+    const handleNewsCreatedFromAi = (news: NewsItem) => {
+        setIsAiAssistantOpen(false);
+        setSelectedNews(news);
+        setShowEditor(true);
+        showToast(
+            t('admin.news.aiCreated', 'Noticia creada con IA — abierta en editor'),
+            'success'
+        );
     };
 
     const handleEdit = (news: NewsItem) => {
@@ -190,7 +207,17 @@ const NewsManagement: React.FC<NewsManagementProps> = ({ onBack }) => {
 
     // Show editor view
     if (showEditor) {
-        return <NewsEditor news={selectedNews} onClose={handleEditorClose} />;
+        return (
+            <NewsEditor
+                key={selectedNews?.id || 'new'}
+                news={selectedNews}
+                onClose={handleEditorClose}
+                onTranslationCreated={(translatedNews) => {
+                    // Switch to editing the newly translated news
+                    setSelectedNews(translatedNews);
+                }}
+            />
+        );
     }
 
     // Format date
@@ -226,6 +253,15 @@ const NewsManagement: React.FC<NewsManagementProps> = ({ onBack }) => {
                         </h1>
                     </div>
                     <div className="flex items-center gap-2">
+                        <button
+                            onClick={handleAiCreate}
+                            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-lg font-medium hover:shadow-lg hover:shadow-blue-500/20 transition-all"
+                        >
+                            <Sparkles size={18} />
+                            <span className="hidden sm:inline">
+                                {t('admin.news.aiCreate', 'Crear con IA')}
+                            </span>
+                        </button>
                         <button
                             onClick={handleCreate}
                             className="flex items-center gap-2 px-4 py-2 bg-editor-accent text-editor-bg rounded-lg font-medium hover:bg-editor-accent/90 transition-colors"
@@ -677,6 +713,14 @@ const NewsManagement: React.FC<NewsManagementProps> = ({ onBack }) => {
             {/* Click outside to close action menu */}
             {actionMenuId && (
                 <div className="fixed inset-0 z-10" onClick={() => setActionMenuId(null)} />
+            )}
+
+            {/* AI News Studio Modal */}
+            {isAiAssistantOpen && (
+                <AINewsStudio
+                    onClose={() => setIsAiAssistantOpen(false)}
+                    onNewsCreated={handleNewsCreatedFromAi}
+                />
             )}
         </div>
     );
