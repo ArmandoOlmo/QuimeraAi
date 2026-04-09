@@ -3,7 +3,59 @@
  * 
  * Provides XSS protection by sanitizing HTML content before rendering.
  * Uses a whitelist approach to only allow safe HTML tags and attributes.
+ * Allows safe video embeds (YouTube, Vimeo, etc.) with domain validation.
  */
+
+// ============================================================================
+// TRUSTED EMBED DOMAINS
+// ============================================================================
+
+/** Domains trusted for iframe embeds (video providers, maps, etc.) */
+const TRUSTED_EMBED_DOMAINS = [
+    'youtube.com',
+    'www.youtube.com',
+    'youtube-nocookie.com',
+    'www.youtube-nocookie.com',
+    'youtu.be',
+    'player.vimeo.com',
+    'vimeo.com',
+    'www.dailymotion.com',
+    'player.twitch.tv',
+    'www.tiktok.com',
+    'open.spotify.com',
+    'w.soundcloud.com',
+    'www.google.com',       // Google Maps
+    'maps.google.com',
+    'docs.google.com',
+    'drive.google.com',
+    'www.loom.com',
+    'www.canva.com',
+    'codepen.io',
+    'codesandbox.io',
+    'stackblitz.com',
+    'figma.com',
+    'www.figma.com',
+    'firebasestorage.googleapis.com',
+];
+
+/**
+ * Check if an iframe src is from a trusted embed domain.
+ */
+function isTrustedEmbedSrc(src: string): boolean {
+    try {
+        const url = new URL(src);
+        if (url.protocol !== 'https:' && url.protocol !== 'http:') return false;
+        return TRUSTED_EMBED_DOMAINS.some(domain => 
+            url.hostname === domain || url.hostname.endsWith('.' + domain)
+        );
+    } catch {
+        return false;
+    }
+}
+
+// ============================================================================
+// ALLOWED TAGS & ATTRIBUTES
+// ============================================================================
 
 // Allowed HTML tags (safe for content rendering)
 const ALLOWED_TAGS = new Set([
@@ -35,6 +87,11 @@ const ALLOWED_TAGS = new Set([
     
     // Figures
     'figure', 'figcaption',
+
+    // Video & audio (HTML5 native elements)
+    'video', 'audio', 'source', 'track',
+
+    // Iframes are handled separately via domain whitelist (not in this set)
 ]);
 
 // Allowed attributes per tag
@@ -46,6 +103,13 @@ const ALLOWED_ATTRIBUTES: Record<string, Set<string>> = {
     'th': new Set(['colspan', 'rowspan', 'scope']),
     'ol': new Set(['start', 'type']),
     'li': new Set(['value']),
+    'video': new Set(['src', 'controls', 'autoplay', 'muted', 'loop', 'playsinline',
+                      'preload', 'poster', 'width', 'height']),
+    'audio': new Set(['src', 'controls', 'autoplay', 'muted', 'loop', 'preload']),
+    'source': new Set(['src', 'type']),
+    'track': new Set(['src', 'kind', 'srclang', 'label', 'default']),
+    'iframe': new Set(['src', 'width', 'height', 'frameborder', 'allow',
+                       'allowfullscreen', 'loading', 'referrerpolicy']),
 };
 
 // Dangerous CSS properties that could be used for attacks
@@ -107,12 +171,71 @@ function sanitizeStyle(style: string): string {
     return sanitized;
 }
 
+// ============================================================================
+// IFRAME SANITIZATION
+// ============================================================================
+
+/**
+ * Process iframes: keep trusted ones with responsive wrapper, remove untrusted.
+ */
+function sanitizeIframes(content: DocumentFragment): void {
+    const iframes = Array.from(content.querySelectorAll('iframe'));
+    for (const iframe of iframes) {
+        const src = iframe.getAttribute('src') || '';
+
+        if (!isTrustedEmbedSrc(src)) {
+            // Untrusted iframe → remove completely
+            iframe.remove();
+            continue;
+        }
+
+        // Sanitize iframe attributes — keep only allowed ones
+        const allowedIframeAttrs = ALLOWED_ATTRIBUTES['iframe'] || new Set<string>();
+        const globalAttrs = ALLOWED_ATTRIBUTES['*'] || new Set<string>();
+        const combined = new Set([...globalAttrs, ...allowedIframeAttrs]);
+
+        for (const attr of Array.from(iframe.attributes)) {
+            const name = attr.name.toLowerCase();
+            if (!combined.has(name) || name.startsWith('on')) {
+                iframe.removeAttribute(attr.name);
+            }
+        }
+
+        // Force security: sandbox attribute for extra isolation
+        iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-popups allow-presentation');
+        // Ensure referrerpolicy
+        if (!iframe.getAttribute('referrerpolicy')) {
+            iframe.setAttribute('referrerpolicy', 'no-referrer');
+        }
+
+        // Wrap in responsive container for mobile
+        const wrapper = document.createElement('div');
+        wrapper.setAttribute('class', 'sanitized-video-wrapper');
+        wrapper.setAttribute('style',
+            'position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:100%;border-radius:8px;margin:1em 0;'
+        );
+        iframe.setAttribute('style',
+            'position:absolute;top:0;left:0;width:100%;height:100%;border:0;'
+        );
+
+        iframe.parentNode?.insertBefore(wrapper, iframe);
+        wrapper.appendChild(iframe);
+    }
+}
+
+// ============================================================================
+// ELEMENT SANITIZATION
+// ============================================================================
+
 /**
  * Sanitize an HTML element and its children
  */
 function sanitizeElement(element: Element): void {
     const tagName = element.tagName.toLowerCase();
     
+    // Skip iframes — they are handled separately by sanitizeIframes
+    if (tagName === 'iframe') return;
+
     // Remove disallowed tags
     if (!ALLOWED_TAGS.has(tagName)) {
         // Replace with text content to preserve readable content
@@ -164,20 +287,32 @@ function sanitizeElement(element: Element): void {
     // Add security attributes to links
     if (tagName === 'a') {
         element.setAttribute('rel', 'noopener noreferrer');
-        if (element.getAttribute('target') === '_blank') {
-            // Already has rel set
+    }
+
+    // Ensure video elements have playsinline for iOS compatibility
+    if (tagName === 'video') {
+        element.setAttribute('playsinline', '');
+        // Set responsive styles
+        if (!element.getAttribute('style')?.includes('max-width')) {
+            const existingStyle = element.getAttribute('style') || '';
+            element.setAttribute('style', existingStyle + ';max-width:100%;height:auto;');
         }
     }
     
-    // Recursively sanitize children
+    // Recursively sanitize children (skip sanitized-video-wrapper internals)
     const children = Array.from(element.children);
     for (const child of children) {
         sanitizeElement(child);
     }
 }
 
+// ============================================================================
+// MAIN SANITIZE FUNCTION
+// ============================================================================
+
 /**
- * Sanitize HTML string to prevent XSS attacks
+ * Sanitize HTML string to prevent XSS attacks.
+ * Allows safe video embeds from trusted domains.
  * 
  * @param html - The HTML string to sanitize
  * @returns Sanitized HTML string safe for rendering
@@ -201,11 +336,14 @@ export function sanitizeHtml(html: string): string {
     const styles = content.querySelectorAll('style');
     styles.forEach(style => style.remove());
     
-    // Remove iframe, embed, object, etc.
-    const dangerous = content.querySelectorAll('iframe, embed, object, applet, form, input, button, textarea, select');
+    // Remove always-dangerous elements (NOT iframes — those get domain-checked)
+    const dangerous = content.querySelectorAll('embed, object, applet, form, input, button, textarea, select');
     dangerous.forEach(el => el.remove());
+
+    // Process iframes: keep trusted embeds, remove untrusted
+    sanitizeIframes(content);
     
-    // Sanitize all elements
+    // Sanitize all remaining elements
     const elements = Array.from(content.querySelectorAll('*'));
     for (const element of elements) {
         sanitizeElement(element);
@@ -244,7 +382,6 @@ export function containsDangerousHtml(html: string): boolean {
         /<script/i,
         /javascript:/i,
         /on\w+=/i,  // onclick, onerror, etc.
-        /<iframe/i,
         /<embed/i,
         /<object/i,
         /<form/i,
