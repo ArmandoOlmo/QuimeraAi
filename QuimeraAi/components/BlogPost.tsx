@@ -351,13 +351,15 @@ const BlogPost: React.FC<BlogPostProps> = ({ post, theme, onBack, textColor, bac
                             }
                             return (
                                 <video
-                                    src={post.podcastVideoUrl}
                                     controls
                                     playsInline
-                                    preload="auto"
+                                    muted
+                                    preload="metadata"
+                                    crossOrigin="anonymous"
                                     className="w-full rounded-lg"
                                     style={{ maxHeight: '500px', maxWidth: '100%', backgroundColor: '#000' }}
                                 >
+                                    <source src={post.podcastVideoUrl} type="video/mp4" />
                                     Tu navegador no soporta el elemento de video.
                                 </video>
                             );
