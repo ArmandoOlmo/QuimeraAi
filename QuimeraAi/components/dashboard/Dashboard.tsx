@@ -638,7 +638,7 @@ const Dashboard: React.FC = () => {
                                     draggable
                                     onDragStart={() => handleDragStart(sectionId)}
                                     onDragEnd={handleDragEnd}
-                                    className="opacity-0 group-hover/drag:opacity-100 focus-within:opacity-100 transition-opacity duration-200 cursor-grab active:cursor-grabbing flex-shrink-0 absolute left-0 top-1 -ml-8"
+                                    className="opacity-0 group-hover/drag:opacity-100 focus-within:opacity-100 transition-opacity duration-200 cursor-grab active:cursor-grabbing flex-shrink-0 self-center mr-1"
                                     title={t('dashboard.dragToReorder', 'Arrastra para reordenar')}
                                     aria-label={t('dashboard.dragToReorder', 'Arrastra para reordenar')}
                                     role="button"
@@ -659,10 +659,10 @@ const Dashboard: React.FC = () => {
                                         onDragOver={(e) => handleDragOver(e, 'projects')}
                                         onDragLeave={handleDragLeave}
                                     >
-                                        {dragHandle}
                                         <section className="relative z-[1]">
                                             <div className={`flex items-center justify-between ${projectsCollapsed ? 'mb-0' : 'mb-6'}`}>
                                                 <div className="flex items-center gap-0">
+                                                    {dragHandle}
                                                     <button
                                                         onClick={toggleProjectsCollapsed}
                                                         className="text-2xl font-bold text-foreground flex items-center gap-3 hover:text-primary/90 transition-colors"
@@ -736,10 +736,10 @@ const Dashboard: React.FC = () => {
                                         onDragOver={(e) => handleDragOver(e, 'templates')}
                                         onDragLeave={handleDragLeave}
                                     >
-                                        {dragHandle}
                                         <section>
                                             <div className={`flex items-center justify-between ${templatesCollapsed ? 'mb-0' : 'mb-6'}`}>
                                                 <div className="flex items-center gap-0">
+                                                    {dragHandle}
                                                     <button
                                                         onClick={toggleTemplatesCollapsed}
                                                         className="text-2xl font-bold text-foreground flex items-center gap-3 hover:text-primary/90 transition-colors"
@@ -794,10 +794,10 @@ const Dashboard: React.FC = () => {
                                         onDragOver={(e) => handleDragOver(e, 'leads')}
                                         onDragLeave={handleDragLeave}
                                     >
-                                        {dragHandle}
                                         <section className="w-full">
                                             <div className={`flex items-center justify-between ${leadsCollapsed ? 'mb-0' : 'mb-6'}`}>
                                                 <div className="flex items-center gap-0">
+                                                    {dragHandle}
                                                     <button
                                                         onClick={toggleLeadsCollapsed}
                                                         className="text-2xl font-bold text-foreground flex items-center gap-3 hover:text-primary/90 transition-colors"
@@ -836,10 +836,10 @@ const Dashboard: React.FC = () => {
                                         onDragOver={(e) => handleDragOver(e, 'news')}
                                         onDragLeave={handleDragLeave}
                                     >
-                                        {dragHandle}
                                         <section className="w-full">
                                             <div className={`flex items-center justify-between ${newsCollapsed ? 'mb-0' : 'mb-0'}`}>
                                                 <div className="flex items-center gap-0">
+                                                    {dragHandle}
                                                     <button
                                                         onClick={toggleNewsCollapsed}
                                                         className="text-2xl font-bold text-foreground flex items-center gap-3 hover:text-primary/90 transition-colors mb-6"
