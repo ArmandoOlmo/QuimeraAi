@@ -638,14 +638,14 @@ const Dashboard: React.FC = () => {
                                     draggable
                                     onDragStart={() => handleDragStart(sectionId)}
                                     onDragEnd={handleDragEnd}
-                                    className="absolute -left-2 top-1/2 -translate-y-1/2 z-10 opacity-0 group-hover/drag:opacity-100 focus-within:opacity-100 transition-opacity duration-200 cursor-grab active:cursor-grabbing"
+                                    className="opacity-0 group-hover/drag:opacity-100 focus-within:opacity-100 transition-opacity duration-200 cursor-grab active:cursor-grabbing flex-shrink-0 ml-2"
                                     title={t('dashboard.dragToReorder', 'Arrastra para reordenar')}
                                     aria-label={t('dashboard.dragToReorder', 'Arrastra para reordenar')}
                                     role="button"
                                     tabIndex={0}
                                 >
-                                    <div className="flex items-center justify-center w-7 h-14 rounded-lg bg-secondary/80 border border-border/50 shadow-sm hover:bg-secondary hover:border-border hover:shadow-md transition-all">
-                                        <GripVertical size={16} className="text-muted-foreground" />
+                                    <div className="flex items-center justify-center w-6 h-6 rounded-md hover:bg-secondary/80 transition-colors">
+                                        <GripVertical size={14} className="text-muted-foreground/60" />
                                     </div>
                                 </div>
                             );
@@ -659,18 +659,20 @@ const Dashboard: React.FC = () => {
                                         onDragOver={(e) => handleDragOver(e, 'projects')}
                                         onDragLeave={handleDragLeave}
                                     >
-                                        {dragHandle}
                                         <section className="relative z-[1]">
                                             <div className={`flex items-center justify-between ${projectsCollapsed ? 'mb-0' : 'mb-6'}`}>
-                                                <button
-                                                    onClick={toggleProjectsCollapsed}
-                                                    className="text-2xl font-bold text-foreground flex items-center gap-3 hover:text-primary/90 transition-colors"
-                                                    aria-expanded={!projectsCollapsed}
-                                                >
-                                                    <LayoutGrid className="text-primary" size={24} />
-                                                    {t('dashboard.recentProjects')}
-                                                    <ChevronDown size={20} className={`text-muted-foreground transition-transform duration-300 ${projectsCollapsed ? '-rotate-90' : 'rotate-0'}`} />
-                                                </button>
+                                                <div className="flex items-center gap-0">
+                                                    <button
+                                                        onClick={toggleProjectsCollapsed}
+                                                        className="text-2xl font-bold text-foreground flex items-center gap-3 hover:text-primary/90 transition-colors"
+                                                        aria-expanded={!projectsCollapsed}
+                                                    >
+                                                        <LayoutGrid className="text-primary" size={24} />
+                                                        {t('dashboard.recentProjects')}
+                                                        <ChevronDown size={20} className={`text-muted-foreground transition-transform duration-300 ${projectsCollapsed ? '-rotate-90' : 'rotate-0'}`} />
+                                                    </button>
+                                                    {dragHandle}
+                                                </div>
                                                 {!projectsCollapsed && allUserProjects.length > 0 && (
                                                     <button onClick={() => navigate(ROUTES.WEBSITES)} className="text-sm font-semibold text-yellow-400 hover:text-yellow-300 transition-colors flex items-center">
                                                         {t('dashboard.viewAll')} <Globe size={14} className="ml-1" />
@@ -734,18 +736,20 @@ const Dashboard: React.FC = () => {
                                         onDragOver={(e) => handleDragOver(e, 'templates')}
                                         onDragLeave={handleDragLeave}
                                     >
-                                        {dragHandle}
                                         <section>
                                             <div className={`flex items-center justify-between ${templatesCollapsed ? 'mb-0' : 'mb-6'}`}>
-                                                <button
-                                                    onClick={toggleTemplatesCollapsed}
-                                                    className="text-2xl font-bold text-foreground flex items-center gap-3 hover:text-primary/90 transition-colors"
-                                                    aria-expanded={!templatesCollapsed}
-                                                >
-                                                    <LayoutTemplate className="text-primary" size={24} />
-                                                    {t('dashboard.startFromTemplate')}
-                                                    <ChevronDown size={20} className={`text-muted-foreground transition-transform duration-300 ${templatesCollapsed ? '-rotate-90' : 'rotate-0'}`} />
-                                                </button>
+                                                <div className="flex items-center gap-0">
+                                                    <button
+                                                        onClick={toggleTemplatesCollapsed}
+                                                        className="text-2xl font-bold text-foreground flex items-center gap-3 hover:text-primary/90 transition-colors"
+                                                        aria-expanded={!templatesCollapsed}
+                                                    >
+                                                        <LayoutTemplate className="text-primary" size={24} />
+                                                        {t('dashboard.startFromTemplate')}
+                                                        <ChevronDown size={20} className={`text-muted-foreground transition-transform duration-300 ${templatesCollapsed ? '-rotate-90' : 'rotate-0'}`} />
+                                                    </button>
+                                                    {dragHandle}
+                                                </div>
                                                 {!templatesCollapsed && (
                                                     <div className="flex items-center gap-1 bg-secondary/40 rounded-lg p-1" role="group" aria-label={t('dashboard.templateSize', 'Tamaño de plantillas')}>
                                                         <button
@@ -790,18 +794,20 @@ const Dashboard: React.FC = () => {
                                         onDragOver={(e) => handleDragOver(e, 'leads')}
                                         onDragLeave={handleDragLeave}
                                     >
-                                        {dragHandle}
                                         <section className="w-full">
                                             <div className={`flex items-center justify-between ${leadsCollapsed ? 'mb-0' : 'mb-6'}`}>
-                                                <button
-                                                    onClick={toggleLeadsCollapsed}
-                                                    className="text-2xl font-bold text-foreground flex items-center gap-3 hover:text-primary/90 transition-colors"
-                                                    aria-expanded={!leadsCollapsed}
-                                                >
-                                                    <Users className="text-primary" size={24} />
-                                                    {t('dashboard.leads.title', 'Últimos Leads')}
-                                                    <ChevronDown size={20} className={`text-muted-foreground transition-transform duration-300 ${leadsCollapsed ? '-rotate-90' : 'rotate-0'}`} />
-                                                </button>
+                                                <div className="flex items-center gap-0">
+                                                    <button
+                                                        onClick={toggleLeadsCollapsed}
+                                                        className="text-2xl font-bold text-foreground flex items-center gap-3 hover:text-primary/90 transition-colors"
+                                                        aria-expanded={!leadsCollapsed}
+                                                    >
+                                                        <Users className="text-primary" size={24} />
+                                                        {t('dashboard.leads.title', 'Últimos Leads')}
+                                                        <ChevronDown size={20} className={`text-muted-foreground transition-transform duration-300 ${leadsCollapsed ? '-rotate-90' : 'rotate-0'}`} />
+                                                    </button>
+                                                    {dragHandle}
+                                                </div>
                                                 {!leadsCollapsed && (
                                                     <button
                                                         onClick={() => navigate(ROUTES.LEADS)}
@@ -830,18 +836,20 @@ const Dashboard: React.FC = () => {
                                         onDragOver={(e) => handleDragOver(e, 'news')}
                                         onDragLeave={handleDragLeave}
                                     >
-                                        {dragHandle}
                                         <section className="w-full">
                                             <div className={`flex items-center justify-between ${newsCollapsed ? 'mb-0' : 'mb-0'}`}>
-                                                <button
-                                                    onClick={toggleNewsCollapsed}
-                                                    className="text-2xl font-bold text-foreground flex items-center gap-3 hover:text-primary/90 transition-colors mb-6"
-                                                    aria-expanded={!newsCollapsed}
-                                                >
-                                                    <Newspaper className="text-primary" size={24} />
-                                                    {t('dashboard.news.title', 'Noticias y Novedades')}
-                                                    <ChevronDown size={20} className={`text-muted-foreground transition-transform duration-300 ${newsCollapsed ? '-rotate-90' : 'rotate-0'}`} />
-                                                </button>
+                                                <div className="flex items-center gap-0">
+                                                    <button
+                                                        onClick={toggleNewsCollapsed}
+                                                        className="text-2xl font-bold text-foreground flex items-center gap-3 hover:text-primary/90 transition-colors mb-6"
+                                                        aria-expanded={!newsCollapsed}
+                                                    >
+                                                        <Newspaper className="text-primary" size={24} />
+                                                        {t('dashboard.news.title', 'Noticias y Novedades')}
+                                                        <ChevronDown size={20} className={`text-muted-foreground transition-transform duration-300 ${newsCollapsed ? '-rotate-90' : 'rotate-0'}`} />
+                                                    </button>
+                                                    {dragHandle}
+                                                </div>
                                             </div>
                                             {!newsCollapsed && (
                                                 <div className="animate-fade-in-up">
