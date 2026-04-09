@@ -94,7 +94,23 @@ export default defineConfig(({ mode }) => {
               }
             },
             {
-              // Cache Firebase Storage images
+               // IMPORTANT: Video/Audio files from Firebase Storage must BYPASS the SW entirely.
+               // iOS Safari requires HTTP 206 Partial Content (Range requests) for video playback.
+               // The Service Worker strips these headers, causing videos to show 00:00 and fail to play.
+               urlPattern: ({ url }) => {
+                 if (!url.hostname.includes('firebasestorage.googleapis.com')) return false;
+                 const path = url.pathname.toLowerCase();
+                 return path.includes('.mp4') || path.includes('.webm') || path.includes('.mov') ||
+                        path.includes('.avi') || path.includes('.mp3') || path.includes('.wav') ||
+                        path.includes('.ogg') || path.includes('.m4a') || path.includes('.aac');
+               },
+               handler: 'NetworkOnly',
+               options: {
+                 cacheName: 'firebase-media-bypass'
+               }
+             },
+            {
+              // Cache Firebase Storage images (NOT videos - those use NetworkOnly above)
               urlPattern: /^https:\/\/firebasestorage\.googleapis\.com\/.*/i,
               handler: 'CacheFirst',
               options: {

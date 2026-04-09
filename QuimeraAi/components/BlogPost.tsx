@@ -353,9 +353,7 @@ const BlogPost: React.FC<BlogPostProps> = ({ post, theme, onBack, textColor, bac
                                 <video
                                     controls
                                     playsInline
-                                    muted
                                     preload="metadata"
-                                    crossOrigin="anonymous"
                                     className="w-full rounded-lg"
                                     style={{ maxHeight: '500px', maxWidth: '100%', backgroundColor: '#000' }}
                                 >
