@@ -19,9 +19,10 @@ import FileHistory from './FileHistory';
 import FilterChip from './FilterChip';
 import EmptyState from './EmptyState';
 import NewsUpdates from './NewsUpdates';
+import RecentLeads from './RecentLeads';
 import DashboardHelpGuide from './DashboardHelpGuide';
 import DashboardStatusCards from './DashboardStatusCards';
-import { Plus, Menu, Search, LayoutGrid, Globe, Images, List, ArrowUpDown, CheckCircle, FileEdit, X, Loader2, Sparkles, MousePointerClick, Palette, Rocket, LayoutTemplate, BookOpen, ArrowLeft, Crown, ChevronUp, ChevronDown } from 'lucide-react';
+import { Plus, Menu, Search, LayoutGrid, Globe, Images, List, ArrowUpDown, CheckCircle, FileEdit, X, Loader2, Sparkles, MousePointerClick, Palette, Rocket, LayoutTemplate, BookOpen, ArrowLeft, Crown, ChevronUp, ChevronDown, Maximize2, Minimize2, Newspaper, Users } from 'lucide-react';
 import MobileSearchModal from '../ui/MobileSearchModal';
 import { trackSearchPerformed, trackFilterApplied, trackSortChanged, trackViewModeChanged, trackDashboardView } from '../../utils/analytics';
 import { useInfiniteScroll, paginateArray, hasMoreItems } from '../../hooks/useInfiniteScroll';
@@ -65,6 +66,73 @@ const Dashboard: React.FC = () => {
         setUpgradeMinimized(prev => {
             const next = !prev;
             localStorage.setItem('quimera_upgrade_minimized', String(next));
+            return next;
+        });
+    };
+
+    // Template card size preference (persisted in localStorage)
+    const [compactTemplates, setCompactTemplates] = useState(() => {
+        const saved = localStorage.getItem('quimera_compact_templates');
+        return saved !== 'false';
+    });
+
+    const toggleCompactTemplates = (compact: boolean) => {
+        setCompactTemplates(compact);
+        localStorage.setItem('quimera_compact_templates', String(compact));
+    };
+
+    // Templates section collapsed state (persisted in localStorage)
+    const [templatesCollapsed, setTemplatesCollapsed] = useState(() => {
+        const saved = localStorage.getItem('quimera_templates_collapsed');
+        return saved === 'true';
+    });
+
+    const toggleTemplatesCollapsed = () => {
+        setTemplatesCollapsed(prev => {
+            const next = !prev;
+            localStorage.setItem('quimera_templates_collapsed', String(next));
+            return next;
+        });
+    };
+
+    // Recent Projects section collapsed state (persisted in localStorage)
+    const [projectsCollapsed, setProjectsCollapsed] = useState(() => {
+        const saved = localStorage.getItem('quimera_projects_collapsed');
+        return saved === 'true';
+    });
+
+    const toggleProjectsCollapsed = () => {
+        setProjectsCollapsed(prev => {
+            const next = !prev;
+            localStorage.setItem('quimera_projects_collapsed', String(next));
+            return next;
+        });
+    };
+
+    // News section collapsed state (persisted in localStorage)
+    const [newsCollapsed, setNewsCollapsed] = useState(() => {
+        const saved = localStorage.getItem('quimera_news_collapsed');
+        return saved === 'true';
+    });
+
+    const toggleNewsCollapsed = () => {
+        setNewsCollapsed(prev => {
+            const next = !prev;
+            localStorage.setItem('quimera_news_collapsed', String(next));
+            return next;
+        });
+    };
+
+    // Leads section collapsed state (persisted in localStorage)
+    const [leadsCollapsed, setLeadsCollapsed] = useState(() => {
+        const saved = localStorage.getItem('quimera_leads_collapsed');
+        return saved === 'true';
+    });
+
+    const toggleLeadsCollapsed = () => {
+        setLeadsCollapsed(prev => {
+            const next = !prev;
+            localStorage.setItem('quimera_leads_collapsed', String(next));
             return next;
         });
     };
@@ -494,12 +562,17 @@ const Dashboard: React.FC = () => {
                                 <section className="relative z-[1]">
                                     {/* Only show section header on Dashboard view, since Websites view has it in main header */}
                                     {isDashboard && (
-                                        <div className="flex items-center justify-between mb-6">
-                                            <h2 className="text-2xl font-bold text-foreground flex items-center gap-3">
+                                        <div className={`flex items-center justify-between ${projectsCollapsed ? 'mb-0' : 'mb-6'}`}>
+                                            <button
+                                                onClick={toggleProjectsCollapsed}
+                                                className="text-2xl font-bold text-foreground flex items-center gap-3 hover:text-primary/90 transition-colors"
+                                                aria-expanded={!projectsCollapsed}
+                                            >
                                                 <LayoutGrid className="text-primary" size={24} />
                                                 {t('dashboard.recentProjects')}
-                                            </h2>
-                                            {allUserProjects.length > 0 && (
+                                                <ChevronDown size={20} className={`text-muted-foreground transition-transform duration-300 ${projectsCollapsed ? '-rotate-90' : 'rotate-0'}`} />
+                                            </button>
+                                            {!projectsCollapsed && allUserProjects.length > 0 && (
                                                 <button onClick={() => navigate(ROUTES.WEBSITES)} className="text-sm font-semibold text-yellow-400 hover:text-yellow-300 transition-colors flex items-center">
                                                     {t('dashboard.viewAll')} <Globe size={14} className="ml-1" />
                                                 </button>
@@ -595,6 +668,8 @@ const Dashboard: React.FC = () => {
                                         </div>
                                     )}
 
+                                    {(!isDashboard || !projectsCollapsed) && (
+                                    <>
                                     {isLoadingProjects ? (
                                         <>
                                             {/* Grid View Skeleton */}
@@ -619,7 +694,7 @@ const Dashboard: React.FC = () => {
                                         <>
                                             {/* Grid View */}
                                             {viewMode === 'grid' && (
-                                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 animate-fade-in-up">
                                                     {(isWebsites ? userProjects : userProjects.slice(0, 4)).map(project => (
                                                         <ProjectCard
                                                             key={project.id}
@@ -666,6 +741,8 @@ const Dashboard: React.FC = () => {
                                             } : undefined}
                                         />
                                     )}
+                                    </>
+                                    )}
                                 </section>
                             )
                         }
@@ -674,17 +751,79 @@ const Dashboard: React.FC = () => {
                         {
                             isDashboard && (
                                 <section>
-                                    <div className="flex items-center justify-between mb-6">
-                                        <h2 className="text-2xl font-bold text-foreground flex items-center gap-3">
+                                    <div className={`flex items-center justify-between ${templatesCollapsed ? 'mb-0' : 'mb-6'}`}>
+                                        <button
+                                            onClick={toggleTemplatesCollapsed}
+                                            className="text-2xl font-bold text-foreground flex items-center gap-3 hover:text-primary/90 transition-colors"
+                                            aria-expanded={!templatesCollapsed}
+                                        >
                                             <LayoutTemplate className="text-primary" size={24} />
                                             {t('dashboard.startFromTemplate')}
-                                        </h2>
+                                            <ChevronDown size={20} className={`text-muted-foreground transition-transform duration-300 ${templatesCollapsed ? '-rotate-90' : 'rotate-0'}`} />
+                                        </button>
+                                        {/* Size toggle + collapse */}
+                                        {!templatesCollapsed && (
+                                            <div className="flex items-center gap-1 bg-secondary/40 rounded-lg p-1" role="group" aria-label={t('dashboard.templateSize', 'Tama\u00f1o de plantillas')}>
+                                                <button
+                                                    onClick={() => toggleCompactTemplates(false)}
+                                                    className={`h-8 w-8 flex items-center justify-center rounded-md transition-all ${!compactTemplates ? 'text-primary bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+                                                    aria-label={t('dashboard.templateSizeLarge', 'Grande')}
+                                                    aria-pressed={!compactTemplates}
+                                                    title={t('dashboard.templateSizeLarge', 'Grande')}
+                                                >
+                                                    <Maximize2 size={15} aria-hidden="true" />
+                                                </button>
+                                                <button
+                                                    onClick={() => toggleCompactTemplates(true)}
+                                                    className={`h-8 w-8 flex items-center justify-center rounded-md transition-all ${compactTemplates ? 'text-primary bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+                                                    aria-label={t('dashboard.templateSizeCompact', 'Compacto')}
+                                                    aria-pressed={compactTemplates}
+                                                    title={t('dashboard.templateSizeCompact', 'Compacto')}
+                                                >
+                                                    <Minimize2 size={15} aria-hidden="true" />
+                                                </button>
+                                            </div>
+                                        )}
                                     </div>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                                        {templates.slice(0, 4).map(template => (
-                                            <ProjectCard key={template.id} project={template} />
-                                        ))}
+                                    {!templatesCollapsed && (
+                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 animate-fade-in-up">
+                                            {templates.slice(0, 4).map(template => (
+                                                <ProjectCard key={template.id} project={template} compact={compactTemplates} />
+                                            ))}
+                                        </div>
+                                    )}
+                                </section>
+                            )
+                        }
+
+                        {/* Recent Leads Section (Only on Dashboard) */}
+                        {
+                            isDashboard && (
+                                <section className="w-full">
+                                    <div className={`flex items-center justify-between ${leadsCollapsed ? 'mb-0' : 'mb-6'}`}>
+                                        <button
+                                            onClick={toggleLeadsCollapsed}
+                                            className="text-2xl font-bold text-foreground flex items-center gap-3 hover:text-primary/90 transition-colors"
+                                            aria-expanded={!leadsCollapsed}
+                                        >
+                                            <Users className="text-primary" size={24} />
+                                            {t('dashboard.leads.title', 'Últimos Leads')}
+                                            <ChevronDown size={20} className={`text-muted-foreground transition-transform duration-300 ${leadsCollapsed ? '-rotate-90' : 'rotate-0'}`} />
+                                        </button>
+                                        {!leadsCollapsed && (
+                                            <button
+                                                onClick={() => navigate(ROUTES.LEADS)}
+                                                className="text-sm font-semibold text-yellow-400 hover:text-yellow-300 transition-colors flex items-center"
+                                            >
+                                                {t('dashboard.viewAll', 'Ver todos')} <Users size={14} className="ml-1" />
+                                            </button>
+                                        )}
                                     </div>
+                                    {!leadsCollapsed && (
+                                        <div className="animate-fade-in-up">
+                                            <RecentLeads maxItems={6} />
+                                        </div>
+                                    )}
                                 </section>
                             )
                         }
@@ -693,7 +832,22 @@ const Dashboard: React.FC = () => {
                         {
                             isDashboard && (
                                 <section className="w-full">
-                                    <NewsUpdates maxItems={4} />
+                                    <div className={`flex items-center justify-between ${newsCollapsed ? 'mb-0' : 'mb-0'}`}>
+                                        <button
+                                            onClick={toggleNewsCollapsed}
+                                            className="text-2xl font-bold text-foreground flex items-center gap-3 hover:text-primary/90 transition-colors mb-6"
+                                            aria-expanded={!newsCollapsed}
+                                        >
+                                            <Newspaper className="text-primary" size={24} />
+                                            {t('dashboard.news.title', 'Noticias y Novedades')}
+                                            <ChevronDown size={20} className={`text-muted-foreground transition-transform duration-300 ${newsCollapsed ? '-rotate-90' : 'rotate-0'}`} />
+                                        </button>
+                                    </div>
+                                    {!newsCollapsed && (
+                                        <div className="animate-fade-in-up">
+                                            <NewsUpdates maxItems={4} hideHeader />
+                                        </div>
+                                    )}
                                 </section>
                             )
                         }

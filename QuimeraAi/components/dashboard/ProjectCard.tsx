@@ -18,6 +18,7 @@ interface ProjectCardProps {
   onSelect?: (projectId: string) => void;
   tokenUsage?: { tokensUsed: number; creditsUsed: number };
   maxTokens?: number;
+  compact?: boolean;
 }
 
 const ProjectCard: React.FC<ProjectCardProps> = ({
@@ -26,7 +27,8 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
   isSelected = false,
   onSelect,
   tokenUsage,
-  maxTokens = 1
+  maxTokens = 1,
+  compact = false
 }) => {
   const { t } = useTranslation();
   const { user, userDocument } = useAuth();
@@ -180,7 +182,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
 
   return (
     <article
-      className={`group relative rounded-2xl overflow-hidden transition-all duration-500 h-[400px] ${isSelected ? 'ring-4 ring-primary shadow-2xl shadow-primary/30' : 'hover:shadow-2xl hover:scale-[1.02]'
+      className={`group relative rounded-2xl overflow-hidden transition-all duration-500 ${compact ? 'h-[260px]' : 'h-[400px]'} ${isSelected ? 'ring-4 ring-primary shadow-2xl shadow-primary/30' : 'hover:shadow-2xl hover:scale-[1.02]'
         }`}
       aria-label={projectLabel}
     >
@@ -331,17 +333,17 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
         </div>
 
         {/* Bottom Section: Title and Date */}
-        <div className="absolute bottom-0 left-0 right-0 z-10 p-6 pointer-events-none">
-          <div className="flex items-center gap-3 mb-2">
+        <div className={`absolute bottom-0 left-0 right-0 z-10 ${compact ? 'p-3' : 'p-6'} pointer-events-none`}>
+          <div className={`flex items-center ${compact ? 'gap-2 mb-1' : 'gap-3 mb-2'}`}>
             {project.faviconUrl && (
               <img
                 src={project.faviconUrl}
                 alt="Favicon"
-                className="w-8 h-8 rounded-md object-contain bg-white/10 backdrop-blur-sm p-1 flex-shrink-0 border border-white/20"
+                className={`${compact ? 'w-6 h-6' : 'w-8 h-8'} rounded-md object-contain bg-white/10 backdrop-blur-sm p-1 flex-shrink-0 border border-white/20`}
               />
             )}
             <h3
-              className="font-bold text-2xl text-white line-clamp-2 pointer-events-auto cursor-pointer hover:text-primary/90 transition-colors"
+              className={`font-bold ${compact ? 'text-base line-clamp-1' : 'text-2xl line-clamp-2'} text-white pointer-events-auto cursor-pointer hover:text-primary/90 transition-colors`}
               title={project.name}
               onClick={(e) => {
                 e.stopPropagation();
@@ -380,9 +382,9 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
             </div>
           )}
 
-          <div className="flex items-center text-white/90 mt-2">
-            <Clock size={16} className="mr-2" aria-hidden="true" />
-            <time dateTime={project.lastUpdated} className="text-sm font-medium">
+          <div className={`flex items-center text-white/90 ${compact ? 'mt-1' : 'mt-2'}`}>
+            <Clock size={compact ? 12 : 16} className="mr-2" aria-hidden="true" />
+            <time dateTime={project.lastUpdated} className={`${compact ? 'text-xs' : 'text-sm'} font-medium`}>
               {t('common.updated')} {new Date(project.lastUpdated).toLocaleDateString(undefined, { month: 'numeric', day: 'numeric', year: 'numeric' })}
             </time>
           </div>

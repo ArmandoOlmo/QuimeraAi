@@ -30,12 +30,14 @@ interface NewsUpdatesProps {
     className?: string;
     maxItems?: number;
     compact?: boolean;
+    hideHeader?: boolean;
 }
 
 const NewsUpdates: React.FC<NewsUpdatesProps> = ({
     className = '',
     maxItems = 4,
     compact = false,
+    hideHeader = false,
 }) => {
     const { t, i18n } = useTranslation();
     const {
@@ -51,15 +53,16 @@ const NewsUpdates: React.FC<NewsUpdatesProps> = ({
     const [selectedNews, setSelectedNews] = useState<NewsItem | null>(null);
     const [dismissingId, setDismissingId] = useState<string | null>(null);
     const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
+    const [showAll, setShowAll] = useState(false);
 
     // Fetch news on mount and when the app language changes
     useEffect(() => {
         fetchUserNews();
     }, [i18n.language]);
 
-    // Get visible news (limited)
-    const visibleNews = userNews.slice(0, maxItems);
-    const hasMore = userNews.length > maxItems;
+    // Get visible news (limited unless showAll is toggled)
+    const visibleNews = showAll ? userNews : userNews.slice(0, maxItems);
+    const hasMore = userNews.length > maxItems && !showAll;
 
     // Handle card click
     const handleCardClick = async (news: NewsItem) => {
@@ -113,12 +116,14 @@ const NewsUpdates: React.FC<NewsUpdatesProps> = ({
     if (isLoadingUserNews) {
         return (
             <div className={`${className}`}>
-                <div className="flex items-center justify-between mb-6">
-                    <div className="flex items-center gap-3">
-                        <Newspaper className="text-primary" size={24} />
-                        <h2 className="text-2xl font-bold">{t('dashboard.news.title', 'Noticias y Novedades')}</h2>
+                {!hideHeader && (
+                    <div className="flex items-center justify-between mb-6">
+                        <div className="flex items-center gap-3">
+                            <Newspaper className="text-primary" size={24} />
+                            <h2 className="text-2xl font-bold">{t('dashboard.news.title', 'Noticias y Novedades')}</h2>
+                        </div>
                     </div>
-                </div>
+                )}
                 <div className="flex items-center justify-center py-12">
                     <Loader2 className="animate-spin text-primary" size={32} />
                 </div>
@@ -130,12 +135,14 @@ const NewsUpdates: React.FC<NewsUpdatesProps> = ({
     if (visibleNews.length === 0) {
         return (
             <div className={`${className}`}>
-                <div className="flex items-center justify-between mb-6">
-                    <div className="flex items-center gap-3">
-                        <Newspaper className="text-primary" size={24} />
-                        <h2 className="text-2xl font-bold">{t('dashboard.news.title', 'Noticias y Novedades')}</h2>
+                {!hideHeader && (
+                    <div className="flex items-center justify-between mb-6">
+                        <div className="flex items-center gap-3">
+                            <Newspaper className="text-primary" size={24} />
+                            <h2 className="text-2xl font-bold">{t('dashboard.news.title', 'Noticias y Novedades')}</h2>
+                        </div>
                     </div>
-                </div>
+                )}
                 <div className="text-center py-12 bg-card/50 rounded-2xl border border-border">
                     <CheckCircle className="mx-auto text-green-500 mb-4" size={40} />
                     <p className="text-muted-foreground">
@@ -157,24 +164,26 @@ const NewsUpdates: React.FC<NewsUpdatesProps> = ({
         <>
             <div className={`${className}`}>
                 {/* Section Header */}
-                <div className="flex items-center justify-between mb-6">
-                    <div className="flex items-center gap-3">
-                        <Newspaper className="text-primary" size={24} />
-                        <h2 className="text-2xl font-bold">{t('dashboard.news.title', 'Noticias y Novedades')}</h2>
-                        {userNews.length > 0 && (
-                            <span className="px-2.5 py-1 bg-primary/10 text-primary text-xs font-bold rounded-full">
-                                {userNews.filter(n => !isRead(n.id)).length} {t('dashboard.news.new', 'nuevas')}
-                            </span>
-                        )}
+                {!hideHeader && (
+                    <div className="flex items-center justify-between mb-6">
+                        <div className="flex items-center gap-3">
+                            <Newspaper className="text-primary" size={24} />
+                            <h2 className="text-2xl font-bold">{t('dashboard.news.title', 'Noticias y Novedades')}</h2>
+                            {userNews.length > 0 && (
+                                <span className="px-2.5 py-1 bg-primary/10 text-primary text-xs font-bold rounded-full">
+                                    {userNews.filter(n => !isRead(n.id)).length} {t('dashboard.news.new', 'nuevas')}
+                                </span>
+                            )}
+                        </div>
+                        <button
+                            onClick={() => fetchUserNews()}
+                            className="p-2 hover:bg-secondary rounded-lg transition-colors text-muted-foreground hover:text-foreground"
+                            title={t('dashboard.news.refresh', 'Actualizar')}
+                        >
+                            <RefreshCw size={18} />
+                        </button>
                     </div>
-                    <button
-                        onClick={() => fetchUserNews()}
-                        className="p-2 hover:bg-secondary rounded-lg transition-colors text-muted-foreground hover:text-foreground"
-                        title={t('dashboard.news.refresh', 'Actualizar')}
-                    >
-                        <RefreshCw size={18} />
-                    </button>
-                </div>
+                )}
 
                 {/* News Grid - Max 2 columns, horizontal cards with image background */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -274,14 +283,17 @@ const NewsUpdates: React.FC<NewsUpdatesProps> = ({
                     ))}
                 </div>
 
-                {/* See more */}
-                {hasMore && (
+                {/* See more / Collapse toggle */}
+                {userNews.length > maxItems && (
                     <div className="mt-6 text-center">
                         <button
-                            onClick={() => setSelectedNews(userNews[0])}
+                            onClick={() => setShowAll(prev => !prev)}
                             className="text-sm font-medium text-primary hover:underline"
                         >
-                            {t('dashboard.news.seeAll', 'Ver todas las noticias')} ({userNews.length})
+                            {showAll
+                                ? t('dashboard.news.showLess', 'Mostrar menos')
+                                : `${t('dashboard.news.seeAll', 'Ver todas las noticias')} (${userNews.length})`
+                            }
                         </button>
                     </div>
                 )}
