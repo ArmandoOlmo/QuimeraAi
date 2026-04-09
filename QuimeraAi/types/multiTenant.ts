@@ -113,11 +113,17 @@ export interface Tenant {
     id: string;
     name: string;
     slug: string;                  // URL-friendly name "cliente-abc"
+    email: string;                 // Contact email
+    companyName?: string;          // Company/business name
     type: TenantType;
 
     // Ownership
     ownerUserId: string;           // Firebase Auth UID of owner
     ownerTenantId?: string;        // If this is a sub-client of an agency
+
+    // Members & Projects
+    memberUserIds: string[];       // UIDs of users belonging to this tenant
+    projectIds: string[];          // IDs of projects owned by this tenant
 
     // Subscription & Limits - Updated with new plans
     subscriptionPlan:
@@ -144,6 +150,11 @@ export interface Tenant {
 
     // Billing
     billing?: TenantBilling;
+    billingInfo?: {                // Legacy billing info (stored by createTenant)
+        mrr?: number;
+        nextBillingDate?: string;
+        paymentMethod?: string;
+    };
 
     // Trial
     trialEndsAt?: { seconds: number; nanoseconds: number };

@@ -24,7 +24,7 @@ interface TenantManagementProps {
 const TenantManagement: React.FC<TenantManagementProps> = ({ onBack }) => {
     const { t } = useTranslation();
     const { canPerform } = useAuth();
-    const { tenants, fetchTenants, deleteTenant, updateTenantStatus, allUsers, createTenant } = useAdmin();
+    const { tenants, fetchTenants, deleteTenant, updateTenantStatus, updateTenant, updateTenantLimits, allUsers, createTenant } = useAdmin();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState<'all' | 'individual' | 'agency'>('all');
@@ -99,7 +99,7 @@ const TenantManagement: React.FC<TenantManagementProps> = ({ onBack }) => {
     };
 
     const calculateTotalMRR = () => {
-        return tenants.reduce((sum, t) => sum + (t.billingInfo?.mrr || 0), 0);
+        return tenants.reduce((sum, t) => sum + (t.billing?.mrr || t.billingInfo?.mrr || 0), 0);
     };
 
     // Componente de métrica
@@ -547,6 +547,8 @@ const TenantManagement: React.FC<TenantManagementProps> = ({ onBack }) => {
                     allTenants={tenants}
                     onClose={() => setSelectedTenant(null)}
                     onSelectTenant={setSelectedTenant}
+                    updateTenant={updateTenant}
+                    fetchTenants={fetchTenants}
                 />
             )}
 
@@ -562,15 +564,54 @@ const TenantManagement: React.FC<TenantManagementProps> = ({ onBack }) => {
     );
 };
 
-// Sub-componente para el modal de detalles para manejar mejor el estado y la lógica de pestañas
+// Sub-componente para el modal de detalles — EDITABLE con información completa
 const TenantDetailsModal: React.FC<{
     tenant: Tenant;
     allTenants: Tenant[];
     onClose: () => void;
     onSelectTenant: (tenant: Tenant) => void;
-}> = ({ tenant, allTenants, onClose, onSelectTenant }) => {
+    updateTenant: (tenantId: string, data: Partial<Tenant>) => Promise<void>;
+    fetchTenants: () => Promise<void>;
+}> = ({ tenant, allTenants, onClose, onSelectTenant, updateTenant, fetchTenants }) => {
     const { t } = useTranslation();
     const [activeTab, setActiveTab] = useState<'general' | 'clients' | 'subscription' | 'credits'>('general');
+
+    // Edit mode state
+    const [isEditing, setIsEditing] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
+    const [editData, setEditData] = useState({
+        name: tenant.name || '',
+        email: tenant.email || '',
+        companyName: tenant.companyName || '',
+        status: tenant.status,
+        subscriptionPlan: tenant.subscriptionPlan,
+        type: tenant.type,
+    });
+    const [editLimits, setEditLimits] = useState({
+        maxProjects: tenant.limits?.maxProjects ?? 1,
+        maxUsers: tenant.limits?.maxUsers ?? 1,
+        maxStorageGB: tenant.limits?.maxStorageGB ?? 1,
+        maxAiCredits: tenant.limits?.maxAiCredits ?? 100,
+    });
+
+    // Reset edit state when tenant changes
+    useEffect(() => {
+        setEditData({
+            name: tenant.name || '',
+            email: tenant.email || '',
+            companyName: tenant.companyName || '',
+            status: tenant.status,
+            subscriptionPlan: tenant.subscriptionPlan,
+            type: tenant.type,
+        });
+        setEditLimits({
+            maxProjects: tenant.limits?.maxProjects ?? 1,
+            maxUsers: tenant.limits?.maxUsers ?? 1,
+            maxStorageGB: tenant.limits?.maxStorageGB ?? 1,
+            maxAiCredits: tenant.limits?.maxAiCredits ?? 100,
+        });
+        setIsEditing(false);
+    }, [tenant.id]);
 
     const [creditUsage, setCreditUsage] = useState<AiCreditsUsage | null>(null);
     const [creditTransactions, setCreditTransactions] = useState<AiCreditTransaction[]>([]);
@@ -631,6 +672,32 @@ const TenantDetailsModal: React.FC<{
         }
     };
 
+    const handleSave = async () => {
+        setIsSaving(true);
+        try {
+            await updateTenant(tenant.id, {
+                name: editData.name,
+                email: editData.email,
+                companyName: editData.companyName,
+                status: editData.status as TenantStatus,
+                subscriptionPlan: editData.subscriptionPlan as Tenant['subscriptionPlan'],
+                type: editData.type as TenantType,
+                limits: {
+                    ...tenant.limits,
+                    ...editLimits,
+                },
+            } as Partial<Tenant>);
+            await fetchTenants();
+            setIsEditing(false);
+            alert(t('superadmin.tenant.detailsModal.saveSuccess', 'Cambios guardados exitosamente'));
+        } catch (error) {
+            console.error('Error saving tenant:', error);
+            alert(t('superadmin.tenant.detailsModal.saveError', 'Error al guardar los cambios'));
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
     // Filtrar sub-clientes si es una agencia
     const agencyClients = allTenants.filter(t => t.ownerTenantId === tenant.id);
 
@@ -643,31 +710,89 @@ const TenantDetailsModal: React.FC<{
         }
     };
 
+    const formatDate = (dateVal: any) => {
+        if (!dateVal) return '—';
+        if (dateVal.seconds) return new Date(dateVal.seconds * 1000).toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+        if (typeof dateVal === 'string') return new Date(dateVal).toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+        return '—';
+    };
+
+    const inputClass = "w-full px-3 py-2 bg-editor-bg border border-editor-border rounded-lg text-editor-text-primary focus:outline-none focus:ring-2 focus:ring-editor-accent/50 focus:border-editor-accent transition-colors";
+    const selectClass = "w-full px-3 py-2 bg-editor-bg border border-editor-border rounded-lg text-editor-text-primary focus:outline-none focus:ring-2 focus:ring-editor-accent/50 focus:border-editor-accent transition-colors";
+    const labelClass = "text-sm text-editor-text-secondary block mb-1.5 font-medium";
+    const readOnlyValueClass = "text-editor-text-primary font-medium";
+
     return (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-editor-panel-bg border border-editor-border rounded-lg p-6 max-w-4xl w-full max-h-[85vh] overflow-y-auto flex flex-col">
+            <div className="bg-editor-panel-bg border border-editor-border rounded-xl p-6 max-w-4xl w-full max-h-[85vh] overflow-y-auto flex flex-col shadow-2xl">
                 <div className="flex items-center justify-between mb-6 flex-shrink-0">
-                    <h2 className="text-xl font-bold text-editor-text-primary">
-                        {tenant.type === 'agency' ? 'Detalles de Agencia' : 'Detalles del Tenant'}
-                    </h2>
-                    <button onClick={onClose} className="text-editor-text-secondary hover:text-editor-text-primary">
-                        <X size={20} />
-                    </button>
+                    <div className="flex items-center gap-3">
+                        <div className={`p-2.5 rounded-lg ${tenant.type === 'agency' ? 'bg-blue-500/20' : 'bg-purple-500/20'}`}>
+                            {tenant.type === 'agency' ?
+                                <Building2 size={22} className="text-blue-400" /> :
+                                <User size={22} className="text-purple-400" />
+                            }
+                        </div>
+                        <div>
+                            <h2 className="text-xl font-bold text-editor-text-primary">
+                                {isEditing ? editData.name : tenant.name}
+                            </h2>
+                            <p className="text-sm text-editor-text-secondary">{tenant.email || 'Sin email'}</p>
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        {activeTab === 'general' && (
+                            <button
+                                onClick={() => {
+                                    if (isEditing) {
+                                        // Cancel editing
+                                        setEditData({
+                                            name: tenant.name || '',
+                                            email: tenant.email || '',
+                                            companyName: tenant.companyName || '',
+                                            status: tenant.status,
+                                            subscriptionPlan: tenant.subscriptionPlan,
+                                            type: tenant.type,
+                                        });
+                                        setEditLimits({
+                                            maxProjects: tenant.limits?.maxProjects ?? 1,
+                                            maxUsers: tenant.limits?.maxUsers ?? 1,
+                                            maxStorageGB: tenant.limits?.maxStorageGB ?? 1,
+                                            maxAiCredits: tenant.limits?.maxAiCredits ?? 100,
+                                        });
+                                        setIsEditing(false);
+                                    } else {
+                                        setIsEditing(true);
+                                    }
+                                }}
+                                className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${isEditing
+                                    ? 'text-yellow-400 hover:text-yellow-300 bg-yellow-500/10 border border-yellow-500/30'
+                                    : 'text-editor-accent hover:text-editor-accent/80 bg-editor-accent/10 border border-editor-accent/30'
+                                    }`}
+                            >
+                                <Edit2 size={14} />
+                                {isEditing ? 'Cancelar' : 'Editar'}
+                            </button>
+                        )}
+                        <button onClick={onClose} className="p-2 text-editor-text-secondary hover:text-editor-text-primary rounded-lg hover:bg-editor-bg transition-colors">
+                            <X size={20} />
+                        </button>
+                    </div>
                 </div>
 
-                <div className="flex border-b border-editor-border mb-6 flex-shrink-0">
+                <div className="flex border-b border-editor-border mb-6 flex-shrink-0 overflow-x-auto">
                     <button
                         onClick={() => setActiveTab('general')}
-                        className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${activeTab === 'general'
+                        className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${activeTab === 'general'
                             ? 'border-editor-accent text-editor-accent'
                             : 'border-transparent text-editor-text-secondary hover:text-editor-text-primary'
                             }`}
                     >
-                        {t('superadmin.tenant.detailsModal.tabs.general', 'General')}
+                        {t('superadmin.tenant.detailsModal.tabs.general', 'Información General')}
                     </button>
                     <button
                         onClick={() => setActiveTab('subscription')}
-                        className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${activeTab === 'subscription'
+                        className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${activeTab === 'subscription'
                             ? 'border-editor-accent text-editor-accent'
                             : 'border-transparent text-editor-text-secondary hover:text-editor-text-primary'
                             }`}
@@ -676,7 +801,7 @@ const TenantDetailsModal: React.FC<{
                     </button>
                     <button
                         onClick={() => setActiveTab('credits')}
-                        className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${activeTab === 'credits'
+                        className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${activeTab === 'credits'
                             ? 'border-editor-accent text-editor-accent'
                             : 'border-transparent text-editor-text-secondary hover:text-editor-text-primary'
                             }`}
@@ -686,7 +811,7 @@ const TenantDetailsModal: React.FC<{
                     {tenant.type === 'agency' && (
                         <button
                             onClick={() => setActiveTab('clients')}
-                            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${activeTab === 'clients'
+                            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${activeTab === 'clients'
                                 ? 'border-editor-accent text-editor-accent'
                                 : 'border-transparent text-editor-text-secondary hover:text-editor-text-primary'
                                 }`}
@@ -698,65 +823,302 @@ const TenantDetailsModal: React.FC<{
 
                 <div className="flex-1 overflow-y-auto min-h-0 pr-2">
                     {activeTab === 'general' && (
-                        <div className="space-y-4">
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="text-sm text-editor-text-secondary block mb-1">Nombre</label>
-                                    <p className="text-editor-text-primary font-semibold">{tenant.name}</p>
-                                </div>
-                                <div>
-                                    <label className="text-sm text-editor-text-secondary block mb-1">Empresa</label>
-                                    <p className="text-editor-text-primary">{tenant.companyName || '-'}</p>
-                                </div>
-                                <div>
-                                    <label className="text-sm text-editor-text-secondary block mb-1">Email</label>
-                                    <p className="text-editor-text-primary">{tenant.email}</p>
-                                </div>
-                                <div>
-                                    <label className="text-sm text-editor-text-secondary block mb-1">Tipo</label>
-                                    <div className="flex items-center gap-2">
-                                        {tenant.type === 'agency' ? <Building2 size={16} className="text-blue-400" /> : <User size={16} className="text-purple-400" />}
-                                        <p className="text-editor-text-primary capitalize">{tenant.type}</p>
+                        <div className="space-y-6">
+                            {/* Información Principal */}
+                            <div>
+                                <h3 className="font-semibold text-editor-text-primary mb-4 flex items-center gap-2 text-base">
+                                    <User className="w-4 h-4 text-editor-accent" />
+                                    Información del Cliente
+                                </h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-editor-bg/50 p-4 rounded-lg border border-editor-border/50">
+                                    <div>
+                                        <label className={labelClass}>Nombre</label>
+                                        {isEditing ? (
+                                            <input
+                                                type="text"
+                                                value={editData.name}
+                                                onChange={(e) => setEditData(prev => ({ ...prev, name: e.target.value }))}
+                                                className={inputClass}
+                                            />
+                                        ) : (
+                                            <p className={readOnlyValueClass}>{tenant.name || '—'}</p>
+                                        )}
                                     </div>
-                                </div>
-                                <div>
-                                    <label className="text-sm text-editor-text-secondary block mb-1">Estado</label>
-                                    <div className="flex items-center gap-2">
-                                        {getStatusIcon(tenant.status)}
-                                        <span className="capitalize text-editor-text-primary">{tenant.status}</span>
+                                    <div>
+                                        <label className={labelClass}>Email</label>
+                                        {isEditing ? (
+                                            <input
+                                                type="email"
+                                                value={editData.email}
+                                                onChange={(e) => setEditData(prev => ({ ...prev, email: e.target.value }))}
+                                                className={inputClass}
+                                            />
+                                        ) : (
+                                            <p className={readOnlyValueClass}>{tenant.email || '—'}</p>
+                                        )}
                                     </div>
-                                </div>
-                                <div>
-                                    <label className="text-sm text-editor-text-secondary block mb-1">Plan Actual</label>
-                                    <span className="px-2 py-1 bg-purple-500/10 text-purple-400 rounded text-sm border border-purple-500/20 font-medium capitalize">
-                                        {tenant.subscriptionPlan}
-                                    </span>
+                                    <div>
+                                        <label className={labelClass}>Empresa</label>
+                                        {isEditing ? (
+                                            <input
+                                                type="text"
+                                                value={editData.companyName}
+                                                onChange={(e) => setEditData(prev => ({ ...prev, companyName: e.target.value }))}
+                                                className={inputClass}
+                                                placeholder="Nombre de la empresa"
+                                            />
+                                        ) : (
+                                            <p className={readOnlyValueClass}>{tenant.companyName || '—'}</p>
+                                        )}
+                                    </div>
+                                    <div>
+                                        <label className={labelClass}>Tipo</label>
+                                        {isEditing ? (
+                                            <select
+                                                value={editData.type}
+                                                onChange={(e) => setEditData(prev => ({ ...prev, type: e.target.value as TenantType }))}
+                                                className={selectClass}
+                                            >
+                                                <option value="individual">Individual</option>
+                                                <option value="agency_client">Cliente de Agencia</option>
+                                            </select>
+                                        ) : (
+                                            <div className="flex items-center gap-2">
+                                                {tenant.type === 'agency' ? <Building2 size={16} className="text-blue-400" /> : <User size={16} className="text-purple-400" />}
+                                                <p className="text-editor-text-primary capitalize font-medium">{tenant.type === 'agency_client' ? 'Cliente de Agencia' : tenant.type}</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div>
+                                        <label className={labelClass}>Estado</label>
+                                        {isEditing ? (
+                                            <select
+                                                value={editData.status}
+                                                onChange={(e) => setEditData(prev => ({ ...prev, status: e.target.value as TenantStatus }))}
+                                                className={selectClass}
+                                            >
+                                                <option value="active">Activo</option>
+                                                <option value="trial">Prueba</option>
+                                                <option value="suspended">Suspendido</option>
+                                                <option value="expired">Expirado</option>
+                                            </select>
+                                        ) : (
+                                            <div className="flex items-center gap-2">
+                                                {getStatusIcon(tenant.status)}
+                                                <span className="capitalize text-editor-text-primary font-medium">{tenant.status}</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div>
+                                        <label className={labelClass}>Plan Actual</label>
+                                        {isEditing ? (
+                                            <select
+                                                value={editData.subscriptionPlan}
+                                                onChange={(e) => setEditData(prev => ({ ...prev, subscriptionPlan: e.target.value as Tenant['subscriptionPlan'] }))}
+                                                className={selectClass}
+                                            >
+                                                <option value="free">Free</option>
+                                                <option value="hobby">Hobby</option>
+                                                <option value="starter">Starter</option>
+                                                <option value="individual">Individual</option>
+                                                <option value="pro">Pro</option>
+                                                <option value="agency">Agency</option>
+                                                <option value="agency_plus">Agency Plus</option>
+                                                <option value="agency_starter">Agency Starter</option>
+                                                <option value="agency_pro">Agency Pro</option>
+                                                <option value="agency_scale">Agency Scale</option>
+                                                <option value="enterprise">Enterprise</option>
+                                            </select>
+                                        ) : (
+                                            <span className="px-2.5 py-1 bg-purple-500/10 text-purple-400 rounded-md text-sm border border-purple-500/20 font-semibold capitalize inline-block">
+                                                {tenant.subscriptionPlan}
+                                            </span>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
 
-                            <div className="pt-4 border-t border-editor-border mt-4">
-                                <h3 className="font-semibold text-editor-text-primary mb-3">Métricas de Uso</h3>
-                                <div className="grid grid-cols-3 gap-4">
+                            {/* Identificadores y Metadata */}
+                            <div>
+                                <h3 className="font-semibold text-editor-text-primary mb-4 flex items-center gap-2 text-base">
+                                    <HardDrive className="w-4 h-4 text-editor-accent" />
+                                    Identificadores y Metadata
+                                </h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-editor-bg/50 p-4 rounded-lg border border-editor-border/50">
+                                    <div>
+                                        <label className={labelClass}>Tenant ID</label>
+                                        <p className="text-editor-text-primary font-mono text-xs bg-editor-bg px-2 py-1.5 rounded border border-editor-border select-all">{tenant.id}</p>
+                                    </div>
+                                    <div>
+                                        <label className={labelClass}>Owner User ID</label>
+                                        <p className="text-editor-text-primary font-mono text-xs bg-editor-bg px-2 py-1.5 rounded border border-editor-border select-all">{tenant.ownerUserId || '—'}</p>
+                                    </div>
+                                    {tenant.ownerTenantId && (
+                                        <div>
+                                            <label className={labelClass}>Owner Tenant ID (Agencia)</label>
+                                            <p className="text-editor-text-primary font-mono text-xs bg-editor-bg px-2 py-1.5 rounded border border-editor-border select-all">{tenant.ownerTenantId}</p>
+                                        </div>
+                                    )}
+                                    <div>
+                                        <label className={labelClass}>Slug</label>
+                                        <p className={readOnlyValueClass}>{tenant.slug || '—'}</p>
+                                    </div>
+                                    <div>
+                                        <label className={labelClass}>Fecha de Creación</label>
+                                        <p className={readOnlyValueClass}>{formatDate(tenant.createdAt)}</p>
+                                    </div>
+                                    <div>
+                                        <label className={labelClass}>Última Actualización</label>
+                                        <p className={readOnlyValueClass}>{formatDate(tenant.updatedAt)}</p>
+                                    </div>
+                                    {tenant.lastActiveAt && (
+                                        <div>
+                                            <label className={labelClass}>Última Actividad</label>
+                                            <p className={readOnlyValueClass}>{formatDate(tenant.lastActiveAt)}</p>
+                                        </div>
+                                    )}
+                                    {tenant.trialEndsAt && (
+                                        <div>
+                                            <label className={labelClass}>Trial Expira</label>
+                                            <p className="text-yellow-400 font-medium">{formatDate(tenant.trialEndsAt)}</p>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Métricas de Uso */}
+                            <div>
+                                <h3 className="font-semibold text-editor-text-primary mb-4 flex items-center gap-2 text-base">
+                                    <Zap className="w-4 h-4 text-editor-accent" />
+                                    Métricas de Uso
+                                </h3>
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                                     <div className="bg-editor-bg p-3 rounded-lg border border-editor-border">
-                                        <div className="text-xs text-editor-text-secondary mb-1">Proyectos</div>
-                                        <div className="font-semibold text-editor-text-primary">
-                                            {tenant.usage.projectCount} <span className="text-editor-text-secondary font-normal">/ {tenant.limits.maxProjects}</span>
+                                        <div className="flex items-center gap-1.5 mb-1 text-editor-text-secondary">
+                                            <Folder size={14} />
+                                            <span className="text-xs font-medium">Proyectos</span>
+                                        </div>
+                                        <div className="font-bold text-editor-text-primary text-lg">
+                                            {tenant.usage?.projectCount ?? 0} <span className="text-editor-text-secondary font-normal text-sm">/ {tenant.limits?.maxProjects === -1 ? '∞' : tenant.limits?.maxProjects ?? '?'}</span>
                                         </div>
                                     </div>
                                     <div className="bg-editor-bg p-3 rounded-lg border border-editor-border">
-                                        <div className="text-xs text-editor-text-secondary mb-1">Usuarios</div>
-                                        <div className="font-semibold text-editor-text-primary">
-                                            {tenant.usage.userCount} <span className="text-editor-text-secondary font-normal">/ {tenant.limits.maxUsers}</span>
+                                        <div className="flex items-center gap-1.5 mb-1 text-editor-text-secondary">
+                                            <Users size={14} />
+                                            <span className="text-xs font-medium">Usuarios</span>
+                                        </div>
+                                        <div className="font-bold text-editor-text-primary text-lg">
+                                            {tenant.usage?.userCount ?? 0} <span className="text-editor-text-secondary font-normal text-sm">/ {tenant.limits?.maxUsers === -1 ? '∞' : tenant.limits?.maxUsers ?? '?'}</span>
                                         </div>
                                     </div>
                                     <div className="bg-editor-bg p-3 rounded-lg border border-editor-border">
-                                        <div className="text-xs text-editor-text-secondary mb-1">Almacenamiento</div>
-                                        <div className="font-semibold text-editor-text-primary">
-                                            {(tenant.usage.storageUsedGB ?? 0).toFixed(1)} GB <span className="text-editor-text-secondary font-normal">/ {tenant.limits.maxStorageGB} GB</span>
+                                        <div className="flex items-center gap-1.5 mb-1 text-editor-text-secondary">
+                                            <HardDrive size={14} />
+                                            <span className="text-xs font-medium">Almacenamiento</span>
+                                        </div>
+                                        <div className="font-bold text-editor-text-primary text-lg">
+                                            {(tenant.usage?.storageUsedGB ?? 0).toFixed(1)} <span className="text-editor-text-secondary font-normal text-sm">/ {tenant.limits?.maxStorageGB ?? '?'} GB</span>
+                                        </div>
+                                    </div>
+                                    <div className="bg-editor-bg p-3 rounded-lg border border-editor-border">
+                                        <div className="flex items-center gap-1.5 mb-1 text-editor-text-secondary">
+                                            <Zap size={14} />
+                                            <span className="text-xs font-medium">Créditos IA</span>
+                                        </div>
+                                        <div className="font-bold text-editor-text-primary text-lg">
+                                            {tenant.usage?.aiCreditsUsed ?? 0} <span className="text-editor-text-secondary font-normal text-sm">/ {tenant.limits?.maxAiCredits ?? '?'}</span>
                                         </div>
                                     </div>
                                 </div>
                             </div>
+
+                            {/* Límites del Plan (editable) */}
+                            {isEditing && (
+                                <div>
+                                    <h3 className="font-semibold text-editor-text-primary mb-4 flex items-center gap-2 text-base">
+                                        <Zap className="w-4 h-4 text-editor-accent" />
+                                        Límites del Plan
+                                    </h3>
+                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 bg-editor-bg/50 p-4 rounded-lg border border-editor-border/50">
+                                        <div>
+                                            <label className={labelClass}>Máx. Proyectos</label>
+                                            <input
+                                                type="number"
+                                                value={editLimits.maxProjects}
+                                                onChange={(e) => setEditLimits(prev => ({ ...prev, maxProjects: parseInt(e.target.value) || 0 }))}
+                                                className={inputClass}
+                                            />
+                                            <p className="text-xs text-editor-text-secondary mt-1">-1 = ilimitado</p>
+                                        </div>
+                                        <div>
+                                            <label className={labelClass}>Máx. Usuarios</label>
+                                            <input
+                                                type="number"
+                                                value={editLimits.maxUsers}
+                                                onChange={(e) => setEditLimits(prev => ({ ...prev, maxUsers: parseInt(e.target.value) || 0 }))}
+                                                className={inputClass}
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className={labelClass}>Máx. Almacenamiento (GB)</label>
+                                            <input
+                                                type="number"
+                                                value={editLimits.maxStorageGB}
+                                                onChange={(e) => setEditLimits(prev => ({ ...prev, maxStorageGB: parseInt(e.target.value) || 0 }))}
+                                                className={inputClass}
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className={labelClass}>Máx. Créditos IA</label>
+                                            <input
+                                                type="number"
+                                                value={editLimits.maxAiCredits}
+                                                onChange={(e) => setEditLimits(prev => ({ ...prev, maxAiCredits: parseInt(e.target.value) || 0 }))}
+                                                className={inputClass}
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Branding Info */}
+                            {tenant.branding && (tenant.branding.customDomain || tenant.branding.quimeraSubdomain || tenant.branding.primaryColor) && (
+                                <div>
+                                    <h3 className="font-semibold text-editor-text-primary mb-4 flex items-center gap-2 text-base">
+                                        <Building2 className="w-4 h-4 text-editor-accent" />
+                                        Branding
+                                    </h3>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-editor-bg/50 p-4 rounded-lg border border-editor-border/50">
+                                        {tenant.branding.customDomain && (
+                                            <div>
+                                                <label className={labelClass}>Dominio Personalizado</label>
+                                                <p className={readOnlyValueClass}>{tenant.branding.customDomain}{tenant.branding.customDomainVerified ? ' ✅' : ' ⏳'}</p>
+                                            </div>
+                                        )}
+                                        {tenant.branding.quimeraSubdomain && (
+                                            <div>
+                                                <label className={labelClass}>Subdominio Quimera</label>
+                                                <p className={readOnlyValueClass}>{tenant.branding.quimeraSubdomain}.quimera.ai</p>
+                                            </div>
+                                        )}
+                                        {tenant.branding.primaryColor && (
+                                            <div>
+                                                <label className={labelClass}>Color Primario</label>
+                                                <div className="flex items-center gap-2">
+                                                    <div className="w-5 h-5 rounded border border-editor-border" style={{ backgroundColor: tenant.branding.primaryColor }} />
+                                                    <p className={readOnlyValueClass}>{tenant.branding.primaryColor}</p>
+                                                </div>
+                                            </div>
+                                        )}
+                                        {tenant.branding.supportEmail && (
+                                            <div>
+                                                <label className={labelClass}>Email de Soporte</label>
+                                                <p className={readOnlyValueClass}>{tenant.branding.supportEmail}</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     )}
 
@@ -783,27 +1145,67 @@ const TenantDetailsModal: React.FC<{
                                     </div>
                                     <div>
                                         <p className="text-sm text-editor-text-secondary mb-1">{t('superadmin.tenant.detailsModal.mrr', 'Ingreso Recurrente (MRR)')}</p>
-                                        <p className="text-editor-text-primary font-bold text-2xl mt-1">${tenant.billingInfo?.mrr || 0} <span className="text-sm font-normal text-editor-text-secondary">/mes</span></p>
+                                        <p className="text-editor-text-primary font-bold text-2xl mt-1">${tenant.billing?.mrr || tenant.billingInfo?.mrr || 0} <span className="text-sm font-normal text-editor-text-secondary">/mes</span></p>
                                     </div>
                                     <div>
                                         <p className="text-sm text-editor-text-secondary mb-2">{t('superadmin.tenant.detailsModal.limits', 'Límites del Plan')}</p>
                                         <ul className="text-sm text-editor-text-primary space-y-1">
                                             <li className="flex justify-between border-b border-editor-border/50 pb-1">
                                                 <span className="text-editor-text-secondary">Proyectos:</span>
-                                                <span className="font-medium">{tenant.limits.maxProjects}</span>
+                                                <span className="font-medium">{tenant.limits?.maxProjects === -1 ? '∞' : tenant.limits?.maxProjects ?? '?'}</span>
                                             </li>
                                             <li className="flex justify-between border-b border-editor-border/50 pb-1 pt-1">
                                                 <span className="text-editor-text-secondary">Usuarios:</span>
-                                                <span className="font-medium">{tenant.limits.maxUsers}</span>
+                                                <span className="font-medium">{tenant.limits?.maxUsers === -1 ? '∞' : tenant.limits?.maxUsers ?? '?'}</span>
+                                            </li>
+                                            <li className="flex justify-between border-b border-editor-border/50 pb-1 pt-1">
+                                                <span className="text-editor-text-secondary">Almacenamiento:</span>
+                                                <span className="font-medium">{tenant.limits?.maxStorageGB ?? '?'} GB</span>
                                             </li>
                                             <li className="flex justify-between pt-1">
-                                                <span className="text-editor-text-secondary">Almacenamiento:</span>
-                                                <span className="font-medium">{tenant.limits.maxStorageGB} GB</span>
+                                                <span className="text-editor-text-secondary">Créditos IA:</span>
+                                                <span className="font-medium">{tenant.limits?.maxAiCredits ?? '?'}</span>
                                             </li>
                                         </ul>
                                     </div>
                                 </div>
                             </div>
+
+                            {/* Billing details */}
+                            {(tenant.billing || tenant.billingInfo) && (
+                                <div>
+                                    <h3 className="text-lg font-semibold text-editor-text-primary mb-4 flex items-center gap-2">
+                                        <DollarSign className="w-5 h-5 text-editor-accent" />
+                                        Detalles de Facturación
+                                    </h3>
+                                    <div className="bg-editor-panel-bg border border-editor-border rounded-lg p-5 grid grid-cols-2 gap-4">
+                                        {tenant.billing?.stripeCustomerId && (
+                                            <div>
+                                                <p className="text-sm text-editor-text-secondary mb-1">Stripe Customer ID</p>
+                                                <p className="text-editor-text-primary font-mono text-xs">{tenant.billing.stripeCustomerId}</p>
+                                            </div>
+                                        )}
+                                        {tenant.billing?.stripeSubscriptionId && (
+                                            <div>
+                                                <p className="text-sm text-editor-text-secondary mb-1">Stripe Subscription ID</p>
+                                                <p className="text-editor-text-primary font-mono text-xs">{tenant.billing.stripeSubscriptionId}</p>
+                                            </div>
+                                        )}
+                                        {(tenant.billing?.nextBillingDate || tenant.billingInfo?.nextBillingDate) && (
+                                            <div>
+                                                <p className="text-sm text-editor-text-secondary mb-1">Próx. Fecha de Cobro</p>
+                                                <p className={readOnlyValueClass}>{tenant.billing?.nextBillingDate || tenant.billingInfo?.nextBillingDate}</p>
+                                            </div>
+                                        )}
+                                        {(tenant.billing?.paymentMethod || tenant.billingInfo?.paymentMethod) && (
+                                            <div>
+                                                <p className="text-sm text-editor-text-secondary mb-1">Método de Pago</p>
+                                                <p className={readOnlyValueClass}>{tenant.billing?.paymentMethod || tenant.billingInfo?.paymentMethod}</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     )}
 
@@ -972,13 +1374,48 @@ const TenantDetailsModal: React.FC<{
                     )}
                 </div>
 
-                <div className="mt-6 flex justify-end pt-4 border-t border-editor-border flex-shrink-0">
-                    <button
-                        onClick={onClose}
-                        className="px-4 py-2 bg-editor-bg border border-editor-border text-editor-text-primary rounded-lg hover:bg-editor-border transition-colors"
-                    >
-                        Cerrar
-                    </button>
+                <div className="mt-6 flex justify-between items-center pt-4 border-t border-editor-border flex-shrink-0">
+                    <div>
+                        {isEditing && (
+                            <p className="text-xs text-yellow-400 flex items-center gap-1">
+                                <Edit2 size={12} />
+                                Modo edición activo
+                            </p>
+                        )}
+                    </div>
+                    <div className="flex gap-3">
+                        {isEditing ? (
+                            <>
+                                <button
+                                    onClick={() => setIsEditing(false)}
+                                    className="px-4 py-2 bg-editor-bg border border-editor-border text-editor-text-primary rounded-lg hover:bg-editor-border transition-colors"
+                                >
+                                    Cancelar
+                                </button>
+                                <button
+                                    onClick={handleSave}
+                                    disabled={isSaving}
+                                    className="px-5 py-2 bg-editor-accent text-white font-medium rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center gap-2"
+                                >
+                                    {isSaving ? (
+                                        <>
+                                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                            Guardando...
+                                        </>
+                                    ) : (
+                                        'Guardar Cambios'
+                                    )}
+                                </button>
+                            </>
+                        ) : (
+                            <button
+                                onClick={onClose}
+                                className="px-4 py-2 bg-editor-bg border border-editor-border text-editor-text-primary rounded-lg hover:bg-editor-border transition-colors"
+                            >
+                                Cerrar
+                            </button>
+                        )}
+                    </div>
                 </div>
             </div>
         </div>
@@ -986,3 +1423,4 @@ const TenantDetailsModal: React.FC<{
 };
 
 export default TenantManagement;
+

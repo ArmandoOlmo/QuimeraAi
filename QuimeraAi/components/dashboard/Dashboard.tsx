@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/core/AuthContext';
 import { useSafeTenant } from '../../contexts/tenant/TenantContext';
@@ -22,7 +22,7 @@ import NewsUpdates from './NewsUpdates';
 import RecentLeads from './RecentLeads';
 import DashboardHelpGuide from './DashboardHelpGuide';
 import DashboardStatusCards from './DashboardStatusCards';
-import { Plus, Menu, Search, LayoutGrid, Globe, Images, List, ArrowUpDown, CheckCircle, FileEdit, X, Loader2, Sparkles, MousePointerClick, Palette, Rocket, LayoutTemplate, BookOpen, ArrowLeft, Crown, ChevronUp, ChevronDown, Maximize2, Minimize2, Newspaper, Users } from 'lucide-react';
+import { Plus, Menu, Search, LayoutGrid, Globe, Images, List, ArrowUpDown, CheckCircle, FileEdit, X, Loader2, Sparkles, MousePointerClick, Palette, Rocket, LayoutTemplate, BookOpen, ArrowLeft, Crown, ChevronUp, ChevronDown, Maximize2, Minimize2, Newspaper, Users, GripVertical } from 'lucide-react';
 import MobileSearchModal from '../ui/MobileSearchModal';
 import { trackSearchPerformed, trackFilterApplied, trackSortChanged, trackViewModeChanged, trackDashboardView } from '../../utils/analytics';
 import { useInfiniteScroll, paginateArray, hasMoreItems } from '../../hooks/useInfiniteScroll';
@@ -136,6 +136,72 @@ const Dashboard: React.FC = () => {
             return next;
         });
     };
+
+    // ─── Drag & Drop Section Reordering ─────────────────────────────────────
+    type DashboardSectionId = 'projects' | 'templates' | 'leads' | 'news';
+    const DEFAULT_SECTION_ORDER: DashboardSectionId[] = ['projects', 'templates', 'leads', 'news'];
+
+    const [sectionOrder, setSectionOrder] = useState<DashboardSectionId[]>(() => {
+        try {
+            const saved = localStorage.getItem('quimera_dashboard_section_order');
+            if (saved) {
+                const parsed = JSON.parse(saved) as DashboardSectionId[];
+                // Validate: must contain all sections exactly
+                if (
+                    Array.isArray(parsed) &&
+                    parsed.length === DEFAULT_SECTION_ORDER.length &&
+                    DEFAULT_SECTION_ORDER.every(s => parsed.includes(s))
+                ) {
+                    return parsed;
+                }
+            }
+        } catch { /* ignore */ }
+        return DEFAULT_SECTION_ORDER;
+    });
+
+    const dragItem = useRef<DashboardSectionId | null>(null);
+    const dragOverItem = useRef<DashboardSectionId | null>(null);
+    const [draggedSection, setDraggedSection] = useState<DashboardSectionId | null>(null);
+    const [dragOverSection, setDragOverSection] = useState<DashboardSectionId | null>(null);
+
+    const handleDragStart = useCallback((sectionId: DashboardSectionId) => {
+        dragItem.current = sectionId;
+        setDraggedSection(sectionId);
+    }, []);
+
+    const handleDragOver = useCallback((e: React.DragEvent, sectionId: DashboardSectionId) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        dragOverItem.current = sectionId;
+        setDragOverSection(sectionId);
+    }, []);
+
+    const handleDragEnd = useCallback(() => {
+        if (dragItem.current !== null && dragOverItem.current !== null && dragItem.current !== dragOverItem.current) {
+            setSectionOrder(prev => {
+                const newOrder = [...prev];
+                const dragIdx = newOrder.indexOf(dragItem.current!);
+                const overIdx = newOrder.indexOf(dragOverItem.current!);
+                if (dragIdx === -1 || overIdx === -1) return prev;
+                newOrder.splice(dragIdx, 1);
+                newOrder.splice(overIdx, 0, dragItem.current!);
+                localStorage.setItem('quimera_dashboard_section_order', JSON.stringify(newOrder));
+                return newOrder;
+            });
+        }
+        dragItem.current = null;
+        dragOverItem.current = null;
+        setDraggedSection(null);
+        setDragOverSection(null);
+    }, []);
+
+    const handleDragLeave = useCallback((e: React.DragEvent) => {
+        // Only clear if leaving the section element entirely
+        const relatedTarget = e.relatedTarget as Node | null;
+        if (!e.currentTarget.contains(relatedTarget)) {
+            setDragOverSection(null);
+        }
+    }, []);
 
     // Determine next plan for upgrade button
     const currentPlanId = usage?.planId || 'free';
@@ -556,123 +622,331 @@ const Dashboard: React.FC = () => {
                             )
                         }
 
-                        {/* Projects Section */}
-                        {
-                            (isDashboard || isWebsites) && (
-                                <section className="relative z-[1]">
-                                    {/* Only show section header on Dashboard view, since Websites view has it in main header */}
-                                    {isDashboard && (
-                                        <div className={`flex items-center justify-between ${projectsCollapsed ? 'mb-0' : 'mb-6'}`}>
-                                            <button
-                                                onClick={toggleProjectsCollapsed}
-                                                className="text-2xl font-bold text-foreground flex items-center gap-3 hover:text-primary/90 transition-colors"
-                                                aria-expanded={!projectsCollapsed}
-                                            >
-                                                <LayoutGrid className="text-primary" size={24} />
-                                                {t('dashboard.recentProjects')}
-                                                <ChevronDown size={20} className={`text-muted-foreground transition-transform duration-300 ${projectsCollapsed ? '-rotate-90' : 'rotate-0'}`} />
-                                            </button>
-                                            {!projectsCollapsed && allUserProjects.length > 0 && (
-                                                <button onClick={() => navigate(ROUTES.WEBSITES)} className="text-sm font-semibold text-yellow-400 hover:text-yellow-300 transition-colors flex items-center">
-                                                    {t('dashboard.viewAll')} <Globe size={14} className="ml-1" />
-                                                </button>
-                                            )}
-                                        </div>
-                                    )}
+                        {/* ─── Draggable Dashboard Sections (only on Dashboard view) ─── */}
+                        {isDashboard && sectionOrder.map((sectionId) => {
+                            const isDragging = draggedSection === sectionId;
+                            const isOver = dragOverSection === sectionId && draggedSection !== sectionId;
 
-                                    {/* Filter Chips - Only on Websites view */}
-                                    {isWebsites && (
-                                        <div className="mb-4 md:mb-6 space-y-3 md:space-y-4">
-                                            <div className="flex flex-wrap items-center gap-2 md:gap-3">
-                                                <FilterChip
-                                                    label={t('dashboard.allStatus')}
-                                                    active={filterStatus === 'all'}
-                                                    count={allUserProjects.length}
-                                                    onClick={() => setFilterStatus('all')}
-                                                />
-                                                <FilterChip
-                                                    label={t('dashboard.published')}
-                                                    active={filterStatus === 'Published'}
-                                                    count={publishedCount}
-                                                    onClick={() => setFilterStatus('Published')}
-                                                    color="green"
-                                                />
-                                                <FilterChip
-                                                    label={t('dashboard.draft')}
-                                                    active={filterStatus === 'Draft'}
-                                                    count={draftCount}
-                                                    onClick={() => setFilterStatus('Draft')}
-                                                    color="gray"
-                                                />
+                            const wrapperClasses = [
+                                'group/drag relative rounded-2xl transition-all duration-300',
+                                isDragging ? 'opacity-40 scale-[0.98]' : '',
+                                isOver ? 'ring-2 ring-primary/50 ring-offset-2 ring-offset-background' : '',
+                            ].filter(Boolean).join(' ');
 
-                                                {/* Spacer */}
-                                                <div className="flex-1" />
+                            const dragHandle = (
+                                <div
+                                    draggable
+                                    onDragStart={() => handleDragStart(sectionId)}
+                                    onDragEnd={handleDragEnd}
+                                    className="absolute -left-2 top-1/2 -translate-y-1/2 z-10 opacity-0 group-hover/drag:opacity-100 focus-within:opacity-100 transition-opacity duration-200 cursor-grab active:cursor-grabbing"
+                                    title={t('dashboard.dragToReorder', 'Arrastra para reordenar')}
+                                    aria-label={t('dashboard.dragToReorder', 'Arrastra para reordenar')}
+                                    role="button"
+                                    tabIndex={0}
+                                >
+                                    <div className="flex items-center justify-center w-7 h-14 rounded-lg bg-secondary/80 border border-border/50 shadow-sm hover:bg-secondary hover:border-border hover:shadow-md transition-all">
+                                        <GripVertical size={16} className="text-muted-foreground" />
+                                    </div>
+                                </div>
+                            );
 
-                                                {/* Sort Button */}
+                            // ── Projects Section ──
+                            if (sectionId === 'projects') {
+                                return (
+                                    <div
+                                        key="projects"
+                                        className={wrapperClasses}
+                                        onDragOver={(e) => handleDragOver(e, 'projects')}
+                                        onDragLeave={handleDragLeave}
+                                    >
+                                        {dragHandle}
+                                        <section className="relative z-[1]">
+                                            <div className={`flex items-center justify-between ${projectsCollapsed ? 'mb-0' : 'mb-6'}`}>
                                                 <button
-                                                    onClick={() => {
-                                                        if (sortBy === 'lastUpdated') {
-                                                            setSortBy('name');
-                                                            setSortOrder('asc');
-                                                        } else if (sortBy === 'name' && sortOrder === 'asc') {
-                                                            setSortOrder('desc');
-                                                        } else {
-                                                            setSortBy('lastUpdated');
-                                                            setSortOrder('desc');
-                                                        }
-                                                    }}
-                                                    className="hidden sm:flex items-center gap-1.5 h-9 px-3 rounded-lg text-sm font-medium transition-all bg-secondary/50 text-muted-foreground hover:text-foreground hover:bg-secondary"
-                                                    aria-label={`Sort by ${sortBy} (${sortOrder}ending)`}
+                                                    onClick={toggleProjectsCollapsed}
+                                                    className="text-2xl font-bold text-foreground flex items-center gap-3 hover:text-primary/90 transition-colors"
+                                                    aria-expanded={!projectsCollapsed}
                                                 >
-                                                    <ArrowUpDown size={14} aria-hidden="true" />
-                                                    <span className="hidden md:inline">
-                                                        {sortBy === 'name' ? t('common.name') : t('common.updated')}
-                                                    </span>
+                                                    <LayoutGrid className="text-primary" size={24} />
+                                                    {t('dashboard.recentProjects')}
+                                                    <ChevronDown size={20} className={`text-muted-foreground transition-transform duration-300 ${projectsCollapsed ? '-rotate-90' : 'rotate-0'}`} />
                                                 </button>
-
-
-                                                {/* View Mode Toggle */}
-                                                <div className="hidden sm:flex items-center gap-1 bg-secondary/40 rounded-lg p-1" role="group" aria-label="View mode">
-                                                    <button
-                                                        onClick={() => setViewMode('grid')}
-                                                        className={`h-8 w-8 flex items-center justify-center rounded-md transition-all ${viewMode === 'grid' ? 'text-primary bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
-                                                        aria-label={t('dashboard.gridView')}
-                                                        aria-pressed={viewMode === 'grid'}
-                                                    >
-                                                        <LayoutGrid size={15} aria-hidden="true" />
+                                                {!projectsCollapsed && allUserProjects.length > 0 && (
+                                                    <button onClick={() => navigate(ROUTES.WEBSITES)} className="text-sm font-semibold text-yellow-400 hover:text-yellow-300 transition-colors flex items-center">
+                                                        {t('dashboard.viewAll')} <Globe size={14} className="ml-1" />
                                                     </button>
-                                                    <button
-                                                        onClick={() => setViewMode('list')}
-                                                        className={`h-8 w-8 flex items-center justify-center rounded-md transition-all ${viewMode === 'list' ? 'text-primary bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
-                                                        aria-label={t('dashboard.listView')}
-                                                        aria-pressed={viewMode === 'list'}
-                                                    >
-                                                        <List size={15} aria-hidden="true" />
-                                                    </button>
-                                                </div>
+                                                )}
                                             </div>
-                                            <div className="flex items-center justify-between">
-                                                <span className="text-xs md:text-sm text-muted-foreground">
-                                                    {t('dashboard.showingProjects', { count: userProjects.length, total: allUserProjects.length })}
-                                                </span>
-                                                {/* Mobile controls */}
-                                                <div className="flex items-center gap-2 sm:hidden">
-                                                    <button
-                                                        onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
-                                                        className="p-2 bg-secondary/50 rounded-lg text-muted-foreground hover:text-foreground transition-colors"
-                                                    >
-                                                        {viewMode === 'grid' ? <List size={16} /> : <LayoutGrid size={16} />}
-                                                    </button>
+
+                                            {!projectsCollapsed && (
+                                            <>
+                                            {isLoadingProjects ? (
+                                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                                                    {[1, 2, 3, 4, 5, 6, 7, 8].map(i => (
+                                                        <ProjectCardSkeleton key={i} />
+                                                    ))}
                                                 </div>
+                                            ) : userProjects.length > 0 ? (
+                                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 animate-fade-in-up">
+                                                    {userProjects.slice(0, 4).map(project => (
+                                                        <ProjectCard
+                                                            key={project.id}
+                                                            project={project}
+                                                            tokenUsage={projectUsage[project.id]}
+                                                            maxTokens={maxTokens}
+                                                        />
+                                                    ))}
+                                                </div>
+                                            ) : (
+                                                <EmptyState
+                                                    icon={searchQuery ? Search : Globe}
+                                                    title={searchQuery ? t('dashboard.emptyState.titleNoProjects') : t('dashboard.emptyState.titleNoWebsites')}
+                                                    description={
+                                                        searchQuery
+                                                            ? t('dashboard.emptyState.descNoProjects', { query: searchQuery })
+                                                            : t('dashboard.emptyState.descNoWebsites')
+                                                    }
+                                                    illustration={searchQuery ? 'search' : 'website'}
+                                                    action={searchQuery ? undefined : {
+                                                        label: t('dashboard.emptyState.createFirst'),
+                                                        onClick: () => setIsOnboardingOpen(true),
+                                                        icon: Plus
+                                                    }}
+                                                    secondaryAction={searchQuery ? {
+                                                        label: 'Clear Search',
+                                                        onClick: () => setSearchQuery('')
+                                                    } : undefined}
+                                                />
+                                            )}
+                                            </>
+                                            )}
+                                        </section>
+                                    </div>
+                                );
+                            }
+
+                            // ── Templates Section ──
+                            if (sectionId === 'templates') {
+                                return (
+                                    <div
+                                        key="templates"
+                                        className={wrapperClasses}
+                                        onDragOver={(e) => handleDragOver(e, 'templates')}
+                                        onDragLeave={handleDragLeave}
+                                    >
+                                        {dragHandle}
+                                        <section>
+                                            <div className={`flex items-center justify-between ${templatesCollapsed ? 'mb-0' : 'mb-6'}`}>
+                                                <button
+                                                    onClick={toggleTemplatesCollapsed}
+                                                    className="text-2xl font-bold text-foreground flex items-center gap-3 hover:text-primary/90 transition-colors"
+                                                    aria-expanded={!templatesCollapsed}
+                                                >
+                                                    <LayoutTemplate className="text-primary" size={24} />
+                                                    {t('dashboard.startFromTemplate')}
+                                                    <ChevronDown size={20} className={`text-muted-foreground transition-transform duration-300 ${templatesCollapsed ? '-rotate-90' : 'rotate-0'}`} />
+                                                </button>
+                                                {!templatesCollapsed && (
+                                                    <div className="flex items-center gap-1 bg-secondary/40 rounded-lg p-1" role="group" aria-label={t('dashboard.templateSize', 'Tamaño de plantillas')}>
+                                                        <button
+                                                            onClick={() => toggleCompactTemplates(false)}
+                                                            className={`h-8 w-8 flex items-center justify-center rounded-md transition-all ${!compactTemplates ? 'text-primary bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+                                                            aria-label={t('dashboard.templateSizeLarge', 'Grande')}
+                                                            aria-pressed={!compactTemplates}
+                                                            title={t('dashboard.templateSizeLarge', 'Grande')}
+                                                        >
+                                                            <Maximize2 size={15} aria-hidden="true" />
+                                                        </button>
+                                                        <button
+                                                            onClick={() => toggleCompactTemplates(true)}
+                                                            className={`h-8 w-8 flex items-center justify-center rounded-md transition-all ${compactTemplates ? 'text-primary bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+                                                            aria-label={t('dashboard.templateSizeCompact', 'Compacto')}
+                                                            aria-pressed={compactTemplates}
+                                                            title={t('dashboard.templateSizeCompact', 'Compacto')}
+                                                        >
+                                                            <Minimize2 size={15} aria-hidden="true" />
+                                                        </button>
+                                                    </div>
+                                                )}
+                                            </div>
+                                            {!templatesCollapsed && (
+                                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 animate-fade-in-up">
+                                                    {templates.slice(0, 4).map(template => (
+                                                        <ProjectCard key={template.id} project={template} compact={compactTemplates} />
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </section>
+                                    </div>
+                                );
+                            }
+
+                            // ── Leads Section ──
+                            if (sectionId === 'leads') {
+                                return (
+                                    <div
+                                        key="leads"
+                                        className={wrapperClasses}
+                                        onDragOver={(e) => handleDragOver(e, 'leads')}
+                                        onDragLeave={handleDragLeave}
+                                    >
+                                        {dragHandle}
+                                        <section className="w-full">
+                                            <div className={`flex items-center justify-between ${leadsCollapsed ? 'mb-0' : 'mb-6'}`}>
+                                                <button
+                                                    onClick={toggleLeadsCollapsed}
+                                                    className="text-2xl font-bold text-foreground flex items-center gap-3 hover:text-primary/90 transition-colors"
+                                                    aria-expanded={!leadsCollapsed}
+                                                >
+                                                    <Users className="text-primary" size={24} />
+                                                    {t('dashboard.leads.title', 'Últimos Leads')}
+                                                    <ChevronDown size={20} className={`text-muted-foreground transition-transform duration-300 ${leadsCollapsed ? '-rotate-90' : 'rotate-0'}`} />
+                                                </button>
+                                                {!leadsCollapsed && (
+                                                    <button
+                                                        onClick={() => navigate(ROUTES.LEADS)}
+                                                        className="text-sm font-semibold text-yellow-400 hover:text-yellow-300 transition-colors flex items-center"
+                                                    >
+                                                        {t('dashboard.viewAll', 'Ver todos')} <Users size={14} className="ml-1" />
+                                                    </button>
+                                                )}
+                                            </div>
+                                            {!leadsCollapsed && (
+                                                <div className="animate-fade-in-up">
+                                                    <RecentLeads maxItems={6} />
+                                                </div>
+                                            )}
+                                        </section>
+                                    </div>
+                                );
+                            }
+
+                            // ── News Section ──
+                            if (sectionId === 'news') {
+                                return (
+                                    <div
+                                        key="news"
+                                        className={wrapperClasses}
+                                        onDragOver={(e) => handleDragOver(e, 'news')}
+                                        onDragLeave={handleDragLeave}
+                                    >
+                                        {dragHandle}
+                                        <section className="w-full">
+                                            <div className={`flex items-center justify-between ${newsCollapsed ? 'mb-0' : 'mb-0'}`}>
+                                                <button
+                                                    onClick={toggleNewsCollapsed}
+                                                    className="text-2xl font-bold text-foreground flex items-center gap-3 hover:text-primary/90 transition-colors mb-6"
+                                                    aria-expanded={!newsCollapsed}
+                                                >
+                                                    <Newspaper className="text-primary" size={24} />
+                                                    {t('dashboard.news.title', 'Noticias y Novedades')}
+                                                    <ChevronDown size={20} className={`text-muted-foreground transition-transform duration-300 ${newsCollapsed ? '-rotate-90' : 'rotate-0'}`} />
+                                                </button>
+                                            </div>
+                                            {!newsCollapsed && (
+                                                <div className="animate-fade-in-up">
+                                                    <NewsUpdates maxItems={4} hideHeader />
+                                                </div>
+                                            )}
+                                        </section>
+                                    </div>
+                                );
+                            }
+
+                            return null;
+                        })}
+
+                        {/* Projects Section - Full view for Websites page (non-draggable) */}
+                        {
+                            isWebsites && (
+                                <section className="relative z-[1]">
+                                    {/* Filter Chips - Only on Websites view */}
+                                    <div className="mb-4 md:mb-6 space-y-3 md:space-y-4">
+                                        <div className="flex flex-wrap items-center gap-2 md:gap-3">
+                                            <FilterChip
+                                                label={t('dashboard.allStatus')}
+                                                active={filterStatus === 'all'}
+                                                count={allUserProjects.length}
+                                                onClick={() => setFilterStatus('all')}
+                                            />
+                                            <FilterChip
+                                                label={t('dashboard.published')}
+                                                active={filterStatus === 'Published'}
+                                                count={publishedCount}
+                                                onClick={() => setFilterStatus('Published')}
+                                                color="green"
+                                            />
+                                            <FilterChip
+                                                label={t('dashboard.draft')}
+                                                active={filterStatus === 'Draft'}
+                                                count={draftCount}
+                                                onClick={() => setFilterStatus('Draft')}
+                                                color="gray"
+                                            />
+
+                                            {/* Spacer */}
+                                            <div className="flex-1" />
+
+                                            {/* Sort Button */}
+                                            <button
+                                                onClick={() => {
+                                                    if (sortBy === 'lastUpdated') {
+                                                        setSortBy('name');
+                                                        setSortOrder('asc');
+                                                    } else if (sortBy === 'name' && sortOrder === 'asc') {
+                                                        setSortOrder('desc');
+                                                    } else {
+                                                        setSortBy('lastUpdated');
+                                                        setSortOrder('desc');
+                                                    }
+                                                }}
+                                                className="hidden sm:flex items-center gap-1.5 h-9 px-3 rounded-lg text-sm font-medium transition-all bg-secondary/50 text-muted-foreground hover:text-foreground hover:bg-secondary"
+                                                aria-label={`Sort by ${sortBy} (${sortOrder}ending)`}
+                                            >
+                                                <ArrowUpDown size={14} aria-hidden="true" />
+                                                <span className="hidden md:inline">
+                                                    {sortBy === 'name' ? t('common.name') : t('common.updated')}
+                                                </span>
+                                            </button>
+
+                                            {/* View Mode Toggle */}
+                                            <div className="hidden sm:flex items-center gap-1 bg-secondary/40 rounded-lg p-1" role="group" aria-label="View mode">
+                                                <button
+                                                    onClick={() => setViewMode('grid')}
+                                                    className={`h-8 w-8 flex items-center justify-center rounded-md transition-all ${viewMode === 'grid' ? 'text-primary bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+                                                    aria-label={t('dashboard.gridView')}
+                                                    aria-pressed={viewMode === 'grid'}
+                                                >
+                                                    <LayoutGrid size={15} aria-hidden="true" />
+                                                </button>
+                                                <button
+                                                    onClick={() => setViewMode('list')}
+                                                    className={`h-8 w-8 flex items-center justify-center rounded-md transition-all ${viewMode === 'list' ? 'text-primary bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+                                                    aria-label={t('dashboard.listView')}
+                                                    aria-pressed={viewMode === 'list'}
+                                                >
+                                                    <List size={15} aria-hidden="true" />
+                                                </button>
                                             </div>
                                         </div>
-                                    )}
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-xs md:text-sm text-muted-foreground">
+                                                {t('dashboard.showingProjects', { count: userProjects.length, total: allUserProjects.length })}
+                                            </span>
+                                            {/* Mobile controls */}
+                                            <div className="flex items-center gap-2 sm:hidden">
+                                                <button
+                                                    onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
+                                                    className="p-2 bg-secondary/50 rounded-lg text-muted-foreground hover:text-foreground transition-colors"
+                                                >
+                                                    {viewMode === 'grid' ? <List size={16} /> : <LayoutGrid size={16} />}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
 
-                                    {(!isDashboard || !projectsCollapsed) && (
-                                    <>
                                     {isLoadingProjects ? (
                                         <>
-                                            {/* Grid View Skeleton */}
                                             {viewMode === 'grid' && (
                                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                                                     {[1, 2, 3, 4, 5, 6, 7, 8].map(i => (
@@ -680,9 +954,7 @@ const Dashboard: React.FC = () => {
                                                     ))}
                                                 </div>
                                             )}
-
-                                            {/* List View Skeleton */}
-                                            {viewMode === 'list' && isWebsites && (
+                                            {viewMode === 'list' && (
                                                 <div className="space-y-4">
                                                     {[1, 2, 3, 4].map(i => (
                                                         <ProjectCardSkeleton key={i} />
@@ -692,10 +964,9 @@ const Dashboard: React.FC = () => {
                                         </>
                                     ) : userProjects.length > 0 ? (
                                         <>
-                                            {/* Grid View */}
                                             {viewMode === 'grid' && (
                                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 animate-fade-in-up">
-                                                    {(isWebsites ? userProjects : userProjects.slice(0, 4)).map(project => (
+                                                    {userProjects.map(project => (
                                                         <ProjectCard
                                                             key={project.id}
                                                             project={project}
@@ -705,9 +976,7 @@ const Dashboard: React.FC = () => {
                                                     ))}
                                                 </div>
                                             )}
-
-                                            {/* List View */}
-                                            {viewMode === 'list' && isWebsites && (
+                                            {viewMode === 'list' && (
                                                 <div className="space-y-4">
                                                     {userProjects.map(project => (
                                                         <ProjectListItem
@@ -740,113 +1009,6 @@ const Dashboard: React.FC = () => {
                                                 onClick: () => setSearchQuery('')
                                             } : undefined}
                                         />
-                                    )}
-                                    </>
-                                    )}
-                                </section>
-                            )
-                        }
-
-                        {/* Templates Section (Only on Dashboard) */}
-                        {
-                            isDashboard && (
-                                <section>
-                                    <div className={`flex items-center justify-between ${templatesCollapsed ? 'mb-0' : 'mb-6'}`}>
-                                        <button
-                                            onClick={toggleTemplatesCollapsed}
-                                            className="text-2xl font-bold text-foreground flex items-center gap-3 hover:text-primary/90 transition-colors"
-                                            aria-expanded={!templatesCollapsed}
-                                        >
-                                            <LayoutTemplate className="text-primary" size={24} />
-                                            {t('dashboard.startFromTemplate')}
-                                            <ChevronDown size={20} className={`text-muted-foreground transition-transform duration-300 ${templatesCollapsed ? '-rotate-90' : 'rotate-0'}`} />
-                                        </button>
-                                        {/* Size toggle + collapse */}
-                                        {!templatesCollapsed && (
-                                            <div className="flex items-center gap-1 bg-secondary/40 rounded-lg p-1" role="group" aria-label={t('dashboard.templateSize', 'Tama\u00f1o de plantillas')}>
-                                                <button
-                                                    onClick={() => toggleCompactTemplates(false)}
-                                                    className={`h-8 w-8 flex items-center justify-center rounded-md transition-all ${!compactTemplates ? 'text-primary bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
-                                                    aria-label={t('dashboard.templateSizeLarge', 'Grande')}
-                                                    aria-pressed={!compactTemplates}
-                                                    title={t('dashboard.templateSizeLarge', 'Grande')}
-                                                >
-                                                    <Maximize2 size={15} aria-hidden="true" />
-                                                </button>
-                                                <button
-                                                    onClick={() => toggleCompactTemplates(true)}
-                                                    className={`h-8 w-8 flex items-center justify-center rounded-md transition-all ${compactTemplates ? 'text-primary bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
-                                                    aria-label={t('dashboard.templateSizeCompact', 'Compacto')}
-                                                    aria-pressed={compactTemplates}
-                                                    title={t('dashboard.templateSizeCompact', 'Compacto')}
-                                                >
-                                                    <Minimize2 size={15} aria-hidden="true" />
-                                                </button>
-                                            </div>
-                                        )}
-                                    </div>
-                                    {!templatesCollapsed && (
-                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 animate-fade-in-up">
-                                            {templates.slice(0, 4).map(template => (
-                                                <ProjectCard key={template.id} project={template} compact={compactTemplates} />
-                                            ))}
-                                        </div>
-                                    )}
-                                </section>
-                            )
-                        }
-
-                        {/* Recent Leads Section (Only on Dashboard) */}
-                        {
-                            isDashboard && (
-                                <section className="w-full">
-                                    <div className={`flex items-center justify-between ${leadsCollapsed ? 'mb-0' : 'mb-6'}`}>
-                                        <button
-                                            onClick={toggleLeadsCollapsed}
-                                            className="text-2xl font-bold text-foreground flex items-center gap-3 hover:text-primary/90 transition-colors"
-                                            aria-expanded={!leadsCollapsed}
-                                        >
-                                            <Users className="text-primary" size={24} />
-                                            {t('dashboard.leads.title', 'Últimos Leads')}
-                                            <ChevronDown size={20} className={`text-muted-foreground transition-transform duration-300 ${leadsCollapsed ? '-rotate-90' : 'rotate-0'}`} />
-                                        </button>
-                                        {!leadsCollapsed && (
-                                            <button
-                                                onClick={() => navigate(ROUTES.LEADS)}
-                                                className="text-sm font-semibold text-yellow-400 hover:text-yellow-300 transition-colors flex items-center"
-                                            >
-                                                {t('dashboard.viewAll', 'Ver todos')} <Users size={14} className="ml-1" />
-                                            </button>
-                                        )}
-                                    </div>
-                                    {!leadsCollapsed && (
-                                        <div className="animate-fade-in-up">
-                                            <RecentLeads maxItems={6} />
-                                        </div>
-                                    )}
-                                </section>
-                            )
-                        }
-
-                        {/* News & Updates Section - Show on Dashboard (after templates) */}
-                        {
-                            isDashboard && (
-                                <section className="w-full">
-                                    <div className={`flex items-center justify-between ${newsCollapsed ? 'mb-0' : 'mb-0'}`}>
-                                        <button
-                                            onClick={toggleNewsCollapsed}
-                                            className="text-2xl font-bold text-foreground flex items-center gap-3 hover:text-primary/90 transition-colors mb-6"
-                                            aria-expanded={!newsCollapsed}
-                                        >
-                                            <Newspaper className="text-primary" size={24} />
-                                            {t('dashboard.news.title', 'Noticias y Novedades')}
-                                            <ChevronDown size={20} className={`text-muted-foreground transition-transform duration-300 ${newsCollapsed ? '-rotate-90' : 'rotate-0'}`} />
-                                        </button>
-                                    </div>
-                                    {!newsCollapsed && (
-                                        <div className="animate-fade-in-up">
-                                            <NewsUpdates maxItems={4} hideHeader />
-                                        </div>
                                     )}
                                 </section>
                             )
