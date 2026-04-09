@@ -212,8 +212,10 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
     { id: 'assets', icon: Zap, label: t('sidebar.images', 'Imágenes'), view: 'assets', route: ROUTES.ASSETS, serviceId: 'aiFeatures' }, // AI Features
     { id: 'finance', icon: DollarSign, label: t('editor.finance'), view: 'finance', route: ROUTES.FINANCE, serviceId: 'finance' },
     { id: 'appointments', icon: Calendar, label: t('appointments.title'), view: 'appointments', route: ROUTES.APPOINTMENTS, serviceId: 'appointments' },
-    { id: 'blog-hub', icon: Newspaper, label: t('dashboard.blogHub', 'Blog'), view: 'blog-hub', route: ROUTES.BLOG_HUB },
   ];
+
+  // Blog - standalone outside tools section, above agency
+  const blogItem: NavItemData = { id: 'blog-hub', icon: Newspaper, label: t('dashboard.blogHub', 'Blog'), view: 'blog-hub', route: ROUTES.BLOG_HUB };
 
   // Agency button - standalone outside control panel area
   const agencyItem: NavItemData = { id: 'agency', icon: Building2, label: t('dashboard.agencySection', 'Agencia'), view: 'agency', route: ROUTES.AGENCY };
@@ -231,7 +233,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
   ];
 
   // All items combined for backwards compatibility with drag-and-drop
-  const defaultNavItems: NavItemData[] = [dashboardItem, ...websiteItems, ...ecommerceItems, ...toolsItems, ...agencyItems];
+  const defaultNavItems: NavItemData[] = [dashboardItem, ...websiteItems, ...ecommerceItems, ...toolsItems, blogItem, ...agencyItems];
 
   // Helper function to reorder items based on saved order
   const getOrderedItems = (orderIds: string[]): NavItemData[] => {
@@ -290,6 +292,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
   const allSortableIds = useMemo(() => {
     const ids = navItems.map(item => item.id);
     // Add standalone items that are rendered as SortableNavItem but aren't in navItems
+    if (!ids.includes(blogItem.id)) ids.push(blogItem.id);
     if (!ids.includes(agencyItem.id)) ids.push(agencyItem.id);
     if (!ids.includes(settingsItem.id)) ids.push(settingsItem.id);
     if (canAccessSuperAdmin && !ids.includes('superadmin')) ids.push('superadmin');
@@ -636,11 +639,13 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
                       .map((item, index) => (
                         <SortableNavItem key={item.id} item={item} index={index + 1} />
                       ))}
-                    {/* Agency button - standalone */}
+                    {/* Blog - standalone */}
                     <div className="my-2 border-t border-border mx-2" />
-                    <SortableNavItem item={agencyItem} index={websiteItems.length + ecommerceItems.length + toolsItems.length + 1} />
+                    <SortableNavItem item={blogItem} index={websiteItems.length + ecommerceItems.length + toolsItems.length + 1} />
+                    {/* Agency button - standalone */}
+                    <SortableNavItem item={agencyItem} index={websiteItems.length + ecommerceItems.length + toolsItems.length + 2} />
                     {/* Workspace Settings - standalone before Super Admin */}
-                    <SortableNavItem item={settingsItem} index={websiteItems.length + ecommerceItems.length + toolsItems.length + 2} />
+                    <SortableNavItem item={settingsItem} index={websiteItems.length + ecommerceItems.length + toolsItems.length + 3} />
                   </>
                 ) : (
                   <>
@@ -731,17 +736,23 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
                       </div>
                     )}
 
-                    {/* Agency Button - Standalone outside control panel area */}
+                    {/* Blog - Standalone above Agency */}
                     <div className={`my-3 md:my-4 border-t border-border ${isCollapsed && !isMobileOpen ? 'mx-2' : 'mx-0'}`} />
                     <SortableNavItem
-                      item={agencyItem}
+                      item={blogItem}
                       index={websiteItems.length + ecommerceItems.length + toolsItems.length + 1}
+                    />
+
+                    {/* Agency Button - Standalone outside control panel area */}
+                    <SortableNavItem
+                      item={agencyItem}
+                      index={websiteItems.length + ecommerceItems.length + toolsItems.length + 2}
                     />
 
                     {/* Workspace Settings - Standalone outside tools section */}
                     <SortableNavItem
                       item={settingsItem}
-                      index={websiteItems.length + ecommerceItems.length + toolsItems.length + 2}
+                      index={websiteItems.length + ecommerceItems.length + toolsItems.length + 3}
                     />
                   </>
                 )}
