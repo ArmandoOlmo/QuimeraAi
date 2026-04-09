@@ -338,11 +338,12 @@ const BlogPost: React.FC<BlogPostProps> = ({ post, theme, onBack, textColor, bac
                             const ytMatch = post.podcastVideoUrl!.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]+)/);
                             if (ytMatch) {
                                 return (
-                                    <div style={{ position: 'relative', paddingBottom: '56.25%', height: 0, overflow: 'hidden', borderRadius: '0.5rem' }}>
+                                    <div style={{ position: 'relative', paddingBottom: '56.25%', height: 0, overflow: 'hidden', borderRadius: '0.5rem', maxWidth: '100%' }}>
                                         <iframe
-                                            src={`https://www.youtube.com/embed/${ytMatch[1]}`}
-                                            style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
-                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                            src={`https://www.youtube.com/embed/${ytMatch[1]}?playsinline=1`}
+                                            title="Video del artículo"
+                                            style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 0 }}
+                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                                             allowFullScreen
                                         />
                                     </div>
@@ -351,11 +352,16 @@ const BlogPost: React.FC<BlogPostProps> = ({ post, theme, onBack, textColor, bac
                             return (
                                 <video
                                     controls
+                                    playsInline
                                     className="w-full rounded-lg"
-                                    style={{ maxHeight: '500px', backgroundColor: '#000' }}
+                                    style={{ maxHeight: '500px', maxWidth: '100%', backgroundColor: '#000' }}
                                     preload="metadata"
                                 >
-                                    <source src={post.podcastVideoUrl} />
+                                    <source src={post.podcastVideoUrl} type={
+                                        post.podcastVideoUrl!.endsWith('.webm') ? 'video/webm' :
+                                        post.podcastVideoUrl!.endsWith('.ogg') ? 'video/ogg' :
+                                        'video/mp4'
+                                    } />
                                     Tu navegador no soporta el elemento de video.
                                 </video>
                             );
