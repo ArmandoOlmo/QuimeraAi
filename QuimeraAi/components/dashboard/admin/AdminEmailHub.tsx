@@ -2736,53 +2736,6 @@ Conversación:\n${conversationSummary}`;
                 </div>
             )}
 
-            {/* ===== CONFIRMATION MODAL ===== */}
-            {confirmModal.show && (
-                <div
-                    className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[200] flex items-center justify-center p-4"
-                    onClick={() => setConfirmModal(prev => ({ ...prev, show: false }))}
-                >
-                    <div
-                        className="bg-editor-bg border border-editor-border rounded-2xl w-full max-w-sm p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200"
-                        onClick={e => e.stopPropagation()}
-                    >
-                        {/* Warning Icon */}
-                        <div className="flex items-center justify-center mb-4">
-                            <div className="p-3 bg-red-500/10 rounded-full">
-                                <AlertTriangle size={28} className="text-red-400" />
-                            </div>
-                        </div>
-
-                        {/* Title */}
-                        <h3 className="text-lg font-bold text-editor-text-primary text-center mb-2">
-                            {confirmModal.title}
-                        </h3>
-
-                        {/* Message */}
-                        <p className="text-sm text-editor-text-secondary text-center mb-6 leading-relaxed">
-                            {confirmModal.message}
-                        </p>
-
-                        {/* Actions */}
-                        <div className="flex gap-3">
-                            <button
-                                onClick={() => setConfirmModal(prev => ({ ...prev, show: false }))}
-                                className="flex-1 px-4 py-2.5 text-sm font-medium text-editor-text-secondary bg-editor-panel-bg border border-editor-border rounded-xl hover:bg-editor-border hover:text-editor-text-primary transition-colors"
-                            >
-                                Cancelar
-                            </button>
-                            <button
-                                onClick={confirmModal.onConfirm}
-                                className="flex-1 px-4 py-2.5 text-sm font-semibold text-white bg-red-600 rounded-xl hover:bg-red-700 transition-colors shadow-lg shadow-red-500/20"
-                            >
-                                <span className="flex items-center justify-center gap-2">
-                                    <Trash2 size={14} /> Eliminar
-                                </span>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
         </div>
     );
 
@@ -4370,6 +4323,48 @@ pedro@ejemplo.com,Pedro García`}
                     )}
                 </main>
             </div>
+
+            {/* ===== GLOBAL CONFIRMATION MODAL (always rendered) ===== */}
+            {confirmModal.show && (
+                <div
+                    className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[200] flex items-center justify-center p-4"
+                    onClick={() => setConfirmModal(prev => ({ ...prev, show: false }))}
+                >
+                    <div
+                        className="bg-editor-bg border border-editor-border rounded-2xl w-full max-w-sm p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200"
+                        onClick={e => e.stopPropagation()}
+                    >
+                        {/* Warning Icon */}
+                        <div className="flex items-center justify-center mb-4">
+                            <div className="p-3 bg-red-500/10 rounded-full">
+                                <AlertTriangle size={28} className="text-red-400" />
+                            </div>
+                        </div>
+                        <h3 className="text-lg font-bold text-editor-text-primary text-center mb-2">
+                            {confirmModal.title}
+                        </h3>
+                        <p className="text-sm text-editor-text-secondary text-center mb-6 leading-relaxed">
+                            {confirmModal.message}
+                        </p>
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => setConfirmModal(prev => ({ ...prev, show: false }))}
+                                className="flex-1 px-4 py-2.5 text-sm font-medium text-editor-text-secondary bg-editor-panel-bg border border-editor-border rounded-xl hover:bg-editor-border hover:text-editor-text-primary transition-colors"
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                onClick={confirmModal.onConfirm}
+                                className="flex-1 px-4 py-2.5 text-sm font-semibold text-white bg-red-600 rounded-xl hover:bg-red-700 transition-colors shadow-lg shadow-red-500/20"
+                            >
+                                <span className="flex items-center justify-center gap-2">
+                                    <Trash2 size={14} /> Eliminar
+                                </span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
