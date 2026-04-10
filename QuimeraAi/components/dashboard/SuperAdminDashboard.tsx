@@ -9,7 +9,7 @@ import {
     ArrowLeft, Menu, Image, MessageSquare, PackageSearch, Palette,
     FlaskConical, Languages, Search, FileText, FolderOpen,
     Navigation, Star, Settings, Grid3x3, List, X, Sparkles, Zap, Newspaper, Layout,
-    Loader2, DollarSign, Globe, UserPlus, CalendarDays
+    Loader2, DollarSign, Globe, UserPlus, CalendarDays, Mail
 } from 'lucide-react';
 import DashboardSidebar from './DashboardSidebar';
 import MobileSearchModal from '../ui/MobileSearchModal';
@@ -46,6 +46,7 @@ const ServiceAvailabilityControl = React.lazy(() => import('./admin/ServiceAvail
 const SubdomainManagement = React.lazy(() => import('./admin/SubdomainManagement'));
 const AdminLeadsDashboard = React.lazy(() => import('./admin/AdminLeadsDashboard'));
 const AdminAppointmentsDashboard = React.lazy(() => import('./admin/AdminAppointmentsDashboard'));
+const AdminEmailHub = React.lazy(() => import('./admin/AdminEmailHub'));
 
 // Loading skeleton for admin panels
 const AdminPanelLoader = () => (
@@ -100,6 +101,7 @@ const ADMIN_ROUTES: Record<string, string> = {
     'subdomains': ROUTES.ADMIN_SUBDOMAINS,
     'admin-leads': ROUTES.ADMIN_LEADS,
     'admin-appointments': ROUTES.ADMIN_APPOINTMENTS,
+    'admin-email': ROUTES.ADMIN_EMAIL,
 };
 
 // Components
@@ -286,6 +288,9 @@ const SuperAdminDashboard = () => {
         { id: 'admin-appointments', title: t('superadmin.platformAppointments', 'Citas de Plataforma'), description: t('superadmin.platformAppointmentsDesc', 'Gestionar citas agendadas a nivel de plataforma'), icon: <CalendarDays size={24} />, category: 'core', route: ROUTES.ADMIN_APPOINTMENTS, isNew: true, allowedRoles: ['owner', 'superadmin'] },
         { id: 'global-seo', title: t('superadmin.globalSEO'), description: t('superadmin.globalSEODesc'), icon: <Search size={24} />, category: 'system', route: ROUTES.ADMIN_GLOBAL_SEO, allowedRoles: ['owner', 'superadmin', 'admin'] },
         { id: 'execution-mode', title: '⚡ Execution Mode (Coming Soon)', description: 'Configure assistant execution behavior (feature in development)', icon: <Zap size={24} />, category: 'system', route: ROUTES.ADMIN_EXECUTION_MODE, isNew: true, allowedRoles: ['owner', 'superadmin'] },
+
+        // Email Marketing
+        { id: 'admin-email', title: t('superadmin.emailMarketing', 'Email Marketing Hub'), description: t('superadmin.emailMarketingDesc', 'Gestión centralizada de campañas, audiencias, automatizaciones y AI Email Studio'), icon: <Mail size={24} />, category: 'content', route: ROUTES.ADMIN_EMAIL, isNew: true, allowedRoles: ['owner', 'superadmin'] },
     ];
 
     // Filter features based on user role
@@ -367,6 +372,7 @@ const SuperAdminDashboard = () => {
             );
             case 'design-tokens': return <AdminViewLayout title={t('superadmin.designTokensTitle')} onBack={handleBack}><DesignTokensEditor /></AdminViewLayout>;
             case 'analytics': return <AdminViewLayout title={t('superadmin.componentAnalyticsTitle')} onBack={handleBack} noPadding><AnalyticsDashboard /></AdminViewLayout>;
+            case 'admin-email': return <AdminEmailHub onBack={handleBack} />;
             default: return null;
         }
     })();

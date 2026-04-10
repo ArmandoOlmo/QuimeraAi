@@ -157,6 +157,7 @@ export const ROUTES = {
   ADMIN_DIAGNOSE: '/admin/diagnose',
   ADMIN_LEADS: '/admin/leads',
   ADMIN_APPOINTMENTS: '/admin/appointments',
+  ADMIN_EMAIL: '/admin/email',
 } as const;
 
 // =============================================================================
@@ -1021,6 +1022,17 @@ export const routeConfigs: RouteConfig[] = [
     adminView: 'admin-appointments',
     type: 'admin',
     title: 'Platform Appointments',
+    requiresAuth: true,
+    requiresEmailVerified: true,
+    roles: ['owner', 'superadmin'],
+    parent: ROUTES.SUPERADMIN,
+  },
+  {
+    path: ROUTES.ADMIN_EMAIL,
+    view: 'superadmin',
+    adminView: 'admin-email',
+    type: 'admin',
+    title: 'Email Marketing Hub',
     requiresAuth: true,
     requiresEmailVerified: true,
     roles: ['owner', 'superadmin'],
