@@ -2657,10 +2657,12 @@ Conversación:\n${conversationSummary}`;
                                         Vista Previa
                                     </label>
                                     <div className="border border-editor-border rounded-xl overflow-hidden bg-white">
-                                        <div
-                                            className="max-h-[400px] overflow-y-auto"
-                                            dangerouslySetInnerHTML={{ __html: detailCampaign.htmlContent }}
-                                            style={{ transformOrigin: 'top left', transform: 'scale(0.5)', width: '200%', height: 'auto' }}
+                                        <iframe
+                                            srcDoc={detailCampaign.htmlContent}
+                                            title="Vista previa del email"
+                                            className="w-full border-0"
+                                            style={{ height: '500px', pointerEvents: 'none' }}
+                                            sandbox="allow-same-origin"
                                         />
                                     </div>
                                 </div>
