@@ -272,7 +272,7 @@ const AdminEmailHub: React.FC<AdminEmailHubProps> = ({ onBack }) => {
     const [emailDocument, setEmailDocument] = useState<Partial<EmailDocument> | null>(null);
     const [editingCampaignId, setEditingCampaignId] = useState<string | null>(null);
     const [showNewCampaignModal, setShowNewCampaignModal] = useState(false);
-    const [newCampaignForm, setNewCampaignForm] = useState({ name: '', subject: '', previewText: '', type: 'newsletter' });
+    const [newCampaignForm, setNewCampaignForm] = useState({ name: '', subject: '', previewText: '', type: 'newsletter', audienceType: 'all' as 'all' | 'segment' | 'custom', audienceSegmentId: '', customEmails: '' });
 
     // AI Studio state
     const [showAIStudio, setShowAIStudio] = useState(false);
@@ -1642,16 +1642,18 @@ Conversación:\n${conversationSummary}`;
                 ));
             } else {
                 // Create new campaign
-                const newCampaign = {
+                const newCampaign: Record<string, any> = {
                     name: document.name,
                     subject: document.subject,
                     previewText: document.previewText,
                     type: newCampaignForm.type || 'newsletter',
                     htmlContent,
                     emailDocument: document,
-                    audienceType: 'all' as const,
+                    audienceType: newCampaignForm.audienceType || 'all',
+                    ...(newCampaignForm.audienceType === 'segment' && newCampaignForm.audienceSegmentId ? { audienceSegmentId: newCampaignForm.audienceSegmentId } : {}),
+                    ...(newCampaignForm.audienceType === 'custom' && newCampaignForm.customEmails ? { customRecipientEmails: newCampaignForm.customEmails.split(',').map(e => e.trim()).filter(Boolean) } : {}),
                     status: 'draft' as CampaignStatus,
-                    stats: { totalRecipients: 0, sent: 0, delivered: 0, opened: 0, uniqueOpens: 0, clicked: 0, uniqueClicks: 0, bounced: 0, complained: 0, unsubscribed: 0 },
+                    stats: { totalRecipients: 0, sent: 0, delivered: 0, opened: 0, totalOpens: 0, uniqueOpens: 0, clicked: 0, totalClicks: 0, uniqueClicks: 0, bounced: 0, complained: 0, unsubscribed: 0 },
                     tags: ['visual-editor'],
                     createdBy: user?.uid || 'admin',
                     createdAt: serverTimestamp(),
@@ -1671,7 +1673,7 @@ Conversación:\n${conversationSummary}`;
             setEmailDocument(null);
             setEditingCampaignId(null);
             setSelectedCampaign(null);
-            setNewCampaignForm({ name: '', subject: '', previewText: '', type: 'newsletter' });
+            setNewCampaignForm({ name: '', subject: '', previewText: '', type: 'newsletter', audienceType: 'all', audienceSegmentId: '', customEmails: '' });
         } catch (err) {
             console.error('Save from visual editor error:', err);
             alert('Error al guardar: ' + (err instanceof Error ? err.message : 'Error desconocido'));
@@ -2108,6 +2110,64 @@ Conversación:\n${conversationSummary}`;
                                     <option value="transactional">Transaccional</option>
                                 </select>
                             </div>
+
+                            {/* Audience Selection */}
+                            <div>
+                                <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-1.5 block">Audiencia</label>
+                                <select
+                                    value={newCampaignForm.audienceType}
+                                    onChange={e => setNewCampaignForm(prev => ({ ...prev, audienceType: e.target.value as 'all' | 'segment' | 'custom' }))}
+                                    className="w-full bg-editor-panel-bg border border-editor-border rounded-xl px-4 py-2.5 text-sm text-editor-text-primary focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+                                >
+                                    <option value="all">📋 Todos los contactos</option>
+                                    <option value="segment">🎯 Segmento específico</option>
+                                    <option value="custom">✉️ Emails personalizados</option>
+                                </select>
+                            </div>
+
+                            {/* Segment selector (when segment selected) */}
+                            {newCampaignForm.audienceType === 'segment' && (
+                                <div>
+                                    <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-1.5 block">Segmento</label>
+                                    {audiences.length > 0 ? (
+                                        <select
+                                            value={newCampaignForm.audienceSegmentId}
+                                            onChange={e => setNewCampaignForm(prev => ({ ...prev, audienceSegmentId: e.target.value }))}
+                                            className="w-full bg-editor-panel-bg border border-editor-border rounded-xl px-4 py-2.5 text-sm text-editor-text-primary focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+                                        >
+                                            <option value="">Selecciona un segmento...</option>
+                                            {audiences.map(a => (
+                                                <option key={a.id} value={a.id}>
+                                                    {a.name} — {a.tenantName} ({a.estimatedCount || a.staticMemberCount || 0} contactos)
+                                                </option>
+                                            ))}
+                                        </select>
+                                    ) : (
+                                        <p className="text-xs text-editor-text-secondary bg-editor-panel-bg border border-editor-border rounded-xl px-4 py-3">
+                                            No hay segmentos creados. Crea uno desde la pestaña Audiencias.
+                                        </p>
+                                    )}
+                                </div>
+                            )}
+
+                            {/* Custom emails input (when custom selected) */}
+                            {newCampaignForm.audienceType === 'custom' && (
+                                <div>
+                                    <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-1.5 block">Emails (separados por coma)</label>
+                                    <textarea
+                                        value={newCampaignForm.customEmails}
+                                        onChange={e => setNewCampaignForm(prev => ({ ...prev, customEmails: e.target.value }))}
+                                        rows={3}
+                                        className="w-full bg-editor-panel-bg border border-editor-border rounded-xl px-4 py-2.5 text-sm text-editor-text-primary focus:outline-none focus:ring-2 focus:ring-purple-500/50 resize-none"
+                                        placeholder="email1@ejemplo.com, email2@ejemplo.com, email3@ejemplo.com"
+                                    />
+                                    {newCampaignForm.customEmails && (
+                                        <p className="text-[10px] text-editor-text-secondary mt-1">
+                                            {newCampaignForm.customEmails.split(',').filter(e => e.trim()).length} destinatarios
+                                        </p>
+                                    )}
+                                </div>
+                            )}
                         </div>
 
                         {/* Footer — choose how to create */}
