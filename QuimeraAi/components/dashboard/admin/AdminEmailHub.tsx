@@ -1724,6 +1724,7 @@ Conversación:\n${conversationSummary}`;
 
             if (hasDocument) {
                 // Editor mode: generate HTML from current document
+                console.log('[Test Email] Editor mode — generating from open document, blocks:', emailDocument!.blocks?.length);
                 const fullDoc: EmailDocument = {
                     id: emailDocument!.id || 'admin-test',
                     name: emailDocument!.name || 'Test Email',
@@ -1736,23 +1737,33 @@ Conversación:\n${conversationSummary}`;
                 };
                 payload.htmlContent = generateEmailHtml(fullDoc);
                 payload.subject = fullDoc.subject;
-            } else if (campaign?.emailDocument && (campaign.emailDocument as any).blocks?.length > 0) {
-                // Table mode but campaign has stored blocks: regenerate fresh HTML
-                const storedDoc = campaign.emailDocument as any;
-                const fullDoc: EmailDocument = {
-                    id: storedDoc.id || campaign.id,
-                    name: storedDoc.name || campaign.name || 'Email',
-                    subject: storedDoc.subject || campaign.subject || 'Email',
-                    previewText: storedDoc.previewText || '',
-                    blocks: storedDoc.blocks || [],
-                    globalStyles: storedDoc.globalStyles || DEFAULT_EMAIL_GLOBAL_STYLES,
-                    createdAt: Date.now(),
-                    updatedAt: Date.now(),
-                };
-                payload.htmlContent = generateEmailHtml(fullDoc);
-                payload.subject = fullDoc.subject;
+            } else {
+                // Table mode: try to regenerate from stored emailDocument blocks
+                const storedDoc = (campaign as any)?.emailDocument;
+                console.log('[Test Email] Table mode — storedDoc exists:', !!storedDoc, 'blocks:', storedDoc?.blocks?.length);
+                
+                if (storedDoc && storedDoc.blocks && storedDoc.blocks.length > 0) {
+                    // Log logo blocks for debugging
+                    const logoBlocks = storedDoc.blocks.filter((b: any) => b.type === 'logo');
+                    console.log('[Test Email] Logo blocks found:', logoBlocks.length, logoBlocks.map((b: any) => ({ src: (b.content as any)?.src, visible: b.visible })));
+                    
+                    const fullDoc: EmailDocument = {
+                        id: storedDoc.id || campaign!.id,
+                        name: storedDoc.name || campaign!.name || 'Email',
+                        subject: storedDoc.subject || campaign!.subject || 'Email',
+                        previewText: storedDoc.previewText || '',
+                        blocks: storedDoc.blocks || [],
+                        globalStyles: storedDoc.globalStyles || DEFAULT_EMAIL_GLOBAL_STYLES,
+                        createdAt: Date.now(),
+                        updatedAt: Date.now(),
+                    };
+                    payload.htmlContent = generateEmailHtml(fullDoc);
+                    payload.subject = fullDoc.subject;
+                    console.log('[Test Email] Generated HTML length:', payload.htmlContent.length, 'contains logo img:', payload.htmlContent.includes('logo_quimera'));
+                } else {
+                    console.log('[Test Email] No stored blocks — CF will use campaign.htmlContent from Firestore');
+                }
             }
-            // If no blocks available, CF will load campaign.htmlContent from Firestore
 
             const result = await sendTestFn(payload);
             const data = result.data as any;
