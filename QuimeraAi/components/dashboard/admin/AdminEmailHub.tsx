@@ -1708,11 +1708,16 @@ Conversación:\n${conversationSummary}`;
             const functions = getFunctions();
             const sendTestFn = httpsCallable(functions, 'sendTestEmail');
 
+            // Look up campaign in local state to get its real userId/projectId
+            const campaign = campaigns.find(c => c.id === campaignId);
+            const realUserId = campaign?.userId || user?.uid || 'admin';
+            const realProjectId = campaign?.projectId || 'admin';
+
             // Build payload — if we have a document (editor open), send HTML directly
             // Otherwise just send campaignId and let the CF load from Firestore
             const payload: Record<string, any> = {
-                userId: user?.uid || 'admin',
-                storeId: 'admin',
+                userId: realUserId,
+                storeId: realProjectId,
                 campaignId: campaignId || 'admin-test',
                 testEmail,
             };
@@ -1732,7 +1737,7 @@ Conversación:\n${conversationSummary}`;
                 payload.htmlContent = generateEmailHtml(fullDoc);
                 payload.subject = fullDoc.subject;
             }
-            // If no document, CF will load campaign from adminEmailCampaigns/{campaignId}
+            // If no document, CF will load campaign from correct Firestore path
 
             const result = await sendTestFn(payload);
             const data = result.data as any;
