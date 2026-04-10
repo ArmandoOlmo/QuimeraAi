@@ -431,6 +431,26 @@ export const generateEmailHtml = (document: EmailDocument): string => {
         .filter(block => block.visible)
         .map(block => generateBlockHtml(block, globalStyles))
         .join('\n');
+
+    // Generate Google Fonts import for custom fonts
+    const fontFamily = globalStyles.fontFamily || 'Arial, sans-serif';
+    const primaryFont = fontFamily.split(',')[0].trim().replace(/['"]/g, '');
+    
+    // Only import from Google Fonts if it's not a system font
+    const systemFonts = ['Arial', 'Helvetica', 'Georgia', 'Times New Roman', 'Courier New', 'Verdana', 'Tahoma', 'Trebuchet MS', 'sans-serif', 'serif', 'monospace'];
+    const isCustomFont = !systemFonts.some(sf => sf.toLowerCase() === primaryFont.toLowerCase());
+    
+    const googleFontsUrl = isCustomFont 
+        ? `https://fonts.googleapis.com/css2?family=${encodeURIComponent(primaryFont)}:wght@400;600;700&display=swap`
+        : '';
+    
+    const fontImportHtml = googleFontsUrl ? `
+    <!--[if !mso]><!-->
+    <link href="${googleFontsUrl}" rel="stylesheet" type="text/css">
+    <style>
+        @import url('${googleFontsUrl}');
+    </style>
+    <!--<![endif]-->` : '';
     
     return `
 <!DOCTYPE html>
@@ -444,6 +464,7 @@ export const generateEmailHtml = (document: EmailDocument): string => {
     <meta name="color-scheme" content="light">
     <meta name="supported-color-schemes" content="light">
     <title>${escapeHtml(document.subject || 'Email')}</title>
+    ${fontImportHtml}
     <!--[if mso]>
     <noscript>
         <xml>
