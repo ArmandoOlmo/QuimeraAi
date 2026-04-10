@@ -1994,9 +1994,9 @@ Conversación:\n${conversationSummary}`;
                 />
             )}
 
-            {/* ===== VISUAL EMAIL EDITOR — Full Screen ===== */}
+            {/* ===== VISUAL EMAIL EDITOR — Respects sidebar ===== */}
             {showEmailEditor && emailDocument && (
-                <div className="fixed inset-0 z-[100] bg-editor-bg">
+                <div className="fixed inset-0 md:left-72 z-50 bg-editor-bg">
                     <AdminEmailEditorWrapper
                         initialDocument={emailDocument}
                         onSave={handleSaveFromEditor}
