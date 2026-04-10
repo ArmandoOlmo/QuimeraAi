@@ -126,6 +126,8 @@ import {
     sendTestEmail
 } from './email/marketing/campaignService';
 
+import { resendWebhook } from './email/marketing/resendWebhook';
+
 import { sendDirectEmail } from './email/marketing/directEmail';
 
 // Domain management functions
@@ -335,6 +337,9 @@ export const email = {
     // Stock alert (from ecommerceSync)
     onProductUpdateCheckStock
 };
+
+// Export Resend Webhook (HTTP endpoint for email tracking)
+export { resendWebhook };
 
 // Export Domain Management functions
 export const domains = {

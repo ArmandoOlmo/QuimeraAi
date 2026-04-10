@@ -124,13 +124,23 @@ export interface CampaignStats {
     totalRecipients: number;
     sent: number;
     delivered: number;
-    opened: number;
-    uniqueOpens: number;
-    clicked: number;
-    uniqueClicks: number;
+    opened: number;        // Deprecated: use totalOpens
+    totalOpens: number;    // Total opens (including reopens)
+    uniqueOpens: number;   // Unique opens (one per recipient)
+    clicked: number;       // Deprecated: use totalClicks
+    totalClicks: number;   // Total clicks (including re-clicks)
+    uniqueClicks: number;  // Unique clicks (one per recipient)
     bounced: number;
-    complained: number;
+    bounceDetails?: {
+        hard: number;      // Invalid email / permanent failure
+        soft: number;      // Temporary failure (mailbox full, etc.)
+    };
+    complained: number;    // Spam complaints
     unsubscribed: number;
+    // Rates (calculated, not stored — but useful for UI)
+    openRate?: number;     // uniqueOpens / delivered * 100
+    clickRate?: number;    // uniqueClicks / uniqueOpens * 100
+    bounceRate?: number;   // bounced / sent * 100
 }
 
 // =============================================================================
@@ -167,9 +177,16 @@ export interface EmailLog {
     // Timestamps
     sentAt: FirebaseTimestamp;
     deliveredAt?: FirebaseTimestamp;
-    openedAt?: FirebaseTimestamp;
+    // Tracking details (populated by Resend webhooks)
+    openCount?: number;
+    openedAt?: FirebaseTimestamp | FirebaseTimestamp[];
+    clickCount?: number;
+    clickedLinks?: { url: string; at: FirebaseTimestamp }[];
     clickedAt?: FirebaseTimestamp;
     bouncedAt?: FirebaseTimestamp;
+    bounceType?: string;       // 'hard' | 'soft'
+    bounceMessage?: string;
+    complainedAt?: FirebaseTimestamp;
 
     // Error info
     errorMessage?: string;
