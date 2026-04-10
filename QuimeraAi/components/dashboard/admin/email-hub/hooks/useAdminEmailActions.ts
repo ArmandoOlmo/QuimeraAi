@@ -14,7 +14,7 @@ import { serverTimestamp } from 'firebase/firestore';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import { generateEmailHtml } from '../../../../../utils/emailHtmlGenerator';
 import { DEFAULT_EMAIL_GLOBAL_STYLES } from '../../../../../types/email';
-import type { CampaignStatus, EmailDocument, EmailAutomation, AutomationStatus } from '../../../../../types/email';
+import type { CampaignStatus, EmailDocument, EmailAutomation, AutomationStatus, AutomationWorkflowStep, AutomationCategory } from '../../../../../types/email';
 import type {
     CrossTenantCampaign,
     CrossTenantAudience,
@@ -74,13 +74,23 @@ export interface AdminEmailActionsReturn {
     confirmModal: ConfirmModalState;
     setConfirmModal: React.Dispatch<React.SetStateAction<ConfirmModalState>>;
 
-    // Automation creation
+    // Automation creation / editing
     showCreateAutomation: boolean;
     setShowCreateAutomation: (v: boolean) => void;
     selectedTemplate: AutomationTemplate | null;
     setSelectedTemplate: (v: AutomationTemplate | null) => void;
-    newAutomation: { name: string; subject: string; delayMinutes: number; status: AutomationStatus };
-    setNewAutomation: React.Dispatch<React.SetStateAction<{ name: string; subject: string; delayMinutes: number; status: AutomationStatus }>>;
+    newAutomation: {
+        name: string; subject: string; description: string; delayMinutes: number;
+        status: AutomationStatus; steps: AutomationWorkflowStep[]; category: AutomationCategory;
+        audienceId: string;
+    };
+    setNewAutomation: React.Dispatch<React.SetStateAction<{
+        name: string; subject: string; description: string; delayMinutes: number;
+        status: AutomationStatus; steps: AutomationWorkflowStep[]; category: AutomationCategory;
+        audienceId: string;
+    }>>;
+    editingAutomationId: string | null;
+    setEditingAutomationId: (v: string | null) => void;
 
     // Campaign handlers
     handleEditCampaignVisual: (campaign: CrossTenantCampaign) => void;
@@ -105,8 +115,11 @@ export interface AdminEmailActionsReturn {
 
     // Automation handlers
     createAutomation: () => Promise<void>;
+    updateAutomation: () => Promise<void>;
+    duplicateAutomation: (automation: EmailAutomation) => Promise<void>;
     toggleAutomationStatus: (automation: EmailAutomation) => Promise<void>;
     deleteAutomation: (automationId: string) => Promise<void>;
+    openEditAutomation: (automation: EmailAutomation) => void;
 }
 
 export function useAdminEmailActions(data: AdminEmailDataReturn): AdminEmailActionsReturn {
@@ -147,11 +160,17 @@ export function useAdminEmailActions(data: AdminEmailDataReturn): AdminEmailActi
         show: false, title: '', message: '', onConfirm: () => {},
     });
 
-    // Automation creation
+    // Automation creation / editing
     const [showCreateAutomation, setShowCreateAutomation] = useState(false);
     const [selectedTemplate, setSelectedTemplate] = useState<AutomationTemplate | null>(null);
-    const [newAutomation, setNewAutomation] = useState({
-        name: '', subject: '', delayMinutes: 60, status: 'draft' as AutomationStatus,
+    const [editingAutomationId, setEditingAutomationId] = useState<string | null>(null);
+    const [newAutomation, setNewAutomation] = useState<{
+        name: string; subject: string; description: string; delayMinutes: number;
+        status: AutomationStatus; steps: AutomationWorkflowStep[]; category: AutomationCategory;
+        audienceId: string;
+    }>({
+        name: '', subject: '', description: '', delayMinutes: 60, status: 'draft',
+        steps: [], category: 'lifecycle', audienceId: '',
     });
 
     // =============================================================================
@@ -217,11 +236,11 @@ export function useAdminEmailActions(data: AdminEmailDataReturn): AdminEmailActi
                     ? 'adminEmailCampaigns'
                     : `users/${selectedCampaign.userId}/projects/${selectedCampaign.projectId}/emailCampaigns`;
                 await updateDoc(doc(db, collectionPath, editingCampaignId), {
-                    name: document.name,
-                    subject: document.subject,
-                    previewText: document.previewText,
+                    name: document.name || '',
+                    subject: document.subject || '',
+                    previewText: document.previewText || '',
                     htmlContent,
-                    emailDocument: document,
+                    emailDocument: JSON.parse(JSON.stringify(document)),
                     updatedAt: serverTimestamp(),
                 });
                 setCampaigns(prev => prev.map(c =>
@@ -231,12 +250,12 @@ export function useAdminEmailActions(data: AdminEmailDataReturn): AdminEmailActi
                 ));
             } else {
                 const newCampaign: Record<string, any> = {
-                    name: document.name,
-                    subject: document.subject,
-                    previewText: document.previewText,
+                    name: document.name || 'Sin nombre',
+                    subject: document.subject || '',
+                    previewText: document.previewText || '',
                     type: newCampaignForm.type || 'newsletter',
                     htmlContent,
-                    emailDocument: document,
+                    emailDocument: JSON.parse(JSON.stringify(document)),
                     audienceType: newCampaignForm.audienceType || 'all',
                     ...(newCampaignForm.audienceType === 'segment' && newCampaignForm.audienceSegmentId ? { audienceSegmentId: newCampaignForm.audienceSegmentId } : {}),
                     ...(newCampaignForm.audienceType === 'custom' && newCampaignForm.customEmails ? { customRecipientEmails: newCampaignForm.customEmails.split(',').map(e => e.trim()).filter(Boolean) } : {}),
@@ -510,16 +529,20 @@ export function useAdminEmailActions(data: AdminEmailDataReturn): AdminEmailActi
 
     const handleDuplicateCampaign = async (campaign: CrossTenantCampaign) => {
         try {
+            // Deep-clone emailDocument to strip any undefined values Firestore would reject
+            const clonedEmailDoc = (campaign as any).emailDocument
+                ? JSON.parse(JSON.stringify((campaign as any).emailDocument))
+                : null;
             const dupData = {
                 name: `${campaign.name} (Copia)`,
-                subject: campaign.subject,
+                subject: campaign.subject || '',
                 previewText: campaign.previewText || '',
                 type: campaign.type || 'newsletter',
                 htmlContent: campaign.htmlContent || '',
-                emailDocument: (campaign as any).emailDocument || null,
+                emailDocument: clonedEmailDoc,
                 audienceType: 'all' as const,
                 status: 'draft' as CampaignStatus,
-                stats: { totalRecipients: 0, sent: 0, delivered: 0, opened: 0, uniqueOpens: 0, clicked: 0, uniqueClicks: 0, bounced: 0, complained: 0, unsubscribed: 0 },
+                stats: { totalRecipients: 0, sent: 0, delivered: 0, opened: 0, totalOpens: 0, uniqueOpens: 0, clicked: 0, totalClicks: 0, uniqueClicks: 0, bounced: 0, complained: 0, unsubscribed: 0 },
                 tags: ['duplicate'],
                 createdBy: user?.uid || 'admin',
                 createdAt: serverTimestamp(),
@@ -542,19 +565,28 @@ export function useAdminEmailActions(data: AdminEmailDataReturn): AdminEmailActi
     // =============================================================================
 
     const createAutomation = async () => {
-        if (!selectedTemplate || !newAutomation.name) return;
+        if (!newAutomation.name) return;
 
         try {
+            const triggerEvent = selectedTemplate?.triggerEvent || 'customer.created';
+            const automationType = selectedTemplate?.type || 'welcome';
+            // Sanitize steps for Firestore (strip undefined values)
+            const sanitizedSteps = (newAutomation.steps || []).map(step => JSON.parse(JSON.stringify(step)));
+
             const automationData = {
                 name: newAutomation.name,
-                type: selectedTemplate.type,
+                description: newAutomation.description || '',
+                type: automationType,
+                category: newAutomation.category || selectedTemplate?.category || 'lifecycle',
                 status: newAutomation.status,
                 triggerConfig: {
                     type: 'event' as const,
-                    event: selectedTemplate.triggerEvent,
+                    event: triggerEvent,
                 },
+                audienceId: newAutomation.audienceId || '',
+                steps: sanitizedSteps,
                 templateId: '',
-                subject: newAutomation.subject || `${selectedTemplate.name} — Auto`,
+                subject: newAutomation.subject || `${selectedTemplate?.name || 'Automatización'} — Auto`,
                 delayMinutes: newAutomation.delayMinutes,
                 stats: { triggered: 0, sent: 0, opened: 0, clicked: 0, converted: 0 },
                 createdAt: serverTimestamp(),
@@ -564,10 +596,82 @@ export function useAdminEmailActions(data: AdminEmailDataReturn): AdminEmailActi
             await addDoc(collection(db, 'adminEmailAutomations'), automationData);
             setShowCreateAutomation(false);
             setSelectedTemplate(null);
-            setNewAutomation({ name: '', subject: '', delayMinutes: 60, status: 'draft' });
+            setEditingAutomationId(null);
+            setNewAutomation({ name: '', subject: '', description: '', delayMinutes: 60, status: 'draft', steps: [], category: 'lifecycle', audienceId: '' });
         } catch (err) {
             console.error('[AdminEmailHub] Error creating automation:', err);
         }
+    };
+
+    const updateAutomation = async () => {
+        if (!editingAutomationId || !newAutomation.name) return;
+
+        try {
+            const sanitizedSteps = (newAutomation.steps || []).map(step => JSON.parse(JSON.stringify(step)));
+
+            await updateDoc(doc(db, 'adminEmailAutomations', editingAutomationId), {
+                name: newAutomation.name,
+                description: newAutomation.description || '',
+                category: newAutomation.category || 'lifecycle',
+                subject: newAutomation.subject || '',
+                audienceId: newAutomation.audienceId || '',
+                steps: sanitizedSteps,
+                delayMinutes: newAutomation.delayMinutes,
+                updatedAt: serverTimestamp(),
+            });
+
+            setShowCreateAutomation(false);
+            setSelectedTemplate(null);
+            setEditingAutomationId(null);
+            setNewAutomation({ name: '', subject: '', description: '', delayMinutes: 60, status: 'draft', steps: [], category: 'lifecycle', audienceId: '' });
+        } catch (err) {
+            console.error('[AdminEmailHub] Error updating automation:', err);
+        }
+    };
+
+    const duplicateAutomation = async (automation: EmailAutomation) => {
+        try {
+            const sanitizedSteps = (automation.steps || []).map(step => JSON.parse(JSON.stringify(step)));
+            const dupData = {
+                name: `${automation.name} (Copia)`,
+                description: automation.description || '',
+                type: automation.type,
+                category: automation.category || 'lifecycle',
+                status: 'draft' as AutomationStatus,
+                triggerConfig: JSON.parse(JSON.stringify(automation.triggerConfig)),
+                audienceId: automation.audienceId || '',
+                steps: sanitizedSteps,
+                templateId: automation.templateId || '',
+                subject: automation.subject || '',
+                delayMinutes: automation.delayMinutes || 0,
+                stats: { triggered: 0, sent: 0, opened: 0, clicked: 0, converted: 0 },
+                createdAt: serverTimestamp(),
+                updatedAt: serverTimestamp(),
+            };
+            await addDoc(collection(db, 'adminEmailAutomations'), dupData);
+        } catch (err) {
+            console.error('[AdminEmailHub] Error duplicating automation:', err);
+        }
+    };
+
+    const openEditAutomation = (automation: EmailAutomation) => {
+        setEditingAutomationId(automation.id);
+        setNewAutomation({
+            name: automation.name,
+            subject: automation.subject || '',
+            description: automation.description || '',
+            delayMinutes: automation.delayMinutes || 0,
+            status: automation.status,
+            steps: automation.steps || [],
+            category: automation.category || 'lifecycle',
+            audienceId: automation.audienceId || '',
+        });
+        // Try to find the matching template
+        const matchingTemplate = data.automations.length > 0
+            ? null
+            : null;
+        setSelectedTemplate(matchingTemplate);
+        setShowCreateAutomation(true);
     };
 
     const toggleAutomationStatus = async (automation: EmailAutomation) => {
@@ -609,6 +713,7 @@ export function useAdminEmailActions(data: AdminEmailDataReturn): AdminEmailActi
         showCreateAutomation, setShowCreateAutomation,
         selectedTemplate, setSelectedTemplate,
         newAutomation, setNewAutomation,
+        editingAutomationId, setEditingAutomationId,
         handleEditCampaignVisual, handleOpenTemplateGallery,
         handleSelectTemplate, handleStartBlank,
         handleSaveFromEditor, handleCloseEditor,
@@ -616,6 +721,7 @@ export function useAdminEmailActions(data: AdminEmailDataReturn): AdminEmailActi
         handleUpdateCampaignStatus, handleUpdateCampaignAudience,
         handleSendTestEmail, handleOpenSendConfirm, handleSendCampaign,
         handleDeleteCampaign, handleDuplicateCampaign,
-        createAutomation, toggleAutomationStatus, deleteAutomation,
+        createAutomation, updateAutomation, duplicateAutomation,
+        toggleAutomationStatus, deleteAutomation, openEditAutomation,
     };
 }

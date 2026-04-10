@@ -119,7 +119,7 @@ Tu rol es ayudar al Super Administrador a:
 1. Planificar y crear campañas de email efectivas
 2. Optimizar subject lines para máximo open rate
 3. Segmentar audiencias de manera inteligente
-4. Diseñar flujos de automatización
+4. Diseñar flujos de automatización multi-paso
 5. Analizar métricas y proponer mejoras
 6. Diseñar emails profesionales usando bloques del editor visual
 
@@ -137,6 +137,19 @@ El sistema usa un editor visual basado en bloques. Los tipos de bloques disponib
 - Pie de Email: Footer con datos legales y enlace de cancelar suscripción
 
 Cuando crees campañas, cada bloque será individualmente editable, reordenable y personalizable en el editor visual.
+
+AUTOMATIZACIONES DE EMAIL:
+El sistema soporta flujos de trabajo multi-paso con un Constructor Visual de nodos. Puedes crear automatizaciones con estos tipos de nodos:
+- ⚡ Trigger: El evento que inicia el flujo (customer.created, cart.abandoned, order.delivered, order.completed, customer.inactive, customer.birthday, browse.abandoned, customer.vip-qualified, customer.no-engagement-90d)
+- 📧 Email: Envío de un email con subject y preview text configurables
+- ⏱️ Delay: Espera antes del siguiente paso (minutos: 60=1h, 1440=1d, 4320=3d, 7200=5d, 10080=7d)
+- 🔀 Condición: Verificación de comportamiento (email-opened, email-clicked, has-tag, purchase-made, custom)
+- 🏷️ Acción: Tagging, mover a audiencia, notificaciones, etc.
+
+Los 10 tipos de automatización disponibles son: welcome, abandoned-cart, post-purchase, win-back, birthday, browse-abandonment, upsell, review-request, vip-reward, sunset.
+Las 4 categorías son: lifecycle (ciclo de vida), conversion, engagement, retention (retención).
+
+Cuando crees automatizaciones, genera flujos de 5-8 pasos con emails, delays y condiciones para crear secuencias inteligentes.
 
 IMPORTANTE: El administrador puede pedirte que CREES campañas, audiencias o automatizaciones directamente.
 Cuando te pida crear algo, genera la respuesta normal conversacional describiendo lo que crearás.
@@ -653,10 +666,10 @@ RESPONDE SOLO CON EL JSON:`;
                 previewText: campaignData.previewText || '',
                 type: campaignData.type || 'newsletter',
                 htmlContent: generatedHtml,
-                emailDocument: aiEmailDocument,
+                emailDocument: JSON.parse(JSON.stringify(aiEmailDocument)),
                 audienceType: 'all' as const,
                 status: 'draft' as CampaignStatus,
-                stats: { totalRecipients: 0, sent: 0, delivered: 0, opened: 0, uniqueOpens: 0, clicked: 0, uniqueClicks: 0, bounced: 0, complained: 0, unsubscribed: 0 },
+                stats: { totalRecipients: 0, sent: 0, delivered: 0, opened: 0, totalOpens: 0, uniqueOpens: 0, clicked: 0, totalClicks: 0, uniqueClicks: 0, bounced: 0, complained: 0, unsubscribed: 0 },
                 tags: ['ai-generated'],
                 createdBy: user?.uid || 'ai-studio',
                 createdAt: serverTimestamp(),
@@ -812,47 +825,141 @@ Conversación:\n${conversationSummary}`;
                 .map(m => `${m.role === 'user' ? 'Admin' : 'AI'}: ${m.text}`)
                 .join('\n');
 
-            const prompt = `Basándote en la conversación anterior, genera los datos para crear una automatización de email.
-Devuelve SOLO un JSON válido con esta estructura exacta (sin markdown, sin backticks):
-{"name":"...","type":"welcome|abandoned-cart|post-purchase|win-back|birthday","subject":"...","triggerEvent":"customer.created|cart.abandoned|order.delivered|customer.inactive|customer.birthday","delayMinutes":60,"status":"draft"}
+            const prompt = `Basándote en la conversación anterior, genera los datos para crear una automatización de email marketing COMPLETA con flujo de trabajo multi-paso.
 
-Conversación:\n${conversationSummary}`;
+Devuelve SOLO un JSON válido (sin markdown, sin backticks) con esta estructura:
+
+{
+  "name": "Nombre de la automatización",
+  "description": "Descripción breve del flujo",
+  "type": "welcome|abandoned-cart|post-purchase|win-back|birthday|browse-abandonment|upsell|review-request|vip-reward|sunset",
+  "category": "lifecycle|conversion|engagement|retention",
+  "triggerEvent": "customer.created|cart.abandoned|order.delivered|order.completed|customer.inactive|customer.birthday|browse.abandoned|customer.vip-qualified|customer.no-engagement-90d",
+  "status": "draft",
+  "steps": [
+    {
+      "id": "t1",
+      "type": "trigger",
+      "label": "Descripción del trigger",
+      "order": 0
+    },
+    {
+      "id": "e1",
+      "type": "email",
+      "label": "Nombre del email",
+      "order": 1,
+      "emailConfig": {
+        "subject": "Línea de asunto del email",
+        "previewText": "Preview text opcional"
+      }
+    },
+    {
+      "id": "d1",
+      "type": "delay",
+      "label": "Esperar X tiempo",
+      "order": 2,
+      "delayConfig": {
+        "delayMinutes": 1440,
+        "delayType": "fixed"
+      }
+    },
+    {
+      "id": "c1",
+      "type": "condition",
+      "label": "¿Condición?",
+      "order": 3,
+      "conditionConfig": {
+        "conditionType": "email-opened|email-clicked|has-tag|purchase-made|custom",
+        "referenceStepId": "e1"
+      }
+    },
+    {
+      "id": "a1",
+      "type": "action",
+      "label": "Descripción de la acción",
+      "order": 4,
+      "actionConfig": {
+        "actionType": "add-tag|remove-tag|move-to-audience|update-field|send-notification",
+        "tagName": "nombre-del-tag"
+      }
+    }
+  ]
+}
+
+REGLAS DE PASOS:
+- El primer paso SIEMPRE debe ser type "trigger" (order 0)
+- Usa múltiples pasos — un flujo profesional tiene 5-8 pasos mínimo
+- Alterna entre emails, delays y condiciones para crear un flujo inteligente
+- Los delays comunes: 60 (1 hora), 1440 (1 día), 4320 (3 días), 7200 (5 días), 10080 (7 días)
+- Si usas condiciones, colócalas DESPUÉS del email que verifican
+- Termina con una acción (tag) cuando sea apropiado
+- Cada "id" debe ser único (usa t1, e1, e2, d1, d2, c1, a1, etc.)
+- Los subjects de emails deben ser creativos y con emojis
+
+EJEMPLO COMPLETO (Serie de Bienvenida):
+{"name":"Serie de Bienvenida","description":"Secuencia de onboarding para nuevos suscriptores","type":"welcome","category":"lifecycle","triggerEvent":"customer.created","status":"draft","steps":[{"id":"t1","type":"trigger","label":"Nuevo suscriptor","order":0},{"id":"e1","type":"email","label":"Email de Bienvenida","order":1,"emailConfig":{"subject":"¡Bienvenido! 🎉 Tu aventura empieza aquí","previewText":"Gracias por unirte a nuestra comunidad"}},{"id":"d1","type":"delay","label":"Esperar 1 día","order":2,"delayConfig":{"delayMinutes":1440,"delayType":"fixed"}},{"id":"e2","type":"email","label":"Guía de Primeros Pasos","order":3,"emailConfig":{"subject":"📚 Guía rápida para empezar","previewText":"Todo lo que necesitas saber"}},{"id":"c1","type":"condition","label":"¿Abrió el email?","order":4,"conditionConfig":{"conditionType":"email-opened","referenceStepId":"e2"}},{"id":"d2","type":"delay","label":"Esperar 3 días","order":5,"delayConfig":{"delayMinutes":4320,"delayType":"fixed"}},{"id":"e3","type":"email","label":"Tips Profesionales","order":6,"emailConfig":{"subject":"💡 5 tips que los pros usan","previewText":"Saca el máximo provecho"}},{"id":"a1","type":"action","label":"Marcar como onboarded","order":7,"actionConfig":{"actionType":"add-tag","tagName":"onboarding-complete"}}]}
+
+Conversación:\n${conversationSummary}
+
+RESPONDE SOLO CON EL JSON:`;
 
             const response = await generateChatContentViaProxy(
                 'ai-email-studio', [], prompt,
-                'Devuelve SOLO JSON válido.', MODEL_TEXT,
-                { temperature: 0.3, maxOutputTokens: 2048 },
+                'Eres un generador de JSON para automatizaciones de email. Devuelve SOLO un JSON válido con la estructura de flujo multi-paso especificada. Sin markdown, sin explicaciones, sin backticks. Solo el JSON puro.',
+                MODEL_TEXT,
+                { temperature: 0.4, maxOutputTokens: 4096 },
                 user?.uid
             );
 
             let responseText = extractTextFromResponse(response) || '';
             responseText = responseText.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+            const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+            if (jsonMatch) responseText = jsonMatch[0];
 
             let autoData: any;
             try {
                 autoData = JSON.parse(responseText);
+                console.log('[AIEmailStudio] ✅ Automation JSON parsed:', autoData.name, '— steps:', autoData.steps?.length);
             } catch {
+                console.warn('[AIEmailStudio] ⚠️ JSON parse failed for automation, using fallback');
                 autoData = {
                     name: `Automatización AI — ${new Date().toLocaleDateString('es-ES')}`,
+                    description: 'Automatización generada por AI Email Studio',
                     type: 'welcome',
-                    subject: 'Automatización generada por AI',
+                    category: 'lifecycle',
                     triggerEvent: 'customer.created',
-                    delayMinutes: 60,
                     status: 'draft',
+                    steps: [
+                        { id: 't1', type: 'trigger', label: 'Nuevo suscriptor', order: 0 },
+                        { id: 'e1', type: 'email', label: 'Email de Bienvenida', order: 1, emailConfig: { subject: '¡Bienvenido! 🎉' } },
+                        { id: 'd1', type: 'delay', label: 'Esperar 1 día', order: 2, delayConfig: { delayMinutes: 1440, delayType: 'fixed' } },
+                        { id: 'e2', type: 'email', label: 'Seguimiento', order: 3, emailConfig: { subject: '¿Cómo va todo? 💬' } },
+                    ],
                 };
             }
 
+            // Sanitize steps for Firestore (strip undefined values)
+            const sanitizedSteps = Array.isArray(autoData.steps)
+                ? autoData.steps.map((s: any) => JSON.parse(JSON.stringify(s)))
+                : [];
+
+            const firstEmailSubject = sanitizedSteps.find((s: any) => s.type === 'email')?.emailConfig?.subject || '';
+
             const newAutomationData = {
                 name: autoData.name || 'Automatización AI',
+                description: autoData.description || '',
                 type: autoData.type || 'welcome',
+                category: autoData.category || 'lifecycle',
                 status: autoData.status || 'draft',
                 triggerConfig: {
                     type: 'event' as const,
                     event: autoData.triggerEvent || 'customer.created',
                 },
+                audienceId: '',
+                steps: sanitizedSteps,
                 templateId: '',
-                subject: autoData.subject || '',
-                delayMinutes: autoData.delayMinutes || 60,
+                subject: firstEmailSubject,
+                delayMinutes: sanitizedSteps.find((s: any) => s.type === 'delay')?.delayConfig?.delayMinutes || 60,
                 stats: { triggered: 0, sent: 0, opened: 0, clicked: 0, converted: 0 },
                 createdAt: serverTimestamp(),
                 updatedAt: serverTimestamp(),
@@ -861,9 +968,47 @@ Conversación:\n${conversationSummary}`;
             const docRef = await addDoc(collection(db, 'adminEmailAutomations'), newAutomationData);
             setAiCreatedItems(prev => [...prev, { type: 'automation', name: autoData.name, id: docRef.id, timestamp: Date.now() }]);
 
+            // Build step summary for the confirmation message
+            const stepLabels: Record<string, string> = {
+                trigger: '⚡ Trigger',
+                email: '📧 Email',
+                delay: '⏱️ Espera',
+                condition: '🔀 Condición',
+                action: '🏷️ Acción',
+            };
+            const stepsSummary = sanitizedSteps.map((s: any) =>
+                `  ${stepLabels[s.type] || s.type}: **${s.label}**${s.emailConfig?.subject ? ` — _"${s.emailConfig.subject}"_` : ''}${s.delayConfig?.delayMinutes ? ` (${formatDelay(s.delayConfig.delayMinutes)})` : ''}`
+            ).join('\n');
+
+            const triggerLabels: Record<string, string> = {
+                'customer.created': 'Nuevo cliente',
+                'cart.abandoned': 'Carrito abandonado',
+                'order.delivered': 'Pedido entregado',
+                'order.completed': 'Compra completada',
+                'customer.inactive': 'Cliente inactivo',
+                'customer.birthday': 'Cumpleaños',
+                'browse.abandoned': 'Navegación sin conversión',
+                'customer.vip-qualified': 'Nivel VIP alcanzado',
+                'customer.no-engagement-90d': 'Sin interacción 90 días',
+            };
+
+            const totalDelayMins = sanitizedSteps.reduce((sum: number, s: any) =>
+                sum + (s.type === 'delay' ? (s.delayConfig?.delayMinutes || 0) : 0), 0);
+
             const confirmMsg: DisplayMessage = {
                 role: 'model',
-                text: `✅ **Automatización creada exitosamente!**\n\n- **Nombre:** ${autoData.name}\n- **Tipo:** ${autoData.type}\n- **Trigger:** ${autoData.triggerEvent}\n- **Delay:** ${formatDelay(autoData.delayMinutes)}\n- **Estado:** ${autoData.status}\n- **ID:** \`${docRef.id}\`\n\nLa automatización está lista. Puedes gestionarla desde la pestaña de Automatizaciones.`,
+                text: `✅ **Automatización creada exitosamente!**\n\n` +
+                    `- **Nombre:** ${autoData.name}\n` +
+                    `- **Descripción:** ${autoData.description || '—'}\n` +
+                    `- **Tipo:** ${autoData.type}\n` +
+                    `- **Categoría:** ${autoData.category}\n` +
+                    `- **Trigger:** ${triggerLabels[autoData.triggerEvent] || autoData.triggerEvent}\n` +
+                    `- **Pasos:** ${sanitizedSteps.length}\n` +
+                    `- **Duración total:** ${totalDelayMins > 0 ? formatDelay(totalDelayMins) : 'Instantáneo'}\n` +
+                    `- **Estado:** Borrador\n` +
+                    `- **ID:** \`${docRef.id}\`\n\n` +
+                    `**Flujo de trabajo:**\n${stepsSummary}\n\n` +
+                    `📝 La automatización ya aparece en la pestaña de **Automatizaciones**. Puedes editarla con el **Constructor Visual** para ajustar los pasos, cambiar subjects, o añadir condiciones.`,
                 timestamp: Date.now(),
             };
             setAiMessages(prev => [...prev, confirmMsg]);
@@ -871,7 +1016,12 @@ Conversación:\n${conversationSummary}`;
 
         } catch (error) {
             console.error('[AIEmailStudio] Automation creation error:', error);
-            setAiMessages(prev => [...prev, { role: 'model', text: '⚠️ Error al crear la automatización. Intenta de nuevo.', timestamp: Date.now() }]);
+            const errorDetail = error instanceof Error ? error.message : String(error);
+            setAiMessages(prev => [...prev, {
+                role: 'model',
+                text: `⚠️ **Error al crear la automatización:**\n\n\`${errorDetail}\`\n\nPor favor intenta de nuevo.`,
+                timestamp: Date.now(),
+            }]);
         } finally {
             setAiCreating(null);
         }

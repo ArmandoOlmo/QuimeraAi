@@ -316,8 +316,70 @@ export interface TemplateVariable {
 // EMAIL AUTOMATION
 // =============================================================================
 
-export type AutomationType = 'welcome' | 'abandoned-cart' | 'post-purchase' | 'win-back' | 'birthday';
+export type AutomationType =
+    | 'welcome'
+    | 'abandoned-cart'
+    | 'post-purchase'
+    | 'win-back'
+    | 'birthday'
+    | 'browse-abandonment'
+    | 'upsell'
+    | 'review-request'
+    | 'vip-reward'
+    | 'sunset';
+
 export type AutomationStatus = 'active' | 'paused' | 'draft';
+export type AutomationCategory = 'lifecycle' | 'conversion' | 'engagement' | 'retention';
+
+// Workflow step types for the visual builder
+export type WorkflowStepType = 'trigger' | 'email' | 'delay' | 'condition' | 'action';
+
+export interface WorkflowStepEmail {
+    subject: string;
+    previewText?: string;
+    campaignId?: string;       // link to an existing campaign with visual content
+    templateId?: string;       // or link to a template
+    htmlContent?: string;      // inline HTML content
+}
+
+export interface WorkflowStepDelay {
+    delayMinutes: number;
+    delayType: 'fixed' | 'until-time';  // fixed delay or wait until specific time of day
+    untilHour?: number;                 // 0-23, used when delayType === 'until-time'
+}
+
+export interface WorkflowStepCondition {
+    conditionType: 'email-opened' | 'email-clicked' | 'has-tag' | 'purchase-made' | 'custom';
+    referenceStepId?: string;   // which email step this condition checks
+    tagName?: string;           // for has-tag condition
+    customField?: string;       // for custom condition
+    customValue?: string;
+}
+
+export interface WorkflowStepAction {
+    actionType: 'add-tag' | 'remove-tag' | 'move-to-audience' | 'update-field' | 'send-notification';
+    tagName?: string;
+    audienceId?: string;
+    fieldName?: string;
+    fieldValue?: string;
+    notificationEmail?: string;
+}
+
+export interface AutomationWorkflowStep {
+    id: string;
+    type: WorkflowStepType;
+    label: string;
+    // Type-specific configuration (only one populated based on type)
+    emailConfig?: WorkflowStepEmail;
+    delayConfig?: WorkflowStepDelay;
+    conditionConfig?: WorkflowStepCondition;
+    actionConfig?: WorkflowStepAction;
+    // For condition nodes — which step to branch to on true/false
+    trueBranchStepId?: string;
+    falseBranchStepId?: string;
+    // Position in the sequence
+    order: number;
+}
 
 /**
  * Automatización de email
@@ -325,17 +387,23 @@ export type AutomationStatus = 'active' | 'paused' | 'draft';
 export interface EmailAutomation {
     id: string;
     name: string;
+    description?: string;
     type: AutomationType;
     status: AutomationStatus;
+    category?: AutomationCategory;
 
     // Trigger configuration
     triggerConfig: AutomationTrigger;
 
-    // Email to send
+    // Target audience (optional — defaults to all matching trigger)
+    audienceId?: string;
+
+    // Multi-step workflow (the visual builder steps)
+    steps?: AutomationWorkflowStep[];
+
+    // Legacy single-email fields (kept for backward compat)
     templateId: string;
     subject: string;
-
-    // Delay before sending
     delayMinutes: number;
 
     // Stats
@@ -353,7 +421,7 @@ export interface EmailAutomation {
 
 export interface AutomationTrigger {
     type: 'event' | 'schedule';
-    event?: string; // 'customer.created', 'cart.abandoned', 'order.delivered'
+    event?: string; // 'customer.created', 'cart.abandoned', 'order.delivered', etc.
     schedule?: string; // cron expression
     conditions?: AudienceFilter[];
 }

@@ -46,6 +46,7 @@ import { formatDate, getStatusColor, getStatusIcon, formatDelay } from './email-
 // View components
 import OverviewTab from './email-hub/views/OverviewTab';
 import AnalyticsTab from './email-hub/views/AnalyticsTab';
+import AutomationsTab from './email-hub/views/AutomationsTab';
 
 // =============================================================================
 // COMPONENT
@@ -93,7 +94,9 @@ const AdminEmailHub: React.FC<AdminEmailHubProps> = ({ onBack }) => {
         handleUpdateCampaignStatus, handleUpdateCampaignAudience,
         handleSendTestEmail, handleOpenSendConfirm, handleSendCampaign,
         handleDeleteCampaign, handleDuplicateCampaign,
-        createAutomation, toggleAutomationStatus, deleteAutomation,
+        createAutomation, updateAutomation, duplicateAutomation,
+        toggleAutomationStatus, deleteAutomation, openEditAutomation,
+        editingAutomationId, setEditingAutomationId,
     } = actions;
 
     const {
@@ -776,85 +779,6 @@ const AdminEmailHub: React.FC<AdminEmailHubProps> = ({ onBack }) => {
     );
 
     // =============================================================================
-    // RENDER: AUTOMATIONS
-    // =============================================================================
-
-    const renderAutomations = () => (
-        <div className="space-y-6">
-            <div>
-                <h2 className="text-lg font-bold text-editor-text-primary">Automatizaciones</h2>
-                <p className="text-sm text-editor-text-secondary">Flujos automáticos y templates</p>
-            </div>
-            {/* Active automations */}
-            {automations.length > 0 && (
-                <div className="bg-editor-panel-bg border border-editor-border rounded-xl p-6">
-                    <h3 className="text-sm font-bold text-editor-text-secondary uppercase tracking-wider mb-4">Automatizaciones Activas</h3>
-                    <div className="space-y-3">
-                        {automations.map(auto => (
-                            <div key={auto.id} className="flex items-center justify-between p-4 bg-editor-bg/50 border border-editor-border rounded-xl">
-                                <div className="flex-1 min-w-0">
-                                    <p className="text-sm font-semibold text-editor-text-primary">{auto.name}</p>
-                                    <p className="text-xs text-editor-text-secondary mt-0.5">Tipo: {auto.type} • Delay: {formatDelay(auto.delayMinutes || 0)} • Trigger: {auto.triggerConfig?.event || auto.triggerConfig?.type || '—'}</p>
-                                </div>
-                                <div className="flex items-center gap-2 ml-4">
-                                    <span className={`px-2 py-0.5 text-xs rounded-full border ${getStatusColor(auto.status)}`}>{auto.status}</span>
-                                    <button onClick={() => toggleAutomationStatus(auto)} className="p-2 hover:bg-editor-border/40 rounded-lg transition-colors" title={auto.status === 'active' ? 'Pausar' : 'Activar'}>
-                                        {auto.status === 'active' ? <Pause size={14} className="text-amber-400" /> : <Play size={14} className="text-green-400" />}
-                                    </button>
-                                    <button onClick={() => { setConfirmModal({ show: true, title: 'Eliminar Automatización', message: `¿Eliminar "${auto.name}"?`, onConfirm: async () => { await deleteAutomation(auto.id); setConfirmModal(prev => ({ ...prev, show: false })); } }); }} className="p-2 hover:bg-red-500/10 rounded-lg transition-colors"><Trash2 size={14} className="text-red-400" /></button>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            )}
-            {/* Template Gallery */}
-            <div className="bg-editor-panel-bg border border-editor-border rounded-xl p-6">
-                <h3 className="text-sm font-bold text-editor-text-secondary uppercase tracking-wider mb-4">Templates de Automatización</h3>
-                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {AUTOMATION_TEMPLATES.map(template => (
-                        <button key={template.id} onClick={() => { setSelectedTemplate(template); setNewAutomation({ name: template.name, subject: '', delayMinutes: template.defaultDelay, status: 'draft' }); setShowCreateAutomation(true); }} className="flex flex-col items-start gap-3 p-4 bg-editor-bg border border-editor-border rounded-xl hover:border-editor-accent/30 transition-all text-left">
-                            <div className={`p-2.5 rounded-xl ${template.color}`}>{template.icon}</div>
-                            <div>
-                                <p className="text-sm font-semibold text-editor-text-primary">{template.name}</p>
-                                <p className="text-xs text-editor-text-secondary mt-1 line-clamp-2">{template.description}</p>
-                            </div>
-                            <span className="text-[10px] text-editor-text-secondary uppercase tracking-wider">{template.category}</span>
-                        </button>
-                    ))}
-                </div>
-            </div>
-            {/* Create Automation Modal */}
-            {showCreateAutomation && selectedTemplate && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" onClick={() => setShowCreateAutomation(false)}>
-                    <div className="bg-editor-bg border border-editor-border w-full max-w-md rounded-2xl shadow-2xl" onClick={e => e.stopPropagation()}>
-                        <div className="p-5 border-b border-editor-border flex items-center justify-between">
-                            <h2 className="text-lg font-bold text-editor-text-primary">Crear Automatización</h2>
-                            <button onClick={() => setShowCreateAutomation(false)} className="p-2 hover:bg-editor-border/40 rounded-lg"><X size={18} className="text-editor-text-secondary" /></button>
-                        </div>
-                        <div className="p-5 space-y-4">
-                            <div className={`flex items-center gap-3 p-3 rounded-xl ${selectedTemplate.color}`}>
-                                {selectedTemplate.icon}
-                                <div>
-                                    <p className="text-sm font-semibold">{selectedTemplate.name}</p>
-                                    <p className="text-xs opacity-70">{selectedTemplate.category}</p>
-                                </div>
-                            </div>
-                            <div><label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-1.5 block">Nombre</label><input type="text" value={newAutomation.name} onChange={e => setNewAutomation(prev => ({ ...prev, name: e.target.value }))} className="w-full bg-editor-panel-bg border border-editor-border rounded-xl px-4 py-2.5 text-sm text-editor-text-primary focus:outline-none focus:ring-2 focus:ring-purple-500/50" /></div>
-                            <div><label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-1.5 block">Asunto del Email</label><input type="text" value={newAutomation.subject} onChange={e => setNewAutomation(prev => ({ ...prev, subject: e.target.value }))} className="w-full bg-editor-panel-bg border border-editor-border rounded-xl px-4 py-2.5 text-sm text-editor-text-primary focus:outline-none focus:ring-2 focus:ring-purple-500/50" placeholder={`${selectedTemplate.name} — Automático`} /></div>
-                            <div><label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-1.5 block">Delay (minutos)</label><input type="number" value={newAutomation.delayMinutes} onChange={e => setNewAutomation(prev => ({ ...prev, delayMinutes: parseInt(e.target.value) || 0 }))} className="w-full bg-editor-panel-bg border border-editor-border rounded-xl px-4 py-2.5 text-sm text-editor-text-primary focus:outline-none focus:ring-2 focus:ring-purple-500/50" /><p className="text-[10px] text-editor-text-secondary mt-1">= {formatDelay(newAutomation.delayMinutes)}</p></div>
-                        </div>
-                        <div className="p-5 border-t border-editor-border flex justify-end gap-3">
-                            <button onClick={() => setShowCreateAutomation(false)} className="px-4 py-2 text-sm text-editor-text-secondary">Cancelar</button>
-                            <button onClick={createAutomation} disabled={!newAutomation.name} className="px-4 py-2 bg-gradient-to-r from-purple-500 to-blue-500 text-white text-sm font-bold rounded-xl disabled:opacity-50">Crear</button>
-                        </div>
-                    </div>
-                </div>
-            )}
-        </div>
-    );
-
-    // =============================================================================
     // RENDER: AI STUDIO
     // =============================================================================
 
@@ -1010,7 +934,28 @@ const AdminEmailHub: React.FC<AdminEmailHubProps> = ({ onBack }) => {
                             {activeTab === 'campaigns' && renderCampaigns()}
                             {activeTab === 'audiences' && renderAudiences()}
                             {activeTab === 'analytics' && <AnalyticsTab stats={stats} campaigns={campaigns} monthlyData={monthlyData} tenantPerformance={tenantPerformance} tenants={tenants} />}
-                            {activeTab === 'automations' && renderAutomations()}
+                            {activeTab === 'automations' && (
+                                <AutomationsTab
+                                    automations={automations}
+                                    audiences={audiences}
+                                    showCreateAutomation={showCreateAutomation}
+                                    setShowCreateAutomation={setShowCreateAutomation}
+                                    selectedTemplate={selectedTemplate}
+                                    setSelectedTemplate={setSelectedTemplate}
+                                    newAutomation={newAutomation}
+                                    setNewAutomation={setNewAutomation}
+                                    editingAutomationId={editingAutomationId}
+                                    setEditingAutomationId={setEditingAutomationId}
+                                    createAutomation={createAutomation}
+                                    updateAutomation={updateAutomation}
+                                    duplicateAutomation={duplicateAutomation}
+                                    toggleAutomationStatus={toggleAutomationStatus}
+                                    deleteAutomation={deleteAutomation}
+                                    openEditAutomation={openEditAutomation}
+                                    confirmModal={confirmModal}
+                                    setConfirmModal={setConfirmModal}
+                                />
+                            )}
                             {activeTab === 'ai-studio' && renderAIStudio()}
                         </>
                     )}
