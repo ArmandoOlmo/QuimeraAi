@@ -24,7 +24,7 @@ import {
     Sparkles, Bot, Mic, MicOff, Volume2, VolumeX, X, Loader2,
     RefreshCcw, CheckCircle, XCircle, ArrowRight, Settings2,
     Building2, Globe, Tag, Layers, PhoneOff, FileText, Upload, Download,
-    TrendingDown, Activity, AlertTriangle,
+    TrendingDown, Activity, AlertTriangle, TestTube,
 } from 'lucide-react';
 import { LiveServerMessage, Modality } from '@google/genai';
 import { getGoogleGenAI } from '../../../utils/genAiClient';
@@ -36,6 +36,7 @@ import {
     updateDoc, deleteDoc, setDoc, onSnapshot,
 } from '../../../firebase';
 import { serverTimestamp } from 'firebase/firestore';
+import { getFunctions, httpsCallable } from 'firebase/functions';
 import {
     generateChatContentViaProxy,
     extractTextFromResponse,
@@ -322,6 +323,13 @@ const AdminEmailHub: React.FC<AdminEmailHubProps> = ({ onBack }) => {
     const [audienceMembers, setAudienceMembers] = useState<Record<string, { email: string; name?: string }[]>>({});
     const [addUserSearch, setAddUserSearch] = useState('');
     const [addUserSelectedIds, setAddUserSelectedIds] = useState<string[]>([]);
+
+    // Test email modal state
+    const [showTestEmailModal, setShowTestEmailModal] = useState(false);
+    const [testEmail, setTestEmail] = useState('');
+    const [sendingTest, setSendingTest] = useState(false);
+    const [testSendError, setTestSendError] = useState<string | null>(null);
+    const [testSendSuccess, setTestSendSuccess] = useState<string | null>(null);
 
     // Confirmation modal state (replaces native browser confirm())
     const [confirmModal, setConfirmModal] = useState<{
@@ -1671,6 +1679,60 @@ Conversación:\n${conversationSummary}`;
         setEditingCampaignId(null);
     };
 
+    /** Send a test email to a specified address */
+    const handleSendTestEmail = async () => {
+        if (!testEmail || !emailDocument) return;
+
+        setSendingTest(true);
+        setTestSendError(null);
+        setTestSendSuccess(null);
+
+        try {
+            const functions = getFunctions();
+            const sendTestFn = httpsCallable(functions, 'sendTestEmail');
+
+            // Generate HTML from email document
+            const fullDoc: EmailDocument = {
+                id: emailDocument.id || 'admin-test',
+                name: emailDocument.name || 'Test Email',
+                subject: emailDocument.subject || 'Test Email',
+                previewText: emailDocument.previewText || '',
+                blocks: emailDocument.blocks || [],
+                globalStyles: emailDocument.globalStyles || DEFAULT_EMAIL_GLOBAL_STYLES,
+                createdAt: Date.now(),
+                updatedAt: Date.now(),
+            };
+
+            const htmlContent = generateEmailHtml(fullDoc);
+
+            const result = await sendTestFn({
+                userId: user?.uid || 'admin',
+                storeId: 'admin',
+                campaignId: editingCampaignId || 'admin-test',
+                testEmail,
+                htmlContent,
+                subject: fullDoc.subject,
+            });
+
+            const data = result.data as any;
+
+            if (data.success) {
+                setTestSendSuccess(`Email de prueba enviado a ${testEmail}`);
+                setTimeout(() => {
+                    setShowTestEmailModal(false);
+                    setTestSendSuccess(null);
+                }, 3000);
+            } else {
+                throw new Error(data.error || 'Error desconocido');
+            }
+        } catch (err: any) {
+            console.error('Error sending test email:', err);
+            setTestSendError(err.message || 'Error al enviar email de prueba');
+        } finally {
+            setSendingTest(false);
+        }
+    };
+
     /** Delete a campaign with confirmation */
     const handleDeleteCampaign = async (campaign: CrossTenantCampaign) => {
         setConfirmModal({
@@ -2001,12 +2063,83 @@ Conversación:\n${conversationSummary}`;
                         initialDocument={emailDocument}
                         onSave={handleSaveFromEditor}
                         onClose={handleCloseEditor}
+                        onSendTest={() => {
+                            setTestEmail('');
+                            setTestSendError(null);
+                            setShowTestEmailModal(true);
+                        }}
                         campaignId={editingCampaignId || undefined}
                         campaignName={editingCampaignId
                             ? campaigns.find(c => c.id === editingCampaignId)?.name
                             : newCampaignForm.name || undefined
                         }
                     />
+                </div>
+            )}
+
+            {/* ===== TEST EMAIL MODAL ===== */}
+            {showTestEmailModal && (
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[200] flex items-center justify-center p-4">
+                    <div className="bg-card rounded-xl border border-border w-full max-w-md shadow-2xl">
+                        <div className="p-6 border-b border-border flex items-center justify-between">
+                            <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
+                                <TestTube size={20} className="text-blue-500" />
+                                Enviar Email de Prueba
+                            </h3>
+                            <button
+                                onClick={() => { setShowTestEmailModal(false); setTestSendError(null); }}
+                                className="p-2 hover:bg-muted rounded-lg transition-colors"
+                            >
+                                <X size={20} className="text-muted-foreground" />
+                            </button>
+                        </div>
+                        <div className="p-6 space-y-4">
+                            <p className="text-muted-foreground text-sm">
+                                Envía una versión de prueba de esta campaña a tu correo para revisarla antes de enviar.
+                            </p>
+                            <div>
+                                <label className="block text-sm font-medium text-foreground mb-1">
+                                    Email de prueba *
+                                </label>
+                                <input
+                                    type="email"
+                                    value={testEmail}
+                                    onChange={(e) => setTestEmail(e.target.value)}
+                                    placeholder="tu@email.com"
+                                    className="w-full px-4 py-2 bg-muted/50 border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                                    onKeyDown={(e) => { if (e.key === 'Enter' && testEmail) handleSendTestEmail(); }}
+                                />
+                            </div>
+                            {testSendError && (
+                                <p className="text-red-500 text-sm flex items-center gap-1.5">
+                                    <AlertCircle size={14} />
+                                    {testSendError}
+                                </p>
+                            )}
+                            {testSendSuccess && (
+                                <p className="text-green-500 text-sm flex items-center gap-1.5">
+                                    <CheckCircle size={14} />
+                                    {testSendSuccess}
+                                </p>
+                            )}
+                        </div>
+                        <div className="p-6 border-t border-border flex justify-end gap-3">
+                            <button
+                                onClick={() => { setShowTestEmailModal(false); setTestSendError(null); }}
+                                className="px-4 py-2 border border-border rounded-lg text-foreground hover:bg-muted transition-colors"
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                onClick={handleSendTestEmail}
+                                disabled={!testEmail || sendingTest}
+                                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {sendingTest ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
+                                Enviar prueba
+                            </button>
+                        </div>
+                    </div>
                 </div>
             )}
 
