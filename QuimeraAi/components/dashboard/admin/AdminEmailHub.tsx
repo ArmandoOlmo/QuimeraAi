@@ -337,6 +337,10 @@ const AdminEmailHub: React.FC<AdminEmailHubProps> = ({ onBack }) => {
     const [sendCampaignError, setSendCampaignError] = useState<string | null>(null);
     const [sendCampaignSuccess, setSendCampaignSuccess] = useState<string | null>(null);
 
+    // Campaign detail panel state
+    const [showDetailPanel, setShowDetailPanel] = useState(false);
+    const [detailCampaign, setDetailCampaign] = useState<CrossTenantCampaign | null>(null);
+
     // Confirmation modal state (replaces native browser confirm())
     const [confirmModal, setConfirmModal] = useState<{
         show: boolean;
@@ -1397,6 +1401,7 @@ Conversación:\n${conversationSummary}`;
         switch (status) {
             case 'sent': return 'bg-green-500/20 text-green-400 border-green-500/30';
             case 'draft': return 'bg-gray-500/20 text-gray-400 border-gray-500/30';
+            case 'approved': return 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30';
             case 'scheduled': return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
             case 'sending': return 'bg-amber-500/20 text-amber-400 border-amber-500/30';
             case 'paused': return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
@@ -1410,6 +1415,7 @@ Conversación:\n${conversationSummary}`;
         switch (status) {
             case 'sent': return <CheckCircle size={14} />;
             case 'draft': return <Edit2 size={14} />;
+            case 'approved': return <CheckCircle size={14} />;
             case 'scheduled': return <Clock size={14} />;
             case 'sending': return <Send size={14} />;
             case 'paused': return <Pause size={14} />;
@@ -1685,6 +1691,77 @@ Conversación:\n${conversationSummary}`;
         setShowEmailEditor(false);
         setEmailDocument(null);
         setEditingCampaignId(null);
+    };
+
+    /** Open campaign detail panel */
+    const openDetailPanel = (campaign: CrossTenantCampaign) => {
+        setDetailCampaign(campaign);
+        setShowDetailPanel(true);
+    };
+
+    /** Update campaign status in Firestore */
+    const handleUpdateCampaignStatus = async (campaignId: string, newStatus: CampaignStatus) => {
+        try {
+            const campaign = campaigns.find(c => c.id === campaignId);
+            const collectionPath = campaign?.tenantId === 'admin'
+                ? 'adminEmailCampaigns'
+                : `users/${campaign?.userId}/projects/${campaign?.projectId}/emailCampaigns`;
+            
+            await updateDoc(doc(db, collectionPath, campaignId), {
+                status: newStatus,
+                updatedAt: serverTimestamp(),
+            });
+
+            // Update local state
+            setCampaigns(prev => prev.map(c =>
+                c.id === campaignId ? { ...c, status: newStatus, updatedAt: new Date() } as any : c
+            ));
+            // Also update detail panel if it's showing this campaign
+            if (detailCampaign?.id === campaignId) {
+                setDetailCampaign(prev => prev ? { ...prev, status: newStatus } as any : null);
+            }
+        } catch (err) {
+            console.error('[AdminEmailHub] Error updating campaign status:', err);
+        }
+    };
+
+    /** Update campaign audience in Firestore */
+    const handleUpdateCampaignAudience = async (
+        campaignId: string,
+        audienceType: 'all' | 'segment' | 'custom',
+        audienceSegmentId?: string,
+        customRecipientEmails?: string[]
+    ) => {
+        try {
+            const campaign = campaigns.find(c => c.id === campaignId);
+            const collectionPath = campaign?.tenantId === 'admin'
+                ? 'adminEmailCampaigns'
+                : `users/${campaign?.userId}/projects/${campaign?.projectId}/emailCampaigns`;
+            
+            const updates: Record<string, any> = {
+                audienceType,
+                updatedAt: serverTimestamp(),
+            };
+            if (audienceType === 'segment' && audienceSegmentId) {
+                updates.audienceSegmentId = audienceSegmentId;
+            }
+            if (audienceType === 'custom' && customRecipientEmails) {
+                updates.customRecipientEmails = customRecipientEmails;
+            }
+
+            await updateDoc(doc(db, collectionPath, campaignId), updates);
+
+            // Update local state
+            const updatedCampaign = { ...campaign!, audienceType, audienceSegmentId: audienceSegmentId || '', customRecipientEmails: customRecipientEmails || [] };
+            setCampaigns(prev => prev.map(c =>
+                c.id === campaignId ? { ...c, ...updatedCampaign } as any : c
+            ));
+            if (detailCampaign?.id === campaignId) {
+                setDetailCampaign(prev => prev ? { ...prev, ...updatedCampaign } as any : null);
+            }
+        } catch (err) {
+            console.error('[AdminEmailHub] Error updating campaign audience:', err);
+        }
     };
 
     /** Send a test email to a specified address */
@@ -1966,6 +2043,7 @@ Conversación:\n${conversationSummary}`;
                             <thead>
                                 <tr className="border-b border-editor-border">
                                     <th className="text-left px-4 py-3 text-xs font-medium text-editor-text-secondary uppercase tracking-wider">Campaña</th>
+                                    <th className="text-left px-4 py-3 text-xs font-medium text-editor-text-secondary uppercase tracking-wider">Audiencia</th>
                                     <th className="text-left px-4 py-3 text-xs font-medium text-editor-text-secondary uppercase tracking-wider">Tenant</th>
                                     <th className="text-left px-4 py-3 text-xs font-medium text-editor-text-secondary uppercase tracking-wider">Estado</th>
                                     <th className="text-right px-4 py-3 text-xs font-medium text-editor-text-secondary uppercase tracking-wider">Enviados</th>
@@ -1978,11 +2056,18 @@ Conversación:\n${conversationSummary}`;
                                 {filteredCampaigns.map(campaign => (
                                     <tr
                                         key={`${campaign.userId}-${campaign.projectId}-${campaign.id}`}
-                                        className="hover:bg-editor-bg/50 transition-colors group"
+                                        className="hover:bg-editor-bg/50 transition-colors group cursor-pointer"
+                                        onClick={() => openDetailPanel(campaign)}
                                     >
                                         <td className="px-4 py-3">
                                             <p className="text-sm font-medium text-editor-text-primary truncate max-w-[200px]">{campaign.name}</p>
                                             <p className="text-xs text-editor-text-secondary truncate max-w-[200px]">{campaign.subject}</p>
+                                        </td>
+                                        <td className="px-4 py-3">
+                                            <span className="text-xs text-editor-text-secondary flex items-center gap-1">
+                                                <Target size={12} />
+                                                {campaign.audienceType === 'all' ? 'Todos' : campaign.audienceType === 'segment' ? (() => { const aud = audiences.find(a => a.id === campaign.audienceSegmentId); return aud ? aud.name : 'Segmento'; })() : 'Custom'}
+                                            </span>
                                         </td>
                                         <td className="px-4 py-3">
                                             <span className="text-xs text-editor-text-secondary flex items-center gap-1">
@@ -2011,8 +2096,28 @@ Conversación:\n${conversationSummary}`;
                                         </td>
                                         <td className="px-4 py-3">
                                             <div className="flex items-center justify-end gap-1">
-                                                {/* Send — only for drafts */}
+                                                {/* Approve — only for drafts */}
                                                 {campaign.status === 'draft' && (
+                                                    <button
+                                                        onClick={(e) => { e.stopPropagation(); handleUpdateCampaignStatus(campaign.id, 'approved' as CampaignStatus); }}
+                                                        className="p-2 hover:bg-emerald-500/20 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
+                                                        title="Aprobar campaña"
+                                                    >
+                                                        <CheckCircle size={15} className="text-emerald-400" />
+                                                    </button>
+                                                )}
+                                                {/* Back to Draft — only for approved */}
+                                                {campaign.status === 'approved' && (
+                                                    <button
+                                                        onClick={(e) => { e.stopPropagation(); handleUpdateCampaignStatus(campaign.id, 'draft' as CampaignStatus); }}
+                                                        className="p-2 hover:bg-gray-500/20 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
+                                                        title="Volver a borrador"
+                                                    >
+                                                        <Edit2 size={15} className="text-gray-400" />
+                                                    </button>
+                                                )}
+                                                {/* Send — only for drafts or approved */}
+                                                {(campaign.status === 'draft' || campaign.status === 'approved') && (
                                                     <button
                                                         onClick={(e) => { e.stopPropagation(); handleOpenSendConfirm(campaign.id); }}
                                                         className="p-2 hover:bg-green-500/20 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
@@ -2021,8 +2126,8 @@ Conversación:\n${conversationSummary}`;
                                                         <Play size={15} className="text-green-400" />
                                                     </button>
                                                 )}
-                                                {/* Send Test — only for drafts */}
-                                                {campaign.status === 'draft' && (
+                                                {/* Send Test — only for drafts or approved */}
+                                                {(campaign.status === 'draft' || campaign.status === 'approved') && (
                                                     <button
                                                         onClick={(e) => {
                                                             e.stopPropagation();
@@ -2251,7 +2356,7 @@ Conversación:\n${conversationSummary}`;
 
             {/* ===== VISUAL EMAIL EDITOR — Respects sidebar ===== */}
             {showEmailEditor && emailDocument && (
-                <div className="fixed inset-0 md:left-72 z-50 bg-editor-bg">
+                <div className="absolute inset-0 z-40 bg-editor-bg">
                     <AdminEmailEditorWrapper
                         initialDocument={emailDocument}
                         onSave={handleSaveFromEditor}
@@ -2385,6 +2490,249 @@ Conversación:\n${conversationSummary}`;
                     </div>
                 );
             })()}
+
+            {/* ===== CAMPAIGN DETAIL SIDE PANEL ===== */}
+            {showDetailPanel && detailCampaign && (
+                <div className="fixed inset-0 z-[180] flex" onClick={() => { setShowDetailPanel(false); setDetailCampaign(null); }}>
+                    {/* Backdrop */}
+                    <div className="flex-1 bg-black/40 backdrop-blur-sm" />
+                    {/* Panel */}
+                    <div
+                        className="w-full max-w-lg bg-editor-bg border-l border-editor-border shadow-2xl overflow-y-auto animate-in slide-in-from-right duration-300"
+                        onClick={e => e.stopPropagation()}
+                    >
+                        {/* Header */}
+                        <div className="sticky top-0 z-10 bg-editor-bg border-b border-editor-border p-5">
+                            <div className="flex items-center justify-between mb-3">
+                                <h3 className="text-lg font-bold text-editor-text-primary truncate pr-4">{detailCampaign.name}</h3>
+                                <button
+                                    onClick={() => { setShowDetailPanel(false); setDetailCampaign(null); }}
+                                    className="p-2 hover:bg-editor-border/40 rounded-lg transition-colors shrink-0"
+                                >
+                                    <X size={18} className="text-editor-text-secondary" />
+                                </button>
+                            </div>
+                            <p className="text-sm text-editor-text-secondary truncate">{detailCampaign.subject}</p>
+                        </div>
+
+                        <div className="p-5 space-y-6">
+                            {/* Status Section */}
+                            <div>
+                                <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2 block">Estado</label>
+                                <div className="flex items-center gap-3">
+                                    <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-full border font-medium ${getStatusColor(detailCampaign.status)}`}>
+                                        {getStatusIcon(detailCampaign.status)}
+                                        {detailCampaign.status === 'draft' ? 'Borrador' : detailCampaign.status === 'approved' ? 'Aprobada' : detailCampaign.status === 'sent' ? 'Enviada' : detailCampaign.status === 'sending' ? 'Enviando...' : detailCampaign.status}
+                                    </span>
+                                    {detailCampaign.status !== 'sent' && detailCampaign.status !== 'sending' && (
+                                        <select
+                                            value={detailCampaign.status}
+                                            onChange={(e) => handleUpdateCampaignStatus(detailCampaign.id, e.target.value as CampaignStatus)}
+                                            className="px-3 py-1.5 bg-editor-panel-bg border border-editor-border rounded-lg text-sm text-editor-text-primary focus:outline-none focus:ring-2 focus:ring-editor-accent"
+                                        >
+                                            <option value="draft">Borrador</option>
+                                            <option value="approved">Aprobada</option>
+                                        </select>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Audience Section */}
+                            <div>
+                                <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2 block flex items-center gap-1.5">
+                                    <Target size={14} />
+                                    Audiencia
+                                </label>
+                                {detailCampaign.status !== 'sent' && detailCampaign.status !== 'sending' ? (
+                                    <div className="space-y-3">
+                                        <select
+                                            value={detailCampaign.audienceType || 'all'}
+                                            onChange={(e) => {
+                                                const newType = e.target.value as 'all' | 'segment' | 'custom';
+                                                handleUpdateCampaignAudience(detailCampaign.id, newType);
+                                            }}
+                                            className="w-full px-3 py-2.5 bg-editor-panel-bg border border-editor-border rounded-xl text-sm text-editor-text-primary focus:outline-none focus:ring-2 focus:ring-editor-accent"
+                                        >
+                                            <option value="all">📋 Todos los contactos</option>
+                                            <option value="segment">🎯 Segmento específico</option>
+                                            <option value="custom">✉️ Emails personalizados</option>
+                                        </select>
+
+                                        {detailCampaign.audienceType === 'segment' && (
+                                            <div className="animate-in fade-in slide-in-from-top-2 duration-200">
+                                                {audiences.length > 0 ? (
+                                                    <select
+                                                        value={detailCampaign.audienceSegmentId || ''}
+                                                        onChange={(e) => handleUpdateCampaignAudience(detailCampaign.id, 'segment', e.target.value)}
+                                                        className="w-full px-3 py-2.5 bg-editor-panel-bg border border-editor-border rounded-xl text-sm text-editor-text-primary focus:outline-none focus:ring-2 focus:ring-editor-accent"
+                                                    >
+                                                        <option value="">Selecciona un segmento...</option>
+                                                        {audiences.map(a => (
+                                                            <option key={a.id} value={a.id}>
+                                                                {a.name} ({a.estimatedCount || a.staticMemberCount || 0} contactos)
+                                                            </option>
+                                                        ))}
+                                                    </select>
+                                                ) : (
+                                                    <p className="text-xs text-amber-400 bg-amber-500/10 border border-amber-500/20 rounded-lg px-3 py-2">
+                                                        No hay segmentos. Crea uno en la pestaña Audiencias.
+                                                    </p>
+                                                )}
+                                            </div>
+                                        )}
+
+                                        {detailCampaign.audienceType === 'custom' && (
+                                            <div className="animate-in fade-in slide-in-from-top-2 duration-200">
+                                                <textarea
+                                                    defaultValue={(detailCampaign.customRecipientEmails || []).join(', ')}
+                                                    onBlur={(e) => {
+                                                        const emails = e.target.value.split(',').map(em => em.trim()).filter(em => em.includes('@'));
+                                                        handleUpdateCampaignAudience(detailCampaign.id, 'custom', undefined, emails);
+                                                    }}
+                                                    rows={3}
+                                                    className="w-full px-3 py-2.5 bg-editor-panel-bg border border-editor-border rounded-xl text-sm text-editor-text-primary focus:outline-none focus:ring-2 focus:ring-editor-accent resize-none"
+                                                    placeholder="email1@ejemplo.com, email2@ejemplo.com"
+                                                />
+                                                <p className="text-[10px] text-editor-text-secondary mt-1">Separa los emails con comas. Se guarda al salir del campo.</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                ) : (
+                                    <p className="text-sm text-editor-text-primary bg-editor-panel-bg border border-editor-border rounded-lg px-3 py-2">
+                                        {detailCampaign.audienceType === 'all' ? '📋 Todos los contactos' : detailCampaign.audienceType === 'segment' ? `🎯 ${audiences.find(a => a.id === detailCampaign.audienceSegmentId)?.name || 'Segmento'}` : '✉️ Emails personalizados'}
+                                    </p>
+                                )}
+                            </div>
+
+                            {/* Campaign Info */}
+                            <div>
+                                <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2 block">Detalles</label>
+                                <div className="bg-editor-panel-bg border border-editor-border rounded-xl divide-y divide-editor-border">
+                                    <div className="flex justify-between items-center px-4 py-2.5 text-sm">
+                                        <span className="text-editor-text-secondary">Tipo</span>
+                                        <span className="text-editor-text-primary capitalize">{detailCampaign.type || 'newsletter'}</span>
+                                    </div>
+                                    <div className="flex justify-between items-center px-4 py-2.5 text-sm">
+                                        <span className="text-editor-text-secondary">Tenant</span>
+                                        <span className="text-editor-text-primary flex items-center gap-1"><Building2 size={12} /> {detailCampaign.tenantName}</span>
+                                    </div>
+                                    {detailCampaign.previewText && (
+                                        <div className="flex justify-between items-center px-4 py-2.5 text-sm">
+                                            <span className="text-editor-text-secondary">Preview</span>
+                                            <span className="text-editor-text-primary truncate max-w-[200px]">{detailCampaign.previewText}</span>
+                                        </div>
+                                    )}
+                                    <div className="flex justify-between items-center px-4 py-2.5 text-sm">
+                                        <span className="text-editor-text-secondary">Creada</span>
+                                        <span className="text-editor-text-primary">{formatDate(detailCampaign.createdAt)}</span>
+                                    </div>
+                                    {detailCampaign.stats && detailCampaign.stats.sent > 0 && (
+                                        <>
+                                            <div className="flex justify-between items-center px-4 py-2.5 text-sm">
+                                                <span className="text-editor-text-secondary">Enviados</span>
+                                                <span className="text-editor-text-primary font-medium">{detailCampaign.stats.sent.toLocaleString()}</span>
+                                            </div>
+                                            <div className="flex justify-between items-center px-4 py-2.5 text-sm">
+                                                <span className="text-editor-text-secondary">Apertura</span>
+                                                <span className="text-editor-text-primary font-medium">
+                                                    {detailCampaign.stats.sent > 0 ? `${((detailCampaign.stats.uniqueOpens || 0) / detailCampaign.stats.sent * 100).toFixed(1)}%` : '—'}
+                                                </span>
+                                            </div>
+                                            <div className="flex justify-between items-center px-4 py-2.5 text-sm">
+                                                <span className="text-editor-text-secondary">Clicks</span>
+                                                <span className="text-editor-text-primary font-medium">
+                                                    {(detailCampaign.stats.uniqueOpens || 0) > 0 ? `${((detailCampaign.stats.uniqueClicks || 0) / detailCampaign.stats.uniqueOpens * 100).toFixed(1)}%` : '—'}
+                                                </span>
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Email Preview */}
+                            {detailCampaign.htmlContent && (
+                                <div>
+                                    <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2 block flex items-center gap-1.5">
+                                        <Eye size={14} />
+                                        Vista Previa
+                                    </label>
+                                    <div className="border border-editor-border rounded-xl overflow-hidden bg-white">
+                                        <div
+                                            className="max-h-[400px] overflow-y-auto"
+                                            dangerouslySetInnerHTML={{ __html: detailCampaign.htmlContent }}
+                                            style={{ transformOrigin: 'top left', transform: 'scale(0.5)', width: '200%', height: 'auto' }}
+                                        />
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Action Buttons */}
+                            <div className="space-y-2">
+                                <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2 block">Acciones</label>
+                                
+                                {(detailCampaign.status === 'draft' || detailCampaign.status === 'approved') && (
+                                    <button
+                                        onClick={() => { setShowDetailPanel(false); handleEditCampaignVisual(detailCampaign); }}
+                                        className="w-full flex items-center gap-3 px-4 py-3 bg-editor-panel-bg border border-editor-border rounded-xl hover:border-purple-500/50 hover:bg-purple-500/5 transition-all text-left"
+                                    >
+                                        <Edit2 size={18} className="text-purple-400" />
+                                        <div>
+                                            <p className="text-sm font-medium text-editor-text-primary">Editar en Editor Visual</p>
+                                            <p className="text-xs text-editor-text-secondary">Modifica el diseño y contenido del email</p>
+                                        </div>
+                                    </button>
+                                )}
+
+                                {(detailCampaign.status === 'draft' || detailCampaign.status === 'approved') && (
+                                    <button
+                                        onClick={() => {
+                                            setEditingCampaignId(detailCampaign.id);
+                                            setTestEmail('');
+                                            setTestSendError(null);
+                                            setShowTestEmailModal(true);
+                                        }}
+                                        className="w-full flex items-center gap-3 px-4 py-3 bg-editor-panel-bg border border-editor-border rounded-xl hover:border-blue-500/50 hover:bg-blue-500/5 transition-all text-left"
+                                    >
+                                        <TestTube size={18} className="text-blue-400" />
+                                        <div>
+                                            <p className="text-sm font-medium text-editor-text-primary">Enviar Prueba</p>
+                                            <p className="text-xs text-editor-text-secondary">Envía un test email a tu correo</p>
+                                        </div>
+                                    </button>
+                                )}
+
+                                {(detailCampaign.status === 'draft' || detailCampaign.status === 'approved') && (
+                                    <button
+                                        onClick={() => { setShowDetailPanel(false); handleOpenSendConfirm(detailCampaign.id); }}
+                                        className="w-full flex items-center gap-3 px-4 py-3 bg-gradient-to-r from-green-600/10 to-emerald-600/10 border border-green-500/30 rounded-xl hover:from-green-600/20 hover:to-emerald-600/20 transition-all text-left"
+                                    >
+                                        <Send size={18} className="text-green-400" />
+                                        <div>
+                                            <p className="text-sm font-medium text-editor-text-primary">Enviar Campaña</p>
+                                            <p className="text-xs text-editor-text-secondary">Envía a toda la audiencia seleccionada</p>
+                                        </div>
+                                    </button>
+                                )}
+
+                                <div className="flex gap-2 pt-2">
+                                    <button
+                                        onClick={() => { handleDuplicateCampaign(detailCampaign); setShowDetailPanel(false); }}
+                                        className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 bg-editor-panel-bg border border-editor-border rounded-xl text-sm text-editor-text-secondary hover:text-editor-text-primary hover:border-editor-accent/30 transition-all"
+                                    >
+                                        <Copy size={14} /> Duplicar
+                                    </button>
+                                    <button
+                                        onClick={() => { handleDeleteCampaign(detailCampaign); setShowDetailPanel(false); }}
+                                        className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 bg-red-500/5 border border-red-500/20 rounded-xl text-sm text-red-400 hover:bg-red-500/10 hover:border-red-500/30 transition-all"
+                                    >
+                                        <Trash2 size={14} /> Eliminar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* ===== CONFIRMATION MODAL ===== */}
             {confirmModal.show && (
@@ -3945,7 +4293,7 @@ pedro@ejemplo.com,Pedro García`}
         <div className="flex h-screen bg-editor-bg text-editor-text-primary">
             <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
 
-            <div className="flex-1 flex flex-col overflow-hidden">
+            <div className="flex-1 flex flex-col overflow-hidden relative">
                 {/* Header */}
                 <header className="h-14 bg-editor-bg border-b border-editor-border flex-shrink-0 flex items-center justify-between px-4 sm:px-6 sticky top-0 z-10">
                     <div className="flex items-center gap-3">
