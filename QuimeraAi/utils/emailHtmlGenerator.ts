@@ -83,9 +83,11 @@ const generateLogoBlockHtml = (block: EmailBlock, globalStyles: EmailGlobalStyle
     const width = content.width || 150;
     const height = content.height ? `height="${content.height}"` : '';
     
-    if (!content.src) return '';
+    // Use globalStyles.logoUrl as fallback if block src is empty
+    const logoSrc = content.src || (globalStyles as any).logoUrl || '';
+    if (!logoSrc) return '';
     
-    const imgTag = `<img src="${content.src}" alt="${escapeHtml(content.alt || 'Logo')}" width="${width}" ${height} style="display: block; max-width: 100%; height: auto; border: 0; margin: ${alignment === 'center' ? '0 auto' : alignment === 'right' ? '0 0 0 auto' : '0'};" />`;
+    const imgTag = `<img src="${logoSrc}" alt="${escapeHtml(content.alt || 'Logo')}" width="${width}" ${height} style="display: block; max-width: 100%; height: auto; border: 0; margin: ${alignment === 'center' ? '0 auto' : alignment === 'right' ? '0 0 0 auto' : '0'};" />`;
     
     const imageContent = content.linkUrl 
         ? `<a href="${content.linkUrl}" style="display: inline-block;">${imgTag}</a>`

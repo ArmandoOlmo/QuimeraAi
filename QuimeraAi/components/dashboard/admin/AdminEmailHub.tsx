@@ -1736,8 +1736,23 @@ Conversación:\n${conversationSummary}`;
                 };
                 payload.htmlContent = generateEmailHtml(fullDoc);
                 payload.subject = fullDoc.subject;
+            } else if (campaign?.emailDocument && (campaign.emailDocument as any).blocks?.length > 0) {
+                // Table mode but campaign has stored blocks: regenerate fresh HTML
+                const storedDoc = campaign.emailDocument as any;
+                const fullDoc: EmailDocument = {
+                    id: storedDoc.id || campaign.id,
+                    name: storedDoc.name || campaign.name || 'Email',
+                    subject: storedDoc.subject || campaign.subject || 'Email',
+                    previewText: storedDoc.previewText || '',
+                    blocks: storedDoc.blocks || [],
+                    globalStyles: storedDoc.globalStyles || DEFAULT_EMAIL_GLOBAL_STYLES,
+                    createdAt: Date.now(),
+                    updatedAt: Date.now(),
+                };
+                payload.htmlContent = generateEmailHtml(fullDoc);
+                payload.subject = fullDoc.subject;
             }
-            // If no document, CF will load campaign from correct Firestore path
+            // If no blocks available, CF will load campaign.htmlContent from Firestore
 
             const result = await sendTestFn(payload);
             const data = result.data as any;
