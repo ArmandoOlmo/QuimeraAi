@@ -94,28 +94,69 @@ export const sendCampaign = functions.https.onCall(async (data: {
         let recipients: RecipientData[] = [];
 
         if (isAdminCampaign) {
-            // Admin campaigns: use customRecipientEmails if available
+            // Admin campaigns: resolve recipients from adminEmailAudiences collection
             if (campaign.audienceType === 'custom' && campaign.customRecipientEmails) {
+                // Custom list of emails stored directly on the campaign
                 recipients = campaign.customRecipientEmails
                     .filter((e: string) => isValidEmail(e))
                     .map((email: string) => ({ email }));
+                console.log(`[sendCampaign] Admin custom recipients: ${recipients.length}`);
+
+            } else if (campaign.audienceType === 'segment' && campaign.audienceSegmentId) {
+                // Specific audience segment — read members from adminEmailAudiences
+                const audienceDoc = await db.doc(`adminEmailAudiences/${campaign.audienceSegmentId}`).get();
+                if (audienceDoc.exists) {
+                    const audienceData = audienceDoc.data() || {};
+                    const members: any[] = audienceData.members || [];
+                    console.log(`[sendCampaign] Admin segment "${audienceData.name}" has ${members.length} members`);
+                    for (const member of members) {
+                        const email = member.email || member;
+                        if (typeof email === 'string' && isValidEmail(email)) {
+                            recipients.push({
+                                email,
+                                firstName: member.name?.split(' ')[0] || member.firstName || '',
+                                lastName: member.name?.split(' ').slice(1).join(' ') || member.lastName || '',
+                            });
+                        }
+                    }
+                } else {
+                    console.warn(`[sendCampaign] Admin audience segment not found: ${campaign.audienceSegmentId}`);
+                }
+
             } else {
-                // For admin 'all' audience: gather from all tenants or use stored audience
-                // For now, customRecipientEmails is the primary admin send method
-                console.log('[sendCampaign] Admin campaign with audienceType:', campaign.audienceType);
+                // 'all' — gather members from ALL admin audiences
+                console.log('[sendCampaign] Admin campaign audienceType "all" — gathering from all admin audiences');
+                const allAudiencesSnapshot = await db.collection('adminEmailAudiences').get();
+                const seenEmails = new Set<string>();
+
+                for (const audienceDoc of allAudiencesSnapshot.docs) {
+                    const audienceData = audienceDoc.data() || {};
+                    const members: any[] = audienceData.members || [];
+                    for (const member of members) {
+                        const email = (member.email || member) as string;
+                        if (typeof email === 'string' && isValidEmail(email) && !seenEmails.has(email.toLowerCase())) {
+                            seenEmails.add(email.toLowerCase());
+                            recipients.push({
+                                email,
+                                firstName: member.name?.split(' ')[0] || member.firstName || '',
+                                lastName: member.name?.split(' ').slice(1).join(' ') || member.lastName || '',
+                            });
+                        }
+                    }
+                }
+                console.log(`[sendCampaign] Admin "all" audiences: ${recipients.length} unique recipients from ${allAudiencesSnapshot.size} audiences`);
             }
         } else {
             recipients = await getRecipients(userId, projectId, campaign);
         }
 
         if (recipients.length === 0) {
+            // Revert to draft — don't mark as 'sent' when nothing was sent
             await campaignDoc.ref.update({
-                status: 'sent',
-                sentAt: admin.firestore.FieldValue.serverTimestamp(),
-                'stats.totalRecipients': 0,
-                'stats.sent': 0,
+                status: 'draft',
+                lastError: 'No se encontraron destinatarios en la audiencia seleccionada.',
             });
-            return { success: true, totalRecipients: 0, sent: 0, failed: 0 };
+            return { success: false, totalRecipients: 0, sent: 0, failed: 0, error: 'No se encontraron destinatarios. Verifica que la audiencia tenga contactos.' };
         }
 
         // Get email settings

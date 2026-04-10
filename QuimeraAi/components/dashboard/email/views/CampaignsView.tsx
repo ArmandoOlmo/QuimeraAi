@@ -501,11 +501,13 @@ const CampaignsView: React.FC<CampaignsViewProps> = ({ onCreateTrigger }) => {
 
             const data = result.data as any;
 
-            if (data.success) {
+            if (data.success && data.sent > 0) {
                 setSendSuccess(t('email.campaignSent', `Campaña enviada a ${data.sent} destinatarios`));
                 setTimeout(() => setSendSuccess(null), 5000);
-            } else {
-                throw new Error(data.error || 'Unknown error');
+            } else if (!data.success || data.sent === 0) {
+                const errorMsg = data.error || t('email.noRecipients', 'No se encontraron destinatarios. Verifica que la audiencia tenga contactos.');
+                setSendError(errorMsg);
+                setTimeout(() => setSendError(null), 8000);
             }
         } catch (err: any) {
             console.error('Error sending campaign:', err);
