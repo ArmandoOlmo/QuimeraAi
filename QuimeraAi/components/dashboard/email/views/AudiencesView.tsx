@@ -287,14 +287,14 @@ const AudiencesView: React.FC = () => {
                                     </div>
                                     <div className="flex items-center gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                                         <button
-                                            onClick={() => handleOpenModal(audience)}
+                                            onClick={(e) => { e.stopPropagation(); handleOpenModal(audience); }}
                                             className="p-1.5 hover:bg-muted rounded-lg"
                                             title={t('email.edit', 'Editar')}
                                         >
                                             <Edit size={14} className="text-muted-foreground" />
                                         </button>
                                         <button
-                                            onClick={() => handleDuplicateAudience(audience.id!)}
+                                            onClick={(e) => { e.stopPropagation(); handleDuplicateAudience(audience.id!); }}
                                             className="p-1.5 hover:bg-muted rounded-lg"
                                             title={t('email.duplicate', 'Duplicar')}
                                         >
@@ -302,7 +302,7 @@ const AudiencesView: React.FC = () => {
                                         </button>
                                         {!audience.isDefault && (
                                             <button
-                                                onClick={() => handleDeleteAudience(audience.id!, audience.isDefault)}
+                                                onClick={(e) => { e.stopPropagation(); handleDeleteAudience(audience.id!, audience.isDefault); }}
                                                 className="p-1.5 hover:bg-red-500/20 rounded-lg"
                                                 title={t('email.delete', 'Eliminar')}
                                             >
