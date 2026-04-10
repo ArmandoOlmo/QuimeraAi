@@ -332,141 +332,21 @@ const AdminEmailHub: React.FC<AdminEmailHubProps> = ({ onBack }) => {
     }>({ show: false, title: '', message: '', onConfirm: () => {} });
 
     // =============================================================================
-    // DATA LOADING — CROSS-TENANT (PRODUCTION FIRESTORE)
+    // DATA LOADING — ADMIN-ONLY (no cross-tenant crawling)
     // =============================================================================
+    // The Admin Email Hub only manages admin-level campaigns, audiences, and logs.
+    // User/project-level email data stays in their own dashboards.
 
     useEffect(() => {
-        loadCrossTenantData();
+        // Load users list for audience management (add registered users feature)
+        fetchAllUsers().catch(() => {});
     }, []);
 
-    const loadCrossTenantData = async () => {
+    // =========================================================================
+    // REALTIME: Admin Campaigns
+    // =========================================================================
+    useEffect(() => {
         setIsLoading(true);
-        try {
-            // Ensure tenants and users are loaded
-            await Promise.all([fetchTenants(), fetchAllUsers()]);
-        } catch (err) {
-            console.error('[AdminEmailHub] Error loading initial data:', err);
-            setIsLoading(false);
-        }
-        // Note: setIsLoading(false) is handled after email data loads in the [tenants] effect
-    };
-
-    // Once tenants are loaded, fetch email data from all user/project paths
-    useEffect(() => {
-        if (tenants.length === 0) return;
-
-        const fetchAllEmailData = async () => {
-            const allCampaigns: CrossTenantCampaign[] = [];
-            const allAudiences: CrossTenantAudience[] = [];
-            const allLogs: CrossTenantLog[] = [];
-
-            // Build a map of users who belong to each tenant
-            const usersByTenant = new Map<string, string[]>();
-            for (const tenant of tenants) {
-                const memberIds = tenant.memberUserIds || [];
-                if (tenant.ownerUserId && !memberIds.includes(tenant.ownerUserId)) {
-                    memberIds.push(tenant.ownerUserId);
-                }
-                usersByTenant.set(tenant.id, memberIds);
-            }
-
-            // For each tenant, iterate through its users and their projects
-            for (const tenant of tenants) {
-                const userIds = usersByTenant.get(tenant.id) || [];
-                
-                for (const userId of userIds) {
-                    try {
-                        // Get all projects for this user
-                        const projectsRef = collection(db, `users/${userId}/projects`);
-                        const projectsSnap = await getDocs(projectsRef);
-                        
-                        for (const projectDoc of projectsSnap.docs) {
-                            const projectId = projectDoc.id;
-                            
-                            // Fetch campaigns
-                            try {
-                                const campaignsRef = collection(db, `users/${userId}/projects/${projectId}/emailCampaigns`);
-                                const campaignsSnap = await getDocs(query(campaignsRef, orderBy('createdAt', 'desc')));
-                                campaignsSnap.docs.forEach(d => {
-                                    allCampaigns.push({
-                                        id: d.id,
-                                        ...d.data(),
-                                        tenantId: tenant.id,
-                                        tenantName: tenant.name,
-                                        userId,
-                                        projectId,
-                                    } as CrossTenantCampaign);
-                                });
-                            } catch { /* no campaigns collection */ }
-
-                            // Fetch audiences
-                            try {
-                                const audiencesRef = collection(db, `users/${userId}/projects/${projectId}/emailAudiences`);
-                                const audiencesSnap = await getDocs(query(audiencesRef, orderBy('createdAt', 'desc')));
-                                audiencesSnap.docs.forEach(d => {
-                                    allAudiences.push({
-                                        id: d.id,
-                                        ...d.data(),
-                                        tenantId: tenant.id,
-                                        tenantName: tenant.name,
-                                        userId,
-                                        projectId,
-                                    } as CrossTenantAudience);
-                                });
-                            } catch { /* no audiences collection */ }
-
-                            // Fetch email logs (limit per project for performance)
-                            try {
-                                const logsRef = collection(db, `users/${userId}/projects/${projectId}/emailLogs`);
-                                const logsSnap = await getDocs(query(logsRef, orderBy('sentAt', 'desc')));
-                                logsSnap.docs.forEach(d => {
-                                    allLogs.push({
-                                        id: d.id,
-                                        ...d.data(),
-                                        tenantId: tenant.id,
-                                        tenantName: tenant.name,
-                                    } as CrossTenantLog);
-                                });
-                            } catch { /* no logs collection */ }
-                        }
-                    } catch (err) {
-                        console.warn(`[AdminEmailHub] Error fetching data for user ${userId}:`, err);
-                    }
-                }
-            }
-
-            // Fetch admin-level audiences (one-shot is fine for these)
-            try {
-                const adminAudiencesRef = collection(db, 'adminEmailAudiences');
-                const adminAudiencesSnap = await getDocs(query(adminAudiencesRef, orderBy('createdAt', 'desc')));
-                adminAudiencesSnap.docs.forEach(d => {
-                    allAudiences.push({
-                        id: d.id,
-                        ...d.data(),
-                        tenantId: 'admin',
-                        tenantName: 'Super Admin',
-                        userId: d.data().createdBy || 'admin',
-                        projectId: 'admin',
-                    } as CrossTenantAudience);
-                });
-            } catch { /* no admin audiences collection yet */ }
-
-            // Store tenant-level data (non-admin campaigns will be merged later)
-            tenantCampaignsRef.current = allCampaigns;
-            setAudiences(allAudiences);
-            setEmailLogs(allLogs);
-            setIsLoading(false);
-        };
-
-        fetchAllEmailData();
-    }, [tenants]);
-
-    // =========================================================================
-    // REALTIME LISTENER for admin campaigns (never miss a create/update/delete)
-    // =========================================================================
-    const tenantCampaignsRef = useRef<CrossTenantCampaign[]>([]);
-
-    useEffect(() => {
         const adminCampaignsRef = collection(db, 'adminEmailCampaigns');
         const q = query(adminCampaignsRef, orderBy('createdAt', 'desc'));
 
@@ -480,11 +360,60 @@ const AdminEmailHub: React.FC<AdminEmailHubProps> = ({ onBack }) => {
                 projectId: 'admin',
             } as CrossTenantCampaign));
 
-            // Merge tenant campaigns + admin campaigns
-            const tenantOnes = tenantCampaignsRef.current;
-            setCampaigns([...adminCampaigns, ...tenantOnes]);
+            setCampaigns(adminCampaigns);
+            setIsLoading(false);
         }, (err) => {
             console.warn('[AdminEmailHub] Admin campaigns snapshot error:', err);
+            setIsLoading(false);
+        });
+
+        return () => unsubscribe();
+    }, []);
+
+    // =========================================================================
+    // REALTIME: Admin Audiences
+    // =========================================================================
+    useEffect(() => {
+        const adminAudiencesRef = collection(db, 'adminEmailAudiences');
+        const q = query(adminAudiencesRef, orderBy('createdAt', 'desc'));
+
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            const adminAudiences: CrossTenantAudience[] = snapshot.docs.map(d => ({
+                id: d.id,
+                ...d.data(),
+                tenantId: 'admin',
+                tenantName: 'Super Admin',
+                userId: d.data().createdBy || 'admin',
+                projectId: 'admin',
+            } as CrossTenantAudience));
+
+            setAudiences(adminAudiences);
+        }, (err) => {
+            console.warn('[AdminEmailHub] Admin audiences snapshot error:', err);
+        });
+
+        return () => unsubscribe();
+    }, []);
+
+    // =========================================================================
+    // REALTIME: Admin Email Logs
+    // =========================================================================
+    useEffect(() => {
+        const adminLogsRef = collection(db, 'adminEmailLogs');
+        const q = query(adminLogsRef, orderBy('sentAt', 'desc'));
+
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            const adminLogs: CrossTenantLog[] = snapshot.docs.map(d => ({
+                id: d.id,
+                ...d.data(),
+                tenantId: 'admin',
+                tenantName: 'Super Admin',
+            } as CrossTenantLog));
+
+            setEmailLogs(adminLogs);
+        }, (err) => {
+            // Collection may not exist yet — that's fine
+            console.warn('[AdminEmailHub] Admin logs snapshot error:', err);
         });
 
         return () => unsubscribe();
