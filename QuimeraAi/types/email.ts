@@ -469,6 +469,7 @@ export interface WelcomeEmailVariables {
  * Tipos de bloques disponibles en el editor de email
  */
 export type EmailBlockType =
+    | 'logo'
     | 'hero'
     | 'text'
     | 'image'
@@ -518,6 +519,19 @@ export interface EmailBlockStyles {
     fontSize?: EmailFontSize;
     borderRadius?: EmailBorderRadius;
     borderWidth?: number;
+}
+
+/**
+ * Contenido del bloque Logo
+ */
+export interface EmailLogoContent {
+    src: string;
+    alt?: string;
+    width?: number;     // px
+    height?: number;    // px — optional, auto if not set
+    linkUrl?: string;
+    linkType?: 'manual' | 'product' | 'collection' | 'content';
+    collectionId?: string;
 }
 
 /**
@@ -626,6 +640,7 @@ export interface EmailFooterContent {
  * Union type para contenido de bloques
  */
 export type EmailBlockContent =
+    | EmailLogoContent
     | EmailHeroContent
     | EmailTextContent
     | EmailImageContent
@@ -696,6 +711,13 @@ export const DEFAULT_EMAIL_GLOBAL_STYLES: EmailGlobalStyles = {
  * Contenido por defecto para cada tipo de bloque
  */
 export const DEFAULT_BLOCK_CONTENT: Record<EmailBlockType, EmailBlockContent> = {
+    logo: {
+        src: '',
+        alt: 'Logo',
+        width: 150,
+        linkUrl: '#',
+        linkType: 'manual',
+    } as EmailLogoContent,
     hero: {
         headline: 'Welcome to our newsletter',
         subheadline: 'Stay updated with the latest news and offers',
@@ -756,6 +778,11 @@ export const DEFAULT_BLOCK_CONTENT: Record<EmailBlockType, EmailBlockContent> = 
  * Estilos por defecto para cada tipo de bloque
  */
 export const DEFAULT_BLOCK_STYLES: Record<EmailBlockType, EmailBlockStyles> = {
+    logo: {
+        backgroundColor: 'transparent',
+        padding: 'md',
+        alignment: 'center',
+    },
     hero: {
         backgroundColor: '#4f46e5',
         textColor: '#ffffff',

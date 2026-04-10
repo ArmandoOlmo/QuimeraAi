@@ -8,6 +8,7 @@ import { sanitizeHtml } from '../../../../../utils/sanitize';
 import {
     EmailBlock,
     EmailGlobalStyles,
+    EmailLogoContent,
     EmailHeroContent,
     EmailTextContent,
     EmailImageContent,
@@ -45,6 +46,43 @@ const getPadding = (size?: EmailPaddingSize): string => {
 // =============================================================================
 // BLOCK RENDERERS
 // =============================================================================
+
+const renderLogoBlock = (block: EmailBlock, globalStyles: EmailGlobalStyles): React.ReactNode => {
+    const content = block.content as EmailLogoContent;
+    const styles = block.styles;
+
+    const logoImage = (
+        <img
+            src={content.src || 'https://via.placeholder.com/150x50?text=Logo'}
+            alt={content.alt || 'Logo'}
+            style={{
+                display: 'block',
+                width: content.width ? `${content.width}px` : '150px',
+                height: content.height ? `${content.height}px` : 'auto',
+                maxWidth: '100%',
+                margin: styles.alignment === 'center' ? '0 auto' : styles.alignment === 'right' ? '0 0 0 auto' : '0',
+            }}
+        />
+    );
+
+    return (
+        <div
+            style={{
+                backgroundColor: styles.backgroundColor || 'transparent',
+                padding: getPadding(styles.padding),
+                textAlign: styles.alignment || 'center',
+            }}
+        >
+            {content.linkUrl ? (
+                <a href={content.linkUrl} style={{ display: 'inline-block' }}>
+                    {logoImage}
+                </a>
+            ) : (
+                logoImage
+            )}
+        </div>
+    );
+};
 
 const renderHeroBlock = (block: EmailBlock, globalStyles: EmailGlobalStyles): React.ReactNode => {
     const content = block.content as EmailHeroContent;
@@ -566,6 +604,8 @@ const renderColumnsBlock = (block: EmailBlock, globalStyles: EmailGlobalStyles):
 
 export const renderEmailBlock = (block: EmailBlock, globalStyles: EmailGlobalStyles): React.ReactNode => {
     switch (block.type) {
+        case 'logo':
+            return renderLogoBlock(block, globalStyles);
         case 'hero':
             return renderHeroBlock(block, globalStyles);
         case 'text':

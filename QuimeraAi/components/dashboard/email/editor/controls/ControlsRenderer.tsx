@@ -5,6 +5,7 @@
 
 import React from 'react';
 import { EmailBlock } from '../../../../../types/email';
+import LogoBlockControls from './LogoBlockControls';
 import HeroBlockControls from './HeroBlockControls';
 import TextBlockControls from './TextBlockControls';
 import ImageBlockControls from './ImageBlockControls';
@@ -22,6 +23,8 @@ export const renderBlockControls = (block: EmailBlock, activeTab: TabType): Reac
     const props = { block, activeTab };
     
     switch (block.type) {
+        case 'logo':
+            return <LogoBlockControls {...props} />;
         case 'hero':
             return <HeroBlockControls {...props} />;
         case 'text':

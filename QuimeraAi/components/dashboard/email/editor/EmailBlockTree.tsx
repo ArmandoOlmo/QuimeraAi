@@ -46,6 +46,7 @@ import {
     Search,
     ChevronDown,
     LayoutTemplate,
+    Crown,
 } from 'lucide-react';
 import { useEmailEditor } from './EmailEditor';
 import { EmailBlock, EmailBlockType } from '../../../../types/email';
@@ -56,6 +57,7 @@ import { useServiceAvailability } from '../../../../hooks/useServiceAvailability
 // =============================================================================
 
 const blockIcons: Record<EmailBlockType, React.ElementType> = {
+    logo: Crown,
     hero: Image,
     text: Type,
     image: Image,
@@ -69,6 +71,7 @@ const blockIcons: Record<EmailBlockType, React.ElementType> = {
 };
 
 const blockLabels: Record<EmailBlockType, string> = {
+    logo: 'Logo',
     hero: 'Hero',
     text: 'Texto',
     image: 'Imagen',
@@ -83,6 +86,7 @@ const blockLabels: Record<EmailBlockType, string> = {
 
 // Available blocks for adding
 const AVAILABLE_BLOCKS: EmailBlockType[] = [
+    'logo',
     'hero',
     'text',
     'image',
