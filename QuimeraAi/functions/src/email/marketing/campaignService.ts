@@ -437,15 +437,19 @@ export const processScheduledCampaigns = functions.pubsub
 
 /**
  * Send a test email for a campaign
+ * Supports both user-level and admin-level campaigns.
+ * If htmlContent + subject are provided directly, skip campaign lookup.
  */
 export const sendTestEmail = functions.https.onCall(async (data: {
     userId: string;
-    storeId: string;  // Note: This is actually projectId from frontend
+    storeId: string;  // projectId from frontend, or 'admin'
     campaignId: string;
     testEmail: string;
+    htmlContent?: string;  // Optional: pre-generated HTML (admin editor sends this)
+    subject?: string;      // Optional: if provided, skip campaign lookup
 }, context) => {
-    if (!context.auth || context.auth.uid !== data.userId) {
-        throw new functions.https.HttpsError('permission-denied', 'Access denied');
+    if (!context.auth) {
+        throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated');
     }
 
     const { userId, storeId: projectId, campaignId, testEmail } = data;
@@ -455,22 +459,43 @@ export const sendTestEmail = functions.https.onCall(async (data: {
     }
 
     try {
-        // Use projects path (frontend uses projects, not stores)
-        const campaignDoc = await db.doc(`users/${userId}/projects/${projectId}/emailCampaigns/${campaignId}`).get();
-        
-        if (!campaignDoc.exists) {
-            throw new functions.https.HttpsError('not-found', 'Campaign not found');
+        let htmlToSend = data.htmlContent || '';
+        let subjectToSend = data.subject || '';
+        let fromName = 'Quimera';
+        let fromEmail = 'noreply@quimera.ai';
+
+        // If HTML + subject already provided (from admin editor), use them directly
+        if (htmlToSend && subjectToSend) {
+            console.log('[sendTestEmail] Using provided HTML content (admin mode)');
+        } else {
+            // Look up the campaign in Firestore
+            let campaignDoc = await db.doc(`users/${userId}/projects/${projectId}/emailCampaigns/${campaignId}`).get();
+
+            // Fallback: try admin-level campaigns
+            if (!campaignDoc.exists) {
+                campaignDoc = await db.doc(`adminEmailCampaigns/${campaignId}`).get();
+            }
+
+            if (!campaignDoc.exists) {
+                throw new functions.https.HttpsError('not-found', 'Campaign not found');
+            }
+
+            const campaign = campaignDoc.data() as CampaignData;
+            subjectToSend = campaign.subject;
+            htmlToSend = campaign.htmlContent || `<p>${campaign.subject}</p>`;
+
+            // Get project settings for from info
+            const emailSettingsDoc = await db.doc(`users/${userId}/projects/${projectId}/settings/email`).get();
+            const emailSettings = emailSettingsDoc.data() || {};
+            const projectDoc = await db.doc(`users/${userId}/projects/${projectId}`).get();
+            const projectSettings = projectDoc.data() || {};
+
+            fromName = emailSettings.fromName || projectSettings.name || 'Quimera';
+            fromEmail = emailSettings.fromEmail || 'noreply@quimera.ai';
         }
 
-        const campaign = campaignDoc.data() as CampaignData;
-
-        const emailSettingsDoc = await db.doc(`users/${userId}/projects/${projectId}/settings/email`).get();
-        const emailSettings = emailSettingsDoc.data() || {};
-
-        const projectDoc = await db.doc(`users/${userId}/projects/${projectId}`).get();
-        const projectSettings = projectDoc.data() || {};
-
-        const testHtml = renderTemplate(campaign.htmlContent || `<p>${campaign.subject}</p>`, {
+        // Personalize with test variables
+        const testHtml = renderTemplate(htmlToSend, {
             firstName: 'Test',
             lastName: 'User',
             email: testEmail,
@@ -479,9 +504,9 @@ export const sendTestEmail = functions.https.onCall(async (data: {
 
         const result = await sendEmail({
             to: testEmail,
-            subject: `[TEST] ${campaign.subject}`,
+            subject: `[TEST] ${subjectToSend}`,
             html: testHtml,
-            from: `${emailSettings.fromName || projectSettings.name || 'Quimera'} <${emailSettings.fromEmail || 'noreply@quimera.ai'}>`,
+            from: `${fromName} <${fromEmail}>`,
         });
 
         return {
@@ -489,6 +514,7 @@ export const sendTestEmail = functions.https.onCall(async (data: {
             error: result.error,
         };
     } catch (error: any) {
+        console.error('[sendTestEmail] Error:', error);
         throw new functions.https.HttpsError('internal', error.message);
     }
 });
