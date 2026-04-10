@@ -8,6 +8,7 @@ import {
     EmailDocument,
     EmailBlock,
     EmailGlobalStyles,
+    EmailLogoContent,
     EmailHeroContent,
     EmailTextContent,
     EmailImageContent,
@@ -71,6 +72,35 @@ const escapeHtml = (text: string): string => {
 // =============================================================================
 // BLOCK TO HTML CONVERTERS
 // =============================================================================
+
+const generateLogoBlockHtml = (block: EmailBlock, globalStyles: EmailGlobalStyles): string => {
+    const content = block.content as EmailLogoContent;
+    const styles = block.styles;
+    
+    const padding = getPadding(styles.padding);
+    const alignment = styles.alignment || 'center';
+    const bgColor = styles.backgroundColor || 'transparent';
+    const width = content.width || 150;
+    const height = content.height ? `height="${content.height}"` : '';
+    
+    if (!content.src) return '';
+    
+    const imgTag = `<img src="${content.src}" alt="${escapeHtml(content.alt || 'Logo')}" width="${width}" ${height} style="display: block; max-width: 100%; height: auto; border: 0; margin: ${alignment === 'center' ? '0 auto' : alignment === 'right' ? '0 0 0 auto' : '0'};" />`;
+    
+    const imageContent = content.linkUrl 
+        ? `<a href="${content.linkUrl}" style="display: inline-block;">${imgTag}</a>`
+        : imgTag;
+    
+    return `
+        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+            <tr>
+                <td align="${alignment}" style="padding: ${padding}; background-color: ${bgColor};">
+                    ${imageContent}
+                </td>
+            </tr>
+        </table>
+    `;
+};
 
 const generateHeroBlockHtml = (block: EmailBlock, globalStyles: EmailGlobalStyles): string => {
     const content = block.content as EmailHeroContent;
@@ -368,6 +398,8 @@ const generateBlockHtml = (block: EmailBlock, globalStyles: EmailGlobalStyles): 
     if (!block.visible) return '';
     
     switch (block.type) {
+        case 'logo':
+            return generateLogoBlockHtml(block, globalStyles);
         case 'hero':
             return generateHeroBlockHtml(block, globalStyles);
         case 'text':
