@@ -331,6 +331,12 @@ const AdminEmailHub: React.FC<AdminEmailHubProps> = ({ onBack }) => {
     const [testSendError, setTestSendError] = useState<string | null>(null);
     const [testSendSuccess, setTestSendSuccess] = useState<string | null>(null);
 
+    // Send campaign state
+    const [showSendConfirmModal, setShowSendConfirmModal] = useState(false);
+    const [sendingCampaignId, setSendingCampaignId] = useState<string | null>(null);
+    const [sendCampaignError, setSendCampaignError] = useState<string | null>(null);
+    const [sendCampaignSuccess, setSendCampaignSuccess] = useState<string | null>(null);
+
     // Confirmation modal state (replaces native browser confirm())
     const [confirmModal, setConfirmModal] = useState<{
         show: boolean;
@@ -1733,6 +1739,50 @@ Conversación:\n${conversationSummary}`;
         }
     };
 
+    /** Open send campaign confirmation */
+    const handleOpenSendConfirm = (campaignId: string) => {
+        setSendingCampaignId(campaignId);
+        setSendCampaignError(null);
+        setShowSendConfirmModal(true);
+    };
+
+    /** Send campaign to audience via Cloud Function */
+    const handleSendCampaign = async () => {
+        if (!sendingCampaignId) return;
+
+        const campaign = campaigns.find(c => c.id === sendingCampaignId);
+        if (!campaign) return;
+
+        setShowSendConfirmModal(false);
+        setSendCampaignError(null);
+
+        try {
+            const functions = getFunctions();
+            const sendCampaignFn = httpsCallable(functions, 'sendCampaign');
+
+            const result = await sendCampaignFn({
+                userId: campaign.userId || user?.uid || 'admin',
+                storeId: campaign.projectId || 'admin',
+                campaignId: sendingCampaignId,
+            });
+
+            const data = result.data as any;
+
+            if (data.success) {
+                setSendCampaignSuccess(`Campaña enviada exitosamente a ${data.sent || 0} destinatarios`);
+                setTimeout(() => setSendCampaignSuccess(null), 5000);
+            } else {
+                throw new Error(data.error || 'Error desconocido');
+            }
+        } catch (err: any) {
+            console.error('Error sending campaign:', err);
+            setSendCampaignError(err.message || 'Error al enviar la campaña');
+            setTimeout(() => setSendCampaignError(null), 5000);
+        } finally {
+            setSendingCampaignId(null);
+        }
+    };
+
     /** Delete a campaign with confirmation */
     const handleDeleteCampaign = async (campaign: CrossTenantCampaign) => {
         setConfirmModal({
@@ -1804,6 +1854,19 @@ Conversación:\n${conversationSummary}`;
                     Nueva Campaña
                 </button>
             </div>
+            {/* Send feedback banners */}
+            {sendCampaignSuccess && (
+                <div className="flex items-center gap-2 px-4 py-3 bg-green-500/10 border border-green-500/30 rounded-xl text-green-400 text-sm font-medium animate-in fade-in duration-200">
+                    <CheckCircle size={16} />
+                    {sendCampaignSuccess}
+                </div>
+            )}
+            {sendCampaignError && (
+                <div className="flex items-center gap-2 px-4 py-3 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 text-sm font-medium animate-in fade-in duration-200">
+                    <AlertCircle size={16} />
+                    {sendCampaignError}
+                </div>
+            )}
 
             {/* Filters */}
             <div className="bg-editor-panel-bg border border-editor-border rounded-xl p-4">
@@ -1902,6 +1965,32 @@ Conversación:\n${conversationSummary}`;
                                         </td>
                                         <td className="px-4 py-3">
                                             <div className="flex items-center justify-end gap-1">
+                                                {/* Send — only for drafts */}
+                                                {campaign.status === 'draft' && (
+                                                    <button
+                                                        onClick={(e) => { e.stopPropagation(); handleOpenSendConfirm(campaign.id); }}
+                                                        className="p-2 hover:bg-green-500/20 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
+                                                        title="Enviar campaña"
+                                                    >
+                                                        <Play size={15} className="text-green-400" />
+                                                    </button>
+                                                )}
+                                                {/* Send Test — only for drafts */}
+                                                {campaign.status === 'draft' && (
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setEditingCampaignId(campaign.id);
+                                                            setTestEmail('');
+                                                            setTestSendError(null);
+                                                            setShowTestEmailModal(true);
+                                                        }}
+                                                        className="p-2 hover:bg-blue-500/20 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
+                                                        title="Enviar prueba"
+                                                    >
+                                                        <TestTube size={15} className="text-blue-400" />
+                                                    </button>
+                                                )}
                                                 {/* Edit — opens visual editor */}
                                                 <button
                                                     onClick={() => handleEditCampaignVisual(campaign)}
@@ -2142,6 +2231,56 @@ Conversación:\n${conversationSummary}`;
                     </div>
                 </div>
             )}
+
+            {/* ===== SEND CAMPAIGN CONFIRMATION MODAL ===== */}
+            {showSendConfirmModal && sendingCampaignId && (() => {
+                const campaign = campaigns.find(c => c.id === sendingCampaignId);
+                if (!campaign) return null;
+                return (
+                    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[200] flex items-center justify-center p-4">
+                        <div className="bg-card rounded-xl border border-border w-full max-w-md shadow-2xl">
+                            <div className="p-6 border-b border-border">
+                                <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
+                                    <Send size={20} className="text-green-500" />
+                                    Enviar Campaña
+                                </h3>
+                            </div>
+                            <div className="p-6 space-y-4">
+                                <p className="text-foreground">
+                                    ¿Estás seguro de enviar esta campaña?
+                                </p>
+                                <div className="bg-muted/30 rounded-lg p-4 space-y-2">
+                                    <p className="text-sm"><strong>Campaña:</strong> {campaign.name}</p>
+                                    <p className="text-sm"><strong>Asunto:</strong> {campaign.subject}</p>
+                                    <p className="text-sm"><strong>Tenant:</strong> {campaign.tenantName || 'Admin'}</p>
+                                    <p className="text-sm"><strong>Audiencia:</strong> {campaign.audienceType === 'all' ? 'Todos los suscriptores' : 'Segmento seleccionado'}</p>
+                                </div>
+                                <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-3">
+                                    <p className="text-amber-500 text-sm flex items-center gap-2">
+                                        <AlertTriangle size={16} />
+                                        Esta acción enviará el email a todos los destinatarios. No se puede deshacer.
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="p-6 border-t border-border flex justify-end gap-3">
+                                <button
+                                    onClick={() => { setShowSendConfirmModal(false); setSendingCampaignId(null); }}
+                                    className="px-4 py-2 border border-border rounded-lg text-foreground hover:bg-muted transition-colors"
+                                >
+                                    Cancelar
+                                </button>
+                                <button
+                                    onClick={handleSendCampaign}
+                                    className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                                >
+                                    <Send size={16} />
+                                    Enviar ahora
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                );
+            })()}
 
             {/* ===== CONFIRMATION MODAL ===== */}
             {confirmModal.show && (
