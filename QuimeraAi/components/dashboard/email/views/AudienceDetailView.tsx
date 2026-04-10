@@ -44,7 +44,7 @@ const AudienceDetailView: React.FC<AudienceDetailViewProps> = ({
 }) => {
     const { t } = useTranslation();
     const { updateAudience, isSaving } = useEmailAudiences(userId, projectId);
-    const { leads, updateLead } = useCRM();
+    const { leads, updateLead, isLoadingLeads } = useCRM();
 
     // Modal state
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -154,29 +154,34 @@ const AudienceDetailView: React.FC<AudienceDetailViewProps> = ({
         return staticLeadIds.filter(id => !existingLeadIds.has(id));
     }, [leads, staticLeadIds]);
 
-    // Auto-clean orphan IDs - runs once when orphans are detected
+    // Auto-clean orphan IDs - only runs when leads have fully loaded, with debounce
     React.useEffect(() => {
-        const cleanOrphanIds = async () => {
-            if (orphanLeadIds.length > 0 && !isSaving) {
-                console.log('[AudienceDetailView] Cleaning orphan lead IDs:', orphanLeadIds);
-                try {
-                    const staticMemberCount = validLeadIds.length + staticCustomerIds.length + staticEmails.length;
-                    await updateAudience(audience.id!, {
-                        staticMembers: {
-                            leadIds: validLeadIds,
-                            customerIds: staticCustomerIds,
-                            emails: staticEmails,
-                        },
-                        staticMemberCount,
-                    });
-                    console.log('[AudienceDetailView] Orphan IDs cleaned successfully');
-                } catch (err) {
-                    console.error('Error cleaning orphan IDs:', err);
-                }
+        // Don't clean while leads are still loading - all IDs would appear orphaned
+        if (isLoadingLeads || isSaving) return;
+        // Don't clean if there are no orphans
+        if (orphanLeadIds.length === 0) return;
+
+        // Debounce to avoid race conditions with Firestore snapshot updates
+        const debounceTimer = setTimeout(async () => {
+            console.log('[AudienceDetailView] Cleaning orphan lead IDs:', orphanLeadIds);
+            try {
+                const staticMemberCount = validLeadIds.length + staticCustomerIds.length + staticEmails.length;
+                await updateAudience(audience.id!, {
+                    staticMembers: {
+                        leadIds: validLeadIds,
+                        customerIds: staticCustomerIds,
+                        emails: staticEmails,
+                    },
+                    staticMemberCount,
+                });
+                console.log('[AudienceDetailView] Orphan IDs cleaned successfully');
+            } catch (err) {
+                console.error('Error cleaning orphan IDs:', err);
             }
-        };
-        cleanOrphanIds();
-    }, [orphanLeadIds.length]); // Only run when orphan count changes
+        }, 3000); // Wait 3 seconds to ensure all data is synced
+
+        return () => clearTimeout(debounceTimer);
+    }, [orphanLeadIds.length, isLoadingLeads, isSaving]); // Re-evaluate when loading state changes
 
     const totalStaticMembers = validLeadIds.length + staticCustomerIds.length + staticEmails.length;
     const totalMembers = (audience.estimatedCount || 0) + totalStaticMembers;
