@@ -1689,7 +1689,16 @@ Conversación:\n${conversationSummary}`;
 
     /** Send a test email to a specified address */
     const handleSendTestEmail = async () => {
-        if (!testEmail || !emailDocument) return;
+        if (!testEmail) return;
+
+        // Need either a campaign ID (table mode) or emailDocument (editor mode)
+        const campaignId = editingCampaignId;
+        const hasDocument = emailDocument && emailDocument.blocks && emailDocument.blocks.length > 0;
+
+        if (!campaignId && !hasDocument) {
+            setTestSendError('No hay campaña seleccionada');
+            return;
+        }
 
         setSendingTest(true);
         setTestSendError(null);
@@ -1699,29 +1708,33 @@ Conversación:\n${conversationSummary}`;
             const functions = getFunctions();
             const sendTestFn = httpsCallable(functions, 'sendTestEmail');
 
-            // Generate HTML from email document
-            const fullDoc: EmailDocument = {
-                id: emailDocument.id || 'admin-test',
-                name: emailDocument.name || 'Test Email',
-                subject: emailDocument.subject || 'Test Email',
-                previewText: emailDocument.previewText || '',
-                blocks: emailDocument.blocks || [],
-                globalStyles: emailDocument.globalStyles || DEFAULT_EMAIL_GLOBAL_STYLES,
-                createdAt: Date.now(),
-                updatedAt: Date.now(),
-            };
-
-            const htmlContent = generateEmailHtml(fullDoc);
-
-            const result = await sendTestFn({
+            // Build payload — if we have a document (editor open), send HTML directly
+            // Otherwise just send campaignId and let the CF load from Firestore
+            const payload: Record<string, any> = {
                 userId: user?.uid || 'admin',
                 storeId: 'admin',
-                campaignId: editingCampaignId || 'admin-test',
+                campaignId: campaignId || 'admin-test',
                 testEmail,
-                htmlContent,
-                subject: fullDoc.subject,
-            });
+            };
 
+            if (hasDocument) {
+                // Editor mode: generate HTML from current document
+                const fullDoc: EmailDocument = {
+                    id: emailDocument!.id || 'admin-test',
+                    name: emailDocument!.name || 'Test Email',
+                    subject: emailDocument!.subject || 'Test Email',
+                    previewText: emailDocument!.previewText || '',
+                    blocks: emailDocument!.blocks || [],
+                    globalStyles: emailDocument!.globalStyles || DEFAULT_EMAIL_GLOBAL_STYLES,
+                    createdAt: Date.now(),
+                    updatedAt: Date.now(),
+                };
+                payload.htmlContent = generateEmailHtml(fullDoc);
+                payload.subject = fullDoc.subject;
+            }
+            // If no document, CF will load campaign from adminEmailCampaigns/{campaignId}
+
+            const result = await sendTestFn(payload);
             const data = result.data as any;
 
             if (data.success) {

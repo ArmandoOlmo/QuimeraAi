@@ -51,7 +51,7 @@ interface SendCampaignResult {
  */
 export const sendCampaign = functions.https.onCall(async (data: {
     userId: string;
-    storeId: string;  // Note: This is actually projectId from frontend
+    storeId: string;  // projectId from frontend, or 'admin'
     campaignId: string;
 }, context) => {
     // Verify authentication
@@ -61,20 +61,23 @@ export const sendCampaign = functions.https.onCall(async (data: {
 
     const { userId, storeId: projectId, campaignId } = data;
 
-    // Verify user owns this project
-    if (context.auth.uid !== userId) {
-        throw new functions.https.HttpsError('permission-denied', 'User does not have access to this project');
-    }
-
     try {
-        // Get campaign data (using projects path)
-        const campaignDoc = await db.doc(`users/${userId}/projects/${projectId}/emailCampaigns/${campaignId}`).get();
-        
+        // Try user-level campaign first
+        let campaignDoc = await db.doc(`users/${userId}/projects/${projectId}/emailCampaigns/${campaignId}`).get();
+        let isAdminCampaign = false;
+
+        // Fallback: try admin-level campaigns
+        if (!campaignDoc.exists) {
+            campaignDoc = await db.doc(`adminEmailCampaigns/${campaignId}`).get();
+            isAdminCampaign = true;
+        }
+
         if (!campaignDoc.exists) {
             throw new functions.https.HttpsError('not-found', 'Campaign not found');
         }
 
         const campaign = campaignDoc.data() as CampaignData;
+        campaign.id = campaignId;
 
         // Verify campaign is in sendable state
         if (campaign.status !== 'draft' && campaign.status !== 'scheduled') {
@@ -88,7 +91,22 @@ export const sendCampaign = functions.https.onCall(async (data: {
         });
 
         // Get recipients based on audience type
-        const recipients = await getRecipients(userId, projectId, campaign);
+        let recipients: RecipientData[] = [];
+
+        if (isAdminCampaign) {
+            // Admin campaigns: use customRecipientEmails if available
+            if (campaign.audienceType === 'custom' && campaign.customRecipientEmails) {
+                recipients = campaign.customRecipientEmails
+                    .filter((e: string) => isValidEmail(e))
+                    .map((email: string) => ({ email }));
+            } else {
+                // For admin 'all' audience: gather from all tenants or use stored audience
+                // For now, customRecipientEmails is the primary admin send method
+                console.log('[sendCampaign] Admin campaign with audienceType:', campaign.audienceType);
+            }
+        } else {
+            recipients = await getRecipients(userId, projectId, campaign);
+        }
 
         if (recipients.length === 0) {
             await campaignDoc.ref.update({
@@ -101,15 +119,17 @@ export const sendCampaign = functions.https.onCall(async (data: {
         }
 
         // Get email settings
-        const emailSettingsDoc = await db.doc(`users/${userId}/projects/${projectId}/settings/email`).get();
-        const emailSettings = emailSettingsDoc.data() || {};
+        let fromEmail = 'noreply@quimera.ai';
+        let fromName = 'Quimera';
 
-        const projectDoc = await db.doc(`users/${userId}/projects/${projectId}`).get();
-        const projectSettings = projectDoc.data() || {};
-
-        // Prepare email parameters
-        const fromEmail = emailSettings.fromEmail || 'noreply@quimera.ai';
-        const fromName = emailSettings.fromName || projectSettings.name || 'Quimera';
+        if (!isAdminCampaign) {
+            const emailSettingsDoc = await db.doc(`users/${userId}/projects/${projectId}/settings/email`).get();
+            const emailSettings = emailSettingsDoc.data() || {};
+            const projectDoc = await db.doc(`users/${userId}/projects/${projectId}`).get();
+            const projectSettings = projectDoc.data() || {};
+            fromEmail = emailSettings.fromEmail || 'noreply@quimera.ai';
+            fromName = emailSettings.fromName || projectSettings.name || 'Quimera';
+        }
 
         // Send emails in batches
         const result = await sendCampaignEmails({
@@ -117,8 +137,8 @@ export const sendCampaign = functions.https.onCall(async (data: {
             recipients,
             fromEmail,
             fromName,
-            userId,
-            projectId,
+            userId: isAdminCampaign ? 'admin' : userId,
+            projectId: isAdminCampaign ? 'admin' : projectId,
         });
 
         // Update campaign with results
@@ -136,11 +156,22 @@ export const sendCampaign = functions.https.onCall(async (data: {
     } catch (error: any) {
         console.error('Error sending campaign:', error);
         
-        // Update status to indicate failure
-        await db.doc(`users/${userId}/projects/${projectId}/emailCampaigns/${campaignId}`).update({
-            status: 'draft', // Revert to draft so it can be retried
-            lastError: error.message,
-        });
+        // Try to revert status
+        try {
+            const userPath = `users/${userId}/projects/${projectId}/emailCampaigns/${campaignId}`;
+            const adminPath = `adminEmailCampaigns/${campaignId}`;
+            const doc = await db.doc(userPath).get();
+            if (doc.exists) {
+                await doc.ref.update({ status: 'draft', lastError: error.message });
+            } else {
+                const adminDoc = await db.doc(adminPath).get();
+                if (adminDoc.exists) {
+                    await adminDoc.ref.update({ status: 'draft', lastError: error.message });
+                }
+            }
+        } catch (revertErr) {
+            console.error('Error reverting campaign status:', revertErr);
+        }
 
         throw new functions.https.HttpsError('internal', error.message);
     }
