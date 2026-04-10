@@ -46,8 +46,9 @@ import type { Tenant } from '../../../types';
 import type {
     EmailCampaign, CampaignStatus, EmailAudience,
     EmailAutomation, AutomationType, AutomationStatus,
+    EmailBlockType,
 } from '../../../types/email';
-import { DEFAULT_EMAIL_GLOBAL_STYLES } from '../../../types/email';
+import { DEFAULT_EMAIL_GLOBAL_STYLES, DEFAULT_BLOCK_CONTENT, DEFAULT_BLOCK_STYLES } from '../../../types/email';
 import type { EmailDocument } from '../../../types/email';
 import AdminEmailEditorWrapper from './AdminEmailEditorWrapper';
 import EmailTemplateGallery from '../email/editor/EmailTemplateGallery';
