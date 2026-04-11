@@ -6,7 +6,7 @@ import {
     Layout, Image, List, Star, Users, DollarSign,
     Briefcase, Mail, Send, MessageCircle, PlaySquare,
     MonitorPlay, Grid, MessageSquare, Type, AlignJustify,
-    HelpCircle, ChevronDown, Eye, EyeOff,
+    HelpCircle, ChevronDown, Eye, EyeOff, FileText,
     GripVertical, Plus, Search, X, MapPin, Trash2, UtensilsCrossed, Palette, Columns,
     ShoppingBag, Clock, Shield, Package, Megaphone, Store
 } from 'lucide-react';
@@ -63,6 +63,7 @@ const sectionIcons: Record<PageSection, React.ElementType> = {
     menu: UtensilsCrossed,
     banner: Image,
     chatbot: MessageSquare,
+    cmsFeed: FileText,
     footer: Type,
     header: AlignJustify,
     typography: Type,
@@ -302,6 +303,7 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
         menu: t('editor.restaurantMenu'),
         banner: t('editor.bannerSection'),
         chatbot: t('editor.aiChatbot'),
+        cmsFeed: t('editor.cmsFeedSection', 'CMS Feed'),
         footer: t('editor.footerSection'),
         header: t('editor.navigationSection'),
         typography: t('editor.typographySection'),

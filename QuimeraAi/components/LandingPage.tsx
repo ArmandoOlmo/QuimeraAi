@@ -634,6 +634,7 @@ const LandingPageContent: React.FC = () => {
   const mergedHeaderData = mergeComponentData('header');
   const mergedHeroSplitData = mergeComponentData('heroSplit');
   const mergedProductsData = mergeComponentData('products');
+  const mergedCMSFeedData = mergeComponentData('cmsFeed');
 
   // Ecommerce section components
   const mergedFeaturedProductsData = mergeComponentData('featuredProducts');
@@ -822,6 +823,252 @@ const LandingPageContent: React.FC = () => {
     ) : null,
     // Store settings is a config section, not a visual component
     storeSettings: null,
+    // CMS Feed section - renders blog posts grid
+    cmsFeed: (() => {
+      const fd = mergedCMSFeedData || data.cmsFeed || {} as any;
+      const colors = fd.colors || {};
+      const layout = fd.layout || 'grid';
+      const cols = fd.columns || 3;
+      const maxPosts = fd.maxPosts || 6;
+      const categoryFilter = fd.categoryFilter || 'all';
+      const showOnlyPublished = fd.showOnlyPublished !== false;
+      const showFeaturedImage = fd.showFeaturedImage !== false;
+      const showExcerpt = fd.showExcerpt !== false;
+      const showDate = fd.showDate !== false;
+      const showAuthor = fd.showAuthor !== false;
+      const showCategoryBadge = fd.showCategoryBadge !== false;
+      const showReadMore = fd.showReadMore !== false;
+      const readMoreText = fd.readMoreText || 'Read More';
+      const viewAllText = fd.viewAllText || '';
+      const viewAllLink = fd.viewAllLink || '/blog';
+      const imageStyle = fd.imageStyle || 'rounded';
+
+      const paddingYMap: Record<string, string> = { none: '0', sm: '2rem', md: '4rem', lg: '6rem', xl: '8rem' };
+      const paddingXMap: Record<string, string> = { none: '0', sm: '1rem', md: '2rem', lg: '4rem', xl: '6rem' };
+      const py = paddingYMap[fd.paddingY || 'md'] || '4rem';
+      const px = paddingXMap[fd.paddingX || 'md'] || '2rem';
+
+      const titleSizeMap: Record<string, string> = { sm: '1.5rem', md: '2rem', lg: '2.5rem', xl: '3rem' };
+      const descSizeMap: Record<string, string> = { sm: '0.875rem', md: '1rem', lg: '1.125rem', xl: '1.25rem' };
+
+      let filteredPosts = [...cmsPosts];
+      if (showOnlyPublished) filteredPosts = filteredPosts.filter(p => p.status === 'published');
+      if (categoryFilter !== 'all') filteredPosts = filteredPosts.filter(p => p.categoryId === categoryFilter);
+      filteredPosts = filteredPosts.slice(0, maxPosts);
+
+      const imageRadius = imageStyle === 'rounded' ? theme.cardBorderRadius || 'lg' : imageStyle === 'square' ? 'none' : 'none';
+      const borderRadiusMap: Record<string, string> = { none: '0', sm: '0.25rem', md: '0.5rem', lg: '0.75rem', xl: '1rem', '2xl': '1.5rem', full: '9999px' };
+      const cardRadius = borderRadiusMap[theme.cardBorderRadius || 'lg'] || '0.75rem';
+      const imgRadiusVal = borderRadiusMap[imageRadius] || '0.75rem';
+
+      const gridColClass = layout === 'grid'
+        ? cols === 1 ? 'grid-cols-1' : cols === 2 ? 'grid-cols-1 md:grid-cols-2' : cols === 4 ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-4' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'
+        : layout === 'list' ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3';
+
+      const resolvedCategory = (catId: string) => {
+        const cat = categories.find((c: any) => c.id === catId);
+        return cat?.name || '';
+      };
+
+      return (
+        <SectionBackground
+          backgroundImageUrl={fd.backgroundImageUrl}
+          backgroundColor={colors.background}
+          backgroundOverlayEnabled={fd.backgroundOverlayEnabled}
+          backgroundOverlayOpacity={fd.backgroundOverlayOpacity}
+          backgroundOverlayColor={fd.backgroundOverlayColor}
+        >
+          <section id="cmsFeed" style={{ padding: `${py} ${px}`, background: colors.background || 'transparent' }}>
+            {/* Corner Gradient */}
+            {fd.cornerGradient?.enabled && (
+              <div className="absolute inset-0 pointer-events-none" style={{
+                background: (() => {
+                  const dirs: Record<string, string> = { 'top-left': 'to bottom right', 'top-right': 'to bottom left', 'bottom-left': 'to top right', 'bottom-right': 'to top left' };
+                  const dir = dirs[fd.cornerGradient.position] || 'to bottom right';
+                  const hex = fd.cornerGradient.color || '#ffffff';
+                  const r = parseInt(hex.slice(1, 3), 16), g = parseInt(hex.slice(3, 5), 16), b = parseInt(hex.slice(5, 7), 16);
+                  return `linear-gradient(${dir}, rgba(${r},${g},${b},${(fd.cornerGradient.opacity || 20) / 100}) 0%, transparent ${fd.cornerGradient.size || 50}%)`;
+                })()
+              }} />
+            )}
+
+            <div className="container mx-auto relative z-10">
+              {/* Section Header */}
+              {(fd.title || fd.description) && (
+                <div className="text-center mb-12">
+                  {fd.title && (
+                    <h2 style={{ fontSize: titleSizeMap[fd.titleFontSize || 'md'], color: colors.heading || '#F9FAFB', fontFamily: 'var(--font-header)', fontWeight: 'var(--font-weight-header)' as any }} className="font-bold mb-4">
+                      {fd.title}
+                    </h2>
+                  )}
+                  {fd.description && (
+                    <p style={{ fontSize: descSizeMap[fd.descriptionFontSize || 'md'], color: colors.text || '#94a3b8' }} className="max-w-2xl mx-auto">
+                      {fd.description}
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {/* Posts Grid */}
+              {filteredPosts.length === 0 ? (
+                <div className="text-center py-16" style={{ color: colors.text || '#94a3b8' }}>
+                  <p className="text-lg opacity-60">No articles to display</p>
+                </div>
+              ) : layout === 'magazine' ? (
+                /* Magazine Layout: Large featured + smaller grid */
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {filteredPosts.map((post, idx) => (
+                    <div
+                      key={post.id}
+                      className={`group cursor-pointer overflow-hidden transition-all duration-300 hover:-translate-y-1 ${idx === 0 ? 'lg:row-span-2' : ''}`}
+                      style={{ borderRadius: cardRadius, background: colors.cardBackground || '#1e293b', border: `1px solid ${colors.cardBorder || '#334155'}` }}
+                      onClick={() => handleLinkNavigation(`/blog/${post.slug}`)}
+                    >
+                      {showFeaturedImage && post.featuredImage && (
+                        <div className={`overflow-hidden ${idx === 0 ? 'h-64 lg:h-full' : 'h-48'}`} style={{ borderRadius: imageStyle === 'cover' ? '0' : `${imgRadiusVal} ${imgRadiusVal} 0 0` }}>
+                          <img src={post.featuredImage} alt={post.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                        </div>
+                      )}
+                      <div className="p-5">
+                        {showCategoryBadge && post.categoryId && (
+                          <span className="inline-block px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-full mb-3" style={{ background: colors.categoryBadgeBackground || '#4f46e5', color: colors.categoryBadgeText || '#fff' }}>
+                            {resolvedCategory(post.categoryId)}
+                          </span>
+                        )}
+                        <h3 className="font-bold mb-2 group-hover:opacity-80 transition-opacity" style={{ color: colors.cardHeading || '#f8fafc', fontSize: idx === 0 ? '1.5rem' : '1.125rem' }}>{post.title}</h3>
+                        {showExcerpt && <p className="line-clamp-2 mb-3" style={{ color: colors.cardExcerpt || '#94a3b8', fontSize: '0.875rem' }}>{post.excerpt}</p>}
+                        <div className="flex items-center gap-3 text-xs" style={{ color: colors.cardText || '#cbd5e1' }}>
+                          {showAuthor && post.author && <span>{post.author}</span>}
+                          {showDate && <span>{new Date(post.publishedAt || post.createdAt).toLocaleDateString()}</span>}
+                        </div>
+                        {showReadMore && (
+                          <span className="inline-block mt-3 text-sm font-semibold" style={{ color: colors.buttonBackground || '#4f46e5' }}>{readMoreText} →</span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : layout === 'carousel' ? (
+                /* Carousel Layout: Horizontal scroll */
+                <div className="flex gap-6 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide" style={{ scrollbarWidth: 'none' }}>
+                  {filteredPosts.map(post => (
+                    <div
+                      key={post.id}
+                      className="group cursor-pointer flex-shrink-0 snap-start overflow-hidden transition-all duration-300 hover:-translate-y-1"
+                      style={{ borderRadius: cardRadius, background: colors.cardBackground || '#1e293b', border: `1px solid ${colors.cardBorder || '#334155'}`, width: '320px' }}
+                      onClick={() => handleLinkNavigation(`/blog/${post.slug}`)}
+                    >
+                      {showFeaturedImage && post.featuredImage && (
+                        <div className="h-48 overflow-hidden" style={{ borderRadius: imageStyle === 'cover' ? '0' : `${imgRadiusVal} ${imgRadiusVal} 0 0` }}>
+                          <img src={post.featuredImage} alt={post.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                        </div>
+                      )}
+                      <div className="p-5">
+                        {showCategoryBadge && post.categoryId && (
+                          <span className="inline-block px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-full mb-3" style={{ background: colors.categoryBadgeBackground || '#4f46e5', color: colors.categoryBadgeText || '#fff' }}>
+                            {resolvedCategory(post.categoryId)}
+                          </span>
+                        )}
+                        <h3 className="font-bold text-lg mb-2 group-hover:opacity-80 transition-opacity" style={{ color: colors.cardHeading || '#f8fafc' }}>{post.title}</h3>
+                        {showExcerpt && <p className="line-clamp-2 mb-3" style={{ color: colors.cardExcerpt || '#94a3b8', fontSize: '0.875rem' }}>{post.excerpt}</p>}
+                        <div className="flex items-center gap-3 text-xs" style={{ color: colors.cardText || '#cbd5e1' }}>
+                          {showAuthor && post.author && <span>{post.author}</span>}
+                          {showDate && <span>{new Date(post.publishedAt || post.createdAt).toLocaleDateString()}</span>}
+                        </div>
+                        {showReadMore && (
+                          <span className="inline-block mt-3 text-sm font-semibold" style={{ color: colors.buttonBackground || '#4f46e5' }}>{readMoreText} →</span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : layout === 'list' ? (
+                /* List Layout: Horizontal cards */
+                <div className="space-y-4">
+                  {filteredPosts.map(post => (
+                    <div
+                      key={post.id}
+                      className="group cursor-pointer flex flex-col sm:flex-row gap-5 overflow-hidden transition-all duration-300 hover:-translate-y-0.5"
+                      style={{ borderRadius: cardRadius, background: colors.cardBackground || '#1e293b', border: `1px solid ${colors.cardBorder || '#334155'}` }}
+                      onClick={() => handleLinkNavigation(`/blog/${post.slug}`)}
+                    >
+                      {showFeaturedImage && post.featuredImage && (
+                        <div className="sm:w-64 h-48 sm:h-auto flex-shrink-0 overflow-hidden" style={{ borderRadius: imageStyle === 'cover' ? '0' : imgRadiusVal }}>
+                          <img src={post.featuredImage} alt={post.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                        </div>
+                      )}
+                      <div className="p-5 flex-1 flex flex-col justify-center">
+                        {showCategoryBadge && post.categoryId && (
+                          <span className="inline-block w-fit px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-full mb-3" style={{ background: colors.categoryBadgeBackground || '#4f46e5', color: colors.categoryBadgeText || '#fff' }}>
+                            {resolvedCategory(post.categoryId)}
+                          </span>
+                        )}
+                        <h3 className="font-bold text-xl mb-2 group-hover:opacity-80 transition-opacity" style={{ color: colors.cardHeading || '#f8fafc' }}>{post.title}</h3>
+                        {showExcerpt && <p className="line-clamp-2 mb-3" style={{ color: colors.cardExcerpt || '#94a3b8' }}>{post.excerpt}</p>}
+                        <div className="flex items-center gap-4 text-sm" style={{ color: colors.cardText || '#cbd5e1' }}>
+                          {showAuthor && post.author && <span>{post.author}</span>}
+                          {showDate && <span>{new Date(post.publishedAt || post.createdAt).toLocaleDateString()}</span>}
+                          {showReadMore && (
+                            <span className="ml-auto font-semibold" style={{ color: colors.buttonBackground || '#4f46e5' }}>{readMoreText} →</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                /* Default Grid Layout */
+                <div className={`grid ${gridColClass} gap-6`}>
+                  {filteredPosts.map(post => (
+                    <div
+                      key={post.id}
+                      className="group cursor-pointer overflow-hidden transition-all duration-300 hover:-translate-y-1"
+                      style={{ borderRadius: cardRadius, background: colors.cardBackground || '#1e293b', border: `1px solid ${colors.cardBorder || '#334155'}` }}
+                      onClick={() => handleLinkNavigation(`/blog/${post.slug}`)}
+                    >
+                      {showFeaturedImage && post.featuredImage && (
+                        <div className="h-52 overflow-hidden" style={{ borderRadius: imageStyle === 'cover' ? '0' : `${imgRadiusVal} ${imgRadiusVal} 0 0` }}>
+                          <img src={post.featuredImage} alt={post.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                        </div>
+                      )}
+                      <div className="p-5">
+                        {showCategoryBadge && post.categoryId && (
+                          <span className="inline-block px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-full mb-3" style={{ background: colors.categoryBadgeBackground || '#4f46e5', color: colors.categoryBadgeText || '#fff' }}>
+                            {resolvedCategory(post.categoryId)}
+                          </span>
+                        )}
+                        <h3 className="font-bold text-lg mb-2 group-hover:opacity-80 transition-opacity" style={{ color: colors.cardHeading || '#f8fafc' }}>{post.title}</h3>
+                        {showExcerpt && <p className="line-clamp-2 mb-3" style={{ color: colors.cardExcerpt || '#94a3b8', fontSize: '0.875rem' }}>{post.excerpt}</p>}
+                        <div className="flex items-center gap-3 text-xs" style={{ color: colors.cardText || '#cbd5e1' }}>
+                          {showAuthor && post.author && <span>{post.author}</span>}
+                          {showDate && <span>{new Date(post.publishedAt || post.createdAt).toLocaleDateString()}</span>}
+                        </div>
+                        {showReadMore && (
+                          <span className="inline-block mt-3 text-sm font-semibold" style={{ color: colors.buttonBackground || '#4f46e5' }}>{readMoreText} →</span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* View All CTA */}
+              {viewAllText && (
+                <div className="text-center mt-10">
+                  <button
+                    onClick={() => handleLinkNavigation(viewAllLink)}
+                    className="inline-flex items-center gap-2 px-6 py-3 font-semibold text-sm transition-all duration-300 hover:opacity-90"
+                    style={{ background: colors.buttonBackground || '#4f46e5', color: colors.buttonText || '#fff', borderRadius: borderRadiusMap[theme.buttonBorderRadius || 'md'] || '0.5rem' }}
+                  >
+                    {viewAllText}
+                  </button>
+                </div>
+              )}
+            </div>
+          </section>
+        </SectionBackground>
+      );
+    })(),
   };
 
   // Font variables are now injected directly into :root via useEffect above

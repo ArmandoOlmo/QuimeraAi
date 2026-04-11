@@ -386,7 +386,7 @@ const Controls: React.FC = () => {
   };
 
   const { uploadImageAndGetURL } = useFiles();
-  const { menus } = useCMS();
+  const { menus, categories } = useCMS();
 
   // Page settings modal state
   const [showPageSettings, setShowPageSettings] = useState<string | null>(null);
@@ -3296,6 +3296,7 @@ const Controls: React.FC = () => {
     collectionBanner: { label: 'Collection Banner', icon: Image, renderer: () => null },
     productBundle: { label: 'Product Bundle', icon: ShoppingBag, renderer: () => null },
     announcementBar: { label: 'Announcement Bar', icon: MessageCircle, renderer: () => null },
+    cmsFeed: { label: 'CMS Feed', icon: FileText, renderer: () => null },
   };
 
   if (!data) return null;
@@ -5262,6 +5263,217 @@ const Controls: React.FC = () => {
           <ColorControl label="Gradient Start" value={data?.leads.colors?.gradientStart || '#4f46e5'} onChange={(v) => setNestedData('leads.colors.gradientStart', v)} />
           <ColorControl label="Gradient End" value={data?.leads.colors?.gradientEnd || '#10b981'} onChange={(v) => setNestedData('leads.colors.gradientEnd', v)} />
         </div>
+      </div>
+    );
+
+    return <TabbedControls contentTab={contentTab} styleTab={styleTab} />;
+  };
+
+  // CMS Feed Controls with Tabs
+  const renderCMSFeedControlsWithTabs = () => {
+    // Initialize cmsFeed data if not present
+    const feedData = data?.cmsFeed || {} as any;
+
+    const contentTab = (
+      <div className="space-y-4">
+        {/* Section Heading */}
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
+            <FileText size={14} />
+            {t('controls.content')}
+          </label>
+          <Input label={t('editor.controls.common.title')} value={feedData.title || ''} onChange={(e) => setNestedData('cmsFeed.title', e.target.value)} placeholder="Latest Articles" />
+          <FontSizeSelector label={t('editor.controls.common.titleSize')} value={feedData.titleFontSize || 'md'} onChange={(v) => setNestedData('cmsFeed.titleFontSize', v)} />
+          <TextArea label={t('editor.controls.common.description')} value={feedData.description || ''} onChange={(e) => setNestedData('cmsFeed.description', e.target.value)} rows={2} placeholder="Stay up to date with our latest content" />
+          <FontSizeSelector label={t('editor.controls.common.descriptionSize')} value={feedData.descriptionFontSize || 'md'} onChange={(v) => setNestedData('cmsFeed.descriptionFontSize', v)} />
+        </div>
+
+        {/* Layout Settings */}
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
+            <LayoutGrid size={14} />
+            Layout
+          </label>
+          <Select
+            label="Layout Variant"
+            value={feedData.layout || 'grid'}
+            onChange={(v) => setNestedData('cmsFeed.layout', v)}
+            options={[
+              { value: 'grid', label: 'Grid' },
+              { value: 'list', label: 'List' },
+              { value: 'carousel', label: 'Carousel' },
+              { value: 'magazine', label: 'Magazine' },
+            ]}
+          />
+          {(feedData.layout || 'grid') === 'grid' && (
+            <Select
+              label="Columns"
+              value={String(feedData.columns || 3)}
+              onChange={(v) => setNestedData('cmsFeed.columns', parseInt(v))}
+              options={[
+                { value: '1', label: '1 Column' },
+                { value: '2', label: '2 Columns' },
+                { value: '3', label: '3 Columns' },
+                { value: '4', label: '4 Columns' },
+              ]}
+            />
+          )}
+          <Select
+            label="Max Posts"
+            value={String(feedData.maxPosts || 6)}
+            onChange={(v) => setNestedData('cmsFeed.maxPosts', parseInt(v))}
+            options={[
+              { value: '3', label: '3 Posts' },
+              { value: '6', label: '6 Posts' },
+              { value: '9', label: '9 Posts' },
+              { value: '12', label: '12 Posts' },
+            ]}
+          />
+          <Select
+            label="Category Filter"
+            value={feedData.categoryFilter || 'all'}
+            onChange={(v) => setNestedData('cmsFeed.categoryFilter', v)}
+            options={[
+              { value: 'all', label: 'All Categories' },
+              ...(categories || []).map((cat: any) => ({ value: cat.id, label: cat.name }))
+            ]}
+          />
+        </div>
+
+        {/* Card Content Controls */}
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
+            <SlidersHorizontal size={14} />
+            Card Content
+          </label>
+          <ToggleControl
+            label="Show Featured Image"
+            checked={feedData.showFeaturedImage !== false}
+            onChange={(v) => setNestedData('cmsFeed.showFeaturedImage', v)}
+          />
+          <ToggleControl
+            label="Show Excerpt"
+            checked={feedData.showExcerpt !== false}
+            onChange={(v) => setNestedData('cmsFeed.showExcerpt', v)}
+          />
+          <ToggleControl
+            label="Show Date"
+            checked={feedData.showDate !== false}
+            onChange={(v) => setNestedData('cmsFeed.showDate', v)}
+          />
+          <ToggleControl
+            label="Show Author"
+            checked={feedData.showAuthor !== false}
+            onChange={(v) => setNestedData('cmsFeed.showAuthor', v)}
+          />
+          <ToggleControl
+            label="Show Category Badge"
+            checked={feedData.showCategoryBadge !== false}
+            onChange={(v) => setNestedData('cmsFeed.showCategoryBadge', v)}
+          />
+          <ToggleControl
+            label="Show Read More"
+            checked={feedData.showReadMore !== false}
+            onChange={(v) => setNestedData('cmsFeed.showReadMore', v)}
+          />
+          {feedData.showReadMore !== false && (
+            <Input
+              label="Read More Text"
+              value={feedData.readMoreText || 'Read More'}
+              onChange={(e) => setNestedData('cmsFeed.readMoreText', e.target.value)}
+            />
+          )}
+          <ToggleControl
+            label="Show Only Published"
+            checked={feedData.showOnlyPublished !== false}
+            onChange={(v) => setNestedData('cmsFeed.showOnlyPublished', v)}
+          />
+        </div>
+
+        {/* View All CTA */}
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
+            <MousePointerClick size={14} />
+            View All CTA
+          </label>
+          <Input label="Button Text" value={feedData.viewAllText || ''} onChange={(e) => setNestedData('cmsFeed.viewAllText', e.target.value)} placeholder="View All Articles" />
+          <Input label="Button Link" value={feedData.viewAllLink || ''} onChange={(e) => setNestedData('cmsFeed.viewAllLink', e.target.value)} placeholder="/blog" />
+        </div>
+      </div>
+    );
+
+    const styleTab = (
+      <div className="space-y-4">
+        <BackgroundImageControl sectionKey="cmsFeed" />
+        {/* Spacing */}
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Spacing</label>
+          <div className="space-y-1">
+            <PaddingSelector label="Vertical" value={feedData.paddingY || 'md'} onChange={(v) => setNestedData('cmsFeed.paddingY', v)} />
+            <PaddingSelector label="Horizontal" value={feedData.paddingX || 'md'} onChange={(v) => setNestedData('cmsFeed.paddingX', v)} />
+          </div>
+        </div>
+
+        {/* Section Colors */}
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Section Colors</label>
+          <ColorControl label={t('editor.controls.common.background')} value={feedData.colors?.background || '#0f172a'} onChange={(v) => setNestedData('cmsFeed.colors.background', v)} />
+          <ColorControl label="Section Title" value={feedData.colors?.heading || '#F9FAFB'} onChange={(v) => setNestedData('cmsFeed.colors.heading', v)} />
+          <ColorControl label="Section Description" value={feedData.colors?.text || '#94a3b8'} onChange={(v) => setNestedData('cmsFeed.colors.text', v)} />
+        </div>
+
+        {/* Card Colors */}
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Card Colors</label>
+          <ColorControl label="Card Background" value={feedData.colors?.cardBackground || '#1e293b'} onChange={(v) => setNestedData('cmsFeed.colors.cardBackground', v)} />
+          <ColorControl label="Card Border" value={feedData.colors?.cardBorder || '#334155'} onChange={(v) => setNestedData('cmsFeed.colors.cardBorder', v)} />
+          <ColorControl label="Card Heading" value={feedData.colors?.cardHeading || '#f8fafc'} onChange={(v) => setNestedData('cmsFeed.colors.cardHeading', v)} />
+          <ColorControl label="Card Text" value={feedData.colors?.cardText || '#cbd5e1'} onChange={(v) => setNestedData('cmsFeed.colors.cardText', v)} />
+          <ColorControl label="Card Excerpt" value={feedData.colors?.cardExcerpt || '#94a3b8'} onChange={(v) => setNestedData('cmsFeed.colors.cardExcerpt', v)} />
+        </div>
+
+        {/* Image Style */}
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Image Style</label>
+          <Select
+            label="Card Image Shape"
+            value={feedData.imageStyle || 'rounded'}
+            onChange={(v) => setNestedData('cmsFeed.imageStyle', v)}
+            options={[
+              { value: 'rounded', label: 'Rounded' },
+              { value: 'square', label: 'Square' },
+              { value: 'cover', label: 'Full Cover' },
+            ]}
+          />
+        </div>
+
+        {/* Category Badge Colors */}
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Category Badge</label>
+          <ColorControl label="Badge Background" value={feedData.colors?.categoryBadgeBackground || '#4f46e5'} onChange={(v) => setNestedData('cmsFeed.colors.categoryBadgeBackground', v)} />
+          <ColorControl label="Badge Text" value={feedData.colors?.categoryBadgeText || '#ffffff'} onChange={(v) => setNestedData('cmsFeed.colors.categoryBadgeText', v)} />
+        </div>
+
+        {/* Button Colors */}
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Buttons</label>
+          <ColorControl label="Button Background" value={feedData.colors?.buttonBackground || '#4f46e5'} onChange={(v) => setNestedData('cmsFeed.colors.buttonBackground', v)} />
+          <ColorControl label={t('editor.controls.common.buttonText')} value={feedData.colors?.buttonText || '#ffffff'} onChange={(v) => setNestedData('cmsFeed.colors.buttonText', v)} />
+        </div>
+
+        {/* Corner Gradient */}
+        <CornerGradientControl
+          enabled={feedData.cornerGradient?.enabled || false}
+          position={feedData.cornerGradient?.position || 'top-left'}
+          color={feedData.cornerGradient?.color || '#ffffff'}
+          opacity={feedData.cornerGradient?.opacity || 20}
+          size={feedData.cornerGradient?.size || 50}
+          onEnabledChange={(v) => setNestedData('cmsFeed.cornerGradient.enabled', v)}
+          onPositionChange={(v) => setNestedData('cmsFeed.cornerGradient.position', v)}
+          onColorChange={(v) => setNestedData('cmsFeed.cornerGradient.color', v)}
+          onOpacityChange={(v) => setNestedData('cmsFeed.cornerGradient.opacity', v)}
+          onSizeChange={(v) => setNestedData('cmsFeed.cornerGradient.size', v)}
+        />
       </div>
     );
 
@@ -7477,6 +7689,8 @@ const Controls: React.FC = () => {
         return renderLeadsControlsWithTabs();
       case 'newsletter':
         return renderNewsletterControlsWithTabs();
+      case 'cmsFeed':
+        return renderCMSFeedControlsWithTabs();
       case 'cta':
         return renderCTAControlsWithTabs();
       case 'howItWorks':

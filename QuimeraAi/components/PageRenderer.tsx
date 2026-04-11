@@ -182,6 +182,7 @@ const PageRenderer: React.FC<PageRendererProps> = ({
             collectionBanner: mergeComponentData('collectionBanner') || baseData.collectionBanner,
             productBundle: mergeComponentData('productBundle') || baseData.productBundle,
             announcementBar: mergeComponentData('announcementBar') || baseData.announcementBar,
+            cmsFeed: mergeComponentData('cmsFeed') || (baseData as any).cmsFeed,
         } as PageData;
     }, [baseData, mergeComponentData]);
 
@@ -760,6 +761,7 @@ const PageRenderer: React.FC<PageRendererProps> = ({
             case 'typography':
             case 'storeSettings':
             case 'chatbot':
+            case 'cmsFeed': // CMS Feed is rendered dynamically via LandingPage with useCMS()
             case 'products': // Legacy products grid - use ProductGridSection instead
                 return null;
 
