@@ -593,15 +593,22 @@ export const useOnboarding = () => {
 
             // Add contact info if available
             if (result.contactInfo) {
+                const ci = result.contactInfo;
                 updates.contactInfo = {
-                    email: result.contactInfo.email,
-                    phone: result.contactInfo.phone,
-                    address: result.contactInfo.address,
-                    facebook: result.contactInfo.facebook,
-                    instagram: result.contactInfo.instagram,
-                    twitter: result.contactInfo.twitter,
-                    linkedin: result.contactInfo.linkedin,
-                    youtube: result.contactInfo.youtube,
+                    email: ci.email || undefined,
+                    phone: ci.phone || undefined,
+                    address: ci.address || undefined,
+                    city: ci.city || undefined,
+                    state: ci.state || undefined,
+                    zipCode: ci.zipCode || undefined,
+                    country: ci.country || undefined,
+                    facebook: ci.facebook || undefined,
+                    instagram: ci.instagram || undefined,
+                    twitter: ci.twitter || undefined,
+                    linkedin: ci.linkedin || undefined,
+                    youtube: ci.youtube || undefined,
+                    tiktok: ci.tiktok || undefined,
+                    businessHours: ci.businessHours || undefined,
                 };
             }
 

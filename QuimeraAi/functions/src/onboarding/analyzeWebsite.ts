@@ -41,39 +41,61 @@ export const analyzeWebsite = functions
                 throw new functions.https.HttpsError('internal', 'AI configuration error');
             }
 
-            // Use Gemini URL Context tool — Google fetches the website, not us
+            // Use Gemini 3.1 Flash Live Preview with URL Context tool
             const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
 
             const prompt = `Visit this website: ${normalizedUrl}
 
-Analyze the website and extract business information. Return ONLY a valid JSON object (no markdown, no code blocks, no explanations) with these fields:
+Analyze the website thoroughly and extract ALL available business information. Be very careful to separate address components into individual fields. Look in the footer, contact page, about page, and header for information.
+
+Return ONLY a valid JSON object (no markdown, no code blocks, no explanations) with these EXACT fields:
 
 {
-  "businessName": "The business/company name",
-  "industry": "One of: restaurant, technology, healthcare, consulting, fitness-gym, photography, real-estate, beauty-spa, automotive, legal, finance, construction, education, travel, event-planning, retail, fashion, jewelry, electronics, home-decor, beauty-products, food-products, crafts, sports-equipment, other",
+  "businessName": "The business/company name as displayed on the website",
+  "industry": "One of: restaurant, cafe, technology, healthcare, consulting, fitness-gym, photography, real-estate, beauty-spa, automotive, legal, finance, construction, education, travel, event-planning, retail, fashion, jewelry, electronics, home-decor, beauty-products, food-products, crafts, sports-equipment, ecommerce, other",
   "description": "A 2-3 sentence description of the business (in the same language as the website)",
   "tagline": "A short catchy tagline for the business (in the same language as the website)",
   "services": [
     { "name": "Service name", "description": "Brief description" }
   ],
   "contactInfo": {
-    "email": "email if found or null",
-    "phone": "phone if found or null",
-    "address": "address if found or null",
-    "facebook": "facebook URL if found or null",
-    "instagram": "instagram URL if found or null",
-    "twitter": "twitter/X URL if found or null",
-    "linkedin": "linkedin URL if found or null",
-    "youtube": "youtube URL if found or null"
+    "email": "business email if found, or null",
+    "phone": "phone number with country code if found, or null",
+    "address": "street address only (e.g. '123 Main Street'), or null",
+    "city": "city name only, or null",
+    "state": "state/province/region, or null",
+    "zipCode": "postal/zip code, or null",
+    "country": "country name, or null",
+    "facebook": "full Facebook URL if found, or null",
+    "instagram": "full Instagram URL or @handle if found, or null",
+    "twitter": "full Twitter/X URL or @handle if found, or null",
+    "linkedin": "full LinkedIn URL if found, or null",
+    "youtube": "full YouTube URL if found, or null",
+    "tiktok": "full TikTok URL or @handle if found, or null",
+    "businessHours": {
+      "monday": { "isOpen": true, "openTime": "09:00", "closeTime": "18:00" },
+      "tuesday": { "isOpen": true, "openTime": "09:00", "closeTime": "18:00" },
+      "wednesday": { "isOpen": true, "openTime": "09:00", "closeTime": "18:00" },
+      "thursday": { "isOpen": true, "openTime": "09:00", "closeTime": "18:00" },
+      "friday": { "isOpen": true, "openTime": "09:00", "closeTime": "18:00" },
+      "saturday": { "isOpen": false },
+      "sunday": { "isOpen": false }
+    }
   }
 }
 
-Important rules:
-- Extract 3-6 services maximum
-- Keep descriptions concise
-- If a field is not found, use null
-- The description and tagline should be in the same language as the website
-- Return ONLY the JSON, nothing else`;
+CRITICAL RULES for accurate extraction:
+1. SEPARATE the address into individual fields: address (street), city, state, zipCode, country
+   - Example: "123 Oak Ave, Miami, FL 33101, USA" → address: "123 Oak Ave", city: "Miami", state: "FL", zipCode: "33101", country: "USA"
+   - DO NOT put the full address in the address field
+2. For social media, extract the FULL URL (e.g. "https://facebook.com/business"), not just the platform name
+3. For phone numbers, include country code if visible (e.g. "+1 305-555-1234")
+4. For business hours, use 24-hour format (e.g. "09:00", "17:30"). If hours are not found, set all days to null
+5. If business hours show "Mon-Fri 9-5" style, expand to individual days
+6. Extract 3-6 services maximum, keeping descriptions concise
+7. If a field is not found on the website, use null (not empty string)
+8. The description and tagline should be in the SAME LANGUAGE as the website content
+9. Return ONLY the JSON, nothing else`;
 
             const geminiResponse = await fetch(geminiUrl, {
                 method: 'POST',
@@ -82,8 +104,8 @@ Important rules:
                     contents: [{ parts: [{ text: prompt }] }],
                     tools: [{ url_context: {} }],
                     generationConfig: {
-                        temperature: 0.3,
-                        maxOutputTokens: 2000,
+                        temperature: 0.2,
+                        maxOutputTokens: 4000,
                     },
                 }),
             });
@@ -124,6 +146,15 @@ Important rules:
                 throw new functions.https.HttpsError('internal', 'Failed to parse analysis results. Please try again.');
             }
 
+            // Sanitize: convert empty strings to null for cleaner data
+            if (result.contactInfo) {
+                for (const key of Object.keys(result.contactInfo)) {
+                    if (result.contactInfo[key] === '' || result.contactInfo[key] === 'null') {
+                        result.contactInfo[key] = null;
+                    }
+                }
+            }
+
             // Log URL context metadata if available
             const urlContextMetadata = geminiData?.candidates?.[0]?.urlContextMetadata;
             if (urlContextMetadata) {
@@ -135,6 +166,12 @@ Important rules:
                 businessName: result.businessName,
                 industry: result.industry,
                 servicesCount: result.services?.length || 0,
+                hasContactEmail: !!result.contactInfo?.email,
+                hasContactPhone: !!result.contactInfo?.phone,
+                hasAddress: !!result.contactInfo?.address,
+                hasCity: !!result.contactInfo?.city,
+                hasSocial: !!(result.contactInfo?.facebook || result.contactInfo?.instagram),
+                hasBusinessHours: !!result.contactInfo?.businessHours,
             });
 
             return {
@@ -155,3 +192,4 @@ Important rules:
             throw new functions.https.HttpsError('internal', `Analysis failed: ${error.message}`);
         }
     });
+
