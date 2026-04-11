@@ -130,8 +130,8 @@ Generate a JSON object defining the visual strategy.
 - Header and Footer MUST have the SAME background color (primary brand color)
 - Both header and footer backgrounds must be SOLID colors, never transparent or gradient
 - Page background should default to white (#ffffff) or a very light neutral color to provide contrast`,
-    model: 'gemini-3-pro-preview',
-    version: 4,
+    model: 'gemini-3.1-flash-live-preview',
+    version: 5,
   },
   {
     name: 'onboarding-website-json',
@@ -441,8 +441,8 @@ Return ONLY valid JSON. No markdown.
 5. If "portfolio" is NOT in componentOrder, do NOT include portfolio.items.X.imageUrl prompts
 6. Each prompt must be detailed and specific to the {{industry}} and {{aesthetic}}
 7. Use imageStyleDescription from Design Plan for consistent visual style`,
-    model: 'gemini-3-pro-preview',
-    version: 5,
+    model: 'gemini-3.1-flash-live-preview',
+    version: 6,
   },
 
   // Onboarding - Generate Description (Step 2)
@@ -473,8 +473,8 @@ Return ONLY valid JSON in this exact format:
   "description": "The full business description here...",
   "tagline": "Short catchy tagline here"
 }`,
-    model: 'gemini-2.5-flash',
-    version: 2,
+    model: 'gemini-3.1-flash-live-preview',
+    version: 3,
   },
 
   // Onboarding - Generate Services (Step 3)
@@ -496,8 +496,8 @@ Requirements:
 - Output as JSON array with format: [{"name": "Service Name", "description": "Brief description"}]
 
 Generate the services:`,
-    model: 'gemini-2.5-flash',
-    version: 1,
+    model: 'gemini-3.1-flash-live-preview',
+    version: 2,
   },
 
   // Onboarding - Generate Product Categories (for ecommerce stores)
@@ -523,8 +523,8 @@ Requirements:
 - Output as JSON array with category names only: ["Category 1", "Category 2", "Category 3", ...]
 
 Generate the categories:`,
-    model: 'gemini-2.5-flash',
-    version: 1,
+    model: 'gemini-3.1-flash-live-preview',
+    version: 2,
   },
 
   // Onboarding - Generate Component Content (Step 6)
@@ -593,8 +593,8 @@ Return JSON with this exact structure (only include sections that were requested
 }
 
 Keep all text SHORT and CONCISE. Return ONLY valid JSON.`,
-    model: 'gemini-2.5-flash',
-    version: 3,
+    model: 'gemini-3.1-flash-live-preview',
+    version: 4,
   },
 
   // Onboarding - Generate Image Prompts (Step 6) - LLM generates ALL image prompts at once
@@ -654,8 +654,8 @@ Return ONLY valid JSON with this structure:
 }
 
 REMEMBER: Every image must clearly represent "{{businessName}}" and their specific offerings. Be DETAILED and SPECIFIC.`,
-    model: 'gemini-2.5-flash',
-    version: 2,
+    model: 'gemini-3.1-flash-live-preview',
+    version: 3,
   },
 
   // Onboarding - Template Recommendation (Step 4)
@@ -693,8 +693,8 @@ Return ONLY valid JSON:
   "matchScore": 75-95,
   "matchReasons": ["industry reason", "color reason", "component reason"]
 }`,
-    model: 'gemini-2.5-flash',
-    version: 1,
+    model: 'gemini-3.1-flash-live-preview',
+    version: 2,
   },
 
   // Content Generation - Generic Fallback

@@ -1249,6 +1249,30 @@ TEMPLATE #${t.index}: "${t.name}"
             }
         }
 
+        // BACKGROUND IMAGES for sections — generate contextual backgrounds
+        const bgSections = [
+            { section: 'services', label: 'Services section background' },
+            { section: 'features', label: 'Features section background' },
+            { section: 'testimonials', label: 'Testimonials section background' },
+            { section: 'pricing', label: 'Pricing section background' },
+            { section: 'faq', label: 'FAQ section background' },
+            { section: 'leads', label: 'Contact form section background' },
+            { section: 'newsletter', label: 'Newsletter section background' },
+            { section: 'howItWorks', label: 'How It Works section background' },
+            { section: 'cmsFeed', label: 'Blog feed section background' },
+            { section: 'team', label: 'Team section background' },
+            { section: 'portfolio', label: 'Portfolio section background' },
+        ];
+        for (const bg of bgSections) {
+            if (templateData[bg.section] && isEnabled(bg.section)) {
+                imagesToGenerate.push({
+                    key: `${bg.section}.backgroundImageUrl`,
+                    aspectRatio: '16:9',
+                    description: `${bg.label} — subtle, atmospheric, semi-transparent overlay`
+                });
+            }
+        }
+
         if (imagesToGenerate.length === 0) {
             // Fallback to at least hero
             imagesToGenerate.push({ key: 'hero.imageUrl', aspectRatio: '16:9', description: 'Main hero banner image' });
@@ -1756,6 +1780,52 @@ TEMPLATE #${t.index}: "${t.name}"
             // Remove slides if it exists (use items instead)
             if (data.slideshow.slides) {
                 delete data.slideshow.slides;
+            }
+        }
+
+        // ============ CMS FEED ============
+        if (data.cmsFeed && isOn('cmsFeed')) {
+            data.cmsFeed.title = t('Últimos Artículos', 'Latest Articles');
+            data.cmsFeed.description = t('Mantente al día con nuestro contenido', 'Stay up to date with our latest content');
+            data.cmsFeed.layout = 'grid';
+            data.cmsFeed.cardStyle = 'classic';
+            data.cmsFeed.columns = 3;
+            data.cmsFeed.maxPosts = 6;
+            data.cmsFeed.showFeaturedImage = true;
+            data.cmsFeed.showExcerpt = true;
+            data.cmsFeed.showDate = true;
+            data.cmsFeed.showAuthor = true;
+            data.cmsFeed.showCategoryBadge = true;
+            data.cmsFeed.showReadMore = true;
+            data.cmsFeed.readMoreText = t('Leer Más', 'Read More');
+            if (generatedImages['cmsFeed.backgroundImageUrl']) {
+                data.cmsFeed.backgroundImageUrl = generatedImages['cmsFeed.backgroundImageUrl'];
+            }
+        }
+
+        // ============ VIDEO ============
+        if (data.video && isOn('video')) {
+            data.video.title = t('Video', 'Video');
+            data.video.description = t('Conoce más sobre nosotros', 'Learn more about us');
+        }
+
+        // ============ CHATBOT ============
+        if (data.chatbot && isOn('chatbot')) {
+            data.chatbot.title = name;
+            data.chatbot.welcomeMessage = t(
+                `¡Hola! Bienvenido a ${name}. ¿En qué puedo ayudarte?`,
+                `Hello! Welcome to ${name}. How can I help you?`
+            );
+        }
+
+        // ============ APPLY BACKGROUND IMAGES TO ALL SECTIONS ============
+        const bgSectionKeys = [
+            'services', 'features', 'testimonials', 'pricing', 'faq',
+            'leads', 'newsletter', 'howItWorks', 'team', 'portfolio',
+        ];
+        for (const sectionKey of bgSectionKeys) {
+            if (data[sectionKey] && generatedImages[`${sectionKey}.backgroundImageUrl`]) {
+                data[sectionKey].backgroundImageUrl = generatedImages[`${sectionKey}.backgroundImageUrl`];
             }
         }
 
