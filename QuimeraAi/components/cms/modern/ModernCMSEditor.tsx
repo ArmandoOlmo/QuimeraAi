@@ -146,7 +146,7 @@ const SettingsSidebarContent: React.FC<SettingsSidebarContentProps> = ({
 
             {/* Podcast Audio */}
             <div className="pt-6 border-t border-border">
-                <h4 className="font-bold text-sm flex items-center mb-4"><Headphones size={16} className="mr-2 text-primary" /> Audio del Podcast</h4>
+                <h4 className="font-bold text-sm flex items-center mb-4"><Headphones size={16} className="mr-2 text-primary" /> {t('cms_editor.podcastAudio', 'Podcast Audio')}</h4>
                 {podcastAudioUrl ? (
                     <div className="space-y-3">
                         <audio controls className="w-full rounded-lg" style={{ height: '40px' }}>
@@ -158,7 +158,7 @@ const SettingsSidebarContent: React.FC<SettingsSidebarContentProps> = ({
                                 onClick={() => setPodcastAudioUrl('')}
                                 className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-red-400 hover:text-red-300 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 rounded-lg transition-colors"
                             >
-                                <Trash2 size={12} /> Eliminar
+                                <Trash2 size={12} /> {t('common.delete', 'Delete')}
                             </button>
                         </div>
                     </div>
@@ -175,12 +175,12 @@ const SettingsSidebarContent: React.FC<SettingsSidebarContentProps> = ({
                             {isUploadingAudio ? (
                                 <>
                                     <Loader2 size={24} className="animate-spin text-primary" />
-                                    <span className="text-xs font-medium">Subiendo audio...</span>
+                                    <span className="text-xs font-medium">{t('cms_editor.uploadingAudio', 'Uploading audio...')}</span>
                                 </>
                             ) : (
                                 <>
                                     <Upload size={24} />
-                                    <span className="text-xs font-medium">Subir o arrastrar archivo de audio</span>
+                                    <span className="text-xs font-medium">{t('cms_editor.uploadOrDragAudio', 'Upload or drag audio file')}</span>
                                     <span className="text-[10px] text-muted-foreground/60">MP3, WAV, OGG, AAC, M4A</span>
                                 </>
                             )}
@@ -190,7 +190,7 @@ const SettingsSidebarContent: React.FC<SettingsSidebarContentProps> = ({
                                 type="url"
                                 value={podcastAudioUrl}
                                 onChange={(e) => setPodcastAudioUrl(e.target.value)}
-                                placeholder="O pega una URL de audio..."
+                                placeholder={t('cms_editor.pasteAudioUrl', 'Or paste an audio URL...')}
                                 className="w-full bg-secondary/50 border border-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-primary outline-none text-foreground placeholder:text-muted-foreground/50"
                             />
                         </div>
@@ -200,7 +200,7 @@ const SettingsSidebarContent: React.FC<SettingsSidebarContentProps> = ({
 
             {/* Podcast Video */}
             <div className="pt-6 border-t border-border">
-                <h4 className="font-bold text-sm flex items-center mb-4"><VideoIcon size={16} className="mr-2 text-primary" /> Video del Artículo</h4>
+                <h4 className="font-bold text-sm flex items-center mb-4"><VideoIcon size={16} className="mr-2 text-primary" /> {t('cms_editor.articleVideo', 'Article Video')}</h4>
                 {podcastVideoUrl ? (
                     <div className="space-y-3">
                         {(() => {
@@ -224,7 +224,7 @@ const SettingsSidebarContent: React.FC<SettingsSidebarContentProps> = ({
                                 onClick={() => setPodcastVideoUrl('')}
                                 className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-red-400 hover:text-red-300 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 rounded-lg transition-colors"
                             >
-                                <Trash2 size={12} /> Eliminar
+                                <Trash2 size={12} /> {t('common.delete', 'Delete')}
                             </button>
                         </div>
                     </div>
@@ -241,7 +241,7 @@ const SettingsSidebarContent: React.FC<SettingsSidebarContentProps> = ({
                             {isUploadingVideo ? (
                                 <>
                                     <Loader2 size={24} className="animate-spin text-primary" />
-                                    <span className="text-xs font-medium">Subiendo video... {uploadProgress > 0 ? `${uploadProgress}%` : ''}</span>
+                                    <span className="text-xs font-medium">{t('cms_editor.uploadingVideo', 'Uploading video...')} {uploadProgress > 0 ? `${uploadProgress}%` : ''}</span>
                                     {uploadProgress > 0 && (
                                         <div className="w-full bg-secondary rounded-full h-2 mt-1">
                                             <div className="bg-primary h-2 rounded-full transition-all duration-300" style={{ width: `${uploadProgress}%` }} />
@@ -251,7 +251,7 @@ const SettingsSidebarContent: React.FC<SettingsSidebarContentProps> = ({
                             ) : (
                                 <>
                                     <VideoIcon size={24} />
-                                    <span className="text-xs font-medium">Subir o arrastrar video</span>
+                                    <span className="text-xs font-medium">{t('cms_editor.uploadOrDragVideo', 'Upload or drag video')}</span>
                                     <span className="text-[10px] text-muted-foreground/60">MP4, MOV, WEBM, AVI</span>
                                 </>
                             )}
@@ -261,7 +261,7 @@ const SettingsSidebarContent: React.FC<SettingsSidebarContentProps> = ({
                                 type="url"
                                 value={podcastVideoUrl}
                                 onChange={(e) => setPodcastVideoUrl(e.target.value)}
-                                placeholder="O pega una URL de video..."
+                                placeholder={t('cms_editor.pasteVideoUrl', 'Or paste a video URL...')}
                                 className="w-full bg-secondary/50 border border-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-primary outline-none text-foreground placeholder:text-muted-foreground/50"
                             />
                         </div>
@@ -271,17 +271,17 @@ const SettingsSidebarContent: React.FC<SettingsSidebarContentProps> = ({
 
             {/* Author & Date Controls */}
             <div className="pt-6 border-t border-border">
-                <h4 className="font-bold text-sm flex items-center mb-4"><User size={16} className="mr-2" /> Autor & Fecha</h4>
+                <h4 className="font-bold text-sm flex items-center mb-4"><User size={16} className="mr-2" /> {t('cms_editor.authorDate', 'Author & Date')}</h4>
                 <div className="space-y-4">
                     {/* Author Name */}
                     <div>
-                        <label className="block text-xs font-bold text-muted-foreground uppercase mb-2">Autor</label>
-                        <input value={author} onChange={(e) => setAuthor(e.target.value)} className="w-full bg-secondary/50 border border-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-primary outline-none text-foreground" placeholder="Nombre del autor..." />
+                        <label className="block text-xs font-bold text-muted-foreground uppercase mb-2">{t('cms_editor.author', 'Author')}</label>
+                        <input value={author} onChange={(e) => setAuthor(e.target.value)} className="w-full bg-secondary/50 border border-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-primary outline-none text-foreground" placeholder={t('cms_editor.authorPlaceholder', 'Author name...')} />
                     </div>
 
                     {/* Publication Date */}
                     <div>
-                        <label className="block text-xs font-bold text-muted-foreground uppercase mb-2">Fecha de Publicación</label>
+                        <label className="block text-xs font-bold text-muted-foreground uppercase mb-2">{t('cms_editor.publicationDate', 'Publication Date')}</label>
                         <input
                             type="datetime-local"
                             value={publishedAt ? new Date(publishedAt).toISOString().slice(0, 16) : ''}
@@ -294,7 +294,7 @@ const SettingsSidebarContent: React.FC<SettingsSidebarContentProps> = ({
                     <div className="flex items-center justify-between p-3 bg-secondary/30 border border-border rounded-lg">
                         <div className="flex items-center gap-2">
                             <User size={14} className="text-muted-foreground" />
-                            <span className="text-sm font-medium">Mostrar Autor</span>
+                            <span className="text-sm font-medium">{t('cms_editor.showAuthor', 'Show Author')}</span>
                         </div>
                         <label className="relative inline-flex items-center cursor-pointer">
                             <input
@@ -311,7 +311,7 @@ const SettingsSidebarContent: React.FC<SettingsSidebarContentProps> = ({
                     <div className="flex items-center justify-between p-3 bg-secondary/30 border border-border rounded-lg">
                         <div className="flex items-center gap-2">
                             <Calendar size={14} className="text-muted-foreground" />
-                            <span className="text-sm font-medium">Mostrar Fecha</span>
+                            <span className="text-sm font-medium">{t('cms_editor.showDate', 'Show Date')}</span>
                         </div>
                         <label className="relative inline-flex items-center cursor-pointer">
                             <input
@@ -531,7 +531,7 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
             setPodcastAudioUrl(url);
         } catch (error) {
             console.error('Audio upload failed', error);
-            alert('Error al subir el audio. Intente de nuevo.');
+            alert(t('cms_editor.audioUploadError', 'Error uploading audio. Please try again.'));
         } finally {
             setIsUploadingAudio(false);
             // Reset file input
@@ -543,7 +543,7 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
     const handleAudioFileDrop = async (files: FileList) => {
         const file = files[0];
         if (!file || !file.type.startsWith('audio/')) {
-            alert('Por favor arrastra un archivo de audio válido.');
+            alert(t('cms_editor.invalidAudioFile', 'Please drag a valid audio file.'));
             return;
         }
 
@@ -558,7 +558,7 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
             setPodcastAudioUrl(url);
         } catch (error) {
             console.error('Audio upload failed', error);
-            alert('Error al subir el audio. Intente de nuevo.');
+            alert(t('cms_editor.audioUploadError', 'Error uploading audio. Please try again.'));
         } finally {
             setIsUploadingAudio(false);
         }
@@ -604,7 +604,7 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
             setPodcastVideoUrl(url);
         } catch (error: any) {
             console.error('[Video Upload] Failed:', error?.code, error?.message, error);
-            alert(`Error al subir el video: ${error?.message || 'Error desconocido'}`);
+            alert(`${t('cms_editor.videoUploadError', 'Error uploading video')}: ${error?.message || t('common.unknownError', 'Unknown error')}`);
         } finally {
             setIsUploadingVideo(false);
             setUploadProgress(0);
@@ -616,7 +616,7 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
     const handleVideoFileDrop = async (files: FileList) => {
         const file = files[0];
         if (!file || !file.type.startsWith('video/')) {
-            alert('Por favor arrastra un archivo de video válido.');
+            alert(t('cms_editor.invalidVideoFile', 'Please drag a valid video file.'));
             return;
         }
 
@@ -654,7 +654,7 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
             setPodcastVideoUrl(url);
         } catch (error: any) {
             console.error('[Video Drop] Failed:', error?.code, error?.message, error);
-            alert(`Error al subir el video: ${error?.message || 'Error desconocido'}`);
+            alert(`${t('cms_editor.videoUploadError', 'Error uploading video')}: ${error?.message || t('common.unknownError', 'Unknown error')}`);
         } finally {
             setIsUploadingVideo(false);
             setUploadProgress(0);

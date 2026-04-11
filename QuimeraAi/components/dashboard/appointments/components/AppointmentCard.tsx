@@ -101,7 +101,7 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
     className = '',
     animationDelay = 0,
 }) => {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const [showMenu, setShowMenu] = useState(false);
     const [isHovered, setIsHovered] = useState(false);
 
@@ -481,7 +481,7 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
                         </div>
                         <div className="flex flex-wrap items-center">
                             <span className="text-foreground font-medium">
-                                {today ? t('appointments.today') : startDate.toLocaleDateString('es-ES', {
+                                {today ? t('appointments.today') : startDate.toLocaleDateString(i18n.language, {
                                     day: 'numeric',
                                     month: 'short'
                                 })}

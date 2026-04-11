@@ -42,7 +42,8 @@ export const dateToTimestamp = (date: Date): { seconds: number; nanoseconds: num
  */
 export const formatAppointmentDate = (
     timestamp: { seconds: number; nanoseconds: number },
-    options?: Intl.DateTimeFormatOptions
+    options?: Intl.DateTimeFormatOptions,
+    locale?: string
 ): string => {
     const date = timestampToDate(timestamp);
     const defaultOptions: Intl.DateTimeFormatOptions = {
@@ -52,23 +53,23 @@ export const formatAppointmentDate = (
         hour: '2-digit',
         minute: '2-digit',
     };
-    return date.toLocaleDateString('es-ES', options || defaultOptions);
+    return date.toLocaleDateString(locale || navigator.language, options || defaultOptions);
 };
 
 /**
  * Formatea solo la hora
  */
-export const formatTime = (timestamp: { seconds: number; nanoseconds: number }): string => {
+export const formatTime = (timestamp: { seconds: number; nanoseconds: number }, locale?: string): string => {
     const date = timestampToDate(timestamp);
-    return date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+    return date.toLocaleTimeString(locale || navigator.language, { hour: '2-digit', minute: '2-digit' });
 };
 
 /**
  * Formatea la fecha sin hora
  */
-export const formatDateOnly = (timestamp: { seconds: number; nanoseconds: number }): string => {
+export const formatDateOnly = (timestamp: { seconds: number; nanoseconds: number }, locale?: string): string => {
     const date = timestampToDate(timestamp);
-    return date.toLocaleDateString('es-ES', {
+    return date.toLocaleDateString(locale || navigator.language, {
         weekday: 'long',
         day: 'numeric',
         month: 'long',

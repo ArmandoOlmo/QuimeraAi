@@ -14,7 +14,7 @@ import {
     Zap, Play, Pause, Trash2, Copy, Edit2, Plus, Search, X, ChevronDown,
     ChevronRight, Mail, Clock, GitBranch, Tag, Loader2, ArrowRight,
     MoreVertical, Eye, Settings2, Users, Target, Activity,
-    CheckCircle, AlertTriangle, Sparkles, BarChart3, Filter,
+    CheckCircle, AlertTriangle, AlertCircle, Sparkles, BarChart3, Filter,
 } from 'lucide-react';
 
 // Simple unique ID generator (no external dependency)
@@ -62,6 +62,8 @@ interface AutomationsTabProps {
     openEditAutomation: (automation: EmailAutomation) => void;
     confirmModal: ConfirmModalState;
     setConfirmModal: React.Dispatch<React.SetStateAction<ConfirmModalState>>;
+    // Email ↔ Automation integration
+    onDesignEmail?: (step: AutomationWorkflowStep, automationName: string) => void;
 }
 
 // =============================================================================
@@ -100,7 +102,8 @@ const WorkflowNode: React.FC<{
     onUpdate: (step: AutomationWorkflowStep) => void;
     onDelete: () => void;
     readOnly?: boolean;
-}> = ({ step, index, totalSteps, isExpanded, onToggle, onUpdate, onDelete, readOnly }) => {
+    onDesignEmail?: (step: AutomationWorkflowStep) => void;
+}> = ({ step, index, totalSteps, isExpanded, onToggle, onUpdate, onDelete, readOnly, onDesignEmail }) => {
     const borderColor = getNodeBorderColor(step.type);
     const bgColor = getNodeBgColor(step.type);
     const textColor = getNodeTextColor(step.type);
@@ -149,6 +152,20 @@ const WorkflowNode: React.FC<{
                             <p className="text-xs text-editor-text-secondary truncate mt-0.5">
                                 Asunto: {step.emailConfig.subject}
                             </p>
+                        )}
+                        {/* Email content status badge */}
+                        {step.type === 'email' && (
+                            <div className="flex items-center gap-1.5 mt-1">
+                                {step.emailConfig?.emailDocumentId || step.emailConfig?.campaignId ? (
+                                    <span className="inline-flex items-center gap-1 text-[10px] font-medium text-green-400 bg-green-500/10 border border-green-500/20 rounded-md px-1.5 py-0.5">
+                                        <CheckCircle size={10} /> Contenido diseñado
+                                    </span>
+                                ) : (
+                                    <span className="inline-flex items-center gap-1 text-[10px] font-medium text-amber-400 bg-amber-500/10 border border-amber-500/20 rounded-md px-1.5 py-0.5">
+                                        <AlertCircle size={10} /> Sin contenido
+                                    </span>
+                                )}
+                            </div>
                         )}
                         {step.type === 'condition' && step.conditionConfig && (
                             <p className="text-xs text-editor-text-secondary truncate mt-0.5">
@@ -224,6 +241,22 @@ const WorkflowNode: React.FC<{
                                         placeholder="Texto de preview..."
                                     />
                                 </div>
+                                {/* Design email button */}
+                                {onDesignEmail && (
+                                    <button
+                                        onClick={(e) => { e.stopPropagation(); onDesignEmail(step); }}
+                                        className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl border text-sm font-medium transition-all ${
+                                            step.emailConfig?.emailDocumentId || step.emailConfig?.campaignId
+                                                ? 'bg-green-500/10 border-green-500/30 text-green-400 hover:bg-green-500/20'
+                                                : 'bg-purple-500/10 border-purple-500/30 text-purple-400 hover:bg-purple-500/20'
+                                        }`}
+                                    >
+                                        <Edit2 size={14} />
+                                        {step.emailConfig?.emailDocumentId || step.emailConfig?.campaignId
+                                            ? 'Editar Contenido de Email'
+                                            : 'Diseñar Contenido de Email'}
+                                    </button>
+                                )}
                             </>
                         )}
 
@@ -403,6 +436,7 @@ const AutomationsTab: React.FC<AutomationsTabProps> = ({
     openEditAutomation,
     confirmModal,
     setConfirmModal,
+    onDesignEmail,
 }) => {
     // Local state
     const [searchTerm, setSearchTerm] = useState('');
@@ -691,6 +725,7 @@ const AutomationsTab: React.FC<AutomationsTabProps> = ({
                                             onToggle={() => setExpandedNodeId(expandedNodeId === step.id ? null : step.id)}
                                             onUpdate={handleUpdateStep}
                                             onDelete={() => handleDeleteStep(step.id)}
+                                            onDesignEmail={onDesignEmail ? (s) => onDesignEmail(s, newAutomation.name) : undefined}
                                         />
                                         {/* Add step button between nodes */}
                                         {index < newAutomation.steps.length - 1 && (

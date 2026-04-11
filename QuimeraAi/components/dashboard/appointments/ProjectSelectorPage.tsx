@@ -38,7 +38,7 @@ const ProjectSelectorPage: React.FC<ProjectSelectorPageProps> = ({
     onProjectSelect,
     onBack,
 }) => {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const { setIsOnboardingOpen } = useUI();
     const { projects, isLoadingProjects } = useProject();
 
@@ -77,7 +77,7 @@ const ProjectSelectorPage: React.FC<ProjectSelectorPageProps> = ({
 
     const formatDate = (dateString: string) => {
         const date = new Date(dateString);
-        return date.toLocaleDateString('es-ES', {
+        return date.toLocaleDateString(i18n.language, {
             day: 'numeric',
             month: 'short',
             year: 'numeric',
@@ -110,7 +110,7 @@ const ProjectSelectorPage: React.FC<ProjectSelectorPageProps> = ({
                         <div className="flex items-center gap-2">
                             <Calendar className="text-primary" size={20} />
                             <h1 className="text-lg font-bold text-foreground">
-                                Citas
+                                {t('appointments.projectSelector.pageTitle')}
                             </h1>
                         </div>
                     </div>
@@ -142,7 +142,7 @@ const ProjectSelectorPage: React.FC<ProjectSelectorPageProps> = ({
                     searchQuery={searchQuery}
                     onSearchChange={setSearchQuery}
                     onClose={() => setIsSearchOpen(false)}
-                    placeholder="Buscar proyectos..."
+                    placeholder={t('appointments.projectSelector.searchPlaceholder')}
                 />
 
                 {/* Main Content - Scrollable Area */}
@@ -153,10 +153,10 @@ const ProjectSelectorPage: React.FC<ProjectSelectorPageProps> = ({
                             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
                                 <div>
                                     <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
-                                        Selecciona un Proyecto
+                                        {t('appointments.projectSelector.selectProject')}
                                     </h2>
                                     <p className="text-muted-foreground">
-                                        Las citas están organizadas por proyecto. Selecciona uno para ver y gestionar sus citas.
+                                        {t('appointments.projectSelector.description')}
                                     </p>
                                 </div>
                                 <button
@@ -282,13 +282,13 @@ const ProjectSelectorPage: React.FC<ProjectSelectorPageProps> = ({
                                 </div>
                                 <h3 className="text-xl font-bold text-foreground mb-2">
                                     {searchQuery
-                                        ? 'No se encontraron proyectos'
-                                        : 'No tienes proyectos aún'}
+                                        ? t('appointments.projectSelector.noProjectsFound')
+                                        : t('appointments.projectSelector.noProjectsYet')}
                                 </h3>
                                 <p className="text-muted-foreground mb-6 max-w-md mx-auto">
                                     {searchQuery
-                                        ? 'Intenta con otros términos de búsqueda'
-                                        : 'Crea tu primer proyecto para comenzar a gestionar citas'}
+                                        ? t('appointments.projectSelector.tryOtherSearch')
+                                        : t('appointments.projectSelector.createFirstProject')}
                                 </p>
                                 {!searchQuery && (
                                     <button
@@ -373,7 +373,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, onSelect, formatDate
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center pb-4">
                     <span className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg font-medium text-sm transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
                         <Calendar size={16} />
-                        Ver Citas
+                        {t('appointments.projectSelector.viewAppointments')}
                     </span>
                 </div>
             </div>
@@ -446,7 +446,7 @@ const ProjectListItem: React.FC<ProjectListItemProps> = ({ project, onSelect, fo
             {/* Action */}
             <div className="flex items-center gap-2 text-muted-foreground group-hover:text-primary transition-colors">
                 <span className="text-sm font-medium hidden md:block">
-                    Ver Citas
+                    {t('appointments.projectSelector.viewAppointments')}
                 </span>
                 <ChevronRight size={20} className="group-hover:translate-x-1 transition-transform" />
             </div>

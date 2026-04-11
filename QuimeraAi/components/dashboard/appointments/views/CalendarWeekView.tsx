@@ -36,9 +36,8 @@ interface CalendarWeekViewProps {
 // CONSTANTS
 // =============================================================================
 
-const DAYS_ES_SHORT = ['D', 'L', 'M', 'X', 'J', 'V', 'S'];
-const DAYS_ES = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
-const DAYS_FULL_ES = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+// Day names are now loaded from translations dynamically
+const DAY_KEYS = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
 const HOUR_HEIGHT = 64; // px per hour
 const GRID_COLS = '3rem repeat(7, 1fr)';
@@ -118,7 +117,7 @@ export const CalendarWeekView: React.FC<CalendarWeekViewProps> = ({
     blockedDates = [],
     onBlockClick,
 }) => {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const scrollContainerRef = useRef<HTMLDivElement>(null);
     const [currentTimeTop, setCurrentTimeTop] = useState(0);
 
@@ -198,8 +197,8 @@ export const CalendarWeekView: React.FC<CalendarWeekViewProps> = ({
                                     `}
                                 >
                                     <span className={`text-[10px] sm:text-xs font-semibold uppercase tracking-wide ${isCurrentDay ? 'text-primary' : 'text-muted-foreground'}`}>
-                                        <span className="sm:hidden">{DAYS_ES_SHORT[day.getDay()]}</span>
-                                        <span className="hidden sm:inline">{DAYS_ES[day.getDay()]}</span>
+                                        <span className="sm:hidden">{t(`appointments.calendar.daysShort.${DAY_KEYS[day.getDay()]}`)}</span>
+                                        <span className="hidden sm:inline">{t(`appointments.calendar.days.${DAY_KEYS[day.getDay()]}`)}</span>
                                     </span>
                                     <div className={`
                                         w-6 h-6 sm:w-8 sm:h-8 flex items-center justify-center rounded-full text-sm sm:text-lg font-bold
@@ -225,7 +224,7 @@ export const CalendarWeekView: React.FC<CalendarWeekViewProps> = ({
                             >
                                 <div className="w-12 sm:w-16 flex justify-end pr-1 sm:pr-2">
                                     <span className="text-[8px] sm:text-[10px] font-bold text-red-500 bg-background px-0.5 sm:px-1 rounded">
-                                        {new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
+                                        {new Date().toLocaleTimeString(i18n.language, { hour: '2-digit', minute: '2-digit' })}
                                     </span>
                                 </div>
                                 <div className="flex-1 h-px bg-red-500 shadow-[0_0_4px_rgba(239,68,68,0.6)]" />

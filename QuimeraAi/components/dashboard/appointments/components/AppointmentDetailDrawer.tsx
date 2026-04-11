@@ -128,7 +128,7 @@ export const AppointmentDetailDrawer: React.FC<AppointmentDetailDrawerProps> = (
     onUpdateAiInsights,
     isGeneratingAi,
 }) => {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const [activeTab, setActiveTab] = useState<TabId>('details');
     const [showStatusMenu, setShowStatusMenu] = useState(false);
     const [isChangingStatus, setIsChangingStatus] = useState(false);
@@ -250,7 +250,7 @@ export const AppointmentDetailDrawer: React.FC<AppointmentDetailDrawerProps> = (
                         <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-white/80 text-xs sm:text-sm">
                             <div className="flex items-center gap-1">
                                 <Calendar size={12} className="sm:w-3.5 sm:h-3.5" />
-                                {startDate.toLocaleDateString('es-ES', {
+                                {startDate.toLocaleDateString(i18n.language, {
                                     day: 'numeric',
                                     month: 'short'
                                 })}
@@ -356,7 +356,7 @@ export const AppointmentDetailDrawer: React.FC<AppointmentDetailDrawerProps> = (
                                 {/* Share */}
                                 <button
                                     onClick={() => {
-                                        const shareText = `${appointment.title}\n📅 ${timestampToDate(appointment.startDate).toLocaleDateString('es-ES')}\n⏰ ${formatTime(appointment.startDate)} - ${formatTime(appointment.endDate)}${appointment.location?.meetingUrl ? `\n🔗 ${appointment.location.meetingUrl}` : ''}`;
+                                        const shareText = `${appointment.title}\n📅 ${timestampToDate(appointment.startDate).toLocaleDateString(i18n.language)}\n⏰ ${formatTime(appointment.startDate)} - ${formatTime(appointment.endDate)}${appointment.location?.meetingUrl ? `\n🔗 ${appointment.location.meetingUrl}` : ''}`;
                                         navigator.clipboard.writeText(shareText);
                                         setShowMoreMenu(false);
                                     }}
@@ -539,10 +539,10 @@ export const AppointmentDetailDrawer: React.FC<AppointmentDetailDrawerProps> = (
                                             <Bell size={14} className={reminder.sent ? 'text-green-500' : 'text-muted-foreground'} />
                                             <span className="text-sm text-foreground flex-1">
                                                 {reminder.minutesBefore < 60
-                                                    ? `${reminder.minutesBefore} minutos antes`
+                                                    ? t('appointments.drawer.minutesBefore', { count: reminder.minutesBefore })
                                                     : reminder.minutesBefore < 1440
-                                                        ? `${reminder.minutesBefore / 60} hora(s) antes`
-                                                        : `${reminder.minutesBefore / 1440} día(s) antes`
+                                                        ? t('appointments.drawer.hoursBefore', { count: reminder.minutesBefore / 60 })
+                                                        : t('appointments.drawer.daysBefore', { count: reminder.minutesBefore / 1440 })
                                                 }
                                             </span>
                                             {reminder.sent && (
@@ -578,7 +578,7 @@ export const AppointmentDetailDrawer: React.FC<AppointmentDetailDrawerProps> = (
                                             <p className="font-semibold text-foreground">{participant.name}</p>
                                             {participant.role === 'host' && (
                                                 <span className="px-1.5 py-0.5 bg-primary/10 text-primary rounded text-xs font-medium">
-                                                    Organizador
+                                                    {t('appointments.drawer.organizer')}
                                                 </span>
                                             )}
                                             {participant.type === 'lead' && (
@@ -599,10 +599,10 @@ export const AppointmentDetailDrawer: React.FC<AppointmentDetailDrawerProps> = (
                                                 participant.status === 'tentative' ? 'bg-yellow-500/10 text-yellow-500' :
                                                     'bg-muted text-muted-foreground'}
                                     `}>
-                                        {participant.status === 'accepted' ? 'Aceptado' :
-                                            participant.status === 'declined' ? 'Rechazado' :
-                                                participant.status === 'tentative' ? 'Tentativo' :
-                                                    'Pendiente'}
+                                        {participant.status === 'accepted' ? t('appointments.drawer.accepted') :
+                                            participant.status === 'declined' ? t('appointments.drawer.declined') :
+                                                participant.status === 'tentative' ? t('appointments.drawer.tentative') :
+                                                    t('appointments.drawer.pending')}
                                     </div>
                                 </div>
                             ))}
@@ -611,7 +611,7 @@ export const AppointmentDetailDrawer: React.FC<AppointmentDetailDrawerProps> = (
                                 <div className="text-center py-8">
                                     <Users className="mx-auto h-12 w-12 text-muted-foreground/30 mb-3" />
                                     <p className="text-sm text-muted-foreground">
-                                        No hay participantes en esta cita
+                                        {t('appointments.drawer.noParticipants')}
                                     </p>
                                 </div>
                             )}
@@ -627,7 +627,7 @@ export const AppointmentDetailDrawer: React.FC<AppointmentDetailDrawerProps> = (
                                     <textarea
                                         value={newNoteContent}
                                         onChange={(e) => setNewNoteContent(e.target.value)}
-                                        placeholder="Escribe tu nota aquí..."
+                                        placeholder={t('appointments.drawer.writeNotePlaceholder')}
                                         rows={4}
                                         className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/50 resize-none"
                                         autoFocus
@@ -640,7 +640,7 @@ export const AppointmentDetailDrawer: React.FC<AppointmentDetailDrawerProps> = (
                                             }}
                                             className="px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
                                         >
-                                            Cancelar
+                                            {t('actions.cancel')}
                                         </button>
                                         <button
                                             onClick={handleAddNote}
@@ -650,12 +650,12 @@ export const AppointmentDetailDrawer: React.FC<AppointmentDetailDrawerProps> = (
                                             {isAddingNote ? (
                                                 <>
                                                     <Loader2 size={14} className="animate-spin" />
-                                                    Guardando...
+                                                    {t('appointments.drawer.saving')}
                                                 </>
                                             ) : (
                                                 <>
                                                     <Check size={14} />
-                                                    Guardar nota
+                                                    {t('appointments.drawer.saveNote')}
                                                 </>
                                             )}
                                         </button>
@@ -667,7 +667,7 @@ export const AppointmentDetailDrawer: React.FC<AppointmentDetailDrawerProps> = (
                                     className="w-full py-3 border-2 border-dashed border-border rounded-xl text-muted-foreground hover:text-foreground hover:border-muted-foreground/50 transition-colors flex items-center justify-center gap-2"
                                 >
                                     <Plus size={16} />
-                                    Añadir nota
+                                    {t('appointments.drawer.addNote')}
                                 </button>
                             )}
 
@@ -678,12 +678,12 @@ export const AppointmentDetailDrawer: React.FC<AppointmentDetailDrawerProps> = (
                                 >
                                     <div className="flex items-center justify-between mb-2">
                                         <span className="text-xs text-muted-foreground">
-                                            {timestampToDate(note.createdAt).toLocaleDateString('es-ES')}
+                                            {timestampToDate(note.createdAt).toLocaleDateString(i18n.language)}
                                         </span>
                                         {note.aiGenerated && (
                                             <span className="flex items-center gap-1 text-xs text-purple-500">
                                                 <Sparkles size={12} />
-                                                Generado por IA
+                                                {t('appointments.notes.aiGenerated')}
                                             </span>
                                         )}
                                     </div>
@@ -697,7 +697,7 @@ export const AppointmentDetailDrawer: React.FC<AppointmentDetailDrawerProps> = (
                                 <div className="text-center py-8">
                                     <MessageSquare className="mx-auto h-12 w-12 text-muted-foreground/30 mb-3" />
                                     <p className="text-sm text-muted-foreground">
-                                        No hay notas todavía
+                                        {t('appointments.drawer.noNotesYet')}
                                     </p>
                                 </div>
                             )}

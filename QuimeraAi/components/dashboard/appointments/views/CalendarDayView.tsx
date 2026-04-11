@@ -53,7 +53,7 @@ export const CalendarDayView: React.FC<CalendarDayViewProps> = ({
     blockedDates = [],
     onBlockClick,
 }) => {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const scrollContainerRef = useRef<HTMLDivElement>(null);
     const [currentTimeTop, setCurrentTimeTop] = useState(0);
 
@@ -106,13 +106,13 @@ export const CalendarDayView: React.FC<CalendarDayViewProps> = ({
                     ${isCurrentDay ? 'bg-primary/5' : ''}
                 `}>
                     <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-1">
-                        {currentDate.toLocaleDateString('es-ES', { weekday: 'long' })}
+                        {currentDate.toLocaleDateString(i18n.language, { weekday: 'long' })}
                     </p>
                     <p className={`text-3xl lg:text-4xl font-bold ${isCurrentDay ? 'text-primary' : 'text-foreground'}`}>
                         {currentDate.getDate()}
                     </p>
                     <p className="text-sm text-muted-foreground mt-1">
-                        {currentDate.toLocaleDateString('es-ES', { month: 'short', year: 'numeric' })}
+                        {currentDate.toLocaleDateString(i18n.language, { month: 'short', year: 'numeric' })}
                     </p>
 
                     {isCurrentDay && (
@@ -176,7 +176,7 @@ export const CalendarDayView: React.FC<CalendarDayViewProps> = ({
                     </p>
                     <div>
                         <p className="text-sm font-medium text-foreground">
-                            {currentDate.toLocaleDateString('es-ES', { weekday: 'short', month: 'short' })}
+                            {currentDate.toLocaleDateString(i18n.language, { weekday: 'short', month: 'short' })}
                         </p>
                         {isCurrentDay && (
                             <span className="text-xs text-primary">{t('appointments.today')}</span>
@@ -184,7 +184,7 @@ export const CalendarDayView: React.FC<CalendarDayViewProps> = ({
                     </div>
                 </div>
                 <span className="text-xs bg-muted px-2 py-0.5 rounded-full text-muted-foreground">
-                    {dayAppointments.length} cita{dayAppointments.length !== 1 ? 's' : ''}
+                    {t('appointments.calendar.appointmentCount', { count: dayAppointments.length })}
                 </span>
             </div>
 

@@ -322,7 +322,7 @@ export const GoogleCalendarConnect: React.FC<GoogleCalendarConnectProps> = ({
                         <span className="text-muted-foreground">{t('appointments.google.lastSync')}</span>
                         <span className="text-foreground">
                             {lastSyncTime
-                                ? lastSyncTime.toLocaleString(i18n.language === 'es' ? 'es-ES' : 'en-US', {
+                                ? lastSyncTime.toLocaleString(i18n.language, {
                                     day: 'numeric',
                                     month: 'short',
                                     hour: '2-digit',

@@ -65,7 +65,7 @@ const SortableProfileItem: React.FC<{ post: CMSPost; index: number }> = ({ post,
             <div className="flex-1 min-w-0">
                 <p className="font-semibold text-sm text-foreground truncate">{post.title}</p>
                 <p className="text-[10px] text-muted-foreground">
-                    {post.status === 'published' ? '● Publicado' : '○ Borrador'}
+                    {post.status === 'published' ? `● ${t('cms_editor.published', 'Published')}` : `○ ${t('cms_editor.draft', 'Draft')}`}
                 </p>
             </div>
         </div>
@@ -174,7 +174,7 @@ const CMSDashboard: React.FC = () => {
             await loadCMSPosts();
         } catch (error) {
             console.error('[CMSDashboard] ❌ Error deleting post:', error);
-            alert('Error al eliminar el post. Revisa la consola para más detalles.');
+            alert(t('cms.deleteError', 'Error deleting post. Check the console for more details.'));
         } finally {
             setIsDeleting(false);
             setDeleteConfirmId(null);

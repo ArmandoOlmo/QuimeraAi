@@ -97,7 +97,7 @@ type ViewMode = 'day' | 'week' | 'month' | 'list';
 // =============================================================================
 
 const AppointmentsDashboard: React.FC = () => {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const { user } = useAuth();
     const { leads } = useCRM();
     const { hasApiKey, promptForKeySelection, handleApiError } = useAI();
@@ -598,7 +598,7 @@ const AppointmentsDashboard: React.FC = () => {
     const getDateLabel = () => {
         switch (viewMode) {
             case 'day':
-                return currentDate.toLocaleDateString('es-ES', {
+                return currentDate.toLocaleDateString(i18n.language, {
                     weekday: 'long',
                     day: 'numeric',
                     month: 'long',
@@ -611,11 +611,11 @@ const AppointmentsDashboard: React.FC = () => {
                 weekEnd.setDate(weekEnd.getDate() + 6);
 
                 if (weekStart.getMonth() === weekEnd.getMonth()) {
-                    return `${weekStart.getDate()} - ${weekEnd.getDate()} de ${weekStart.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })}`;
+                    return `${weekStart.getDate()} - ${weekEnd.getDate()} ${weekStart.toLocaleDateString(i18n.language, { month: 'long', year: 'numeric' })}`;
                 }
-                return `${weekStart.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })} - ${weekEnd.toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })}`;
+                return `${weekStart.toLocaleDateString(i18n.language, { day: 'numeric', month: 'short' })} - ${weekEnd.toLocaleDateString(i18n.language, { day: 'numeric', month: 'short', year: 'numeric' })}`;
             case 'month':
-                return currentDate.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });
+                return currentDate.toLocaleDateString(i18n.language, { month: 'long', year: 'numeric' });
             default:
                 return t('appointments.allAppointments');
         }

@@ -340,6 +340,8 @@ export interface WorkflowStepEmail {
     campaignId?: string;       // link to an existing campaign with visual content
     templateId?: string;       // or link to a template
     htmlContent?: string;      // inline HTML content
+    emailDocumentId?: string;  // ID of the adminEmailCampaigns doc with full visual content
+    emailStatus?: 'pending' | 'designed' | 'ready'; // content design status
 }
 
 export interface WorkflowStepDelay {

@@ -186,7 +186,7 @@ const NewsEditor: React.FC<NewsEditorProps> = ({ news, onClose, onTranslationCre
             Color,
             Highlight.configure({ multicolor: true }),
             Placeholder.configure({
-                placeholder: t('admin.news.editorPlaceholder', 'Escribe el contenido de la noticia... Usa "/" para comandos'),
+                placeholder: t('superadmin.news.editorPlaceholder', 'Escribe el contenido de la noticia... Usa "/" para comandos'),
             }),
             Table.configure({
                 resizable: true,
@@ -266,9 +266,9 @@ const NewsEditor: React.FC<NewsEditorProps> = ({ news, onClose, onTranslationCre
                 description: `News content image: ${title}`,
             });
             editor.chain().focus().setImage({ src: url }).run();
-            showToast(t('admin.news.imageUploaded', 'Imagen subida correctamente'), 'success');
+            showToast(t('superadmin.news.imageUploaded', 'Imagen subida correctamente'), 'success');
         } catch (err: any) {
-            showToast(err.message || t('admin.news.imageUploadError', 'Error al subir imagen'), 'error');
+            showToast(err.message || t('superadmin.news.imageUploadError', 'Error al subir imagen'), 'error');
         }
     };
 
@@ -389,7 +389,7 @@ const NewsEditor: React.FC<NewsEditorProps> = ({ news, onClose, onTranslationCre
         );
 
         if (!selectedText && command !== 'continue' && command !== 'format') {
-            showToast(t('admin.news.selectTextFirst', 'Por favor selecciona texto primero'), 'warning');
+            showToast(t('superadmin.news.selectTextFirst', 'Por favor selecciona texto primero'), 'warning');
             return;
         }
 
@@ -478,7 +478,7 @@ Text to format:
                 editor?.chain().focus().deleteSelection().insertContent(result).run();
             }
 
-            showToast(t('admin.news.aiSuccess', 'IA aplicada correctamente'), 'success');
+            showToast(t('superadmin.news.aiSuccess', 'IA aplicada correctamente'), 'success');
         } catch (error) {
             if (user) {
                 logApiCall({
@@ -490,7 +490,7 @@ Text to format:
                     errorMessage: error instanceof Error ? error.message : 'Unknown error',
                 });
             }
-            showToast(t('admin.news.aiError', 'Error al procesar con IA'), 'error');
+            showToast(t('superadmin.news.aiError', 'Error al procesar con IA'), 'error');
             console.error(error);
         } finally {
             setIsAiWorking(false);
@@ -510,7 +510,7 @@ Text to format:
 
     const performSave = async (isAutoSave: boolean = false) => {
         if (!title.trim()) {
-            if (!isAutoSave) showToast(t('admin.news.titleRequired', 'El título es requerido'), 'error');
+            if (!isAutoSave) showToast(t('superadmin.news.titleRequired', 'El título es requerido'), 'error');
             return;
         }
 
@@ -558,14 +558,14 @@ Text to format:
             if (!isAutoSave) {
                 showToast(
                     status === 'published'
-                        ? t('admin.news.published', 'Noticia publicada')
-                        : t('admin.news.saved', 'Noticia guardada'),
+                        ? t('superadmin.news.published', 'Noticia publicada')
+                        : t('superadmin.news.saved', 'Noticia guardada'),
                     'success'
                 );
                 setTimeout(() => onClose(), 500);
             }
         } catch (err: any) {
-            if (!isAutoSave) showToast(err.message || t('admin.news.saveError', 'Error al guardar'), 'error');
+            if (!isAutoSave) showToast(err.message || t('superadmin.news.saveError', 'Error al guardar'), 'error');
         } finally {
             setIsSaving(false);
         }
@@ -753,8 +753,8 @@ Text to format:
                         <Sparkles className="text-primary w-5 h-5 hidden md:block" />
                         <span className="text-sm font-bold text-foreground hidden md:inline">
                             {isEditing
-                                ? t('admin.news.editTitle', 'Editar Noticia')
-                                : t('admin.news.createTitle', 'Nueva Noticia')}
+                                ? t('superadmin.news.editTitle', 'Editar Noticia')
+                                : t('superadmin.news.createTitle', 'Nueva Noticia')}
                         </span>
                     </div>
 
@@ -768,13 +768,13 @@ Text to format:
                         )}
                         <div className="flex items-center gap-1 text-xs font-medium">
                             <button onClick={() => setStatus('draft')} className={`px-2 py-1 rounded-md transition-all ${status === 'draft' ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'}`}>
-                                {t('admin.news.status.draft', 'Borrador')}
+                                {t('superadmin.news.status.draft', 'Borrador')}
                             </button>
                             <button onClick={() => setStatus('published')} className={`px-2 py-1 rounded-md transition-all ${status === 'published' ? 'text-green-400' : 'text-muted-foreground hover:text-foreground'}`}>
-                                {t('admin.news.status.published', 'Publicado')}
+                                {t('superadmin.news.status.published', 'Publicado')}
                             </button>
                             <button onClick={() => setStatus('scheduled')} className={`px-2 py-1 rounded-md transition-all ${status === 'scheduled' ? 'text-blue-400' : 'text-muted-foreground hover:text-foreground'}`}>
-                                {t('admin.news.status.scheduled', 'Programado')}
+                                {t('superadmin.news.status.scheduled', 'Programado')}
                             </button>
                         </div>
                     </div>
@@ -788,7 +788,7 @@ Text to format:
                                 className="flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all bg-green-500 text-white hover:bg-green-600 disabled:opacity-50"
                             >
                                 <Send size={16} />
-                                <span className="hidden sm:inline">{t('admin.news.publish', 'Publicar')}</span>
+                                <span className="hidden sm:inline">{t('superadmin.news.publish', 'Publicar')}</span>
                             </button>
                         )}
                         <button
@@ -802,7 +802,7 @@ Text to format:
                         <button
                             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
                             className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${isSidebarOpen ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:text-foreground hover:bg-secondary/50'}`}
-                            title={t('admin.news.toggleSidebar', 'Panel lateral')}
+                            title={t('superadmin.news.toggleSidebar', 'Panel lateral')}
                         >
                             <MoreVertical size={16} />
                         </button>
@@ -830,7 +830,7 @@ Text to format:
                     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
                         <div className="bg-card border border-border rounded-xl max-w-md w-full p-6">
                             <h3 className="text-lg font-semibold mb-4">
-                                {t('admin.news.editLink', 'Editar Enlace')}
+                                {t('superadmin.news.editLink', 'Editar Enlace')}
                             </h3>
                             <input
                                 type="url"
@@ -846,7 +846,7 @@ Text to format:
                                     onClick={removeLink}
                                     className="text-sm text-red-500 hover:text-red-600 font-medium"
                                 >
-                                    {t('admin.news.removeLink', 'Eliminar Enlace')}
+                                    {t('superadmin.news.removeLink', 'Eliminar Enlace')}
                                 </button>
                                 <div className="flex gap-2">
                                     <button
@@ -859,7 +859,7 @@ Text to format:
                                         onClick={applyLink}
                                         className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:opacity-90"
                                     >
-                                        {t('admin.news.applyLink', 'Aplicar')}
+                                        {t('superadmin.news.applyLink', 'Aplicar')}
                                     </button>
                                 </div>
                             </div>
@@ -888,7 +888,7 @@ Text to format:
                                         type="text"
                                         value={title}
                                         onChange={(e) => setTitle(e.target.value)}
-                                        placeholder={t('admin.news.titlePlaceholder', 'Título de la noticia...')}
+                                        placeholder={t('superadmin.news.titlePlaceholder', 'Título de la noticia...')}
                                         className="w-full text-3xl sm:text-4xl font-bold bg-transparent border-none outline-none text-foreground placeholder:text-muted-foreground/50 leading-tight"
                                     />
                                     <div className="mt-3 h-px bg-border/50" />
@@ -912,12 +912,12 @@ Text to format:
                     {isSidebarOpen && (
                         <aside className="w-80 bg-editor-panel-bg border-l border-editor-border overflow-y-auto shrink-0">
                             {/* ── Configuration Section ── */}
-                            {renderSidebarSection('config', t('admin.news.tabSettings', 'Configuración'), <Type size={16} />, <>
+                            {renderSidebarSection('config', t('superadmin.news.tabSettings', 'Configuración'), <Type size={16} />, <>
                                 {/* Featured Image — uses ImagePicker like CMS */}
                                 <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
                                     <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
                                         <ImageIcon size={14} />
-                                        {t('admin.news.featuredImage', 'Imagen Destacada')}
+                                        {t('superadmin.news.featuredImage', 'Imagen Destacada')}
                                     </label>
                                     <ImagePicker label="" value={imageUrl} onChange={setImageUrl} hideUrlInput={true} destination="global" />
                                 </div>
@@ -926,14 +926,14 @@ Text to format:
                                 <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
                                     <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
                                         <Type size={14} />
-                                        {t('admin.news.excerpt', 'Extracto')}
+                                        {t('superadmin.news.excerpt', 'Extracto')}
                                     </label>
                                     <textarea
                                         value={excerpt}
                                         onChange={e => setExcerpt(e.target.value.slice(0, 200))}
                                         rows={3}
                                         className="w-full bg-editor-bg border border-editor-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-editor-accent outline-none resize-none text-editor-text-primary"
-                                        placeholder={t('admin.news.excerptPlaceholder', 'Resumen corto para listados...')}
+                                        placeholder={t('superadmin.news.excerptPlaceholder', 'Resumen corto para listados...')}
                                     />
                                     <p className="text-xs text-editor-text-secondary mt-1">
                                         {excerpt.length}/200
@@ -1015,7 +1015,7 @@ Text to format:
                                 {/* Category */}
                                 <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
                                     <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
-                                        {t('admin.news.category', 'Categoría')}
+                                        {t('superadmin.news.category', 'Categoría')}
                                     </label>
                                     <select
                                         value={category}
@@ -1024,7 +1024,7 @@ Text to format:
                                     >
                                         {(Object.keys(NEWS_CATEGORY_LABELS) as NewsCategory[]).map(c => (
                                             <option key={c} value={c}>
-                                                {t(`admin.news.category.${c}`, NEWS_CATEGORY_LABELS[c])}
+                                                {t(`superadmin.news.category.${c}`, NEWS_CATEGORY_LABELS[c])}
                                             </option>
                                         ))}
                                     </select>
@@ -1034,7 +1034,7 @@ Text to format:
                                 <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
                                     <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
                                         <Tag size={14} />
-                                        {t('admin.news.tags', 'Etiquetas')}
+                                        {t('superadmin.news.tags', 'Etiquetas')}
                                     </label>
                                     <div className="flex flex-wrap gap-1.5 mb-2">
                                         {tags.map(tag => (
@@ -1058,7 +1058,7 @@ Text to format:
                                             value={tagInput}
                                             onChange={e => setTagInput(e.target.value)}
                                             onKeyDown={handleTagKeyDown}
-                                            placeholder={t('admin.news.addTag', 'Añadir etiqueta...')}
+                                            placeholder={t('superadmin.news.addTag', 'Añadir etiqueta...')}
                                             className="flex-1 bg-editor-bg border border-editor-border rounded-lg p-2 text-sm focus:ring-1 focus:ring-editor-accent outline-none text-editor-text-primary"
                                         />
                                         <button
@@ -1076,10 +1076,10 @@ Text to format:
                                         <Star size={14} className="text-yellow-500" />
                                         <div>
                                             <p className="text-sm font-medium text-editor-text-primary">
-                                                {t('admin.news.featured', 'Destacada')}
+                                                {t('superadmin.news.featured', 'Destacada')}
                                             </p>
                                             <p className="text-xs text-editor-text-secondary">
-                                                {t('admin.news.featuredDesc', 'Mostrar en sección destacada')}
+                                                {t('superadmin.news.featuredDesc', 'Mostrar en sección destacada')}
                                             </p>
                                         </div>
                                     </div>
@@ -1097,7 +1097,7 @@ Text to format:
                                 {/* Priority */}
                                 <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
                                     <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3">
-                                        {t('admin.news.priority', 'Prioridad (orden)')}
+                                        {t('superadmin.news.priority', 'Prioridad (orden)')}
                                     </label>
                                     <input
                                         type="number"
@@ -1108,7 +1108,7 @@ Text to format:
                                         className="w-full bg-editor-bg border border-editor-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-editor-accent outline-none text-editor-text-primary"
                                     />
                                     <p className="text-xs text-editor-text-secondary mt-1">
-                                        {t('admin.news.priorityHelp', 'Mayor número = aparece primero')}
+                                        {t('superadmin.news.priorityHelp', 'Mayor número = aparece primero')}
                                     </p>
                                 </div>
 
@@ -1116,20 +1116,20 @@ Text to format:
                                 <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
                                     <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-1 flex items-center gap-2">
                                         <LinkIcon size={14} />
-                                        {t('admin.news.cta', 'CTA')}
+                                        {t('superadmin.news.cta', 'CTA')}
                                     </label>
                                     <input
                                         type="text"
                                         value={ctaLabel}
                                         onChange={e => setCtaLabel(e.target.value)}
-                                        placeholder={t('admin.news.ctaLabel', 'Texto del botón')}
+                                        placeholder={t('superadmin.news.ctaLabel', 'Texto del botón')}
                                         className="w-full bg-editor-bg border border-editor-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-editor-accent outline-none text-editor-text-primary"
                                     />
                                     <input
                                         type="url"
                                         value={ctaUrl}
                                         onChange={e => setCtaUrl(e.target.value)}
-                                        placeholder={t('admin.news.ctaUrl', 'URL del enlace')}
+                                        placeholder={t('superadmin.news.ctaUrl', 'URL del enlace')}
                                         className="w-full bg-editor-bg border border-editor-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-editor-accent outline-none text-editor-text-primary"
                                     />
                                     <label className="flex items-center gap-2 text-xs text-editor-text-secondary">
@@ -1140,7 +1140,7 @@ Text to format:
                                             className="rounded"
                                         />
                                         <ExternalLink size={12} />
-                                        {t('admin.news.ctaExternal', 'Abrir en nueva pestaña')}
+                                        {t('superadmin.news.ctaExternal', 'Abrir en nueva pestaña')}
                                     </label>
                                 </div>
 
@@ -1148,12 +1148,12 @@ Text to format:
                                 <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
                                     <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-1 flex items-center gap-2">
                                         <Calendar size={14} />
-                                        {t('admin.news.scheduling', 'Programación')}
+                                        {t('superadmin.news.scheduling', 'Programación')}
                                     </label>
                                     <div className="grid grid-cols-1 gap-2">
                                         <div>
                                             <label className="block text-xs text-editor-text-secondary mb-1">
-                                                {t('admin.news.publishAt', 'Publicar en')}
+                                                {t('superadmin.news.publishAt', 'Publicar en')}
                                             </label>
                                             <input
                                                 type="datetime-local"
@@ -1164,7 +1164,7 @@ Text to format:
                                         </div>
                                         <div>
                                             <label className="block text-xs text-editor-text-secondary mb-1">
-                                                {t('admin.news.expireAt', 'Expira en')}
+                                                {t('superadmin.news.expireAt', 'Expira en')}
                                             </label>
                                             <input
                                                 type="datetime-local"
@@ -1178,11 +1178,11 @@ Text to format:
                             </>)}
 
                             {/* ── Targeting Section ── */}
-                            {renderSidebarSection('targeting', t('admin.news.tabTargeting', 'Audiencia'), <Target size={16} />, <>
+                            {renderSidebarSection('targeting', t('superadmin.news.tabTargeting', 'Audiencia'), <Target size={16} />, <>
                                 {/* Target Type */}
                                 <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
                                     <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
-                                        {t('admin.news.targetType', 'Mostrar a')}
+                                        {t('superadmin.news.targetType', 'Mostrar a')}
                                     </label>
                                     <div className="grid grid-cols-2 gap-1.5">
                                         {(['all', 'roles', 'plans', 'tenants'] as NewsTargetType[]).map(type => (
@@ -1195,10 +1195,10 @@ Text to format:
                                                         : 'bg-editor-bg border-editor-border hover:border-editor-accent text-editor-text-secondary hover:text-editor-text-primary'
                                                 }`}
                                             >
-                                                {type === 'all' && t('admin.news.targetAll', 'Todos')}
-                                                {type === 'roles' && t('admin.news.targetRoles', 'Por Rol')}
-                                                {type === 'plans' && t('admin.news.targetPlans', 'Por Plan')}
-                                                {type === 'tenants' && t('admin.news.targetTenants', 'Por Tenant')}
+                                                {type === 'all' && t('superadmin.news.targetAll', 'Todos')}
+                                                {type === 'roles' && t('superadmin.news.targetRoles', 'Por Rol')}
+                                                {type === 'plans' && t('superadmin.news.targetPlans', 'Por Plan')}
+                                                {type === 'tenants' && t('superadmin.news.targetTenants', 'Por Tenant')}
                                             </button>
                                         ))}
                                     </div>
@@ -1209,7 +1209,7 @@ Text to format:
                                     <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-1.5">
                                         <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-1 flex items-center gap-2">
                                             <Users size={14} />
-                                            {t('admin.news.selectRoles', 'Seleccionar roles')}
+                                            {t('superadmin.news.selectRoles', 'Seleccionar roles')}
                                         </label>
                                         {ROLES.map(role => (
                                             <label key={role} className="flex items-center gap-2 p-2 rounded-lg hover:bg-editor-bg/50 transition-colors cursor-pointer">
@@ -1236,7 +1236,7 @@ Text to format:
                                     <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-1.5">
                                         <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-1 flex items-center gap-2">
                                             <Globe size={14} />
-                                            {t('admin.news.selectPlans', 'Seleccionar planes')}
+                                            {t('superadmin.news.selectPlans', 'Seleccionar planes')}
                                         </label>
                                         {PLANS.map(plan => (
                                             <label key={plan} className="flex items-center gap-2 p-2 rounded-lg hover:bg-editor-bg/50 transition-colors cursor-pointer">
@@ -1263,7 +1263,7 @@ Text to format:
                                     <AlertCircle className="text-blue-500 flex-shrink-0 mt-0.5" size={14} />
                                     <p className="text-xs text-editor-text-secondary">
                                         {t(
-                                            'admin.news.targetingInfoDesc',
+                                            'superadmin.news.targetingInfoDesc',
                                             'La noticia solo se mostrará a los usuarios que cumplan con los criterios seleccionados.'
                                         )}
                                     </p>
@@ -1402,7 +1402,7 @@ Text to format:
                             </>, 'text-blue-400')}
 
                             {/* ── Preview Section ── */}
-                            {renderSidebarSection('preview', t('admin.news.preview', 'Vista previa'), <Eye size={16} />, <>
+                            {renderSidebarSection('preview', t('superadmin.news.preview', 'Vista previa'), <Eye size={16} />, <>
                                 <div className="bg-editor-bg border border-editor-border rounded-lg overflow-hidden">
                                     {imageUrl ? (
                                         <img
@@ -1419,14 +1419,14 @@ Text to format:
                                         {featured && (
                                             <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-yellow-500/10 text-yellow-500 rounded-full text-xs mb-2">
                                                 <Star size={10} className="fill-yellow-500" />
-                                                {t('admin.news.featuredBadge', 'Destacado')}
+                                                {t('superadmin.news.featuredBadge', 'Destacado')}
                                             </span>
                                         )}
                                         <h4 className="font-semibold text-sm mb-1 line-clamp-2 text-editor-text-primary">
-                                            {title || t('admin.news.untitled', 'Sin título')}
+                                            {title || t('superadmin.news.untitled', 'Sin título')}
                                         </h4>
                                         <p className="text-xs text-editor-text-secondary line-clamp-3 mb-3">
-                                            {excerpt || t('admin.news.noExcerpt', 'Sin resumen')}
+                                            {excerpt || t('superadmin.news.noExcerpt', 'Sin resumen')}
                                         </p>
                                         {ctaLabel && ctaUrl && (
                                             <button className="w-full px-3 py-2 bg-editor-accent text-editor-bg rounded-lg text-xs font-medium">

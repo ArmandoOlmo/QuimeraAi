@@ -11,7 +11,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '../../../../../contexts/core/AuthContext';
 import { useAdmin } from '../../../../../contexts/admin/AdminContext';
 import {
-    db, collection, addDoc,
+    db, collection, addDoc, doc, updateDoc,
 } from '../../../../../firebase';
 import { serverTimestamp } from 'firebase/firestore';
 import { LiveServerMessage, Modality } from '@google/genai';
@@ -825,7 +825,8 @@ Conversación:\n${conversationSummary}`;
                 .map(m => `${m.role === 'user' ? 'Admin' : 'AI'}: ${m.text}`)
                 .join('\n');
 
-            const prompt = `Basándote en la conversación anterior, genera los datos para crear una automatización de email marketing COMPLETA con flujo de trabajo multi-paso.
+            // ── STEP 1: Generate Automation Structure ──────────────────────────
+            const automationPrompt = `Basándote en la conversación anterior, genera los datos para crear una automatización de email marketing COMPLETA con flujo de trabajo multi-paso.
 
 Devuelve SOLO un JSON válido (sin markdown, sin backticks) con esta estructura:
 
@@ -904,7 +905,7 @@ Conversación:\n${conversationSummary}
 RESPONDE SOLO CON EL JSON:`;
 
             const response = await generateChatContentViaProxy(
-                'ai-email-studio', [], prompt,
+                'ai-email-studio', [], automationPrompt,
                 'Eres un generador de JSON para automatizaciones de email. Devuelve SOLO un JSON válido con la estructura de flujo multi-paso especificada. Sin markdown, sin explicaciones, sin backticks. Solo el JSON puro.',
                 MODEL_TEXT,
                 { temperature: 0.4, maxOutputTokens: 4096 },
@@ -965,10 +966,213 @@ RESPONDE SOLO CON EL JSON:`;
                 updatedAt: serverTimestamp(),
             };
 
-            const docRef = await addDoc(collection(db, 'adminEmailAutomations'), newAutomationData);
-            setAiCreatedItems(prev => [...prev, { type: 'automation', name: autoData.name, id: docRef.id, timestamp: Date.now() }]);
+            const automationDocRef = await addDoc(collection(db, 'adminEmailAutomations'), newAutomationData);
+            const automationId = automationDocRef.id;
+            setAiCreatedItems(prev => [...prev, { type: 'automation', name: autoData.name, id: automationId, timestamp: Date.now() }]);
 
-            // Build step summary for the confirmation message
+            console.log('[AIEmailStudio] ✅ Automation saved:', automationId, '— now generating email content for each email step...');
+
+            // ── STEP 2: Generate Visual Email Content for each email step ──────
+            const emailSteps = sanitizedSteps.filter((s: any) => s.type === 'email');
+            const emailCreationResults: { stepId: string; label: string; subject: string; campaignId: string; blockCount: number }[] = [];
+
+            // Send a progress message
+            const progressMsg: DisplayMessage = {
+                role: 'model',
+                text: `⏳ **Automatización creada.** Ahora estoy generando el contenido visual para ${emailSteps.length} email(s) del flujo...\n\n_Cada email tendrá su propio diseño con bloques editables en el editor visual._`,
+                timestamp: Date.now(),
+            };
+            setAiMessages(prev => [...prev, progressMsg]);
+
+            for (const emailStep of emailSteps) {
+                try {
+                    const stepSubject = emailStep.emailConfig?.subject || emailStep.label || 'Email';
+                    const stepPreview = emailStep.emailConfig?.previewText || '';
+                    const stepLabel = emailStep.label || 'Email';
+                    const stepPosition = emailStep.order + 1;
+                    const totalSteps = sanitizedSteps.length;
+
+                    // Generate email blocks via AI
+                    const emailBlockPrompt = `Genera el contenido visual en bloques para un email de automatización.
+
+CONTEXTO:
+- Automatización: "${autoData.name}" — ${autoData.description || ''}
+- Tipo: ${autoData.type} | Categoría: ${autoData.category}
+- Este es el paso ${stepPosition} de ${totalSteps} del flujo
+- Nombre del paso: "${stepLabel}"
+- Asunto: "${stepSubject}"
+- Preview: "${stepPreview}"
+- Trigger: ${autoData.triggerEvent}
+
+Devuelve SOLO un JSON válido (sin markdown, sin backticks) con un array de bloques:
+{
+  "blocks": [
+    { "type": "hero", "content": { "headline": "...", "subheadline": "...", "buttonText": "...", "buttonUrl": "#", "showButton": true }, "styles": { "backgroundColor": "#4f46e5", "headingColor": "#ffffff", "textColor": "#ffffff", "buttonColor": "#ffffff", "buttonTextColor": "#4f46e5", "padding": "lg", "alignment": "center" } },
+    { "type": "text", "content": { "text": "...", "isHtml": false }, "styles": { "padding": "md", "textColor": "#374151", "alignment": "left", "fontSize": "md" } },
+    { "type": "button", "content": { "text": "...", "url": "#", "fullWidth": false }, "styles": { "buttonColor": "#4f46e5", "buttonTextColor": "#ffffff", "padding": "md", "alignment": "center", "borderRadius": "md" } },
+    { "type": "footer", "content": { "companyName": "Quimera.ai", "showUnsubscribe": true, "unsubscribeText": "Cancelar suscripción", "copyrightText": "© 2025 Quimera.ai" }, "styles": { "backgroundColor": "#f9fafb", "textColor": "#9ca3af", "padding": "lg", "alignment": "center", "fontSize": "xs" } }
+  ]
+}
+
+REGLAS:
+- Genera mínimo 4 bloques: hero + texto + botón/imagen + footer
+- El contenido debe ser relevante al paso y al tipo de automatización
+- Usa colores coherentes y profesionales
+- El tono debe coincidir con la posición en el flujo (primer email = bienvenida cálida, recordatorio = urgencia suave, etc.)
+- Para ${autoData.type}: adapta el mensaje (bienvenida, abandono de carrito, post-compra, etc.)
+
+RESPONDE SOLO CON EL JSON:`;
+
+                    const emailResponse = await generateChatContentViaProxy(
+                        'ai-email-studio', [], emailBlockPrompt,
+                        'Genera SOLO un JSON válido con un array de bloques de email. Sin markdown, sin backticks.',
+                        MODEL_TEXT,
+                        { temperature: 0.5, maxOutputTokens: 4096 },
+                        user?.uid
+                    );
+
+                    let emailResponseText = extractTextFromResponse(emailResponse) || '';
+                    emailResponseText = emailResponseText.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+                    const emailJsonMatch = emailResponseText.match(/\{[\s\S]*\}/);
+                    if (emailJsonMatch) emailResponseText = emailJsonMatch[0];
+
+                    let emailData: any;
+                    try {
+                        emailData = JSON.parse(emailResponseText);
+                    } catch {
+                        // Fallback blocks if AI parse fails
+                        emailData = { blocks: [
+                            { type: 'hero', content: { headline: stepLabel, subheadline: stepPreview || autoData.description, buttonText: 'Ver más', buttonUrl: '#', showButton: true }, styles: { backgroundColor: '#4f46e5', headingColor: '#ffffff', textColor: '#ffffff', buttonColor: '#ffffff', buttonTextColor: '#4f46e5', padding: 'lg', alignment: 'center' } },
+                            { type: 'text', content: { text: `Este email es parte de la automatización "${autoData.name}". Personaliza el contenido desde el editor visual.`, isHtml: false }, styles: { padding: 'md', textColor: '#52525b', alignment: 'left', fontSize: 'md' } },
+                            { type: 'footer', content: { companyName: 'Quimera.ai', showUnsubscribe: true, unsubscribeText: 'Cancelar suscripción', copyrightText: '© 2025 Quimera.ai' }, styles: { backgroundColor: '#f4f4f5', textColor: '#71717a', padding: 'lg', alignment: 'center', fontSize: 'xs' } },
+                        ] };
+                    }
+
+                    // Build proper EmailBlocks with IDs and defaults
+                    const VALID_BLOCK_TYPES = new Set(['hero', 'text', 'image', 'button', 'divider', 'spacer', 'columns', 'products', 'social', 'footer']);
+                    const aiBlocks: any[] = Array.isArray(emailData.blocks) ? emailData.blocks : [];
+
+                    const emailBlocks = aiBlocks
+                        .filter((b: any) => b && VALID_BLOCK_TYPES.has(b.type))
+                        .map((b: any) => ({
+                            id: uuidv4(),
+                            type: b.type as EmailBlockType,
+                            visible: true,
+                            content: { ...(DEFAULT_BLOCK_CONTENT[b.type as EmailBlockType] || {}), ...(b.content || {}) },
+                            styles: { ...(DEFAULT_BLOCK_STYLES[b.type as EmailBlockType] || {}), ...(b.styles || {}) },
+                        }));
+
+                    if (emailBlocks.length === 0) {
+                        emailBlocks.push({
+                            id: uuidv4(),
+                            type: 'text' as EmailBlockType,
+                            visible: true,
+                            content: { text: `Contenido del email "${stepLabel}". Edítalo desde el editor visual.`, isHtml: false },
+                            styles: { ...DEFAULT_BLOCK_STYLES.text },
+                        });
+                    }
+
+                    // Build EmailDocument
+                    const emailDocument = {
+                        id: uuidv4(),
+                        name: `[Auto] ${autoData.name} — ${stepLabel}`,
+                        subject: stepSubject,
+                        previewText: stepPreview,
+                        blocks: emailBlocks,
+                        globalStyles: DEFAULT_EMAIL_GLOBAL_STYLES,
+                    };
+
+                    const generatedHtml = generateEmailHtml(emailDocument as EmailDocument);
+
+                    // Save to Firestore as an automation-linked campaign
+                    const campaignData = {
+                        name: emailDocument.name,
+                        subject: stepSubject,
+                        previewText: stepPreview,
+                        type: 'automated' as const,
+                        htmlContent: generatedHtml,
+                        emailDocument: JSON.parse(JSON.stringify(emailDocument)),
+                        audienceType: 'all' as const,
+                        status: 'draft' as CampaignStatus,
+                        stats: { totalRecipients: 0, sent: 0, delivered: 0, opened: 0, totalOpens: 0, uniqueOpens: 0, clicked: 0, totalClicks: 0, uniqueClicks: 0, bounced: 0, complained: 0, unsubscribed: 0 },
+                        tags: ['ai-generated', 'automation-email'],
+                        automationId,
+                        automationStepId: emailStep.id,
+                        createdBy: user?.uid || 'ai-studio',
+                        createdAt: serverTimestamp(),
+                        updatedAt: serverTimestamp(),
+                    };
+
+                    const campaignDocRef = await addDoc(collection(db, 'adminEmailCampaigns'), campaignData);
+                    console.log(`[AIEmailStudio] 📧 Email created for step "${stepLabel}": ${campaignDocRef.id} (${emailBlocks.length} blocks)`);
+
+                    // Track in local campaigns state
+                    setCampaigns(prev => [{
+                        id: campaignDocRef.id,
+                        ...campaignData,
+                        tenantId: 'admin',
+                        tenantName: 'Super Admin',
+                        userId: user?.uid || 'admin',
+                        projectId: 'admin',
+                        createdAt: new Date(),
+                        updatedAt: new Date(),
+                    } as CrossTenantCampaign, ...prev]);
+
+                    emailCreationResults.push({
+                        stepId: emailStep.id,
+                        label: stepLabel,
+                        subject: stepSubject,
+                        campaignId: campaignDocRef.id,
+                        blockCount: emailBlocks.length,
+                    });
+
+                    // Update the step's emailConfig with the link
+                    emailStep.emailConfig = {
+                        ...emailStep.emailConfig,
+                        campaignId: campaignDocRef.id,
+                        emailDocumentId: campaignDocRef.id,
+                        emailStatus: 'designed',
+                    };
+                } catch (emailErr) {
+                    console.error(`[AIEmailStudio] ❌ Error creating email for step "${emailStep.label}":`, emailErr);
+                    // Mark as pending so user knows it needs manual design
+                    emailStep.emailConfig = {
+                        ...emailStep.emailConfig,
+                        emailStatus: 'pending',
+                    };
+                }
+            }
+
+            // ── STEP 3: Update automation with linked email IDs ────────────────
+            if (emailCreationResults.length > 0) {
+                const updatedSteps = sanitizedSteps.map((s: any) => {
+                    const match = emailCreationResults.find(r => r.stepId === s.id);
+                    if (match && s.type === 'email') {
+                        return {
+                            ...s,
+                            emailConfig: {
+                                ...s.emailConfig,
+                                campaignId: match.campaignId,
+                                emailDocumentId: match.campaignId,
+                                emailStatus: 'designed',
+                            },
+                        };
+                    }
+                    return s;
+                });
+
+                try {
+                    await updateDoc(doc(db, 'adminEmailAutomations', automationId), {
+                        steps: updatedSteps.map((s: any) => JSON.parse(JSON.stringify(s))),
+                        updatedAt: serverTimestamp(),
+                    });
+                    console.log('[AIEmailStudio] ✅ Automation updated with email links');
+                } catch (updateErr) {
+                    console.warn('[AIEmailStudio] ⚠️ Could not update automation with email links:', updateErr);
+                }
+            }
+
+            // ── STEP 4: Build comprehensive confirmation message ────────────────
             const stepLabels: Record<string, string> = {
                 trigger: '⚡ Trigger',
                 email: '📧 Email',
@@ -976,9 +1180,15 @@ RESPONDE SOLO CON EL JSON:`;
                 condition: '🔀 Condición',
                 action: '🏷️ Acción',
             };
-            const stepsSummary = sanitizedSteps.map((s: any) =>
-                `  ${stepLabels[s.type] || s.type}: **${s.label}**${s.emailConfig?.subject ? ` — _"${s.emailConfig.subject}"_` : ''}${s.delayConfig?.delayMinutes ? ` (${formatDelay(s.delayConfig.delayMinutes)})` : ''}`
-            ).join('\n');
+            const stepsSummary = sanitizedSteps.map((s: any) => {
+                let line = `  ${stepLabels[s.type] || s.type}: **${s.label}**`;
+                if (s.emailConfig?.subject) line += ` — _"${s.emailConfig.subject}"_`;
+                if (s.delayConfig?.delayMinutes) line += ` (${formatDelay(s.delayConfig.delayMinutes)})`;
+                // Mark linked emails
+                const emailResult = emailCreationResults.find(r => r.stepId === s.id);
+                if (emailResult) line += ` ✅ _${emailResult.blockCount} bloques creados_`;
+                return line;
+            }).join('\n');
 
             const triggerLabels: Record<string, string> = {
                 'customer.created': 'Nuevo cliente',
@@ -995,9 +1205,27 @@ RESPONDE SOLO CON EL JSON:`;
             const totalDelayMins = sanitizedSteps.reduce((sum: number, s: any) =>
                 sum + (s.type === 'delay' ? (s.delayConfig?.delayMinutes || 0) : 0), 0);
 
+            const emailsSummary = emailCreationResults.length > 0
+                ? `\n\n**📧 Emails creados (${emailCreationResults.length}):**\n` +
+                  emailCreationResults.map(r =>
+                    `  - **${r.label}**: "${r.subject}" — ${r.blockCount} bloques visuales ✅`
+                  ).join('\n') +
+                  `\n\n_Cada email tiene contenido visual completo con bloques editables (hero, texto, botón, footer). Puedes editar cada uno desde la pestaña de **Campañas** o directamente desde el flujo de trabajo._`
+                : '\n\n⚠️ _No se pudieron generar los emails automáticamente. Usa el botón "Diseñar Email" en cada paso del flujo para crear el contenido._';
+
+            const aiExplanation = `\n\n---\n\n🤖 **Lo que hice:**\n` +
+                `1. Diseñé un flujo de automatización "${autoData.type}" con ${sanitizedSteps.length} pasos\n` +
+                `2. Generé ${emailCreationResults.length} email(s) con contenido visual completo\n` +
+                `3. Vinculé cada email al paso correspondiente del flujo\n` +
+                `4. Todo quedó en estado borrador para que puedas revisarlo\n\n` +
+                `**Próximos pasos recomendados:**\n` +
+                `- Revisa y personaliza cada email en la pestaña de Campañas\n` +
+                `- Ajusta los tiempos de espera según tu audiencia\n` +
+                `- Activa la automatización cuando estés listo`;
+
             const confirmMsg: DisplayMessage = {
                 role: 'model',
-                text: `✅ **Automatización creada exitosamente!**\n\n` +
+                text: `✅ **Automatización creada con emails integrados!**\n\n` +
                     `- **Nombre:** ${autoData.name}\n` +
                     `- **Descripción:** ${autoData.description || '—'}\n` +
                     `- **Tipo:** ${autoData.type}\n` +
@@ -1006,9 +1234,10 @@ RESPONDE SOLO CON EL JSON:`;
                     `- **Pasos:** ${sanitizedSteps.length}\n` +
                     `- **Duración total:** ${totalDelayMins > 0 ? formatDelay(totalDelayMins) : 'Instantáneo'}\n` +
                     `- **Estado:** Borrador\n` +
-                    `- **ID:** \`${docRef.id}\`\n\n` +
-                    `**Flujo de trabajo:**\n${stepsSummary}\n\n` +
-                    `📝 La automatización ya aparece en la pestaña de **Automatizaciones**. Puedes editarla con el **Constructor Visual** para ajustar los pasos, cambiar subjects, o añadir condiciones.`,
+                    `- **ID:** \`${automationId}\`\n\n` +
+                    `**Flujo de trabajo:**\n${stepsSummary}` +
+                    emailsSummary +
+                    aiExplanation,
                 timestamp: Date.now(),
             };
             setAiMessages(prev => [...prev, confirmMsg]);

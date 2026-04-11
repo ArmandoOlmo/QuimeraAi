@@ -115,6 +115,7 @@ export const AIPreparationPanel: React.FC<AIPreparationPanelProps> = ({
     onInsightsGenerated,
     className = '',
 }) => {
+    const { t, i18n } = useTranslation();
     const { user } = useAuth();
     const { hasApiKey, promptForKeySelection, handleApiError } = useAI();
     const { activeProject } = useProject();
@@ -336,9 +337,9 @@ export const AIPreparationPanel: React.FC<AIPreparationPanelProps> = ({
                         <Sparkles size={20} />
                     </div>
                     <div>
-                        <h3 className="font-bold text-foreground">Preparación con IA</h3>
+                        <h3 className="font-bold text-foreground">{t('appointments.ai.title')}</h3>
                         <p className="text-xs text-muted-foreground">
-                            Genera briefing, preguntas y estrategia
+                            {t('appointments.ai.subtitle')}
                         </p>
                     </div>
                 </div>
@@ -351,12 +352,12 @@ export const AIPreparationPanel: React.FC<AIPreparationPanelProps> = ({
                     {isGenerating && activeGeneration === 'full' ? (
                         <>
                             <Loader2 size={16} className="animate-spin" />
-                            Generando...
+                            {t('appointments.ai.generating')}
                         </>
                     ) : (
                         <>
                             {insights ? <RefreshCw size={16} /> : <Sparkles size={16} />}
-                            {insights ? 'Regenerar' : 'Generar'}
+                            {insights ? t('appointments.ai.regenerate') : t('appointments.ai.generate')}
                         </>
                     )}
                 </button>
@@ -369,7 +370,7 @@ export const AIPreparationPanel: React.FC<AIPreparationPanelProps> = ({
                         <div className="flex items-center gap-2 mb-2">
                             <TrendingUp size={16} className="text-green-500" />
                             <span className="text-xs font-semibold text-muted-foreground uppercase">
-                                Probabilidad de éxito
+                                {t('appointments.ai.successProbability')}
                             </span>
                         </div>
                         <div className="flex items-end gap-2">
@@ -398,7 +399,7 @@ export const AIPreparationPanel: React.FC<AIPreparationPanelProps> = ({
                             <div className="flex items-center gap-2 mb-2">
                                 <Clock size={16} className="text-blue-500" />
                                 <span className="text-xs font-semibold text-muted-foreground uppercase">
-                                    Duración recomendada
+                                    {t('appointments.ai.recommendedDuration')}
                                 </span>
                             </div>
                             <span className="text-3xl font-bold text-foreground">
@@ -426,7 +427,7 @@ export const AIPreparationPanel: React.FC<AIPreparationPanelProps> = ({
             <div className="space-y-3">
                 {/* Preparation Tips */}
                 <ExpandableSection
-                    title="Puntos a cubrir"
+                    title={t('appointments.ai.talkingPoints')}
                     icon={Target}
                     iconColor="bg-blue-500"
                 >
@@ -447,14 +448,14 @@ export const AIPreparationPanel: React.FC<AIPreparationPanelProps> = ({
                         </ul>
                     ) : (
                         <p className="text-sm text-muted-foreground italic">
-                            Genera la preparación completa para ver los puntos a cubrir.
+                            {t('appointments.ai.talkingPointsEmpty')}
                         </p>
                     )}
                 </ExpandableSection>
 
                 {/* Suggested Questions */}
                 <ExpandableSection
-                    title="Preguntas sugeridas"
+                    title={t('appointments.ai.suggestedQuestions')}
                     icon={MessageSquare}
                     iconColor="bg-green-500"
                 >
@@ -472,7 +473,7 @@ export const AIPreparationPanel: React.FC<AIPreparationPanelProps> = ({
                         ) : (
                             <div className="flex items-center justify-between">
                                 <p className="text-sm text-muted-foreground italic">
-                                    Aún no hay preguntas generadas.
+                                    {t('appointments.ai.noQuestionsYet')}
                                 </p>
                                 <button
                                     onClick={() => generateSection('questions')}
@@ -484,7 +485,7 @@ export const AIPreparationPanel: React.FC<AIPreparationPanelProps> = ({
                                     ) : (
                                         <Sparkles size={14} />
                                     )}
-                                    Generar
+                                    {t('appointments.ai.generate')}
                                 </button>
                             </div>
                         )}
@@ -493,7 +494,7 @@ export const AIPreparationPanel: React.FC<AIPreparationPanelProps> = ({
 
                 {/* Potential Objections */}
                 <ExpandableSection
-                    title="Posibles objeciones"
+                    title={t('appointments.ai.possibleObjections')}
                     icon={AlertTriangle}
                     iconColor="bg-orange-500"
                 >
@@ -513,7 +514,7 @@ export const AIPreparationPanel: React.FC<AIPreparationPanelProps> = ({
                         ) : (
                             <div className="flex items-center justify-between">
                                 <p className="text-sm text-muted-foreground italic">
-                                    Aún no hay objeciones generadas.
+                                    {t('appointments.ai.noObjectionsYet')}
                                 </p>
                                 <button
                                     onClick={() => generateSection('objections')}
@@ -525,7 +526,7 @@ export const AIPreparationPanel: React.FC<AIPreparationPanelProps> = ({
                                     ) : (
                                         <Sparkles size={14} />
                                     )}
-                                    Generar
+                                    {t('appointments.ai.generate')}
                                 </button>
                             </div>
                         )}
@@ -534,7 +535,7 @@ export const AIPreparationPanel: React.FC<AIPreparationPanelProps> = ({
 
                 {/* Recommended Strategy */}
                 <ExpandableSection
-                    title="Estrategia recomendada"
+                    title={t('appointments.ai.recommendedStrategy')}
                     icon={Zap}
                     iconColor="bg-purple-500"
                 >
@@ -550,7 +551,7 @@ export const AIPreparationPanel: React.FC<AIPreparationPanelProps> = ({
                     ) : (
                         <div className="flex items-center justify-between">
                             <p className="text-sm text-muted-foreground italic">
-                                Aún no hay estrategia generada.
+                                {t('appointments.ai.noStrategyYet')}
                             </p>
                             <button
                                 onClick={() => generateSection('strategy')}
@@ -562,7 +563,7 @@ export const AIPreparationPanel: React.FC<AIPreparationPanelProps> = ({
                                 ) : (
                                     <Sparkles size={14} />
                                 )}
-                                Generar
+                                {t('appointments.ai.generate')}
                             </button>
                         </div>
                     )}
@@ -572,8 +573,8 @@ export const AIPreparationPanel: React.FC<AIPreparationPanelProps> = ({
             {/* Footer */}
             {insights?.generatedAt && (
                 <p className="text-xs text-muted-foreground text-center">
-                    Generado el {new Date(insights.generatedAt.seconds * 1000).toLocaleString('es-ES')}
-                    {insights.model && ` con ${insights.model}`}
+                    {t('appointments.ai.generatedAt', { date: new Date(insights.generatedAt.seconds * 1000).toLocaleString(i18n.language) })}
+                    {insights.model && ` ${t('appointments.ai.withModel', { model: insights.model })}`}
                 </p>
             )}
         </div>

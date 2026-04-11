@@ -120,6 +120,12 @@ export interface AdminEmailActionsReturn {
     toggleAutomationStatus: (automation: EmailAutomation) => Promise<void>;
     deleteAutomation: (automationId: string) => Promise<void>;
     openEditAutomation: (automation: EmailAutomation) => void;
+
+    // Automation → Email integration
+    openEmailEditorForStep: (step: AutomationWorkflowStep, automationName: string) => void;
+    saveEmailForAutomationStep: (document: EmailDocument, stepId: string, automationId: string) => Promise<string>;
+    automationStepEmailContext: { stepId: string; automationId: string; automationName: string } | null;
+    setAutomationStepEmailContext: (v: { stepId: string; automationId: string; automationName: string } | null) => void;
 }
 
 export function useAdminEmailActions(data: AdminEmailDataReturn): AdminEmailActionsReturn {
@@ -172,6 +178,11 @@ export function useAdminEmailActions(data: AdminEmailDataReturn): AdminEmailActi
         name: '', subject: '', description: '', delayMinutes: 60, status: 'draft',
         steps: [], category: 'lifecycle', audienceId: '',
     });
+
+    // Automation → Email integration context
+    const [automationStepEmailContext, setAutomationStepEmailContext] = useState<{
+        stepId: string; automationId: string; automationName: string;
+    } | null>(null);
 
     // =============================================================================
     // CAMPAIGN EDITOR HANDLERS
@@ -694,6 +705,126 @@ export function useAdminEmailActions(data: AdminEmailDataReturn): AdminEmailActi
         }
     };
 
+    // =============================================================================
+    // AUTOMATION → EMAIL INTEGRATION
+    // =============================================================================
+
+    /**
+     * Open the visual email editor pre-filled for a specific automation step.
+     * When the user saves, the email will be linked back to the step.
+     */
+    const openEmailEditorForStep = (step: AutomationWorkflowStep, automationName: string) => {
+        const existingCampaignId = step.emailConfig?.campaignId || step.emailConfig?.emailDocumentId;
+
+        if (existingCampaignId) {
+            // Open existing linked campaign for editing
+            const linkedCampaign = campaigns.find(c => c.id === existingCampaignId);
+            if (linkedCampaign) {
+                handleEditCampaignVisual(linkedCampaign);
+                return;
+            }
+        }
+
+        // Create a new blank document pre-filled with the step's subject
+        setEmailDocument({
+            name: `[Auto] ${automationName} — ${step.label}`,
+            subject: step.emailConfig?.subject || '',
+            previewText: step.emailConfig?.previewText || '',
+            blocks: [],
+            globalStyles: DEFAULT_EMAIL_GLOBAL_STYLES,
+        });
+        setEditingCampaignId(null);
+        setShowTemplateGallery(false);
+        setShowEmailEditor(true);
+
+        // Store context so we can link after save
+        setAutomationStepEmailContext({
+            stepId: step.id,
+            automationId: editingAutomationId || '',
+            automationName,
+        });
+    };
+
+    /**
+     * Save an email document and link it to a specific automation step.
+     * Returns the new campaign document ID.
+     */
+    const saveEmailForAutomationStep = async (
+        document: EmailDocument,
+        stepId: string,
+        automationId: string,
+    ): Promise<string> => {
+        const htmlContent = generateEmailHtml(document);
+
+        const campaignData: Record<string, any> = {
+            name: document.name || 'Email de Automatización',
+            subject: document.subject || '',
+            previewText: document.previewText || '',
+            type: 'automated',
+            htmlContent,
+            emailDocument: JSON.parse(JSON.stringify(document)),
+            audienceType: 'all',
+            status: 'draft' as CampaignStatus,
+            stats: { totalRecipients: 0, sent: 0, delivered: 0, opened: 0, totalOpens: 0, uniqueOpens: 0, clicked: 0, totalClicks: 0, uniqueClicks: 0, bounced: 0, complained: 0, unsubscribed: 0 },
+            tags: ['automation-email'],
+            automationId,
+            automationStepId: stepId,
+            createdBy: user?.uid || 'admin',
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp(),
+        };
+
+        const docRef = await addDoc(collection(db, 'adminEmailCampaigns'), campaignData);
+
+        // Update the automation step with the link
+        if (automationId) {
+            try {
+                const automationDocRef = doc(db, 'adminEmailAutomations', automationId);
+                // We need to find and update just the matching step
+                const automation = data.automations.find(a => a.id === automationId);
+                if (automation?.steps) {
+                    const updatedSteps = automation.steps.map(s => {
+                        if (s.id === stepId) {
+                            return {
+                                ...s,
+                                emailConfig: {
+                                    ...s.emailConfig,
+                                    campaignId: docRef.id,
+                                    emailDocumentId: docRef.id,
+                                    emailStatus: 'designed' as const,
+                                },
+                            };
+                        }
+                        return s;
+                    });
+                    await updateDoc(automationDocRef, {
+                        steps: updatedSteps.map(s => JSON.parse(JSON.stringify(s))),
+                        updatedAt: serverTimestamp(),
+                    });
+                }
+            } catch (err) {
+                console.error('[AdminEmailHub] Error linking email to automation step:', err);
+            }
+        }
+
+        // Track campaign locally
+        setCampaigns(prev => [{
+            id: docRef.id,
+            ...campaignData,
+            tenantId: 'admin',
+            tenantName: 'Super Admin',
+            userId: user?.uid || 'admin',
+            projectId: 'admin',
+            createdAt: new Date(),
+            updatedAt: new Date(),
+        } as CrossTenantCampaign, ...prev]);
+
+        // Clear context
+        setAutomationStepEmailContext(null);
+
+        return docRef.id;
+    };
+
     return {
         showEmailEditor, setShowEmailEditor,
         showTemplateGallery, setShowTemplateGallery,
@@ -723,5 +854,7 @@ export function useAdminEmailActions(data: AdminEmailDataReturn): AdminEmailActi
         handleDeleteCampaign, handleDuplicateCampaign,
         createAutomation, updateAutomation, duplicateAutomation,
         toggleAutomationStatus, deleteAutomation, openEditAutomation,
+        openEmailEditorForStep, saveEmailForAutomationStep,
+        automationStepEmailContext, setAutomationStepEmailContext,
     };
 }

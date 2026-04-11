@@ -51,7 +51,7 @@ const DayGroup: React.FC<DayGroupProps> = ({
     onAppointmentDelete,
     animationDelayStart,
 }) => {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const dateObj = new Date(date);
     const isCurrentDay = isToday(dateObj);
     const isPast = dateObj < new Date() && !isCurrentDay;
@@ -68,7 +68,7 @@ const DayGroup: React.FC<DayGroupProps> = ({
         yesterday.setDate(yesterday.getDate() - 1);
         if (isSameDay(dateObj, yesterday)) return t('appointments.yesterday');
 
-        return dateObj.toLocaleDateString('es-ES', {
+        return dateObj.toLocaleDateString(i18n.language, {
             weekday: 'long',
             day: 'numeric',
             month: 'long',
@@ -94,7 +94,7 @@ const DayGroup: React.FC<DayGroupProps> = ({
 
                 {!isCurrentDay && (
                     <span className="text-[10px] sm:text-xs text-muted-foreground hidden sm:inline">
-                        {dateObj.toLocaleDateString('es-ES', {
+                        {dateObj.toLocaleDateString(i18n.language, {
                             day: 'numeric',
                             month: 'short'
                         })}
@@ -124,19 +124,22 @@ const DayGroup: React.FC<DayGroupProps> = ({
 };
 
 // Empty state component
-const EmptyState: React.FC<{ message?: string }> = ({ message }) => (
-    <div className="flex flex-col items-center justify-center py-16 px-4">
-        <div className="w-20 h-20 rounded-full bg-muted/50 flex items-center justify-center mb-6">
-            <Calendar className="w-10 h-10 text-muted-foreground/50" />
+const EmptyState: React.FC<{ message?: string }> = ({ message }) => {
+    const { t } = useTranslation();
+    return (
+        <div className="flex flex-col items-center justify-center py-16 px-4">
+            <div className="w-20 h-20 rounded-full bg-muted/50 flex items-center justify-center mb-6">
+                <Calendar className="w-10 h-10 text-muted-foreground/50" />
+            </div>
+            <h3 className="text-lg font-semibold text-foreground mb-2">
+                {t('appointments.noAppointments')}
+            </h3>
+            <p className="text-sm text-muted-foreground text-center max-w-md">
+                {message || t('appointments.listView.emptyMessage')}
+            </p>
         </div>
-        <h3 className="text-lg font-semibold text-foreground mb-2">
-            {t('appointments.noAppointments')}
-        </h3>
-        <p className="text-sm text-muted-foreground text-center max-w-md">
-            {message || 'No se encontraron citas. Crea una nueva cita para comenzar a gestionar tu calendario.'}
-        </p>
-    </div>
-);
+    );
+};
 
 // =============================================================================
 // MAIN COMPONENT

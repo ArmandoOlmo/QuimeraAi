@@ -90,20 +90,20 @@ interface FormData {
 // CONSTANTS
 // =============================================================================
 
-const STEPS: { id: WizardStep; label: string; icon: React.ElementType }[] = [
-    { id: 'basics', label: 'Información', icon: Calendar },
-    { id: 'datetime', label: 'Fecha y Hora', icon: Clock },
-    { id: 'participants', label: 'Participantes', icon: Users },
-    { id: 'settings', label: 'Configuración', icon: Settings },
+const getSteps = (t: (key: string) => string): { id: WizardStep; label: string; icon: React.ElementType }[] => [
+    { id: 'basics', label: t('appointments.steps.basics'), icon: Calendar },
+    { id: 'datetime', label: t('appointments.steps.datetime'), icon: Clock },
+    { id: 'participants', label: t('appointments.steps.participants'), icon: Users },
+    { id: 'settings', label: t('appointments.steps.settings'), icon: Settings },
 ];
 
-const REMINDER_OPTIONS = [
-    { minutes: 15, label: '15 minutos antes' },
-    { minutes: 30, label: '30 minutos antes' },
-    { minutes: 60, label: '1 hora antes' },
-    { minutes: 120, label: '2 horas antes' },
-    { minutes: 1440, label: '1 día antes' },
-    { minutes: 2880, label: '2 días antes' },
+const getReminderOptions = (t: (key: string) => string) => [
+    { minutes: 15, label: t('appointments.reminders.15min') },
+    { minutes: 30, label: t('appointments.reminders.30min') },
+    { minutes: 60, label: t('appointments.reminders.1hour') },
+    { minutes: 120, label: t('appointments.reminders.2hours') },
+    { minutes: 1440, label: t('appointments.reminders.1day') },
+    { minutes: 2880, label: t('appointments.reminders.2days') },
 ];
 
 // =============================================================================
@@ -199,18 +199,19 @@ interface BasicsStepProps {
 }
 
 const BasicsStep: React.FC<BasicsStepProps> = ({ data, onChange }) => {
+    const { t } = useTranslation();
     return (
         <div className="space-y-6 animate-fade-in-up">
             {/* Title */}
             <div>
                 <label className="block text-sm font-semibold text-foreground mb-2">
-                    Título de la cita *
+                    {t('appointments.form.titleRequired')}
                 </label>
                 <input
                     type="text"
                     value={data.title}
                     onChange={(e) => onChange({ title: e.target.value })}
-                    placeholder="Ej: Llamada de discovery con cliente"
+                    placeholder={t('appointments.form.titlePlaceholder2')}
                     className="w-full h-12 bg-secondary/50 border border-border rounded-xl px-4 text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
                     autoFocus
                 />
@@ -219,7 +220,7 @@ const BasicsStep: React.FC<BasicsStepProps> = ({ data, onChange }) => {
             {/* Type selector */}
             <div>
                 <label className="block text-sm font-semibold text-foreground mb-3">
-                    Tipo de cita
+                    {t('appointments.form.typeLabel')}
                 </label>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3">
                     {Object.entries(APPOINTMENT_TYPE_CONFIGS).map(([key, config]) => {
@@ -267,7 +268,7 @@ const BasicsStep: React.FC<BasicsStepProps> = ({ data, onChange }) => {
                 {/* Custom Type Input */}
                 <div className="relative">
                     <label className="block text-xs font-medium text-muted-foreground mb-1.5 ml-1">
-                        O escribe un tipo personalizado
+                        {t('appointments.form.customType')}
                     </label>
                     <div className="relative">
                         <input
@@ -277,7 +278,7 @@ const BasicsStep: React.FC<BasicsStepProps> = ({ data, onChange }) => {
                                 const val = e.target.value;
                                 if (val) onChange({ type: val as AppointmentType });
                             }}
-                            placeholder="Ej. Entrevista, Coaching, Terapia..."
+                            placeholder={t('appointments.form.customTypePlaceholder')}
                             className={`
                                 w-full h-10 bg-secondary/50 border rounded-xl px-4 pl-10 text-sm
                                 outline-none focus:ring-2 focus:ring-primary/50 transition-all
@@ -298,7 +299,7 @@ const BasicsStep: React.FC<BasicsStepProps> = ({ data, onChange }) => {
                                 <span className="text-xs font-bold">#</span>
                             </div>
                             <span className="text-sm font-medium text-foreground">
-                                Tipo seleccionado: <span className="text-primary">{data.type}</span>
+                                {t('appointments.form.selectedType')} <span className="text-primary">{data.type}</span>
                             </span>
                         </div>
                     )}
@@ -308,7 +309,7 @@ const BasicsStep: React.FC<BasicsStepProps> = ({ data, onChange }) => {
             {/* Priority */}
             <div>
                 <label className="block text-sm font-semibold text-foreground mb-3">
-                    Prioridad
+                    {t('appointments.form.priorityLabel')}
                 </label>
                 <div className="flex gap-2">
                     {Object.entries(APPOINTMENT_PRIORITY_CONFIGS).map(([key, config]) => {
@@ -337,12 +338,12 @@ const BasicsStep: React.FC<BasicsStepProps> = ({ data, onChange }) => {
             {/* Description */}
             <div>
                 <label className="block text-sm font-semibold text-foreground mb-2">
-                    Descripción
+                    {t('appointments.form.descriptionLabel')}
                 </label>
                 <textarea
                     value={data.description}
                     onChange={(e) => onChange({ description: e.target.value })}
-                    placeholder="Añade contexto o notas sobre la cita..."
+                    placeholder={t('appointments.form.descriptionPlaceholder2')}
                     rows={3}
                     className="w-full bg-secondary/50 border border-border rounded-xl px-4 py-3 text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all resize-none"
                 />
@@ -358,13 +359,14 @@ interface DateTimeStepProps {
 }
 
 const DateTimeStep: React.FC<DateTimeStepProps> = ({ data, onChange }) => {
+    const { t, i18n } = useTranslation();
     return (
         <div className="space-y-6 animate-fade-in-up">
             {/* Date & Time grid */}
             <div className="grid grid-cols-2 gap-4">
                 <div>
                     <label className="block text-sm font-semibold text-foreground mb-2">
-                        Fecha de inicio *
+                        {t('appointments.form.startDateRequired')}
                     </label>
                     <input
                         type="date"
@@ -375,7 +377,7 @@ const DateTimeStep: React.FC<DateTimeStepProps> = ({ data, onChange }) => {
                 </div>
                 <div>
                     <label className="block text-sm font-semibold text-foreground mb-2">
-                        Hora de inicio *
+                        {t('appointments.form.startTimeRequired')}
                     </label>
                     <input
                         type="time"
@@ -386,7 +388,7 @@ const DateTimeStep: React.FC<DateTimeStepProps> = ({ data, onChange }) => {
                 </div>
                 <div>
                     <label className="block text-sm font-semibold text-foreground mb-2">
-                        Fecha de fin
+                        {t('appointments.form.endDateLabel')}
                     </label>
                     <input
                         type="date"
@@ -397,7 +399,7 @@ const DateTimeStep: React.FC<DateTimeStepProps> = ({ data, onChange }) => {
                 </div>
                 <div>
                     <label className="block text-sm font-semibold text-foreground mb-2">
-                        Hora de fin
+                        {t('appointments.form.endTimeLabel')}
                     </label>
                     <input
                         type="time"
@@ -411,7 +413,7 @@ const DateTimeStep: React.FC<DateTimeStepProps> = ({ data, onChange }) => {
             {/* Quick duration buttons */}
             <div>
                 <label className="block text-sm font-semibold text-foreground mb-2">
-                    Duración rápida
+                    {t('appointments.form.quickDuration')}
                 </label>
                 <div className="flex gap-2 flex-wrap">
                     {[15, 30, 45, 60, 90, 120].map(minutes => (
@@ -437,7 +439,7 @@ const DateTimeStep: React.FC<DateTimeStepProps> = ({ data, onChange }) => {
             {/* Timezone */}
             <div>
                 <label className="block text-sm font-semibold text-foreground mb-2">
-                    Zona horaria
+                    {t('appointments.form.timezoneLabel')}
                 </label>
                 <select
                     value={data.timezone}
@@ -457,13 +459,13 @@ const DateTimeStep: React.FC<DateTimeStepProps> = ({ data, onChange }) => {
             {/* Location type */}
             <div>
                 <label className="block text-sm font-semibold text-foreground mb-3">
-                    Ubicación
+                    {t('appointments.form.locationLabel')}
                 </label>
                 <div className="grid grid-cols-3 gap-3 mb-4">
                     {[
-                        { type: 'virtual', icon: Video, label: 'Virtual' },
-                        { type: 'physical', icon: MapPin, label: 'Presencial' },
-                        { type: 'phone', icon: Phone, label: 'Teléfono' },
+                        { type: 'virtual', icon: Video, label: t('appointments.locations.virtual') },
+                        { type: 'physical', icon: MapPin, label: t('appointments.locations.physical') },
+                        { type: 'phone', icon: Phone, label: t('appointments.locations.phone') },
                     ].map(({ type, icon: Icon, label }) => (
                         <button
                             key={type}
@@ -492,7 +494,7 @@ const DateTimeStep: React.FC<DateTimeStepProps> = ({ data, onChange }) => {
                         type="url"
                         value={data.meetingUrl}
                         onChange={(e) => onChange({ meetingUrl: e.target.value })}
-                        placeholder="https://meet.google.com/... o https://zoom.us/..."
+                        placeholder={t('appointments.form.meetingUrlPlaceholder')}
                         className="w-full h-12 bg-secondary/50 border border-border rounded-xl px-4 text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/50 transition-all"
                     />
                 )}
@@ -501,7 +503,7 @@ const DateTimeStep: React.FC<DateTimeStepProps> = ({ data, onChange }) => {
                         type="text"
                         value={data.address}
                         onChange={(e) => onChange({ address: e.target.value })}
-                        placeholder="Dirección completa..."
+                        placeholder={t('appointments.form.addressPlaceholder')}
                         className="w-full h-12 bg-secondary/50 border border-border rounded-xl px-4 text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/50 transition-all"
                     />
                 )}
@@ -510,7 +512,7 @@ const DateTimeStep: React.FC<DateTimeStepProps> = ({ data, onChange }) => {
                         type="tel"
                         value={data.phoneNumber}
                         onChange={(e) => onChange({ phoneNumber: e.target.value })}
-                        placeholder="+52 55 1234 5678"
+                        placeholder={t('appointments.form.phonePlaceholder')}
                         className="w-full h-12 bg-secondary/50 border border-border rounded-xl px-4 text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/50 transition-all"
                     />
                 )}
@@ -527,6 +529,7 @@ interface ParticipantsStepProps {
 }
 
 const ParticipantsStep: React.FC<ParticipantsStepProps> = ({ data, leads, onChange }) => {
+    const { t } = useTranslation();
     const [searchQuery, setSearchQuery] = useState('');
     const [showLeadPicker, setShowLeadPicker] = useState(false);
     const [newParticipant, setNewParticipant] = useState({ name: '', email: '' });
@@ -592,7 +595,7 @@ const ParticipantsStep: React.FC<ParticipantsStepProps> = ({ data, leads, onChan
             <div>
                 <div className="flex items-center justify-between mb-3">
                     <label className="text-sm font-semibold text-foreground">
-                        Importar desde Leads
+                        {t('appointments.form.importFromLeads')}
                     </label>
                     <button
                         type="button"
@@ -600,7 +603,7 @@ const ParticipantsStep: React.FC<ParticipantsStepProps> = ({ data, leads, onChan
                         className="text-sm text-primary hover:underline flex items-center gap-1"
                     >
                         <Users size={14} />
-                        Seleccionar leads
+                        {t('appointments.form.selectLeads')}
                     </button>
                 </div>
 
@@ -612,7 +615,7 @@ const ParticipantsStep: React.FC<ParticipantsStepProps> = ({ data, leads, onChan
                                 type="text"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                placeholder="Buscar leads..."
+                                placeholder={t('appointments.form.searchLeads')}
                                 className="flex-1 bg-transparent outline-none text-sm min-w-0"
                             />
                             {searchQuery && (
@@ -654,7 +657,7 @@ const ParticipantsStep: React.FC<ParticipantsStepProps> = ({ data, leads, onChan
 
                             {filteredLeads.length === 0 && (
                                 <p className="text-sm text-muted-foreground text-center py-4">
-                                    No se encontraron leads
+                                    {t('appointments.form.noLeadsFound')}
                                 </p>
                             )}
                         </div>
@@ -665,21 +668,21 @@ const ParticipantsStep: React.FC<ParticipantsStepProps> = ({ data, leads, onChan
             {/* Add external participant */}
             <div>
                 <label className="block text-sm font-semibold text-foreground mb-3">
-                    Añadir participante externo
+                    {t('appointments.form.addExternal')}
                 </label>
                 <div className="flex gap-2">
                     <input
                         type="text"
                         value={newParticipant.name}
                         onChange={(e) => setNewParticipant(p => ({ ...p, name: e.target.value }))}
-                        placeholder="Nombre"
+                        placeholder={t('appointments.form.namePlaceholder')}
                         className="flex-1 h-10 bg-secondary/50 border border-border rounded-lg px-3 text-sm outline-none focus:ring-2 focus:ring-primary/50"
                     />
                     <input
                         type="email"
                         value={newParticipant.email}
                         onChange={(e) => setNewParticipant(p => ({ ...p, email: e.target.value }))}
-                        placeholder="email@ejemplo.com"
+                        placeholder={t('appointments.form.emailPlaceholder')}
                         className="flex-1 h-10 bg-secondary/50 border border-border rounded-lg px-3 text-sm outline-none focus:ring-2 focus:ring-primary/50"
                     />
                     <button
@@ -696,14 +699,14 @@ const ParticipantsStep: React.FC<ParticipantsStepProps> = ({ data, leads, onChan
             {/* Participants list */}
             <div>
                 <label className="block text-sm font-semibold text-foreground mb-3">
-                    Participantes ({data.participants.length})
+                    {t('appointments.form.participantsCount', { count: data.participants.length })}
                 </label>
 
                 {data.participants.length === 0 ? (
                     <div className="border-2 border-dashed border-border rounded-xl p-8 text-center">
                         <Users className="mx-auto h-10 w-10 text-muted-foreground/30 mb-3" />
                         <p className="text-sm text-muted-foreground">
-                            Aún no hay participantes. Importa desde tus leads o añade participantes externos.
+                            {t('appointments.form.noParticipantsYet')}
                         </p>
                     </div>
                 ) : (
@@ -748,6 +751,8 @@ interface SettingsStepProps {
 }
 
 const SettingsStep: React.FC<SettingsStepProps> = ({ data, onChange }) => {
+    const { t, i18n } = useTranslation();
+    const REMINDER_OPTIONS = getReminderOptions(t);
     const toggleReminder = (minutes: number) => {
         const existing = data.reminders.find(r => r.minutesBefore === minutes);
         if (existing) {
@@ -770,7 +775,7 @@ const SettingsStep: React.FC<SettingsStepProps> = ({ data, onChange }) => {
             <div>
                 <label className="block text-sm font-semibold text-foreground mb-3">
                     <Bell size={14} className="inline mr-2" />
-                    Recordatorios
+                    {t('appointments.form.reminders')}
                 </label>
                 <div className="flex flex-wrap gap-2">
                     {REMINDER_OPTIONS.map(option => {
@@ -804,9 +809,9 @@ const SettingsStep: React.FC<SettingsStepProps> = ({ data, onChange }) => {
                             <Sparkles size={20} />
                         </div>
                         <div>
-                            <p className="font-semibold text-foreground">Preparación con IA</p>
+                            <p className="font-semibold text-foreground">{t('appointments.ai.aiPrepTitle')}</p>
                             <p className="text-sm text-muted-foreground">
-                                Genera briefing, preguntas clave y estrategia
+                                {t('appointments.ai.aiPrepDescription')}
                             </p>
                         </div>
                     </div>
@@ -831,11 +836,11 @@ const SettingsStep: React.FC<SettingsStepProps> = ({ data, onChange }) => {
             {/* Tags */}
             <div>
                 <label className="block text-sm font-semibold text-foreground mb-2">
-                    Etiquetas
+                    {t('appointments.form.tags')}
                 </label>
                 <input
                     type="text"
-                    placeholder="Escribe y presiona Enter para añadir..."
+                    placeholder={t('appointments.form.tagsPlaceholder')}
                     onKeyDown={(e) => {
                         if (e.key === 'Enter') {
                             e.preventDefault();
@@ -871,18 +876,18 @@ const SettingsStep: React.FC<SettingsStepProps> = ({ data, onChange }) => {
 
             {/* Summary */}
             <div className="p-4 rounded-xl bg-secondary/30 border border-border">
-                <h4 className="font-semibold text-foreground mb-3">Resumen</h4>
+                <h4 className="font-semibold text-foreground mb-3">{t('appointments.form.summaryTitle')}</h4>
                 <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
-                        <span className="text-muted-foreground">Tipo:</span>
+                        <span className="text-muted-foreground">{t('appointments.form.summaryType')}</span>
                         <span className="text-foreground font-medium">
                             {APPOINTMENT_TYPE_CONFIGS[data.type]?.label}
                         </span>
                     </div>
                     <div className="flex justify-between">
-                        <span className="text-muted-foreground">Fecha:</span>
+                        <span className="text-muted-foreground">{t('appointments.form.summaryDate')}</span>
                         <span className="text-foreground font-medium">
-                            {new Date(data.startDate).toLocaleDateString('es-ES', {
+                            {new Date(data.startDate).toLocaleDateString(i18n.language, {
                                 weekday: 'long',
                                 day: 'numeric',
                                 month: 'long'
@@ -890,19 +895,19 @@ const SettingsStep: React.FC<SettingsStepProps> = ({ data, onChange }) => {
                         </span>
                     </div>
                     <div className="flex justify-between">
-                        <span className="text-muted-foreground">Hora:</span>
+                        <span className="text-muted-foreground">{t('appointments.form.summaryTime')}</span>
                         <span className="text-foreground font-medium">
                             {data.startTime} - {data.endTime}
                         </span>
                     </div>
                     <div className="flex justify-between">
-                        <span className="text-muted-foreground">Participantes:</span>
+                        <span className="text-muted-foreground">{t('appointments.form.summaryParticipants')}</span>
                         <span className="text-foreground font-medium">
                             {data.participants.length}
                         </span>
                     </div>
                     <div className="flex justify-between">
-                        <span className="text-muted-foreground">Recordatorios:</span>
+                        <span className="text-muted-foreground">{t('appointments.form.summaryReminders')}</span>
                         <span className="text-foreground font-medium">
                             {data.reminders.length}
                         </span>
@@ -926,6 +931,8 @@ export const CreateAppointmentModal: React.FC<CreateAppointmentModalProps> = ({
     initialHour,
     editingAppointment,
 }) => {
+    const { t, i18n } = useTranslation();
+    const STEPS = useMemo(() => getSteps(t), [t]);
     const [currentStep, setCurrentStep] = useState<WizardStep>('basics');
     const [formData, setFormData] = useState<FormData>(() => getDefaultFormData(initialDate, initialHour, editingAppointment));
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -944,11 +951,11 @@ export const CreateAppointmentModal: React.FC<CreateAppointmentModalProps> = ({
 
         switch (currentStep) {
             case 'basics':
-                if (!formData.title.trim()) newErrors.push('El título es requerido');
+                if (!formData.title.trim()) newErrors.push(t('appointments.validation.titleRequired'));
                 break;
             case 'datetime':
-                if (!formData.startDate) newErrors.push('La fecha de inicio es requerida');
-                if (!formData.startTime) newErrors.push('La hora de inicio es requerida');
+                if (!formData.startDate) newErrors.push(t('appointments.validation.startDateRequired'));
+                if (!formData.startTime) newErrors.push(t('appointments.validation.startTimeRequired'));
                 break;
         }
 
@@ -1023,7 +1030,7 @@ export const CreateAppointmentModal: React.FC<CreateAppointmentModalProps> = ({
             setCurrentStep('basics');
         } catch (error) {
             console.error('Error creating appointment:', error);
-            setErrors(['Error al crear la cita. Inténtalo de nuevo.']);
+            setErrors([t('appointments.modal.errorCreate')]);
         } finally {
             setIsSubmitting(false);
         }
@@ -1045,7 +1052,7 @@ export const CreateAppointmentModal: React.FC<CreateAppointmentModalProps> = ({
                 <div className="flex items-center justify-between p-6 border-b border-border">
                     <div>
                         <h2 className="text-xl font-bold text-foreground">
-                            {editingAppointment ? 'Editar cita' : 'Nueva cita'}
+                            {editingAppointment ? t('appointments.modal.editTitle') : t('appointments.modal.newTitle')}
                         </h2>
                         <p className="text-sm text-muted-foreground mt-0.5">
                             {STEPS[currentStepIndex].label}
@@ -1145,7 +1152,7 @@ export const CreateAppointmentModal: React.FC<CreateAppointmentModalProps> = ({
                         `}
                     >
                         <ChevronLeft size={18} />
-                        Anterior
+                        {t('appointments.modal.previous')}
                     </button>
 
                     {isLastStep ? (
@@ -1157,12 +1164,12 @@ export const CreateAppointmentModal: React.FC<CreateAppointmentModalProps> = ({
                             {isSubmitting ? (
                                 <>
                                     <Loader2 size={18} className="animate-spin" />
-                                    {editingAppointment ? 'Guardando...' : 'Creando...'}
+                                    {editingAppointment ? t('appointments.modal.saving') : t('appointments.modal.creating')}
                                 </>
                             ) : (
                                 <>
                                     <Check size={18} />
-                                    {editingAppointment ? 'Guardar cambios' : 'Crear cita'}
+                                    {editingAppointment ? t('appointments.modal.saveChanges') : t('appointments.modal.create')}
                                 </>
                             )}
                         </button>
@@ -1171,7 +1178,7 @@ export const CreateAppointmentModal: React.FC<CreateAppointmentModalProps> = ({
                             onClick={handleNext}
                             className="flex items-center gap-2 px-6 py-2.5 bg-primary text-primary-foreground rounded-xl font-semibold text-sm hover:opacity-90 transition-opacity"
                         >
-                            Siguiente
+                            {t('appointments.modal.next')}
                             <ChevronRight size={18} />
                         </button>
                     )}

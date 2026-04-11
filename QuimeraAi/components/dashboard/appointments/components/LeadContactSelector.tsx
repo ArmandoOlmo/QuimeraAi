@@ -182,6 +182,7 @@ export const LeadContactSelector: React.FC<LeadContactSelectorProps> = ({
     maxSelection,
     className = '',
 }) => {
+    const { t } = useTranslation();
     const [searchQuery, setSearchQuery] = useState('');
     const [statusFilter, setStatusFilter] = useState<string>('all');
     const [showFilters, setShowFilters] = useState(false);
@@ -271,9 +272,9 @@ export const LeadContactSelector: React.FC<LeadContactSelectorProps> = ({
             <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
                     <Users size={18} className="text-primary" />
-                    <h3 className="font-semibold text-foreground">Importar Leads</h3>
+                    <h3 className="font-semibold text-foreground">{t('appointments.form.importFromLeads')}</h3>
                     <span className="text-xs bg-muted px-2 py-0.5 rounded-full text-muted-foreground">
-                        {leads.length} disponibles
+                        {leads.length} {t('appointments.leadSelector.available')}
                     </span>
                 </div>
 
@@ -283,7 +284,7 @@ export const LeadContactSelector: React.FC<LeadContactSelectorProps> = ({
                             onClick={clearSelection}
                             className="text-xs text-muted-foreground hover:text-foreground transition-colors"
                         >
-                            Limpiar
+                            {t('appointments.leadSelector.clear')}
                         </button>
                     )}
                     <button
@@ -291,7 +292,7 @@ export const LeadContactSelector: React.FC<LeadContactSelectorProps> = ({
                         disabled={reachedMax}
                         className="text-xs text-primary hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                        Seleccionar todos
+                        {t('appointments.leadSelector.selectAll')}
                     </button>
                 </div>
             </div>
@@ -304,7 +305,7 @@ export const LeadContactSelector: React.FC<LeadContactSelectorProps> = ({
                         type="text"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        placeholder="Buscar por nombre, email, empresa..."
+                        placeholder={t('appointments.leadSelector.searchPlaceholder')}
                         className="flex-1 bg-transparent outline-none text-sm min-w-0"
                     />
                     {searchQuery && (
@@ -326,7 +327,7 @@ export const LeadContactSelector: React.FC<LeadContactSelectorProps> = ({
                     `}
                 >
                     <Filter size={14} />
-                    Filtros
+                    {t('appointments.leadSelector.filters')}
                     <ChevronDown size={14} className={`transition-transform ${showFilters ? 'rotate-180' : ''}`} />
                 </button>
             </div>
@@ -335,7 +336,7 @@ export const LeadContactSelector: React.FC<LeadContactSelectorProps> = ({
             {showFilters && (
                 <div className="mb-4 p-3 bg-secondary/30 rounded-xl border border-border animate-scale-in">
                     <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block">
-                        Estado del lead
+                        {t('appointments.leadSelector.leadStatus')}
                     </label>
                     <div className="flex flex-wrap gap-2">
                         {['all', 'new', 'contacted', 'qualified', 'negotiation', 'won'].map(status => (
@@ -351,7 +352,7 @@ export const LeadContactSelector: React.FC<LeadContactSelectorProps> = ({
                                     }
                                 `}
                             >
-                                {status === 'all' ? 'Todos' : status.charAt(0).toUpperCase() + status.slice(1)}
+                                {status === 'all' ? t('appointments.leadSelector.all') : status.charAt(0).toUpperCase() + status.slice(1)}
                             </button>
                         ))}
                     </div>
@@ -366,11 +367,11 @@ export const LeadContactSelector: React.FC<LeadContactSelectorProps> = ({
                             {selectedLeadIds.length}
                         </div>
                         <span className="text-sm font-medium text-foreground">
-                            lead{selectedLeadIds.length !== 1 ? 's' : ''} seleccionado{selectedLeadIds.length !== 1 ? 's' : ''}
+                            {t('appointments.leadSelector.leadsSelected', { count: selectedLeadIds.length })}
                         </span>
                         {maxSelection && (
                             <span className="text-xs text-muted-foreground">
-                                (máx. {maxSelection})
+                                ({t('appointments.leadSelector.max', { count: maxSelection })})
                             </span>
                         )}
                     </div>
@@ -380,7 +381,7 @@ export const LeadContactSelector: React.FC<LeadContactSelectorProps> = ({
                         className="px-4 py-2 bg-primary text-primary-foreground rounded-lg font-medium text-sm flex items-center gap-2 hover:opacity-90 transition-opacity"
                     >
                         <UserPlus size={16} />
-                        Importar
+                        {t('appointments.leadSelector.import')}
                     </button>
                 </div>
             )}
@@ -392,8 +393,8 @@ export const LeadContactSelector: React.FC<LeadContactSelectorProps> = ({
                         <Users className="mx-auto h-12 w-12 text-muted-foreground/30 mb-3" />
                         <p className="text-sm text-muted-foreground">
                             {searchQuery || statusFilter !== 'all'
-                                ? 'No se encontraron leads con esos criterios'
-                                : 'No hay leads disponibles'
+                                ? t('appointments.leadSelector.noLeadsMatchCriteria')
+                                : t('appointments.form.noLeadsFound')
                             }
                         </p>
                     </div>
@@ -416,7 +417,7 @@ export const LeadContactSelector: React.FC<LeadContactSelectorProps> = ({
             {selectedLeadIds.length > 0 && (
                 <div className="mt-4 pt-4 border-t border-border">
                     <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-                        Seleccionados
+                        {t('appointments.leadSelector.selected')}
                     </p>
                     <div className="flex flex-wrap gap-2">
                         {selectedLeadIds.map(id => {
