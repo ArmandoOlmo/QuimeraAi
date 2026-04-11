@@ -855,7 +855,9 @@
     "join": "Participar",
     "details": "Detalhes",
     "participants": "Participantes",
-    "notes": "Notas",
+    "notes": {
+      "aiGenerated": "Gerado por IA"
+    },
     "location": "Localização",
     "priority": "Prioridade",
     "type": "Tipo",
@@ -1053,9 +1055,6 @@
       "createFirstProject": "Crie seu primeiro projeto para começar a gerenciar compromissos",
       "viewAppointments": "Ver Compromissos"
     },
-    "notes": {
-      "aiGenerated": "Gerado por IA"
-    },
     "leadSelector": {
       "available": "disponíveis",
       "clear": "Limpar",
@@ -1160,5 +1159,65 @@
     "deleteConfirmMessage": "Tem certeza de que deseja excluir este compromisso? Esta ação não pode ser desfeita.",
     "disconnectGoogle": "Desconectar Google Calendar?",
     "disconnectGoogleMessage": "Tem certeza de que deseja desconectar o Google Calendar? Seus compromissos existentes não serão excluídos."
+  },
+  "editor": {
+    "cmsFeedSection": "Feed do CMS",
+    "controls": {
+      "cmsFeed": {
+        "layout": "Layout",
+        "layoutVariant": "Variante do layout",
+        "grid": "Grade",
+        "list": "Lista",
+        "carousel": "Carrossel",
+        "magazine": "Revista",
+        "columns": "Colunas",
+        "column": "Coluna",
+        "columnCount": "{{count}} Coluna",
+        "columnCountPlural": "{{count}} Colunas",
+        "cardStyle": "Estilo do cartão",
+        "classicStyle": "Clássico — Imagem acima, texto abaixo",
+        "overlayStyle": "Sobreposição — Texto sobre imagem",
+        "minimalStyle": "Minimalista — Limpo e compacto",
+        "compactStyle": "Quadrado compacto — Proporção 1:1",
+        "editorialStyle": "Editorial — Imagem grande, tipo bold",
+        "maxPosts": "Máx. publicações",
+        "postsCount": "{{count}} Publicações",
+        "categoryFilter": "Filtro de categoria",
+        "allCategories": "Todas as categorias",
+        "cardContent": "Conteúdo do cartão",
+        "showFeaturedImage": "Mostrar imagem destacada",
+        "showExcerpt": "Mostrar resumo",
+        "showDate": "Mostrar data",
+        "showAuthor": "Mostrar autor",
+        "showCategoryBadge": "Mostrar selo de categoria",
+        "showReadMore": "Mostrar ler mais",
+        "readMoreText": "Texto de ler mais",
+        "showOnlyPublished": "Mostrar apenas publicados",
+        "viewAllCta": "Ver todos CTA",
+        "buttonText": "Texto do botão",
+        "buttonLink": "Link do botão",
+        "spacing": "Espaçamento",
+        "sectionColors": "Cores da seção",
+        "sectionTitle": "Título da seção",
+        "sectionDescription": "Descrição da seção",
+        "cardColors": "Cores do cartão",
+        "cardBackground": "Fundo do cartão",
+        "cardBorder": "Borda do cartão",
+        "cardHeading": "Cabeçalho do cartão",
+        "cardText": "Texto do cartão",
+        "cardExcerpt": "Resumo do cartão",
+        "imageStyle": "Estilo da imagem",
+        "cardImageShape": "Forma da imagem",
+        "rounded": "Arredondado",
+        "square": "Quadrado",
+        "fullCover": "Cobertura total",
+        "categoryBadge": "Selo de categoria",
+        "badgeBackground": "Fundo do selo",
+        "badgeText": "Texto do selo",
+        "buttons": "Botões",
+        "buttonBackground": "Fundo do botão",
+        "noArticles": "Nenhum artigo para exibir"
+      }
+    }
   }
 }

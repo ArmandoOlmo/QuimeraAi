@@ -855,7 +855,9 @@
     "join": "Rejoindre",
     "details": "Détails",
     "participants": "Participants",
-    "notes": "Notes",
+    "notes": {
+      "aiGenerated": "Généré par l'IA"
+    },
     "location": "Lieu",
     "priority": "Priorité",
     "type": "Type",
@@ -1053,9 +1055,6 @@
       "createFirstProject": "Créez votre premier projet pour commencer à gérer les rendez-vous",
       "viewAppointments": "Voir les rendez-vous"
     },
-    "notes": {
-      "aiGenerated": "Généré par l'IA"
-    },
     "leadSelector": {
       "available": "disponibles",
       "clear": "Effacer",
@@ -1160,5 +1159,65 @@
     "deleteConfirmMessage": "Êtes-vous sûr de vouloir supprimer ce rendez-vous ? Cette action est irréversible.",
     "disconnectGoogle": "Déconnecter Google Calendar ?",
     "disconnectGoogleMessage": "Êtes-vous sûr de vouloir déconnecter Google Calendar ? Vos rendez-vous existants ne seront pas supprimés."
+  },
+  "editor": {
+    "cmsFeedSection": "Flux CMS",
+    "controls": {
+      "cmsFeed": {
+        "layout": "Mise en page",
+        "layoutVariant": "Variante de mise en page",
+        "grid": "Grille",
+        "list": "Liste",
+        "carousel": "Carrousel",
+        "magazine": "Magazine",
+        "columns": "Colonnes",
+        "column": "Colonne",
+        "columnCount": "{{count}} Colonne",
+        "columnCountPlural": "{{count}} Colonnes",
+        "cardStyle": "Style de carte",
+        "classicStyle": "Classique — Image en haut, texte en bas",
+        "overlayStyle": "Superposé — Texte sur l'image",
+        "minimalStyle": "Minimal — Propre et compact",
+        "compactStyle": "Carré compact — Ratio 1:1",
+        "editorialStyle": "Éditorial — Grande image, typographie bold",
+        "maxPosts": "Max. articles",
+        "postsCount": "{{count}} Articles",
+        "categoryFilter": "Filtre de catégorie",
+        "allCategories": "Toutes les catégories",
+        "cardContent": "Contenu de la carte",
+        "showFeaturedImage": "Afficher l'image mise en avant",
+        "showExcerpt": "Afficher l'extrait",
+        "showDate": "Afficher la date",
+        "showAuthor": "Afficher l'auteur",
+        "showCategoryBadge": "Afficher le badge de catégorie",
+        "showReadMore": "Afficher lire la suite",
+        "readMoreText": "Texte de lire la suite",
+        "showOnlyPublished": "Afficher uniquement les publiés",
+        "viewAllCta": "Voir tout CTA",
+        "buttonText": "Texte du bouton",
+        "buttonLink": "Lien du bouton",
+        "spacing": "Espacement",
+        "sectionColors": "Couleurs de section",
+        "sectionTitle": "Titre de section",
+        "sectionDescription": "Description de section",
+        "cardColors": "Couleurs de carte",
+        "cardBackground": "Fond de carte",
+        "cardBorder": "Bordure de carte",
+        "cardHeading": "En-tête de carte",
+        "cardText": "Texte de carte",
+        "cardExcerpt": "Extrait de carte",
+        "imageStyle": "Style d'image",
+        "cardImageShape": "Forme d'image",
+        "rounded": "Arrondi",
+        "square": "Carré",
+        "fullCover": "Couverture complète",
+        "categoryBadge": "Badge de catégorie",
+        "badgeBackground": "Fond du badge",
+        "badgeText": "Texte du badge",
+        "buttons": "Boutons",
+        "buttonBackground": "Fond du bouton",
+        "noArticles": "Aucun article à afficher"
+      }
+    }
   }
 }
