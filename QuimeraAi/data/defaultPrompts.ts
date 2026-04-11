@@ -748,7 +748,7 @@ Generate or rewrite content for the specific UI element described below. Ensure 
     area: 'Image Generation',
     description: "Generates images using Quimera Nano Banana 2 - supports multiple aspect ratios, thinking level, reference images, theme colors, and photorealistic quality.",
     template: `{{prompt}}, {{style}}, professional high quality photo, {{lighting}}, {{cameraAngle}}, {{colorGrading}}, {{themeColors}}, {{depthOfField}}, no blurry, no distorted text, high quality`,
-    model: 'imagen-4.0-nano-banana-002',
+    model: 'gemini-3.1-flash-image-preview',
     version: 12,
   },
 
