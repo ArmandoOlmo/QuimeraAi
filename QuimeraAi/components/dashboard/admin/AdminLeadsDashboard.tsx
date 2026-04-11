@@ -101,7 +101,8 @@ import {
     ArrowUpRight, Calendar, Trash2, MoveRight,
     Building2, Palette, Sparkles, Loader2, ThumbsUp,
     Smile, Table, List, Columns, Download, Upload, Edit, MapPin,
-    Globe, Briefcase, Linkedin, BookOpen, X, Save, Send, Users, ArrowLeft
+    Globe, Briefcase, Linkedin, BookOpen, X, Save, Send, Users, ArrowLeft,
+    Megaphone,
 } from 'lucide-react';
 import { generateContentViaProxy, extractTextFromResponse } from '../../../utils/geminiProxyClient';
 import LeadsFilters, { LeadsFiltersState } from '../leads/LeadsFilters';
@@ -113,6 +114,7 @@ import ImportLeadsModal from '../leads/ImportLeadsModal';
 import MobileSearchModal from '../../ui/MobileSearchModal';
 import { useRouter } from '../../../hooks/useRouter';
 import { ROUTES } from '../../../routes/config';
+import { AddToAudienceModal } from './email-hub/components/AddToAudienceModal';
 
 // ============================================================================
 // Main Export
@@ -196,6 +198,8 @@ const AdminLeadsDashboardInner: React.FC<{ onBack: () => void }> = ({ onBack }) 
     const [isFiltersOpen, setIsFiltersOpen] = useState(false);
     const [showCustomFields, setShowCustomFields] = useState(false);
     const [showAddToAudience, setShowAddToAudience] = useState(false);
+    const [audienceContacts, setAudienceContacts] = useState<{ email: string; name?: string; source?: string }[]>([]);
+    const [audienceModalTitle, setAudienceModalTitle] = useState('');
     const [searchQuery, setSearchQuery] = useState('');
     const [aiAnalysis, setAiAnalysis] = useState<string | null>(null);
     const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -418,6 +422,21 @@ const AdminLeadsDashboardInner: React.FC<{ onBack: () => void }> = ({ onBack }) 
                         <button onClick={() => setIsFiltersOpen(!isFiltersOpen)} className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"><Filter size={18} /></button>
                         <button onClick={handleExportCSV} className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors" title="Exportar CSV"><Download size={18} /></button>
                         <button onClick={() => setShowImport(true)} className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors" title="Importar"><Upload size={18} /></button>
+                        {/* Bulk add to audience */}
+                        {selectedLeadIds.size > 0 && (
+                            <button
+                                onClick={() => {
+                                    const selected = leads.filter(l => selectedLeadIds.has(l.id) && l.email);
+                                    setAudienceContacts(selected.map(l => ({ email: l.email!, name: l.name, source: 'leads' })));
+                                    setAudienceModalTitle(`Añadir ${selected.length} lead${selected.length > 1 ? 's' : ''} a Audiencia`);
+                                    setShowAddToAudience(true);
+                                }}
+                                className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-purple-500/10 text-purple-500 hover:bg-purple-500/20 transition-all text-sm font-medium"
+                            >
+                                <Megaphone size={14} />
+                                Audiencia ({selectedLeadIds.size})
+                            </button>
+                        )}
                         <button
                             onClick={handleAiAnalysis}
                             disabled={isAnalyzing}
@@ -602,6 +621,39 @@ const AdminLeadsDashboardInner: React.FC<{ onBack: () => void }> = ({ onBack }) 
                                     <div className="text-xs text-muted-foreground whitespace-pre-wrap max-h-40 overflow-y-auto bg-secondary/50 p-3 rounded-lg">{selectedLead.conversationTranscript}</div>
                                 </div>
                             )}
+                            {/* Email Marketing Integration */}
+                            <div className="border-t border-border pt-4">
+                                <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
+                                    <Megaphone size={14} className="text-purple-500" />
+                                    Email Marketing
+                                </h3>
+                                <div className="space-y-2">
+                                    {selectedLead.email && (
+                                        <button
+                                            onClick={() => {
+                                                setAudienceContacts([{ email: selectedLead.email!, name: selectedLead.name, source: 'leads' }]);
+                                                setAudienceModalTitle(`Añadir ${selectedLead.name || 'lead'} a Audiencia`);
+                                                setShowAddToAudience(true);
+                                            }}
+                                            className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl border border-purple-500/30 bg-purple-500/5 text-purple-600 dark:text-purple-400 hover:bg-purple-500/10 transition-all text-sm font-medium"
+                                        >
+                                            <Mail size={14} />
+                                            Añadir a Audiencia Email
+                                        </button>
+                                    )}
+                                    {selectedLead.email && (
+                                        <button
+                                            onClick={() => {
+                                                navigate(`${ROUTES.ADMIN_EMAIL}?action=new-campaign&email=${encodeURIComponent(selectedLead.email!)}&name=${encodeURIComponent(selectedLead.name || '')}`);
+                                            }}
+                                            className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl border border-blue-500/30 bg-blue-500/5 text-blue-600 dark:text-blue-400 hover:bg-blue-500/10 transition-all text-sm font-medium"
+                                        >
+                                            <Send size={14} />
+                                            Crear Campaña de Email
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -640,6 +692,14 @@ const AdminLeadsDashboardInner: React.FC<{ onBack: () => void }> = ({ onBack }) 
                 confirmText={t('common.delete', 'Eliminar')}
                 isLoading={isDeleting}
                 variant="danger"
+            />
+            {/* Add to Audience Modal */}
+            <AddToAudienceModal
+                isOpen={showAddToAudience}
+                onClose={() => setShowAddToAudience(false)}
+                contacts={audienceContacts}
+                title={audienceModalTitle}
+                description="Los contactos se añadirán a la audiencia seleccionada del Email Hub."
             />
         </>
     );

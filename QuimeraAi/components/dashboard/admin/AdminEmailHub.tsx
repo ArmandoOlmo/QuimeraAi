@@ -13,7 +13,7 @@
  *            AutomationsTab, AIStudioTab (render functions, inline for now)
  */
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
     ArrowLeft, Mail, Send, Eye, MousePointer, AlertCircle, TrendingUp,
@@ -64,6 +64,39 @@ const AdminEmailHub: React.FC<AdminEmailHubProps> = ({ onBack }) => {
     const actions = useAdminEmailActions(data);
     const audience = useAudienceActions(data);
     const ai = useAIEmailStudio(data, activeTab);
+
+    // ------ URL params: cross-module deep linking ------
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        const action = params.get('action');
+        const tab = params.get('tab');
+
+        // Direct tab navigation
+        if (tab) {
+            const validTabs: AdminEmailTab[] = ['overview', 'campaigns', 'audiences', 'analytics', 'automations', 'ai-studio'];
+            if (validTabs.includes(tab as AdminEmailTab)) {
+                setActiveTab(tab as AdminEmailTab);
+            }
+        }
+
+        // Create campaign with pre-filled data (from Leads/Appointments)
+        if (action === 'new-campaign') {
+            const email = params.get('email') || '';
+            const name = params.get('name') || '';
+            setActiveTab('campaigns');
+            // Open new campaign modal with pre-filled subject
+            actions.setShowNewCampaignModal(true);
+            if (name) {
+                actions.setNewCampaignForm((prev: any) => ({
+                    ...prev,
+                    name: `Campaña para ${name}`,
+                    subject: `Hola ${name}`,
+                }));
+            }
+            // Clean URL params after processing
+            window.history.replaceState({}, '', window.location.pathname);
+        }
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     // Destructure for convenience
     const {

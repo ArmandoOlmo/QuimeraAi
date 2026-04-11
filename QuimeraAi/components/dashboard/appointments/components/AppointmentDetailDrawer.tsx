@@ -32,6 +32,9 @@ import {
     Check,
     Play,
     Loader2,
+    Mail,
+    Megaphone,
+    Send,
 } from 'lucide-react';
 import {
     Appointment,
@@ -54,6 +57,7 @@ import {
     downloadAsICS,
 } from '../utils/appointmentHelpers';
 import { AIPreparationPanel } from './AIPreparationPanel';
+import { AddToAudienceModal } from '../../admin/email-hub/components/AddToAudienceModal';
 
 // =============================================================================
 // TYPES
@@ -136,6 +140,7 @@ export const AppointmentDetailDrawer: React.FC<AppointmentDetailDrawerProps> = (
     const [isAddingNote, setIsAddingNote] = useState(false);
     const [showNoteInput, setShowNoteInput] = useState(false);
     const [showMoreMenu, setShowMoreMenu] = useState(false);
+    const [showAddToAudience, setShowAddToAudience] = useState(false);
 
     const handleAddNote = async () => {
         if (!newNoteContent.trim() || !onAddNote) return;
@@ -615,6 +620,23 @@ export const AppointmentDetailDrawer: React.FC<AppointmentDetailDrawerProps> = (
                                     </p>
                                 </div>
                             )}
+
+                            {/* Email Marketing Quick Action */}
+                            {appointment.participants && appointment.participants.some(p => p.email) && (
+                                <div className="pt-4 border-t border-border">
+                                    <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                                        <Megaphone size={12} className="text-purple-500" />
+                                        Email Marketing
+                                    </h4>
+                                    <button
+                                        onClick={() => setShowAddToAudience(true)}
+                                        className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl border border-purple-500/30 bg-purple-500/5 text-purple-600 dark:text-purple-400 hover:bg-purple-500/10 transition-all text-sm font-medium"
+                                    >
+                                        <Mail size={14} />
+                                        Añadir participantes a Audiencia Email
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     )}
 
@@ -741,6 +763,19 @@ export const AppointmentDetailDrawer: React.FC<AppointmentDetailDrawerProps> = (
                     )}
                 </div>
             </div>
+
+            {/* Add to Audience Modal */}
+            <AddToAudienceModal
+                isOpen={showAddToAudience}
+                onClose={() => setShowAddToAudience(false)}
+                contacts={
+                    appointment.participants
+                        ?.filter(p => p.email)
+                        .map(p => ({ email: p.email, name: p.name, source: 'appointments' })) || []
+                }
+                title={`Añadir ${appointment.participants?.filter(p => p.email).length || 0} participante(s) a Audiencia`}
+                description={`Participantes de la cita: ${appointment.title}`}
+            />
         </>
     );
 };
