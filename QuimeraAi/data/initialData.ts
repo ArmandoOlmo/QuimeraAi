@@ -714,6 +714,43 @@ const pageData: PageData = {
       buttonText: '#ffffff',
     },
   },
+  cmsFeed: {
+    title: 'Latest Articles',
+    description: 'Stay up to date with our latest content',
+    titleFontSize: 'md',
+    descriptionFontSize: 'md',
+    layout: 'grid',
+    columns: 3,
+    maxPosts: 6,
+    categoryFilter: 'all',
+    showFeaturedImage: true,
+    showExcerpt: true,
+    showDate: true,
+    showAuthor: true,
+    showCategoryBadge: true,
+    showReadMore: true,
+    readMoreText: 'Read More',
+    showOnlyPublished: true,
+    viewAllText: 'View All Articles',
+    viewAllLink: '/blog',
+    imageStyle: 'rounded',
+    paddingY: 'lg',
+    paddingX: 'md',
+    colors: {
+      background: '#0f172a',
+      heading: '#F9FAFB',
+      text: '#94a3b8',
+      cardBackground: '#1e293b',
+      cardBorder: '#334155',
+      cardHeading: '#f8fafc',
+      cardText: '#cbd5e1',
+      cardExcerpt: '#94a3b8',
+      categoryBadgeBackground: '#4f46e5',
+      categoryBadgeText: '#ffffff',
+      buttonBackground: '#4f46e5',
+      buttonText: '#ffffff',
+    },
+  },
   storeSettings: {
     showFilterSidebar: true,
     showSearchBar: true,
@@ -1227,7 +1264,7 @@ const componentOrder: PageSection[] = [
     // Multi-page sections (for dynamic pages)
     'productDetail', 'categoryProducts', 'articleContent', 'productGrid', 'cart', 'checkout',
     // Integrations
-    'leads', 'newsletter', 'map', 'chatbot',
+    'leads', 'newsletter', 'map', 'chatbot', 'cmsFeed',
     // Footer
     'footer'
 ];
