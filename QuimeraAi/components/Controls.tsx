@@ -5319,6 +5319,18 @@ const Controls: React.FC = () => {
             />
           )}
           <Select
+            label="Card Style"
+            value={feedData.cardStyle || 'classic'}
+            onChange={(v) => setNestedData('cmsFeed.cardStyle', v)}
+            options={[
+              { value: 'classic', label: '📰 Classic — Image top, text below' },
+              { value: 'overlay', label: '🎬 Overlay — Text over image' },
+              { value: 'minimal', label: '✨ Minimal — Clean & compact' },
+              { value: 'compact', label: '📐 Compact Square — 1:1 ratio' },
+              { value: 'editorial', label: '📖 Editorial — Large image, bold type' },
+            ]}
+          />
+          <Select
             label="Max Posts"
             value={String(feedData.maxPosts || 6)}
             onChange={(v) => setNestedData('cmsFeed.maxPosts', parseInt(v))}

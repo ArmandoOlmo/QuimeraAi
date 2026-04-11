@@ -720,6 +720,7 @@ const pageData: PageData = {
     titleFontSize: 'md',
     descriptionFontSize: 'md',
     layout: 'grid',
+    cardStyle: 'classic',
     columns: 3,
     maxPosts: 6,
     categoryFilter: 'all',

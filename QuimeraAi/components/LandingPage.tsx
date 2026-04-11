@@ -842,6 +842,7 @@ const LandingPageContent: React.FC = () => {
       const viewAllText = fd.viewAllText || '';
       const viewAllLink = fd.viewAllLink || '/blog';
       const imageStyle = fd.imageStyle || 'rounded';
+      const cardStyle = fd.cardStyle || 'classic';
 
       const paddingYMap: Record<string, string> = { none: '0', sm: '2rem', md: '4rem', lg: '6rem', xl: '8rem' };
       const paddingXMap: Record<string, string> = { none: '0', sm: '1rem', md: '2rem', lg: '4rem', xl: '6rem' };
@@ -868,6 +869,120 @@ const LandingPageContent: React.FC = () => {
       const resolvedCategory = (catId: string) => {
         const cat = categories.find((c: any) => c.id === catId);
         return cat?.name || '';
+      };
+
+      // === CARD RENDERERS ===
+      const renderCard = (post: any, idx?: number) => {
+        const categoryName = post.categoryId ? resolvedCategory(post.categoryId) : '';
+        const dateStr = new Date(post.publishedAt || post.createdAt).toLocaleDateString();
+
+        // Classic: Image top, text below
+        if (cardStyle === 'classic') return (
+          <div key={post.id} className="group cursor-pointer overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-xl" style={{ borderRadius: cardRadius, background: colors.cardBackground || '#1e293b', border: `1px solid ${colors.cardBorder || '#334155'}` }} onClick={() => handleLinkNavigation(`/blog/${post.slug}`)}>
+            {showFeaturedImage && post.featuredImage && (
+              <div className="h-52 overflow-hidden" style={{ borderRadius: imageStyle === 'cover' ? '0' : `${imgRadiusVal} ${imgRadiusVal} 0 0` }}>
+                <img src={post.featuredImage} alt={post.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+              </div>
+            )}
+            <div className="p-5">
+              {showCategoryBadge && categoryName && <span className="inline-block px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-full mb-3" style={{ background: colors.categoryBadgeBackground || '#4f46e5', color: colors.categoryBadgeText || '#fff' }}>{categoryName}</span>}
+              <h3 className="font-bold text-lg mb-2 group-hover:opacity-80 transition-opacity" style={{ color: colors.cardHeading || '#f8fafc' }}>{post.title}</h3>
+              {showExcerpt && <p className="line-clamp-2 mb-3" style={{ color: colors.cardExcerpt || '#94a3b8', fontSize: '0.875rem' }}>{post.excerpt}</p>}
+              <div className="flex items-center gap-3 text-xs" style={{ color: colors.cardText || '#cbd5e1' }}>
+                {showAuthor && post.author && <span>{post.author}</span>}
+                {showDate && <span>{dateStr}</span>}
+              </div>
+              {showReadMore && <span className="inline-block mt-3 text-sm font-semibold" style={{ color: colors.buttonBackground || '#4f46e5' }}>{readMoreText} \u2192</span>}
+            </div>
+          </div>
+        );
+
+        // Overlay: Text on top of image with gradient
+        if (cardStyle === 'overlay') return (
+          <div key={post.id} className="group cursor-pointer relative overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl" style={{ borderRadius: cardRadius, minHeight: '320px' }} onClick={() => handleLinkNavigation(`/blog/${post.slug}`)}>
+            {post.featuredImage ? (
+              <img src={post.featuredImage} alt={post.title} className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+            ) : (
+              <div className="absolute inset-0" style={{ background: colors.cardBackground || '#1e293b' }} />
+            )}
+            <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.3) 50%, transparent 100%)' }} />
+            <div className="relative h-full flex flex-col justify-end p-6" style={{ minHeight: '320px' }}>
+              {showCategoryBadge && categoryName && <span className="inline-block w-fit px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-full mb-3" style={{ background: colors.categoryBadgeBackground || '#4f46e5', color: colors.categoryBadgeText || '#fff' }}>{categoryName}</span>}
+              <h3 className="font-bold text-xl mb-2 drop-shadow-lg group-hover:opacity-90 transition-opacity" style={{ color: '#ffffff' }}>{post.title}</h3>
+              {showExcerpt && <p className="line-clamp-2 mb-3 drop-shadow" style={{ color: 'rgba(255,255,255,0.8)', fontSize: '0.875rem' }}>{post.excerpt}</p>}
+              <div className="flex items-center gap-3 text-xs drop-shadow" style={{ color: 'rgba(255,255,255,0.7)' }}>
+                {showAuthor && post.author && <span>{post.author}</span>}
+                {showDate && <span>{dateStr}</span>}
+              </div>
+              {showReadMore && <span className="inline-block mt-3 text-sm font-semibold" style={{ color: colors.categoryBadgeBackground || '#4f46e5' }}>{readMoreText} \u2192</span>}
+            </div>
+          </div>
+        );
+
+        // Minimal: Small thumbnail left, text right (compact)
+        if (cardStyle === 'minimal') return (
+          <div key={post.id} className="group cursor-pointer flex gap-4 p-4 overflow-hidden transition-all duration-300 hover:translate-x-1" style={{ borderRadius: cardRadius, background: colors.cardBackground || '#1e293b', border: `1px solid ${colors.cardBorder || '#334155'}` }} onClick={() => handleLinkNavigation(`/blog/${post.slug}`)}>
+            {showFeaturedImage && post.featuredImage && (
+              <div className="w-20 h-20 flex-shrink-0 overflow-hidden" style={{ borderRadius: imgRadiusVal }}>
+                <img src={post.featuredImage} alt={post.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+              </div>
+            )}
+            <div className="flex-1 min-w-0">
+              {showCategoryBadge && categoryName && <span className="inline-block px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider rounded-full mb-1.5" style={{ background: colors.categoryBadgeBackground || '#4f46e5', color: colors.categoryBadgeText || '#fff' }}>{categoryName}</span>}
+              <h3 className="font-bold text-sm mb-1 truncate group-hover:opacity-80 transition-opacity" style={{ color: colors.cardHeading || '#f8fafc' }}>{post.title}</h3>
+              {showExcerpt && <p className="line-clamp-1 text-xs" style={{ color: colors.cardExcerpt || '#94a3b8' }}>{post.excerpt}</p>}
+              <div className="flex items-center gap-2 mt-1 text-[10px]" style={{ color: colors.cardText || '#cbd5e1' }}>
+                {showAuthor && post.author && <span>{post.author}</span>}
+                {showDate && <span>{dateStr}</span>}
+              </div>
+            </div>
+          </div>
+        );
+
+        // Compact Square: 1:1 aspect ratio with overlay text
+        if (cardStyle === 'compact') return (
+          <div key={post.id} className="group cursor-pointer relative overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl" style={{ borderRadius: cardRadius, paddingBottom: '100%' /* 1:1 */ }} onClick={() => handleLinkNavigation(`/blog/${post.slug}`)}>
+            {post.featuredImage ? (
+              <img src={post.featuredImage} alt={post.title} className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+            ) : (
+              <div className="absolute inset-0" style={{ background: colors.cardBackground || '#1e293b' }} />
+            )}
+            <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.1) 60%, transparent 100%)' }} />
+            <div className="absolute bottom-0 left-0 right-0 p-5">
+              {showCategoryBadge && categoryName && <span className="inline-block w-fit px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider rounded-full mb-2" style={{ background: colors.categoryBadgeBackground || '#4f46e5', color: colors.categoryBadgeText || '#fff' }}>{categoryName}</span>}
+              <h3 className="font-bold text-base mb-1 drop-shadow-lg group-hover:opacity-90 transition-opacity line-clamp-2" style={{ color: '#ffffff' }}>{post.title}</h3>
+              <div className="flex items-center gap-2 text-[10px] drop-shadow" style={{ color: 'rgba(255,255,255,0.7)' }}>
+                {showAuthor && post.author && <span>{post.author}</span>}
+                {showDate && <span>{dateStr}</span>}
+              </div>
+            </div>
+          </div>
+        );
+
+        // Editorial: Large image, bold heading, generous spacing
+        return (
+          <div key={post.id} className="group cursor-pointer overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-xl" style={{ borderRadius: cardRadius, background: colors.cardBackground || '#1e293b', border: `1px solid ${colors.cardBorder || '#334155'}` }} onClick={() => handleLinkNavigation(`/blog/${post.slug}`)}>
+            {showFeaturedImage && post.featuredImage && (
+              <div className="h-64 overflow-hidden" style={{ borderRadius: imageStyle === 'cover' ? '0' : `${imgRadiusVal} ${imgRadiusVal} 0 0` }}>
+                <img src={post.featuredImage} alt={post.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+              </div>
+            )}
+            <div className="p-6">
+              <div className="flex items-center gap-3 mb-3">
+                {showCategoryBadge && categoryName && <span className="inline-block px-3 py-1 text-[10px] font-bold uppercase tracking-widest rounded-full" style={{ background: colors.categoryBadgeBackground || '#4f46e5', color: colors.categoryBadgeText || '#fff' }}>{categoryName}</span>}
+                <div className="flex items-center gap-2 text-xs" style={{ color: colors.cardText || '#cbd5e1' }}>
+                  {showDate && <span>{dateStr}</span>}
+                </div>
+              </div>
+              <h3 className="font-extrabold text-2xl mb-3 group-hover:opacity-80 transition-opacity leading-tight" style={{ color: colors.cardHeading || '#f8fafc', fontFamily: 'var(--font-header)' }}>{post.title}</h3>
+              {showExcerpt && <p className="line-clamp-3 mb-4 leading-relaxed" style={{ color: colors.cardExcerpt || '#94a3b8' }}>{post.excerpt}</p>}
+              <div className="flex items-center justify-between">
+                {showAuthor && post.author && <span className="text-sm font-medium" style={{ color: colors.cardText || '#cbd5e1' }}>{post.author}</span>}
+                {showReadMore && <span className="text-sm font-bold" style={{ color: colors.buttonBackground || '#4f46e5' }}>{readMoreText} \u2192</span>}
+              </div>
+            </div>
+          </div>
+        );
       };
 
       return (
@@ -918,137 +1033,29 @@ const LandingPageContent: React.FC = () => {
                 /* Magazine Layout: Large featured + smaller grid */
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   {filteredPosts.map((post, idx) => (
-                    <div
-                      key={post.id}
-                      className={`group cursor-pointer overflow-hidden transition-all duration-300 hover:-translate-y-1 ${idx === 0 ? 'lg:row-span-2' : ''}`}
-                      style={{ borderRadius: cardRadius, background: colors.cardBackground || '#1e293b', border: `1px solid ${colors.cardBorder || '#334155'}` }}
-                      onClick={() => handleLinkNavigation(`/blog/${post.slug}`)}
-                    >
-                      {showFeaturedImage && post.featuredImage && (
-                        <div className={`overflow-hidden ${idx === 0 ? 'h-64 lg:h-full' : 'h-48'}`} style={{ borderRadius: imageStyle === 'cover' ? '0' : `${imgRadiusVal} ${imgRadiusVal} 0 0` }}>
-                          <img src={post.featuredImage} alt={post.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                        </div>
-                      )}
-                      <div className="p-5">
-                        {showCategoryBadge && post.categoryId && (
-                          <span className="inline-block px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-full mb-3" style={{ background: colors.categoryBadgeBackground || '#4f46e5', color: colors.categoryBadgeText || '#fff' }}>
-                            {resolvedCategory(post.categoryId)}
-                          </span>
-                        )}
-                        <h3 className="font-bold mb-2 group-hover:opacity-80 transition-opacity" style={{ color: colors.cardHeading || '#f8fafc', fontSize: idx === 0 ? '1.5rem' : '1.125rem' }}>{post.title}</h3>
-                        {showExcerpt && <p className="line-clamp-2 mb-3" style={{ color: colors.cardExcerpt || '#94a3b8', fontSize: '0.875rem' }}>{post.excerpt}</p>}
-                        <div className="flex items-center gap-3 text-xs" style={{ color: colors.cardText || '#cbd5e1' }}>
-                          {showAuthor && post.author && <span>{post.author}</span>}
-                          {showDate && <span>{new Date(post.publishedAt || post.createdAt).toLocaleDateString()}</span>}
-                        </div>
-                        {showReadMore && (
-                          <span className="inline-block mt-3 text-sm font-semibold" style={{ color: colors.buttonBackground || '#4f46e5' }}>{readMoreText} →</span>
-                        )}
-                      </div>
+                    <div key={post.id} className={idx === 0 ? 'lg:row-span-2' : ''}>
+                      {renderCard(post, idx)}
                     </div>
                   ))}
                 </div>
               ) : layout === 'carousel' ? (
                 /* Carousel Layout: Horizontal scroll */
                 <div className="flex gap-6 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide" style={{ scrollbarWidth: 'none' }}>
-                  {filteredPosts.map(post => (
-                    <div
-                      key={post.id}
-                      className="group cursor-pointer flex-shrink-0 snap-start overflow-hidden transition-all duration-300 hover:-translate-y-1"
-                      style={{ borderRadius: cardRadius, background: colors.cardBackground || '#1e293b', border: `1px solid ${colors.cardBorder || '#334155'}`, width: '320px' }}
-                      onClick={() => handleLinkNavigation(`/blog/${post.slug}`)}
-                    >
-                      {showFeaturedImage && post.featuredImage && (
-                        <div className="h-48 overflow-hidden" style={{ borderRadius: imageStyle === 'cover' ? '0' : `${imgRadiusVal} ${imgRadiusVal} 0 0` }}>
-                          <img src={post.featuredImage} alt={post.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                        </div>
-                      )}
-                      <div className="p-5">
-                        {showCategoryBadge && post.categoryId && (
-                          <span className="inline-block px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-full mb-3" style={{ background: colors.categoryBadgeBackground || '#4f46e5', color: colors.categoryBadgeText || '#fff' }}>
-                            {resolvedCategory(post.categoryId)}
-                          </span>
-                        )}
-                        <h3 className="font-bold text-lg mb-2 group-hover:opacity-80 transition-opacity" style={{ color: colors.cardHeading || '#f8fafc' }}>{post.title}</h3>
-                        {showExcerpt && <p className="line-clamp-2 mb-3" style={{ color: colors.cardExcerpt || '#94a3b8', fontSize: '0.875rem' }}>{post.excerpt}</p>}
-                        <div className="flex items-center gap-3 text-xs" style={{ color: colors.cardText || '#cbd5e1' }}>
-                          {showAuthor && post.author && <span>{post.author}</span>}
-                          {showDate && <span>{new Date(post.publishedAt || post.createdAt).toLocaleDateString()}</span>}
-                        </div>
-                        {showReadMore && (
-                          <span className="inline-block mt-3 text-sm font-semibold" style={{ color: colors.buttonBackground || '#4f46e5' }}>{readMoreText} →</span>
-                        )}
-                      </div>
+                  {filteredPosts.map((post, idx) => (
+                    <div key={post.id} className="flex-shrink-0 snap-start" style={{ width: cardStyle === 'compact' ? '280px' : '320px' }}>
+                      {renderCard(post, idx)}
                     </div>
                   ))}
                 </div>
               ) : layout === 'list' ? (
-                /* List Layout: Horizontal cards */
+                /* List Layout */
                 <div className="space-y-4">
-                  {filteredPosts.map(post => (
-                    <div
-                      key={post.id}
-                      className="group cursor-pointer flex flex-col sm:flex-row gap-5 overflow-hidden transition-all duration-300 hover:-translate-y-0.5"
-                      style={{ borderRadius: cardRadius, background: colors.cardBackground || '#1e293b', border: `1px solid ${colors.cardBorder || '#334155'}` }}
-                      onClick={() => handleLinkNavigation(`/blog/${post.slug}`)}
-                    >
-                      {showFeaturedImage && post.featuredImage && (
-                        <div className="sm:w-64 h-48 sm:h-auto flex-shrink-0 overflow-hidden" style={{ borderRadius: imageStyle === 'cover' ? '0' : imgRadiusVal }}>
-                          <img src={post.featuredImage} alt={post.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                        </div>
-                      )}
-                      <div className="p-5 flex-1 flex flex-col justify-center">
-                        {showCategoryBadge && post.categoryId && (
-                          <span className="inline-block w-fit px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-full mb-3" style={{ background: colors.categoryBadgeBackground || '#4f46e5', color: colors.categoryBadgeText || '#fff' }}>
-                            {resolvedCategory(post.categoryId)}
-                          </span>
-                        )}
-                        <h3 className="font-bold text-xl mb-2 group-hover:opacity-80 transition-opacity" style={{ color: colors.cardHeading || '#f8fafc' }}>{post.title}</h3>
-                        {showExcerpt && <p className="line-clamp-2 mb-3" style={{ color: colors.cardExcerpt || '#94a3b8' }}>{post.excerpt}</p>}
-                        <div className="flex items-center gap-4 text-sm" style={{ color: colors.cardText || '#cbd5e1' }}>
-                          {showAuthor && post.author && <span>{post.author}</span>}
-                          {showDate && <span>{new Date(post.publishedAt || post.createdAt).toLocaleDateString()}</span>}
-                          {showReadMore && (
-                            <span className="ml-auto font-semibold" style={{ color: colors.buttonBackground || '#4f46e5' }}>{readMoreText} →</span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+                  {filteredPosts.map((post, idx) => renderCard(post, idx))}
                 </div>
               ) : (
                 /* Default Grid Layout */
                 <div className={`grid ${gridColClass} gap-6`}>
-                  {filteredPosts.map(post => (
-                    <div
-                      key={post.id}
-                      className="group cursor-pointer overflow-hidden transition-all duration-300 hover:-translate-y-1"
-                      style={{ borderRadius: cardRadius, background: colors.cardBackground || '#1e293b', border: `1px solid ${colors.cardBorder || '#334155'}` }}
-                      onClick={() => handleLinkNavigation(`/blog/${post.slug}`)}
-                    >
-                      {showFeaturedImage && post.featuredImage && (
-                        <div className="h-52 overflow-hidden" style={{ borderRadius: imageStyle === 'cover' ? '0' : `${imgRadiusVal} ${imgRadiusVal} 0 0` }}>
-                          <img src={post.featuredImage} alt={post.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                        </div>
-                      )}
-                      <div className="p-5">
-                        {showCategoryBadge && post.categoryId && (
-                          <span className="inline-block px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-full mb-3" style={{ background: colors.categoryBadgeBackground || '#4f46e5', color: colors.categoryBadgeText || '#fff' }}>
-                            {resolvedCategory(post.categoryId)}
-                          </span>
-                        )}
-                        <h3 className="font-bold text-lg mb-2 group-hover:opacity-80 transition-opacity" style={{ color: colors.cardHeading || '#f8fafc' }}>{post.title}</h3>
-                        {showExcerpt && <p className="line-clamp-2 mb-3" style={{ color: colors.cardExcerpt || '#94a3b8', fontSize: '0.875rem' }}>{post.excerpt}</p>}
-                        <div className="flex items-center gap-3 text-xs" style={{ color: colors.cardText || '#cbd5e1' }}>
-                          {showAuthor && post.author && <span>{post.author}</span>}
-                          {showDate && <span>{new Date(post.publishedAt || post.createdAt).toLocaleDateString()}</span>}
-                        </div>
-                        {showReadMore && (
-                          <span className="inline-block mt-3 text-sm font-semibold" style={{ color: colors.buttonBackground || '#4f46e5' }}>{readMoreText} →</span>
-                        )}
-                      </div>
-                    </div>
-                  ))}
+                  {filteredPosts.map((post, idx) => renderCard(post, idx))}
                 </div>
               )}
 
