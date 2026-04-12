@@ -14,6 +14,7 @@ import HeroVerticalSplit from './HeroVerticalSplit';
 import HeroGlass from './HeroGlass';
 import HeroStacked from './HeroStacked';
 import HeroSplit from './HeroSplit';
+import HeroGallery from './HeroGallery';
 import Features from './Features';
 import Testimonials from './Testimonials';
 import Slideshow from './Slideshow';
@@ -633,6 +634,7 @@ const LandingPageContent: React.FC = () => {
   const mergedFooterData = mergeComponentData('footer');
   const mergedHeaderData = mergeComponentData('header');
   const mergedHeroSplitData = mergeComponentData('heroSplit');
+  const mergedHeroGalleryData = mergeComponentData('heroGallery');
   const mergedProductsData = mergeComponentData('products');
   const mergedCMSFeedData = mergeComponentData('cmsFeed');
 
@@ -735,6 +737,13 @@ const LandingPageContent: React.FC = () => {
       </SectionBackground>
     ),
     heroSplit: <SectionBackground backgroundImageUrl={mergedHeroSplitData?.backgroundImageUrl} backgroundColor={mergedHeroSplitData?.colors?.background} backgroundOverlayEnabled={mergedHeroSplitData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedHeroSplitData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedHeroSplitData?.backgroundOverlayColor}><HeroSplit {...mergedHeroSplitData} borderRadius={mergedHeroSplitData?.buttonBorderRadius || theme.buttonBorderRadius} onNavigate={handleLinkNavigation} /></SectionBackground>,
+    heroGallery: mergedHeroGalleryData ? (
+      <HeroGallery
+        {...mergedHeroGalleryData}
+        borderRadius={mergedHeroGalleryData?.buttonBorderRadius || theme.buttonBorderRadius}
+        onNavigate={handleLinkNavigation}
+      />
+    ) : null,
     features: <SectionBackground backgroundImageUrl={mergedFeaturesData?.backgroundImageUrl} backgroundColor={mergedFeaturesData?.colors?.background} backgroundOverlayEnabled={mergedFeaturesData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedFeaturesData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedFeaturesData?.backgroundOverlayColor}><Features {...mergedFeaturesData} borderRadius={mergedFeaturesData.borderRadius || theme.cardBorderRadius} onNavigate={handleLinkNavigation} /></SectionBackground>,
     testimonials: <SectionBackground backgroundImageUrl={mergedTestimonialsData?.backgroundImageUrl} backgroundColor={mergedTestimonialsData?.colors?.background} backgroundOverlayEnabled={mergedTestimonialsData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedTestimonialsData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedTestimonialsData?.backgroundOverlayColor}><Testimonials {...mergedTestimonialsData} borderRadius={mergedTestimonialsData.borderRadius || theme.cardBorderRadius} cardShadow={mergedTestimonialsData.cardShadow} borderStyle={mergedTestimonialsData.borderStyle} cardPadding={mergedTestimonialsData.cardPadding} testimonialsVariant={mergedTestimonialsData.testimonialsVariant} /></SectionBackground>,
     slideshow: <SectionBackground backgroundImageUrl={mergedSlideshowData?.backgroundImageUrl} backgroundColor={mergedSlideshowData?.colors?.background} backgroundOverlayEnabled={mergedSlideshowData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedSlideshowData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedSlideshowData?.backgroundOverlayColor}><Slideshow {...mergedSlideshowData} borderRadius={theme.cardBorderRadius} /></SectionBackground>,
