@@ -46,6 +46,7 @@ interface ComponentTreeProps {
 const sectionIcons: Record<PageSection, React.ElementType> = {
     hero: Image,
     heroSplit: Columns,
+    heroGallery: Image,
     features: List,
     testimonials: Star,
     services: Layout,
@@ -286,6 +287,7 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
     const sectionLabels: Record<PageSection, string> = {
         hero: t('editor.heroSection'),
         heroSplit: t('editor.heroSplitSection'),
+        heroGallery: 'Hero Gallery',
         features: t('editor.featuresSection'),
         testimonials: t('editor.testimonialsSection'),
         services: t('editor.servicesSection'),

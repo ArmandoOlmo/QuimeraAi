@@ -29,6 +29,7 @@ import HeroVerticalSplit from './HeroVerticalSplit';
 import HeroGlass from './HeroGlass';
 import HeroStacked from './HeroStacked';
 import HeroSplit from './HeroSplit';
+import HeroGallery from './HeroGallery';
 import Features from './Features';
 import Testimonials from './Testimonials';
 import Pricing from './Pricing';
@@ -153,6 +154,7 @@ const PageRenderer: React.FC<PageRendererProps> = ({
             ...baseData,
             hero: mergeComponentData('hero') || baseData.hero,
             heroSplit: mergeComponentData('heroSplit') || baseData.heroSplit,
+            heroGallery: mergeComponentData('heroGallery') || baseData.heroGallery,
             features: mergeComponentData('features') || baseData.features,
             testimonials: mergeComponentData('testimonials') || baseData.testimonials,
             pricing: mergeComponentData('pricing') || baseData.pricing,
@@ -338,6 +340,18 @@ const PageRenderer: React.FC<PageRendererProps> = ({
                         />
                     </SectionBackground>
                 );
+
+            case 'heroGallery': {
+                const galleryData = mergedData.heroGallery;
+                return galleryData ? (
+                    <HeroGallery
+                        key={key}
+                        {...galleryData}
+                        borderRadius={galleryData.buttonBorderRadius || buttonBorderRadius}
+                        onNavigate={handleLinkNavigation}
+                    />
+                ) : null;
+            }
 
             case 'features':
                 return (

@@ -184,6 +184,51 @@ export interface HeroSplitData {
 }
 
 // =============================================================================
+// HERO GALLERY (Gallery-style slideshow hero)
+// =============================================================================
+export interface HeroGalleryImage {
+    url: string;
+    alt: string;
+}
+
+export interface HeroGallerySlide {
+    headline: string;
+    subheadline?: string;
+    primaryCta?: string;
+    primaryCtaLink?: string;
+    secondaryCta?: string;
+    secondaryCtaLink?: string;
+    images: HeroGalleryImage[];
+    backgroundColor?: string;
+}
+
+export interface HeroGalleryData {
+    slides: HeroGallerySlide[];
+    autoPlaySpeed?: number;
+    transitionDuration?: number;
+    showArrows?: boolean;
+    showDots?: boolean;
+    dotStyle?: 'circle' | 'line';
+    heroHeight?: number;
+    headlineFontSize?: FontSize;
+    subheadlineFontSize?: FontSize;
+    showGrain?: boolean;
+    frameStyle?: 'thin' | 'shadow' | 'glass' | 'none';
+    colors?: {
+        background?: string;
+        text?: string;
+        heading?: string;
+        ctaText?: string;
+        dotActive?: string;
+        dotInactive?: string;
+        arrowColor?: string;
+        frameColor?: string;
+    };
+    buttonBorderRadius?: BorderRadiusSize;
+    cornerGradient?: CornerGradientConfig;
+}
+
+// =============================================================================
 // FEATURES
 // =============================================================================
 export interface FeatureItem {
@@ -1792,6 +1837,7 @@ export interface PageData {
     header: HeaderData;
     hero: HeroData;
     heroSplit: HeroSplitData;
+    heroGallery?: HeroGalleryData;
     features: FeaturesData;
     testimonials: TestimonialsData;
     slideshow: SlideshowData;

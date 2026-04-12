@@ -102,6 +102,44 @@ const pageData: PageData = {
     subheadlineFontSize: 'md',
     buttonBorderRadius: 'xl',
   },
+  heroGallery: {
+    slides: [
+      {
+        headline: 'Curated Collection for Modern Living',
+        subheadline: 'In Store and Online',
+        primaryCta: 'SHOP COLLECTION',
+        primaryCtaLink: '/#products',
+        secondaryCta: 'MORE DETAILS',
+        secondaryCtaLink: '/#features',
+        images: [
+          { url: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='533' viewBox='0 0 400 533'%3E%3Crect fill='%23374151' width='400' height='533'/%3E%3Ctext fill='%239CA3AF' font-family='system-ui,sans-serif' font-size='20' x='50%25' y='50%25' text-anchor='middle' dominant-baseline='middle'%3E400 × 533%3C/text%3E%3C/svg%3E", alt: 'Gallery Image 1' },
+          { url: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='533' viewBox='0 0 400 533'%3E%3Crect fill='%23374151' width='400' height='533'/%3E%3Ctext fill='%239CA3AF' font-family='system-ui,sans-serif' font-size='20' x='50%25' y='50%25' text-anchor='middle' dominant-baseline='middle'%3E400 × 533%3C/text%3E%3C/svg%3E", alt: 'Gallery Image 2' },
+        ],
+        backgroundColor: '#8B6F5C',
+      },
+    ],
+    autoPlaySpeed: 6000,
+    transitionDuration: 800,
+    showArrows: true,
+    showDots: true,
+    dotStyle: 'circle',
+    heroHeight: 80,
+    headlineFontSize: 'lg',
+    subheadlineFontSize: 'md',
+    showGrain: true,
+    frameStyle: 'shadow',
+    colors: {
+      background: '#8B6F5C',
+      text: '#ffffff',
+      heading: '#ffffff',
+      ctaText: '#ffffff',
+      dotActive: '#ffffff',
+      dotInactive: 'rgba(255,255,255,0.5)',
+      arrowColor: '#ffffff',
+      frameColor: 'rgba(255,255,255,0.15)',
+    },
+    buttonBorderRadius: 'none',
+  },
   features: {
     featuresVariant: 'bento-premium',
     paddingY: 'lg',
@@ -1257,7 +1295,7 @@ const componentOrder: PageSection[] = [
     // Structure
     'colors', 'typography', 'header',
     // Content
-    'hero', 'heroSplit', 'banner', 'features', 'testimonials', 'slideshow',
+    'hero', 'heroSplit', 'heroGallery', 'banner', 'features', 'testimonials', 'slideshow',
     'pricing', 'faq', 'portfolio', 'cta', 'services', 'team', 'video', 'howItWorks', 'menu',
     // Ecommerce
     'storeSettings', 'products', 'featuredProducts', 'categoryGrid', 'productHero', 'saleCountdown',

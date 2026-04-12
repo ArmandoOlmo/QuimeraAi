@@ -400,6 +400,13 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
                     // Guard against auto-save during restoration
                     isInitialLoadRef.current = true;
 
+                    // CRITICAL: Cancel any pending auto-save and sync ref
+                    if (autoSaveTimerRef.current) {
+                        clearTimeout(autoSaveTimerRef.current);
+                        autoSaveTimerRef.current = null;
+                    }
+                    activeProjectIdRef.current = activeProjectId;
+
                     setData(storedProject.data);
                     setTheme(storedProject.theme);
                     setBrandIdentity(storedProject.brandIdentity || initialData.brandIdentity);
@@ -580,6 +587,15 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
     // Save current project - saves ALL fields to ensure consistency
     const saveProject = useCallback(async () => {
         if (!user || !activeProjectId || !data) return;
+
+        // CRITICAL: Validate synchronous ref matches the state-based activeProjectId.
+        // During rapid project switches, React may batch state updates, causing
+        // `activeProjectId` (state) to lag behind `activeProjectIdRef` (synchronous).
+        // If they don't match, we're in a transitional state — skip the save.
+        if (activeProjectIdRef.current !== activeProjectId) {
+            console.log(`[ProjectContext] saveProject skipped: ref (${activeProjectIdRef.current}) !== state (${activeProjectId})`);
+            return;
+        }
 
         const project = projectsRef.current.find(p => p.id === activeProjectId);
         if (!project) return;
@@ -847,6 +863,13 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
             // catches transitions the state-based scheduledProjectId can't detect.
             if (activeProjectIdRef.current !== scheduledProjectId) {
                 console.log(`[ProjectContext] Auto-save skipped: project changed during debounce (scheduled: ${scheduledProjectId}, current: ${activeProjectIdRef.current})`);
+                return;
+            }
+            // CRITICAL FIX: Verify the project still exists in local state before saving.
+            // This prevents writing stale data to projects that were deleted or never existed.
+            const projectToSave = projectsRef.current.find(p => p.id === scheduledProjectId);
+            if (!projectToSave) {
+                console.log(`[ProjectContext] Auto-save skipped: project ${scheduledProjectId} not found in local state`);
                 return;
             }
             saveProject().catch(console.error);

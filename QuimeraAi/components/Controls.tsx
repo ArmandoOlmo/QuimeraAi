@@ -9,6 +9,7 @@ import { useCMS } from '../contexts/cms';
 import { useAdmin } from '../contexts/admin';
 import { useRouter } from '../hooks/useRouter';
 import { ROUTES } from '../routes/config';
+import { initialData } from '../data/initialData';
 import { PageSection, PricingTier, ServiceIcon, SitePage, SocialPlatform } from '../types';
 import PageSelector from './dashboard/PageSelector';
 import PageSettings from './dashboard/PageSettings';
@@ -3258,9 +3259,287 @@ const Controls: React.FC = () => {
     return <TabbedControls contentTab={contentTab} styleTab={styleTab} />;
   };
 
+  // ========== HERO GALLERY CONTROLS ==========
+  const renderHeroGalleryControls = () => {
+    if (!data?.heroGallery) return null;
+
+    const slides = data.heroGallery.slides || [];
+
+    const contentTab = (
+      <div className="space-y-4">
+        {/* Slides */}
+        <div>
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
+            <PlaySquare size={14} />
+            Slides ({slides.length})
+          </label>
+
+          {slides.map((slide: any, slideIndex: number) => (
+            <div key={slideIndex} className="bg-editor-bg p-4 rounded-lg border border-editor-border mb-4">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-xs font-bold text-editor-accent uppercase">Slide #{slideIndex + 1}</span>
+                {slides.length > 1 && (
+                  <button
+                    onClick={() => {
+                      const newSlides = slides.filter((_: any, i: number) => i !== slideIndex);
+                      setNestedData('heroGallery.slides', newSlides);
+                    }}
+                    className="p-1 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded transition-colors"
+                    title="Remove slide"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                )}
+              </div>
+
+              {/* Headline */}
+              <AIFormControl label={t('controls.headline')} onAssistClick={() => setAiAssistField({ path: `heroGallery.slides.${slideIndex}.headline`, value: slide.headline, context: 'Hero Gallery Headline' })}>
+                <TextArea value={slide.headline || ''} onChange={(e) => setNestedData(`heroGallery.slides.${slideIndex}.headline`, e.target.value)} rows={2} />
+              </AIFormControl>
+
+              {/* Subheadline */}
+              <AIFormControl label={t('controls.subheadline')} onAssistClick={() => setAiAssistField({ path: `heroGallery.slides.${slideIndex}.subheadline`, value: slide.subheadline || '', context: 'Hero Gallery Subheadline' })}>
+                <Input label="" value={slide.subheadline || ''} onChange={(e) => setNestedData(`heroGallery.slides.${slideIndex}.subheadline`, e.target.value)} />
+              </AIFormControl>
+
+              {/* CTAs */}
+              <div className="bg-editor-panel-bg/50 p-3 rounded-md border border-editor-border mt-3">
+                <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2 flex items-center gap-2">
+                  <Link size={12} />
+                  Call to Actions
+                </label>
+                <div className="grid grid-cols-2 gap-2 mb-2">
+                  <Input label="Primary CTA" value={slide.primaryCta || ''} onChange={(e) => setNestedData(`heroGallery.slides.${slideIndex}.primaryCta`, e.target.value)} />
+                  <Input label="Primary Link" value={slide.primaryCtaLink || ''} onChange={(e) => setNestedData(`heroGallery.slides.${slideIndex}.primaryCtaLink`, e.target.value)} />
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <Input label="Secondary CTA" value={slide.secondaryCta || ''} onChange={(e) => setNestedData(`heroGallery.slides.${slideIndex}.secondaryCta`, e.target.value)} />
+                  <Input label="Secondary Link" value={slide.secondaryCtaLink || ''} onChange={(e) => setNestedData(`heroGallery.slides.${slideIndex}.secondaryCtaLink`, e.target.value)} />
+                </div>
+              </div>
+
+              {/* Per-Slide Background Color */}
+              <div className="mt-3">
+                <ColorControl label="Slide Background" value={slide.backgroundColor || data.heroGallery.colors?.background || '#8B6F5C'} onChange={(v) => setNestedData(`heroGallery.slides.${slideIndex}.backgroundColor`, v)} />
+              </div>
+
+              {/* Images */}
+              <div className="mt-3">
+                <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2 flex items-center gap-2">
+                  <Image size={12} />
+                  Gallery Images
+                </label>
+                {(slide.images || []).map((img: any, imgIndex: number) => (
+                  <div key={imgIndex} className="mb-2">
+                    <ImagePicker
+                      label={`Image #${imgIndex + 1}`}
+                      value={img.url}
+                      onChange={(url) => setNestedData(`heroGallery.slides.${slideIndex}.images.${imgIndex}.url`, url)}
+                      onRemove={() => {
+                        const newImages = (slide.images || []).filter((_: any, i: number) => i !== imgIndex);
+                        setNestedData(`heroGallery.slides.${slideIndex}.images`, newImages);
+                      }}
+                    />
+                    <input
+                      placeholder="Alt text"
+                      value={img.alt || ''}
+                      onChange={(e) => setNestedData(`heroGallery.slides.${slideIndex}.images.${imgIndex}.alt`, e.target.value)}
+                      className="w-full bg-editor-panel-bg border border-editor-border rounded px-2 py-1 text-xs text-editor-text-primary focus:outline-none focus:border-editor-accent mt-1"
+                    />
+                  </div>
+                ))}
+                <button
+                  onClick={() => {
+                    const newImages = [...(slide.images || []), { url: '', alt: 'New image' }];
+                    setNestedData(`heroGallery.slides.${slideIndex}.images`, newImages);
+                  }}
+                  className="w-full py-1.5 border border-dashed border-editor-border text-editor-text-secondary hover:text-editor-accent hover:border-editor-accent rounded-md transition-colors flex items-center justify-center gap-1 text-xs"
+                >
+                  <Plus size={12} /> Add Image
+                </button>
+              </div>
+            </div>
+          ))}
+
+          {/* Add Slide Button */}
+          <button
+            onClick={() => {
+              const newSlide = {
+                headline: 'New Slide Headline',
+                subheadline: 'Subtitle here',
+                primaryCta: 'SHOP NOW',
+                primaryCtaLink: '/#products',
+                secondaryCta: '',
+                secondaryCtaLink: '',
+                images: [
+                  { url: '', alt: 'Image 1' },
+                  { url: '', alt: 'Image 2' },
+                ],
+                backgroundColor: data.heroGallery.colors?.background || '#8B6F5C',
+              };
+              setNestedData('heroGallery.slides', [...slides, newSlide]);
+            }}
+            className="w-full py-2 bg-editor-accent text-editor-bg rounded-md hover:bg-editor-accent/90 transition-colors flex items-center justify-center gap-2 font-medium text-sm"
+          >
+            <Plus size={16} /> Add Slide
+          </button>
+        </div>
+      </div>
+    );
+
+    const styleTab = (
+      <div className="space-y-4">
+        {/* Frame Style */}
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+            <Layout size={14} />
+            Gallery Style
+          </label>
+
+          <Select
+            label="Frame Style"
+            value={data.heroGallery.frameStyle || 'shadow'}
+            onChange={(v) => setNestedData('heroGallery.frameStyle', v)}
+            options={[
+              { value: 'thin', label: '🖼️ Thin Border' },
+              { value: 'shadow', label: '🌑 Shadow Frame' },
+              { value: 'glass', label: '✨ Glassmorphism' },
+              { value: 'none', label: '◻️ No Frame' },
+            ]}
+          />
+
+          <ToggleControl label="Grain Texture" checked={data.heroGallery.showGrain ?? true} onChange={(v) => setNestedData('heroGallery.showGrain', v)} />
+        </div>
+
+        {/* Layout */}
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+            <Layout size={14} />
+            Layout
+          </label>
+
+          {/* Hero Height */}
+          <div className="mb-4">
+            <div className="flex justify-between items-center mb-1">
+              <label className="text-xs font-semibold text-editor-text-secondary">Hero Height</label>
+              <span className="text-xs text-editor-text-primary">{data.heroGallery.heroHeight || 80}vh</span>
+            </div>
+            <input
+              type="range" min="50" max="100" step="5"
+              value={data.heroGallery.heroHeight || 80}
+              onChange={(e) => setNestedData('heroGallery.heroHeight', parseInt(e.target.value))}
+              className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
+            />
+          </div>
+
+          <FontSizeSelector label={t('controls.headlineSize')} value={data.heroGallery.headlineFontSize || 'lg'} onChange={(v) => setNestedData('heroGallery.headlineFontSize', v)} />
+          <FontSizeSelector label={t('controls.subheadlineSize')} value={data.heroGallery.subheadlineFontSize || 'md'} onChange={(v) => setNestedData('heroGallery.subheadlineFontSize', v)} />
+        </div>
+
+        {/* Slideshow Settings */}
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+            <PlaySquare size={14} />
+            Slideshow
+          </label>
+
+          <div className="mb-3">
+            <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">Autoplay Speed (ms)</label>
+            <input
+              type="number" min="2000" max="15000" step="500"
+              value={data.heroGallery.autoPlaySpeed || 6000}
+              onChange={(e) => setNestedData('heroGallery.autoPlaySpeed', parseInt(e.target.value))}
+              className="w-full bg-editor-panel-bg border border-editor-border rounded-md px-3 py-2 text-sm text-editor-text-primary focus:outline-none focus:ring-1 focus:ring-editor-accent"
+            />
+          </div>
+
+          <div className="mb-3">
+            <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">Transition Duration (ms)</label>
+            <input
+              type="number" min="300" max="2000" step="100"
+              value={data.heroGallery.transitionDuration || 800}
+              onChange={(e) => setNestedData('heroGallery.transitionDuration', parseInt(e.target.value))}
+              className="w-full bg-editor-panel-bg border border-editor-border rounded-md px-3 py-2 text-sm text-editor-text-primary focus:outline-none focus:ring-1 focus:ring-editor-accent"
+            />
+          </div>
+        </div>
+
+        {/* Navigation */}
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Navigation</label>
+          <ToggleControl label="Show Arrows" checked={data.heroGallery.showArrows ?? true} onChange={(v) => setNestedData('heroGallery.showArrows', v)} />
+          <ToggleControl label="Show Dots" checked={data.heroGallery.showDots ?? true} onChange={(v) => setNestedData('heroGallery.showDots', v)} />
+
+          {(data.heroGallery.showDots ?? true) && (
+            <Select
+              label="Dot Style"
+              value={data.heroGallery.dotStyle || 'circle'}
+              onChange={(val) => setNestedData('heroGallery.dotStyle', val)}
+              options={[
+                { value: 'circle', label: 'Circle' },
+                { value: 'line', label: 'Line' },
+              ]}
+              noMargin
+            />
+          )}
+        </div>
+
+        {/* Colors */}
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+            <Palette size={14} />
+            Colors
+          </label>
+
+          <div className="space-y-3">
+            <ColorControl label="Background" value={data.heroGallery.colors?.background || '#8B6F5C'} onChange={(v) => setNestedData('heroGallery.colors.background', v)} />
+            <ColorControl label="Headline" value={data.heroGallery.colors?.heading || '#ffffff'} onChange={(v) => setNestedData('heroGallery.colors.heading', v)} />
+            <ColorControl label="Text" value={data.heroGallery.colors?.text || '#ffffff'} onChange={(v) => setNestedData('heroGallery.colors.text', v)} />
+            <ColorControl label="CTA Text" value={data.heroGallery.colors?.ctaText || '#ffffff'} onChange={(v) => setNestedData('heroGallery.colors.ctaText', v)} />
+
+            <p className="text-[10px] text-editor-text-secondary uppercase tracking-wider font-bold mt-2">Frame</p>
+            <ColorControl label="Frame Color" value={data.heroGallery.colors?.frameColor || 'rgba(255,255,255,0.15)'} onChange={(v) => setNestedData('heroGallery.colors.frameColor', v)} />
+
+            {(data.heroGallery.showArrows ?? true) && (
+              <>
+                <p className="text-[10px] text-editor-text-secondary uppercase tracking-wider font-bold mt-2">Arrows</p>
+                <ColorControl label="Arrow Color" value={data.heroGallery.colors?.arrowColor || '#ffffff'} onChange={(v) => setNestedData('heroGallery.colors.arrowColor', v)} />
+              </>
+            )}
+
+            {(data.heroGallery.showDots ?? true) && (
+              <>
+                <p className="text-[10px] text-editor-text-secondary uppercase tracking-wider font-bold mt-2">Dots</p>
+                <ColorControl label="Active Dot" value={data.heroGallery.colors?.dotActive || '#ffffff'} onChange={(v) => setNestedData('heroGallery.colors.dotActive', v)} />
+                <ColorControl label="Inactive Dot" value={data.heroGallery.colors?.dotInactive || 'rgba(255,255,255,0.5)'} onChange={(v) => setNestedData('heroGallery.colors.dotInactive', v)} />
+              </>
+            )}
+
+            {/* Corner Gradient */}
+            <CornerGradientControl
+              enabled={data.heroGallery.cornerGradient?.enabled || false}
+              position={data.heroGallery.cornerGradient?.position || 'top-left'}
+              color={data.heroGallery.cornerGradient?.color || '#4f46e5'}
+              opacity={data.heroGallery.cornerGradient?.opacity || 30}
+              size={data.heroGallery.cornerGradient?.size || 50}
+              onEnabledChange={(v) => setNestedData('heroGallery.cornerGradient.enabled', v)}
+              onPositionChange={(v) => setNestedData('heroGallery.cornerGradient.position', v)}
+              onColorChange={(v) => setNestedData('heroGallery.cornerGradient.color', v)}
+              onOpacityChange={(v) => setNestedData('heroGallery.cornerGradient.opacity', v)}
+              onSizeChange={(v) => setNestedData('heroGallery.cornerGradient.size', v)}
+            />
+          </div>
+        </div>
+      </div>
+    );
+
+    return <TabbedControls contentTab={contentTab} styleTab={styleTab} />;
+  };
+
   const sectionConfig: Record<PageSection, { label: string, icon: React.ElementType, renderer: () => React.ReactNode }> = {
     hero: { label: 'Hero Section', icon: Image, renderer: renderHeroControls },
     heroSplit: { label: 'Hero Split', icon: Columns, renderer: renderHeroSplitControls },
+    heroGallery: { label: 'Hero Gallery', icon: Image, renderer: renderHeroGalleryControls },
     features: { label: 'Features', icon: List, renderer: renderFeaturesControls },
     testimonials: { label: 'Testimonials', icon: Star, renderer: renderTestimonialsControls },
     services: { label: 'Services', icon: Layout, renderer: () => null },
@@ -3322,35 +3601,32 @@ const Controls: React.FC = () => {
     setComponentOrder(newOrder as PageSection[]);
     setEditorComponentOrder(newOrder as PageSection[]);
 
-    // Apply global default styles if available (merging on top of existing data to preserve content but update style)
-    if (componentStyles && componentStyles[section]) {
-      const globalDefault = componentStyles[section];
-      // We merge globalDefault into the existing section data
-      // This ensures new/re-added components pick up the latest style choices (e.g. Bento Grid)
-      // while hopefully preserving user content if it exists.
-      // Note: setNestedData merges at the path, but here we want to merge properties of the section object.
+    // Initialize section data with defaults from initialData, then apply component styles if available
+    // This ensures components added to older projects always get proper default data (slides, content, colors, etc.)
+    const globalDefault = (componentStyles && componentStyles[section]) ? componentStyles[section] : {};
 
-      // We need to use setData directly for this merge to be clean
-      setData(prevData => {
-        if (!prevData) return null;
-        const newData = JSON.parse(JSON.stringify(prevData));
+    setData(prevData => {
+      if (!prevData) return null;
+      const newData = JSON.parse(JSON.stringify(prevData));
 
-        // Merge global defaults deeply into the section data
-        // We prioritize global defaults for style properties, but we should be careful not to overwrite content.
-        // Actually, componentStyles usually only contains style props (colors, padding, variants), not content.
-        // So merging componentStyles[section] on top of newData[section] updates the style.
-        newData[section] = {
-          ...newData[section],
-          ...globalDefault,
-          colors: {
-            ...newData[section]?.colors,
-            ...globalDefault.colors
-          }
-        };
+      // Use initialData defaults as base when section data doesn't exist in the project
+      const sectionDefaults = (initialData.data as any)[section] || {};
+      const existingData = newData[section] || {};
 
-        return newData;
-      });
-    }
+      // Merge order: initialData defaults -> existing project data -> global component styles
+      newData[section] = {
+        ...sectionDefaults,
+        ...existingData,
+        ...globalDefault,
+        colors: {
+          ...sectionDefaults?.colors,
+          ...existingData?.colors,
+          ...(globalDefault as any)?.colors,
+        }
+      };
+
+      return newData;
+    });
 
     // Make it visible
     setSectionVisibility(prev => ({
@@ -7725,6 +8001,8 @@ const Controls: React.FC = () => {
         return renderProductsControlsWithTabs();
       case 'heroSplit':
         return renderHeroSplitControls();
+      case 'heroGallery':
+        return renderHeroGalleryControls();
       case 'map':
         return renderMapControls();
       // Ecommerce components - use pre-computed results from hooks called at component top level
