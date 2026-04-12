@@ -3318,45 +3318,23 @@ const Controls: React.FC = () => {
                 </div>
               </div>
 
-              {/* Per-Slide Background Color */}
-              <div className="mt-3">
-                <ColorControl label="Slide Background" value={slide.backgroundColor || data.heroGallery.colors?.background || '#8B6F5C'} onChange={(v) => setNestedData(`heroGallery.slides.${slideIndex}.backgroundColor`, v)} />
-              </div>
-
-              {/* Images */}
+              {/* Background Image */}
               <div className="mt-3">
                 <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2 flex items-center gap-2">
                   <Image size={12} />
-                  Gallery Images
+                  Background Image
                 </label>
-                {(slide.images || []).map((img: any, imgIndex: number) => (
-                  <div key={imgIndex} className="mb-2">
-                    <ImagePicker
-                      label={`Image #${imgIndex + 1}`}
-                      value={img.url}
-                      onChange={(url) => setNestedData(`heroGallery.slides.${slideIndex}.images.${imgIndex}.url`, url)}
-                      onRemove={() => {
-                        const newImages = (slide.images || []).filter((_: any, i: number) => i !== imgIndex);
-                        setNestedData(`heroGallery.slides.${slideIndex}.images`, newImages);
-                      }}
-                    />
-                    <input
-                      placeholder="Alt text"
-                      value={img.alt || ''}
-                      onChange={(e) => setNestedData(`heroGallery.slides.${slideIndex}.images.${imgIndex}.alt`, e.target.value)}
-                      className="w-full bg-editor-panel-bg border border-editor-border rounded px-2 py-1 text-xs text-editor-text-primary focus:outline-none focus:border-editor-accent mt-1"
-                    />
-                  </div>
-                ))}
-                <button
-                  onClick={() => {
-                    const newImages = [...(slide.images || []), { url: '', alt: 'New image' }];
-                    setNestedData(`heroGallery.slides.${slideIndex}.images`, newImages);
-                  }}
-                  className="w-full py-1.5 border border-dashed border-editor-border text-editor-text-secondary hover:text-editor-accent hover:border-editor-accent rounded-md transition-colors flex items-center justify-center gap-1 text-xs"
-                >
-                  <Plus size={12} /> Add Image
-                </button>
+                <ImagePicker
+                  label="Slide Background"
+                  value={slide.backgroundImage || ''}
+                  onChange={(url) => setNestedData(`heroGallery.slides.${slideIndex}.backgroundImage`, url)}
+                  onRemove={() => setNestedData(`heroGallery.slides.${slideIndex}.backgroundImage`, '')}
+                />
+              </div>
+
+              {/* Per-Slide Fallback Background Color */}
+              <div className="mt-3">
+                <ColorControl label="Fallback Color" value={slide.backgroundColor || data.heroGallery.colors?.background || '#8B6F5C'} onChange={(v) => setNestedData(`heroGallery.slides.${slideIndex}.backgroundColor`, v)} />
               </div>
             </div>
           ))}
@@ -3371,10 +3349,7 @@ const Controls: React.FC = () => {
                 primaryCtaLink: '/#products',
                 secondaryCta: '',
                 secondaryCtaLink: '',
-                images: [
-                  { url: '', alt: 'Image 1' },
-                  { url: '', alt: 'Image 2' },
-                ],
+                backgroundImage: '',
                 backgroundColor: data.heroGallery.colors?.background || '#8B6F5C',
               };
               setNestedData('heroGallery.slides', [...slides, newSlide]);
@@ -3389,24 +3364,26 @@ const Controls: React.FC = () => {
 
     const styleTab = (
       <div className="space-y-4">
-        {/* Frame Style */}
+        {/* Overlay & Grain */}
         <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
           <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
             <Layout size={14} />
-            Gallery Style
+            Image Overlay
           </label>
 
-          <Select
-            label="Frame Style"
-            value={data.heroGallery.frameStyle || 'shadow'}
-            onChange={(v) => setNestedData('heroGallery.frameStyle', v)}
-            options={[
-              { value: 'thin', label: '🖼️ Thin Border' },
-              { value: 'shadow', label: '🌑 Shadow Frame' },
-              { value: 'glass', label: '✨ Glassmorphism' },
-              { value: 'none', label: '◻️ No Frame' },
-            ]}
-          />
+          {/* Overlay Opacity */}
+          <div className="mb-4">
+            <div className="flex justify-between items-center mb-1">
+              <label className="text-xs font-semibold text-editor-text-secondary">Overlay Darkness</label>
+              <span className="text-xs text-editor-text-primary">{Math.round((data.heroGallery.overlayOpacity ?? 0.35) * 100)}%</span>
+            </div>
+            <input
+              type="range" min="0" max="80" step="5"
+              value={Math.round((data.heroGallery.overlayOpacity ?? 0.35) * 100)}
+              onChange={(e) => setNestedData('heroGallery.overlayOpacity', parseInt(e.target.value) / 100)}
+              className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
+            />
+          </div>
 
           <ToggleControl label="Grain Texture" checked={data.heroGallery.showGrain ?? true} onChange={(v) => setNestedData('heroGallery.showGrain', v)} />
         </div>
@@ -3492,13 +3469,10 @@ const Controls: React.FC = () => {
           </label>
 
           <div className="space-y-3">
-            <ColorControl label="Background" value={data.heroGallery.colors?.background || '#8B6F5C'} onChange={(v) => setNestedData('heroGallery.colors.background', v)} />
+            <ColorControl label="Fallback Background" value={data.heroGallery.colors?.background || '#8B6F5C'} onChange={(v) => setNestedData('heroGallery.colors.background', v)} />
             <ColorControl label="Headline" value={data.heroGallery.colors?.heading || '#ffffff'} onChange={(v) => setNestedData('heroGallery.colors.heading', v)} />
             <ColorControl label="Text" value={data.heroGallery.colors?.text || '#ffffff'} onChange={(v) => setNestedData('heroGallery.colors.text', v)} />
             <ColorControl label="CTA Text" value={data.heroGallery.colors?.ctaText || '#ffffff'} onChange={(v) => setNestedData('heroGallery.colors.ctaText', v)} />
-
-            <p className="text-[10px] text-editor-text-secondary uppercase tracking-wider font-bold mt-2">Frame</p>
-            <ColorControl label="Frame Color" value={data.heroGallery.colors?.frameColor || 'rgba(255,255,255,0.15)'} onChange={(v) => setNestedData('heroGallery.colors.frameColor', v)} />
 
             {(data.heroGallery.showArrows ?? true) && (
               <>

@@ -184,7 +184,7 @@ export interface HeroSplitData {
 }
 
 // =============================================================================
-// HERO GALLERY (Gallery-style slideshow hero)
+// HERO GALLERY (Fullscreen background-image slideshow hero)
 // =============================================================================
 export interface HeroGalleryImage {
     url: string;
@@ -198,8 +198,10 @@ export interface HeroGallerySlide {
     primaryCtaLink?: string;
     secondaryCta?: string;
     secondaryCtaLink?: string;
-    images: HeroGalleryImage[];
+    backgroundImage?: string;
     backgroundColor?: string;
+    /** @deprecated Use backgroundImage instead */
+    images?: HeroGalleryImage[];
 }
 
 export interface HeroGalleryData {
@@ -213,7 +215,8 @@ export interface HeroGalleryData {
     headlineFontSize?: FontSize;
     subheadlineFontSize?: FontSize;
     showGrain?: boolean;
-    frameStyle?: 'thin' | 'shadow' | 'glass' | 'none';
+    /** Overlay darkness: 0 = no overlay, 1 = fully dark */
+    overlayOpacity?: number;
     colors?: {
         background?: string;
         text?: string;
@@ -222,7 +225,6 @@ export interface HeroGalleryData {
         dotActive?: string;
         dotInactive?: string;
         arrowColor?: string;
-        frameColor?: string;
     };
     buttonBorderRadius?: BorderRadiusSize;
     cornerGradient?: CornerGradientConfig;

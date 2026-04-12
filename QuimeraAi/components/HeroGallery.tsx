@@ -2,8 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { HeroGalleryData, FontSize, BorderRadiusSize } from '../types';
 import { useDesignTokens } from '../hooks/useDesignTokens';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import ImagePlaceholder from './ui/ImagePlaceholder';
-import { isPendingImage } from '../utils/imagePlaceholders';
 import { sanitizeHtml } from '../utils/sanitize';
 import CornerGradient from './ui/CornerGradient';
 
@@ -22,14 +20,6 @@ const subheadlineSizeClasses: Record<FontSize, string> = {
     xl: 'text-lg md:text-xl lg:text-2xl',
 };
 
-// ─── Gallery Image sub-component ───
-const GalleryImage: React.FC<{ src: string; alt: string; className?: string }> = ({ src, alt, className = '' }) => {
-    if (isPendingImage(src)) {
-        return <ImagePlaceholder aspectRatio="3:4" showGenerateButton={false} className={`w-full h-full ${className}`} />;
-    }
-    return <img src={src} alt={alt} className={`w-full h-full object-cover ${className}`} loading="lazy" />;
-};
-
 // ─── Props ───
 interface HeroGalleryProps extends HeroGalleryData {
     borderRadius?: BorderRadiusSize;
@@ -37,10 +27,10 @@ interface HeroGalleryProps extends HeroGalleryData {
 }
 
 /**
- * HeroGallery — Gallery-style slideshow hero.
- * Inspired by Nordic gallery aesthetics: solid warm backgrounds, floating framed artwork,
- * refined light-weight typography, text-link CTAs, built-in slideshow with dots & arrows,
- * subtle grain texture, and staggered entrance animations.
+ * HeroGallery — Fullscreen background-image slideshow hero.
+ * Each slide has a full-bleed background image with text overlay.
+ * Inspired by Copenhagen Oil: warm tones, fullscreen imagery, clean typography,
+ * text-link CTAs, slideshow with dots & arrows, subtle grain texture.
  */
 const HeroGallery: React.FC<HeroGalleryProps> = ({
     slides = [],
@@ -53,7 +43,7 @@ const HeroGallery: React.FC<HeroGalleryProps> = ({
     headlineFontSize = 'lg',
     subheadlineFontSize = 'md',
     showGrain = true,
-    frameStyle = 'shadow',
+    overlayOpacity = 0.35,
     colors,
     cornerGradient,
     onNavigate,
@@ -68,7 +58,6 @@ const HeroGallery: React.FC<HeroGalleryProps> = ({
         subheadline: 'Discover our curated collection',
         primaryCta: 'Explore',
         primaryCtaLink: '/#cta',
-        images: [],
     }];
 
     const hasMultipleSlides = validSlides.length > 1;
@@ -103,37 +92,10 @@ const HeroGallery: React.FC<HeroGalleryProps> = ({
     }, [currentIndex, hasMultipleSlides, autoPlaySpeed]);
 
     // ─── Colors ───
-    const activeSlide = validSlides[currentIndex];
-    const bgColor = activeSlide?.backgroundColor || colors?.background || '#8B6F5C';
+    const bgColor = colors?.background || '#8B6F5C';
     const textColor = colors?.text || '#ffffff';
     const headingColor = colors?.heading || '#ffffff';
     const ctaColor = colors?.ctaText || '#ffffff';
-    const frameColor = colors?.frameColor || 'rgba(255,255,255,0.15)';
-
-    // ─── Frame styles for gallery images ───
-    const getFrameStyles = (): React.CSSProperties => {
-        switch (frameStyle) {
-            case 'thin':
-                return {
-                    border: `2px solid ${frameColor}`,
-                    boxShadow: '0 4px 24px rgba(0,0,0,0.15)',
-                };
-            case 'shadow':
-                return {
-                    boxShadow: '0 12px 48px rgba(0,0,0,0.25), 0 4px 12px rgba(0,0,0,0.1)',
-                };
-            case 'glass':
-                return {
-                    border: `1px solid ${frameColor}`,
-                    boxShadow: '0 8px 32px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.1)',
-                    backdropFilter: 'blur(4px)',
-                    WebkitBackdropFilter: 'blur(4px)',
-                };
-            case 'none':
-            default:
-                return {};
-        }
-    };
 
     // ─── Navigation handler ───
     const handleNavigate = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
@@ -148,40 +110,62 @@ const HeroGallery: React.FC<HeroGalleryProps> = ({
     return (
         <section
             className="relative w-full overflow-hidden"
-            style={{
-                minHeight,
-                backgroundColor: bgColor,
-                transition: `background-color ${transitionDuration}ms ease-in-out`,
-            }}
+            style={{ minHeight, backgroundColor: bgColor }}
         >
             <CornerGradient config={cornerGradient} />
-
-            {/* Grain texture overlay */}
-            {showGrain && <div className="absolute inset-0 z-[1] pointer-events-none gallery-grain" />}
 
             {/* ─── Slides (absolute stacked, crossfade via opacity) ─── */}
             {validSlides.map((slide, i) => {
                 const isActive = i === currentIndex;
-                const images = slide.images || [];
-                const primaryImage = images[0];
-                const secondaryImage = images[1];
+                // Support both new backgroundImage and legacy images[0].url
+                const bgImage = slide.backgroundImage || slide.images?.[0]?.url;
+                const slideBg = slide.backgroundColor || bgColor;
 
                 return (
                     <div
                         key={i}
-                        className="absolute inset-0 z-[5]"
+                        className="absolute inset-0 z-[2]"
                         style={{
                             opacity: isActive ? 1 : 0,
                             transition: `opacity ${transitionDuration}ms ease-in-out`,
                             pointerEvents: isActive ? 'auto' : 'none',
                         }}
                     >
+                        {/* Background image — fullscreen */}
+                        {bgImage ? (
+                            <div
+                                className="absolute inset-0 z-0"
+                                style={{
+                                    backgroundImage: `url(${bgImage})`,
+                                    backgroundSize: 'cover',
+                                    backgroundPosition: 'center',
+                                    backgroundColor: slideBg,
+                                }}
+                            />
+                        ) : (
+                            <div
+                                className="absolute inset-0 z-0"
+                                style={{ backgroundColor: slideBg }}
+                            />
+                        )}
+
+                        {/* Dark overlay for text readability */}
                         <div
-                            className="w-full flex flex-col justify-center md:flex-row md:items-center gap-6 md:gap-12 max-w-7xl mx-auto px-5 md:px-12 py-24 md:py-0"
+                            className="absolute inset-0 z-[1]"
+                            style={{
+                                backgroundColor: `rgba(0, 0, 0, ${overlayOpacity})`,
+                            }}
+                        />
+
+                        {/* Grain texture overlay */}
+                        {showGrain && <div className="absolute inset-0 z-[2] pointer-events-none gallery-grain" />}
+
+                        {/* ─── Text content ─── */}
+                        <div
+                            className="relative z-[5] w-full flex flex-col justify-end px-5 md:px-12 pb-20 md:pb-24"
                             style={{ minHeight }}
                         >
-                            {/* ─── Text column ─── */}
-                            <div className="w-full md:w-[55%] flex flex-col justify-center md:pr-8">
+                            <div className="max-w-4xl">
                                 {/* Headline */}
                                 <h1
                                     className={`${headlineSizeClasses[headlineFontSize]} font-light leading-tight mb-3 md:mb-5 font-header gallery-headline`}
@@ -196,7 +180,7 @@ const HeroGallery: React.FC<HeroGalleryProps> = ({
                                 {/* Subheadline */}
                                 {slide.subheadline && (
                                     <p
-                                        className={`${subheadlineSizeClasses[subheadlineFontSize]} font-body opacity-80 mb-6 md:mb-10 gallery-sub`}
+                                        className={`${subheadlineSizeClasses[subheadlineFontSize]} font-body opacity-85 mb-8 md:mb-12 gallery-sub`}
                                         style={{ color: textColor }}
                                     >
                                         {slide.subheadline}
@@ -238,41 +222,12 @@ const HeroGallery: React.FC<HeroGalleryProps> = ({
                                     )}
                                 </div>
                             </div>
-
-                            {/* ─── Gallery images column ─── */}
-                            {images.length > 0 && (
-                                <div className="w-full md:w-[45%] flex gap-3 md:gap-5 items-start justify-center md:justify-end">
-                                    {/* Primary image — larger, offset down */}
-                                    {primaryImage && (
-                                        <div className={`${secondaryImage ? 'w-[50%] md:w-[55%]' : 'w-[60%] md:w-[65%]'} pt-6 md:pt-12 gallery-img-1`}>
-                                            <div
-                                                className="aspect-[3/4] overflow-hidden"
-                                                style={getFrameStyles()}
-                                            >
-                                                <GalleryImage src={primaryImage.url} alt={primaryImage.alt} />
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {/* Secondary image — smaller, offset up */}
-                                    {secondaryImage && (
-                                        <div className="w-[42%] md:w-[42%] pt-0 md:pt-2 gallery-img-2">
-                                            <div
-                                                className="aspect-[3/4] overflow-hidden"
-                                                style={getFrameStyles()}
-                                            >
-                                                <GalleryImage src={secondaryImage.url} alt={secondaryImage.alt} />
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                            )}
                         </div>
                     </div>
                 );
             })}
 
-            {/* ─── Slideshow Controls (always visible, not part of slide layers) ─── */}
+            {/* ─── Slideshow Controls (always visible, above slide layers) ─── */}
             {hasMultipleSlides && (
                 <div className="absolute bottom-6 md:bottom-10 right-5 md:right-12 flex items-center gap-3 z-20">
                     {/* Dots */}
@@ -331,10 +286,6 @@ const HeroGallery: React.FC<HeroGalleryProps> = ({
                     from { opacity: 0; transform: translateY(25px); }
                     to { opacity: 1; transform: translateY(0); }
                 }
-                @keyframes gallery-img-reveal {
-                    from { opacity: 0; transform: scale(0.92) translateY(15px); }
-                    to { opacity: 1; transform: scale(1) translateY(0); }
-                }
                 .gallery-headline {
                     animation: gallery-fade-up 0.9s ease-out 0.2s both;
                 }
@@ -344,18 +295,13 @@ const HeroGallery: React.FC<HeroGalleryProps> = ({
                 .gallery-cta {
                     animation: gallery-fade-up 0.7s ease-out 0.6s both;
                 }
-                .gallery-img-1 {
-                    animation: gallery-img-reveal 1s ease-out 0.3s both;
-                }
-                .gallery-img-2 {
-                    animation: gallery-img-reveal 1s ease-out 0.55s both;
-                }
                 .gallery-grain {
                     background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
                     opacity: 0.035;
                     mix-blend-mode: overlay;
                 }
-            `}</style>
+            `}
+            </style>
         </section>
     );
 };
