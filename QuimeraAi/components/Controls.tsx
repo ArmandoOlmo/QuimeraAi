@@ -3621,7 +3621,7 @@ const Controls: React.FC = () => {
 
           {(data.heroWave.gradientColors || ['#ff006e', '#fb5607', '#ffbe0b', '#38b000', '#00b4d8']).map(
             (color: string, i: number) => (
-              <div key={i} className="flex items-center gap-2 mb-2">
+              <div key={i} className="relative mb-2">
                 <ColorControl
                   label={`Stop ${i + 1}`}
                   value={color}
@@ -3637,7 +3637,7 @@ const Controls: React.FC = () => {
                       const newColors = [...(data.heroWave.gradientColors || [])].filter((_: any, idx: number) => idx !== i);
                       setNestedData('heroWave.gradientColors', newColors);
                     }}
-                    className="p-1 text-red-400 hover:text-red-300 rounded text-xs"
+                    className="absolute top-1 right-0 p-1 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded transition-colors"
                     title="Remove color stop"
                   >
                     <X size={12} />
