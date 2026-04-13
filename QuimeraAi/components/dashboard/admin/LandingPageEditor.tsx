@@ -851,6 +851,124 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
                 heading: colors.heading,
             }
         },
+        // ── New section mappings (topBar, logoBanner, signupFloat, cmsFeed, heroSplit, hero variants, chatbot, products) ──
+        topBar: {
+            colors: {
+                background: colors.primary,
+                text: '#ffffff',
+                linkColor: '#ffffff',
+                iconColor: '#ffffff',
+                borderColor: colors.border,
+            }
+        },
+        logoBanner: {
+            colors: {
+                background: colors.background,
+                text: colors.text,
+                heading: colors.heading,
+                accent: colors.primary,
+                borderColor: colors.border,
+            }
+        },
+        signupFloat: {
+            colors: {
+                background: colors.primary,
+                text: '#ffffff',
+                heading: '#ffffff',
+                buttonBackground: colors.secondary,
+                buttonText: '#ffffff',
+                inputBackground: colors.background,
+                inputText: colors.text,
+                inputBorder: colors.border,
+            }
+        },
+        cmsFeed: {
+            colors: {
+                background: colors.background,
+                heading: colors.heading,
+                text: colors.text,
+                accent: colors.primary,
+                cardBackground: colors.surface,
+                cardHeading: colors.heading,
+                cardText: colors.text,
+                borderColor: colors.border,
+                buttonBackground: colors.primary,
+                buttonText: '#ffffff',
+            }
+        },
+        heroSplit: {
+            colors: {
+                textBackground: colors.background,
+                imageBackground: colors.surface,
+                heading: colors.heading,
+                text: colors.text,
+                buttonBackground: colors.primary,
+                buttonText: '#ffffff',
+            }
+        },
+        heroGallery: {
+            colors: {
+                primary: colors.primary,
+                secondary: colors.secondary,
+                background: colors.background,
+                text: colors.text,
+                heading: colors.heading,
+                buttonBackground: colors.primary,
+                buttonText: '#ffffff',
+            }
+        },
+        heroWave: {
+            colors: {
+                primary: colors.primary,
+                secondary: colors.secondary,
+                background: colors.background,
+                text: colors.text,
+                heading: colors.heading,
+                buttonBackground: colors.primary,
+                buttonText: '#ffffff',
+            }
+        },
+        heroNova: {
+            colors: {
+                primary: colors.primary,
+                secondary: colors.secondary,
+                background: colors.background,
+                text: colors.text,
+                heading: colors.heading,
+                buttonBackground: colors.primary,
+                buttonText: '#ffffff',
+                accent: colors.accent,
+            }
+        },
+        chatbot: {
+            colors: {
+                primaryColor: colors.primary,
+                secondaryColor: colors.secondary,
+                accentColor: colors.accent,
+                userBubbleColor: colors.primary,
+                userTextColor: '#ffffff',
+                botBubbleColor: colors.surface,
+                botTextColor: colors.text,
+                backgroundColor: colors.background,
+                inputBackground: colors.surface,
+                inputBorder: colors.border,
+                inputText: colors.text,
+                headerBackground: colors.primary,
+                headerText: '#ffffff',
+            }
+        },
+        products: {
+            colors: {
+                background: colors.background,
+                heading: colors.heading,
+                text: colors.text,
+                accent: colors.primary,
+                cardBackground: colors.surface,
+                cardText: colors.heading,
+                buttonBackground: colors.primary,
+                buttonText: '#ffffff',
+            }
+        },
     });
 
     /**
