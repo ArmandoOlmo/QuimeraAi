@@ -843,12 +843,25 @@ const PageRenderer: React.FC<PageRendererProps> = ({
         return true;
     });
 
+    // If topBar has aboveHeader, ensure it renders before the header
+    const topBarAboveHeader = mergedData.topBar?.aboveHeader;
+    let orderedSections = [...visibleSections];
+    if (topBarAboveHeader) {
+        const topBarIdx = orderedSections.indexOf('topBar');
+        const headerIdx = orderedSections.indexOf('header');
+        if (topBarIdx > -1 && headerIdx > -1 && topBarIdx > headerIdx) {
+            // Move topBar right before header
+            orderedSections.splice(topBarIdx, 1);
+            orderedSections.splice(headerIdx, 0, 'topBar');
+        }
+    }
+
     return (
         <div
             className="min-h-screen"
             style={{ backgroundColor: theme.pageBackground || globalColors?.background }}
         >
-            {visibleSections.map((section, index) => renderSection(section, index))}
+            {orderedSections.map((section, index) => renderSection(section, index))}
         </div>
     );
 };

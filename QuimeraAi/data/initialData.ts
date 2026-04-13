@@ -816,6 +816,7 @@ const pageData: PageData = {
     separator: 'dot',
     showRotatingArrows: true,
     rotateSpeed: 4000,
+    aboveHeader: true,
   },
   products: {
     title: 'Nuestros Productos',

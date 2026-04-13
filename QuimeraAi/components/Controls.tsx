@@ -4237,8 +4237,39 @@ const Controls: React.FC = () => {
             </div>
 
             <Input label="Text" value={msg.text || ''} onChange={(e) => setNestedData(`topBar.messages.${idx}.text`, e.target.value)} />
-            <Input label="Link URL" value={msg.link || ''} onChange={(e) => setNestedData(`topBar.messages.${idx}.link`, e.target.value)} placeholder="#section or /page or https://..." />
             <Input label="Link Text" value={msg.linkText || ''} onChange={(e) => setNestedData(`topBar.messages.${idx}.linkText`, e.target.value)} placeholder="Shop Now" />
+
+            {/* Link Type Selector */}
+            <div>
+              <div className="text-[10px] font-medium text-editor-text-secondary mb-1">Link Destination</div>
+              <div className="flex bg-editor-bg rounded-md border border-editor-border p-0.5 mb-2">
+                {[
+                  { value: 'manual', label: 'URL' },
+                  { value: 'content', label: 'Content' },
+                ].map(type => (
+                  <button
+                    key={type.value}
+                    onClick={() => setNestedData(`topBar.messages.${idx}.linkType`, type.value)}
+                    className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors ${(msg.linkType || 'manual') === type.value
+                      ? 'bg-editor-accent text-editor-bg'
+                      : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-hover'
+                    }`}
+                  >
+                    {type.label}
+                  </button>
+                ))}
+              </div>
+              {(msg.linkType === 'manual' || !msg.linkType) && (
+                <Input label="Link URL" value={msg.link || ''} onChange={(e) => setNestedData(`topBar.messages.${idx}.link`, e.target.value)} placeholder="#section or /page or https://..." />
+              )}
+              {msg.linkType === 'content' && (
+                <SingleContentSelector
+                  selectedContentPath={msg.link}
+                  onSelect={(path) => setNestedData(`topBar.messages.${idx}.link`, path || '')}
+                  label="Select Content"
+                />
+              )}
+            </div>
           </div>
         ))}
 
@@ -4256,6 +4287,13 @@ const Controls: React.FC = () => {
 
     const styleTab = (
       <div className="space-y-3">
+        {/* Position */}
+        <div className="text-[10px] font-semibold text-editor-text-secondary uppercase tracking-wider pt-1">Position</div>
+        <ToggleControl label="Above Header" checked={data.topBar.aboveHeader ?? true} onChange={(v) => setNestedData('topBar.aboveHeader', v)} />
+        <p className="text-[10px] text-editor-text-secondary -mt-1">
+          {data.topBar.aboveHeader ? 'Pinned above navigation bar' : 'Placed in content flow'}
+        </p>
+
         <div className="text-[10px] font-semibold text-editor-text-secondary uppercase tracking-wider pt-1">Behavior</div>
         <ToggleControl label="Scroll (Marquee)" checked={data.topBar.scrollEnabled ?? false} onChange={(v) => setNestedData('topBar.scrollEnabled', v)} />
         <ToggleControl label="Pause on Hover" checked={data.topBar.pauseOnHover ?? true} onChange={(v) => setNestedData('topBar.pauseOnHover', v)} />

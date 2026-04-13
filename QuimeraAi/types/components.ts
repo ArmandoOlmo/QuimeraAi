@@ -997,6 +997,7 @@ export interface TopBarMessage {
     icon?: string;
     link?: string;
     linkText?: string;
+    linkType?: 'manual' | 'content';
 }
 
 export interface TopBarData {
@@ -1018,6 +1019,8 @@ export interface TopBarData {
     height?: number;
     showRotatingArrows?: boolean;
     rotateSpeed?: number;
+    /** Position above header instead of in content flow */
+    aboveHeader?: boolean;
 }
 
 // =============================================================================
