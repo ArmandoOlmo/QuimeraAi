@@ -309,6 +309,7 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
         map: t('editor.locationMap'),
         menu: t('editor.restaurantMenu'),
         banner: t('editor.bannerSection'),
+        topBar: 'Top Bar',
         chatbot: t('editor.aiChatbot'),
         cmsFeed: t('editor.cmsFeedSection', 'CMS Feed'),
         footer: t('editor.footerSection'),

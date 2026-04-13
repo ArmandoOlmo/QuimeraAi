@@ -27,7 +27,8 @@ import {
   Layout, Image, List, Star, PlaySquare, Users, DollarSign, Eye,
   Briefcase, MessageCircle, Mail, Send, Type, MousePointerClick,
   Settings, AlignJustify, MonitorPlay, Grid, GripVertical, Upload, Menu as MenuIcon, MessageSquare, FileText, PlusCircle, X, Palette, AlertCircle, TrendingUp, Sparkles, MapPin, Map as MapIcon, Columns, Search, Loader2, ShoppingBag, Info, Store, SlidersHorizontal, LayoutGrid, Check, Link, FolderOpen, Maximize2, Clock, PanelRightClose, PanelRightOpen, Zap,
-  Twitter, Facebook, Instagram, Linkedin, Github, Youtube, Music, Pin, Ghost, Gamepad2, AtSign, Share2, Waves, Bell
+  Twitter, Facebook, Instagram, Linkedin, Github, Youtube, Music, Pin, Ghost, Gamepad2, AtSign, Share2, Waves, Bell,
+  Megaphone, Tag, Gift, Truck, Percent, Heart, ShieldCheck, Flame, Award, Crown, Phone
 } from 'lucide-react';
 import { usePublicProducts } from '../hooks/usePublicProducts';
 import AIFormControl from './ui/AIFormControl';
@@ -4178,11 +4179,13 @@ const Controls: React.FC = () => {
 
     const topBarMessages = data.topBar.messages || [];
 
-    const iconOptions = [
-      'megaphone', 'tag', 'gift', 'truck', 'percent', 'sparkles', 'bell',
-      'info', 'star', 'zap', 'heart', 'shield', 'clock', 'flame', 'award',
-      'crown', 'phone', 'mail', 'pin', 'link',
-    ];
+    const topBarIconMap: Record<string, React.ElementType> = {
+      megaphone: Megaphone, tag: Tag, gift: Gift, truck: Truck, percent: Percent,
+      sparkles: Sparkles, bell: Bell, info: Info, star: Star, zap: Zap,
+      heart: Heart, shield: ShieldCheck, clock: Clock, flame: Flame, award: Award,
+      crown: Crown, phone: Phone, mail: Mail, pin: Pin, link: Link,
+    };
+    const iconOptions = Object.keys(topBarIconMap);
 
     const contentTab = (
       <div className="space-y-3">
@@ -4211,21 +4214,22 @@ const Controls: React.FC = () => {
               <div className="grid grid-cols-7 gap-1">
                 <button
                   onClick={() => setNestedData(`topBar.messages.${idx}.icon`, '')}
-                  className={`p-1.5 rounded text-xs ${!msg.icon ? 'bg-blue-500/20 ring-1 ring-blue-500' : 'bg-editor-bg hover:bg-editor-hover'}`}
+                  className={`p-1.5 rounded flex items-center justify-center ${!msg.icon ? 'bg-blue-500/20 ring-1 ring-blue-500' : 'bg-editor-bg hover:bg-editor-hover'}`}
                   title="No icon"
                 >
-                  <X size={12} />
+                  <X size={14} />
                 </button>
                 {iconOptions.map(ic => {
                   const isActive = msg.icon === ic;
+                  const IconComp = topBarIconMap[ic];
                   return (
                     <button
                       key={ic}
                       onClick={() => setNestedData(`topBar.messages.${idx}.icon`, ic)}
-                      className={`p-1.5 rounded text-xs capitalize ${isActive ? 'bg-blue-500/20 ring-1 ring-blue-500' : 'bg-editor-bg hover:bg-editor-hover'}`}
+                      className={`p-1.5 rounded flex items-center justify-center ${isActive ? 'bg-blue-500/20 ring-1 ring-blue-500' : 'bg-editor-bg hover:bg-editor-hover'}`}
                       title={ic}
                     >
-                      {ic.slice(0, 2)}
+                      <IconComp size={14} />
                     </button>
                   );
                 })}
