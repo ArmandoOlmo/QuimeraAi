@@ -1445,7 +1445,39 @@
     "titleLogo": "Logo del Título",
     "selectCollection": "Seleccionar Colección",
     "layoutAlignment": "Alineación del Layout",
-    "editSection": "Editar sección"
+    "editSection": "Editar sección",
+    "signupFloat": {
+      "title": "Registro Flotante",
+      "headerText": "Título",
+      "description": "Descripción",
+      "imagePlacement": "Posición de Imagen",
+      "floatPosition": "Posición Flotante",
+      "showName": "Mostrar Campo Nombre",
+      "showEmail": "Mostrar Campo Email",
+      "showPhone": "Mostrar Campo Teléfono",
+      "showMessage": "Mostrar Campo Mensaje",
+      "showOnLoad": "Mostrar al Cargar",
+      "showClose": "Mostrar Botón Cerrar",
+      "triggerDelay": "Retraso (segundos)",
+      "width": "Ancho",
+      "imageHeight": "Altura de Imagen",
+      "socialLinks": "Redes Sociales",
+      "showSocial": "Mostrar Redes Sociales",
+      "top": "Arriba",
+      "bottom": "Abajo",
+      "left": "Izquierda",
+      "right": "Derecha",
+      "center": "Centro",
+      "formFields": "Campos del Formulario",
+      "namePlaceholder": "Placeholder del Nombre",
+      "emailPlaceholder": "Placeholder del Email",
+      "phonePlaceholder": "Placeholder del Teléfono",
+      "messagePlaceholder": "Placeholder del Mensaje",
+      "behavior": "Comportamiento",
+      "dimensions": "Dimensiones",
+      "minimizeOnClose": "Minimizar al Cerrar",
+      "minimizedLabel": "Texto del Botón Minimizado"
+    }
   },
   "coolorsImporter": {
     "title": "Importador de Paletas",
@@ -3891,7 +3923,8 @@
         "headline": "Titular",
         "subheadline": "Subtítulo",
         "copyMonWeekdays": "Copiar Lun → Días Laborales",
-        "copyMonAllDays": "Copiar Lun → Todos los Días"
+        "copyMonAllDays": "Copiar Lun → Todos los Días",
+        "buttonBorderRadius": "Esquinas de Botón"
       },
       "cmsFeed": {
         "layout": "Diseño",
@@ -3997,7 +4030,8 @@
     "addSocialLink": "Agregar Red Social",
     "cmsFeedSection": "Feed del CMS",
     "topBarSection": "Barra Superior",
-    "logoBannerSection": "Banner de Logos"
+    "logoBannerSection": "Banner de Logos",
+    "signupFloatSection": "Registro Flotante"
   },
   "email": {
     "title": "Email Marketing",

@@ -1445,7 +1445,39 @@
     "titleLogo": "Title Logo",
     "selectCollection": "Select Collection",
     "layoutAlignment": "Layout Alignment",
-    "editSection": "Edit section"
+    "editSection": "Edit section",
+    "signupFloat": {
+      "title": "Sign Up Float",
+      "headerText": "Header Text",
+      "description": "Description",
+      "imagePlacement": "Image Position",
+      "floatPosition": "Float Position",
+      "showName": "Show Name Field",
+      "showEmail": "Show Email Field",
+      "showPhone": "Show Phone Field",
+      "showMessage": "Show Message Field",
+      "showOnLoad": "Show On Load",
+      "showClose": "Show Close Button",
+      "triggerDelay": "Delay (seconds)",
+      "width": "Width",
+      "imageHeight": "Image Height",
+      "socialLinks": "Social Links",
+      "showSocial": "Show Social Links",
+      "top": "Top",
+      "bottom": "Bottom",
+      "left": "Left",
+      "right": "Right",
+      "center": "Center",
+      "formFields": "Form Fields",
+      "namePlaceholder": "Name Placeholder",
+      "emailPlaceholder": "Email Placeholder",
+      "phonePlaceholder": "Phone Placeholder",
+      "messagePlaceholder": "Message Placeholder",
+      "behavior": "Behavior",
+      "dimensions": "Dimensions",
+      "minimizeOnClose": "Minimize On Close",
+      "minimizedLabel": "Minimized Button Label"
+    }
   },
   "coolorsImporter": {
     "title": "Import from Coolors.co",
@@ -3891,7 +3923,8 @@
         "headline": "Headline",
         "subheadline": "Subheadline",
         "copyMonWeekdays": "Copy Mon → Weekdays",
-        "copyMonAllDays": "Copy Mon → All Days"
+        "copyMonAllDays": "Copy Mon → All Days",
+        "buttonBorderRadius": "Button Corners"
       },
       "cmsFeed": {
         "layout": "Layout",
@@ -3997,7 +4030,8 @@
     "addSocialLink": "Add Social Link",
     "cmsFeedSection": "CMS Feed",
     "topBarSection": "Top Bar",
-    "logoBannerSection": "Logo Banner"
+    "logoBannerSection": "Logo Banner",
+    "signupFloatSection": "Sign Up Float"
   },
   "email": {
     "title": "Email",

@@ -1973,6 +1973,79 @@ export interface CheckoutSectionData {
 }
 
 // =============================================================================
+// SIGNUP FLOAT (Floating Sign-Up Overlay)
+// =============================================================================
+export type FloatPosition = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'center';
+export type ImagePlacement = 'top' | 'bottom' | 'left' | 'right';
+
+export interface SignupFloatSocialLink {
+    platform: SocialPlatform;
+    href: string;
+}
+
+export interface SignupFloatData {
+    // Content
+    headerText: string;
+    descriptionText: string;
+    imageUrl: string;
+    imagePlacement: ImagePlacement;
+
+    // Form fields
+    showNameField: boolean;
+    showEmailField: boolean;
+    showPhoneField: boolean;
+    showMessageField: boolean;
+    namePlaceholder: string;
+    emailPlaceholder: string;
+    phonePlaceholder: string;
+    messagePlaceholder: string;
+    buttonText: string;
+
+    // Social links
+    socialLinks: SignupFloatSocialLink[];
+    showSocialLinks: boolean;
+
+    // Floating position on website
+    floatPosition: FloatPosition;
+
+    // Visibility & behavior
+    showOnLoad: boolean;
+    showCloseButton: boolean;
+    triggerDelay?: number;
+    /** When true, closing minimizes to a small pill instead of fully hiding */
+    minimizeOnClose?: boolean;
+    /** Label text shown on the minimized pill button */
+    minimizedLabel?: string;
+
+    // Styling
+    width?: number;
+    borderRadius?: BorderRadiusSize;
+    buttonBorderRadius?: BorderRadiusSize;
+    imageHeight?: number;
+
+    // Colors
+    colors: {
+        background: string;
+        heading: string;
+        text: string;
+        accent: string;
+        buttonBackground: string;
+        buttonText: string;
+        inputBackground: string;
+        inputText: string;
+        inputBorder: string;
+        inputPlaceholder: string;
+        socialIconColor: string;
+        overlayBackground: string;
+        cardShadow: string;
+    };
+
+    // Typography
+    headerFontSize?: FontSize;
+    descriptionFontSize?: FontSize;
+}
+
+// =============================================================================
 // PAGE DATA (AGGREGATED)
 // =============================================================================
 
@@ -2035,5 +2108,11 @@ export interface PageData {
     cart?: CartSectionData;
     /** Configuración de sección de checkout */
     checkout?: CheckoutSectionData;
+
+    // ==========================================================================
+    // FLOATING OVERLAYS
+    // ==========================================================================
+    /** Floating sign-up overlay component */
+    signupFloat?: SignupFloatData;
 }
 

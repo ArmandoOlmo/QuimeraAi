@@ -1164,6 +1164,7 @@
     "cmsFeedSection": "Feed do CMS",
     "topBarSection": "Barra Superior",
     "logoBannerSection": "Banner de Logos",
+    "signupFloatSection": "Cadastro Flutuante",
     "controls": {
       "cmsFeed": {
         "layout": "Layout",
@@ -1219,7 +1220,44 @@
         "buttons": "Botões",
         "buttonBackground": "Fundo do botão",
         "noArticles": "Nenhum artigo para exibir"
+      },
+      "common": {
+        "buttonBorderRadius": "Cantos do Botão"
       }
+    }
+  },
+  "controls": {
+    "signupFloat": {
+      "title": "Cadastro Flutuante",
+      "headerText": "Título",
+      "description": "Descrição",
+      "imagePlacement": "Posição da Imagem",
+      "floatPosition": "Posição Flutuante",
+      "showName": "Mostrar Campo Nome",
+      "showEmail": "Mostrar Campo Email",
+      "showPhone": "Mostrar Campo Telefone",
+      "showMessage": "Mostrar Campo Mensagem",
+      "showOnLoad": "Mostrar ao Carregar",
+      "showClose": "Mostrar Botão Fechar",
+      "triggerDelay": "Atraso (segundos)",
+      "width": "Largura",
+      "imageHeight": "Altura da Imagem",
+      "socialLinks": "Redes Sociais",
+      "showSocial": "Mostrar Redes Sociais",
+      "top": "Topo",
+      "bottom": "Base",
+      "left": "Esquerda",
+      "right": "Direita",
+      "center": "Centro",
+      "formFields": "Campos do Formulário",
+      "namePlaceholder": "Placeholder do Nome",
+      "emailPlaceholder": "Placeholder do Email",
+      "phonePlaceholder": "Placeholder do Telefone",
+      "messagePlaceholder": "Placeholder da Mensagem",
+      "behavior": "Comportamento",
+      "dimensions": "Dimensões",
+      "minimizeOnClose": "Minimizar ao Fechar",
+      "minimizedLabel": "Texto do Botão Minimizado"
     }
   }
 }

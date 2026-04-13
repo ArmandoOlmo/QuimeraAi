@@ -39,6 +39,7 @@ import Menu from './Menu';
 import Banner from './Banner';
 import TopBar from './TopBar';
 import LogoBanner from './LogoBanner';
+import SignupFloat from './SignupFloat';
 import SectionBackground from './ui/SectionBackground';
 import Products from './Products';
 import { PageSection, FontFamily, CMSPost, CMSCategory, FooterData } from '../types';
@@ -1119,6 +1120,8 @@ const LandingPageContent: React.FC = () => {
         </SectionBackground>
       );
     })(),
+    // SignupFloat is a floating overlay, rendered separately below
+    signupFloat: null,
   };
 
   // Font variables are now injected directly into :root via useEffect above
@@ -1613,6 +1616,15 @@ const LandingPageContent: React.FC = () => {
 
       {/* Chatbot Widget - Renders independently outside component order */}
       <ChatbotWidget />
+
+      {/* SignupFloat - Floating overlay rendered outside section flow */}
+      {data?.signupFloat && effectiveComponentOrder.includes('signupFloat') && (sectionVisibility.signupFloat !== false) && (
+        <SignupFloat
+          {...data.signupFloat}
+          projectId={activeProjectId || undefined}
+          isPreviewMode={isEditorMode}
+        />
+      )}
     </div>
   );
 };

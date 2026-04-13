@@ -86,6 +86,7 @@ const sectionIcons: Record<PageSection, React.ElementType> = {
     collectionBanner: Image,
     productBundle: Package,
     announcementBar: Megaphone,
+    signupFloat: Mail,
 };
 
 // Fixed sections that cannot be reordered
@@ -331,6 +332,7 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
         collectionBanner: 'Collection Banner',
         productBundle: 'Product Bundle',
         announcementBar: 'Announcement Bar',
+        signupFloat: t('editor.signupFloatSection', 'Sign Up Float'),
     };
 
     // Group sections by category

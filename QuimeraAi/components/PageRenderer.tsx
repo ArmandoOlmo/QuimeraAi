@@ -51,6 +51,7 @@ import Menu from './Menu';
 import Banner from './Banner';
 import TopBar from './TopBar';
 import LogoBanner from './LogoBanner';
+import SignupFloat from './SignupFloat';
 import SectionBackground from './ui/SectionBackground';
 
 // Import ecommerce sections
@@ -830,6 +831,7 @@ const PageRenderer: React.FC<PageRendererProps> = ({
             case 'chatbot':
             case 'cmsFeed': // CMS Feed is rendered dynamically via LandingPage with useCMS()
             case 'products': // Legacy products grid - use ProductGridSection instead
+            case 'signupFloat': // Rendered as floating overlay outside section loop
                 return null;
 
             default:
@@ -874,6 +876,14 @@ const PageRenderer: React.FC<PageRendererProps> = ({
             style={{ backgroundColor: theme.pageBackground || globalColors?.background }}
         >
             {orderedSections.map((section, index) => renderSection(section, index))}
+
+            {/* Floating Sign-Up Overlay (rendered outside normal section flow) */}
+            {mergedData.signupFloat && page.sections.includes('signupFloat' as PageSection) && (
+                <SignupFloat
+                    {...mergedData.signupFloat}
+                    isPreviewMode={true}
+                />
+            )}
         </div>
     );
 };
