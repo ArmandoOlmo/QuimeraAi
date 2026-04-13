@@ -37,6 +37,7 @@ import ChatbotWidget from '../ChatbotWidget';
 import BusinessMap from '../BusinessMap';
 import Menu from '../Menu';
 import Banner from '../Banner';
+import TopBar from '../TopBar';
 import SectionBackground from '../ui/SectionBackground';
 import Products from '../Products';
 import { PageSection, FontFamily, CMSPost, CMSCategory, FooterData } from '../../types';
@@ -628,6 +629,7 @@ const AgencyLandingPageContent: React.FC = () => {
   const mergedHeroGalleryData = mergeComponentData('heroGallery');
   const mergedHeroWaveData = mergeComponentData('heroWave');
   const mergedHeroNovaData = mergeComponentData('heroNova');
+  const mergedTopBarData = mergeComponentData('topBar');
   const mergedProductsData = mergeComponentData('products');
 
   // Ecommerce section components
@@ -766,6 +768,12 @@ const AgencyLandingPageContent: React.FC = () => {
     map: <SectionBackground backgroundImageUrl={mergedMapData?.backgroundImageUrl} backgroundColor={mergedMapData?.colors?.background} backgroundOverlayEnabled={mergedMapData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedMapData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedMapData?.backgroundOverlayColor}><BusinessMap {...mergedMapData} apiKey={import.meta.env.VITE_GOOGLE_MAPS_KEY || ''} borderRadius={theme.cardBorderRadius} /></SectionBackground>,
     menu: <SectionBackground backgroundImageUrl={mergedMenuData?.backgroundImageUrl} backgroundColor={mergedMenuData?.colors?.background} backgroundOverlayEnabled={mergedMenuData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedMenuData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedMenuData?.backgroundOverlayColor}><Menu {...mergedMenuData} borderRadius={theme.cardBorderRadius} /></SectionBackground>,
     banner: <Banner {...mergedBannerData} buttonBorderRadius={theme.buttonBorderRadius} />,
+    topBar: mergedTopBarData ? (
+      <TopBar
+        {...mergedTopBarData}
+        onNavigate={handleLinkNavigation}
+      />
+    ) : null,
     products: (
       <Products
         {...productsWithData}

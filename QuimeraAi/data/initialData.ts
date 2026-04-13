@@ -795,6 +795,28 @@ const pageData: PageData = {
       buttonText: '#ffffff',
     },
   },
+  topBar: {
+    messages: [
+      { text: '🚀 Free shipping on orders over $50', icon: 'truck', link: '#products', linkText: 'Shop Now' },
+      { text: '⚡ New collection just dropped!', icon: 'sparkles', link: '#features', linkText: 'Explore' },
+    ],
+    scrollEnabled: false,
+    scrollSpeed: 30,
+    pauseOnHover: true,
+    dismissible: true,
+    useGradient: false,
+    gradientFrom: '#4f46e5',
+    gradientTo: '#7c3aed',
+    gradientAngle: 90,
+    backgroundColor: '#1a1a1a',
+    textColor: '#ffffff',
+    linkColor: '#fbbf24',
+    iconColor: '#fbbf24',
+    fontSize: 'sm',
+    separator: 'dot',
+    showRotatingArrows: true,
+    rotateSpeed: 4000,
+  },
   products: {
     title: 'Nuestros Productos',
     subtitle: 'Descubre nuestra selección de productos de alta calidad',
@@ -1368,7 +1390,7 @@ const componentOrder: PageSection[] = [
     // Structure
     'colors', 'typography', 'header',
     // Content
-    'hero', 'heroSplit', 'heroGallery', 'heroWave', 'heroNova', 'banner', 'features', 'testimonials', 'slideshow',
+    'hero', 'heroSplit', 'heroGallery', 'heroWave', 'heroNova', 'topBar', 'banner', 'features', 'testimonials', 'slideshow',
     'pricing', 'faq', 'portfolio', 'cta', 'services', 'team', 'video', 'howItWorks', 'menu',
     // Ecommerce
     'storeSettings', 'products', 'featuredProducts', 'categoryGrid', 'productHero', 'saleCountdown',

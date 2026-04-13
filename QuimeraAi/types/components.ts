@@ -990,6 +990,37 @@ export interface BannerData {
 }
 
 // =============================================================================
+// TOP BAR (Announcement Bar)
+// =============================================================================
+export interface TopBarMessage {
+    text: string;
+    icon?: string;
+    link?: string;
+    linkText?: string;
+}
+
+export interface TopBarData {
+    messages: TopBarMessage[];
+    scrollEnabled?: boolean;
+    scrollSpeed?: number;
+    pauseOnHover?: boolean;
+    dismissible?: boolean;
+    useGradient?: boolean;
+    gradientFrom?: string;
+    gradientTo?: string;
+    gradientAngle?: number;
+    backgroundColor?: string;
+    textColor?: string;
+    linkColor?: string;
+    iconColor?: string;
+    fontSize?: 'sm' | 'md' | 'lg';
+    separator?: 'dot' | 'pipe' | 'star' | 'none';
+    height?: number;
+    showRotatingArrows?: boolean;
+    rotateSpeed?: number;
+}
+
+// =============================================================================
 // PRODUCTS (ECOMMERCE STOREFRONT)
 // =============================================================================
 export type StyleType = 'minimal' | 'modern' | 'elegant' | 'dark';
@@ -1928,6 +1959,7 @@ export interface PageData {
     map: MapData;
     menu: MenuData;
     banner: BannerData;
+    topBar?: TopBarData;
     products?: ProductsData;
     // Ecommerce components - Store settings
     storeSettings?: StoreSettingsData;

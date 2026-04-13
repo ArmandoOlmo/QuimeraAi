@@ -8,7 +8,7 @@ import {
     MonitorPlay, Grid, MessageSquare, Type, AlignJustify,
     HelpCircle, ChevronDown, Eye, EyeOff, FileText,
     GripVertical, Plus, Search, X, MapPin, Trash2, UtensilsCrossed, Palette, Columns,
-    ShoppingBag, Clock, Shield, Package, Megaphone, Store, Waves
+    ShoppingBag, Clock, Shield, Package, Megaphone, Store, Waves, Bell
 } from 'lucide-react';
 import {
     DndContext,
@@ -65,6 +65,7 @@ const sectionIcons: Record<PageSection, React.ElementType> = {
     map: MapPin,
     menu: UtensilsCrossed,
     banner: Image,
+    topBar: Bell,
     chatbot: MessageSquare,
     cmsFeed: FileText,
     footer: Type,

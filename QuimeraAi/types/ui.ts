@@ -46,7 +46,7 @@ export type PageSection =
     | 'hero' | 'heroSplit' | 'heroGallery' | 'heroWave' | 'heroNova' | 'features' | 'testimonials' | 'pricing' | 'faq' | 'cta'
     | 'services' | 'team' | 'video' | 'slideshow' | 'portfolio' | 'leads' | 'newsletter'
     | 'howItWorks' | 'chatbot' | 'footer' | 'header' | 'typography' | 'colors' | 'map'
-    | 'menu' | 'banner' | 'products' | 'cmsFeed'
+    | 'menu' | 'banner' | 'topBar' | 'products' | 'cmsFeed'
     // Store settings
     | 'storeSettings'
     // Ecommerce sections (for landing/store pages)

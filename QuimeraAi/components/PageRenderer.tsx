@@ -49,6 +49,7 @@ import Footer from './Footer';
 import BusinessMap from './BusinessMap';
 import Menu from './Menu';
 import Banner from './Banner';
+import TopBar from './TopBar';
 import SectionBackground from './ui/SectionBackground';
 
 // Import ecommerce sections
@@ -159,6 +160,7 @@ const PageRenderer: React.FC<PageRendererProps> = ({
             heroGallery: mergeComponentData('heroGallery') || baseData.heroGallery,
             heroWave: mergeComponentData('heroWave') || baseData.heroWave,
             heroNova: mergeComponentData('heroNova') || baseData.heroNova,
+            topBar: mergeComponentData('topBar') || baseData.topBar,
             features: mergeComponentData('features') || baseData.features,
             testimonials: mergeComponentData('testimonials') || baseData.testimonials,
             pricing: mergeComponentData('pricing') || baseData.pricing,
@@ -558,6 +560,17 @@ const PageRenderer: React.FC<PageRendererProps> = ({
                         {...mergedData.banner}
                     />
                 );
+
+            case 'topBar': {
+                const topBarData = mergedData.topBar;
+                return topBarData ? (
+                    <TopBar
+                        key={key}
+                        {...topBarData}
+                        onNavigate={handleLinkNavigation}
+                    />
+                ) : null;
+            }
 
             case 'footer':
                 return (

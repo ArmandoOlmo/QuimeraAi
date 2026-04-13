@@ -27,7 +27,7 @@ import {
   Layout, Image, List, Star, PlaySquare, Users, DollarSign, Eye,
   Briefcase, MessageCircle, Mail, Send, Type, MousePointerClick,
   Settings, AlignJustify, MonitorPlay, Grid, GripVertical, Upload, Menu as MenuIcon, MessageSquare, FileText, PlusCircle, X, Palette, AlertCircle, TrendingUp, Sparkles, MapPin, Map as MapIcon, Columns, Search, Loader2, ShoppingBag, Info, Store, SlidersHorizontal, LayoutGrid, Check, Link, FolderOpen, Maximize2, Clock, PanelRightClose, PanelRightOpen, Zap,
-  Twitter, Facebook, Instagram, Linkedin, Github, Youtube, Music, Pin, Ghost, Gamepad2, AtSign, Share2, Waves
+  Twitter, Facebook, Instagram, Linkedin, Github, Youtube, Music, Pin, Ghost, Gamepad2, AtSign, Share2, Waves, Bell
 } from 'lucide-react';
 import { usePublicProducts } from '../hooks/usePublicProducts';
 import AIFormControl from './ui/AIFormControl';
@@ -4172,6 +4172,180 @@ const Controls: React.FC = () => {
     return <TabbedControls contentTab={contentTab} styleTab={styleTab} />;
   };
 
+  // ─── Top Bar (Announcement Bar) Controls ───
+  const renderTopBarControls = () => {
+    if (!data?.topBar) return null;
+
+    const topBarMessages = data.topBar.messages || [];
+
+    const iconOptions = [
+      'megaphone', 'tag', 'gift', 'truck', 'percent', 'sparkles', 'bell',
+      'info', 'star', 'zap', 'heart', 'shield', 'clock', 'flame', 'award',
+      'crown', 'phone', 'mail', 'pin', 'link',
+    ];
+
+    const contentTab = (
+      <div className="space-y-3">
+        {/* Messages */}
+        <SectionLabel label="Messages" />
+        {topBarMessages.map((msg: any, idx: number) => (
+          <div key={idx} className="bg-editor-card rounded-lg p-3 space-y-2 border border-editor-border">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-medium text-editor-text-primary">Message {idx + 1}</span>
+              {topBarMessages.length > 1 && (
+                <button
+                  onClick={() => {
+                    const updated = topBarMessages.filter((_: any, i: number) => i !== idx);
+                    setNestedData('topBar.messages', updated);
+                  }}
+                  className="p-1 rounded hover:bg-red-500/20 text-red-400"
+                  title="Remove"
+                >
+                  <X size={12} />
+                </button>
+              )}
+            </div>
+
+            {/* Icon selector */}
+            <FormControl label="Icon">
+              <div className="grid grid-cols-7 gap-1">
+                <button
+                  onClick={() => setNestedData(`topBar.messages.${idx}.icon`, '')}
+                  className={`p-1.5 rounded text-xs ${!msg.icon ? 'bg-blue-500/20 ring-1 ring-blue-500' : 'bg-editor-bg hover:bg-editor-hover'}`}
+                  title="No icon"
+                >
+                  <X size={12} />
+                </button>
+                {iconOptions.map(ic => {
+                  const isActive = msg.icon === ic;
+                  return (
+                    <button
+                      key={ic}
+                      onClick={() => setNestedData(`topBar.messages.${idx}.icon`, ic)}
+                      className={`p-1.5 rounded text-xs capitalize ${isActive ? 'bg-blue-500/20 ring-1 ring-blue-500' : 'bg-editor-bg hover:bg-editor-hover'}`}
+                      title={ic}
+                    >
+                      {ic.slice(0, 2)}
+                    </button>
+                  );
+                })}
+              </div>
+            </FormControl>
+
+            {/* Text */}
+            <FormControl label="Text">
+              <Input label="" value={msg.text || ''} onChange={(e) => setNestedData(`topBar.messages.${idx}.text`, e.target.value)} />
+            </FormControl>
+
+            {/* Link */}
+            <FormControl label="Link URL">
+              <Input label="" value={msg.link || ''} onChange={(e) => setNestedData(`topBar.messages.${idx}.link`, e.target.value)} placeholder="#section or /page or https://..." />
+            </FormControl>
+
+            {/* Link Text */}
+            <FormControl label="Link Text">
+              <Input label="" value={msg.linkText || ''} onChange={(e) => setNestedData(`topBar.messages.${idx}.linkText`, e.target.value)} placeholder="Shop Now" />
+            </FormControl>
+          </div>
+        ))}
+
+        {/* Add message */}
+        <button
+          onClick={() => {
+            const newMsg = { text: 'New announcement', icon: 'sparkles', link: '', linkText: '' };
+            setNestedData('topBar.messages', [...topBarMessages, newMsg]);
+          }}
+          className="w-full flex items-center justify-center gap-1.5 py-2 rounded-lg bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 text-xs font-medium transition-colors"
+        >
+          <PlusCircle size={14} /> Add Message
+        </button>
+      </div>
+    );
+
+    const styleTab = (
+      <div className="space-y-3">
+        {/* Scroll */}
+        <SectionLabel label="Behavior" />
+        <ToggleControl label="Scroll (Marquee)" checked={data.topBar.scrollEnabled ?? false} onChange={(v) => setNestedData('topBar.scrollEnabled', v)} />
+        <ToggleControl label="Pause on Hover" checked={data.topBar.pauseOnHover ?? true} onChange={(v) => setNestedData('topBar.pauseOnHover', v)} />
+        <ToggleControl label="Dismissible" checked={data.topBar.dismissible ?? true} onChange={(v) => setNestedData('topBar.dismissible', v)} />
+
+        {/* Speed */}
+        {data.topBar.scrollEnabled ? (
+          <FormControl label="Scroll Speed">
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-editor-text-primary">{data.topBar.scrollSpeed || 30}s</span>
+            </div>
+            <input type="range" min={5} max={60} step={5}
+              value={data.topBar.scrollSpeed || 30}
+              onChange={(e) => setNestedData('topBar.scrollSpeed', parseInt(e.target.value))}
+              className="w-full accent-blue-500" />
+          </FormControl>
+        ) : (
+          <>
+            <ToggleControl label="Show Arrows" checked={data.topBar.showRotatingArrows ?? true} onChange={(v) => setNestedData('topBar.showRotatingArrows', v)} />
+            <FormControl label="Rotate Speed">
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-editor-text-primary">{((data.topBar.rotateSpeed || 4000) / 1000).toFixed(1)}s</span>
+              </div>
+              <input type="range" min={1000} max={10000} step={500}
+                value={data.topBar.rotateSpeed || 4000}
+                onChange={(e) => setNestedData('topBar.rotateSpeed', parseInt(e.target.value))}
+                className="w-full accent-blue-500" />
+            </FormControl>
+          </>
+        )}
+
+        {/* Font Size */}
+        <FontSizeSelector label="Font Size" value={data.topBar.fontSize || 'sm'} onChange={(v) => setNestedData('topBar.fontSize', v)} />
+
+        {/* Separator */}
+        <FormControl label="Separator">
+          <SegmentedControl
+            value={data.topBar.separator || 'dot'}
+            onChange={(val) => setNestedData('topBar.separator', val)}
+            options={[
+              { value: 'dot', label: '•' },
+              { value: 'pipe', label: '|' },
+              { value: 'star', label: '★' },
+              { value: 'none', label: 'None' },
+            ]}
+          />
+        </FormControl>
+
+        {/* Background */}
+        <SectionLabel label="Background" />
+        <ToggleControl label="Use Gradient" checked={data.topBar.useGradient ?? false} onChange={(v) => setNestedData('topBar.useGradient', v)} />
+
+        {data.topBar.useGradient ? (
+          <div className="space-y-2">
+            <ColorControl label="Gradient From" value={data.topBar.gradientFrom || '#4f46e5'} onChange={(v) => setNestedData('topBar.gradientFrom', v)} />
+            <ColorControl label="Gradient To" value={data.topBar.gradientTo || '#7c3aed'} onChange={(v) => setNestedData('topBar.gradientTo', v)} />
+            <FormControl label="Gradient Angle">
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-editor-text-primary">{data.topBar.gradientAngle ?? 90}°</span>
+              </div>
+              <input type="range" min={0} max={360} step={15}
+                value={data.topBar.gradientAngle ?? 90}
+                onChange={(e) => setNestedData('topBar.gradientAngle', parseInt(e.target.value))}
+                className="w-full accent-blue-500" />
+            </FormControl>
+          </div>
+        ) : (
+          <ColorControl label="Background Color" value={data.topBar.backgroundColor || '#1a1a1a'} onChange={(v) => setNestedData('topBar.backgroundColor', v)} />
+        )}
+
+        {/* Colors */}
+        <SectionLabel label="Colors" />
+        <ColorControl label="Text" value={data.topBar.textColor || '#ffffff'} onChange={(v) => setNestedData('topBar.textColor', v)} />
+        <ColorControl label="Link" value={data.topBar.linkColor || '#fbbf24'} onChange={(v) => setNestedData('topBar.linkColor', v)} />
+        <ColorControl label="Icon" value={data.topBar.iconColor || '#fbbf24'} onChange={(v) => setNestedData('topBar.iconColor', v)} />
+      </div>
+    );
+
+    return <TabbedControls contentTab={contentTab} styleTab={styleTab} />;
+  };
+
   const sectionConfig: Record<PageSection, { label: string, icon: React.ElementType, renderer: () => React.ReactNode }> = {
     hero: { label: 'Hero Section', icon: Image, renderer: renderHeroControls },
     heroSplit: { label: 'Hero Split', icon: Columns, renderer: renderHeroSplitControls },
@@ -4199,6 +4373,7 @@ const Controls: React.FC = () => {
     colors: { label: 'Colores', icon: Palette, renderer: () => <GlobalStylesControl mode="colors" /> },
     typography: { label: 'Tipografía', icon: Type, renderer: () => <GlobalStylesControl mode="typography" /> },
     banner: { label: 'Banner', icon: Image, renderer: () => null },
+    topBar: { label: 'Top Bar', icon: Bell, renderer: renderTopBarControls },
     products: { label: 'Products', icon: ShoppingBag, renderer: () => null },
     storeSettings: { label: 'Store Settings', icon: Store, renderer: () => null },
     // Ecommerce section components - use separate controls file
@@ -8645,6 +8820,8 @@ const Controls: React.FC = () => {
         return renderHeroWaveControls();
       case 'heroNova':
         return renderHeroNovaControls();
+      case 'topBar':
+        return renderTopBarControls();
       case 'map':
         return renderMapControls();
       // Ecommerce components - use pre-computed results from hooks called at component top level
