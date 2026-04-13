@@ -27,6 +27,66 @@ import { SingleProductSelector, SingleCollectionSelector, SingleContentSelector 
 
 export const renderMapControls = (deps: ControlsDeps) => {
 const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFavicon, menus, categories, navigate, uploadImageAndGetURL, faviconInputRef, isUploadingFavicon, setIsUploadingFavicon, heroProducts, heroCategories, isLoadingHeroProducts, heroProductSearch, setHeroProductSearch, showHeroImagePicker, setShowHeroImagePicker, showHeroPrimaryProductPicker, setShowHeroPrimaryProductPicker, showHeroSecondaryProductPicker, setShowHeroSecondaryProductPicker, showHeroPrimaryCollectionPicker, setShowHeroPrimaryCollectionPicker, showHeroSecondaryCollectionPicker, setShowHeroSecondaryCollectionPicker, heroPrimaryLinkType, setHeroPrimaryLinkType, heroSecondaryLinkType, setHeroSecondaryLinkType, isGeocoding, setIsGeocoding, geocodeError, setGeocodeError, componentStyles, renderListSectionControls } = deps;
+
+  // Helper function for Nominatim geocoding (OpenStreetMap - free)
+  const geocodeWithNominatim = async (address: string) => {
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1`,
+        { headers: { 'User-Agent': 'QuimeraAI/1.0' } }
+      );
+      const results = await response.json();
+      if (results && results.length > 0) {
+        const { lat, lon } = results[0];
+        setNestedData('map.lat', parseFloat(lat));
+        setNestedData('map.lng', parseFloat(lon));
+        setGeocodeError(null);
+      } else {
+        setGeocodeError('Location not found. Try a more specific address.');
+      }
+    } catch (error) {
+      console.error('Nominatim geocoding error:', error);
+      setGeocodeError('Error searching location. Please try again.');
+    } finally {
+      setIsGeocoding(false);
+    }
+  };
+
+  // Function to geocode address
+  const geocodeAddress = async () => {
+    const address = data?.map?.address;
+    if (!address || address.trim() === '') {
+      setGeocodeError('Please enter an address first');
+      return;
+    }
+    setIsGeocoding(true);
+    setGeocodeError(null);
+    try {
+      if (typeof window !== 'undefined' && (window as any).google?.maps?.Geocoder) {
+        const geocoder = new (window as any).google.maps.Geocoder();
+        geocoder.geocode({ address }, (results: any, status: string) => {
+          setIsGeocoding(false);
+          if (status === 'OK' && results && results[0]) {
+            const location = results[0].geometry.location;
+            setNestedData('map.lat', location.lat());
+            setNestedData('map.lng', location.lng());
+            setGeocodeError(null);
+          } else if (status === 'ZERO_RESULTS') {
+            setGeocodeError('Location not found. Try a more specific address.');
+          } else {
+            geocodeWithNominatim(address);
+          }
+        });
+        return;
+      }
+      await geocodeWithNominatim(address);
+    } catch (error) {
+      console.error('Geocoding error:', error);
+      setGeocodeError('Error searching location. Please try again.');
+      setIsGeocoding(false);
+    }
+  };
+
   const contentTab = (
     <div className="space-y-4">
       <Input label={t('editor.controls.common.title')} value={data?.map.title} onChange={(e) => setNestedData('map.title', e.target.value)} />
@@ -115,7 +175,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
   const styleTab = (
     <div className="space-y-4">
-      <BackgroundImageControl sectionKey="map" />
+      <BackgroundImageControl sectionKey="map" data={data} setNestedData={setNestedData} />
       {/* Map Variant */}
       <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
         <Select

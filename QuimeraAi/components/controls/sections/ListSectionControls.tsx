@@ -26,7 +26,7 @@ import { SingleProductSelector, SingleCollectionSelector, SingleContentSelector 
 
 
 // Helper to determine list title based on section key
-export const getListTitle = (sectionKey: string, itemLabel: string) => {
+export const getListTitle = (t: (key: string, opts?: any) => string, sectionKey: string, itemLabel: string) => {
   switch (sectionKey) {
     case 'services': return t('editor.controls.services.services');
     case 'faq': return t('editor.controls.faq.questions');
@@ -82,7 +82,7 @@ const { data, setNestedData, t, setAiAssistField } = deps;
         </>
       )}
 
-      <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">{getListTitle(sectionKey, itemLabel)}</label>
+      <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">{getListTitle(t, sectionKey, itemLabel)}</label>
       {(sectionData.items || []).map((item: any, index: number) => (
         <div
           key={index}

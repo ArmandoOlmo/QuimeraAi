@@ -135,7 +135,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
   const styleTab = (
     <div className="space-y-4">
-      <BackgroundImageControl sectionKey="menu" />
+      <BackgroundImageControl sectionKey="menu" data={data} setNestedData={setNestedData} />
       {/* Section Colors */}
       <div className="space-y-3">
         <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Section Colors</label>

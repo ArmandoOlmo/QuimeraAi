@@ -326,7 +326,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
   const styleTab = (
     <div className="space-y-4">
-      <BackgroundImageControl sectionKey="slideshow" />
+      <BackgroundImageControl sectionKey="slideshow" data={data} setNestedData={setNestedData} />
       {/* Border Radius */}
       <BorderRadiusSelector
         label={t('editor.controls.common.borderRadius')}

@@ -219,16 +219,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
     </div>
   );
 };
-// Helper to determine list title based on section key
-export const getListTitle = (sectionKey: string, itemLabel: string) => {
-  switch (sectionKey) {
-    case 'services': return t('editor.controls.services.services');
-    case 'faq': return t('editor.controls.faq.questions');
-    case 'menu': return t('editor.controls.menu.dishes');
-    case 'howItWorks': return t('editor.controls.list.steps');
-    default: return itemLabel + 's';
-  }
-};
+
 
 // ─── ─── ─── ─── ─── ─── ───
 
@@ -384,7 +375,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
   const styleTab = (
     <div className="space-y-4">
-      <BackgroundImageControl sectionKey="features" />
+      <BackgroundImageControl sectionKey="features" data={data} setNestedData={setNestedData} />
       {/* Section Style */}
       <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
         <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
