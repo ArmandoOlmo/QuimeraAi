@@ -31,6 +31,7 @@ import HeroStacked from './HeroStacked';
 import HeroSplit from './HeroSplit';
 import HeroGallery from './HeroGallery';
 import HeroWave from './HeroWave';
+import HeroNova from './HeroNova';
 import Features from './Features';
 import Testimonials from './Testimonials';
 import Pricing from './Pricing';
@@ -157,6 +158,7 @@ const PageRenderer: React.FC<PageRendererProps> = ({
             heroSplit: mergeComponentData('heroSplit') || baseData.heroSplit,
             heroGallery: mergeComponentData('heroGallery') || baseData.heroGallery,
             heroWave: mergeComponentData('heroWave') || baseData.heroWave,
+            heroNova: mergeComponentData('heroNova') || baseData.heroNova,
             features: mergeComponentData('features') || baseData.features,
             testimonials: mergeComponentData('testimonials') || baseData.testimonials,
             pricing: mergeComponentData('pricing') || baseData.pricing,
@@ -362,6 +364,18 @@ const PageRenderer: React.FC<PageRendererProps> = ({
                         key={key}
                         {...waveData}
                         borderRadius={waveData.buttonBorderRadius || buttonBorderRadius}
+                        onNavigate={handleLinkNavigation}
+                    />
+                ) : null;
+            }
+
+            case 'heroNova': {
+                const novaData = mergedData.heroNova;
+                return novaData ? (
+                    <HeroNova
+                        key={key}
+                        {...novaData}
+                        borderRadius={novaData.buttonBorderRadius || buttonBorderRadius}
                         onNavigate={handleLinkNavigation}
                     />
                 ) : null;

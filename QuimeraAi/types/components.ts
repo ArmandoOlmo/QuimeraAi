@@ -249,6 +249,56 @@ export interface HeroWaveData extends HeroGalleryData {
 }
 
 // =============================================================================
+// HERO NOVA (Minimal video/image hero with bottom content)
+// =============================================================================
+export interface HeroNovaSlide {
+    headline: string;
+    subheadline?: string;
+    primaryCta?: string;
+    primaryCtaLink?: string;
+    /** Media type: 'image' or 'video' */
+    mediaType?: 'image' | 'video';
+    /** Image URL for background */
+    backgroundImage?: string;
+    /** Video URL for background */
+    backgroundVideo?: string;
+    /** Fallback color when no media */
+    backgroundColor?: string;
+}
+
+export interface HeroNovaData {
+    slides: HeroNovaSlide[];
+    /** Large centered display text (brand name, etc.) */
+    displayText?: string;
+    /** Show the centered display text */
+    showDisplayText?: boolean;
+    autoPlaySpeed?: number;
+    transitionDuration?: number;
+    showArrows?: boolean;
+    showDots?: boolean;
+    dotStyle?: 'circle' | 'line';
+    heroHeight?: number;
+    headlineFontSize?: FontSize;
+    subheadlineFontSize?: FontSize;
+    overlayOpacity?: number;
+    /** Display text letter spacing (em) */
+    displayLetterSpacing?: number;
+    colors?: {
+        background?: string;
+        text?: string;
+        heading?: string;
+        displayText?: string;
+        ctaText?: string;
+        ctaBackground?: string;
+        dotActive?: string;
+        dotInactive?: string;
+        arrowColor?: string;
+    };
+    buttonBorderRadius?: BorderRadiusSize;
+    cornerGradient?: CornerGradientConfig;
+}
+
+// =============================================================================
 // FEATURES
 // =============================================================================
 export interface FeatureItem {
@@ -1859,6 +1909,7 @@ export interface PageData {
     heroSplit: HeroSplitData;
     heroGallery?: HeroGalleryData;
     heroWave?: HeroWaveData;
+    heroNova?: HeroNovaData;
     features: FeaturesData;
     testimonials: TestimonialsData;
     slideshow: SlideshowData;

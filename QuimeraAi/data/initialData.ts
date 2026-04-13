@@ -176,6 +176,43 @@ const pageData: PageData = {
     },
     buttonBorderRadius: 'full',
   },
+  heroNova: {
+    slides: [
+      {
+        headline: 'Comfort, Style, Durability: Our Seating Collection',
+        subheadline: '',
+        primaryCta: 'SHOP SEATING',
+        primaryCtaLink: '/#products',
+        mediaType: 'image',
+        backgroundImage: '',
+        backgroundVideo: '',
+        backgroundColor: '#1a1a1a',
+      },
+    ],
+    displayText: 'NOVA',
+    showDisplayText: true,
+    autoPlaySpeed: 6000,
+    transitionDuration: 700,
+    showArrows: true,
+    showDots: true,
+    dotStyle: 'circle',
+    heroHeight: 90,
+    headlineFontSize: 'lg',
+    overlayOpacity: 0.35,
+    displayLetterSpacing: 0.35,
+    colors: {
+      background: '#1a1a1a',
+      text: '#ffffff',
+      heading: '#ffffff',
+      displayText: 'rgba(255,255,255,0.85)',
+      ctaText: '#1a1a1a',
+      ctaBackground: '#ffffff',
+      dotActive: '#ffffff',
+      dotInactive: 'rgba(255,255,255,0.4)',
+      arrowColor: '#ffffff',
+    },
+    buttonBorderRadius: 'full',
+  },
   features: {
     featuresVariant: 'bento-premium',
     paddingY: 'lg',
@@ -1331,7 +1368,7 @@ const componentOrder: PageSection[] = [
     // Structure
     'colors', 'typography', 'header',
     // Content
-    'hero', 'heroSplit', 'heroGallery', 'heroWave', 'banner', 'features', 'testimonials', 'slideshow',
+    'hero', 'heroSplit', 'heroGallery', 'heroWave', 'heroNova', 'banner', 'features', 'testimonials', 'slideshow',
     'pricing', 'faq', 'portfolio', 'cta', 'services', 'team', 'video', 'howItWorks', 'menu',
     // Ecommerce
     'storeSettings', 'products', 'featuredProducts', 'categoryGrid', 'productHero', 'saleCountdown',
