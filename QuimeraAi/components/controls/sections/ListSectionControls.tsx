@@ -37,7 +37,7 @@ export const getListTitle = (sectionKey: string, itemLabel: string) => {
 };
 
 export const renderListSectionControls = (deps: ControlsDeps, sectionKey: string, itemLabel: string, fields: { key: string, label: string, type: 'input' | 'textarea' | 'select' | 'image' | 'icon-selector', options?: string[] }[]) => {
-const { data, setNestedData, t } = deps;
+const { data, setNestedData, t, setAiAssistField } = deps;
   if (!data) return null;
   const sectionData = (data as any)[sectionKey];
   if (!sectionData) return null;

@@ -3,6 +3,7 @@
  * Section controls extracted from Controls.tsx
  */
 import React, { useState, useRef } from 'react';
+import { ROUTES } from '../../../routes/config';
 
 import ColorControl from '../../ui/ColorControl';
 import ImagePicker from '../../ui/ImagePicker';
@@ -26,7 +27,7 @@ import { SingleProductSelector, SingleCollectionSelector, SingleContentSelector 
 
 
 export const renderHeaderControls = (deps: ControlsDeps) => {
-const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFavicon, menus, categories, navigate, uploadImageAndGetURL } = deps;
+const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFavicon, menus, categories, navigate, uploadImageAndGetURL, faviconInputRef, isUploadingFavicon, setIsUploadingFavicon, heroProducts, heroCategories, isLoadingHeroProducts, heroProductSearch, setHeroProductSearch, showHeroImagePicker, setShowHeroImagePicker, showHeroPrimaryProductPicker, setShowHeroPrimaryProductPicker, showHeroSecondaryProductPicker, setShowHeroSecondaryProductPicker, showHeroPrimaryCollectionPicker, setShowHeroPrimaryCollectionPicker, showHeroSecondaryCollectionPicker, setShowHeroSecondaryCollectionPicker, heroPrimaryLinkType, setHeroPrimaryLinkType, heroSecondaryLinkType, setHeroSecondaryLinkType, isGeocoding, setIsGeocoding, geocodeError, setGeocodeError, componentStyles, renderListSectionControls: renderListSectionControlsFn } = deps;
   if (!data?.header) return null;
 
   const activeMenuId = data.header.menuId || '';
@@ -430,7 +431,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 // ─── ─── ─── ─── ─── ─── ───
 
 export const renderHeaderControlsWithTabs = (deps: ControlsDeps) => {
-const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFavicon, menus, categories, navigate, uploadImageAndGetURL } = deps;
+const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFavicon, menus, categories, navigate, uploadImageAndGetURL, faviconInputRef, isUploadingFavicon, setIsUploadingFavicon, heroProducts, heroCategories, isLoadingHeroProducts, heroProductSearch, setHeroProductSearch, showHeroImagePicker, setShowHeroImagePicker, showHeroPrimaryProductPicker, setShowHeroPrimaryProductPicker, showHeroSecondaryProductPicker, setShowHeroSecondaryProductPicker, showHeroPrimaryCollectionPicker, setShowHeroPrimaryCollectionPicker, showHeroSecondaryCollectionPicker, setShowHeroSecondaryCollectionPicker, heroPrimaryLinkType, setHeroPrimaryLinkType, heroSecondaryLinkType, setHeroSecondaryLinkType, isGeocoding, setIsGeocoding, geocodeError, setGeocodeError, componentStyles, renderListSectionControls: renderListSectionControlsFn } = deps;
   if (!data?.header) return null;
   const activeMenuId = data.header.menuId || '';
 
