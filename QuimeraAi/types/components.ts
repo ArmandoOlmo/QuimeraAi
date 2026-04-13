@@ -231,6 +231,24 @@ export interface HeroGalleryData {
 }
 
 // =============================================================================
+// HERO WAVE (Gradient hero with organic SVG wave)
+// =============================================================================
+export interface HeroWaveData extends HeroGalleryData {
+    /** Gradient angle in degrees */
+    gradientAngle?: number;
+    /** Wave shape preset */
+    waveShape?: 'smooth' | 'bubbly' | 'sharp' | 'layered';
+    /** Wave fill color — usually matches the next section's bg */
+    waveColor?: string;
+    /** Text alignment */
+    textAlign?: 'left' | 'center' | 'right';
+    /** Gradient stops (array of hex colors) */
+    gradientColors?: string[];
+    /** Show text stroke/outline effect */
+    showTextStroke?: boolean;
+}
+
+// =============================================================================
 // FEATURES
 // =============================================================================
 export interface FeatureItem {
@@ -1840,6 +1858,7 @@ export interface PageData {
     hero: HeroData;
     heroSplit: HeroSplitData;
     heroGallery?: HeroGalleryData;
+    heroWave?: HeroWaveData;
     features: FeaturesData;
     testimonials: TestimonialsData;
     slideshow: SlideshowData;

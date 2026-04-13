@@ -8,7 +8,7 @@ import {
     MonitorPlay, Grid, MessageSquare, Type, AlignJustify,
     HelpCircle, ChevronDown, Eye, EyeOff, FileText,
     GripVertical, Plus, Search, X, MapPin, Trash2, UtensilsCrossed, Palette, Columns,
-    ShoppingBag, Clock, Shield, Package, Megaphone, Store
+    ShoppingBag, Clock, Shield, Package, Megaphone, Store, Waves
 } from 'lucide-react';
 import {
     DndContext,
@@ -47,6 +47,7 @@ const sectionIcons: Record<PageSection, React.ElementType> = {
     hero: Image,
     heroSplit: Columns,
     heroGallery: Image,
+    heroWave: Waves,
     features: List,
     testimonials: Star,
     services: Layout,
@@ -288,6 +289,7 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
         hero: t('editor.heroSection'),
         heroSplit: t('editor.heroSplitSection'),
         heroGallery: 'Hero Gallery',
+        heroWave: 'Hero Wave',
         features: t('editor.featuresSection'),
         testimonials: t('editor.testimonialsSection'),
         services: t('editor.servicesSection'),

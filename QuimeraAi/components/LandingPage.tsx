@@ -15,6 +15,7 @@ import HeroGlass from './HeroGlass';
 import HeroStacked from './HeroStacked';
 import HeroSplit from './HeroSplit';
 import HeroGallery from './HeroGallery';
+import HeroWave from './HeroWave';
 import Features from './Features';
 import Testimonials from './Testimonials';
 import Slideshow from './Slideshow';
@@ -635,6 +636,7 @@ const LandingPageContent: React.FC = () => {
   const mergedHeaderData = mergeComponentData('header');
   const mergedHeroSplitData = mergeComponentData('heroSplit');
   const mergedHeroGalleryData = mergeComponentData('heroGallery');
+  const mergedHeroWaveData = mergeComponentData('heroWave');
   const mergedProductsData = mergeComponentData('products');
   const mergedCMSFeedData = mergeComponentData('cmsFeed');
 
@@ -741,6 +743,13 @@ const LandingPageContent: React.FC = () => {
       <HeroGallery
         {...mergedHeroGalleryData}
         borderRadius={mergedHeroGalleryData?.buttonBorderRadius || theme.buttonBorderRadius}
+        onNavigate={handleLinkNavigation}
+      />
+    ) : null,
+    heroWave: mergedHeroWaveData ? (
+      <HeroWave
+        {...mergedHeroWaveData}
+        borderRadius={mergedHeroWaveData?.buttonBorderRadius || theme.buttonBorderRadius}
         onNavigate={handleLinkNavigation}
       />
     ) : null,
