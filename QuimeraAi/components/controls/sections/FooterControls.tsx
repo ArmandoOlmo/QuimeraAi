@@ -3,7 +3,7 @@
  * Section controls extracted from Controls.tsx
  */
 import React, { useState, useRef } from 'react';
-import { useTranslation } from 'react-i18next';
+
 import ColorControl from '../../ui/ColorControl';
 import ImagePicker from '../../ui/ImagePicker';
 import IconSelector from '../../ui/IconSelector';
@@ -26,8 +26,7 @@ import { SingleProductSelector, SingleCollectionSelector, SingleContentSelector 
 
 
 export const renderFooterControls = (deps: ControlsDeps) => {
-const { data, setNestedData, setAiAssistField, activeProject, updateProjectFavicon, menus, categories, navigate, uploadImageAndGetURL } = deps;
-const { t } = useTranslation();
+const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFavicon, menus, categories, navigate, uploadImageAndGetURL } = deps;
   if (!data?.footer) return null;
 
   return (
@@ -414,8 +413,7 @@ const geocodeWithNominatim = async (address: string) => {
 // ─── ─── ─── ─── ─── ─── ───
 
 export const renderFooterControlsWithTabs = (deps: ControlsDeps) => {
-const { data, setNestedData, setAiAssistField, activeProject, updateProjectFavicon, menus, categories, navigate, uploadImageAndGetURL } = deps;
-const { t } = useTranslation();
+const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFavicon, menus, categories, navigate, uploadImageAndGetURL } = deps;
   if (!data?.footer) return null;
 
   const contentTab = (

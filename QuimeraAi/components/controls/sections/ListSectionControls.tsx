@@ -3,7 +3,7 @@
  * Section controls extracted from Controls.tsx
  */
 import React, { useState, useRef } from 'react';
-import { useTranslation } from 'react-i18next';
+
 import ColorControl from '../../ui/ColorControl';
 import ImagePicker from '../../ui/ImagePicker';
 import IconSelector from '../../ui/IconSelector';
@@ -37,8 +37,7 @@ export const getListTitle = (sectionKey: string, itemLabel: string) => {
 };
 
 export const renderListSectionControls = (deps: ControlsDeps, sectionKey: string, itemLabel: string, fields: { key: string, label: string, type: 'input' | 'textarea' | 'select' | 'image' | 'icon-selector', options?: string[] }[]) => {
-const { data, setNestedData } = deps;
-const { t } = useTranslation();
+const { data, setNestedData, t } = deps;
   if (!data) return null;
   const sectionData = (data as any)[sectionKey];
   if (!sectionData) return null;

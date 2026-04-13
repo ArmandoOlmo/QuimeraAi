@@ -3,7 +3,7 @@
  * Section controls extracted from Controls.tsx
  */
 import React, { useState, useRef } from 'react';
-import { useTranslation } from 'react-i18next';
+
 import ColorControl from '../../ui/ColorControl';
 import ImagePicker from '../../ui/ImagePicker';
 import IconSelector from '../../ui/IconSelector';
@@ -26,8 +26,7 @@ import { SingleProductSelector, SingleCollectionSelector, SingleContentSelector 
 
 
 export const renderFeaturesControls = (deps: ControlsDeps) => {
-const { data, setNestedData, setAiAssistField, activeProject, updateProjectFavicon, menus, categories, navigate, uploadImageAndGetURL } = deps;
-const { t } = useTranslation();
+const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFavicon, menus, categories, navigate, uploadImageAndGetURL } = deps;
   if (!data?.features) return null;
 
   // Get current variant from data, fallback to classic
@@ -234,8 +233,7 @@ export const getListTitle = (sectionKey: string, itemLabel: string) => {
 // ─── ─── ─── ─── ─── ─── ───
 
 export const renderFeaturesControlsWithTabs = (deps: ControlsDeps) => {
-const { data, setNestedData, setAiAssistField, activeProject, updateProjectFavicon, menus, categories, navigate, uploadImageAndGetURL } = deps;
-const { t } = useTranslation();
+const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFavicon, menus, categories, navigate, uploadImageAndGetURL } = deps;
   if (!data?.features) return null;
   const currentVariant = (data.features as any).featuresVariant || 'classic';
 

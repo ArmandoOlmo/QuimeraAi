@@ -268,7 +268,7 @@ const Controls: React.FC = () => {
 
   // ─── Deps object passed to all section renderers ──────────────────────────
   const deps: ControlsDeps = {
-    data, setNestedData, setAiAssistField, activeProject, updateProjectFavicon,
+    data, setNestedData, setAiAssistField, t, activeProject, updateProjectFavicon,
     menus, categories, navigate, uploadImageAndGetURL,
     heroProducts, heroCategories, isLoadingHeroProducts,
     heroProductSearch, setHeroProductSearch,

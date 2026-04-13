@@ -376,6 +376,7 @@ export interface ControlsDeps {
   data: any;
   setNestedData: (path: string, value: any) => void;
   setAiAssistField: (field: { path: string; value: string; context: string } | null) => void;
+  t: (key: string, opts?: any) => string;
   activeProject?: any;
   updateProjectFavicon?: (projectId: string, file: File) => Promise<void>;
   menus?: any[];

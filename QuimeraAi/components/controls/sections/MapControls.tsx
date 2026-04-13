@@ -3,7 +3,7 @@
  * Section controls extracted from Controls.tsx
  */
 import React, { useState, useRef } from 'react';
-import { useTranslation } from 'react-i18next';
+
 import ColorControl from '../../ui/ColorControl';
 import ImagePicker from '../../ui/ImagePicker';
 import IconSelector from '../../ui/IconSelector';
@@ -26,8 +26,7 @@ import { SingleProductSelector, SingleCollectionSelector, SingleContentSelector 
 
 
 export const renderMapControls = (deps: ControlsDeps) => {
-const { data, setNestedData, setAiAssistField, activeProject, updateProjectFavicon, menus, categories, navigate, uploadImageAndGetURL } = deps;
-const { t } = useTranslation();
+const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFavicon, menus, categories, navigate, uploadImageAndGetURL } = deps;
   const contentTab = (
     <div className="space-y-4">
       <Input label={t('editor.controls.common.title')} value={data?.map.title} onChange={(e) => setNestedData('map.title', e.target.value)} />
