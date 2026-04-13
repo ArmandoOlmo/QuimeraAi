@@ -51,7 +51,7 @@ import {
   renderHeroWaveControls, renderHeroNovaControls,
   renderHeaderControls, renderHeaderControlsWithTabs,
   renderFeaturesControls, renderFeaturesControlsWithTabs,
-  renderListSectionControls,
+  renderListSectionControls as _renderListSectionControls,
   renderPricingControls, renderPricingControlsWithTabs,
   renderTestimonialsControls, renderTestimonialsControlsWithTabs,
   renderSlideshowControls, renderSlideshowControlsWithTabs,
@@ -282,7 +282,7 @@ const Controls: React.FC = () => {
     isGeocoding, setIsGeocoding, geocodeError, setGeocodeError,
     faviconInputRef, isUploadingFavicon, setIsUploadingFavicon,
     componentStyles,
-    renderListSectionControls: (sk: string, il: string, fields: any[]) => renderListSectionControls(deps, sk, il, fields),
+    renderListSectionControls: (sk: string, il: string, fields: any[]) => _renderListSectionControls(deps, sk, il, fields),
   };
 
   // ─── Section config ───────────────────────────────────────────────────────
