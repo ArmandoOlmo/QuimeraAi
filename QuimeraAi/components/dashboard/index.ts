@@ -22,6 +22,16 @@ export { default as ProjectCard } from './ProjectCard';
 export { default as ProjectCardSkeleton } from './ProjectCardSkeleton';
 export { default as ProjectListItem } from './ProjectListItem';
 
+// Dashboard Sub-Components (extracted from Dashboard.tsx)
+export { default as DashboardHeader } from './DashboardHeader';
+export { default as DashboardWelcome } from './DashboardWelcome';
+export { default as DashboardDraggableSection } from './DashboardDraggableSection';
+export { default as DashboardProjectsSection } from './DashboardProjectsSection';
+export { default as DashboardTemplatesSection } from './DashboardTemplatesSection';
+export { default as DashboardLeadsSection } from './DashboardLeadsSection';
+export { default as DashboardNewsSection } from './DashboardNewsSection';
+export { default as WebsitesView } from './WebsitesView';
+
 // UI Components
 export { default as StatCard } from './StatCard';
 export { default as FilterChip } from './FilterChip';
