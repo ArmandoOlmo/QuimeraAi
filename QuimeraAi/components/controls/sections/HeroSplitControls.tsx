@@ -1,0 +1,236 @@
+/**
+ * HeroSplitControls.tsx
+ * Section controls extracted from Controls.tsx
+ */
+import React, { useState, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
+import ColorControl from '../../ui/ColorControl';
+import ImagePicker from '../../ui/ImagePicker';
+import IconSelector from '../../ui/IconSelector';
+import AIFormControl from '../../ui/AIFormControl';
+import TabbedControls from '../../ui/TabbedControls';
+import AnimationControls from '../../ui/AnimationControls';
+import SocialLinksEditor from '../../ui/SocialLinksEditor';
+import { Input, TextArea, Select, ToggleControl, FontSizeSelector, PaddingSelector, BorderRadiusSelector } from '../../ui/EditorControlPrimitives';
+import { BackgroundImageControl, CornerGradientControl, extractVideoId, ControlsDeps } from '../ControlsShared';
+import {
+  Trash2, Plus, ChevronDown, ChevronRight, ChevronLeft, ChevronUp, HelpCircle,
+  Layout, Image, List, Star, PlaySquare, Users, DollarSign, Eye,
+  Briefcase, MessageCircle, Mail, Send, Type, MousePointerClick,
+  Settings, AlignJustify, MonitorPlay, Grid, GripVertical, Upload, MessageSquare, FileText, PlusCircle, X, Palette, AlertCircle, TrendingUp, Sparkles, MapPin, Map as MapIcon, Columns, Search, Loader2, ShoppingBag, Info, Store, SlidersHorizontal, LayoutGrid, Check, Link, FolderOpen, Maximize2, Clock, Zap,
+  Twitter, Facebook, Instagram, Linkedin, Github, Youtube, Music, Pin, Ghost, Gamepad2, AtSign, Share2, Waves, Bell,
+  Megaphone, Tag, Gift, Truck, Percent, Heart, ShieldCheck, Flame, Award, Crown, Phone,
+  Layers, UserPlus
+} from 'lucide-react';
+import { SingleProductSelector, SingleCollectionSelector, SingleContentSelector } from '../../ui/EcommerceControls';
+
+
+export const renderHeroSplitControls = (deps: ControlsDeps) => {
+const { data, setNestedData, setAiAssistField, activeProject, updateProjectFavicon, menus, categories, navigate, uploadImageAndGetURL } = deps;
+const { t } = useTranslation();
+  if (!data?.heroSplit) return null;
+
+  const contentTab = (
+    <div className="space-y-4">
+      {/* Content Section */}
+      <div>
+        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
+          <Type size={14} />
+          {t('controls.content')}
+        </label>
+
+        <AIFormControl label={t('controls.headline')} onAssistClick={() => setAiAssistField({ path: 'heroSplit.headline', value: data.heroSplit.headline, context: 'Hero Split Headline' })}>
+          <TextArea value={data.heroSplit.headline} onChange={(e) => setNestedData('heroSplit.headline', e.target.value)} rows={2} />
+        </AIFormControl>
+        <FontSizeSelector label={t('controls.headlineSize')} value={data.heroSplit.headlineFontSize || 'lg'} onChange={(v) => setNestedData('heroSplit.headlineFontSize', v)} />
+
+        <AIFormControl label={t('controls.subheadline')} onAssistClick={() => setAiAssistField({ path: 'heroSplit.subheadline', value: data.heroSplit.subheadline, context: 'Hero Split Description' })}>
+          <TextArea value={data.heroSplit.subheadline} onChange={(e) => setNestedData('heroSplit.subheadline', e.target.value)} rows={3} />
+        </AIFormControl>
+        <FontSizeSelector label={t('controls.subheadlineSize')} value={data.heroSplit.subheadlineFontSize || 'md'} onChange={(v) => setNestedData('heroSplit.subheadlineFontSize', v)} />
+
+        <Input label={t('editor.controls.common.buttonText')} value={data.heroSplit.buttonText} onChange={(e) => setNestedData('heroSplit.buttonText', e.target.value)} />
+
+        {/* Link Type Selector */}
+        <div className="mb-3">
+          <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">Link Type</label>
+          <div className="flex bg-editor-panel-bg rounded-md border border-editor-border p-1">
+            {[
+              { value: 'manual', label: 'Manual URL' },
+              { value: 'product', label: 'Product' },
+              { value: 'collection', label: 'Collection' },
+              { value: 'content', label: 'Contenido' }
+            ].map((type) => (
+              <button
+                key={type.value}
+                onClick={() => setNestedData('heroSplit.linkType', type.value)}
+                className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors ${(data.heroSplit.linkType || 'manual') === type.value
+                  ? 'bg-editor-accent text-editor-bg'
+                  : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-bg'
+                  }`}
+              >
+                {type.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Conditional Inputs based on Link Type */}
+        {(data.heroSplit.linkType === 'manual' || !data.heroSplit.linkType) && (
+          <Input label={t('editor.controls.common.url')} value={data.heroSplit.buttonUrl || '#cta'} onChange={(e) => setNestedData('heroSplit.buttonUrl', e.target.value)} />
+        )}
+
+        {data.heroSplit.linkType === 'product' && (
+          <SingleProductSelector
+            storeId={activeProject?.id || ''}
+            selectedProductId={data.heroSplit.buttonUrl?.startsWith('/product/') ? data.heroSplit.buttonUrl.split('/product/')[1] : undefined}
+            onSelect={(id) => {
+              if (id) {
+                setNestedData('heroSplit.buttonUrl', `/product/${id}`);
+              } else {
+                setNestedData('heroSplit.buttonUrl', '');
+              }
+            }}
+            label={t('editor.controls.common.selectProduct')}
+          />
+        )}
+
+        {data.heroSplit.linkType === 'collection' && (
+          <SingleCollectionSelector
+            storeId={activeProject?.id || ''}
+            gridCategories={data.categoryGrid?.categories || []}
+            selectedCollectionId={data.heroSplit.collectionId}
+            onSelect={(id) => {
+              setNestedData('heroSplit.collectionId', id || null);
+              if (id) {
+                // For heroSplit, we'll likely want to use the buttonUrl for navigation, 
+                // but if it supports collectionId internally like Banner, we clear buttonUrl.
+                // Assuming standardization: 
+                setNestedData('heroSplit.buttonUrl', '');
+              }
+            }}
+            label={t('editor.controls.common.selectCollection')}
+          />
+        )}
+      </div>
+
+
+      {/* Image */}
+      <div>
+        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
+          <Image size={14} />
+          Image
+        </label>
+        <ImagePicker label={t('editor.controls.hero.image')} value={data.heroSplit.imageUrl} onChange={(url) => setNestedData('heroSplit.imageUrl', url)} />
+      </div>
+    </div>
+  );
+
+  const styleTab = (
+    <div className="space-y-4">
+      <BackgroundImageControl sectionKey="heroSplit" />
+      {/* Layout */}
+      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
+        <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+          <Layout size={14} />
+          Layout
+        </label>
+
+        {/* Image Position Toggle */}
+        <div className="mb-4">
+          <label className="block text-xs font-semibold text-editor-text-secondary mb-2">Image Position</label>
+          <div className="flex bg-editor-bg p-1 rounded-md border border-editor-border">
+            {['left', 'right'].map(pos => (
+              <button
+                key={pos}
+                onClick={() => setNestedData('heroSplit.imagePosition', pos)}
+                className={`flex-1 py-2 text-sm font-medium rounded-sm capitalize ${data.heroSplit.imagePosition === pos
+                  ? 'bg-editor-accent text-editor-bg'
+                  : 'text-editor-text-secondary hover:bg-editor-border'
+                  }`}
+              >
+                {pos === 'left' ? '← Image Left' : 'Image Right →'}
+              </button>
+            ))}
+          </div>
+          <p className="text-xs text-editor-text-secondary mt-1 italic">
+            Switch between image on left or right side
+          </p>
+        </div>
+
+        {/* Max Height */}
+        <div className="mb-4">
+          <div className="flex justify-between items-center mb-1">
+            <label className="text-xs font-semibold text-editor-text-secondary">Max Height</label>
+            <span className="text-xs text-editor-text-primary">{data.heroSplit.maxHeight || 500}px</span>
+          </div>
+          <input
+            type="range" min="300" max="800" step="50"
+            value={data.heroSplit.maxHeight || 500}
+            onChange={(e) => setNestedData('heroSplit.maxHeight', parseInt(e.target.value))}
+            className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
+          />
+        </div>
+
+        {/* Angle Intensity */}
+        <div>
+          <div className="flex justify-between items-center mb-1">
+            <label className="text-xs font-semibold text-editor-text-secondary">Angle Intensity</label>
+            <span className="text-xs text-editor-text-primary">{data.heroSplit.angleIntensity || 15}%</span>
+          </div>
+          <input
+            type="range" min="0" max="30" step="5"
+            value={data.heroSplit.angleIntensity || 15}
+            onChange={(e) => setNestedData('heroSplit.angleIntensity', parseInt(e.target.value))}
+            className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
+          />
+          <p className="text-xs text-editor-text-secondary mt-1 italic">
+            0 = straight line, higher = more diagonal
+          </p>
+        </div>
+      </div>
+
+
+      {/* Colors */}
+      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
+        <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+          <Palette size={14} />
+          Colors
+        </label>
+
+        <div className="space-y-3">
+          <ColorControl label="Text Side Background" value={data.heroSplit.colors?.textBackground || '#ffffff'} onChange={(v) => setNestedData('heroSplit.colors.textBackground', v)} />
+          <ColorControl label="Image Side Background" value={data.heroSplit.colors?.imageBackground || '#000000'} onChange={(v) => setNestedData('heroSplit.colors.imageBackground', v)} />
+
+
+          <ColorControl label="Headline Color" value={data.heroSplit.colors?.heading || '#111827'} onChange={(v) => setNestedData('heroSplit.colors.heading', v)} />
+          <ColorControl label="Text Color" value={data.heroSplit.colors?.text || '#4b5563'} onChange={(v) => setNestedData('heroSplit.colors.text', v)} />
+
+          <p className="text-[10px] text-editor-text-secondary uppercase tracking-wider font-bold">Button</p>
+
+          <ColorControl label="Button Background" value={data.heroSplit.colors?.buttonBackground || '#4f46e5'} onChange={(v) => setNestedData('heroSplit.colors.buttonBackground', v)} />
+          <ColorControl label={t('editor.controls.common.buttonText')} value={data.heroSplit.colors?.buttonText || '#ffffff'} onChange={(v) => setNestedData('heroSplit.colors.buttonText', v)} />
+
+          <BorderRadiusSelector label="Button Corners" value={data.heroSplit.buttonBorderRadius || 'xl'} onChange={(v) => setNestedData('heroSplit.buttonBorderRadius', v)} />
+
+
+          {/* Corner Gradient */}
+          <CornerGradientControl
+            enabled={data.heroSplit.cornerGradient?.enabled || false}
+            position={data.heroSplit.cornerGradient?.position || 'top-left'}
+            color={data.heroSplit.cornerGradient?.color || '#4f46e5'}
+            opacity={data.heroSplit.cornerGradient?.opacity || 30}
+            size={data.heroSplit.cornerGradient?.size || 50}
+            onEnabledChange={(v) => setNestedData('heroSplit.cornerGradient.enabled', v)}
+            onPositionChange={(v) => setNestedData('heroSplit.cornerGradient.position', v)}
+            onColorChange={(v) => setNestedData('heroSplit.cornerGradient.color', v)}
+            onOpacityChange={(v) => setNestedData('heroSplit.cornerGradient.opacity', v)}
+            onSizeChange={(v) => setNestedData('heroSplit.cornerGradient.size', v)}
+          />
+        </div>
+      </div>
+    </div>
+  );
+
+  return <TabbedControls contentTab={contentTab} styleTab={styleTab} />;
+};
