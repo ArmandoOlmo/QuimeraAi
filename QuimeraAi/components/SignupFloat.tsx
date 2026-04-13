@@ -181,7 +181,8 @@ const SignupFloat: React.FC<SignupFloatProps> = ({
   // So the minimized pill goes to bottom-left by default
   const minimizedPositionStyles = useMemo((): React.CSSProperties => {
     // Chatbot is always bottom-right, so minimized pill goes bottom-left
-    return { bottom: '1.5rem', left: '1.5rem' };
+    // Match vertical level: chatbot offsetY (32px) + margin-bottom (55px) = 87px
+    return { bottom: '87px', left: '1.5rem' };
   }, []);
 
   // Flex direction for image placement
