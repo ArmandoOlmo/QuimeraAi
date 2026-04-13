@@ -4186,7 +4186,6 @@ const Controls: React.FC = () => {
 
     const contentTab = (
       <div className="space-y-3">
-        {/* Messages */}
         <div className="text-[10px] font-semibold text-editor-text-secondary uppercase tracking-wider pt-1">Messages</div>
         {topBarMessages.map((msg: any, idx: number) => (
           <div key={idx} className="bg-editor-card rounded-lg p-3 space-y-2 border border-editor-border">
@@ -4207,7 +4206,8 @@ const Controls: React.FC = () => {
             </div>
 
             {/* Icon selector */}
-            <FormControl label="Icon">
+            <div>
+              <div className="text-[10px] font-medium text-editor-text-secondary mb-1">Icon</div>
               <div className="grid grid-cols-7 gap-1">
                 <button
                   onClick={() => setNestedData(`topBar.messages.${idx}.icon`, '')}
@@ -4230,26 +4230,14 @@ const Controls: React.FC = () => {
                   );
                 })}
               </div>
-            </FormControl>
+            </div>
 
-            {/* Text */}
-            <FormControl label="Text">
-              <Input label="" value={msg.text || ''} onChange={(e) => setNestedData(`topBar.messages.${idx}.text`, e.target.value)} />
-            </FormControl>
-
-            {/* Link */}
-            <FormControl label="Link URL">
-              <Input label="" value={msg.link || ''} onChange={(e) => setNestedData(`topBar.messages.${idx}.link`, e.target.value)} placeholder="#section or /page or https://..." />
-            </FormControl>
-
-            {/* Link Text */}
-            <FormControl label="Link Text">
-              <Input label="" value={msg.linkText || ''} onChange={(e) => setNestedData(`topBar.messages.${idx}.linkText`, e.target.value)} placeholder="Shop Now" />
-            </FormControl>
+            <Input label="Text" value={msg.text || ''} onChange={(e) => setNestedData(`topBar.messages.${idx}.text`, e.target.value)} />
+            <Input label="Link URL" value={msg.link || ''} onChange={(e) => setNestedData(`topBar.messages.${idx}.link`, e.target.value)} placeholder="#section or /page or https://..." />
+            <Input label="Link Text" value={msg.linkText || ''} onChange={(e) => setNestedData(`topBar.messages.${idx}.linkText`, e.target.value)} placeholder="Shop Now" />
           </div>
         ))}
 
-        {/* Add message */}
         <button
           onClick={() => {
             const newMsg = { text: 'New announcement', icon: 'sparkles', link: '', linkText: '' };
@@ -4264,54 +4252,64 @@ const Controls: React.FC = () => {
 
     const styleTab = (
       <div className="space-y-3">
-        {/* Scroll */}
         <div className="text-[10px] font-semibold text-editor-text-secondary uppercase tracking-wider pt-1">Behavior</div>
         <ToggleControl label="Scroll (Marquee)" checked={data.topBar.scrollEnabled ?? false} onChange={(v) => setNestedData('topBar.scrollEnabled', v)} />
         <ToggleControl label="Pause on Hover" checked={data.topBar.pauseOnHover ?? true} onChange={(v) => setNestedData('topBar.pauseOnHover', v)} />
         <ToggleControl label="Dismissible" checked={data.topBar.dismissible ?? true} onChange={(v) => setNestedData('topBar.dismissible', v)} />
 
-        {/* Speed */}
         {data.topBar.scrollEnabled ? (
-          <FormControl label="Scroll Speed">
-            <div className="flex items-center gap-2">
+          <div>
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-[10px] font-medium text-editor-text-secondary">Scroll Speed</span>
               <span className="text-xs text-editor-text-primary">{data.topBar.scrollSpeed || 30}s</span>
             </div>
             <input type="range" min={5} max={60} step={5}
               value={data.topBar.scrollSpeed || 30}
               onChange={(e) => setNestedData('topBar.scrollSpeed', parseInt(e.target.value))}
               className="w-full accent-blue-500" />
-          </FormControl>
+          </div>
         ) : (
           <>
             <ToggleControl label="Show Arrows" checked={data.topBar.showRotatingArrows ?? true} onChange={(v) => setNestedData('topBar.showRotatingArrows', v)} />
-            <FormControl label="Rotate Speed">
-              <div className="flex items-center gap-2">
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-[10px] font-medium text-editor-text-secondary">Rotate Speed</span>
                 <span className="text-xs text-editor-text-primary">{((data.topBar.rotateSpeed || 4000) / 1000).toFixed(1)}s</span>
               </div>
               <input type="range" min={1000} max={10000} step={500}
                 value={data.topBar.rotateSpeed || 4000}
                 onChange={(e) => setNestedData('topBar.rotateSpeed', parseInt(e.target.value))}
                 className="w-full accent-blue-500" />
-            </FormControl>
+            </div>
           </>
         )}
 
-        {/* Font Size */}
         <FontSizeSelector label="Font Size" value={data.topBar.fontSize || 'sm'} onChange={(v) => setNestedData('topBar.fontSize', v)} />
 
         {/* Separator */}
-        <FormControl label="Separator">
-          <SegmentedControl
-            value={data.topBar.separator || 'dot'}
-            onChange={(val) => setNestedData('topBar.separator', val)}
-            options={[
+        <div>
+          <div className="text-[10px] font-medium text-editor-text-secondary mb-1">Separator</div>
+          <div className="flex gap-1">
+            {[
               { value: 'dot', label: '•' },
               { value: 'pipe', label: '|' },
               { value: 'star', label: '★' },
               { value: 'none', label: 'None' },
-            ]}
-          />
-        </FormControl>
+            ].map(opt => (
+              <button
+                key={opt.value}
+                onClick={() => setNestedData('topBar.separator', opt.value)}
+                className={`flex-1 py-1.5 rounded text-xs font-medium transition-colors ${
+                  (data.topBar.separator || 'dot') === opt.value
+                    ? 'bg-blue-500/20 text-blue-400 ring-1 ring-blue-500'
+                    : 'bg-editor-bg text-editor-text-secondary hover:bg-editor-hover'
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </div>
 
         {/* Background */}
         <div className="text-[10px] font-semibold text-editor-text-secondary uppercase tracking-wider pt-1">Background</div>
@@ -4321,15 +4319,16 @@ const Controls: React.FC = () => {
           <div className="space-y-2">
             <ColorControl label="Gradient From" value={data.topBar.gradientFrom || '#4f46e5'} onChange={(v) => setNestedData('topBar.gradientFrom', v)} />
             <ColorControl label="Gradient To" value={data.topBar.gradientTo || '#7c3aed'} onChange={(v) => setNestedData('topBar.gradientTo', v)} />
-            <FormControl label="Gradient Angle">
-              <div className="flex items-center gap-2">
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-[10px] font-medium text-editor-text-secondary">Gradient Angle</span>
                 <span className="text-xs text-editor-text-primary">{data.topBar.gradientAngle ?? 90}°</span>
               </div>
               <input type="range" min={0} max={360} step={15}
                 value={data.topBar.gradientAngle ?? 90}
                 onChange={(e) => setNestedData('topBar.gradientAngle', parseInt(e.target.value))}
                 className="w-full accent-blue-500" />
-            </FormControl>
+            </div>
           </div>
         ) : (
           <ColorControl label="Background Color" value={data.topBar.backgroundColor || '#1a1a1a'} onChange={(v) => setNestedData('topBar.backgroundColor', v)} />
