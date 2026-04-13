@@ -4187,7 +4187,7 @@ const Controls: React.FC = () => {
     const contentTab = (
       <div className="space-y-3">
         {/* Messages */}
-        <SectionLabel label="Messages" />
+        <div className="text-[10px] font-semibold text-editor-text-secondary uppercase tracking-wider pt-1">Messages</div>
         {topBarMessages.map((msg: any, idx: number) => (
           <div key={idx} className="bg-editor-card rounded-lg p-3 space-y-2 border border-editor-border">
             <div className="flex items-center justify-between">
@@ -4265,7 +4265,7 @@ const Controls: React.FC = () => {
     const styleTab = (
       <div className="space-y-3">
         {/* Scroll */}
-        <SectionLabel label="Behavior" />
+        <div className="text-[10px] font-semibold text-editor-text-secondary uppercase tracking-wider pt-1">Behavior</div>
         <ToggleControl label="Scroll (Marquee)" checked={data.topBar.scrollEnabled ?? false} onChange={(v) => setNestedData('topBar.scrollEnabled', v)} />
         <ToggleControl label="Pause on Hover" checked={data.topBar.pauseOnHover ?? true} onChange={(v) => setNestedData('topBar.pauseOnHover', v)} />
         <ToggleControl label="Dismissible" checked={data.topBar.dismissible ?? true} onChange={(v) => setNestedData('topBar.dismissible', v)} />
@@ -4314,7 +4314,7 @@ const Controls: React.FC = () => {
         </FormControl>
 
         {/* Background */}
-        <SectionLabel label="Background" />
+        <div className="text-[10px] font-semibold text-editor-text-secondary uppercase tracking-wider pt-1">Background</div>
         <ToggleControl label="Use Gradient" checked={data.topBar.useGradient ?? false} onChange={(v) => setNestedData('topBar.useGradient', v)} />
 
         {data.topBar.useGradient ? (
@@ -4336,7 +4336,7 @@ const Controls: React.FC = () => {
         )}
 
         {/* Colors */}
-        <SectionLabel label="Colors" />
+        <div className="text-[10px] font-semibold text-editor-text-secondary uppercase tracking-wider pt-1">Colors</div>
         <ColorControl label="Text" value={data.topBar.textColor || '#ffffff'} onChange={(v) => setNestedData('topBar.textColor', v)} />
         <ColorControl label="Link" value={data.topBar.linkColor || '#fbbf24'} onChange={(v) => setNestedData('topBar.linkColor', v)} />
         <ColorControl label="Icon" value={data.topBar.iconColor || '#fbbf24'} onChange={(v) => setNestedData('topBar.iconColor', v)} />
