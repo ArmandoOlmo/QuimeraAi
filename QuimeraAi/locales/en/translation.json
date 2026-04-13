@@ -3995,7 +3995,9 @@
     "noSocialLinks": "No social links added yet",
     "addSocialBelow": "Add your social profiles below",
     "addSocialLink": "Add Social Link",
-    "cmsFeedSection": "CMS Feed"
+    "cmsFeedSection": "CMS Feed",
+    "topBarSection": "Top Bar",
+    "logoBannerSection": "Logo Banner"
   },
   "email": {
     "title": "Email",

@@ -1162,6 +1162,8 @@
   },
   "editor": {
     "cmsFeedSection": "Flux CMS",
+    "topBarSection": "Barre Supérieure",
+    "logoBannerSection": "Bannière de Logos",
     "controls": {
       "cmsFeed": {
         "layout": "Mise en page",

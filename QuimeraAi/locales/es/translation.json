@@ -3995,7 +3995,9 @@
     "noSocialLinks": "Aún no hay redes sociales",
     "addSocialBelow": "Agrega tus perfiles sociales abajo",
     "addSocialLink": "Agregar Red Social",
-    "cmsFeedSection": "Feed del CMS"
+    "cmsFeedSection": "Feed del CMS",
+    "topBarSection": "Barra Superior",
+    "logoBannerSection": "Banner de Logos"
   },
   "email": {
     "title": "Email Marketing",

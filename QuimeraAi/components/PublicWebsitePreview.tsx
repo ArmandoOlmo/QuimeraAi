@@ -50,6 +50,8 @@ const ChatbotWidget = lazy(() => import('./ChatbotWidget'));
 const BusinessMap = lazy(() => import('./BusinessMap'));
 const MenuComponent = lazy(() => import('./Menu'));
 const Banner = lazy(() => import('./Banner'));
+const TopBar = lazy(() => import('./TopBar'));
+const LogoBanner = lazy(() => import('./LogoBanner'));
 const BlogPost = lazy(() => import('./BlogPost'));
 const Products = lazy(() => import('./Products'));
 const PageRenderer = lazy(() => import('./PageRenderer'));
@@ -1614,6 +1616,10 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
         return withBackground(<MenuComponent {...compData} borderRadius={borderRadius} />);
       case 'banner':
         return withBackground(<Banner {...compData} buttonBorderRadius={buttonBorderRadius} />);
+      case 'topBar':
+        return compData ? <TopBar {...compData} onNavigate={handleLinkNavigation} /> : null;
+      case 'logoBanner':
+        return compData ? <LogoBanner {...compData} onNavigate={handleLinkNavigation} /> : null;
       case 'products':
         return withBackground(<Products {...compData} primaryColor={compData?.colors?.accent || theme?.globalColors?.primary || '#4f46e5'} />);
       // Ecommerce section components
@@ -1693,6 +1699,13 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
         <div id="announcementBar-above" className="w-full">
           <AnnouncementBar data={mergedData.announcementBar} />
         </div>
+      )}
+
+      {/* TopBar - Above Header position */}
+      {mergedData.topBar?.aboveHeader && componentStatus?.topBar !== false && sectionVisibility?.topBar !== false && mergedData.topBar && (
+        <Suspense fallback={null}>
+          <TopBar {...mergedData.topBar} onNavigate={handleLinkNavigation} />
+        </Suspense>
       )}
 
       {/* Header - Visible on landing, hidden on store view (StorefrontLayout handles it) */}
@@ -1803,7 +1816,9 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
                 const sectionVisible = sectionVisibility?.[key as PageSection] !== false;
                 const notExcluded = key !== 'footer' && key !== 'chatbot' && key !== 'header' &&
                   // AnnouncementBar is rendered separately when positioned above header
-                  !(key === 'announcementBar' && mergedData.announcementBar?.position === 'above-header');
+                  !(key === 'announcementBar' && mergedData.announcementBar?.position === 'above-header') &&
+                  // TopBar is rendered separately when positioned above header
+                  !(key === 'topBar' && mergedData.topBar?.aboveHeader);
                 const baseVisibility = statusVisible && sectionVisible && notExcluded;
 
                 // Para componentes de ecommerce, verificar también visibleIn

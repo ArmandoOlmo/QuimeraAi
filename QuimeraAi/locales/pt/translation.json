@@ -1162,6 +1162,8 @@
   },
   "editor": {
     "cmsFeedSection": "Feed do CMS",
+    "topBarSection": "Barra Superior",
+    "logoBannerSection": "Banner de Logos",
     "controls": {
       "cmsFeed": {
         "layout": "Layout",
