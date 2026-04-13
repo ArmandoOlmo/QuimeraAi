@@ -818,6 +818,32 @@ const pageData: PageData = {
     rotateSpeed: 4000,
     aboveHeader: true,
   },
+  logoBanner: {
+    title: 'Trusted by industry leaders',
+    subtitle: '',
+    logos: [
+      { imageUrl: '', alt: 'Brand 1', link: '', linkText: '' },
+      { imageUrl: '', alt: 'Brand 2', link: '', linkText: '' },
+      { imageUrl: '', alt: 'Brand 3', link: '', linkText: '' },
+      { imageUrl: '', alt: 'Brand 4', link: '', linkText: '' },
+      { imageUrl: '', alt: 'Brand 5', link: '', linkText: '' },
+    ],
+    scrollEnabled: true,
+    scrollSpeed: 25,
+    pauseOnHover: true,
+    logoHeight: 40,
+    logoGap: 48,
+    grayscale: true,
+    useGradient: false,
+    backgroundColor: '#ffffff',
+    titleColor: '#64748b',
+    subtitleColor: '#94a3b8',
+    titleFontSize: 'sm',
+    subtitleFontSize: 'sm',
+    paddingY: 'md',
+    showDivider: false,
+    dividerColor: '#e2e8f0',
+  },
   products: {
     title: 'Nuestros Productos',
     subtitle: 'Descubre nuestra selección de productos de alta calidad',
@@ -1391,7 +1417,7 @@ const componentOrder: PageSection[] = [
     // Structure
     'colors', 'typography', 'header',
     // Content
-    'hero', 'heroSplit', 'heroGallery', 'heroWave', 'heroNova', 'topBar', 'banner', 'features', 'testimonials', 'slideshow',
+    'hero', 'heroSplit', 'heroGallery', 'heroWave', 'heroNova', 'topBar', 'logoBanner', 'banner', 'features', 'testimonials', 'slideshow',
     'pricing', 'faq', 'portfolio', 'cta', 'services', 'team', 'video', 'howItWorks', 'menu',
     // Ecommerce
     'storeSettings', 'products', 'featuredProducts', 'categoryGrid', 'productHero', 'saleCountdown',

@@ -8,7 +8,7 @@ import {
     MonitorPlay, Grid, MessageSquare, Type, AlignJustify,
     HelpCircle, ChevronDown, Eye, EyeOff, FileText,
     GripVertical, Plus, Search, X, MapPin, Trash2, UtensilsCrossed, Palette, Columns,
-    ShoppingBag, Clock, Shield, Package, Megaphone, Store, Waves, Bell
+    ShoppingBag, Clock, Shield, Package, Megaphone, Store, Waves, Bell, Layers
 } from 'lucide-react';
 import {
     DndContext,
@@ -66,6 +66,7 @@ const sectionIcons: Record<PageSection, React.ElementType> = {
     menu: UtensilsCrossed,
     banner: Image,
     topBar: Bell,
+    logoBanner: Layers,
     chatbot: MessageSquare,
     cmsFeed: FileText,
     footer: Type,
@@ -310,6 +311,7 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
         menu: t('editor.restaurantMenu'),
         banner: t('editor.bannerSection'),
         topBar: 'Top Bar',
+        logoBanner: 'Logo Banner',
         chatbot: t('editor.aiChatbot'),
         cmsFeed: t('editor.cmsFeedSection', 'CMS Feed'),
         footer: t('editor.footerSection'),

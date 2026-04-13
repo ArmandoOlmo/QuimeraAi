@@ -38,6 +38,7 @@ import BusinessMap from './BusinessMap';
 import Menu from './Menu';
 import Banner from './Banner';
 import TopBar from './TopBar';
+import LogoBanner from './LogoBanner';
 import SectionBackground from './ui/SectionBackground';
 import Products from './Products';
 import { PageSection, FontFamily, CMSPost, CMSCategory, FooterData } from '../types';
@@ -641,6 +642,7 @@ const LandingPageContent: React.FC = () => {
   const mergedHeroWaveData = mergeComponentData('heroWave');
   const mergedHeroNovaData = mergeComponentData('heroNova');
   const mergedTopBarData = mergeComponentData('topBar');
+  const mergedLogoBannerData = mergeComponentData('logoBanner');
   const mergedProductsData = mergeComponentData('products');
   const mergedCMSFeedData = mergeComponentData('cmsFeed');
 
@@ -783,6 +785,12 @@ const LandingPageContent: React.FC = () => {
     topBar: mergedTopBarData ? (
       <TopBar
         {...mergedTopBarData}
+        onNavigate={handleLinkNavigation}
+      />
+    ) : null,
+    logoBanner: mergedLogoBannerData ? (
+      <LogoBanner
+        {...mergedLogoBannerData}
         onNavigate={handleLinkNavigation}
       />
     ) : null,

@@ -1024,6 +1024,45 @@ export interface TopBarData {
 }
 
 // =============================================================================
+// LOGO BANNER
+// =============================================================================
+export interface LogoBannerItem {
+    imageUrl: string;
+    alt: string;
+    link?: string;
+    linkText?: string;
+    linkType?: 'manual' | 'content';
+}
+
+export interface LogoBannerData {
+    title?: string;
+    subtitle?: string;
+    logos: LogoBannerItem[];
+    scrollEnabled?: boolean;
+    scrollSpeed?: number;
+    pauseOnHover?: boolean;
+    logoHeight?: number;
+    logoGap?: number;
+    grayscale?: boolean;
+    useGradient?: boolean;
+    gradientFrom?: string;
+    gradientTo?: string;
+    gradientAngle?: number;
+    backgroundColor?: string;
+    titleColor?: string;
+    subtitleColor?: string;
+    titleFontSize?: 'sm' | 'md' | 'lg';
+    subtitleFontSize?: 'sm' | 'md' | 'lg';
+    paddingY?: 'sm' | 'md' | 'lg' | 'xl';
+    showDivider?: boolean;
+    dividerColor?: string;
+    backgroundImageUrl?: string;
+    backgroundOverlayEnabled?: boolean;
+    backgroundOverlayOpacity?: number;
+    backgroundOverlayColor?: string;
+}
+
+// =============================================================================
 // PRODUCTS (ECOMMERCE STOREFRONT)
 // =============================================================================
 export type StyleType = 'minimal' | 'modern' | 'elegant' | 'dark';
@@ -1963,6 +2002,7 @@ export interface PageData {
     menu: MenuData;
     banner: BannerData;
     topBar?: TopBarData;
+    logoBanner?: LogoBannerData;
     products?: ProductsData;
     // Ecommerce components - Store settings
     storeSettings?: StoreSettingsData;

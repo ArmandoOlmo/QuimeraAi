@@ -50,6 +50,7 @@ import BusinessMap from './BusinessMap';
 import Menu from './Menu';
 import Banner from './Banner';
 import TopBar from './TopBar';
+import LogoBanner from './LogoBanner';
 import SectionBackground from './ui/SectionBackground';
 
 // Import ecommerce sections
@@ -567,6 +568,17 @@ const PageRenderer: React.FC<PageRendererProps> = ({
                     <TopBar
                         key={key}
                         {...topBarData}
+                        onNavigate={handleLinkNavigation}
+                    />
+                ) : null;
+            }
+
+            case 'logoBanner': {
+                const logoBannerData = mergedData.logoBanner;
+                return logoBannerData ? (
+                    <LogoBanner
+                        key={key}
+                        {...logoBannerData}
                         onNavigate={handleLinkNavigation}
                     />
                 ) : null;
