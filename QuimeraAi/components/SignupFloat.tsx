@@ -274,7 +274,7 @@ const SignupFloat: React.FC<SignupFloatProps> = ({
   // ========== FULL OVERLAY (viewState === 'open') ==========
   return portalRender(
     <>
-      {/* Overlay backdrop for center position */}
+      {/* Overlay backdrop for center position — visual only, does NOT block scroll/click */}
       {floatPosition === 'center' && (
         <div
           style={{
@@ -282,15 +282,15 @@ const SignupFloat: React.FC<SignupFloatProps> = ({
             inset: 0,
             backgroundColor: colors?.overlayBackground || 'rgba(0,0,0,0.4)',
             zIndex: 9998,
-            pointerEvents: 'auto',
+            pointerEvents: 'none',
             transition: 'opacity 0.3s ease',
           }}
-          onClick={showCloseButton ? handleClose : undefined}
         />
       )}
 
       {/* Floating Card */}
       <div
+        onClick={(e) => e.stopPropagation()}
         style={{
           position: positionType,
           zIndex: 9999,
