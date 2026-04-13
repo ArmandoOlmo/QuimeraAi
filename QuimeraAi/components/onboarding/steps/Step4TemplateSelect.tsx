@@ -35,9 +35,10 @@ interface Step4TemplateSelectProps {
 
 // All available components
 const ALL_COMPONENTS: PageSection[] = [
-    'header', 'hero', 'heroSplit', 'features', 'services', 'testimonials',
+    'header', 'topBar', 'logoBanner', 'hero', 'heroSplit', 'features', 'services', 'testimonials',
     'team', 'portfolio', 'pricing', 'faq', 'cta', 'video', 'slideshow',
-    'howItWorks', 'newsletter', 'leads', 'banner', 'menu', 'map', 'footer'
+    'howItWorks', 'newsletter', 'leads', 'banner', 'menu', 'map',
+    'cmsFeed', 'chatbot', 'signupFloat', 'footer'
 ];
 
 // Component labels

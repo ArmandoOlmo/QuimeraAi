@@ -6145,7 +6145,11 @@
       "productReviews": "Reseñas de Productos",
       "collectionBanner": "Banner de Colección",
       "productBundle": "Paquete de Productos",
-      "announcementBar": "Barra de Anuncios"
+      "announcementBar": "Barra de Anuncios",
+      "topBar": "Barra Superior",
+      "logoBanner": "Banner de Logos",
+      "signupFloat": "Registro Flotante",
+      "cmsFeed": "Feed de Blog"
     },
     "social": {
       "facebook": "Facebook",
@@ -6458,7 +6462,11 @@
         "productReviews": "Reseñas de Productos",
         "collectionBanner": "Banner de Colección",
         "productBundle": "Paquete de Productos",
-        "announcementBar": "Barra de Anuncios"
+        "announcementBar": "Barra de Anuncios",
+        "topBar": "Barra Superior",
+        "logoBanner": "Banner de Logos",
+        "signupFloat": "Registro Flotante",
+        "cmsFeed": "Feed de Blog"
       },
       "social": {
         "facebook": "Facebook",

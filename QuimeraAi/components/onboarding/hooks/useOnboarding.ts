@@ -1825,6 +1825,37 @@ TEMPLATE #${t.index}: "${t.name}"
             );
         }
 
+        // ============ TOP BAR ============
+        if (data.topBar && isOn('topBar')) {
+            if (contact.phone) data.topBar.phone = contact.phone;
+            if (contact.email) data.topBar.email = contact.email;
+            if (contact.businessHours) data.topBar.businessHours = contact.businessHours;
+            // Social links for topBar
+            const socialLinks: { platform: string; href: string }[] = [];
+            if (contact.facebook) socialLinks.push({ platform: 'facebook', href: contact.facebook });
+            if (contact.instagram) socialLinks.push({ platform: 'instagram', href: contact.instagram });
+            if (contact.twitter) socialLinks.push({ platform: 'twitter', href: contact.twitter });
+            if (contact.linkedin) socialLinks.push({ platform: 'linkedin', href: contact.linkedin });
+            if (socialLinks.length > 0) data.topBar.socialLinks = socialLinks;
+        }
+
+        // ============ LOGO BANNER ============
+        if (data.logoBanner && isOn('logoBanner')) {
+            data.logoBanner.title = t('Nuestros Aliados', 'Our Partners');
+            data.logoBanner.description = t('Empresas que confían en nosotros', 'Companies that trust us');
+        }
+
+        // ============ SIGNUP FLOAT ============
+        if (data.signupFloat && isOn('signupFloat')) {
+            data.signupFloat.title = t('¡No te pierdas nada!', 'Don\'t miss out!');
+            data.signupFloat.description = t(
+                `Suscríbete a ${name} para recibir ofertas exclusivas.`,
+                `Subscribe to ${name} for exclusive offers.`
+            );
+            data.signupFloat.buttonText = t('Suscribirse', 'Subscribe');
+            data.signupFloat.placeholder = t('Tu correo electrónico', 'Your email address');
+        }
+
         // ============ APPLY BACKGROUND IMAGES TO ALL SECTIONS ============
         const bgSectionKeys = [
             'services', 'features', 'testimonials', 'pricing', 'faq',

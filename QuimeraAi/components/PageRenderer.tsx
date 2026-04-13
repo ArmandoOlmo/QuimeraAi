@@ -193,6 +193,8 @@ const PageRenderer: React.FC<PageRendererProps> = ({
             productBundle: mergeComponentData('productBundle') || baseData.productBundle,
             announcementBar: mergeComponentData('announcementBar') || baseData.announcementBar,
             cmsFeed: mergeComponentData('cmsFeed') || (baseData as any).cmsFeed,
+            logoBanner: mergeComponentData('logoBanner') || (baseData as any).logoBanner,
+            signupFloat: mergeComponentData('signupFloat') || (baseData as any).signupFloat,
         } as PageData;
     }, [baseData, mergeComponentData]);
 

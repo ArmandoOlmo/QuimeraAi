@@ -43,6 +43,10 @@ export function generatePagesFromLegacyProject(
         ecommerceSections.includes(section) && sectionVisibility[section] !== false
     );
     
+    // Helper to check if a section is active
+    const isActive = (section: string) => 
+        componentOrder.includes(section as PageSection) && sectionVisibility[section] !== false;
+    
     const pages: SitePage[] = [];
     
     // 1. Create Home page with content sections
@@ -173,16 +177,17 @@ export function generatePagesFromLegacyProject(
     }
     
     // 7. Create Contact page if leads section exists
-    if (componentOrder.includes('leads') && sectionVisibility['leads'] !== false) {
+    if (isActive('leads')) {
+        const contactSections: PageSection[] = ['header', 'leads'];
+        if (isActive('map')) contactSections.push('map');
+        contactSections.push('footer');
+        
         pages.push({
             id: 'contact',
             title: 'Contacto',
             slug: '/contacto',
             type: 'static',
-            sections: ['header', 'leads', 'map', 'footer'].filter(s => 
-                s === 'header' || s === 'footer' || s === 'leads' ||
-                (componentOrder.includes(s as PageSection) && sectionVisibility[s] !== false)
-            ) as PageSection[],
+            sections: contactSections as PageSection[],
             sectionData: {},
             seo: {
                 title: data.leads?.title || 'Contacto',
@@ -191,6 +196,114 @@ export function generatePagesFromLegacyProject(
             isHomePage: false,
             showInNavigation: true,
             navigationOrder: 5,
+        });
+    }
+    
+    // 8. Create Services page if services section is enabled
+    if (isActive('services')) {
+        const servicesSections: PageSection[] = ['header', 'services'];
+        if (isActive('howItWorks')) servicesSections.push('howItWorks');
+        if (isActive('cta')) servicesSections.push('cta');
+        servicesSections.push('footer');
+        
+        pages.push({
+            id: 'services',
+            title: 'Servicios',
+            slug: '/servicios',
+            type: 'static',
+            sections: servicesSections as PageSection[],
+            sectionData: {},
+            seo: {
+                title: data.services?.title || 'Servicios',
+                description: data.services?.description || 'Nuestros servicios profesionales',
+            },
+            isHomePage: false,
+            showInNavigation: true,
+            navigationOrder: 2,
+        });
+    }
+    
+    // 9. Create Portfolio page if portfolio section is enabled
+    if (isActive('portfolio')) {
+        pages.push({
+            id: 'portfolio',
+            title: 'Portafolio',
+            slug: '/portafolio',
+            type: 'static',
+            sections: ['header', 'portfolio', 'testimonials', 'footer'].filter(s =>
+                s === 'header' || s === 'footer' || s === 'portfolio' || isActive(s)
+            ) as PageSection[],
+            sectionData: {},
+            seo: {
+                title: data.portfolio?.title || 'Portafolio',
+                description: data.portfolio?.description || 'Nuestros trabajos y proyectos',
+            },
+            isHomePage: false,
+            showInNavigation: true,
+            navigationOrder: 3,
+        });
+    }
+    
+    // 10. Create Blog page if cmsFeed section is enabled
+    if (isActive('cmsFeed')) {
+        pages.push({
+            id: 'blog',
+            title: 'Blog',
+            slug: '/blog',
+            type: 'static',
+            sections: ['header', 'cmsFeed', 'newsletter', 'footer'].filter(s =>
+                s === 'header' || s === 'footer' || s === 'cmsFeed' || isActive(s)
+            ) as PageSection[],
+            sectionData: {},
+            seo: {
+                title: (data as any).cmsFeed?.title || 'Blog',
+                description: (data as any).cmsFeed?.description || 'Últimos artículos y noticias',
+            },
+            isHomePage: false,
+            showInNavigation: true,
+            navigationOrder: 4,
+        });
+    }
+    
+    // 11. Create FAQ page if faq section is enabled
+    if (isActive('faq')) {
+        pages.push({
+            id: 'faq',
+            title: 'FAQ',
+            slug: '/faq',
+            type: 'static',
+            sections: ['header', 'faq', 'cta', 'footer'].filter(s =>
+                s === 'header' || s === 'footer' || s === 'faq' || isActive(s)
+            ) as PageSection[],
+            sectionData: {},
+            seo: {
+                title: data.faq?.title || 'Preguntas Frecuentes',
+                description: data.faq?.description || 'Respuestas a tus dudas más comunes',
+            },
+            isHomePage: false,
+            showInNavigation: false,
+            navigationOrder: 6,
+        });
+    }
+    
+    // 12. Create Pricing page if pricing section is enabled
+    if (isActive('pricing')) {
+        pages.push({
+            id: 'pricing',
+            title: 'Precios',
+            slug: '/precios',
+            type: 'static',
+            sections: ['header', 'pricing', 'faq', 'cta', 'footer'].filter(s =>
+                s === 'header' || s === 'footer' || s === 'pricing' || isActive(s)
+            ) as PageSection[],
+            sectionData: {},
+            seo: {
+                title: data.pricing?.title || 'Precios',
+                description: data.pricing?.description || 'Planes y precios',
+            },
+            isHomePage: false,
+            showInNavigation: true,
+            navigationOrder: 4,
         });
     }
     

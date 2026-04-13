@@ -6145,7 +6145,11 @@
       "productReviews": "Product Reviews",
       "collectionBanner": "Collection Banner",
       "productBundle": "Product Bundle",
-      "announcementBar": "Announcement Bar"
+      "announcementBar": "Announcement Bar",
+      "topBar": "Top Bar",
+      "logoBanner": "Logo Banner",
+      "signupFloat": "Floating Signup",
+      "cmsFeed": "Blog Feed"
     },
     "social": {
       "facebook": "Facebook",
