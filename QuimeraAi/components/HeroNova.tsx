@@ -62,10 +62,10 @@ const headlineSizeClasses: Record<FontSize, string> = {
 };
 
 const displaySizeMap: Record<FontSize, string> = {
-    sm: 'text-4xl md:text-6xl lg:text-7xl',
-    md: 'text-5xl md:text-7xl lg:text-8xl',
-    lg: 'text-6xl md:text-8xl lg:text-9xl',
-    xl: 'text-7xl md:text-9xl lg:text-[11rem]',
+    sm: 'text-3xl sm:text-4xl md:text-6xl lg:text-7xl',
+    md: 'text-4xl sm:text-5xl md:text-7xl lg:text-8xl',
+    lg: 'text-4xl sm:text-6xl md:text-8xl lg:text-9xl',
+    xl: 'text-5xl sm:text-7xl md:text-9xl lg:text-[11rem]',
 };
 
 // ─── Props ───
@@ -95,6 +95,46 @@ const HeroNova: React.FC<HeroNovaProps> = ({
     const [currentIndex, setCurrentIndex] = useState(0);
     const [isTransitioning, setIsTransitioning] = useState(false);
     const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
+
+    const [displayScale, setDisplayScale] = useState(1);
+    const displayContainerRef = useRef<HTMLDivElement>(null);
+    const displayTextRef = useRef<HTMLHeadingElement>(null);
+
+    const [headlineScale, setHeadlineScale] = useState(1);
+    const headlineContainerRef = useRef<HTMLDivElement>(null);
+    const headlineTextRef = useRef<HTMLHeadingElement>(null);
+
+    useEffect(() => {
+        const calculateScales = () => {
+            if (displayContainerRef.current && displayTextRef.current && showDisplayText && displayText) {
+                displayTextRef.current.style.transform = 'scale(1)';
+                const containerWidth = displayContainerRef.current.clientWidth - 32;
+                const textWidth = displayTextRef.current.scrollWidth;
+                if (textWidth > containerWidth && containerWidth > 0) {
+                    setDisplayScale(containerWidth / textWidth);
+                } else {
+                    setDisplayScale(1);
+                }
+            }
+
+            if (headlineContainerRef.current && headlineTextRef.current) {
+                headlineTextRef.current.style.transform = 'scale(1)';
+                const containerWidth = headlineContainerRef.current.clientWidth;
+                const textWidth = headlineTextRef.current.scrollWidth;
+                if (textWidth > containerWidth && containerWidth > 0) {
+                    setHeadlineScale(containerWidth / textWidth);
+                } else {
+                    setHeadlineScale(1);
+                }
+            }
+        };
+
+        calculateScales();
+        document.fonts?.ready.then(calculateScales);
+        
+        window.addEventListener('resize', calculateScales);
+        return () => window.removeEventListener('resize', calculateScales);
+    }, [displayText, showDisplayText, headlineFontSize, validSlides, currentIndex]);
 
     // Fallback slide
     const validSlides = Array.isArray(slides) && slides.length > 0 ? slides : [{
@@ -225,15 +265,19 @@ const HeroNova: React.FC<HeroNovaProps> = ({
 
             {/* ─── Centered Display Text (brand name) ─── */}
             {showDisplayText && displayText && (
-                <div className="absolute inset-0 z-[3] flex items-center justify-center pointer-events-none">
+                <div ref={displayContainerRef} className="absolute inset-0 z-[3] flex items-center justify-center pointer-events-none p-4 w-full overflow-hidden">
                     <h2
-                        className={`${displaySizeMap[headlineFontSize]} font-extrabold uppercase font-header nova-display`}
+                        ref={displayTextRef}
+                        className={`${displaySizeMap[headlineFontSize]} font-extrabold uppercase font-header nova-display text-center origin-center`}
                         style={{
                             color: displayColor,
                             letterSpacing: `${displayLetterSpacing}em`,
                             textTransform: 'uppercase',
                             lineHeight: 1,
                             userSelect: 'none',
+                            whiteSpace: 'nowrap',
+                            transform: `scale(${displayScale})`,
+                            willChange: 'transform',
                         }}
                     >
                         {displayText}
@@ -250,13 +294,17 @@ const HeroNova: React.FC<HeroNovaProps> = ({
                     {/* Content row: headline left, CTA right */}
                     <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-6 md:mb-8">
                         {/* Headline — bottom left */}
-                        <div className="max-w-xl nova-headline">
+                        <div ref={headlineContainerRef} className="max-w-xl nova-headline min-w-0">
                             <h1
-                                className={`${headlineSizeClasses[headlineFontSize]} font-bold uppercase leading-tight font-header`}
+                                ref={headlineTextRef}
+                                className={`${headlineSizeClasses[headlineFontSize]} font-bold uppercase leading-tight font-header origin-left`}
                                 style={{
                                     color: headingColor,
                                     letterSpacing: '0.04em',
                                     textTransform: 'var(--headings-transform, uppercase)' as any,
+                                    transform: `scale(${headlineScale})`,
+                                    display: 'inline-block',
+                                    willChange: 'transform',
                                 }}
                                 dangerouslySetInnerHTML={{ __html: sanitizeHtml(currentSlide.headline || '') }}
                             />
