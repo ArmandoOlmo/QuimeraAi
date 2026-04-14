@@ -9,7 +9,7 @@ import { db } from '../../../firebase';
 import { useAuth } from '../../../contexts/core/AuthContext';
 import { useProject } from '../../../contexts/project';
 import { useAdmin } from '../../../contexts/admin';
-import { useAI } from '../../../contexts/ai';
+import { useEditor } from '../../../contexts/EditorContext';
 import { useUI } from '../../../contexts/core/UIContext';
 import { useTranslation } from 'react-i18next';
 import { generateContentViaProxy, extractTextFromResponse } from '../../../utils/geminiProxyClient';
@@ -199,10 +199,11 @@ const createInitialProgress = (language: string): OnboardingProgress => ({
 
 export const useOnboarding = () => {
     const { t, i18n } = useTranslation();
-    // CRITICAL FIX: Use modular contexts instead of useEditor() to ensure
-    // addNewProject comes from ProjectContext (single source of truth).
-    // Previously, using EditorContext's addNewProject caused cross-contamination
-    // because EditorContext and ProjectContext had independent auto-save systems.
+    // CRITICAL FIX: addNewProject comes from ProjectContext (single source of truth)
+    // to prevent cross-contamination between the dual auto-save systems.
+    // generateImage stays from useEditor because it handles Firebase Storage upload
+    // and returns permanent URLs (AIContext returns base64 data URLs which can exceed
+    // Firestore's 1MB document size limit).
     const { user } = useAuth();
     const {
         projects,
@@ -210,7 +211,7 @@ export const useOnboarding = () => {
         loadProject,
     } = useProject();
     const { getPrompt } = useAdmin();
-    const { generateImage } = useAI();
+    const { generateImage } = useEditor();
 
     // Get setIsOnboardingOpen from UIContext (same context that OnboardingModal uses)
     const { setIsOnboardingOpen } = useUI();
@@ -1109,10 +1110,10 @@ TEMPLATE #${t.index}: "${t.name}"
         }
 
         // MENU items (1:1 food photos) - Use AI-generated menu item names and descriptions
-        // Limited to 3 images for faster onboarding (users can generate more later)
+        // Generate all 6 menu item images for a complete presentation
         if (templateData.menu?.items && isEnabled('menu')) {
             const menuItems = aiContent.menu || [];
-            const count = Math.min(menuItems.length > 0 ? menuItems.length : templateData.menu.items.length, 3); // Max 3 for faster generation
+            const count = Math.min(menuItems.length > 0 ? menuItems.length : templateData.menu.items.length, 6); // All 6 menu items
             for (let i = 0; i < count; i++) {
                 const menuItem = menuItems[i];
                 const dishName = menuItem?.name || 'delicious dish';
@@ -1234,10 +1235,10 @@ TEMPLATE #${t.index}: "${t.name}"
             }
         }
 
-        // MENU - Limited to 3 images for faster onboarding
+        // MENU - Generate all 6 menu item images
         if (templateData.menu?.items && isEnabled('menu')) {
             const menuItems = aiContent.menu || [];
-            const count = Math.min(menuItems.length > 0 ? menuItems.length : templateData.menu.items.length, 3); // Max 3 for faster generation
+            const count = Math.min(menuItems.length > 0 ? menuItems.length : templateData.menu.items.length, 6); // All 6 menu items
             for (let i = 0; i < count; i++) {
                 const dish = menuItems[i];
                 imagesToGenerate.push({

@@ -952,9 +952,10 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         const newProject = { ...project, id: finalId };
         setProjects(prev => [newProject, ...prev]);
         
-        // CRITICAL: Also load the new project into the editor immediately
-        // This prevents desync where ProjectContext has a stale activeProjectId
-        loadProject(finalId, false, true, newProject);
+        // NOTE: We do NOT call loadProject here. The callers (useOnboarding,
+        // GlobalAiAssistant, etc.) handle loading the project at the appropriate
+        // time — e.g., after image generation completes during onboarding.
+        // Calling loadProject here would navigate to the editor prematurely.
         
         return finalId;
     };
