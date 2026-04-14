@@ -104,6 +104,8 @@ const HeroNova: React.FC<HeroNovaProps> = ({
     const headlineContainerRef = useRef<HTMLDivElement>(null);
     const headlineTextRef = useRef<HTMLHeadingElement>(null);
 
+    const sectionRef = useRef<HTMLElement>(null);
+
     useEffect(() => {
         const calculateScales = () => {
             if (displayContainerRef.current && displayTextRef.current && showDisplayText && displayText) {
@@ -131,9 +133,20 @@ const HeroNova: React.FC<HeroNovaProps> = ({
 
         calculateScales();
         document.fonts?.ready.then(calculateScales);
+
+        const observer = new ResizeObserver(() => {
+            calculateScales();
+        });
+
+        if (sectionRef.current) {
+            observer.observe(sectionRef.current);
+        }
         
         window.addEventListener('resize', calculateScales);
-        return () => window.removeEventListener('resize', calculateScales);
+        return () => {
+            observer.disconnect();
+            window.removeEventListener('resize', calculateScales);
+        };
     }, [displayText, showDisplayText, headlineFontSize, validSlides, currentIndex]);
 
     // Fallback slide
@@ -208,7 +221,7 @@ const HeroNova: React.FC<HeroNovaProps> = ({
     const currentSlide = validSlides[currentIndex];
 
     return (
-        <section className="relative w-full overflow-hidden" style={{ backgroundColor: bgColor, minHeight }}>
+        <section ref={sectionRef} className="relative w-full overflow-hidden" style={{ backgroundColor: bgColor, minHeight }}>
             <CornerGradient config={cornerGradient} />
 
             {/* ─── Background Slides (image / video) ─── */}
@@ -265,7 +278,7 @@ const HeroNova: React.FC<HeroNovaProps> = ({
 
             {/* ─── Centered Display Text (brand name) ─── */}
             {showDisplayText && displayText && (
-                <div ref={displayContainerRef} className="absolute inset-0 z-[3] flex items-center justify-center pointer-events-none p-4 w-full overflow-hidden">
+                <div ref={displayContainerRef} className="absolute inset-0 z-[3] flex items-center justify-center pointer-events-none p-4 w-full">
                     <h2
                         ref={displayTextRef}
                         className={`${displaySizeMap[headlineFontSize]} font-extrabold uppercase font-header nova-display text-center origin-center`}
