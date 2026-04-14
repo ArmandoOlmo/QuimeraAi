@@ -20,14 +20,7 @@ import Hero from './Hero';
 import HeroModern from './HeroModern';
 import HeroGradient from './HeroGradient';
 import HeroFitness from './HeroFitness';
-import HeroEditorial from './HeroEditorial';
-import HeroCinematic from './HeroCinematic';
-import HeroMinimal from './HeroMinimal';
-import HeroBold from './HeroBold';
-import HeroOverlap from './HeroOverlap';
-import HeroVerticalSplit from './HeroVerticalSplit';
-import HeroGlass from './HeroGlass';
-import HeroStacked from './HeroStacked';
+
 import HeroSplit from './HeroSplit';
 import HeroGallery from './HeroGallery';
 import HeroWave from './HeroWave';
@@ -326,14 +319,7 @@ const PageRenderer: React.FC<PageRendererProps> = ({
                     if (heroData?.heroVariant === 'modern') return <HeroModern key={key} {...heroData} borderRadius={heroBorderRadius} onNavigate={handleLinkNavigation} />;
                     if (heroData?.heroVariant === 'gradient') return <HeroGradient key={key} {...heroData} borderRadius={heroBorderRadius} onNavigate={handleLinkNavigation} />;
                     if (heroData?.heroVariant === 'fitness') return <HeroFitness key={key} {...heroData} borderRadius={heroBorderRadius} onNavigate={handleLinkNavigation} />;
-                    if (heroData?.heroVariant === 'editorial') return <HeroEditorial key={key} {...heroData} borderRadius={heroBorderRadius} onNavigate={handleLinkNavigation} />;
-                    if (heroData?.heroVariant === 'cinematic') return <HeroCinematic key={key} {...heroData} borderRadius={heroBorderRadius} onNavigate={handleLinkNavigation} />;
-                    if (heroData?.heroVariant === 'minimal') return <HeroMinimal key={key} {...heroData} borderRadius={heroBorderRadius} onNavigate={handleLinkNavigation} />;
-                    if (heroData?.heroVariant === 'bold') return <HeroBold key={key} {...heroData} borderRadius={heroBorderRadius} onNavigate={handleLinkNavigation} />;
-                    if (heroData?.heroVariant === 'overlap') return <HeroOverlap key={key} {...heroData} borderRadius={heroBorderRadius} onNavigate={handleLinkNavigation} />;
-                    if (heroData?.heroVariant === 'verticalSplit') return <HeroVerticalSplit key={key} {...heroData} borderRadius={heroBorderRadius} onNavigate={handleLinkNavigation} />;
-                    if (heroData?.heroVariant === 'glass') return <HeroGlass key={key} {...heroData} borderRadius={heroBorderRadius} onNavigate={handleLinkNavigation} />;
-                    if (heroData?.heroVariant === 'stacked') return <HeroStacked key={key} {...heroData} borderRadius={heroBorderRadius} onNavigate={handleLinkNavigation} />;
+
                     return <Hero key={key} {...heroData} borderRadius={heroBorderRadius} onNavigate={handleLinkNavigation} />;
                 })();
                 return <SectionBackground backgroundImageUrl={heroData?.backgroundImageUrl} backgroundColor={heroData?.colors?.background} backgroundOverlayEnabled={heroData?.backgroundOverlayEnabled} backgroundOverlayOpacity={heroData?.backgroundOverlayOpacity} backgroundOverlayColor={heroData?.backgroundOverlayColor}>{heroComponent}</SectionBackground>;

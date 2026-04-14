@@ -25,14 +25,7 @@ import Footer from './Footer';
 const HeroModern = lazy(() => import('./HeroModern'));
 const HeroGradient = lazy(() => import('./HeroGradient'));
 const HeroFitness = lazy(() => import('./HeroFitness'));
-const HeroEditorial = lazy(() => import('./HeroEditorial'));
-const HeroCinematic = lazy(() => import('./HeroCinematic'));
-const HeroMinimal = lazy(() => import('./HeroMinimal'));
-const HeroBold = lazy(() => import('./HeroBold'));
-const HeroOverlap = lazy(() => import('./HeroOverlap'));
-const HeroVerticalSplit = lazy(() => import('./HeroVerticalSplit'));
-const HeroGlass = lazy(() => import('./HeroGlass'));
-const HeroStacked = lazy(() => import('./HeroStacked'));
+
 const HeroSplit = lazy(() => import('./HeroSplit'));
 const Testimonials = lazy(() => import('./Testimonials'));
 const Slideshow = lazy(() => import('./Slideshow'));
@@ -1572,14 +1565,7 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
           if (compData.heroVariant === 'modern') return withBackground(<HeroModern {...compData} borderRadius={hbr} onNavigate={handleLinkNavigation} />);
           if (compData.heroVariant === 'gradient') return withBackground(<HeroGradient {...compData} borderRadius={hbr} onNavigate={handleLinkNavigation} />);
           if (compData.heroVariant === 'fitness') return withBackground(<HeroFitness {...compData} borderRadius={hbr} onNavigate={handleLinkNavigation} />);
-          if (compData.heroVariant === 'editorial') return withBackground(<HeroEditorial {...compData} borderRadius={hbr} onNavigate={handleLinkNavigation} />);
-          if (compData.heroVariant === 'cinematic') return withBackground(<HeroCinematic {...compData} borderRadius={hbr} onNavigate={handleLinkNavigation} />);
-          if (compData.heroVariant === 'minimal') return withBackground(<HeroMinimal {...compData} borderRadius={hbr} onNavigate={handleLinkNavigation} />);
-          if (compData.heroVariant === 'bold') return withBackground(<HeroBold {...compData} borderRadius={hbr} onNavigate={handleLinkNavigation} />);
-          if (compData.heroVariant === 'overlap') return withBackground(<HeroOverlap {...compData} borderRadius={hbr} onNavigate={handleLinkNavigation} />);
-          if (compData.heroVariant === 'verticalSplit') return withBackground(<HeroVerticalSplit {...compData} borderRadius={hbr} onNavigate={handleLinkNavigation} />);
-          if (compData.heroVariant === 'glass') return withBackground(<HeroGlass {...compData} borderRadius={hbr} onNavigate={handleLinkNavigation} />);
-          if (compData.heroVariant === 'stacked') return withBackground(<HeroStacked {...compData} borderRadius={hbr} onNavigate={handleLinkNavigation} />);
+
           return withBackground(<Hero {...compData} borderRadius={hbr} onNavigate={handleLinkNavigation} />);
         }
       case 'heroSplit':

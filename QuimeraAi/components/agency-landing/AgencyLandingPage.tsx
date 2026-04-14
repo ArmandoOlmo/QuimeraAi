@@ -5,14 +5,7 @@ import Hero from '../Hero';
 import HeroModern from '../HeroModern';
 import HeroGradient from '../HeroGradient';
 import HeroFitness from '../HeroFitness';
-import HeroEditorial from '../HeroEditorial';
-import HeroCinematic from '../HeroCinematic';
-import HeroMinimal from '../HeroMinimal';
-import HeroBold from '../HeroBold';
-import HeroOverlap from '../HeroOverlap';
-import HeroVerticalSplit from '../HeroVerticalSplit';
-import HeroGlass from '../HeroGlass';
-import HeroStacked from '../HeroStacked';
+
 import HeroSplit from '../HeroSplit';
 import HeroGallery from '../HeroGallery';
 import HeroWave from '../HeroWave';
@@ -516,14 +509,7 @@ const AgencyLandingPageContent: React.FC = () => {
         if (mergedData.heroVariant === 'modern') return <HeroModern {...mergedData} borderRadius={hbr} />;
         if (mergedData.heroVariant === 'gradient') return <HeroGradient {...mergedData} borderRadius={hbr} />;
         if (mergedData.heroVariant === 'fitness') return <HeroFitness {...mergedData} borderRadius={hbr} />;
-        if (mergedData.heroVariant === 'editorial') return <HeroEditorial {...mergedData} borderRadius={hbr} />;
-        if (mergedData.heroVariant === 'cinematic') return <HeroCinematic {...mergedData} borderRadius={hbr} />;
-        if (mergedData.heroVariant === 'minimal') return <HeroMinimal {...mergedData} borderRadius={hbr} />;
-        if (mergedData.heroVariant === 'bold') return <HeroBold {...mergedData} borderRadius={hbr} />;
-        if (mergedData.heroVariant === 'overlap') return <HeroOverlap {...mergedData} borderRadius={hbr} />;
-        if (mergedData.heroVariant === 'verticalSplit') return <HeroVerticalSplit {...mergedData} borderRadius={hbr} />;
-        if (mergedData.heroVariant === 'glass') return <HeroGlass {...mergedData} borderRadius={hbr} />;
-        if (mergedData.heroVariant === 'stacked') return <HeroStacked {...mergedData} borderRadius={hbr} />;
+
         return <Hero {...mergedData} borderRadius={hbr} />;
       case 'features':
         return <Features {...mergedData} borderRadius={mergedData.borderRadius || borderRadius} />;
@@ -720,14 +706,7 @@ const AgencyLandingPageContent: React.FC = () => {
           if (mergedHeroData.heroVariant === 'modern') return <HeroModern {...mergedHeroData} borderRadius={hbr} onNavigate={nav} />;
           if (mergedHeroData.heroVariant === 'gradient') return <HeroGradient {...mergedHeroData} borderRadius={hbr} onNavigate={nav} />;
           if (mergedHeroData.heroVariant === 'fitness') return <HeroFitness {...mergedHeroData} borderRadius={hbr} onNavigate={nav} />;
-          if (mergedHeroData.heroVariant === 'editorial') return <HeroEditorial {...mergedHeroData} borderRadius={hbr} onNavigate={nav} />;
-          if (mergedHeroData.heroVariant === 'cinematic') return <HeroCinematic {...mergedHeroData} borderRadius={hbr} onNavigate={nav} />;
-          if (mergedHeroData.heroVariant === 'minimal') return <HeroMinimal {...mergedHeroData} borderRadius={hbr} onNavigate={nav} />;
-          if (mergedHeroData.heroVariant === 'bold') return <HeroBold {...mergedHeroData} borderRadius={hbr} onNavigate={nav} />;
-          if (mergedHeroData.heroVariant === 'overlap') return <HeroOverlap {...mergedHeroData} borderRadius={hbr} onNavigate={nav} />;
-          if (mergedHeroData.heroVariant === 'verticalSplit') return <HeroVerticalSplit {...mergedHeroData} borderRadius={hbr} onNavigate={nav} />;
-          if (mergedHeroData.heroVariant === 'glass') return <HeroGlass {...mergedHeroData} borderRadius={hbr} onNavigate={nav} />;
-          if (mergedHeroData.heroVariant === 'stacked') return <HeroStacked {...mergedHeroData} borderRadius={hbr} onNavigate={nav} />;
+
           return <Hero {...mergedHeroData} borderRadius={hbr} onNavigate={nav} />;
         })()}
       </SectionBackground>

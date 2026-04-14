@@ -10,14 +10,7 @@ import Hero from '../../Hero';
 import HeroModern from '../../HeroModern';
 import HeroGradient from '../../HeroGradient';
 import HeroFitness from '../../HeroFitness';
-import HeroEditorial from '../../HeroEditorial';
-import HeroCinematic from '../../HeroCinematic';
-import HeroMinimal from '../../HeroMinimal';
-import HeroBold from '../../HeroBold';
-import HeroOverlap from '../../HeroOverlap';
-import HeroVerticalSplit from '../../HeroVerticalSplit';
-import HeroGlass from '../../HeroGlass';
-import HeroStacked from '../../HeroStacked';
+
 import Features from '../../Features';
 import Testimonials from '../../Testimonials';
 import CTASection from '../../CTASection';
@@ -165,14 +158,7 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({ selectedComponentId
                     if (heroVariant === 'modern') return <HeroModern {...mergedProps} borderRadius={hbr} />;
                     if (heroVariant === 'gradient') return <HeroGradient {...mergedProps} borderRadius={hbr} />;
                     if (heroVariant === 'fitness') return <HeroFitness {...mergedProps} borderRadius={hbr} />;
-                    if (heroVariant === 'editorial') return <HeroEditorial {...mergedProps} borderRadius={hbr} />;
-                    if (heroVariant === 'cinematic') return <HeroCinematic {...mergedProps} borderRadius={hbr} />;
-                    if (heroVariant === 'minimal') return <HeroMinimal {...mergedProps} borderRadius={hbr} />;
-                    if (heroVariant === 'bold') return <HeroBold {...mergedProps} borderRadius={hbr} />;
-                    if (heroVariant === 'overlap') return <HeroOverlap {...mergedProps} borderRadius={hbr} />;
-                    if (heroVariant === 'verticalSplit') return <HeroVerticalSplit {...mergedProps} borderRadius={hbr} />;
-                    if (heroVariant === 'glass') return <HeroGlass {...mergedProps} borderRadius={hbr} />;
-                    if (heroVariant === 'stacked') return <HeroStacked {...mergedProps} borderRadius={hbr} />;
+
                     return <Hero {...mergedProps} borderRadius={hbr} />;
                 }
             case 'features':

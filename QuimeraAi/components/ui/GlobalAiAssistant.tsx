@@ -879,7 +879,7 @@ const GlobalAiAssistant: React.FC = () => {
         userDocument, setAdminView, data, setData, themeMode, setThemeMode, loadProject, activeProject,
         hasApiKey, promptForKeySelection, handleApiError, globalAssistantConfig,
         theme, setTheme,
-        getPrompt, addNewProject,
+        getPrompt,
         updateSeoConfig,
         componentStatus, customComponents
     } = useEditor();
@@ -889,6 +889,7 @@ const GlobalAiAssistant: React.FC = () => {
     const { navigate } = useRouter();
     const {
         projects,
+        addNewProject,
         brandIdentity,
         setBrandIdentity,
         componentOrder,

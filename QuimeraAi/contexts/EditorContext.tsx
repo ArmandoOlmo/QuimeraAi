@@ -1161,135 +1161,26 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
         aiAssistantConfigRef.current = aiAssistantConfig;
     }, [aiAssistantConfig]);
 
-    // Auto-save effect: saves project automatically when data changes (including templates)
+    // =========================================================================
+    // AUTO-SAVE DISABLED IN EDITORCONTEXT
+    // =========================================================================
+    // CRITICAL FIX: Auto-save is now handled EXCLUSIVELY by ProjectContext.
+    // Having two auto-save systems (EditorContext + ProjectContext) running in
+    // parallel caused cross-contamination: when a new project was created via
+    // onboarding, EditorContext's auto-save could write the new project's data
+    // to whatever project ProjectContext had active (or vice versa), corrupting
+    // other projects and even templates.
+    //
+    // ProjectContext's auto-save (2s debounce) is the single source of truth.
+    // EditorContext still provides saveProject() for explicit/manual saves.
+    // =========================================================================
     useEffect(() => {
-        // Skip if missing required data
-        if (!activeProjectId || !data || !user || !activeProject) {
-            return;
-        }
-
-        // CRITICAL FIX: Skip during initial load OR project transition.
-        // isInitialLoadRef is set to true when activeProjectId changes (see effect below).
-        // We must NOT reset it here — it gets reset by a dedicated setTimeout
-        // in the activeProjectId change effect, giving React time to propagate
-        // all the state updates from loadProject() before allowing auto-save.
-        if (isInitialLoadRef.current) {
-            return;
-        }
-
-        // Clear any existing timer
+        // Safety: clear any lingering auto-save timer from before this fix
         if (autoSaveTimerRef.current) {
             clearTimeout(autoSaveTimerRef.current);
+            autoSaveTimerRef.current = null;
         }
-
-        // Capture the projectId at the time of scheduling (for closure safety)
-        const scheduledProjectId = activeProjectId;
-
-        // Set debounced auto-save (2 seconds after last change)
-        autoSaveTimerRef.current = setTimeout(async () => {
-            try {
-                // CRITICAL FIX: Validate that the project hasn't changed during the debounce.
-                // The ref is updated synchronously (not subject to React batching),
-                // so this catches cases where the user switched projects during the 2s window.
-                if (activeProjectIdRef.current !== scheduledProjectId) {
-                    console.log(`🛑 [EditorContext Auto-save] Aborted: Project changed during debounce (scheduled: ${scheduledProjectId}, current: ${activeProjectIdRef.current})`);
-                    return;
-                }
-
-                // Also re-check isInitialLoadRef (loadProject may have been called during debounce)
-                if (isInitialLoadRef.current) {
-                    console.log('🛑 [EditorContext Auto-save] Aborted: Project is loading');
-                    return;
-                }
-
-                // CRITICAL: Double-check project still exists in local state before saving
-                // This prevents recreating deleted projects due to race conditions
-                const projectToSave = projectsRef.current.find(p => p.id === scheduledProjectId);
-                if (!projectToSave) {
-                    console.log('🛑 [EditorContext Auto-save] Aborted: Project no longer exists in local state (was likely deleted)');
-                    return;
-                }
-                if (!user) {
-                    console.log('🛑 [EditorContext Auto-save] Aborted: No authenticated user');
-                    return;
-                }
-
-                // Check permissions for templates
-                if (projectToSave.status === 'Template') {
-                    const userRole = userDocument?.role || '';
-                    if (!['owner', 'superadmin'].includes(userRole)) {
-                        console.warn('⚠️ [EditorContext Auto-save] Skipped: Only owner/superadmin can save templates');
-                        return;
-                    }
-                }
-
-                let thumbnailUrl = projectToSave.thumbnailUrl;
-                if (data.hero?.imageUrl && data.hero.imageUrl.trim() !== '') {
-                    thumbnailUrl = data.hero.imageUrl;
-                }
-
-                const updatedProject: Project = {
-                    ...projectToSave,
-                    data,
-                    theme,
-                    brandIdentity,
-                    componentOrder,
-                    sectionVisibility,
-                    thumbnailUrl,
-                    menus,
-                    aiAssistantConfig: aiAssistantConfigRef.current,
-                    lastUpdated: new Date().toISOString()
-                };
-
-                const { id, ...dataToSave } = updatedProject;
-
-                // Save to appropriate collection based on project type
-                // Use updateDoc instead of setDoc to prevent recreating deleted documents
-                if (projectToSave.status === 'Template') {
-                    // Save template to global templates collection
-                    const templateDocRef = doc(db, 'templates', scheduledProjectId);
-                    // First verify document still exists to prevent recreation
-                    const docSnap = await getDoc(templateDocRef);
-                    if (!docSnap.exists() || docSnap.data()?.isDeleted) {
-                        console.log('🛑 [EditorContext Auto-save] Aborted: Template was deleted from Firestore');
-                        return;
-                    }
-                    await updateDoc(templateDocRef, dataToSave);
-                } else {
-                    // Save regular project to user's projects collection
-                    const projectDocRef = doc(db, 'users', user.uid, 'projects', scheduledProjectId);
-                    // First verify document still exists to prevent recreation
-                    const docSnap = await getDoc(projectDocRef);
-                    if (!docSnap.exists()) {
-                        console.log('🛑 [EditorContext Auto-save] Aborted: Project was deleted from Firestore');
-                        return;
-                    }
-                    await updateDoc(projectDocRef, dataToSave);
-                }
-
-                // Update projects ref without triggering re-render (Firestore is the source of truth)
-                projectsRef.current = projectsRef.current.map(p => p.id === scheduledProjectId ? updatedProject : p);
-                console.log(`✅ [EditorContext Auto-save] Saved project "${projectToSave.name}" (${scheduledProjectId})`);
-            } catch (error: any) {
-                // Don't log errors for "document not found" - this is expected for deleted projects
-                if (error?.code === 'not-found' || error?.message?.includes('No document to update')) {
-                    console.log('🛑 [EditorContext Auto-save] Document not found (likely deleted), skipping save');
-                } else {
-                    console.error('❌ [EditorContext Auto-save] Error:', error);
-                }
-            }
-        }, 2000);
-
-        return () => {
-            if (autoSaveTimerRef.current) {
-                clearTimeout(autoSaveTimerRef.current);
-            }
-        };
-    }, [data, theme, brandIdentity, componentOrder, sectionVisibility, menus, activeProjectId, activeProject, user, userDocument]);
-    // NOTE: aiAssistantConfig is intentionally excluded from this dependency array.
-    // It is saved independently by saveAiAssistantConfig() in both EditorContext and AIContext.
-    // Including it here caused a race condition: loadProject() setting stale cached config
-    // would trigger auto-save and overwrite fresh changes made in the AI Dashboard.
+    }, [activeProjectId]);
 
     // CRITICAL FIX: When activeProjectId changes, set the loading guard AND cancel
     // any pending auto-save timer. The guard is released after a generous delay
@@ -1838,7 +1729,9 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
 
                 // Save to global templates collection
                 const templateDocRef = doc(db, 'templates', activeProject.id);
-                await setDoc(templateDocRef, dataToSave);
+                // Use updateDoc to prevent overwriting the entire document
+                // in case of any data desync between contexts
+                await updateDoc(templateDocRef, dataToSave);
 
                 setProjects(prev => prev.map(p => p.id === activeProject.id ? updatedProject : p));
                 console.log('✅ Template saved to Firestore (global templates collection)');
@@ -1847,7 +1740,9 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
 
             // Save regular user project
             const projectDocRef = doc(db, 'users', user.uid, 'projects', activeProject.id);
-            await setDoc(projectDocRef, dataToSave);
+            // Use updateDoc to prevent overwriting the entire document
+            // in case of any data desync between contexts
+            await updateDoc(projectDocRef, dataToSave);
 
             setProjects(prev => prev.map(p => p.id === activeProject.id ? updatedProject : p));
             console.log('✅ Project saved to Firestore');

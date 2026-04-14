@@ -276,7 +276,7 @@ const Step1BusinessInfo: React.FC<Step1BusinessInfoProps> = ({
                         <button
                             type="button"
                             onClick={() => onEcommerceUpdate(!hasEcommerce, hasEcommerce ? undefined : 'physical')}
-                            className={`relative inline-flex items-center cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 touch-manipulation ${hasEcommerce ? 'bg-primary' : 'bg-muted'
+                            className={`relative inline-flex items-center cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 touch-manipulation flex-shrink-0 ${hasEcommerce ? 'bg-primary' : 'bg-muted'
                                 }`}
                             style={{ width: 44, height: 24, minWidth: 44, minHeight: 24, maxHeight: 24 }}
                             role="switch"
@@ -285,10 +285,11 @@ const Step1BusinessInfo: React.FC<Step1BusinessInfoProps> = ({
                             <span
                                 className={`pointer-events-none absolute rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out`}
                                 style={{
-                                    width: 18,
-                                    height: 18,
-                                    top: 1,
-                                    left: hasEcommerce ? 23 : 1,
+                                    width: 16,
+                                    height: 16,
+                                    top: '50%',
+                                    transform: 'translateY(-50%)',
+                                    left: hasEcommerce ? 22 : 2,
                                 }}
                             />
                         </button>
@@ -374,7 +375,7 @@ const Step1BusinessInfo: React.FC<Step1BusinessInfoProps> = ({
                 <button
                     type="button"
                     onClick={() => onBioPageUpdate?.(!hasBioPage)}
-                    className={`relative inline-flex items-center cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 touch-manipulation ${hasBioPage ? 'bg-primary' : 'bg-muted'
+                    className={`relative inline-flex items-center cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 touch-manipulation flex-shrink-0 ${hasBioPage ? 'bg-primary' : 'bg-muted'
                         }`}
                     style={{ width: 44, height: 24, minWidth: 44, minHeight: 24, maxHeight: 24 }}
                     role="switch"
@@ -383,10 +384,11 @@ const Step1BusinessInfo: React.FC<Step1BusinessInfoProps> = ({
                     <span
                         className={`pointer-events-none absolute rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out`}
                         style={{
-                            width: 18,
-                            height: 18,
-                            top: 1,
-                            left: hasBioPage ? 23 : 1,
+                            width: 16,
+                            height: 16,
+                            top: '50%',
+                            transform: 'translateY(-50%)',
+                            left: hasBioPage ? 22 : 2,
                         }}
                     />
                 </button>

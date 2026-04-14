@@ -6,7 +6,10 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { doc, getDoc, setDoc, deleteDoc, collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../../../firebase';
-import { useEditor } from '../../../contexts/EditorContext';
+import { useAuth } from '../../../contexts/core/AuthContext';
+import { useProject } from '../../../contexts/project';
+import { useAdmin } from '../../../contexts/admin';
+import { useAI } from '../../../contexts/ai';
 import { useUI } from '../../../contexts/core/UIContext';
 import { useTranslation } from 'react-i18next';
 import { generateContentViaProxy, extractTextFromResponse } from '../../../utils/geminiProxyClient';
@@ -196,14 +199,18 @@ const createInitialProgress = (language: string): OnboardingProgress => ({
 
 export const useOnboarding = () => {
     const { t, i18n } = useTranslation();
+    // CRITICAL FIX: Use modular contexts instead of useEditor() to ensure
+    // addNewProject comes from ProjectContext (single source of truth).
+    // Previously, using EditorContext's addNewProject caused cross-contamination
+    // because EditorContext and ProjectContext had independent auto-save systems.
+    const { user } = useAuth();
     const {
-        user,
         projects,
-        getPrompt,
         addNewProject,
         loadProject,
-        generateImage,
-    } = useEditor();
+    } = useProject();
+    const { getPrompt } = useAdmin();
+    const { generateImage } = useAI();
 
     // Get setIsOnboardingOpen from UIContext (same context that OnboardingModal uses)
     const { setIsOnboardingOpen } = useUI();

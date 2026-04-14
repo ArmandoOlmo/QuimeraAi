@@ -921,16 +921,42 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         }
 
         const pathSegments = getProjectsCollectionPath(user.uid, currentTenantId);
-        const projectsCol = collection(db, ...pathSegments);
-        const docRef = await addDoc(projectsCol, {
-            ...project,
+        
+        // Strip the id from the project data before saving to Firestore
+        // (Firestore document ID should not be duplicated inside the document)
+        const { id: providedId, ...projectData } = project;
+        
+        const dataToSave = {
+            ...projectData,
             createdAt: serverTimestamp(),
             lastUpdated: serverTimestamp(),
-        });
+        };
 
-        const newProject = { ...project, id: docRef.id };
+        let finalId: string;
+
+        if (providedId) {
+            // Use the pre-generated ID (e.g., from onboarding: "proj_1234567890")
+            // This ensures the project is created with the exact ID the caller expects
+            const docRef = doc(db, ...pathSegments, providedId);
+            await setDoc(docRef, dataToSave);
+            finalId = providedId;
+            console.log(`✅ [ProjectContext] Project created with provided ID: ${finalId}`);
+        } else {
+            // Auto-generate ID via addDoc (default behavior)
+            const projectsCol = collection(db, ...pathSegments);
+            const docRef = await addDoc(projectsCol, dataToSave);
+            finalId = docRef.id;
+            console.log(`✅ [ProjectContext] Project created with auto-generated ID: ${finalId}`);
+        }
+
+        const newProject = { ...project, id: finalId };
         setProjects(prev => [newProject, ...prev]);
-        return docRef.id;
+        
+        // CRITICAL: Also load the new project into the editor immediately
+        // This prevents desync where ProjectContext has a stale activeProjectId
+        loadProject(finalId, false, true, newProject);
+        
+        return finalId;
     };
 
     // Delete project (soft-delete: marks with deletedAt instead of removing)
