@@ -96,6 +96,18 @@ const HeroNova: React.FC<HeroNovaProps> = ({
     const [isTransitioning, setIsTransitioning] = useState(false);
     const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
 
+    // Fallback slide
+    const validSlides = Array.isArray(slides) && slides.length > 0 ? slides : [{
+        headline: 'Comfort, Style, Durability: Our Seating Collection',
+        primaryCta: 'SHOP NOW',
+        primaryCtaLink: '/#products',
+        mediaType: 'image' as const,
+        backgroundImage: '',
+        backgroundColor: '#1a1a1a',
+    }];
+
+    const hasMultipleSlides = validSlides.length > 1;
+
     const [displayScale, setDisplayScale] = useState(1);
     const displayContainerRef = useRef<HTMLDivElement>(null);
     const displayTextRef = useRef<HTMLHeadingElement>(null);
@@ -149,17 +161,7 @@ const HeroNova: React.FC<HeroNovaProps> = ({
         };
     }, [displayText, showDisplayText, headlineFontSize, validSlides, currentIndex]);
 
-    // Fallback slide
-    const validSlides = Array.isArray(slides) && slides.length > 0 ? slides : [{
-        headline: 'Comfort, Style, Durability: Our Seating Collection',
-        primaryCta: 'SHOP NOW',
-        primaryCtaLink: '/#products',
-        mediaType: 'image' as const,
-        backgroundImage: '',
-        backgroundColor: '#1a1a1a',
-    }];
 
-    const hasMultipleSlides = validSlides.length > 1;
 
     // Colors
     const textColor = colors?.text || '#ffffff';
