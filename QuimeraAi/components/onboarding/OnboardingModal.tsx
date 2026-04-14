@@ -47,7 +47,7 @@ const OnboardingModal: React.FC = () => {
         updateStoreSetup,
         generateDescription,
         generateServices,
-        getTemplateRecommendation,
+
         generateSuggestedCategories,
         startGeneration,
         saveProgress,
@@ -200,10 +200,8 @@ const OnboardingModal: React.FC = () => {
                         selectedTemplateId={progress.selectedTemplateId}
                         enabledComponents={progress.enabledComponents}
                         disabledComponents={progress.disabledComponents}
-                        aiRecommendation={progress.aiRecommendation}
                         industry={progress.industry}
                         onUpdate={updateTemplateSelection}
-                        onGetRecommendation={getTemplateRecommendation}
                     />
                 );
             case 5:

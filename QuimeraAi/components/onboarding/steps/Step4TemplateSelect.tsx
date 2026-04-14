@@ -1,14 +1,15 @@
 /**
  * Step4TemplateSelect
- * Fourth step: AI template recommendation + gallery + component selection
+ * Fourth step: Template gallery + component selection
+ * The user manually picks their template (organized by color scheme).
+ * AI recommendation has been removed — the user is in full control.
  */
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { Layout, Sparkles, Check, Eye, EyeOff, AlertCircle, Star, ChevronDown, ChevronUp, Loader2 } from 'lucide-react';
+import { Layout, Check, Eye, EyeOff, Star, ChevronDown, ChevronUp, Palette, Info } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Project, PageSection } from '../../../types';
-import { TemplateRecommendation, getIndustryComponentDefaults } from '../../../types/onboarding';
-import AIAssistButton from '../components/AIAssistButton';
+import { getIndustryComponentDefaults } from '../../../types/onboarding';
 
 // Helper to get template colors safely
 const getTemplateColors = (template: Project) => {
@@ -27,17 +28,17 @@ interface Step4TemplateSelectProps {
     selectedTemplateId?: string;
     enabledComponents?: PageSection[];
     disabledComponents?: PageSection[];
-    aiRecommendation?: TemplateRecommendation;
     industry: string;
     onUpdate: (templateId: string, templateName: string, enabledComponents: PageSection[], disabledComponents: PageSection[]) => void;
-    onGetRecommendation: () => Promise<TemplateRecommendation>;
 }
 
-// All available components
+// All available components (complete list)
 const ALL_COMPONENTS: PageSection[] = [
-    'header', 'topBar', 'logoBanner', 'hero', 'heroSplit', 'features', 'services', 'testimonials',
+    'header', 'topBar', 'logoBanner', 'hero', 'heroSplit', 'heroGallery', 'heroWave', 'heroNova',
+    'features', 'services', 'testimonials',
     'team', 'portfolio', 'pricing', 'faq', 'cta', 'video', 'slideshow',
     'howItWorks', 'newsletter', 'leads', 'banner', 'menu', 'map',
+    'products', 'announcementBar',
     'cmsFeed', 'chatbot', 'signupFloat', 'footer'
 ];
 
@@ -49,16 +50,11 @@ const Step4TemplateSelect: React.FC<Step4TemplateSelectProps> = ({
     selectedTemplateId,
     enabledComponents: initialEnabledComponents,
     disabledComponents: initialDisabledComponents,
-    aiRecommendation,
     industry,
     onUpdate,
-    onGetRecommendation,
 }) => {
     const { t } = useTranslation();
-    const [isLoadingRecommendation, setIsLoadingRecommendation] = useState(false);
-    const [recommendation, setRecommendation] = useState<TemplateRecommendation | null>(aiRecommendation || null);
-    const [error, setError] = useState<string | null>(null);
-    const [showComponentSettings, setShowComponentSettings] = useState(false);
+    const [showComponentSettings, setShowComponentSettings] = useState(true);
     const [localEnabledComponents, setLocalEnabledComponents] = useState<PageSection[]>(
         initialEnabledComponents || []
     );
@@ -97,43 +93,15 @@ const Step4TemplateSelect: React.FC<Step4TemplateSelectProps> = ({
         }
     }, [selectedTemplateId, industryDefaults, initialEnabledComponents, templates]);
 
-    // Get recommendation on mount if not already done
-    useEffect(() => {
-        if (!recommendation && templates.length > 0) {
-            handleGetRecommendation();
-        }
-    }, [templates.length]);
-
-    const handleGetRecommendation = async () => {
-        setIsLoadingRecommendation(true);
-        setError(null);
-        try {
-            const rec = await onGetRecommendation();
-            setRecommendation(rec);
-            // Auto-select recommended template
-            if (rec.templateId) {
-                const template = templates.find(t => t.id === rec.templateId);
-                if (template) {
-                    handleSelectTemplate(template, rec);
-                }
-            }
-        } catch (err: any) {
-            console.error('Failed to get recommendation:', err);
-            setError(t('onboarding.errorGettingRecommendation', 'Failed to get AI recommendation.'));
-        } finally {
-            setIsLoadingRecommendation(false);
-        }
-    };
-
-    const handleSelectTemplate = (template: Project, rec?: TemplateRecommendation) => {
+    const handleSelectTemplate = (template: Project) => {
         // Get components that the template actually has (from sectionVisibility)
         const templateComponents = Object.keys(template.sectionVisibility || {}).filter(
             key => template.sectionVisibility?.[key as keyof typeof template.sectionVisibility]
         ) as PageSection[];
 
         // Get recommended components for this industry
-        const recommended = rec?.suggestedComponents || industryDefaults.recommended;
-        const disabled = rec?.disabledComponents || industryDefaults.disabled;
+        const recommended = industryDefaults.recommended;
+        const disabled = industryDefaults.disabled;
 
         // Enable only components that: 1) template has AND 2) are recommended for industry
         const enabledComponents = templateComponents.filter(comp =>
@@ -191,8 +159,8 @@ const Step4TemplateSelect: React.FC<Step4TemplateSelectProps> = ({
     const selectedTemplate = templates.find(t => t.id === selectedTemplateId);
 
     return (
-        <div className="space-y-8">
-            {/* Header */}
+        <div className="space-y-6">
+            {/* Header + Instructions */}
             <div className="text-center">
                 <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-pink-400 to-purple-500 flex items-center justify-center">
                     <Layout size={32} className="text-white" />
@@ -200,62 +168,25 @@ const Step4TemplateSelect: React.FC<Step4TemplateSelectProps> = ({
                 <h3 className="text-2xl font-bold text-editor-text-primary mb-2">
                     {t('onboarding.step4Heading', 'Choose Your Template')}
                 </h3>
-                <p className="text-editor-text-secondary">
-                    {t('onboarding.step4Subheading', 'AI recommends the best template for your industry.')}
+                <p className="text-editor-text-secondary max-w-lg mx-auto">
+                    {t('onboarding.step4Subheading2', 'Browse the templates below and pick the one you like. Each template has its own unique color palette and style.')}
                 </p>
             </div>
 
-            {/* AI Recommendation */}
-            {isLoadingRecommendation ? (
-                <div className="flex items-center justify-center gap-3 py-8">
-                    <Loader2 size={24} className="text-purple-400 animate-spin" />
-                    <span className="text-editor-text-secondary">
-                        {t('onboarding.analyzingBusiness', 'Analyzing your business...')}
-                    </span>
+            {/* Info Box — organized by color + full customization */}
+            <div className="flex items-start gap-3 p-4 bg-indigo-500/10 border border-indigo-500/30 rounded-xl">
+                <div className="flex-shrink-0 w-9 h-9 rounded-full bg-indigo-500/20 flex items-center justify-center mt-0.5">
+                    <Palette size={18} className="text-indigo-400" />
                 </div>
-            ) : recommendation ? (
-                <div className="p-4 bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/30 rounded-xl">
-                    <div className="flex items-start gap-3">
-                        <div className="flex-shrink-0 w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center">
-                            <Sparkles size={20} className="text-purple-400" />
-                        </div>
-                        <div className="flex-1">
-                            <h4 className="font-medium text-editor-text-primary flex items-center gap-2">
-                                {t('onboarding.aiRecommends', 'AI Recommends')}
-                                <span className="text-purple-400">{recommendation.templateName}</span>
-                                <span className="text-xs px-2 py-0.5 bg-green-500/20 text-green-400 rounded-full">
-                                    {recommendation.matchScore}% {t('onboarding.match', 'match')}
-                                </span>
-                            </h4>
-                            <ul className="mt-2 space-y-1">
-                                {recommendation.matchReasons.map((reason, index) => (
-                                    <li key={index} className="text-sm text-editor-text-secondary flex items-center gap-2">
-                                        <Check size={14} className="text-green-400" />
-                                        {reason}
-                                    </li>
-                                ))}
-                            </ul>
-                        </div>
-                    </div>
+                <div className="flex-1">
+                    <h4 className="font-medium text-editor-text-primary text-sm mb-1">
+                        {t('onboarding.templateColorHint', 'Templates organized by color')}
+                    </h4>
+                    <p className="text-xs text-editor-text-secondary leading-relaxed">
+                        {t('onboarding.templateCustomizeHint', 'Each template comes with a pre-designed color scheme. Choose the one that best matches your brand — but don\'t worry, you can edit absolutely everything later: colors, texts, images, and components. Make it 100% yours!')}
+                    </p>
                 </div>
-            ) : (
-                <div className="flex justify-center">
-                    <AIAssistButton
-                        onClick={handleGetRecommendation}
-                        isLoading={isLoadingRecommendation}
-                        label={t('onboarding.getRecommendation', 'Get AI Recommendation')}
-                        size="lg"
-                    />
-                </div>
-            )}
-
-            {/* Error Message */}
-            {error && (
-                <div className="flex items-center gap-2 p-3 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 text-sm">
-                    <AlertCircle size={16} />
-                    <span>{error}</span>
-                </div>
-            )}
+            </div>
 
             {/* Template Gallery */}
             <div>
@@ -265,7 +196,6 @@ const Step4TemplateSelect: React.FC<Step4TemplateSelectProps> = ({
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4 max-h-80 overflow-y-auto pr-2">
                     {templates.map((template) => {
                         const isSelected = selectedTemplateId === template.id;
-                        const isRecommended = recommendation?.templateId === template.id;
                         const colors = getTemplateColors(template);
 
                         return (
@@ -342,14 +272,6 @@ const Step4TemplateSelect: React.FC<Step4TemplateSelectProps> = ({
                                         <Check size={14} className="text-slate-900" />
                                     </div>
                                 )}
-
-                                {/* AI Recommended badge */}
-                                {isRecommended && (
-                                    <div className="absolute top-3 left-2 px-2 py-1 bg-purple-500 text-white text-xs font-medium rounded-full flex items-center gap-1 shadow-lg">
-                                        <Star size={10} />
-                                        AI
-                                    </div>
-                                )}
                             </button>
                         );
                     })}
@@ -363,7 +285,7 @@ const Step4TemplateSelect: React.FC<Step4TemplateSelectProps> = ({
                 )}
             </div>
 
-            {/* Component Settings */}
+            {/* Component Settings — open by default */}
             {selectedTemplate && (
                 <div className="border border-editor-border rounded-xl overflow-hidden">
                     <button
@@ -389,7 +311,7 @@ const Step4TemplateSelect: React.FC<Step4TemplateSelectProps> = ({
                     {showComponentSettings && (
                         <div className="p-4 border-t border-editor-border">
                             <p className="text-sm text-editor-text-secondary mb-4">
-                                {t('onboarding.componentSettingsHint', 'Toggle components on/off based on your needs. AI has pre-selected the best options for your industry.')}
+                                {t('onboarding.componentSettingsHintManual', 'Toggle components on/off based on your needs. Components marked with ⭐ are recommended for your industry.')}
                             </p>
                             <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                                 {ALL_COMPONENTS.map((component) => {
@@ -430,7 +352,7 @@ const Step4TemplateSelect: React.FC<Step4TemplateSelectProps> = ({
             <div className="p-4 bg-pink-500/10 border border-pink-500/30 rounded-xl">
                 <p className="text-sm text-pink-300">
                     <span className="font-semibold">💡 {t('onboarding.tip', 'Tip')}:</span>{' '}
-                    {t('onboarding.step4Tip', 'The AI analyzes your industry and business type to suggest the most suitable template and components. You can always customize everything later in the editor.')}
+                    {t('onboarding.step4TipManual', 'Pick the template that catches your eye — you\'ll be able to customize every detail later in the editor. Colors, fonts, images, components... everything is editable!')}
                 </p>
             </div>
         </div>
