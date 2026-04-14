@@ -561,6 +561,11 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
     const [userPermissions, setUserPermissions] = useState<RolePermissions>(getPermissions('user'));
     const [isUserOwner, setIsUserOwner] = useState(false);
 
+    // Permission check helper (used by TenantManagement, etc.)
+    const canPerform = (permission: keyof RolePermissions): boolean => {
+        return userPermissions[permission] || false;
+    };
+
     // Admin — Delegated to useEditorAdmin hook
     const adminHook = useEditorAdmin({ user, userDocument, setUserDocument, isUserOwner });
     const {
