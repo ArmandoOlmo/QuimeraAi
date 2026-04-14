@@ -54,6 +54,28 @@ const getProjectStoragePath = (userId: string, projectId: string, tenantId?: str
     return `users/${userId}/projects/${projectId}`;
 };
 
+// Helper to extract the hero image URL based on whatever Hero component is being used
+export const extractHeroImage = (data: Partial<PageData> | null, componentOrder: PageSection[] | undefined): string | null => {
+    if (!data) return null;
+    
+    // Find the first hero-like component in the order
+    const heroSection = componentOrder?.find((s) => ['hero', 'heroSplit', 'heroGallery', 'heroWave', 'heroNova'].includes(s));
+    
+    if (heroSection === 'hero') return data.hero?.imageUrl || data.hero?.backgroundImage || null;
+    if (heroSection === 'heroSplit') return data.heroSplit?.imageUrl || null;
+    if (heroSection === 'heroGallery') return data.heroGallery?.slides?.[0]?.backgroundImage || null;
+    if (heroSection === 'heroWave') return data.heroWave?.slides?.[0]?.backgroundImage || null;
+    if (heroSection === 'heroNova') return data.heroNova?.slides?.[0]?.backgroundImage || data.heroNova?.slides?.[0]?.imageUrl || null;
+    
+    // Fallback if no hero in componentOrder
+    return data.hero?.imageUrl || data.hero?.backgroundImage ||
+           data.heroSplit?.imageUrl ||
+           data.heroGallery?.slides?.[0]?.backgroundImage ||
+           data.heroWave?.slides?.[0]?.backgroundImage ||
+           data.heroNova?.slides?.[0]?.backgroundImage ||
+           data.heroNova?.slides?.[0]?.imageUrl || null;
+};
+
 // Helper to generate HTML export
 const generateHtml = (project: Project) => {
     const googleFonts = [project.theme.fontFamilyHeader, project.theme.fontFamilyBody, project.theme.fontFamilyButton]
@@ -274,7 +296,9 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
 
             templateSnapshot.docs.forEach(docSnap => {
                 const docData = docSnap.data();
-                if (docData.isDeleted === true) {
+                // CRITICAL FIX: Also check the local deleted cache to prevent "ghost" templates
+                // from reappearing if Firestore sync is laggy or failed silently
+                if (docData.isDeleted === true || deletedTemplateIdsRef.current.has(docSnap.id)) {
                     deletedIds.add(docSnap.id);
                 } else {
                     activeTemplates.push({
@@ -362,7 +386,12 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
             });
 
             const { templates: firestoreTemplates } = await loadGlobalTemplates();
-            setProjects([...firestoreTemplates, ...activeProjects]);
+            
+            // Filter out any trashed templates that we manually marked as deleted 
+            // but might still be returned via cached/duplicate status 
+            const finalActiveProjects = activeProjects.filter(p => !deletedTemplateIdsRef.current.has(p.id));
+            
+            setProjects([...firestoreTemplates, ...finalActiveProjects]);
             setDeletedProjects(trashedProjects);
         } catch (error) {
             console.error("Error loading projects:", error);
@@ -636,7 +665,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
             // Assets (only include if exists)
             ...(project.faviconUrl && { faviconUrl: project.faviconUrl }),
             // Auto-sync hero image as project thumbnail for easy identification in dashboard
-            thumbnailUrl: data?.hero?.imageUrl || data?.hero?.backgroundImage || project.thumbnailUrl || null,
+            thumbnailUrl: extractHeroImage(data, componentOrder) || project.thumbnailUrl || null,
 
             // A/B Testing (only include if exists)
             ...(project.abTests && { abTests: project.abTests }),
@@ -973,6 +1002,21 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
             // Templates use the existing soft-delete via isDeleted flag
             const templateRef = doc(db, 'templates', projectId);
             await updateDoc(templateRef, { isDeleted: true });
+            
+            // BUG FIX: Sometimes cloned 'Template' status projects live in the user's collection.
+            // If so, the above updateDoc creates/updates in global templates but leaves the personal one intact.
+            // Let's attempt to soft-delete the personal one just in case it exists.
+            try {
+                const pathSegments = getProjectsCollectionPath(user.uid, currentTenantId);
+                const userProjectRef = doc(db, ...pathSegments, projectId);
+                await updateDoc(userProjectRef, {
+                    deletedAt: new Date().toISOString(),
+                    deletedBy: user.uid,
+                });
+            } catch (e) {
+                // Ignore. It's expected to fail if it was truly a global template.
+            }
+
             deletedTemplateIdsRef.current.add(projectId);
             localStorage.setItem('deletedTemplateIds', JSON.stringify([...deletedTemplateIdsRef.current]));
         } else {

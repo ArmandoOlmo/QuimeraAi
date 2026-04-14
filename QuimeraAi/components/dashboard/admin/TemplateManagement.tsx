@@ -36,8 +36,6 @@ import ConfirmationModal from '../../ui/ConfirmationModal';
 import TemplateEditorModal from './TemplateEditorModal';
 import { INDUSTRIES, INDUSTRY_CATEGORIES } from '../../../data/industries';
 import { db, doc, setDoc } from '../../../firebase';
-import { migrateTemplatesWithEcommerce } from '../../../scripts/migrateTemplatesEcommerce';
-import { seedDigitalEdgeTemplate } from '../../../scripts/seedDigitalEdgeTemplate';
 
 interface TemplateManagementProps {
     onBack: () => void;
@@ -52,11 +50,8 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
     const { userDocument } = useAuth();
     const { projects, loadProject, createNewTemplate, deleteProject, archiveTemplate, duplicateTemplate, updateTemplateInState, refreshProjects } = useProject();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-    const [isMigrating, setIsMigrating] = useState(false);
-    const [isSeedingDigitalEdge, setIsSeedingDigitalEdge] = useState(false);
     const [deleteConfirmTemplate, setDeleteConfirmTemplate] = useState<{ id: string; name: string } | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
-    const [showMigrateConfirm, setShowMigrateConfirm] = useState(false);
 
     // Search and Filter States
     const [searchTerm, setSearchTerm] = useState('');
@@ -189,46 +184,6 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
         } finally {
             setIsDeleting(false);
             setDeleteConfirmTemplate(null);
-        }
-    };
-
-    const handleMigrateEcommerce = async () => {
-
-        setIsMigrating(true);
-        try {
-            const results = await migrateTemplatesWithEcommerce();
-            showSuccess(
-                t('superadmin.templateManagement.migrateEcommerceSuccess',
-                    `Migración completada: ${results.updated} templates actualizados, ${results.skipped} omitidos`)
-            );
-            // Refresh templates to show updated data
-            await refreshProjects();
-        } catch (error: any) {
-            console.error('Migration error:', error);
-            showError(
-                t('superadmin.templateManagement.migrateEcommerceError',
-                    `Error en la migración: ${error.message}`)
-            );
-        } finally {
-            setIsMigrating(false);
-        }
-    };
-
-    // Seed Digital Edge Marketing template (TEMPORARY — remove after seed)
-    const handleSeedDigitalEdge = async () => {
-        setIsSeedingDigitalEdge(true);
-        try {
-            const result = await seedDigitalEdgeTemplate();
-            if (result.success) {
-                showSuccess(result.message);
-                await refreshProjects();
-            } else {
-                showError(result.message);
-            }
-        } catch (error: any) {
-            showError(`Error: ${error.message}`);
-        } finally {
-            setIsSeedingDigitalEdge(false);
         }
     };
 
@@ -388,42 +343,6 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                                 <List size={16} />
                             </button>
                         </div>
-
-                        {/* Migrate Ecommerce Button */}
-                        <button
-                            onClick={() => setShowMigrateConfirm(true)}
-                            disabled={isMigrating}
-                            className="flex items-center justify-center h-10 w-10 sm:h-9 sm:w-auto sm:px-3 rounded-lg text-sm font-medium transition-all text-green-500 hover:bg-green-500/10 disabled:opacity-50 disabled:cursor-not-allowed"
-                            title={t('superadmin.templateManagement.migrateEcommerce', 'Add ecommerce components to all templates')}
-                        >
-                            {isMigrating ? (
-                                <Loader2 className="w-5 h-5 sm:w-4 sm:h-4 animate-spin" />
-                            ) : (
-                                <ShoppingCart className="w-5 h-5 sm:w-4 sm:h-4" />
-                            )}
-                            <span className="hidden lg:inline ml-1.5">
-                                {isMigrating
-                                    ? t('superadmin.templateManagement.migrating', 'Migrating...')
-                                    : t('superadmin.templateManagement.migrateEcommerce', 'Ecommerce')}
-                            </span>
-                        </button>
-
-                        {/* TEMPORARY: Seed Digital Edge Marketing template */}
-                        <button
-                            onClick={handleSeedDigitalEdge}
-                            disabled={isSeedingDigitalEdge}
-                            className="flex items-center justify-center h-10 w-10 sm:h-9 sm:w-auto sm:px-3 rounded-lg text-sm font-medium transition-all text-blue-500 hover:bg-blue-500/10 disabled:opacity-50 disabled:cursor-not-allowed"
-                            title="Seed Digital Edge Marketing template"
-                        >
-                            {isSeedingDigitalEdge ? (
-                                <Loader2 className="w-5 h-5 sm:w-4 sm:h-4 animate-spin" />
-                            ) : (
-                                <Megaphone className="w-5 h-5 sm:w-4 sm:h-4" />
-                            )}
-                            <span className="hidden lg:inline ml-1.5">
-                                {isSeedingDigitalEdge ? 'Seeding...' : 'Digital Edge'}
-                            </span>
-                        </button>
 
                         <button
                             onClick={() => setShowFilters(!showFilters)}
@@ -1192,21 +1111,6 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                 variant="danger"
                 isLoading={isDeleting}
                 confirmText={t('common.delete', 'Eliminar')}
-                cancelText={t('common.cancel', 'Cancelar')}
-            />
-
-            {/* Migrate Ecommerce Confirmation Modal */}
-            <ConfirmationModal
-                isOpen={showMigrateConfirm}
-                onConfirm={() => {
-                    setShowMigrateConfirm(false);
-                    handleMigrateEcommerce();
-                }}
-                onCancel={() => setShowMigrateConfirm(false)}
-                title={t('superadmin.templateManagement.migrateEcommerceTitle', '¿Migrar templates?')}
-                message={t('superadmin.templateManagement.migrateEcommerceConfirm', '¿Migrar todos los templates para agregar componentes de ecommerce con los colores del template?')}
-                variant="warning"
-                confirmText={t('common.confirm', 'Confirmar')}
                 cancelText={t('common.cancel', 'Cancelar')}
             />
         </div>

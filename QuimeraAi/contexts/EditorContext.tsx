@@ -843,8 +843,9 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
 
             templateSnapshot.docs.forEach(docSnap => {
                 const data = docSnap.data();
-                // Check if template is marked as deleted
-                if (data.isDeleted === true) {
+                // CRITICAL FIX: Also check the local deleted cache to prevent "ghost" templates
+                // from reappearing if Firestore sync is laggy or failed silently
+                if (data.isDeleted === true || deletedTemplateIdsRef.current.has(docSnap.id)) {
                     deletedIds.add(docSnap.id);
                 } else {
                     activeTemplates.push({
@@ -884,11 +885,15 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
             // This also updates deletedTemplateIdsRef with Firestore deleted IDs
             const { templates: firestoreTemplates } = await loadGlobalTemplates();
 
+            // BUG FIX: Filter out any trashed templates from user projects that we manually marked as deleted 
+            // but might still be returned via cached/duplicate status 
+            const finalUserProjects = userProjects.filter(p => !deletedTemplateIdsRef.current.has(p.id));
+
             // Merge: Firestore templates + user projects (NO hardcoded templates)
             console.log('🔍 [Load] Templates from Firestore:', firestoreTemplates.length);
             console.log('🔍 [Load] User projects:', userProjects.length);
 
-            setProjects([...firestoreTemplates, ...userProjects]);
+            setProjects([...firestoreTemplates, ...finalUserProjects]);
         } catch (error) {
             console.error("Error loading user projects:", error);
             // On error, try to load at least templates from Firestore
@@ -2257,6 +2262,19 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
                     deletedAt: new Date().toISOString(),
                     name: projectToDelete?.name || 'Deleted Template'
                 });
+                
+                // BUG FIX: Attempt to soft delete from user's personal project collection in case it was cloned there
+                if (user) {
+                    try {
+                        const userProjectRef = doc(db, 'users', user.uid, 'projects', projectId);
+                        await updateDoc(userProjectRef, {
+                            deletedAt: new Date().toISOString(),
+                            deletedBy: user.uid,
+                        });
+                    } catch (e) {
+                        // Ignore. Expected to fail if genuinely a template.
+                    }
+                }
 
                 // Also persist to local cache to prevent reappearing on errors/logout
                 deletedTemplateIdsRef.current.add(projectId);

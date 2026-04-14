@@ -11,6 +11,7 @@ import { useProject } from '../../../contexts/project';
 import { useAdmin } from '../../../contexts/admin';
 import { useEditor } from '../../../contexts/EditorContext';
 import { useUI } from '../../../contexts/core/UIContext';
+import { extractHeroImage } from '../../../contexts/project/ProjectContext';
 import { useTranslation } from 'react-i18next';
 import { generateContentViaProxy, extractTextFromResponse } from '../../../utils/geminiProxyClient';
 import { generateComponentColorMappings, generateHeroWaveGradientColors } from '../../ui/GlobalStylesControl';
@@ -2223,7 +2224,7 @@ TEMPLATE #${t.index}: "${t.name}"
             const newProject = {
                 id: `proj_${Date.now()}`,
                 name: progress.businessName,
-                thumbnailUrl: generatedImages['hero.imageUrl'] || selectedTemplate.thumbnailUrl,
+                thumbnailUrl: extractHeroImage(mergedData, selectedTemplate.componentOrder) || selectedTemplate.thumbnailUrl,
                 status: 'Draft' as const,
                 lastUpdated: new Date().toISOString(),
                 data: mergedData,
