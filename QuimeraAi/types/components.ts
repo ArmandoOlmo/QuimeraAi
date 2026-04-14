@@ -2043,6 +2043,14 @@ export interface SignupFloatData {
     // Typography
     headerFontSize?: FontSize;
     descriptionFontSize?: FontSize;
+
+    // Lead destination configuration
+    /** Where to save submitted forms: 'leads', 'audience', or 'both' */
+    saveDestination?: 'leads' | 'audience' | 'both';
+    /** ID of the email audience to save contacts to (when saveDestination includes 'audience') */
+    targetAudienceId?: string;
+    /** Display name of the selected audience (for UI display in editor) */
+    targetAudienceName?: string;
 }
 
 // =============================================================================

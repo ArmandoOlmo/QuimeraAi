@@ -12,7 +12,7 @@ import { generateContent } from '../../../utils/genAiClient';
 import { shouldUseProxy, generateContentViaProxy, extractTextFromResponse } from '../../../utils/geminiProxyClient';
 import { INDUSTRIES, INDUSTRY_IDS } from '../../../data/industries';
 import CoolorsImporter from '../../ui/CoolorsImporter';
-import { generateComponentColorMappings } from '../../ui/GlobalStylesControl';
+import { generateComponentColorMappings, generateHeroWaveGradientColors } from '../../ui/GlobalStylesControl';
 import { logApiCall } from '../../../services/apiLoggingService';
 
 interface TemplateEditorModalProps {
@@ -667,6 +667,11 @@ Return ONLY the JSON array, no other text.`;
                             colors: componentColors
                         };
                     }
+                }
+
+                // Apply gradient colors to HeroWave from global palette
+                if (updates.data.heroWave && typeof updates.data.heroWave === 'object') {
+                    (updates.data.heroWave as any).gradientColors = generateHeroWaveGradientColors(formData.globalColors);
                 }
             }
 

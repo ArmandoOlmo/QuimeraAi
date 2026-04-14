@@ -10,7 +10,7 @@ import { useEditor } from '../../../contexts/EditorContext';
 import { useUI } from '../../../contexts/core/UIContext';
 import { useTranslation } from 'react-i18next';
 import { generateContentViaProxy, extractTextFromResponse } from '../../../utils/geminiProxyClient';
-import { generateComponentColorMappings } from '../../ui/GlobalStylesControl';
+import { generateComponentColorMappings, generateHeroWaveGradientColors } from '../../ui/GlobalStylesControl';
 import { getDefaultGlobalColors } from '../../../data/colorPalettes';
 import { logApiCall } from '../../../services/apiLoggingService';
 import {
@@ -2132,6 +2132,11 @@ TEMPLATE #${t.index}: "${t.name}"
                         colors: componentColors
                     };
                 }
+            }
+
+            // Apply gradient colors to HeroWave from global palette
+            if (mergedData.heroWave && typeof mergedData.heroWave === 'object') {
+                mergedData.heroWave.gradientColors = generateHeroWaveGradientColors(globalColors);
             }
 
             if (isDev) console.log('🎨 Applied global colors to all components including ecommerce and chatbot');

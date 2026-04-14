@@ -884,6 +884,8 @@ const PageRenderer: React.FC<PageRendererProps> = ({
             {mergedData.signupFloat && page.sections.includes('signupFloat' as PageSection) && (
                 <SignupFloat
                     {...mergedData.signupFloat}
+                    projectId={project.id}
+                    ownerId={project.userId}
                     isPreviewMode={true}
                 />
             )}

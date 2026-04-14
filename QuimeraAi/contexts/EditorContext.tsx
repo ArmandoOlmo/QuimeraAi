@@ -4,6 +4,9 @@ import { PageData, ThemeData, PageSection, PreviewDevice, PreviewOrientation, Vi
 import { EmailSettings, TransactionalEmailSettings, MarketingEmailSettings } from '../types/email';
 import { useUI } from './core/UIContext';
 import { useSafeProject } from './project/ProjectContext';
+import { useEditorLeads } from './editor/useEditorLeads';
+import { useEditorCMS } from './editor/useEditorCMS';
+import { useEditorDomains } from './editor/useEditorDomains';
 import { getPermissions, isOwner, determineRole, OWNER_EMAIL } from '../constants/roles';
 import { initialData } from '../data/initialData';
 import { defaultPrompts } from '../data/defaultPrompts';
@@ -432,11 +435,15 @@ export const EditorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     const [componentOrder, setComponentOrder] = useState<PageSection[]>(initialData.componentOrder as PageSection[]);
     const [sectionVisibility, setSectionVisibility] = useState<Record<PageSection, boolean>>(initialData.sectionVisibility as Record<PageSection, boolean>);
 
-    // Navigation Menus
-    const [menus, setMenus] = useState<Menu[]>([
-        { id: 'main', title: 'Main Menu', handle: 'main-menu', items: [{ id: '1', text: 'Home', href: '/', type: 'section' }] },
-        { id: 'footer', title: 'Footer Menu', handle: 'footer-menu', items: [{ id: '1', text: 'Contact', href: '/#contact', type: 'section' }] }
-    ]);
+    // CMS & Menus — Delegated to useEditorCMS hook
+    const cmsHook = useEditorCMS({ user, activeProjectId });
+    const {
+        cmsPosts, isLoadingCMS, loadCMSPosts, saveCMSPost, deleteCMSPost,
+        menus, setMenus,
+    } = cmsHook;
+    // Wrapper: saveMenu/deleteMenu need setProjects from orchestrator
+    const saveMenu = async (menu: Menu) => cmsHook.saveMenu(menu, setProjects);
+    const deleteMenu = async (menuId: string) => cmsHook.deleteMenu(menuId, setProjects);
 
     // Auto-save timer ref
     const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -529,19 +536,16 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
     // Design Tokens
     const [designTokens, setDesignTokens] = useState<DesignTokens | null>(null);
 
-    // CMS State
-    const [cmsPosts, setCmsPosts] = useState<CMSPost[]>([]);
-    const [isLoadingCMS, setIsLoadingCMS] = useState(false);
 
-    // Leads State
-    const [leads, setLeads] = useState<Lead[]>([]);
-    const [isLoadingLeads, setIsLoadingLeads] = useState(false);
-    const [leadActivities, setLeadActivities] = useState<LeadActivity[]>([]);
-    const [leadTasks, setLeadTasks] = useState<LeadTask[]>([]);
+    // Leads — Delegated to useEditorLeads hook
+    const leadsHook = useEditorLeads({ user, activeProjectId });
 
-    // Leads Library State
-    const [libraryLeads, setLibraryLeads] = useState<LibraryLead[]>([]);
-    const [isLoadingLibraryLeads, setIsLoadingLibraryLeads] = useState(false);
+    const {
+        leads, isLoadingLeads, addLead, updateLeadStatus, updateLead, deleteLead,
+        leadActivities, addLeadActivity, getLeadActivities,
+        leadTasks, addLeadTask, updateLeadTask, deleteLeadTask, getLeadTasks,
+        libraryLeads, isLoadingLibraryLeads, addLibraryLead, deleteLibraryLead, importLibraryLead,
+    } = leadsHook;
 
     // Theme mode and sidebar order - Use UIContext (single source of truth)
     const { themeMode, setThemeMode, sidebarOrder, setSidebarOrder } = useUI();
@@ -568,10 +572,13 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
     const [componentStyles, setComponentStyles] = useState<ComponentStyles>(defaultComponentStyles);
     const [customComponents, setCustomComponents] = useState<CustomComponent[]>([]);
 
-    // Domains State
-    const [domains, setDomains] = useState<Domain[]>([]);
-
-    // SEO Configuration State
+    // Domains — Delegated to useEditorDomains hook
+    const domainsHook = useEditorDomains({ user, projects });
+    const {
+        domains, fetchUserDomains, addDomain, updateDomain, deleteDomain,
+        verifyDomain, checkDomainSSL, deployDomain, getDomainDeploymentLogs,
+    } = domainsHook;
+    const setDomains = domainsHook.setDomains; // needed by auth effect logout cleanup
     const [seoConfig, setSeoConfig] = useState<SEOConfig | null>(null);
 
     // Usage & Billing State
@@ -582,97 +589,6 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
     const [hasApiKey, setHasApiKey] = useState<boolean | null>(null);
 
 
-    // Leads Library Logic - Project-scoped
-    useEffect(() => {
-        if (!user || !activeProjectId) {
-            setLibraryLeads([]);
-            return;
-        }
-
-        setIsLoadingLibraryLeads(true);
-        // Project-scoped path
-        const q = query(
-            collection(db, `users/${user.uid}/projects/${activeProjectId}/libraryLeads`),
-            orderBy('createdAt', 'desc')
-        );
-
-        const unsubscribe = onSnapshot(q, (snapshot) => {
-            const leadsData = snapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data()
-            })) as LibraryLead[];
-            setLibraryLeads(leadsData);
-            setIsLoadingLibraryLeads(false);
-        }, (error) => {
-            console.error("[EditorContext] Error fetching library leads:", error);
-            setIsLoadingLibraryLeads(false);
-        });
-
-        return () => unsubscribe();
-    }, [user, activeProjectId]);
-
-    const addLibraryLead = async (leadData: Omit<LibraryLead, 'id' | 'createdAt' | 'isImported'>) => {
-        if (!user || !activeProjectId) return;
-        try {
-            // Project-scoped path
-            await addDoc(collection(db, `users/${user.uid}/projects/${activeProjectId}/libraryLeads`), {
-                ...leadData,
-                projectId: activeProjectId,
-                isImported: false,
-                createdAt: serverTimestamp(),
-                updatedAt: serverTimestamp()
-            });
-        } catch (error) {
-            console.error("[EditorContext] Error adding library lead:", error);
-            throw error;
-        }
-    };
-
-    const deleteLibraryLead = async (leadId: string) => {
-        if (!user || !activeProjectId) return;
-        try {
-            // Project-scoped path
-            await deleteDoc(doc(db, `users/${user.uid}/projects/${activeProjectId}/libraryLeads/${leadId}`));
-        } catch (error) {
-            console.error("[EditorContext] Error deleting library lead:", error);
-            throw error;
-        }
-    };
-
-    const importLibraryLead = async (leadId: string) => {
-        if (!user || !activeProjectId) return;
-        try {
-            const leadToImport = libraryLeads.find(l => l.id === leadId);
-            if (!leadToImport) throw new Error("Lead not found");
-
-            // Create in main CRM - Project-scoped path
-            const newLeadRef = await addDoc(collection(db, `users/${user.uid}/projects/${activeProjectId}/leads`), {
-                name: leadToImport.name,
-                email: leadToImport.email,
-                phone: leadToImport.phone || '',
-                company: leadToImport.company || '',
-                source: leadToImport.source || 'library_import',
-                status: 'new',
-                value: 0,
-                notes: leadToImport.notes || '',
-                tags: [...(leadToImport.tags || []), 'imported'],
-                projectId: activeProjectId,
-                createdAt: serverTimestamp(),
-                updatedAt: serverTimestamp()
-            });
-
-            // Update library lead status - Project-scoped path
-            await updateDoc(doc(db, `users/${user.uid}/projects/${activeProjectId}/libraryLeads/${leadId}`), {
-                isImported: true,
-                importedAt: serverTimestamp(),
-                importedLeadId: newLeadRef.id
-            });
-
-        } catch (error) {
-            console.error("[EditorContext] Error importing library lead:", error);
-            throw error;
-        }
-    };
     // Effects
     useEffect(() => {
         const checkApiKey = async () => {
@@ -917,21 +833,7 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
         }
     };
 
-    const fetchUserDomains = async (userId: string) => {
-        try {
-            const domainsCol = collection(db, 'users', userId, 'domains');
-            const q = query(domainsCol, orderBy('createdAt', 'desc'));
-            const snap = await getDocs(q);
-            // IMPORTANT: docSnapshot.id must come AFTER ...data to override any "id" field
-            const userDomains = snap.docs.map(docSnapshot => ({
-                ...docSnapshot.data(),
-                id: docSnapshot.id
-            } as Domain));
-            setDomains(userDomains);
-        } catch (error) {
-            console.error("Error loading user domains:", error);
-        }
-    };
+
 
     // Load templates from Firestore (global collection)
     const loadGlobalTemplates = async (): Promise<{ templates: Project[], deletedIds: Set<string> }> => {
@@ -1178,77 +1080,9 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
         }
     }, [user, activeProjectId]);
 
-    // CMS Real-time Subscription
-    useEffect(() => {
-        let unsubscribe: (() => void) | undefined;
 
-        if (user) {
-            setIsLoadingCMS(true);
-            try {
-                const postsCol = collection(db, 'users', user.uid, 'posts');
-                const q = query(postsCol, orderBy('updatedAt', 'desc'));
 
-                unsubscribe = onSnapshot(q,
-                    (snapshot) => {
-                        const posts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as CMSPost));
-                        setCmsPosts(posts);
-                        setIsLoadingCMS(false);
-                    },
-                    (error) => {
-                        console.error("CMS Snapshot Error:", error);
-                        // If offline or error, keep existing posts if any, or empty
-                        setIsLoadingCMS(false);
-                    }
-                );
-            } catch (e) {
-                console.error("Error setting up CMS subscription:", e);
-                setIsLoadingCMS(false);
-            }
-        } else {
-            setCmsPosts([]);
-            setIsLoadingCMS(false);
-        }
 
-        return () => {
-            if (unsubscribe) unsubscribe();
-        };
-    }, [user]);
-
-    // Leads Real-time Subscription - Project-scoped
-    useEffect(() => {
-        let unsubscribe: (() => void) | undefined;
-
-        if (user && activeProjectId) {
-            setIsLoadingLeads(true);
-            try {
-                // Project-scoped leads path
-                const leadsCol = collection(db, `users/${user.uid}/projects/${activeProjectId}/leads`);
-                const q = query(leadsCol, orderBy('createdAt', 'desc'));
-
-                unsubscribe = onSnapshot(q,
-                    (snapshot) => {
-                        const leadsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Lead));
-                        setLeads(leadsData);
-                        setIsLoadingLeads(false);
-                    },
-                    (error) => {
-                        console.error("[EditorContext] Leads Snapshot Error:", error);
-                        setIsLoadingLeads(false);
-                    }
-                );
-            } catch (e) {
-                console.error("[EditorContext] Error setting up Leads subscription:", e);
-                setIsLoadingLeads(false);
-            }
-        } else {
-            setLeads([]);
-            setIsLoadingLeads(false);
-        }
-
-        return () => {
-            if (unsubscribe) unsubscribe();
-        };
-    }, [user, activeProjectId]);
 
     // Usage & Billing Real-time Subscription
     useEffect(() => {
@@ -1308,67 +1142,6 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
         };
     }, [user]);
 
-    // Lead Activities Real-time Subscription - Project-scoped
-    useEffect(() => {
-        let unsubscribe: (() => void) | undefined;
-
-        if (user && activeProjectId) {
-            try {
-                // Project-scoped path
-                const activitiesCol = collection(db, `users/${user.uid}/projects/${activeProjectId}/leadActivities`);
-                const q = query(activitiesCol, orderBy('createdAt', 'desc'));
-
-                unsubscribe = onSnapshot(q,
-                    (snapshot) => {
-                        const activitiesData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as LeadActivity));
-                        setLeadActivities(activitiesData);
-                    },
-                    (error) => {
-                        console.error("[EditorContext] Lead Activities Snapshot Error:", error);
-                    }
-                );
-            } catch (e) {
-                console.error("[EditorContext] Error setting up Lead Activities subscription:", e);
-            }
-        } else {
-            setLeadActivities([]);
-        }
-
-        return () => {
-            if (unsubscribe) unsubscribe();
-        };
-    }, [user, activeProjectId]);
-
-    // Lead Tasks Real-time Subscription - Project-scoped
-    useEffect(() => {
-        let unsubscribe: (() => void) | undefined;
-
-        if (user && activeProjectId) {
-            try {
-                // Project-scoped path
-                const tasksCol = collection(db, `users/${user.uid}/projects/${activeProjectId}/leadTasks`);
-                const q = query(tasksCol, orderBy('createdAt', 'desc'));
-
-                unsubscribe = onSnapshot(q,
-                    (snapshot) => {
-                        const tasksData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as LeadTask));
-                        setLeadTasks(tasksData);
-                    },
-                    (error) => {
-                        console.error("[EditorContext] Lead Tasks Snapshot Error:", error);
-                    }
-                );
-            } catch (e) {
-                console.error("[EditorContext] Error setting up Lead Tasks subscription:", e);
-            }
-        } else {
-            setLeadTasks([]);
-        }
-
-        return () => {
-            if (unsubscribe) unsubscribe();
-        };
-    }, [user, activeProjectId]);
 
 
     // Sync themeMode to Firebase (localStorage sync is handled by UIContext)
@@ -3551,73 +3324,8 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
         }
     };
 
-    // Navigation Menu Functions
-    const saveMenu = async (menu: Menu) => {
-        if (!activeProjectId) {
-            console.error("Cannot save menu: No active project ID");
-            return;
-        }
+    // Menu functions — Delegated to useEditorCMS hook (wrappers above)
 
-        // Deep clone current menus to avoid reference issues
-        const currentMenus = [...menus];
-        let updatedMenusList: Menu[] = [];
-
-        if (currentMenus.some(m => m.id === menu.id)) {
-            updatedMenusList = currentMenus.map(m => m.id === menu.id ? menu : m);
-        } else {
-            updatedMenusList = [...currentMenus, menu];
-        }
-
-        // 1. Update Menus State (for UI)
-        setMenus(updatedMenusList);
-
-        // 2. Update Projects State (CRITICAL for data consistency)
-        setProjects(prev => prev.map(p => {
-            if (p.id === activeProjectId) {
-                // Ensure we update the menus property on the project object
-                return { ...p, menus: updatedMenusList };
-            }
-            return p;
-        }));
-
-        // 3. Persist to Firestore
-        if (user) {
-            try {
-                const projectDocRef = doc(db, 'users', user.uid, 'projects', activeProjectId);
-                await updateDoc(projectDocRef, { menus: updatedMenusList });
-                console.log("Menu saved successfully.");
-            } catch (e) {
-                console.error("Error saving menu to Firestore:", e);
-            }
-        }
-    };
-
-    const deleteMenu = async (menuId: string) => {
-        if (!activeProjectId) return;
-
-        const updatedMenusList = menus.filter(m => m.id !== menuId);
-
-        // 1. Update Menus State
-        setMenus(updatedMenusList);
-
-        // 2. Update Projects State
-        setProjects(prev => prev.map(p => {
-            if (p.id === activeProjectId) {
-                return { ...p, menus: updatedMenusList };
-            }
-            return p;
-        }));
-
-        // 3. Persist
-        if (user) {
-            try {
-                const projectDocRef = doc(db, 'users', user.uid, 'projects', activeProjectId);
-                await updateDoc(projectDocRef, { menus: updatedMenusList });
-            } catch (e) {
-                console.error("Error deleting menu from project", e);
-            }
-        }
-    };
 
     const saveAiAssistantConfig = async (config: AiAssistantConfig) => {
         aiAssistantConfigRef.current = config; // Sync update to prevent stale closure in auto-save
@@ -3666,405 +3374,9 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
         }
     };
 
-    // Leads & CRM Logic
-    const addLead = async (leadData: Omit<Lead, 'id' | 'createdAt' | 'projectId'>): Promise<string | undefined> => {
-        if (!user) return undefined;
-        if (!activeProjectId) {
-            console.error("[EditorContext] Cannot add lead: No active project");
-            return undefined;
-        }
-        try {
-            // Project-scoped leads path
-            const leadsPath = `users/${user.uid}/projects/${activeProjectId}/leads`;
-            const leadsCol = collection(db, leadsPath);
-            const now = serverTimestamp();
-            const docRef = await addDoc(leadsCol, {
-                ...leadData,
-                projectId: activeProjectId,
-                createdAt: now
-            });
-            // Optimistic update via listener
-            return docRef.id;
-        } catch (error) {
-            console.error("[EditorContext] Error adding lead:", error);
-            return undefined;
-        }
-    };
 
-    const updateLeadStatus = async (leadId: string, status: LeadStatus) => {
-        if (!user || !activeProjectId) return;
-        try {
-            // Project-scoped leads path
-            const leadRef = doc(db, `users/${user.uid}/projects/${activeProjectId}/leads/${leadId}`);
-            await updateDoc(leadRef, { status });
-        } catch (error) {
-            console.error("[EditorContext] Error updating lead status:", error);
-        }
-    };
 
-    const updateLead = async (leadId: string, data: Partial<Lead>) => {
-        if (!user || !activeProjectId) return;
-        try {
-            // Project-scoped leads path
-            const leadRef = doc(db, `users/${user.uid}/projects/${activeProjectId}/leads/${leadId}`);
-            await updateDoc(leadRef, data);
-        } catch (error) {
-            console.error("[EditorContext] Error updating lead:", error);
-        }
-    };
-
-    const deleteLead = async (leadId: string) => {
-        if (!user || !activeProjectId) return;
-        try {
-            // Project-scoped paths
-            const leadRef = doc(db, `users/${user.uid}/projects/${activeProjectId}/leads/${leadId}`);
-            await deleteDoc(leadRef);
-
-            // Also delete all activities and tasks associated with this lead
-            const activitiesCol = collection(db, `users/${user.uid}/projects/${activeProjectId}/leadActivities`);
-            const activitiesSnapshot = await getDocs(query(activitiesCol));
-            const deleteActivitiesPromises = activitiesSnapshot.docs
-                .filter(doc => doc.data().leadId === leadId)
-                .map(doc => deleteDoc(doc.ref));
-
-            const tasksCol = collection(db, `users/${user.uid}/projects/${activeProjectId}/leadTasks`);
-            const tasksSnapshot = await getDocs(query(tasksCol));
-            const deleteTasksPromises = tasksSnapshot.docs
-                .filter(doc => doc.data().leadId === leadId)
-                .map(doc => deleteDoc(doc.ref));
-
-            await Promise.all([...deleteActivitiesPromises, ...deleteTasksPromises]);
-        } catch (error) {
-            console.error("[EditorContext] Error deleting lead:", error);
-        }
-    };
-
-    // Lead Activities
-    const addLeadActivity = async (leadId: string, activityData: Omit<LeadActivity, 'id' | 'createdAt' | 'leadId'>) => {
-        if (!user || !activeProjectId) return;
-        try {
-            // Project-scoped path
-            const activitiesCol = collection(db, `users/${user.uid}/projects/${activeProjectId}/leadActivities`);
-            const now = serverTimestamp();
-            await addDoc(activitiesCol, {
-                ...activityData,
-                leadId,
-                projectId: activeProjectId,
-                createdAt: now,
-                createdBy: user.uid
-            });
-            // Will be updated via listener
-        } catch (error) {
-            console.error("[EditorContext] Error adding lead activity:", error);
-        }
-    };
-
-    const getLeadActivities = (leadId: string): LeadActivity[] => {
-        return leadActivities
-            .filter(activity => activity.leadId === leadId)
-            .sort((a, b) => b.createdAt.seconds - a.createdAt.seconds);
-    };
-
-    // Lead Tasks
-    const addLeadTask = async (leadId: string, taskData: Omit<LeadTask, 'id' | 'createdAt' | 'leadId'>) => {
-        if (!user || !activeProjectId) return;
-        try {
-            // Project-scoped path
-            const tasksCol = collection(db, `users/${user.uid}/projects/${activeProjectId}/leadTasks`);
-            const now = serverTimestamp();
-            await addDoc(tasksCol, {
-                ...taskData,
-                leadId,
-                projectId: activeProjectId,
-                createdAt: now
-            });
-            // Will be updated via listener
-        } catch (error) {
-            console.error("[EditorContext] Error adding lead task:", error);
-        }
-    };
-
-    const updateLeadTask = async (taskId: string, data: Partial<LeadTask>) => {
-        if (!user || !activeProjectId) return;
-        try {
-            // Project-scoped path
-            const taskRef = doc(db, `users/${user.uid}/projects/${activeProjectId}/leadTasks/${taskId}`);
-            await updateDoc(taskRef, data);
-        } catch (error) {
-            console.error("[EditorContext] Error updating lead task:", error);
-        }
-    };
-
-    const deleteLeadTask = async (taskId: string) => {
-        if (!user || !activeProjectId) return;
-        try {
-            // Project-scoped path
-            const taskRef = doc(db, `users/${user.uid}/projects/${activeProjectId}/leadTasks/${taskId}`);
-            await deleteDoc(taskRef);
-        } catch (error) {
-            console.error("[EditorContext] Error deleting lead task:", error);
-        }
-    };
-
-    const getLeadTasks = (leadId: string): LeadTask[] => {
-        return leadTasks
-            .filter(task => task.leadId === leadId)
-            .sort((a, b) => {
-                // Sort by completed status, then by due date
-                if (a.completed !== b.completed) {
-                    return a.completed ? 1 : -1;
-                }
-                return a.dueDate.seconds - b.dueDate.seconds;
-            });
-    };
-
-    // Domain Logic - Enhanced with Cloud Functions for custom domains
-    const addDomain = async (domainData: Domain) => {
-        if (!user) return;
-
-        const newDomain = { ...domainData, createdAt: new Date().toISOString() };
-        setDomains(prev => [newDomain, ...prev]); // Optimistic update
-
-        try {
-            // If this is an external domain being connected to a project,
-            // also register it in the global customDomains collection via Cloud Function
-            if (domainData.provider === 'External' && domainData.projectId) {
-                try {
-                    const { addCustomDomainToProject } = await import('../services/domainService');
-                    const result = await addCustomDomainToProject(domainData.name, domainData.projectId);
-
-                    if (result.success && result.dnsRecords) {
-                        // Update with DNS records from Cloud Function
-                        newDomain.dnsRecords = result.dnsRecords;
-                        newDomain.verificationToken = result.verificationToken;
-                        newDomain.status = 'pending';
-                    }
-                } catch (cfError) {
-                    console.warn('Cloud Function call failed, falling back to local storage:', cfError);
-                    // Continue with local storage even if Cloud Function fails
-                }
-            }
-
-            // Always save to user's domains collection
-            const domainsCol = collection(db, 'users', user.uid, 'domains');
-            await setDoc(doc(domainsCol, domainData.id), newDomain);
-
-            // Update state with final data
-            setDomains(prev => prev.map(d => d.id === domainData.id ? newDomain : d));
-
-        } catch (e) {
-            console.error("Error adding domain", e);
-            // Revert optimistic update on error
-            setDomains(prev => prev.filter(d => d.id !== domainData.id));
-        }
-    };
-
-    const updateDomain = async (id: string, data: Partial<Domain>) => {
-        if (!user) return;
-        setDomains(prev => prev.map(d => d.id === id ? { ...d, ...data } : d));
-        try {
-            const docRef = doc(db, 'users', user.uid, 'domains', id);
-            await updateDoc(docRef, data);
-        } catch (e) {
-            console.error("Error updating domain", e);
-        }
-    };
-
-    const deleteDomain = async (id: string) => {
-        if (!user) return;
-
-        const domain = domains.find(d => d.id === id);
-        setDomains(prev => prev.filter(d => d.id !== id));
-
-        try {
-            // If it's an external domain, also remove from global collection
-            if (domain?.provider === 'External') {
-                try {
-                    const { removeCustomDomainFromProject } = await import('../services/domainService');
-                    await removeCustomDomainFromProject(domain.name);
-                } catch (cfError) {
-                    console.warn('Cloud Function call failed:', cfError);
-                }
-            }
-
-            const docRef = doc(db, 'users', user.uid, 'domains', id);
-            await deleteDoc(docRef);
-        } catch (e) {
-            console.error("Error deleting domain", e);
-        }
-    };
-
-    const verifyDomain = async (id: string): Promise<boolean> => {
-        if (!user) return false;
-
-        const domain = domains.find(d => d.id === id);
-        if (!domain) return false;
-
-        try {
-            // Use Cloud Function for real DNS verification
-            const { verifyDomainDNS } = await import('../services/domainService');
-            const result = await verifyDomainDNS(domain.name);
-
-            if (result.verified) {
-                await updateDomain(id, {
-                    status: 'ssl_pending', // Next step: SSL provisioning
-                    dnsRecords: result.records.map(r => ({
-                        type: r.type,
-                        host: r.type === 'A' ? '@' : (r.type === 'CNAME' ? 'www' : '_quimera-verify'),
-                        value: r.expected,
-                        verified: r.verified,
-                        lastChecked: result.checkedAt
-                    })),
-                    lastVerifiedAt: result.checkedAt
-                });
-                return true;
-            } else {
-                await updateDomain(id, {
-                    status: 'pending',
-                    dnsRecords: result.records.map(r => ({
-                        type: r.type,
-                        host: r.type === 'A' ? '@' : (r.type === 'CNAME' ? 'www' : '_quimera-verify'),
-                        value: r.expected,
-                        verified: r.verified,
-                        lastChecked: result.checkedAt
-                    }))
-                });
-                return false;
-            }
-        } catch (error) {
-            console.error('Domain verification error:', error);
-            await updateDomain(id, { status: 'error' });
-            return false;
-        }
-    };
-
-    // Check SSL status for a domain (called after DNS verification)
-    const checkDomainSSL = async (id: string): Promise<boolean> => {
-        if (!user) return false;
-
-        const domain = domains.find(d => d.id === id);
-        if (!domain) return false;
-
-        try {
-            const { checkDomainSSLStatus } = await import('../services/domainService');
-            const result = await checkDomainSSLStatus(domain.name);
-
-            await updateDomain(id, {
-                status: result.status as any,
-                sslStatus: result.sslStatus
-            });
-
-            return result.sslStatus === 'active';
-        } catch (error) {
-            console.error('SSL check error:', error);
-            return false;
-        }
-    };
-
-    const deployDomain = async (
-        domainId: string,
-        provider: 'vercel' | 'cloudflare' | 'netlify' | 'cloud_run' = 'cloud_run'
-    ): Promise<boolean> => {
-        if (!user) return false;
-
-        const domain = domains.find(d => d.id === domainId);
-        if (!domain || !domain.projectId) {
-            console.error('Domain or project not found');
-            return false;
-        }
-
-        const project = projects.find(p => p.id === domain.projectId);
-        if (!project) {
-            console.error('Project not found');
-            return false;
-        }
-
-        try {
-            // Update status to deploying
-            await updateDomain(domainId, {
-                status: 'deploying',
-                deployment: {
-                    provider,
-                    status: 'deploying'
-                }
-            });
-
-            // Handle Cloud Run / SSR Mapping (Direct Firestore Write)
-            if (provider === 'cloud_run' || domain.provider === 'Quimera') {
-                const normalizedDomain = domain.name.toLowerCase().trim().replace(/^www\./, '');
-
-                // Direct write to customDomains collection
-                await setDoc(doc(db, 'customDomains', normalizedDomain), {
-                    domain: normalizedDomain,
-                    projectId: domain.projectId,
-                    userId: user.uid,
-                    status: 'active',
-                    sslStatus: 'active',
-                    dnsVerified: true,
-                    cloudRunTarget: 'quimera-ssr-575386543550.us-central1.run.app',
-                    updatedAt: new Date().toISOString()
-                }, { merge: true });
-
-                await updateDomain(domainId, {
-                    status: 'active',
-                    sslStatus: 'active',
-                    deployment: {
-                        provider: 'cloud_run',
-                        deploymentUrl: `https://${domain.name}`,
-                        lastDeployedAt: new Date().toISOString(),
-                        status: 'success'
-                    }
-                });
-
-                return true;
-            }
-
-            // Perform actual static deployment (Vercel/Cloudflare/etc)
-            const result = await deploymentService.deployProject(project, domain, provider as any);
-
-            if (result.success) {
-                await updateDomain(domainId, {
-                    status: 'deployed',
-                    deployment: {
-                        provider,
-                        deploymentUrl: result.deploymentUrl,
-                        deploymentId: result.deploymentId,
-                        lastDeployedAt: new Date().toISOString(),
-                        status: 'success'
-                    },
-                    dnsRecords: result.dnsRecords
-                });
-                return true;
-            } else {
-                await updateDomain(domainId, {
-                    status: 'error',
-                    deployment: {
-                        provider,
-                        status: 'failed',
-                        error: result.error
-                    }
-                });
-                return false;
-            }
-        } catch (error) {
-            console.error('Deployment error:', error);
-            await updateDomain(domainId, {
-                status: 'error',
-                deployment: {
-                    provider,
-                    status: 'failed',
-                    error: error instanceof Error ? error.message : 'Unknown error'
-                }
-            });
-            return false;
-        }
-    };
-
-    const getDomainDeploymentLogs = (domainId: string): DeploymentLog[] => {
-        const domain = domains.find(d => d.id === domainId);
-        return domain?.deploymentLogs || [];
-    };
-
+    // Domain Logic — Delegated to useEditorDomains hook
     // Global Assistant Save (todos los usuarios pueden guardar)
     const saveGlobalAssistantConfig = async (config: GlobalAssistantConfig) => {
         // Todos los usuarios pueden guardar configuración del asistente global
@@ -4885,92 +4197,6 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
         } catch (error) {
             console.error('Failed to update component status:', error);
             // Optionally revert state change on error
-        }
-    };
-
-    // CMS Logic - Stub, as real logic moved to subscription
-    const loadCMSPosts = async () => {
-        // No-op to satisfy interface. Subscription handles loading.
-        // This ensures old code doesn't crash but relies on the context's state.
-    };
-
-    const saveCMSPost = async (post: CMSPost) => {
-        if (!user) return;
-        try {
-            const { id, ...data } = post;
-
-            // --- START FIX: Propagate Slug Changes to Menus ---
-            // If updating an existing post, check if slug changed
-            if (id) {
-                const oldPost = cmsPosts.find(p => p.id === id);
-
-                // If we found the old post and the slug is different
-                if (oldPost && oldPost.slug !== post.slug) {
-                    const oldLink = `#article:${oldPost.slug}`;
-                    const newLink = `#article:${post.slug}`;
-
-                    let hasMenuUpdates = false;
-
-                    // Map through menus to find and replace the link
-                    const updatedMenus = menus.map(menu => {
-                        let menuChanged = false;
-                        const newItems = menu.items.map(item => {
-                            if (item.href === oldLink) {
-                                menuChanged = true;
-                                hasMenuUpdates = true;
-                                return { ...item, href: newLink };
-                            }
-                            return item;
-                        });
-
-                        if (menuChanged) {
-                            return { ...menu, items: newItems };
-                        }
-                        return menu;
-                    });
-
-                    // If we found links to update
-                    if (hasMenuUpdates) {
-                        // 1. Update Local State
-                        setMenus(updatedMenus);
-
-                        // 2. Update Project in Firestore
-                        if (activeProjectId) {
-                            try {
-                                const projectDocRef = doc(db, 'users', user.uid, 'projects', activeProjectId);
-                                await updateDoc(projectDocRef, { menus: updatedMenus });
-                                console.log(`[Ref Integrity] Updated menus linking to ${oldLink} -> ${newLink}`);
-                            } catch (err) {
-                                console.error("Failed to update menu references for slug change:", err);
-                            }
-                        }
-                    }
-                }
-            }
-            // --- END FIX ---
-
-            if (id && id.length > 0) {
-                const postRef = doc(db, 'users', user.uid, 'posts', id);
-                await updateDoc(postRef, { ...data, updatedAt: new Date().toISOString() });
-                // Optimistic update removed, relying on snapshot
-            } else {
-                const postsCol = collection(db, 'users', user.uid, 'posts');
-                const now = new Date().toISOString();
-                await addDoc(postsCol, { ...data, authorId: user.uid, createdAt: now, updatedAt: now });
-            }
-        } catch (error) {
-            console.error("Error saving post:", error);
-            throw error;
-        }
-    };
-
-    const deleteCMSPost = async (postId: string) => {
-        if (!user) return;
-        try {
-            const postRef = doc(db, 'users', user.uid, 'posts', postId);
-            await deleteDoc(postRef);
-        } catch (error) {
-            console.error("Error deleting post:", error);
         }
     };
 

@@ -478,6 +478,26 @@ export const generateComponentColorMappings = (colors: GlobalColors): Record<str
     };
 };
 
+/**
+ * Genera los colores del gradiente para HeroWave basándose en la paleta global.
+ * Usa primary, secondary y accent como base y genera stops intermedios.
+ * Exportado para uso en onboarding y templates.
+ */
+export const generateHeroWaveGradientColors = (colors: GlobalColors): string[] => {
+    const gradientColors: string[] = [
+        colors?.primary,
+        colors?.secondary,
+        colors?.accent,
+    ].filter(Boolean);
+
+    // Asegurar al menos 2 colores para un gradiente válido
+    if (gradientColors.length < 2) {
+        return ['#ff006e', '#fb5607', '#ffbe0b', '#38b000', '#00b4d8'];
+    }
+
+    return gradientColors;
+};
+
 const GlobalStylesControl: React.FC<GlobalStylesControlProps> = ({ mode = 'both' }) => {
     const { t } = useTranslation();
     const { updateComponentStyle } = useAdmin();
@@ -607,6 +627,16 @@ const GlobalStylesControl: React.FC<GlobalStylesControlProps> = ({ mode = 'both'
                             colors: componentColors
                         };
                     }
+                }
+
+                // Actualizar gradientColors de HeroWave con los colores de la paleta
+                if (newData.heroWave && typeof newData.heroWave === 'object') {
+                    const newGradient = generateHeroWaveGradientColors(colors);
+                    console.log('🌊 [HeroWave] Applying gradient colors:', newGradient);
+                    console.log('🌊 [HeroWave] Previous gradient:', (newData.heroWave as any).gradientColors);
+                    (newData.heroWave as any).gradientColors = newGradient;
+                } else {
+                    console.log('🌊 [HeroWave] heroWave data NOT found in project data. Keys:', Object.keys(newData));
                 }
 
                 return newData;

@@ -977,12 +977,18 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
     const applyGlobalColorsToAllSections = useCallback((colors: GlobalColors) => {
         const colorMappings = generateLandingSectionColorMappings(colors);
 
+        // Generate gradient colors from palette for HeroWave sections
+        const heroWaveGradient = [colors.primary, colors.secondary, colors.accent].filter(Boolean);
+        const gradientColors = heroWaveGradient.length >= 2 ? heroWaveGradient : ['#ff006e', '#fb5607', '#ffbe0b', '#38b000', '#00b4d8'];
+
         setSections(prev => prev.map(section => {
             const sectionColors = colorMappings[section.type];
             if (sectionColors) {
                 const mergedData = {
                     ...section.data,
-                    ...sectionColors
+                    ...sectionColors,
+                    // Apply gradient colors to HeroWave sections
+                    ...(section.type === 'heroWave' ? { gradientColors } : {}),
                 };
                 if (section.type === 'newsletter') {
                     console.log('[applyGlobalColors] Newsletter merged data:', mergedData);

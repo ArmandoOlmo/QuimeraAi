@@ -20,10 +20,125 @@ import {
   Settings, AlignJustify, MonitorPlay, Grid, GripVertical, Upload, MessageSquare, FileText, PlusCircle, X, Palette, AlertCircle, TrendingUp, Sparkles, MapPin, Map as MapIcon, Columns, Search, Loader2, ShoppingBag, Info, Store, SlidersHorizontal, LayoutGrid, Check, Link, FolderOpen, Maximize2, Clock, Zap,
   Twitter, Facebook, Instagram, Linkedin, Github, Youtube, Music, Pin, Ghost, Gamepad2, AtSign, Share2, Waves, Bell,
   Megaphone, Tag, Gift, Truck, Percent, Heart, ShieldCheck, Flame, Award, Crown, Phone,
-  Layers, UserPlus
+  Layers, UserPlus, Target, Database
 } from 'lucide-react';
 import { SingleProductSelector, SingleCollectionSelector, SingleContentSelector } from '../../ui/EcommerceControls';
+import { useEmailAudiences } from '../../../hooks/useEmailSettings';
+import { useAuth } from '../../../contexts/core/AuthContext';
+import { useSafeProject } from '../../../contexts/project';
 
+
+/**
+ * LeadDestinationSection — sub-component that uses hooks to fetch audiences.
+ * Extracted because hooks can't be called inside renderSignupFloatControlsWithTabs.
+ */
+const LeadDestinationSection: React.FC<{
+  data: any;
+  setNestedData: (path: string, value: any) => void;
+  t: (key: string, fallback?: string) => string;
+}> = ({ data, setNestedData, t }) => {
+  const { user } = useAuth();
+  const projectCtx = useSafeProject();
+  const activeProjectId = projectCtx?.activeProjectId || null;
+  const { audiences, isLoading: loadingAudiences } = useEmailAudiences(
+    user?.uid || '',
+    activeProjectId || ''
+  );
+
+  const destination = data.signupFloat?.saveDestination || 'leads';
+
+  return (
+    <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
+      <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
+        <Target size={14} />
+        {t('controls.signupFloat.saveDestination', 'Destino del Lead')}
+      </label>
+
+      {/* Destination Selector */}
+      <div className="grid grid-cols-3 gap-1 bg-editor-bg p-1 rounded-md border border-editor-border mb-3">
+        {([
+          { value: 'leads', label: t('controls.signupFloat.saveToLeads', 'Leads'), icon: <Database size={12} /> },
+          { value: 'audience', label: t('controls.signupFloat.saveToAudience', 'Audiencia'), icon: <Users size={12} /> },
+          { value: 'both', label: t('controls.signupFloat.saveToBoth', 'Ambos'), icon: <Layers size={12} /> },
+        ] as const).map(opt => (
+          <button
+            key={opt.value}
+            onClick={() => setNestedData('signupFloat.saveDestination', opt.value)}
+            className={`py-2 px-1 text-[11px] font-medium rounded-sm transition-colors flex items-center justify-center gap-1.5 ${
+              destination === opt.value
+                ? 'bg-editor-accent text-editor-bg'
+                : 'text-editor-text-secondary hover:bg-editor-border'
+            }`}
+          >
+            {opt.icon}
+            {opt.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Audience Picker (visible when audience destination is selected) */}
+      {(destination === 'audience' || destination === 'both') && (
+        <div className="mt-2">
+          <label className="block text-xs font-bold text-editor-text-secondary mb-1.5 uppercase tracking-wider">
+            {t('controls.signupFloat.selectAudience', 'Seleccionar Audiencia')}
+          </label>
+          {loadingAudiences ? (
+            <div className="flex items-center gap-2 py-3 text-editor-text-secondary text-xs">
+              <Loader2 size={14} className="animate-spin" />
+              {t('common.loading', 'Cargando...')}
+            </div>
+          ) : audiences.length === 0 ? (
+            <div className="flex items-center gap-2 p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
+              <AlertCircle size={14} className="text-yellow-500 shrink-0" />
+              <p className="text-xs text-yellow-500">
+                {t('controls.signupFloat.noAudiences', 'No hay audiencias. Crea una en Email Hub primero.')}
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
+              {audiences.map((audience: any) => (
+                <button
+                  key={audience.id}
+                  onClick={() => {
+                    setNestedData('signupFloat.targetAudienceId', audience.id);
+                    setNestedData('signupFloat.targetAudienceName', audience.name);
+                  }}
+                  className={`w-full flex items-center gap-2.5 p-2.5 rounded-lg border transition-all text-left text-xs ${
+                    data.signupFloat?.targetAudienceId === audience.id
+                      ? 'border-editor-accent bg-editor-accent/10 ring-1 ring-editor-accent/30'
+                      : 'border-editor-border hover:border-editor-accent/30 hover:bg-editor-border/50'
+                  }`}
+                >
+                  <div className={`w-2.5 h-2.5 rounded-full border-2 flex-shrink-0 ${
+                    data.signupFloat?.targetAudienceId === audience.id
+                      ? 'border-editor-accent bg-editor-accent'
+                      : 'border-editor-text-secondary/50'
+                  }`} />
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-editor-text-primary truncate">{audience.name}</p>
+                    <p className="text-[10px] text-editor-text-secondary">
+                      {(audience.estimatedCount || 0) + (audience.staticMemberCount || 0)} {t('email.members', 'miembros')}
+                    </p>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Info hint */}
+      <div className="mt-3 flex items-start gap-2 p-2 bg-editor-bg/50 rounded-md">
+        <Info size={13} className="text-editor-text-secondary shrink-0 mt-0.5" />
+        <p className="text-[10px] text-editor-text-secondary leading-relaxed">
+          {destination === 'leads' && t('controls.signupFloat.hintLeads', 'Los envíos se guardarán como leads en el CRM.')}
+          {destination === 'audience' && t('controls.signupFloat.hintAudience', 'Los envíos se agregarán a la audiencia seleccionada en Email Marketing.')}
+          {destination === 'both' && t('controls.signupFloat.hintBoth', 'Los envíos se guardarán como leads Y se agregarán a la audiencia de email.')}
+        </p>
+      </div>
+    </div>
+  );
+};
 
 export const renderSignupFloatControlsWithTabs = (deps: ControlsDeps) => {
 const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFavicon, menus, categories, navigate, uploadImageAndGetURL, faviconInputRef, isUploadingFavicon, setIsUploadingFavicon, heroProducts, heroCategories, isLoadingHeroProducts, heroProductSearch, setHeroProductSearch, showHeroImagePicker, setShowHeroImagePicker, showHeroPrimaryProductPicker, setShowHeroPrimaryProductPicker, showHeroSecondaryProductPicker, setShowHeroSecondaryProductPicker, showHeroPrimaryCollectionPicker, setShowHeroPrimaryCollectionPicker, showHeroSecondaryCollectionPicker, setShowHeroSecondaryCollectionPicker, heroPrimaryLinkType, setHeroPrimaryLinkType, heroSecondaryLinkType, setHeroSecondaryLinkType, isGeocoding, setIsGeocoding, geocodeError, setGeocodeError, componentStyles, renderListSectionControls } = deps;
@@ -107,6 +222,9 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         )}
         <Input label={t('editor.controls.common.buttonText')} value={data.signupFloat.buttonText || ''} onChange={(e) => setNestedData('signupFloat.buttonText', e.target.value)} />
       </div>
+
+      {/* ========== LEAD DESTINATION ========== */}
+      <LeadDestinationSection data={data} setNestedData={setNestedData} t={t} />
 
       {/* ========== SOCIAL LINKS ========== */}
       <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">

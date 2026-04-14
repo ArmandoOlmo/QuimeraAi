@@ -1257,7 +1257,16 @@
       "behavior": "Comportement",
       "dimensions": "Dimensions",
       "minimizeOnClose": "Minimiser à la fermeture",
-      "minimizedLabel": "Texte du bouton réduit"
+      "minimizedLabel": "Texte du bouton réduit",
+      "saveDestination": "Destination du Lead",
+      "saveToLeads": "Leads",
+      "saveToAudience": "Audience",
+      "saveToBoth": "Les Deux",
+      "selectAudience": "Sélectionner l'Audience",
+      "noAudiences": "Aucune audience trouvée. Créez-en une dans Email Hub d'abord.",
+      "hintLeads": "Les soumissions seront enregistrées comme leads dans le CRM.",
+      "hintAudience": "Les soumissions seront ajoutées à l'audience Email Marketing sélectionnée.",
+      "hintBoth": "Les soumissions seront enregistrées comme leads ET ajoutées à l'audience email."
     }
   }
 }

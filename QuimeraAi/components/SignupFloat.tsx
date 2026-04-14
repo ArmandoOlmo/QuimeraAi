@@ -16,6 +16,15 @@ import { X, Instagram, Twitter, Facebook, Linkedin, Youtube, Github, MessageCirc
 import type { SignupFloatData, SocialPlatform, BorderRadiusSize } from '../types/components';
 import { useSafeEditor } from '../contexts/EditorContext';
 import { useRouter } from '../hooks/useRouter';
+import {
+  db,
+  doc,
+  getDoc,
+  collection,
+  addDoc,
+  updateDoc,
+  serverTimestamp,
+} from '../firebase';
 
 // Map border radius tokens to CSS values
 const borderRadiusMap: Record<BorderRadiusSize, string> = {
@@ -49,6 +58,8 @@ const socialIconMap: Record<SocialPlatform, React.ElementType> = {
 interface SignupFloatProps extends SignupFloatData {
   /** Project ID for lead capture */
   projectId?: string;
+  /** Owner (user) ID — needed for Firestore writes on published sites */
+  ownerId?: string;
   /** Whether this is preview mode in the editor */
   isPreviewMode?: boolean;
 }
@@ -82,7 +93,12 @@ const SignupFloat: React.FC<SignupFloatProps> = ({
   colors,
   headerFontSize = 'lg',
   descriptionFontSize = 'sm',
+  // Lead destination props
+  saveDestination = 'leads',
+  targetAudienceId,
+  targetAudienceName,
   projectId,
+  ownerId,
   isPreviewMode = false,
 }) => {
   const { t } = useTranslation();
@@ -101,6 +117,7 @@ const SignupFloat: React.FC<SignupFloatProps> = ({
     message: '',
   });
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Show component after delay
   useEffect(() => {
@@ -136,15 +153,140 @@ const SignupFloat: React.FC<SignupFloatProps> = ({
     setViewState('open');
   }, []);
 
-  const handleSubmit = useCallback((e: React.FormEvent) => {
+  // Resolve the owner ID: from prop (published site), or from EditorContext (editor)
+  const resolvedOwnerId = ownerId || editorContext?.activeProject?.userId || '';
+  const resolvedProjectId = projectId || editorContext?.activeProject?.id || '';
+
+  const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Integrate with Leads system if projectId exists
+    if (isSubmitting) return;
+
+    const effectiveDestination = saveDestination || 'leads';
+    const shouldSaveToLeads = effectiveDestination === 'leads' || effectiveDestination === 'both';
+    const shouldSaveToAudience = (effectiveDestination === 'audience' || effectiveDestination === 'both') && !!targetAudienceId;
+
+    // If no destination is configured at all, still show success UI
+    if (!shouldSaveToLeads && !shouldSaveToAudience) {
+      console.warn('[SignupFloat] No save destination configured');
+      setIsSubmitted(true);
+      setTimeout(() => {
+        setIsSubmitted(false);
+        setFormData({ name: '', email: '', phone: '', message: '' });
+      }, 3000);
+      return;
+    }
+
+    // In preview mode (editor), use EditorContext's addLead if available
+    if (isInEditor && editorContext?.addLead && shouldSaveToLeads) {
+      try {
+        setIsSubmitting(true);
+        await editorContext.addLead({
+          name: formData.name || '',
+          email: formData.email || '',
+          phone: formData.phone || '',
+          source: 'signup-float',
+          status: 'new',
+          value: 0,
+          leadScore: 30,
+          tags: ['signup-float', 'website'],
+          notes: formData.message ? `Mensaje del formulario de registro:\n${formData.message}` : '',
+        });
+      } catch (error) {
+        console.error('[SignupFloat] Error saving lead via EditorContext:', error);
+      } finally {
+        setIsSubmitting(false);
+      }
+      setIsSubmitted(true);
+      setTimeout(() => {
+        setIsSubmitted(false);
+        setFormData({ name: '', email: '', phone: '', message: '' });
+      }, 3000);
+      return;
+    }
+
+    // Published site: Direct Firestore writes
+    if (!resolvedOwnerId || !resolvedProjectId) {
+      console.error('[SignupFloat] Missing ownerId or projectId for Firestore writes');
+      setIsSubmitted(true);
+      setTimeout(() => {
+        setIsSubmitted(false);
+        setFormData({ name: '', email: '', phone: '', message: '' });
+      }, 3000);
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const promises: Promise<any>[] = [];
+
+      // 1. Save as CRM Lead
+      if (shouldSaveToLeads) {
+        const leadsPath = `users/${resolvedOwnerId}/projects/${resolvedProjectId}/leads`;
+        promises.push(
+          addDoc(collection(db, leadsPath), {
+            name: formData.name || '',
+            email: formData.email || '',
+            phone: formData.phone || '',
+            source: 'signup-float',
+            status: 'new',
+            value: 0,
+            leadScore: 30,
+            tags: ['signup-float', 'website'],
+            notes: formData.message ? `Mensaje del formulario de registro:\n${formData.message}` : '',
+            projectId: resolvedProjectId,
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp(),
+          })
+        );
+      }
+
+      // 2. Add to Email Audience
+      if (shouldSaveToAudience && targetAudienceId) {
+        const audiencePath = `users/${resolvedOwnerId}/projects/${resolvedProjectId}/emailAudiences/${targetAudienceId}`;
+        const audienceDocRef = doc(db, audiencePath);
+
+        promises.push(
+          (async () => {
+            const snap = await getDoc(audienceDocRef);
+            if (!snap.exists()) {
+              console.error('[SignupFloat] Target audience not found:', targetAudienceId);
+              return;
+            }
+            const audienceData = snap.data();
+            const existingEmails = audienceData?.staticMembers?.emails || [];
+            const existingLeadIds = audienceData?.staticMembers?.leadIds || [];
+            const existingCustomerIds = audienceData?.staticMembers?.customerIds || [];
+
+            // Avoid duplicates
+            if (formData.email && !existingEmails.includes(formData.email)) {
+              const updatedEmails = [...existingEmails, formData.email];
+              const staticMemberCount = updatedEmails.length + existingLeadIds.length + existingCustomerIds.length;
+
+              await updateDoc(audienceDocRef, {
+                'staticMembers.emails': updatedEmails,
+                staticMemberCount,
+                updatedAt: serverTimestamp(),
+              });
+              console.log('[SignupFloat] ✅ Added email to audience:', targetAudienceId);
+            }
+          })()
+        );
+      }
+
+      await Promise.all(promises);
+      console.log('[SignupFloat] ✅ Form submitted successfully');
+    } catch (error) {
+      console.error('[SignupFloat] Error submitting form:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
+
     setIsSubmitted(true);
     setTimeout(() => {
       setIsSubmitted(false);
       setFormData({ name: '', email: '', phone: '', message: '' });
     }, 3000);
-  }, []);
+  }, [formData, saveDestination, targetAudienceId, resolvedOwnerId, resolvedProjectId, isInEditor, editorContext, isSubmitting]);
 
   // Font size mapping
   const fontSizeMap = {

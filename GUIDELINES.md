@@ -127,3 +127,210 @@
 - [ ] Component uses global color tokens instead of hardcoded hex values
 - [ ] Verified that changing the global palette correctly updates all parts of the new component
 - [ ] Verified that importing a Coolors.co URL applies colors as expected to the component
+
+## 📐 Code Structure & Anti-Monolith Rules
+
+**Every new file added to this project MUST follow modular architecture principles.** No monolithic files, no god-components, no mega-hooks. Code must be structured so that any single file can be read and understood at a glance.
+
+### Rule 1: Strict Line Limit per File (≤ 300 lines)
+
+No `.tsx` or `.ts` file may exceed **300 lines**. If a file approaches this limit, it must be decomposed into smaller, focused modules.
+
+```
+✅ Acceptable:  LeadsDashboard.tsx (280 lines)
+❌ Prohibited:  EditorContext.tsx (5,139 lines)
+```
+
+**Exceptions:**
+- Type/interface files may reach 400 lines if well-organized by section
+- Pure data/constants files (e.g., `initialData.ts`) if they contain only static data
+
+### Rule 2: Mandatory Feature Folder Pattern
+
+Every complex feature or component must live in its own folder with a standardized internal structure:
+
+```
+components/dashboard/leads/
+├── LeadsDashboard.tsx          # Composition only — assembles sub-components
+├── components/
+│   ├── LeadsTable.tsx          # Table display
+│   ├── LeadFilters.tsx         # Filter controls
+│   ├── LeadDetailModal.tsx     # Detail modal
+│   └── LeadStatusBadge.tsx     # Status badge
+├── hooks/
+│   ├── useLeadsData.ts         # Data fetching & caching
+│   ├── useLeadsFilters.ts      # Filter logic
+│   └── useLeadsActions.ts      # Mutations (create, update, delete)
+├── types.ts                    # Types scoped to this feature only
+├── helpers.ts                  # Pure utility functions
+├── constants.ts                # Feature-specific constants
+└── index.ts                    # Public re-exports
+```
+
+**Reference implementation:** `components/dashboard/email/email-hub/` follows this pattern with `hooks/`, `views/`, `types.ts`, and `helpers.ts`.
+
+### Rule 3: Single Responsibility Principle for Hooks (SRP)
+
+A hook must have **one single responsibility**. Never mix:
+- Data fetching with mutations
+- UI state with business logic
+- Side effects with pure computations
+
+```tsx
+// ❌ PROHIBITED: Monolithic hook
+function useLeads() {
+  // 50 lines of fetching
+  // 80 lines of filters
+  // 120 lines of mutations
+  // 40 lines of UI state
+  return { /* 30+ values */ };
+}
+
+// ✅ CORRECT: Specialized hooks
+function useLeadsData(projectId: string) { ... }       // Read-only queries
+function useLeadsFilters() { ... }                      // Filter state & logic
+function useLeadsActions(projectId: string) { ... }     // Write mutations only
+function useLeadsUI() { ... }                           // Transient UI state only
+```
+
+**Naming convention:**
+
+| Suffix | Purpose | Example |
+|---|---|---|
+| `use{Feature}Data` | Read-only data queries | `useLeadsData` |
+| `use{Feature}Actions` | Write mutations | `useLeadsActions` |
+| `use{Feature}Filters` | Filter logic | `useLeadsFilters` |
+| `use{Feature}UI` | Local UI state | `useLeadsUI` |
+
+### Rule 4: Components as Composition, Not Monoliths
+
+A parent component must only **compose** sub-components. If it has more than ~20 lines of inline JSX, extract sub-components.
+
+```tsx
+// ❌ PROHIBITED: Everything inline
+function SEODashboard() {
+  return (
+    <div>
+      {/* 200 lines of header */}
+      {/* 300 lines of tabs */}
+      {/* 400 lines of forms */}
+      {/* 100 lines of modals */}
+    </div>
+  );
+}
+
+// ✅ CORRECT: Composition
+function SEODashboard() {
+  return (
+    <DashboardLayout>
+      <SEOHeader />
+      <SEOTabs>
+        <GeneralSEOForm />
+        <TechnicalSEOForm />
+        <SocialSEOForm />
+      </SEOTabs>
+      <SEOPreview />
+    </DashboardLayout>
+  );
+}
+```
+
+### Rule 5: Co-located Types per Feature
+
+Types must live **next to their feature**, not in a single mega-file.
+
+```
+❌ PROHIBITED: One giant global types file
+types/components.ts (2,126 lines with ALL types)
+
+✅ CORRECT: Types co-located with their feature
+components/dashboard/leads/types.ts        # Only lead types
+components/dashboard/email/email-hub/types.ts  # Only email types
+components/dashboard/seo/types.ts          # Only SEO types
+types/shared.ts                            # Only truly shared types
+```
+
+When creating a new feature, always create a local `types.ts` in its folder. Only put types in `types/` at the root if they are genuinely shared across 3+ unrelated features.
+
+### Rule 6: Three-Layer Rule for React Contexts
+
+A React context must never mix abstraction levels. Follow the 3-layer structure:
+
+```
+Layer 1: Pure State (StateContext)
+  └── Only state + refs + computed values
+
+Layer 2: Actions (ActionsContext)
+  └── Only functions that modify state
+
+Layer 3: UI (UIContext)
+  └── Only transient UI state (modals, selections, panels)
+```
+
+```tsx
+// ❌ PROHIBITED: God-context
+<EditorContext.Provider value={{
+  // 200+ values: state + actions + UI + everything
+}}>
+
+// ✅ CORRECT: Specialized contexts
+<EditorStateProvider>
+  <EditorActionsProvider>
+    <EditorUIProvider>
+      {children}
+    </EditorUIProvider>
+  </EditorActionsProvider>
+</EditorStateProvider>
+```
+
+When adding functionality to an existing context, first verify which layer it belongs to. If the context already mixes layers, refactor before adding.
+
+### Rule 7: Extract Pure Logic to Helpers
+
+All logic that **does not require** React hooks must live in `helpers.ts` or `utils/` files as pure functions.
+
+```tsx
+// ❌ PROHIBITED: Business logic inside a component
+function PricingTable({ plans }) {
+  const formatPrice = (price, currency, interval) => { /* 20 lines */ };
+  const calculateDiscount = (plan, coupon) => { /* 15 lines */ };
+  const sortPlans = (plans, criteria) => { /* 10 lines */ };
+  // ...render
+}
+
+// ✅ CORRECT: Pure functions in helpers
+// helpers.ts
+export const formatPrice = (price: number, currency: string, interval: string) => { ... }
+export const calculateDiscount = (plan: Plan, coupon: Coupon) => { ... }
+export const sortPlans = (plans: Plan[], criteria: SortCriteria) => { ... }
+
+// PricingTable.tsx — UI only
+import { formatPrice, calculateDiscount, sortPlans } from './helpers';
+```
+
+**Benefits:**
+- Helpers are **unit-testable** without React
+- Reusable without coupling to a specific component
+- Drastically reduce component file size
+
+### Quick Reference
+
+| # | Rule | Metric |
+|---|---|---|
+| 1 | Line limit | ≤ 300 lines per file |
+| 2 | Feature folders | Each feature gets its own folder + standard structure |
+| 3 | Hook SRP | 1 hook = 1 responsibility |
+| 4 | Composition | Parent ≤ 20 lines of inline JSX |
+| 5 | Co-located types | Types live with their feature |
+| 6 | 3-layer contexts | State / Actions / UI separated |
+| 7 | Pure helpers | Non-React logic → `helpers.ts` |
+
+### Checklist for Code Structure
+
+- [ ] No file exceeds 300 lines
+- [ ] Component uses Feature Folder pattern if it has 2+ sub-components
+- [ ] Hooks follow naming convention (`Data` / `Actions` / `Filters` / `UI`)
+- [ ] Types are co-located in the feature folder
+- [ ] Pure logic extracted to `helpers.ts`
+- [ ] Parent component only composes sub-components
+- [ ] No new responsibility added to an already mixed-layer context

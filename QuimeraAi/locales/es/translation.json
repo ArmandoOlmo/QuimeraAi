@@ -1476,7 +1476,16 @@
       "behavior": "Comportamiento",
       "dimensions": "Dimensiones",
       "minimizeOnClose": "Minimizar al Cerrar",
-      "minimizedLabel": "Texto del Botón Minimizado"
+      "minimizedLabel": "Texto del Botón Minimizado",
+      "saveDestination": "Destino del Lead",
+      "saveToLeads": "Leads",
+      "saveToAudience": "Audiencia",
+      "saveToBoth": "Ambos",
+      "selectAudience": "Seleccionar Audiencia",
+      "noAudiences": "No hay audiencias. Crea una en Email Hub primero.",
+      "hintLeads": "Los envíos se guardarán como leads en el CRM.",
+      "hintAudience": "Los envíos se agregarán a la audiencia seleccionada en Email Marketing.",
+      "hintBoth": "Los envíos se guardarán como leads Y se agregarán a la audiencia de email."
     }
   },
   "coolorsImporter": {

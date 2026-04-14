@@ -1476,7 +1476,16 @@
       "behavior": "Behavior",
       "dimensions": "Dimensions",
       "minimizeOnClose": "Minimize On Close",
-      "minimizedLabel": "Minimized Button Label"
+      "minimizedLabel": "Minimized Button Label",
+      "saveDestination": "Lead Destination",
+      "saveToLeads": "Leads",
+      "saveToAudience": "Audience",
+      "saveToBoth": "Both",
+      "selectAudience": "Select Audience",
+      "noAudiences": "No audiences found. Create one in Email Hub first.",
+      "hintLeads": "Submissions will be saved as leads in the CRM.",
+      "hintAudience": "Submissions will be added to the selected Email Marketing audience.",
+      "hintBoth": "Submissions will be saved as leads AND added to the email audience."
     }
   },
   "coolorsImporter": {
