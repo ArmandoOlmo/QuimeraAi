@@ -11,16 +11,16 @@ import { HeroTextLayout } from '../types';
 // Ajustamos los tamaños para que sean más impactantes en este diseño full-screen
 const headlineSizeClasses: Record<FontSize, string> = {
   sm: 'text-2xl md:text-4xl',
-  md: 'text-3xl md:text-5xl md:text-6xl',
-  lg: 'text-3xl md:text-6xl md:text-7xl',
-  xl: 'text-4xl md:text-7xl md:text-8xl',
+  md: 'text-3xl md:text-5xl lg:text-6xl',
+  lg: 'text-3xl md:text-6xl lg:text-7xl',
+  xl: 'text-4xl md:text-7xl lg:text-8xl',
 };
 
 const subheadlineSizeClasses: Record<FontSize, string> = {
   sm: 'text-xs md:text-base',
   md: 'text-sm md:text-lg',
-  lg: 'text-sm md:text-xl md:text-2xl',
-  xl: 'text-base md:text-2xl md:text-3xl',
+  lg: 'text-sm md:text-xl lg:text-2xl',
+  xl: 'text-base md:text-2xl lg:text-3xl',
 };
 
 const borderRadiusClasses: Record<BorderRadiusSize, string> = {

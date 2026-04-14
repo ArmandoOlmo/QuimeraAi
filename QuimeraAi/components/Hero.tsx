@@ -7,17 +7,17 @@ import { hexToRgba } from '../utils/colorUtils';
 import { sanitizeHtml } from '../utils/sanitize';
 
 const headlineSizeClasses: Record<FontSize, string> = {
-  sm: 'text-lg md:text-2xl md:text-3xl',
-  md: 'text-xl md:text-3xl md:text-5xl',
-  lg: 'text-2xl md:text-4xl md:text-6xl',
-  xl: 'text-3xl md:text-5xl md:text-8xl',
+  sm: 'text-lg md:text-2xl lg:text-3xl',
+  md: 'text-xl md:text-3xl lg:text-5xl',
+  lg: 'text-2xl md:text-4xl lg:text-6xl',
+  xl: 'text-3xl md:text-5xl lg:text-8xl',
 };
 
 const subheadlineSizeClasses: Record<FontSize, string> = {
   sm: 'text-xs md:text-sm',
   md: 'text-sm md:text-base',
-  lg: 'text-sm md:text-lg md:text-xl',
-  xl: 'text-base md:text-xl md:text-2xl',
+  lg: 'text-sm md:text-lg lg:text-xl',
+  xl: 'text-base md:text-xl lg:text-2xl',
 };
 
 const borderRadiusClasses: Record<BorderRadiusSize, string> = {

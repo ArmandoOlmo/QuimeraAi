@@ -2033,31 +2033,48 @@ span.rounded-full.w-4 {
 /* 
  * Hero headline responsive sizing using container queries
  * Targets hero h1 elements and applies container-responsive font sizes
+ * Mapped to Tailwind classes and their responsive variants to ensure Editor changes reflect correctly
  */
 .preview-container h1.font-header {
-  font-size: var(--preview-text-6xl) !important;
   line-height: 1.1 !important;
 }
 
-/* Size variants based on Tailwind classes */
-.preview-container h1.font-header.text-4xl {
-  font-size: calc(var(--preview-text-5xl) * 0.85) !important;
-}
-
-.preview-container h1.font-header.text-5xl {
-  font-size: var(--preview-text-5xl) !important;
-}
-
-.preview-container h1.font-header.text-6xl {
+/* Fallback default if no utility class matched */
+.preview-container h1.font-header:not([class*="text-"]) {
   font-size: var(--preview-text-6xl) !important;
 }
 
-.preview-container h1.font-header.text-7xl {
-  font-size: var(--preview-text-7xl) !important;
+/* Base sizes (mobile) */
+.preview-container h1.font-header.text-lg { font-size: 1.125rem !important; }
+.preview-container h1.font-header.text-xl { font-size: 1.25rem !important; }
+.preview-container h1.font-header.text-2xl { font-size: 1.5rem !important; }
+.preview-container h1.font-header.text-3xl { font-size: calc(var(--preview-text-5xl) * 0.75) !important; }
+.preview-container h1.font-header.text-4xl { font-size: calc(var(--preview-text-5xl) * 0.85) !important; }
+.preview-container h1.font-header.text-5xl { font-size: var(--preview-text-5xl) !important; }
+.preview-container h1.font-header.text-6xl { font-size: var(--preview-text-6xl) !important; }
+.preview-container h1.font-header.text-7xl { font-size: var(--preview-text-7xl) !important; }
+.preview-container h1.font-header.text-8xl { font-size: var(--preview-text-8xl) !important; }
+
+/* Tablet Override (md:) */
+@container preview (min-width: 768px) {
+  .preview-container h1.font-header.md\:text-2xl { font-size: 1.5rem !important; }
+  .preview-container h1.font-header.md\:text-3xl { font-size: calc(var(--preview-text-5xl) * 0.75) !important; }
+  .preview-container h1.font-header.md\:text-4xl { font-size: calc(var(--preview-text-5xl) * 0.85) !important; }
+  .preview-container h1.font-header.md\:text-5xl { font-size: var(--preview-text-5xl) !important; }
+  .preview-container h1.font-header.md\:text-6xl { font-size: var(--preview-text-6xl) !important; }
+  .preview-container h1.font-header.md\:text-7xl { font-size: var(--preview-text-7xl) !important; }
+  .preview-container h1.font-header.md\:text-8xl { font-size: var(--preview-text-8xl) !important; }
 }
 
-.preview-container h1.font-header.text-8xl {
-  font-size: var(--preview-text-8xl) !important;
+/* Desktop Override (lg:) */
+@container preview (min-width: 1024px) {
+  .preview-container h1.font-header.lg\:text-3xl { font-size: calc(var(--preview-text-5xl) * 0.75) !important; }
+  .preview-container h1.font-header.lg\:text-4xl { font-size: calc(var(--preview-text-5xl) * 0.85) !important; }
+  .preview-container h1.font-header.lg\:text-5xl { font-size: var(--preview-text-5xl) !important; }
+  .preview-container h1.font-header.lg\:text-6xl { font-size: var(--preview-text-6xl) !important; }
+  .preview-container h1.font-header.lg\:text-7xl { font-size: var(--preview-text-7xl) !important; }
+  .preview-container h1.font-header.lg\:text-8xl { font-size: var(--preview-text-8xl) !important; }
+  .preview-container h1.font-header.lg\:text-9xl { font-size: calc(var(--preview-text-8xl) * 1.2) !important; }
 }
 
 /* ============================================

@@ -9,17 +9,17 @@ import { getHeroLayoutClasses } from '../utils/heroLayout';
 import { HeroTextLayout } from '../types';
 
 const headlineSizeClasses: Record<FontSize, string> = {
-    sm: 'text-2xl md:text-4xl md:text-5xl',
-    md: 'text-3xl md:text-5xl md:text-7xl',
-    lg: 'text-3xl md:text-6xl md:text-8xl',
-    xl: 'text-4xl md:text-7xl md:text-9xl',
+    sm: 'text-2xl md:text-4xl lg:text-5xl',
+    md: 'text-3xl md:text-5xl lg:text-7xl',
+    lg: 'text-3xl md:text-6xl lg:text-8xl',
+    xl: 'text-4xl md:text-7xl lg:text-9xl',
 };
 
 const subheadlineSizeClasses: Record<FontSize, string> = {
-    sm: 'text-xs md:text-base md:text-lg',
-    md: 'text-sm md:text-lg md:text-xl',
-    lg: 'text-sm md:text-xl md:text-2xl',
-    xl: 'text-base md:text-2xl md:text-3xl',
+    sm: 'text-xs md:text-base lg:text-lg',
+    md: 'text-sm md:text-lg lg:text-xl',
+    lg: 'text-sm md:text-xl lg:text-2xl',
+    xl: 'text-base md:text-2xl lg:text-3xl',
 };
 
 const borderRadiusClasses: Record<BorderRadiusSize, string> = {
