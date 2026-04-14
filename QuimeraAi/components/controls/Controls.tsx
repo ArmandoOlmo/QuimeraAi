@@ -77,7 +77,7 @@ const Controls: React.FC = () => {
   const isDesktop = viewportType === 'desktop';
   const { activeSection, onSectionSelect, activeSectionItem, isSidebarOpen, setIsSidebarOpen } = useUI();
   const {
-    data, setData,
+    data: projectData, setData: setProjectData,
     componentOrder, setComponentOrder, activeProject, updateProjectFavicon,
     saveProject,
     pages, activePage, setActivePage, addPage, updatePage, deletePage, duplicatePage,
@@ -88,6 +88,15 @@ const Controls: React.FC = () => {
   const editorContext = useEditor();
   const setEditorSectionVisibility = editorContext.setSectionVisibility;
   const setEditorComponentOrder = editorContext.setComponentOrder;
+
+  // CRITICAL: Use EditorContext data as source of truth for the editor preview.
+  // The LandingPage reads from editorContext.data when in editor mode, so we
+  // must read AND write from it. We also sync to ProjectContext for persistence.
+  const data = editorContext.data ?? projectData;
+  const setData: React.Dispatch<React.SetStateAction<any>> = (updater: any) => {
+    setProjectData(updater);
+    editorContext.setData(updater);
+  };
 
   const sectionVisibility = projectSectionVisibility;
   const setSectionVisibility = (updater: React.SetStateAction<Record<PageSection, boolean>>) => {
