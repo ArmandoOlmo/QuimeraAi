@@ -176,101 +176,86 @@ const SignupFloat: React.FC<SignupFloatProps> = ({
       return;
     }
 
-    // In preview mode (editor), use EditorContext's addLead if available
-    if (isInEditor && editorContext?.addLead && shouldSaveToLeads) {
-      try {
-        setIsSubmitting(true);
-        await editorContext.addLead({
-          name: formData.name || '',
-          email: formData.email || '',
-          phone: formData.phone || '',
-          source: 'signup-float',
-          status: 'new',
-          value: 0,
-          leadScore: 30,
-          tags: ['signup-float', 'website'],
-          notes: formData.message ? `Mensaje del formulario de registro:\n${formData.message}` : '',
-        });
-      } catch (error) {
-        console.error('[SignupFloat] Error saving lead via EditorContext:', error);
-      } finally {
-        setIsSubmitting(false);
-      }
-      setIsSubmitted(true);
-      setTimeout(() => {
-        setIsSubmitted(false);
-        setFormData({ name: '', email: '', phone: '', message: '' });
-      }, 3000);
-      return;
-    }
-
-    // Published site: Direct Firestore writes
-    if (!resolvedOwnerId || !resolvedProjectId) {
-      console.error('[SignupFloat] Missing ownerId or projectId for Firestore writes');
-      setIsSubmitted(true);
-      setTimeout(() => {
-        setIsSubmitted(false);
-        setFormData({ name: '', email: '', phone: '', message: '' });
-      }, 3000);
-      return;
-    }
-
     setIsSubmitting(true);
     try {
       const promises: Promise<any>[] = [];
 
-      // 1. Save as CRM Lead
+      // 1. Save to CRM
       if (shouldSaveToLeads) {
-        const leadsPath = `users/${resolvedOwnerId}/projects/${resolvedProjectId}/leads`;
-        promises.push(
-          addDoc(collection(db, leadsPath), {
-            name: formData.name || '',
-            email: formData.email || '',
-            phone: formData.phone || '',
-            source: 'signup-float',
-            status: 'new',
-            value: 0,
-            leadScore: 30,
-            tags: ['signup-float', 'website'],
-            notes: formData.message ? `Mensaje del formulario de registro:\n${formData.message}` : '',
-            projectId: resolvedProjectId,
-            createdAt: serverTimestamp(),
-            updatedAt: serverTimestamp(),
-          })
-        );
+        if (isInEditor && editorContext?.addLead) {
+          promises.push(
+            editorContext.addLead({
+              name: formData.name || '',
+              email: formData.email || '',
+              phone: formData.phone || '',
+              source: 'signup-float',
+              status: 'new',
+              value: 0,
+              leadScore: 30,
+              tags: ['signup-float', 'website'],
+              notes: formData.message ? `Mensaje del formulario de registro:\n${formData.message}` : '',
+            }).catch((err) => console.error('[SignupFloat] Error saving lead via EditorContext:', err))
+          );
+        } else if (resolvedOwnerId && resolvedProjectId) {
+          const leadsPath = `users/${resolvedOwnerId}/projects/${resolvedProjectId}/leads`;
+          promises.push(
+            addDoc(collection(db, leadsPath), {
+              name: formData.name || '',
+              email: formData.email || '',
+              phone: formData.phone || '',
+              source: 'signup-float',
+              status: 'new',
+              value: 0,
+              leadScore: 30,
+              tags: ['signup-float', 'website'],
+              notes: formData.message ? `Mensaje del formulario de registro:\n${formData.message}` : '',
+              projectId: resolvedProjectId,
+              createdAt: serverTimestamp(),
+              updatedAt: serverTimestamp(),
+            })
+          );
+        } else {
+          console.error('[SignupFloat] Missing ownerId or projectId for Firestore CRM writes');
+        }
       }
 
-      // 2. Add to Email Audience
+      // 2. Add to Email Audience (always direct Firestore)
       if (shouldSaveToAudience && targetAudienceId) {
-        const audiencePath = `users/${resolvedOwnerId}/projects/${resolvedProjectId}/emailAudiences/${targetAudienceId}`;
-        const audienceDocRef = doc(db, audiencePath);
+        if (resolvedOwnerId && resolvedProjectId) {
+          const audiencePath = `users/${resolvedOwnerId}/projects/${resolvedProjectId}/emailAudiences/${targetAudienceId}`;
+          const audienceDocRef = doc(db, audiencePath);
 
-        promises.push(
-          (async () => {
-            const snap = await getDoc(audienceDocRef);
-            if (!snap.exists()) {
-              console.error('[SignupFloat] Target audience not found:', targetAudienceId);
-              return;
-            }
-            const audienceData = snap.data();
-            const existingEmails = audienceData?.staticMembers?.emails || [];
-            const existingLeadIds = audienceData?.staticMembers?.leadIds || [];
-            const existingCustomerIds = audienceData?.staticMembers?.customerIds || [];
-
-            // Avoid duplicates
-            if (formData.email && !existingEmails.includes(formData.email)) {
-              const updatedEmails = [...existingEmails, formData.email];
-              const staticMemberCount = updatedEmails.length + existingLeadIds.length + existingCustomerIds.length;
-
-              await updateDoc(audienceDocRef, {
-                'staticMembers.emails': updatedEmails,
-                staticMemberCount,
-                updatedAt: serverTimestamp(),
-              });
-              console.log('[SignupFloat] ✅ Added email to audience:', targetAudienceId);
-            }
-          })()
-        );
+          promises.push(
+            (async () => {
+              const snap = await getDoc(audienceDocRef);
+              if (!snap.exists()) {
+                console.error('[SignupFloat] Target audience not found:', targetAudienceId);
+                return;
+              }
+              const existingMembers = snap.data()?.members || [];
+              
+              // Avoid duplicates
+              const exists = existingMembers.some((m: any) => m.email?.toLowerCase() === formData.email.toLowerCase());
+              
+              if (formData.email && !exists) {
+                const newMember = { email: formData.email, name: formData.name || '', source: 'signup-float' };
+                const updatedMembers = [...existingMembers, newMember];
+                
+                await updateDoc(audienceDocRef, {
+                  members: updatedMembers,
+                  staticMemberCount: updatedMembers.length,
+                  estimatedCount: updatedMembers.length,
+                  updatedAt: serverTimestamp(),
+                });
+                console.log('[SignupFloat] ✅ Added email to audience:', targetAudienceId);
+              } else if (exists) {
+                console.log('[SignupFloat] Email already exists in audience:', formData.email);
+              }
+            })()
+          );
+        } else {
+          console.error('[SignupFloat] Missing ownerId or projectId for Firestore Audience writes');
+        }
       }
 
       await Promise.all(promises);
