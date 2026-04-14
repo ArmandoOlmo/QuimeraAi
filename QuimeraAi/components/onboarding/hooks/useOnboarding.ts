@@ -4,7 +4,7 @@
  */
 
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { doc, getDoc, setDoc, deleteDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, deleteDoc, collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../../../firebase';
 import { useEditor } from '../../../contexts/EditorContext';
 import { useUI } from '../../../contexts/core/UIContext';
@@ -2238,6 +2238,46 @@ TEMPLATE #${t.index}: "${t.name}"
             };
 
             await addNewProject(newProject);
+
+            // ============================================================================
+            // REGISTER ONBOARDING IMAGES IN PROJECT LIBRARY
+            // During onboarding, images are generated before the project exists, so they
+            // end up in a user-level fallback path and don't appear in the project's
+            // asset library. Here we register all generated images as project files so
+            // they're available for reuse in the project's media library.
+            // ============================================================================
+            if (user?.uid && Object.keys(generatedImages).length > 0) {
+                if (isDev) console.log('📁 Registering onboarding images in project library...');
+                const filesCol = collection(db, `users/${user.uid}/projects/${newProject.id}/files`);
+                let registeredCount = 0;
+
+                for (const [promptKey, imageUrl] of Object.entries(generatedImages)) {
+                    try {
+                        // Find the matching image item to get prompt and metadata
+                        const matchingItem = imageItems.find(item => item.promptKey === promptKey);
+                        const imagePrompt = matchingItem?.prompt || promptKey;
+
+                        await addDoc(filesCol, {
+                            name: `onboarding-${promptKey.replace(/[.\[\]]/g, '-')}`,
+                            storagePath: '', // URL-based, storage path is unknown from here
+                            downloadURL: imageUrl,
+                            size: 0, // Size unknown from URL
+                            type: 'image/jpeg',
+                            createdAt: serverTimestamp(),
+                            notes: imagePrompt,
+                            aiSummary: '',
+                            projectId: newProject.id,
+                            projectName: newProject.name,
+                            source: 'onboarding', // Tag for easy identification
+                        });
+                        registeredCount++;
+                    } catch (regErr) {
+                        console.warn(`⚠️ Failed to register image ${promptKey} in project library:`, regErr);
+                    }
+                }
+
+                if (isDev) console.log(`✅ Registered ${registeredCount}/${Object.keys(generatedImages).length} images in project library`);
+            }
 
             // Setup ecommerce if enabled
             if (progress.hasEcommerce && progress.storeSetup && user?.uid) {
