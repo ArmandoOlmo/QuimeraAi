@@ -7,6 +7,7 @@ import { useSafeProject } from './project/ProjectContext';
 import { useEditorLeads } from './editor/useEditorLeads';
 import { useEditorCMS } from './editor/useEditorCMS';
 import { useEditorDomains } from './editor/useEditorDomains';
+import { useEditorFiles } from './editor/useEditorFiles';
 import { getPermissions, isOwner, determineRole, OWNER_EMAIL } from '../constants/roles';
 import { initialData } from '../data/initialData';
 import { defaultPrompts } from '../data/defaultPrompts';
@@ -550,7 +551,7 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
     // Theme mode and sidebar order - Use UIContext (single source of truth)
     const { themeMode, setThemeMode, sidebarOrder, setSidebarOrder } = useUI();
 
-    // File Management State
+    // File Management State (kept inline — cross-deps with API key/error handlers)
     const [files, setFiles] = useState<FileRecord[]>([]);
     const [isFilesLoading, setIsFilesLoading] = useState(true);
 
@@ -567,6 +568,7 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
     const [userPermissions, setUserPermissions] = useState<RolePermissions>(getPermissions('user'));
     const [isUserOwner, setIsUserOwner] = useState(false);
     const [prompts, setPrompts] = useState<LLMPrompt[]>([]);
+
 
     // Component Studio State
     const [componentStyles, setComponentStyles] = useState<ComponentStyles>(defaultComponentStyles);

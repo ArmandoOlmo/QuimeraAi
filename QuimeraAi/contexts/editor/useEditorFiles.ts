@@ -17,16 +17,21 @@ interface UseEditorFilesParams {
     user: User | null;
     activeProjectId: string | null;
     activeProjectName?: string;
+    prompts: LLMPrompt[];
     hasApiKey: boolean | null;
     promptForKeySelection: () => Promise<void>;
     handleApiError: (error: any) => void;
-    getPrompt: (name: string) => LLMPrompt | undefined;
 }
 
 export const useEditorFiles = ({
     user, activeProjectId, activeProjectName,
-    hasApiKey, promptForKeySelection, handleApiError, getPrompt,
+    prompts, hasApiKey, promptForKeySelection, handleApiError,
 }: UseEditorFilesParams) => {
+    // Internal helper — derive getPrompt from prompts array
+    const getPrompt = (name: string): LLMPrompt | undefined => {
+        return prompts.find(p => p.name === name);
+    };
+
     // User Files
     const [files, setFiles] = useState<FileRecord[]>([]);
     const [isFilesLoading, setIsFilesLoading] = useState(true);
