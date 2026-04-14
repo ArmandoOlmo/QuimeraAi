@@ -27,6 +27,10 @@ const HeroGradient = lazy(() => import('./HeroGradient'));
 const HeroFitness = lazy(() => import('./HeroFitness'));
 
 const HeroSplit = lazy(() => import('./HeroSplit'));
+const HeroGallery = lazy(() => import('./HeroGallery'));
+const HeroWave = lazy(() => import('./HeroWave'));
+const HeroNova = lazy(() => import('./HeroNova'));
+const SignupFloat = lazy(() => import('./SignupFloat'));
 const Testimonials = lazy(() => import('./Testimonials'));
 const Slideshow = lazy(() => import('./Slideshow'));
 const Pricing = lazy(() => import('./Pricing'));
@@ -1417,6 +1421,9 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
   const mergedData = {
     hero: mergeComponentData('hero'),
     heroSplit: mergeComponentData('heroSplit'),
+    heroGallery: mergeComponentData('heroGallery'),
+    heroWave: mergeComponentData('heroWave'),
+    heroNova: mergeComponentData('heroNova'),
     features: mergeComponentData('features'),
     testimonials: mergeComponentData('testimonials'),
     slideshow: mergeComponentData('slideshow'),
@@ -1432,6 +1439,11 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
     howItWorks: mergeComponentData('howItWorks'),
     map: mergeComponentData('map'),
     menu: mergeComponentData('menu'),
+    banner: mergeComponentData('banner'),
+    topBar: mergeComponentData('topBar'),
+    logoBanner: mergeComponentData('logoBanner'),
+    cmsFeed: mergeComponentData('cmsFeed'),
+    signupFloat: mergeComponentData('signupFloat'),
     footer: mergeComponentData('footer'),
     header: mergeComponentData('header'),
     products: mergeComponentData('products'),
@@ -1570,6 +1582,12 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
         }
       case 'heroSplit':
         return withBackground(<HeroSplit {...compData} borderRadius={compData.buttonBorderRadius || buttonBorderRadius} onNavigate={handleLinkNavigation} />);
+      case 'heroGallery':
+        return compData ? withBackground(<HeroGallery {...compData} borderRadius={compData.buttonBorderRadius || buttonBorderRadius} onNavigate={handleLinkNavigation} />) : null;
+      case 'heroWave':
+        return compData ? withBackground(<HeroWave {...compData} borderRadius={compData.buttonBorderRadius || buttonBorderRadius} onNavigate={handleLinkNavigation} />) : null;
+      case 'heroNova':
+        return compData ? withBackground(<HeroNova {...compData} borderRadius={compData.buttonBorderRadius || buttonBorderRadius} onNavigate={handleLinkNavigation} />) : null;
       case 'features':
         return withBackground(<Features {...compData} borderRadius={borderRadius} onNavigate={handleLinkNavigation} />);
       case 'testimonials':
@@ -1921,6 +1939,17 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
             sectionVisibility: project.sectionVisibility,
           }}
         />
+      )}
+
+      {/* SignupFloat - Floating overlay rendered outside section flow */}
+      {mergedData.signupFloat && componentOrder?.includes('signupFloat') && (sectionVisibility?.signupFloat !== false) && (
+        <Suspense fallback={null}>
+          <SignupFloat
+            {...mergedData.signupFloat}
+            projectId={project.id || storeProjectId || undefined}
+            isPreviewMode={true}
+          />
+        </Suspense>
       )}
 
       {/* Ad Tracking Pixels (if configured in SEO settings) */}
