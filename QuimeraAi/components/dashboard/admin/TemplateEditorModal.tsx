@@ -670,9 +670,10 @@ Return ONLY the JSON array, no other text.`;
                 }
 
                 // Apply gradient colors to HeroWave from global palette
-                if (updates.data.heroWave && typeof updates.data.heroWave === 'object') {
-                    (updates.data.heroWave as any).gradientColors = generateHeroWaveGradientColors(formData.globalColors);
+                if (!updates.data.heroWave || typeof updates.data.heroWave !== 'object') {
+                    (updates.data as any).heroWave = {};
                 }
+                (updates.data.heroWave as any).gradientColors = generateHeroWaveGradientColors(formData.globalColors);
             }
 
             // Update hero image if a new one was generated

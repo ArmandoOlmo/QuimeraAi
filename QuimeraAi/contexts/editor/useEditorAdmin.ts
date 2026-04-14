@@ -5,7 +5,7 @@
 import { useState } from 'react';
 import {
     UserDocument, UserRole, Tenant, TenantStatus, TenantLimits,
-    LLMPrompt, AdminView, GlobalAssistantConfig
+    LLMPrompt, AdminView
 } from '../../types';
 import { isOwner, determineRole } from '../../constants/roles';
 import { defaultPrompts } from '../../data/defaultPrompts';
@@ -29,28 +29,6 @@ export const useEditorAdmin = ({ user, userDocument, setUserDocument, isUserOwne
     const [allUsers, setAllUsers] = useState<UserDocument[]>([]);
     const [tenants, setTenants] = useState<Tenant[]>([]);
     const [prompts, setPrompts] = useState<LLMPrompt[]>([]);
-    const [globalAssistantConfig, setGlobalAssistantConfig] = useState<GlobalAssistantConfig>({
-        personality: '',
-        guidelines: [],
-        restrictedTopics: [],
-        maxResponseLength: 500,
-        enableLargeResponses: false,
-        responseFormat: 'markdown',
-        contextWindow: 'medium',
-        welcomeMessage: '',
-        fallbackMessage: '',
-        escalationMessage: '',
-        enableEmoji: true,
-        enableCodeBlocks: true,
-        enableLinks: true,
-        customInstructions: '',
-        allowedDomains: [],
-        enableAnalytics: true,
-        debugMode: false,
-        rateLimitPerMinute: 10,
-        enableMemory: true,
-        memoryDuration: '24h'
-    });
 
     // Helper for admin check
     const isAdmin = (): boolean => {
@@ -358,16 +336,7 @@ export const useEditorAdmin = ({ user, userDocument, setUserDocument, isUserOwne
         }
     };
 
-    // ─── Global Assistant ───
 
-    const saveGlobalAssistantConfig = async (config: GlobalAssistantConfig) => {
-        setGlobalAssistantConfig(config);
-        try {
-            await setDoc(doc(db, 'settings', 'global_assistant'), config);
-        } catch (e) {
-            console.error("Error saving global assistant config:", e);
-        }
-    };
 
     return {
         adminView, setAdminView,
@@ -376,7 +345,6 @@ export const useEditorAdmin = ({ user, userDocument, setUserDocument, isUserOwne
         tenants, fetchTenants, createTenant, updateTenant, deleteTenant,
         updateTenantStatus, updateTenantLimits,
         prompts, setPrompts, getPrompt, fetchAllPrompts, savePrompt, deletePrompt, syncPrompts,
-        globalAssistantConfig, setGlobalAssistantConfig, saveGlobalAssistantConfig,
         isAdmin,
     };
 };

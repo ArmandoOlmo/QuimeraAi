@@ -38,6 +38,7 @@ import DashboardSidebar from '../DashboardSidebar';
 import LandingPageControls from './LandingPageControls';
 import Modal from '../../ui/Modal';
 import { GlobalColors } from '../../../types';
+import { generateHeroWaveGradientColors } from '../../ui/GlobalStylesControl';
 import { doc, setDoc, getDoc, collection, getDocs, writeBatch, deleteDoc } from '../../../firebase';
 import { db } from '../../../firebase';
 
@@ -978,8 +979,7 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
         const colorMappings = generateLandingSectionColorMappings(colors);
 
         // Generate gradient colors from palette for HeroWave sections
-        const heroWaveGradient = [colors.primary, colors.secondary, colors.accent].filter(Boolean);
-        const gradientColors = heroWaveGradient.length >= 2 ? heroWaveGradient : ['#ff006e', '#fb5607', '#ffbe0b', '#38b000', '#00b4d8'];
+        const gradientColors = generateHeroWaveGradientColors(colors);
 
         setSections(prev => prev.map(section => {
             const sectionColors = colorMappings[section.type];

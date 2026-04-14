@@ -2135,9 +2135,10 @@ TEMPLATE #${t.index}: "${t.name}"
             }
 
             // Apply gradient colors to HeroWave from global palette
-            if (mergedData.heroWave && typeof mergedData.heroWave === 'object') {
-                mergedData.heroWave.gradientColors = generateHeroWaveGradientColors(globalColors);
+            if (!mergedData.heroWave || typeof mergedData.heroWave !== 'object') {
+                mergedData.heroWave = {} as any;
             }
+            mergedData.heroWave.gradientColors = generateHeroWaveGradientColors(globalColors);
 
             if (isDev) console.log('🎨 Applied global colors to all components including ecommerce and chatbot');
 
