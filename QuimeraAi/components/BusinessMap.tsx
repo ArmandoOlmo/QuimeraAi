@@ -84,8 +84,8 @@ const BusinessMap: React.FC<BusinessMapProps> = ({
         cardBackground: colors?.cardBackground || primaryColor,
     };
     
-    // Only load Google Maps if we have a valid API key
-    const hasValidApiKey = apiKey && apiKey.trim().length > 0;
+    // Only load Google Maps if we have a valid API key (not a placeholder)
+    const hasValidApiKey = apiKey && apiKey.trim().length > 20 && !apiKey.includes('your_') && !apiKey.includes('placeholder') && !apiKey.includes('api_key');
     
     const { isLoaded, loadError } = useJsApiLoader({
         id: 'google-map-script',
@@ -152,25 +152,47 @@ const BusinessMap: React.FC<BusinessMapProps> = ({
     }), [mapVariant]);
 
     const renderContent = () => {
-        // Show placeholder if no API key is provided
-        if (!hasValidApiKey) {
+        // Show OpenStreetMap embed if no valid Google API key
+        if (!hasValidApiKey || loadError) {
+            const mapLat = lat || 40.7128;
+            const mapLng = lng || -74.0060;
+            const mapZoom = zoom || 14;
             return (
-                <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center" style={{ minHeight: `${height}px` }}>
-                    <div className="text-center p-8">
-                        <MapPin className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-                        <h3 className="text-lg font-semibold text-gray-700 mb-2">{title || 'Location'}</h3>
-                        <p className="text-sm text-gray-500 mb-4">{address}</p>
-                        <a 
-                            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address || '')}`}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-white text-sm font-medium transition-all hover:scale-105"
-                            style={{ backgroundColor: primaryColor }}
-                        >
-                            <Navigation className="w-4 h-4" />
-                            View on Google Maps
-                        </a>
-                    </div>
+                <div className="relative w-full" style={{ height: `${height}px` }}>
+                    {/* OpenStreetMap Embed */}
+                    <iframe
+                        title={title || 'Location Map'}
+                        width="100%"
+                        height="100%"
+                        style={{ border: 0 }}
+                        loading="lazy"
+                        src={`https://www.openstreetmap.org/export/embed.html?bbox=${mapLng - 0.02},${mapLat - 0.015},${mapLng + 0.02},${mapLat + 0.015}&layer=mapnik&marker=${mapLat},${mapLng}`}
+                    />
+                    
+                    {/* Overlay info card */}
+                    {mapVariant === 'modern' ? null : (
+                        <div className="absolute bottom-4 left-4 bg-white/95 backdrop-blur-sm rounded-xl p-4 max-w-xs shadow-lg border border-gray-200">
+                            <div className="flex items-start gap-3">
+                                <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: (colors?.accent || primaryColor) + '20' }}>
+                                    <MapPin className="w-4 h-4" style={{ color: colors?.accent || primaryColor }} />
+                                </div>
+                                <div>
+                                    <p className="text-sm font-semibold text-gray-900 mb-0.5">{title || 'Location'}</p>
+                                    <p className="text-xs text-gray-600 mb-2">{address}</p>
+                                    <a 
+                                        href={`https://www.google.com/maps/dir/?api=1&destination=${mapLat},${mapLng}`}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="inline-flex items-center gap-1.5 text-xs font-medium transition-all hover:opacity-80"
+                                        style={{ color: colors?.accent || primaryColor }}
+                                    >
+                                        <Navigation className="w-3.5 h-3.5" />
+                                        Get Directions →
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
             );
         }

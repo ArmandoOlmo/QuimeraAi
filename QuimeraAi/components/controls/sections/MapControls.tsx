@@ -62,23 +62,45 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
     setIsGeocoding(true);
     setGeocodeError(null);
     try {
+      // Try Google Geocoder first if available
       if (typeof window !== 'undefined' && (window as any).google?.maps?.Geocoder) {
-        const geocoder = new (window as any).google.maps.Geocoder();
-        geocoder.geocode({ address }, (results: any, status: string) => {
-          setIsGeocoding(false);
-          if (status === 'OK' && results && results[0]) {
-            const location = results[0].geometry.location;
-            setNestedData('map.lat', location.lat());
-            setNestedData('map.lng', location.lng());
-            setGeocodeError(null);
-          } else if (status === 'ZERO_RESULTS') {
-            setGeocodeError('Location not found. Try a more specific address.');
-          } else {
-            geocodeWithNominatim(address);
-          }
-        });
-        return;
+        try {
+          const geocoder = new (window as any).google.maps.Geocoder();
+          // Wrap in a promise with timeout to handle all failure modes
+          const googleResult = await new Promise<boolean>((resolve) => {
+            const timeout = setTimeout(() => {
+              console.warn('Google Geocoder timed out, falling back to Nominatim');
+              resolve(false);
+            }, 5000);
+            
+            try {
+              geocoder.geocode({ address }, (results: any, status: string) => {
+                clearTimeout(timeout);
+                if (status === 'OK' && results && results[0]) {
+                  const location = results[0].geometry.location;
+                  setNestedData('map.lat', location.lat());
+                  setNestedData('map.lng', location.lng());
+                  setGeocodeError(null);
+                  setIsGeocoding(false);
+                  resolve(true);
+                } else {
+                  console.warn(`Google Geocoder returned status: ${status}, falling back to Nominatim`);
+                  resolve(false);
+                }
+              });
+            } catch (geocodeCallError) {
+              clearTimeout(timeout);
+              console.warn('Google geocoder.geocode() threw error:', geocodeCallError);
+              resolve(false);
+            }
+          });
+          
+          if (googleResult) return; // Google succeeded, we're done
+        } catch (googleError) {
+          console.warn('Google Geocoder failed, falling back to Nominatim:', googleError);
+        }
       }
+      // Fallback: always try Nominatim if Google didn't succeed
       await geocodeWithNominatim(address);
     } catch (error) {
       console.error('Geocoding error:', error);

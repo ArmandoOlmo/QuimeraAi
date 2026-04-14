@@ -541,6 +541,7 @@ const PageRenderer: React.FC<PageRendererProps> = ({
                         <BusinessMap
                             key={key}
                             {...mergedData.map}
+                            apiKey={import.meta.env.VITE_GOOGLE_MAPS_KEY || ''}
                             borderRadius={cardBorderRadius}
                         />
                     </SectionBackground>
