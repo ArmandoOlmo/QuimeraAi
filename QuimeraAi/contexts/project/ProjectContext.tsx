@@ -391,7 +391,35 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
             // but might still be returned via cached/duplicate status 
             const finalActiveProjects = activeProjects.filter(p => !deletedTemplateIdsRef.current.has(p.id));
             
-            setProjects([...firestoreTemplates, ...finalActiveProjects]);
+            // Merge templates and user projects, deduplicating by ID (prioritize templates for Template status)
+            const mergedProjectsMap = new Map<string, Project>();
+            
+            // First add user projects
+            finalActiveProjects.forEach(p => {
+                mergedProjectsMap.set(p.id, p);
+            });
+            
+            // Then add templates (overwriting any ghost templates in user projects)
+            firestoreTemplates.forEach(t => {
+                if (mergedProjectsMap.has(t.id)) {
+                    // Self-healing: A template exists in both collections. 
+                    // This is a "ghost" template in the user collection left by an old bug.
+                    // We can attempt to clean it up asynchronously.
+                    if (userId) {
+                        try {
+                            const ghostRef = doc(db, 'users', userId, 'projects', t.id);
+                            import('firebase/firestore').then(({ deleteDoc }) => {
+                                deleteDoc(ghostRef).catch(() => {});
+                            });
+                        } catch (e) {
+                            // Ignore
+                        }
+                    }
+                }
+                mergedProjectsMap.set(t.id, t);
+            });
+            
+            setProjects(Array.from(mergedProjectsMap.values()));
             setDeletedProjects(trashedProjects);
         } catch (error) {
             console.error("Error loading projects:", error);

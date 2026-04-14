@@ -130,9 +130,14 @@ export async function publishProject(options: PublishOptions): Promise<PublishRe
         }
 
         // Update projectPath for snapshot saving if needed
-        const finalProjectPath = (project as any).tenantId
-            ? ['tenants', (project as any).tenantId, 'projects', projectId]
-            : ['users', userId, 'projects', projectId];
+        let finalProjectPath: string[] = [];
+        if (project.status === 'Template') {
+            finalProjectPath = ['templates', projectId];
+        } else {
+            finalProjectPath = (project as any).tenantId
+                ? ['tenants', (project as any).tenantId, 'projects', projectId]
+                : ['users', userId, 'projects', projectId];
+        }
 
         if (projectSnapshot && saveDraftFirst) {
             console.log(`💾 [PublishService] Saving draft to Firestore first...`);
