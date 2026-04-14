@@ -163,7 +163,7 @@ const TopBar: React.FC<TopBarProps> = ({
   if (scrollEnabled) {
     return (
       <div
-        className={`relative overflow-hidden ${fontSizeMap[fontSize]}`}
+        className={`relative overflow-hidden z-[60] ${fontSizeMap[fontSize]}`}
         style={{
           ...bgStyle,
           color: textColor,
@@ -221,7 +221,7 @@ const TopBar: React.FC<TopBarProps> = ({
   // ─── Static / Rotating mode ───
   return (
     <div
-      className={`relative ${fontSizeMap[fontSize]}`}
+      className={`relative z-[60] ${fontSizeMap[fontSize]}`}
       style={{
         ...bgStyle,
         color: textColor,

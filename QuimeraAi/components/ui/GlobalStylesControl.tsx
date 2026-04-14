@@ -562,13 +562,22 @@ const GlobalStylesControl: React.FC<GlobalStylesControlProps> = ({ mode = 'both'
     };
 
     const handleColorChange = (colorKey: keyof GlobalColors, value: string) => {
-        setTheme(prev => ({
-            ...prev,
-            globalColors: {
+        setTheme(prev => {
+            const newColors = {
                 ...(prev.globalColors || getDefaultGlobalColors()),
                 [colorKey]: value
-            }
-        }));
+            };
+            
+            // Propagate individual color changes to all components globally
+            setTimeout(() => {
+                applyPaletteToAllComponents(newColors);
+            }, 0);
+            
+            return {
+                ...prev,
+                globalColors: newColors
+            };
+        });
         setSelectedPaletteId(null); // Clear palette selection when custom color is picked
     };
 

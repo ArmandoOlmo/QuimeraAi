@@ -819,7 +819,7 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
             const filesCol = collection(db, filesPath);
             const q = query(filesCol, orderBy('createdAt', 'desc'));
             const filesSnapshot = await getDocs(q);
-            const userFiles = filesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as FileRecord));
+            const userFiles = filesSnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as FileRecord));
             setFiles(userFiles);
         } catch (error) {
             console.error("[EditorContext] Error loading user files:", error);
@@ -849,8 +849,8 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
                     deletedIds.add(docSnap.id);
                 } else {
                     activeTemplates.push({
-                        id: docSnap.id,
                         ...data,
+                        id: docSnap.id,
                         status: 'Template' as const
                     } as Project);
                 }
@@ -879,7 +879,7 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
             const projectsCol = collection(db, 'users', userId, 'projects');
             const q = query(projectsCol, orderBy('lastUpdated', 'desc'));
             const projectSnapshot = await getDocs(q);
-            const userProjects = projectSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Project));
+            const userProjects = projectSnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as Project));
 
             // Load templates from Firestore (includes deleted template IDs)
             // This also updates deletedTemplateIdsRef with Firestore deleted IDs

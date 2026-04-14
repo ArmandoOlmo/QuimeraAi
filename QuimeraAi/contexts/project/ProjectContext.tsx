@@ -302,8 +302,8 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
                     deletedIds.add(docSnap.id);
                 } else {
                     activeTemplates.push({
-                        id: docSnap.id,
                         ...docData,
+                        id: docSnap.id,
                         status: 'Template' as const
                     } as Project);
                 }
@@ -337,8 +337,8 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
                 const userQuery = query(userProjectsCol, orderBy('lastUpdated', 'desc'));
                 const userSnapshot = await getDocs(userQuery);
                 const personalProjects = userSnapshot.docs.map(docSnap => ({
-                    id: docSnap.id,
-                    ...docSnap.data()
+                    ...docSnap.data(),
+                    id: docSnap.id
                 } as Project));
                 allUserProjects = [...personalProjects];
             } catch (err) {
@@ -353,8 +353,8 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
                     const tenantQuery = query(tenantProjectsCol, orderBy('lastUpdated', 'desc'));
                     const tenantSnapshot = await getDocs(tenantQuery);
                     const tenantProjects = tenantSnapshot.docs.map(docSnap => ({
-                        id: docSnap.id,
-                        ...docSnap.data()
+                        ...docSnap.data(),
+                        id: docSnap.id
                     } as Project));
                     allUserProjects = [...allUserProjects, ...tenantProjects];
                 } catch (err) {
@@ -1286,8 +1286,9 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         if (!template) return;
 
         const now = new Date().toISOString();
+        const { id, ...templateData } = template;
         const newTemplate: Omit<Project, 'id'> = {
-            ...template,
+            ...templateData,
             name: `${template.name} (Copy)`,
             createdAt: now,
             lastUpdated: now,
