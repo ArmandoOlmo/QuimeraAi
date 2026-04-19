@@ -181,8 +181,8 @@ const ModernFeatureCard = ({ feature, index, colors, borderRadius, onNavigate }:
               />
             )}
           </div>
-          <h3 className="text-2xl font-bold mb-3 transition-colors" style={{ color: colors?.heading }}>{feature.title}</h3>
-          <p className="leading-relaxed font-light" style={{ color: colors?.text }}>{feature.description}</p>
+          <h3 className="text-2xl font-bold mb-3 transition-colors font-header" style={{ color: colors?.heading, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>{feature.title}</h3>
+          <p className="leading-relaxed font-light font-body" style={{ color: colors?.text }}>{feature.description}</p>
         </div>
         {feature.linkUrl && (
           <a
@@ -324,7 +324,7 @@ const Features: React.FC<FeaturesProps> = ({
   titleFontSize = 'md',
   descriptionFontSize = 'md',
   gridColumns = 3,
-  imageHeight = 200,
+  imageHeight = 430,
   imageObjectFit = 'cover',
   featuresVariant = 'classic',
   animationType = 'fade-in-up',
@@ -494,16 +494,16 @@ const Features: React.FC<FeaturesProps> = ({
             </div>
 
             {/* Bento Grid Premium */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+            <div className={`grid grid-cols-1 md:grid-cols-2 ${gridColsClasses[gridColumns] || 'lg:grid-cols-3'} gap-4 md:gap-6`}>
               {(items || []).map((feature, index) => {
-                const isLarge = index === 0;
+                const isLarge = index === 0 || index === 3 || index === 6;
 
                 return (
                   <div
                     key={index}
                     className={`
                       group relative overflow-hidden cursor-pointer
-                      ${isLarge ? 'md:col-span-2 lg:row-span-2' : ''}
+                      ${isLarge ? 'md:col-span-2' : 'col-span-1'}
                       ${borderRadiusClasses[borderRadius]}
                       transition-all duration-500 hover:scale-[1.02]
                       border
@@ -522,7 +522,7 @@ const Features: React.FC<FeaturesProps> = ({
                     />
 
                     {/* Image Container */}
-                    <div className={`overflow-hidden ${isLarge ? 'aspect-[16/9]' : 'aspect-[4/3]'}`}>
+                    <div className={`overflow-hidden ${isLarge ? 'aspect-[21/9]' : 'aspect-[4/3]'}`}>
                       {isPendingImage(feature.imageUrl) ? (
                         <ImagePlaceholder
                           aspectRatio="4:3"

@@ -2440,3 +2440,10 @@ span.rounded-full.w-4 {
 .preview-tablet .hidden.nav\:block {
   display: none !important;
 }
+
+/* TopBar marquee keyframes - must be globally available BEFORE the component mounts */
+@keyframes topbar-scroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-33.333%); }
+}
+

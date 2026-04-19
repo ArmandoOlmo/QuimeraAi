@@ -84,9 +84,9 @@ const HeroNova: React.FC<HeroNovaProps> = ({
     showDots = true,
     dotStyle = 'circle',
     heroHeight,
-    headlineFontSize = 'lg',
+    headlineFontSize = 'md',
     overlayOpacity = 0.35,
-    displayLetterSpacing = 0.35,
+    displayLetterSpacing = 0,
     colors,
     cornerGradient,
     onNavigate,
@@ -96,8 +96,10 @@ const HeroNova: React.FC<HeroNovaProps> = ({
     const [isTransitioning, setIsTransitioning] = useState(false);
     const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
 
-    // Fallback slide
-    const validSlides = Array.isArray(slides) && slides.length > 0 ? slides : [{
+
+
+    // Fallback slide and smart empty-slide filtering
+    const rawSlides = Array.isArray(slides) && slides.length > 0 ? slides : [{
         headline: 'Comfort, Style, Durability: Our Seating Collection',
         primaryCta: 'SHOP NOW',
         primaryCtaLink: '/#products',
@@ -105,6 +107,15 @@ const HeroNova: React.FC<HeroNovaProps> = ({
         backgroundImage: '',
         backgroundColor: '#1a1a1a',
     }];
+
+    // Filter out slides that have absolutely no media (common AI hallucination causing "disappearing" image)
+    const validSlides = rawSlides.filter((s, i) => {
+        // Keep the first slide always, so we at least have one slide to render
+        if (i === 0) return true;
+        const bgImg = s.backgroundImage || (s as any).imageUrl || (s as any).images?.[0]?.url;
+        // Keep slide if it has image, video, OR a custom background color that isn't the default or empty
+        return !!bgImg || !!s.backgroundVideo || (s.backgroundColor && s.backgroundColor !== '#1a1a1a' && s.backgroundColor !== '');
+    });
 
     const hasMultipleSlides = validSlides.length > 1;
 
@@ -230,7 +241,7 @@ const HeroNova: React.FC<HeroNovaProps> = ({
             {validSlides.map((slide, i) => {
                 const isActive = i === currentIndex;
                 const mediaType = slide.mediaType || 'image';
-                const bgImage = slide.backgroundImage || (slide as any).images?.[0]?.url;
+                const bgImage = slide.backgroundImage || (slide as any).imageUrl || (slide as any).images?.[0]?.url;
                 const bgVideo = slide.backgroundVideo;
 
                 return (
@@ -254,12 +265,13 @@ const HeroNova: React.FC<HeroNovaProps> = ({
                                 autoPlay={i === 0}
                             />
                         ) : bgImage ? (
-                            <div
-                                className="absolute inset-0"
-                                style={{
-                                    backgroundImage: `url(${bgImage})`,
-                                    backgroundSize: 'cover',
-                                    backgroundPosition: 'center',
+                            <img
+                                src={bgImage}
+                                alt=""
+                                className="absolute inset-0 w-full h-full object-cover"
+                                onError={(e) => {
+                                    console.warn('[HeroNova] Image failed to load:', bgImage);
+                                    (e.target as HTMLImageElement).style.display = 'none';
                                 }}
                             />
                         ) : (
@@ -275,7 +287,7 @@ const HeroNova: React.FC<HeroNovaProps> = ({
             {/* ─── Overlay ─── */}
             <div
                 className="absolute inset-0 z-[2]"
-                style={{ backgroundColor: `rgba(0, 0, 0, ${overlayOpacity})` }}
+                style={{ backgroundColor: `rgba(0, 0, 0, ${overlayOpacity > 1 ? overlayOpacity / 100 : overlayOpacity})` }}
             />
 
             {/* ─── Centered Display Text (brand name) ─── */}

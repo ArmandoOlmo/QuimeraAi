@@ -3,7 +3,7 @@
  * Main modal container for the onboarding flow
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { X, ChevronLeft, ChevronRight, RotateCcw, AlertTriangle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useUI } from '../../contexts/core/UIContext';
@@ -25,7 +25,7 @@ const QUIMERA_LOGO = "https://firebasestorage.googleapis.com/v0/b/quimeraai.fire
 
 const OnboardingModal: React.FC = () => {
     const { t } = useTranslation();
-    const { isOnboardingOpen, setIsOnboardingOpen } = useUI();
+    const { isOnboardingOpen, setIsOnboardingOpen, onboardingMode } = useUI();
     const {
         progress,
         isLoading,
@@ -64,6 +64,7 @@ const OnboardingModal: React.FC = () => {
     // State for emergency cancel confirmation
     const [showCancelConfirm, setShowCancelConfirm] = useState(false);
     const [generationDuration, setGenerationDuration] = useState(0);
+    const hasAutoClosedRef = useRef(false);
 
     // Initialize progress when modal opens
     useEffect(() => {
@@ -123,13 +124,30 @@ const OnboardingModal: React.FC = () => {
         }
     }, [progress?.step, progress?.hasEcommerce, progress?.generationProgress?.phase, progress?.generationProgress?.startedAt]);
 
+    // Auto-close modal when generation completes
+    useEffect(() => {
+        const generationStep = progress?.hasEcommerce ? 7 : 6;
+        if (
+            progress?.step === generationStep &&
+            progress?.generationProgress?.phase === 'completed' &&
+            !hasAutoClosedRef.current
+        ) {
+            hasAutoClosedRef.current = true;
+            // Wait a short delay so user sees the "success" state, then close completely
+            const timer = setTimeout(() => {
+                closeOnboarding();
+            }, 1000);
+            return () => clearTimeout(timer);
+        }
+    }, [progress?.step, progress?.hasEcommerce, progress?.generationProgress?.phase]);
+
     // Handle emergency cancel
     const handleEmergencyCancel = async () => {
         setShowCancelConfirm(false);
         await resetOnboarding();
     };
 
-    if (!isOnboardingOpen) return null;
+    if (!isOnboardingOpen || onboardingMode === 'ai-studio') return null;
 
     // Show loading while progress is being initialized
     if (!progress) {
@@ -255,7 +273,7 @@ const OnboardingModal: React.FC = () => {
     const totalSteps = progress.hasEcommerce ? 7 : 6;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center">
             {/* Backdrop */}
             <div
                 className="absolute inset-0 bg-black/70 backdrop-blur-sm"
@@ -324,7 +342,10 @@ const OnboardingModal: React.FC = () => {
                 </div>
 
                 {/* Content */}
-                <div className="flex-1 min-h-0 p-4 md:p-6 overflow-y-auto overscroll-contain">
+                <div 
+                    className={`flex-1 min-h-0 p-4 md:p-6 overflow-y-auto overscroll-contain transition-all duration-300 ease-in-out ${progress.step === generationStep ? 'min-h-[500px] md:min-h-[600px] flex flex-col' : ''}`} 
+                    style={{ maxHeight: 'calc(90vh - 180px)' }}
+                >
                     {error && (
                         <div className="mb-4 p-4 bg-destructive/10 border border-destructive/30 rounded-xl text-destructive text-sm">
                             {error}

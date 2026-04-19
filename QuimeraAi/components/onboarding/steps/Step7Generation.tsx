@@ -9,6 +9,7 @@ import { useTranslation } from 'react-i18next';
 import { OnboardingProgress, GenerationProgress } from '../../../types/onboarding';
 import { INDUSTRIES } from '../../../data/industries';
 import ImageGenerationProgress from '../components/ImageGenerationProgress';
+import ProgressBar3D from '../../ui/ProgressBar3D';
 
 const QUIMERA_LOGO = "https://firebasestorage.googleapis.com/v0/b/quimeraai.firebasestorage.app/o/quimera%2Fquimeralogo.png?alt=media&token=82368c1c-0f63-42b7-831f-72780006f032";
 
@@ -78,6 +79,32 @@ const Step7Generation: React.FC<Step7GenerationProps> = ({
     const renderPhaseIndicator = (targetPhase: string, label: string, icon: React.ReactNode) => {
         const status = getPhaseStatus(targetPhase);
 
+        // Calculate per-phase progress
+        const getPhaseProgress = (): number => {
+            if (status === 'completed') return 100;
+            if (status === 'pending') return 0;
+            if (status === 'error') return 0;
+            // Active phase — compute based on overall progress
+            if (!generationProgress) return 0;
+            const overall = generationProgress.progress || 0;
+            if (targetPhase === 'content') return Math.min(100, Math.round((overall / 35) * 100));
+            if (targetPhase === 'images') {
+                const total = generationProgress.imagesTotal || 1;
+                const done = generationProgress.imagesCompleted || 0;
+                return Math.round((done / total) * 100);
+            }
+            if (targetPhase === 'finalizing') return Math.min(100, Math.round(((overall - 85) / 15) * 100));
+            return 0;
+        };
+
+        const phaseProgress = getPhaseProgress();
+
+        const gradients: Record<string, { from: string; to: string }> = {
+            content: { from: '#6366f1', to: '#a855f7' },
+            images: { from: '#a855f7', to: '#fb923c' },
+            finalizing: { from: '#10b981', to: '#34d399' },
+        };
+
         return (
             <div className={`
                 flex items-center gap-4 p-4 rounded-xl transition-all
@@ -87,7 +114,7 @@ const Step7Generation: React.FC<Step7GenerationProps> = ({
                 ${status === 'error' ? 'bg-destructive/10 border border-destructive/30' : ''}
             `}>
                 <div className={`
-                    w-10 h-10 rounded-full flex items-center justify-center
+                    w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0
                     ${status === 'active' ? 'bg-primary/20' : ''}
                     ${status === 'completed' ? 'bg-green-500/20' : ''}
                     ${status === 'pending' ? 'bg-muted' : ''}
@@ -98,18 +125,31 @@ const Step7Generation: React.FC<Step7GenerationProps> = ({
                     {status === 'pending' && <div className="text-muted-foreground">{icon}</div>}
                     {status === 'error' && <AlertCircle size={20} className="text-destructive" />}
                 </div>
-                <div className="flex-1">
-                    <p className={`
-                        font-medium
-                        ${status === 'active' ? 'text-primary' : ''}
-                        ${status === 'completed' ? 'text-green-400' : ''}
-                        ${status === 'pending' ? 'text-muted-foreground' : ''}
-                        ${status === 'error' ? 'text-destructive' : ''}
-                    `}>
-                        {label}
-                    </p>
+                <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between mb-1">
+                        <p className={`
+                            font-medium
+                            ${status === 'active' ? 'text-primary' : ''}
+                            ${status === 'completed' ? 'text-green-400' : ''}
+                            ${status === 'pending' ? 'text-muted-foreground' : ''}
+                            ${status === 'error' ? 'text-destructive' : ''}
+                        `}>
+                            {label}
+                        </p>
+                        {(status === 'active' || status === 'completed') && (
+                            <span className={`text-xs font-medium ${status === 'completed' ? 'text-green-400' : 'text-primary'}`}>
+                                {phaseProgress}%
+                            </span>
+                        )}
+                    </div>
+                    <ProgressBar3D
+                        percentage={phaseProgress}
+                        gradient={gradients[targetPhase]}
+                        size="sm"
+                        animate={status === 'active'}
+                    />
                     {status === 'active' && targetPhase === 'content' && (
-                        <p className="text-xs text-muted-foreground mt-1">
+                        <p className="text-xs text-muted-foreground mt-1.5">
                             {t('onboarding.generatingContent', 'Creating personalized content for your website...')}
                         </p>
                     )}
@@ -131,7 +171,7 @@ const Step7Generation: React.FC<Step7GenerationProps> = ({
 
                 <div>
                     <h3 className="text-3xl font-bold text-foreground mb-3">
-                        {t('onboarding.websiteReady', 'Your Website is Ready!')} 🎉
+                        {t('onboarding.websiteReady', 'Your Website is Ready!')}
                     </h3>
                     <p className="text-muted-foreground">
                         {t('onboarding.websiteReadyDescription', 'Your website has been generated successfully. You can now customize it in the editor.')}
@@ -210,16 +250,16 @@ const Step7Generation: React.FC<Step7GenerationProps> = ({
 
     // Generation in progress
     return (
-        <div className="max-w-xl mx-auto space-y-8">
+        <div className="max-w-xl mx-auto flex flex-col flex-1 h-full space-y-4">
             {/* Header with animated logo */}
             <div className="text-center">
-                <div className="relative w-24 h-24 mx-auto mb-6">
+                <div className="relative w-20 h-20 mx-auto mb-4">
                     <div className="absolute inset-0 rounded-full bg-gradient-to-r from-primary via-orange-500 to-pink-500 animate-spin-slow opacity-50 blur-xl" />
-                    <div className="relative w-24 h-24 rounded-full bg-card border-2 border-border flex items-center justify-center">
+                    <div className="relative w-20 h-20 rounded-full bg-card border-2 border-border flex items-center justify-center">
                         <img
                             src={QUIMERA_LOGO}
                             alt="Quimera"
-                            className="w-16 h-16 object-contain animate-pulse"
+                            className="w-12 h-12 object-contain animate-pulse"
                         />
                     </div>
                 </div>
@@ -269,7 +309,7 @@ const Step7Generation: React.FC<Step7GenerationProps> = ({
             </div>
 
             {/* Progress Phases */}
-            <div className="space-y-3">
+            <div className="flex flex-col flex-1 space-y-3 min-h-0">
                 {renderPhaseIndicator(
                     'content',
                     t('onboarding.phaseContent', 'Generating Content'),
@@ -278,7 +318,7 @@ const Step7Generation: React.FC<Step7GenerationProps> = ({
 
                 {/* Image Generation with detailed progress */}
                 {phase === 'images' && generationProgress ? (
-                    <div className="p-4 bg-primary/10 border border-primary/30 rounded-xl">
+                    <div className="flex flex-col flex-1 p-4 bg-primary/10 border border-primary/30 rounded-xl min-h-0">
                         <ImageGenerationProgress progress={generationProgress} />
                     </div>
                 ) : (
@@ -299,7 +339,7 @@ const Step7Generation: React.FC<Step7GenerationProps> = ({
             {/* Tip while waiting */}
             <div className="p-4 bg-primary/10 border border-primary/30 rounded-xl">
                 <p className="text-sm text-foreground">
-                    <span className="font-semibold">💡 {t('onboarding.tip', 'Tip')}:</span>{' '}
+                    <span className="font-semibold">{t('onboarding.tip', 'Tip')}:</span>{' '}
                     {t('onboarding.generationTip', 'Our AI is analyzing your business and generating personalized content. Each image is created specifically for your brand.')}
                 </p>
             </div>

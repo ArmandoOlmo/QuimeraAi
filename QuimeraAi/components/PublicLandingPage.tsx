@@ -1876,7 +1876,7 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
         const fCols = fp.columns || fp.gridColumns || 3;
         const fShowIcons = fp.showIcons !== false;
         const fShowHeader = fp.showSectionHeader !== false;
-        const fImgHeight = fp.imageHeight || 200;
+        const fImgHeight = fp.imageHeight || 430;
         const fImgFit = fp.imageObjectFit || 'cover';
         const fAnimEnabled = fp.enableCardAnimation !== false;
         const fAnimType = fp.animationType || 'fade-in-up';

@@ -418,6 +418,7 @@ const SignupFloat: React.FC<SignupFloatProps> = ({
 
       {/* Floating Card */}
       <div
+        className="signup-float-container"
         onClick={(e) => e.stopPropagation()}
         style={{
           position: positionType,
@@ -666,7 +667,7 @@ const SignupFloat: React.FC<SignupFloatProps> = ({
             </form>
 
             {/* Social Links */}
-            {showSocialLinks && socialLinks?.length > 0 && (
+            {showSocialLinks && Array.isArray(socialLinks) && socialLinks.length > 0 && (
               <div
                 style={{
                   display: 'flex',
@@ -739,6 +740,13 @@ const SignupFloat: React.FC<SignupFloatProps> = ({
         /* Placeholder color for inputs */
         .signup-float-input::placeholder {
           color: ${colors?.inputPlaceholder || '#6b7280'} !important;
+        }
+        /* Ensure font inheritance in portal */
+        .signup-float-container, .signup-float-container input, .signup-float-container textarea, .signup-float-container button {
+          font-family: var(--font-body, 'Inter', sans-serif);
+        }
+        .signup-float-container h3, .signup-float-container h4 {
+          font-family: var(--font-header, var(--font-body, 'Inter', sans-serif));
         }
       `}</style>
     </>,

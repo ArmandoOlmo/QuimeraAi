@@ -27,6 +27,7 @@ import './utils/previewPrefetch';
 const ProfileModal = lazyWithRetry(() => import('./components/dashboard/ProfileModal'));
 const GlobalAiAssistant = lazyWithRetry(() => import('./components/ui/GlobalAiAssistant'));
 const OnboardingModal = lazyWithRetry(() => import('./components/onboarding/OnboardingModal'));
+const AIWebsiteStudio = lazyWithRetry(() => import('./components/onboarding/AIWebsiteStudio'));
 const ViewRouter = lazyWithRetry(() => import('./components/ViewRouter'));
 const PublicWebsitePreview = lazyWithRetry(() => import('./components/PublicWebsitePreview'));
 const StorefrontApp = lazyWithRetry(() => import('./components/ecommerce/StorefrontApp'));
@@ -136,6 +137,9 @@ const AppContent: React.FC<AppContentProps> = ({
       </Suspense>
       <Suspense fallback={null}>
         <OnboardingModal />
+      </Suspense>
+      <Suspense fallback={null}>
+        <AIWebsiteStudio />
       </Suspense>
     </>
   );

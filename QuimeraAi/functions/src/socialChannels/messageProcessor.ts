@@ -5,8 +5,7 @@
 
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
-import { GoogleGenerativeAI } from '@google/generative-ai';
-import { GEMINI_CONFIG } from '../config';
+import { generateTextViaOpenRouter } from '../openrouterHelper';
 
 // Initialize Firestore if not already initialized
 if (!admin.apps.length) {
@@ -191,22 +190,7 @@ async function generateAIResponse(
     message: IncomingMessage,
     conversationHistory: Array<{ role: string; content: string }>
 ): Promise<ProcessedResponse> {
-    const apiKey = GEMINI_CONFIG.apiKey;
-    
-    if (!apiKey) {
-        console.error('Gemini API key not configured');
-        return {
-            success: false,
-            error: 'AI not configured',
-            shouldEscalate: true,
-            escalationReason: 'AI service unavailable'
-        };
-    }
-
     try {
-        const genAI = new GoogleGenerativeAI(apiKey);
-        const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
-
         // Build system prompt
         const systemPrompt = buildSystemPrompt(config, message.channel);
 
@@ -215,10 +199,8 @@ async function generateAIResponse(
             .map(msg => `${msg.role === 'user' ? 'Customer' : 'Assistant'}: ${msg.content}`)
             .join('\n');
 
-        // Build full prompt
-        const fullPrompt = `${systemPrompt}
-
-CONVERSATION HISTORY:
+        // Build user prompt
+        const userPrompt = `CONVERSATION HISTORY:
 ${conversationContext || 'No previous messages'}
 
 CURRENT MESSAGE FROM CUSTOMER (via ${message.channel}):
@@ -226,9 +208,14 @@ ${message.message}
 
 YOUR RESPONSE:`;
 
-        // Generate response
-        const result = await model.generateContent(fullPrompt);
-        const response = result.response.text();
+        // Generate response via OpenRouter
+        const result = await generateTextViaOpenRouter(userPrompt, {
+            model: 'gemini-2.0-flash',
+            systemInstruction: systemPrompt,
+            temperature: 0.7,
+        });
+
+        const response = result.text;
 
         // Check if response suggests escalation
         const shouldEscalate = checkForEscalation(response, message.message);
@@ -512,5 +499,3 @@ async function sendInstagramMessage(config: any, recipientId: string, message: s
         return { success: false, error: error.message };
     }
 }
-
-

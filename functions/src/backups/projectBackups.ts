@@ -18,7 +18,7 @@ const BACKUP_BATCH_SIZE = 500; // Firestore batch limit
 
 /**
  * Scheduled function that runs every 6 hours to backup all projects.
- * Iterates users/*/projects/* and tenants/*/projects/*
+ * Iterates users/{userId}/projects/{projectId} and tenants/{tenantId}/projects/{projectId}
  * and writes snapshots to projectBackups/{backupId}.
  */
 export const backupAllProjects = functions.pubsub
@@ -38,7 +38,7 @@ export const backupAllProjects = functions.pubsub
             for (const userDoc of usersSnapshot.docs) {
                 try {
                     const projectsSnapshot = await db
-                        .collection('users', userDoc.id, 'projects')
+                        .collection(`users/${userDoc.id}/projects`)
                         .get();
 
                     for (const projectDoc of projectsSnapshot.docs) {
@@ -82,7 +82,7 @@ export const backupAllProjects = functions.pubsub
             for (const tenantDoc of tenantsSnapshot.docs) {
                 try {
                     const projectsSnapshot = await db
-                        .collection('tenants', tenantDoc.id, 'projects')
+                        .collection(`tenants/${tenantDoc.id}/projects`)
                         .get();
 
                     for (const projectDoc of projectsSnapshot.docs) {
@@ -257,7 +257,7 @@ export const cleanupOldBackups = functions.pubsub
             for (const userDoc of usersSnapshot.docs) {
                 try {
                     const trashedProjects = await db
-                        .collection('users', userDoc.id, 'projects')
+                        .collection(`users/${userDoc.id}/projects`)
                         .where('deletedAt', '<', trashCutoffISO)
                         .get();
 
@@ -283,7 +283,7 @@ export const cleanupOldBackups = functions.pubsub
             for (const tenantDoc of tenantsSnapshot.docs) {
                 try {
                     const trashedProjects = await db
-                        .collection('tenants', tenantDoc.id, 'projects')
+                        .collection(`tenants/${tenantDoc.id}/projects`)
                         .where('deletedAt', '<', trashCutoffISO)
                         .get();
 

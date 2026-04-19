@@ -37,7 +37,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.tenantsApi = exports.getOnboardingStatus = exports.autoProvisionClient = exports.createCustomerPortalSession = exports.createCheckoutSession = exports.archivePlan = exports.createOrUpdatePlan = exports.checkAddonsEligibility = exports.calculateAddonsPrice = exports.getAddonsPricing = exports.updateSubscriptionAddons = exports.stripeConnectWebhook = exports.generateClientInvoice = exports.cancelClientSubscription = exports.updateClientMonthlyPrice = exports.setupClientBilling = exports.getStripeConnectStatus = exports.createStripeConnectAccount = exports.triggerManualReport = exports.sendWeeklyReports = exports.sendMonthlyReports = exports.deleteSavedReport = exports.getSavedReport = exports.generateConsolidatedReport = void 0;
+exports.cleanupOldBackups = exports.restoreProjectFromBackup = exports.backupAllProjects = exports.tenantsApi = exports.getOnboardingStatus = exports.autoProvisionClient = exports.createCustomerPortalSession = exports.createCheckoutSession = exports.archivePlan = exports.createOrUpdatePlan = exports.checkAddonsEligibility = exports.calculateAddonsPrice = exports.getAddonsPricing = exports.updateSubscriptionAddons = exports.stripeConnectWebhook = exports.generateClientInvoice = exports.cancelClientSubscription = exports.updateClientMonthlyPrice = exports.setupClientBilling = exports.getStripeConnectStatus = exports.createStripeConnectAccount = exports.triggerManualReport = exports.sendWeeklyReports = exports.sendMonthlyReports = exports.deleteSavedReport = exports.getSavedReport = exports.generateConsolidatedReport = void 0;
 const admin = __importStar(require("firebase-admin"));
 // Initialize Firebase Admin
 admin.initializeApp();
@@ -85,6 +85,13 @@ Object.defineProperty(exports, "getOnboardingStatus", { enumerable: true, get: f
 // ============================================================================
 var tenants_1 = require("./api/v1/tenants");
 Object.defineProperty(exports, "tenantsApi", { enumerable: true, get: function () { return tenants_1.tenantsApi; } });
+// ============================================================================
+// PROJECT BACKUP FUNCTIONS
+// ============================================================================
+var projectBackups_1 = require("./backups/projectBackups");
+Object.defineProperty(exports, "backupAllProjects", { enumerable: true, get: function () { return projectBackups_1.backupAllProjects; } });
+Object.defineProperty(exports, "restoreProjectFromBackup", { enumerable: true, get: function () { return projectBackups_1.restoreProjectFromBackup; } });
+Object.defineProperty(exports, "cleanupOldBackups", { enumerable: true, get: function () { return projectBackups_1.cleanupOldBackups; } });
 // Export other functions can be added here as they are created
 // e.g., permission templates, etc.
 //# sourceMappingURL=index.js.map

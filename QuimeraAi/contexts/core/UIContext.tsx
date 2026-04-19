@@ -15,6 +15,8 @@ export interface ActiveSectionItem {
     index: number;
 }
 
+export type OnboardingMode = 'classic' | 'ai-studio';
+
 interface UIContextType {
     // Sidebar State
     isSidebarOpen: boolean;
@@ -49,6 +51,8 @@ interface UIContextType {
     // Onboarding
     isOnboardingOpen: boolean;
     setIsOnboardingOpen: React.Dispatch<React.SetStateAction<boolean>>;
+    onboardingMode: OnboardingMode;
+    setOnboardingMode: React.Dispatch<React.SetStateAction<OnboardingMode>>;
 
     // Theme
     themeMode: ThemeMode;
@@ -87,6 +91,16 @@ export const UIProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
 
     // Onboarding
     const [isOnboardingOpen, setIsOnboardingOpen] = useState(false);
+
+    // Onboarding Mode — reads from localStorage (set by global detection below)
+    const [onboardingMode, setOnboardingMode] = useState<OnboardingMode>(() => {
+        if (typeof window === 'undefined') return 'classic';
+        try {
+            const saved = localStorage.getItem('onboardingMode');
+            if (saved === 'ai-studio') return 'ai-studio';
+        } catch (e) { /* localStorage not available */ }
+        return 'classic';
+    });
 
     // Theme - Load from localStorage (with SSR safety check)
     const [themeMode, setThemeMode] = useState<ThemeMode>(() => {
@@ -235,6 +249,8 @@ export const UIProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
         closeProfileModal,
         isOnboardingOpen,
         setIsOnboardingOpen,
+        onboardingMode,
+        setOnboardingMode,
         themeMode,
         setThemeMode,
         applyAppTokens,

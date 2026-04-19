@@ -73,6 +73,25 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
     return ['owner', 'superadmin'].includes(userRole);
   };
 
+  // Dinámicamente obtiene la imagen que esté en el hero principal
+  const getDynamicThumbnailUrl = () => {
+    if (!project.data) return project.thumbnailUrl;
+
+    const heroC = project.data.hero || project.data.heroNova || project.data.heroWave || project.data.heroSplit;
+    if (heroC?.imageUrl && heroC.imageUrl.trim() !== '') return heroC.imageUrl;
+    if (heroC?.backgroundImageUrl && heroC.backgroundImageUrl.trim() !== '') return heroC.backgroundImageUrl;
+
+    if (project.data.heroGallery?.images && project.data.heroGallery.images.length > 0 && project.data.heroGallery.images[0] !== '') {
+      return project.data.heroGallery.images[0];
+    }
+    
+    const bannerC = project.data.banner || project.data.logoBanner;
+    if (bannerC?.imageUrl && bannerC.imageUrl.trim() !== '') return bannerC.imageUrl;
+    if (bannerC?.backgroundImageUrl && bannerC.backgroundImageUrl.trim() !== '') return bannerC.backgroundImageUrl;
+
+    return project.thumbnailUrl || 'https://images.unsplash.com/photo-1542831371-29b0f74f9713?auto=format&fit=crop';
+  };
+
   // Close menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -210,7 +229,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
         aria-label={t('project.aria.open', { name: project.name })}
       >
         <img
-          src={project.thumbnailUrl}
+          src={getDynamicThumbnailUrl()}
           alt={`${project.name} preview`}
           className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
           loading="lazy"

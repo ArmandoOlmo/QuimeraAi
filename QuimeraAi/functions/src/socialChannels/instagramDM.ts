@@ -5,7 +5,8 @@
 
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
-import { META_CONFIG, GEMINI_CONFIG } from '../config';
+import { META_CONFIG } from '../config';
+import { generateTextViaOpenRouter } from '../openrouterHelper';
 
 // Initialize Firestore if not already initialized
 if (!admin.apps.length) {
@@ -304,20 +305,9 @@ async function processMessageInternal(
     userMessage: string,
     history: any[]
 ): Promise<{ success: boolean; response?: string }> {
-    const { GoogleGenerativeAI } = await import('@google/generative-ai');
-    
-    // Use environment variable (from .env) or fallback to functions.config()
-    const apiKey = GEMINI_CONFIG.apiKey;
-    if (!apiKey) {
-        return { success: false };
-    }
-
     try {
-        const genAI = new GoogleGenerativeAI(apiKey);
-        const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
-
         const aiConfig = projectConfig.aiAssistantConfig;
-        
+
         const systemPrompt = `You are ${aiConfig.agentName}, a ${aiConfig.tone?.toLowerCase() || 'professional'} AI assistant.
 
 BUSINESS PROFILE:
@@ -343,15 +333,15 @@ IMPORTANT: Respond in the same language the user is using.`;
             .map(msg => `${msg.direction === 'inbound' ? 'Customer' : 'Assistant'}: ${msg.message}`)
             .join('\n');
 
-        const fullPrompt = `${systemPrompt}
+        const userPrompt = `${conversationContext ? `CONVERSATION HISTORY:\n${conversationContext}\n\n` : ''}CUSTOMER: ${userMessage}\n\nYOUR RESPONSE (friendly and engaging for Instagram):`;
 
-${conversationContext ? `CONVERSATION HISTORY:\n${conversationContext}\n` : ''}
-CUSTOMER: ${userMessage}
+        const result = await generateTextViaOpenRouter(userPrompt, {
+            model: 'gemini-2.0-flash',
+            systemInstruction: systemPrompt,
+            temperature: 0.7,
+        });
 
-YOUR RESPONSE (friendly and engaging for Instagram):`;
-
-        const result = await model.generateContent(fullPrompt);
-        return { success: true, response: result.response.text().trim() };
+        return { success: true, response: result.text.trim() };
 
     } catch (error: any) {
         console.error('AI generation error:', error);
@@ -453,5 +443,3 @@ async function getConversationHistory(projectId: string, senderId: string, limit
         return [];
     }
 }
-
-

@@ -191,6 +191,35 @@ export const PLATFORM_FEATURES = `
     - Users can save their own designs as templates
     - Template marketplace for sharing and reusing designs
     - Admin can create and publish global templates for all users
+
+16. **AI Website Studio** (Dashboard: "Create with AI" button → modal popup)
+    - Full conversational AI experience to create complete websites from scratch via chat
+    - Users describe their business in natural language and Quimera AI builds the entire site
+    - **How it works:**
+      1. User clicks "Create with AI" on the Dashboard → opens the AI Website Studio modal
+      2. Quimera AI greets the user and asks about their business (name, type, services, style, contact)
+      3. The user chats naturally — text or voice — and Quimera extracts all business info
+      4. A real-time "Business Brief" panel on the right shows extracted data and a readiness score (0-100%)
+      5. When readiness reaches 100%, the user clicks "Generate Website" → Quimera generates all sections automatically
+      6. The website opens in the editor ready for final customization
+    - **Voice Mode**: Real-time voice conversations using Gemini Live API — users can talk to Quimera AI naturally instead of typing
+    - **Website Import / Extraction**: Users who already have a website can click the "Import Website" button to:
+      * Enter their existing website URL
+      * Quimera performs deep extraction: meta tags, navigation links, social media profiles (Facebook, Instagram, Twitter/X, TikTok, LinkedIn, YouTube, Pinterest, WhatsApp), contact info (emails, phones), headings, images, brand colors, and JSON-LD structured data
+      * All extracted data is analyzed by AI and automatically populates the Business Brief
+      * This means users with an existing site can get a new AI-generated website that preserves their branding and content
+    - **Business Brief Panel** (right sidebar):
+      * Real-time display of: Business Name, Business Type, Services, Style Preferences, Contact Info, Components Detected
+      * Readiness Score (0-100%) — tracks how complete the business info is
+      * "Generate Website" button activates when readiness is sufficient
+    - **Generation Pipeline** (7-phase visual overlay):
+      * Phase 1: Template selection based on business type
+      * Phase 2: Content generation (AI writes copy for all sections)
+      * Phase 3-5: Image generation (AI generates images for hero, services, gallery, etc.)
+      * Phase 6: Assembly (components compiled into final project)
+      * Phase 7: Done — project opens in the editor
+    - The AI Website Studio replaces the traditional step-by-step onboarding wizard with a single conversational flow
+    - Fully internationalized (English & Spanish) with theme support (Light, Dark, Black modes)
 `;
 
 export const PLATFORM_TECH_STACK = `

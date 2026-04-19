@@ -4,12 +4,12 @@
  * Server-side URL content extraction for knowledge links.
  * Supports websites and YouTube URLs.
  * 
- * Uses Gemini API for content summarization and extraction.
+ * Uses OpenRouter API for content summarization and extraction.
  */
 
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
-import { GEMINI_CONFIG } from './config';
+import { generateTextViaOpenRouter } from './openrouterHelper';
 
 // Initialize Firebase Admin if not already initialized
 if (!admin.apps.length) {
@@ -91,14 +91,9 @@ async function fetchYouTubeMetadata(url: string): Promise<YouTubeMetadata | null
 }
 
 // ============================================
-// Content Extraction via Gemini
+// Content Extraction via OpenRouter
 // ============================================
-async function extractContentWithGemini(url: string, type: 'website' | 'youtube'): Promise<{ title: string; content: string }> {
-    const apiKey = GEMINI_CONFIG.apiKey;
-    if (!apiKey) {
-        throw new Error('Gemini API key not configured');
-    }
-
+async function extractContentWithAI(url: string, type: 'website' | 'youtube'): Promise<{ title: string; content: string }> {
     let prompt: string;
     if (type === 'youtube') {
         prompt = `You are a content extraction assistant. Given this YouTube video URL: ${url}
@@ -122,30 +117,13 @@ TITLE: [page title]
 CONTENT: [all extracted text content from the page, organized logically. Be thorough - this content will be used as a knowledge source for an AI chatbot.]`;
     }
 
-    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
-
-    const requestBody = {
-        contents: [{ role: 'user', parts: [{ text: prompt }] }],
-        generationConfig: {
-            temperature: 0.1,
-            maxOutputTokens: 8192,
-        },
-    };
-
-    const response = await fetch(geminiUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(requestBody),
+    const result = await generateTextViaOpenRouter(prompt, {
+        model: 'gemini-2.5-flash',
+        temperature: 0.1,
+        maxOutputTokens: 8192,
     });
 
-    if (!response.ok) {
-        const errorText = await response.text();
-        console.error('[extractContent] Gemini API error:', errorText);
-        throw new Error(`Gemini API error: ${response.status}`);
-    }
-
-    const result = await response.json();
-    const text = result?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    const text = result.text;
 
     // Parse response
     const titleMatch = text.match(/TITLE:\s*(.+?)(?:\n|$)/);
@@ -218,8 +196,8 @@ export const extractContent = functions.https.onRequest(async (req, res) => {
             }
         }
 
-        // Extract content using Gemini
-        const extracted = await extractContentWithGemini(url, type);
+        // Extract content using OpenRouter
+        const extracted = await extractContentWithAI(url, type);
 
         // Use YouTube metadata title if available (more accurate)
         const title = (type === 'youtube' && youtubeMetadata?.title)

@@ -578,6 +578,80 @@ const ElegantListCard: React.FC<{
 };
 
 // =============================================================================
+// VARIANT 5: TEXT ONLY 
+// =============================================================================
+const TextOnlyMenuCard: React.FC<{ 
+    item: any; 
+    colors: any; 
+    borderRadius: string; 
+    index: number;
+    animationType?: AnimationType;
+    enableAnimation?: boolean;
+}> = ({ item, colors, borderRadius, index, animationType = 'fade-in-up', enableAnimation = true }) => {
+    const animationClass = getAnimationClass(animationType, enableAnimation);
+    const cardBg = colors?.cardBackground || 'transparent';
+    
+    // Use specific colors - respect user's choices
+    const priceColor = colors?.priceColor || hexToRgba(colors?.accent || '#4f46e5', 0.8);
+    const titleColor = colors?.cardTitleColor || '#ffffff';
+    const textColor = colors?.cardText || colors?.text || '#94a3b8';
+    
+    return (
+        <div 
+            className={`group flex flex-col gap-4 p-6 border-b border-dashed transition-all duration-300 hover:bg-white/5 ${animationClass}`}
+            style={{ 
+                borderColor: hexToRgba(colors?.borderColor || '#ffffff', 0.2),
+                animationDelay: getAnimationDelay(index, 0.08)
+            }}
+        >
+        {/* Content */}
+        <div className="flex-1 flex flex-col justify-between">
+            <div>
+                <div className="flex items-start justify-between mb-2 border-b pb-2" style={{ borderColor: hexToRgba(colors?.borderColor || '#ffffff', 0.1)}}>
+                    <div className="flex-1">
+                        <h3 className="text-xl md:text-2xl font-bold mb-1 font-header" style={{ color: titleColor, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>
+                            {item.name}
+                        </h3>
+                        {item.category && (
+                            <span 
+                                className="inline-block text-xs font-bold uppercase tracking-widest opacity-60 mt-1"
+                                style={{ color: colors?.accent }}
+                            >
+                                {item.category}
+                            </span>
+                        )}
+                    </div>
+                    <span 
+                        className="text-2xl md:text-3xl font-bold ml-4 font-header" 
+                        style={{ color: priceColor }}
+                    >
+                        {item.price}
+                    </span>
+                </div>
+                <p className="leading-relaxed font-body mt-3 opacity-90" style={{ color: textColor }}>
+                    {item.description}
+                </p>
+            </div>
+            
+            {(item.isSpecial) && (
+            <div className="flex items-center gap-4 mt-4">
+                {item.isSpecial && (
+                    <div 
+                        className="px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1.5"
+                        style={{ backgroundColor: hexToRgba(colors?.accent, 0.1), color: colors?.accent, border: `1px solid ${hexToRgba(colors?.accent, 0.2)}` }}
+                    >
+                        <ChefHat size={12} fill="currentColor" />
+                        Especial
+                    </div>
+                )}
+            </div>
+            )}
+        </div>
+    </div>
+);
+};
+
+// =============================================================================
 // MAIN COMPONENT
 // =============================================================================
 interface MenuProps extends MenuData {
@@ -718,6 +792,23 @@ const Menu: React.FC<MenuProps> = ({
                             borderRadius={borderRadiusClasses[borderRadius]}
                             index={index}
                             textAlignment={textAlignment}
+                            animationType={animationType}
+                            enableAnimation={enableCardAnimation}
+                        />
+                    ))}
+                </div>
+            )}
+
+            {/* Menu Items - Text Only Variant */}
+            {menuVariant === 'text-only' && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6 max-w-6xl mx-auto">
+                    {items.map((item, index) => (
+                        <TextOnlyMenuCard 
+                            key={index} 
+                            item={item} 
+                            colors={menuColors} 
+                            borderRadius={borderRadiusClasses[borderRadius]}
+                            index={index}
                             animationType={animationType}
                             enableAnimation={enableCardAnimation}
                         />

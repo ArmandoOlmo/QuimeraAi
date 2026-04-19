@@ -3,12 +3,15 @@
  * 
  * Provides Google Cloud Text-to-Speech and Speech-to-Text services
  * for the public landing chatbot without exposing API keys.
+ * 
+ * The voiceChat function uses OpenRouter for AI text generation,
+ * while TTS continues using Google Cloud Text-to-Speech (ADC-based, not Gemini).
  */
 
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
 import { TextToSpeechClient, protos } from '@google-cloud/text-to-speech';
-import { GEMINI_CONFIG } from './config';
+import { generateTextViaOpenRouter } from './openrouterHelper';
 
 // Initialize Firebase Admin if not already initialized
 if (!admin.apps.length) {
@@ -220,8 +223,8 @@ export const getVoices = functions.https.onRequest(async (req, res) => {
 });
 
 /**
- * Voice chat endpoint - combines Gemini + TTS for seamless voice interaction
- * Receives text, generates AI response with Gemini, and returns audio
+ * Voice chat endpoint - combines AI text generation + TTS for seamless voice interaction
+ * Receives text, generates AI response with OpenRouter, and returns audio via Google Cloud TTS
  */
 export const voiceChat = functions.https.onRequest(async (req, res) => {
     // Handle CORS preflight
@@ -263,39 +266,23 @@ export const voiceChat = functions.https.onRequest(async (req, res) => {
             return;
         }
 
-        // Import Gemini functions dynamically to avoid circular deps
-        const { GoogleGenAI } = await import('@google/genai');
-
-        // Get API key from centralized config
-        const apiKey = GEMINI_CONFIG.apiKey;
-
-        if (!apiKey) {
-            res.status(500).json({ error: 'API key not configured' });
-            return;
-        }
-
-        const genAI = new GoogleGenAI({ apiKey });
-
-        // Build conversation
+        // Build conversation history for OpenRouter
         const history = conversationHistory.map((msg: any) => ({
-            role: msg.role === 'user' ? 'user' : 'model',
-            parts: [{ text: msg.content || msg.text }]
+            role: msg.role === 'user' ? 'user' as const : 'assistant' as const,
+            text: msg.content || msg.text,
         }));
 
-        // Generate AI response
-        const model = genAI.models.generateContent;
-        const fullPrompt = systemPrompt
-            ? `${systemPrompt}\n\nHistorial:\n${history.map((h: any) => `${h.role}: ${h.parts[0].text}`).join('\n')}\n\nUsuario: ${userMessage}\n\nAsistente:`
-            : userMessage;
-
-        const result = await genAI.models.generateContent({
-            model: 'gemini-3-flash-preview',
-            contents: fullPrompt,
+        // Generate AI response via OpenRouter
+        const aiResult = await generateTextViaOpenRouter(userMessage, {
+            model: 'gemini-2.5-flash',
+            systemInstruction: systemPrompt || undefined,
+            history,
+            temperature: 0.7,
         });
 
-        const responseText = result.text || 'Lo siento, no pude procesar tu mensaje.';
+        const responseText = aiResult.text || 'Lo siento, no pude procesar tu mensaje.';
 
-        // Generate audio for the response
+        // Generate audio for the response using Google Cloud TTS
         const voiceConfig = VOICE_CONFIGS[voiceName] || VOICE_CONFIGS['default'];
 
         const [audioResponse] = await ttsClient.synthesizeSpeech({

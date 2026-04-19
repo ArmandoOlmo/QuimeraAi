@@ -75,8 +75,16 @@ function applyGemini3Optimizations(model: string, config: GeminiProxyConfig): Ge
 }
 
 /**
+ * Sleep helper for retry backoff
+ */
+function sleep(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+/**
  * Generate content using the Gemini proxy
  * Includes automatic fallback from gemini-3 to gemini-2.5 on capacity errors
+ * Includes retry with exponential backoff for 429 rate limit errors
  */
 export async function generateContentViaProxy(
     projectId: string,
@@ -84,8 +92,10 @@ export async function generateContentViaProxy(
     model: string = 'gemini-2.5-flash',
     config: GeminiProxyConfig = {},
     userId?: string,
-    tools?: any[]
+    tools?: any[],
+    _retryCount: number = 0
 ): Promise<GeminiProxyResponse> {
+    const MAX_RETRIES = 3;
     // Apply Gemini 3 optimizations (temperature = 1.0)
     const optimizedConfig = applyGemini3Optimizations(model, config);
 
@@ -114,6 +124,27 @@ export async function generateContentViaProxy(
                 console.warn(`[Gemini] Model ${model} unavailable (503), falling back to ${fallbackModel}`);
                 return generateContentViaProxy(projectId, prompt, fallbackModel, config, userId);
             }
+        }
+
+        // Don't retry on 402 CREDITS_EXHAUSTED — this is a terminal error
+        if (response.status === 402) {
+            const errorData: GeminiProxyError = await response.json();
+            throw new Error(errorData.error === 'CREDITS_EXHAUSTED'
+                ? 'CREDITS_EXHAUSTED'
+                : errorData.error || 'Payment required');
+        }
+
+        // Retry on 429 rate limit with exponential backoff
+        if (response.status === 429 && _retryCount < MAX_RETRIES) {
+            // Don't retry if the 429 is actually a billing cap (RESOURCE_EXHAUSTED)
+            const errorBody = await response.text();
+            if (errorBody.includes('billing') || errorBody.includes('RESOURCE_EXHAUSTED')) {
+                throw new Error('API billing limit reached. Please try again later.');
+            }
+            const delay = Math.pow(2, _retryCount + 1) * 1000; // 2s, 4s, 8s
+            console.warn(`[Gemini] Rate limited (429), retrying in ${delay / 1000}s... (attempt ${_retryCount + 1}/${MAX_RETRIES})`);
+            await sleep(delay);
+            return generateContentViaProxy(projectId, prompt, model, config, userId, tools, _retryCount + 1);
         }
 
         if (!response.ok) {
@@ -165,8 +196,10 @@ export async function generateChatContentViaProxy(
     systemInstruction: string,
     model: string = 'gemini-3.1-flash-lite-preview',
     config: GeminiChatConfig = {},
-    userId?: string
+    userId?: string,
+    _retryCount: number = 0
 ): Promise<GeminiProxyResponse> {
+    const MAX_RETRIES = 3;
     // Apply Gemini 3 optimizations (temperature = 1.0)
     const optimizedConfig = applyGemini3Optimizations(model, config);
 
@@ -199,6 +232,27 @@ export async function generateChatContentViaProxy(
                 console.warn(`[Gemini Chat] Model ${model} unavailable (503), falling back to ${fallbackModel}`);
                 return generateChatContentViaProxy(projectId, history, currentMessage, systemInstruction, fallbackModel, config, userId);
             }
+        }
+
+        // Don't retry on 402 CREDITS_EXHAUSTED — this is a terminal error
+        if (response.status === 402) {
+            const errorData: GeminiProxyError = await response.json();
+            throw new Error(errorData.error === 'CREDITS_EXHAUSTED'
+                ? 'CREDITS_EXHAUSTED'
+                : errorData.error || 'Payment required');
+        }
+
+        // Retry on 429 rate limit with exponential backoff
+        if (response.status === 429 && _retryCount < MAX_RETRIES) {
+            // Don't retry if the 429 is actually a billing cap (RESOURCE_EXHAUSTED)
+            const errorBody = await response.text();
+            if (errorBody.includes('billing') || errorBody.includes('RESOURCE_EXHAUSTED')) {
+                throw new Error('API billing limit reached. Please try again later.');
+            }
+            const delay = Math.pow(2, _retryCount + 1) * 1000; // 2s, 4s, 8s
+            console.warn(`[Gemini Chat] Rate limited (429), retrying in ${delay / 1000}s... (attempt ${_retryCount + 1}/${MAX_RETRIES})`);
+            await sleep(delay);
+            return generateChatContentViaProxy(projectId, history, currentMessage, systemInstruction, model, config, userId, _retryCount + 1);
         }
 
         if (!response.ok) {

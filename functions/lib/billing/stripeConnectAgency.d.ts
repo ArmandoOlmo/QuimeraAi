@@ -27,3 +27,23 @@ export declare const cancelClientSubscription: functions.HttpsFunction & functio
  * Generate invoice for client
  */
 export declare const generateClientInvoice: functions.HttpsFunction & functions.Runnable<any>;
+/**
+ * Calculate total monthly bill for agency
+ * @param plan - Agency plan ID
+ * @param activeProjects - Number of active billable projects
+ */
+export declare function calculateAgencyMonthlyBill(plan: string, activeProjects: number): number;
+/**
+ * Update active projects count for an agency
+ * Called when a project is created or deleted
+ */
+export declare const updateAgencyProjectCount: functions.HttpsFunction & functions.Runnable<any>;
+/**
+ * Get agency billing summary
+ */
+export declare const getAgencyBillingSummary: functions.HttpsFunction & functions.Runnable<any>;
+/**
+ * Firestore trigger: Update agency project count when a project is created/deleted
+ * This runs automatically when projects change
+ */
+export declare const onProjectChangeUpdateAgencyBilling: functions.CloudFunction<functions.Change<functions.firestore.DocumentSnapshot>>;

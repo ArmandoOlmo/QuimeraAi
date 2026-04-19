@@ -193,16 +193,16 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           Display Text Style
         </label>
 
-        <FontSizeSelector label="Display Size" value={data.heroNova.headlineFontSize || 'lg'} onChange={(v) => setNestedData('heroNova.headlineFontSize', v)} />
+        <FontSizeSelector label="Display Size" value={data.heroNova.headlineFontSize || 'md'} onChange={(v) => setNestedData('heroNova.headlineFontSize', v)} />
 
         <div className="mt-3">
           <div className="flex justify-between items-center mb-1">
             <label className="text-xs font-semibold text-editor-text-secondary">Letter Spacing</label>
-            <span className="text-xs text-editor-text-primary">{(data.heroNova.displayLetterSpacing ?? 0.35).toFixed(2)}em</span>
+            <span className="text-xs text-editor-text-primary">{(data.heroNova.displayLetterSpacing ?? 0).toFixed(2)}em</span>
           </div>
           <input
             type="range" min="0" max="1" step="0.05"
-            value={data.heroNova.displayLetterSpacing ?? 0.35}
+            value={data.heroNova.displayLetterSpacing ?? 0}
             onChange={(e) => setNestedData('heroNova.displayLetterSpacing', parseFloat(e.target.value))}
             className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
           />

@@ -12,7 +12,7 @@ if (!admin.apps.length) {
 }
 
 import { getWidgetConfig, submitWidgetLead, trackWidgetAnalytics } from './widgetApi';
-import { generateContent, streamContent, getUsageStats, generateImage } from './geminiProxy';
+import { generateContent, streamContent, getUsageStats, generateImage, getLiveApiKey } from './geminiProxy';
 import { textToSpeech, getVoices, voiceChat } from './voiceProxy';
 import { twilioVoiceWebhook } from './voice/twilioVoice';
 import { outboundCall, outboundCallStatus } from './voice/outboundCall';
@@ -237,7 +237,8 @@ export const gemini = {
     generate: generateContent,
     stream: streamContent,
     usage: getUsageStats,
-    image: generateImage
+    image: generateImage,
+    liveApiKey: getLiveApiKey
 };
 
 // Export Voice proxy functions (Google Cloud TTS)
@@ -452,6 +453,7 @@ export {
     streamContent,
     getUsageStats,
     generateImage,
+    getLiveApiKey,
     // Stripe exports
     createPaymentIntent,
     createCheckoutSession,

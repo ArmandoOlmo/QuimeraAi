@@ -245,151 +245,17 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
     const renderHeroControls = () => {
         const heroStyles = styles as typeof componentStyles['hero'];
         const colors = (heroStyles.colors || {}) as any;
-        const currentVariant = heroStyles.heroVariant || 'classic';
 
         return (
             <div className="space-y-4">
-                {/* ========== HERO VARIANT ========== */}
+                {/* ========== HERO INFO ========== */}
                 <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-                    <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+                    <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-2 flex items-center gap-2">
                         <Layout size={14} />
-                        Hero Style
+                        Hero Section
                     </label>
-                    <div className="grid grid-cols-3 gap-2">
-                        <button
-                            onClick={() => handleStyleChange('heroVariant', 'classic')}
-                            className={`px-3 py-2.5 rounded-md border transition-all ${currentVariant === 'classic'
-                                ? 'bg-editor-accent text-editor-bg border-editor-accent shadow-lg'
-                                : 'bg-editor-panel-bg text-editor-text-primary border-editor-border hover:border-editor-accent'
-                                }`}
-                        >
-                            <div className="font-semibold text-sm">Classic</div>
-                            <div className="text-[10px] opacity-70">Two Column</div>
-                        </button>
-                        <button
-                            onClick={() => handleStyleChange('heroVariant', 'modern')}
-                            className={`px-3 py-2.5 rounded-md border transition-all ${currentVariant === 'modern'
-                                ? 'bg-editor-accent text-editor-bg border-editor-accent shadow-lg'
-                                : 'bg-editor-panel-bg text-editor-text-primary border-editor-border hover:border-editor-accent'
-                                }`}
-                        >
-                            <div className="font-semibold text-sm">Modern</div>
-                            <div className="text-[10px] opacity-70">Full Screen</div>
-                        </button>
-                        <button
-                            onClick={() => handleStyleChange('heroVariant', 'gradient')}
-                            className={`px-3 py-2.5 rounded-md border transition-all ${currentVariant === 'gradient'
-                                ? 'bg-editor-accent text-editor-bg border-editor-accent shadow-lg'
-                                : 'bg-editor-panel-bg text-editor-text-primary border-editor-border hover:border-editor-accent'
-                                }`}
-                        >
-                            <div className="font-semibold text-sm">Aurora</div>
-                            <div className="text-[10px] opacity-70">Animated</div>
-                        </button>
-                        <button
-                            onClick={() => handleStyleChange('heroVariant', 'fitness')}
-                            className={`px-3 py-2.5 rounded-md border transition-all ${currentVariant === 'fitness'
-                                ? 'bg-editor-accent text-editor-bg border-editor-accent shadow-lg'
-                                : 'bg-editor-panel-bg text-editor-text-primary border-editor-border hover:border-editor-accent'
-                                }`}
-                        >
-                            <div className="font-semibold text-sm">Fitness</div>
-                            <div className="text-[10px] opacity-70">Brutalist</div>
-                        </button>
-                        <button
-                            onClick={() => handleStyleChange('heroVariant', 'editorial')}
-                            className={`px-3 py-2.5 rounded-md border transition-all ${currentVariant === 'editorial'
-                                ? 'bg-editor-accent text-editor-bg border-editor-accent shadow-lg'
-                                : 'bg-editor-panel-bg text-editor-text-primary border-editor-border hover:border-editor-accent'
-                                }`}
-                        >
-                            <div className="font-semibold text-sm">Editorial</div>
-                            <div className="text-[10px] opacity-70">Magazine</div>
-                        </button>
-                        <button
-                            onClick={() => handleStyleChange('heroVariant', 'cinematic')}
-                            className={`px-3 py-2.5 rounded-md border transition-all ${currentVariant === 'cinematic'
-                                ? 'bg-editor-accent text-editor-bg border-editor-accent shadow-lg'
-                                : 'bg-editor-panel-bg text-editor-text-primary border-editor-border hover:border-editor-accent'
-                                }`}
-                        >
-                            <div className="font-semibold text-sm">Cinematic</div>
-                            <div className="text-[10px] opacity-70">Movie Poster</div>
-                        </button>
-                        <button
-                            onClick={() => handleStyleChange('heroVariant', 'minimal')}
-                            className={`px-3 py-2.5 rounded-md border transition-all ${currentVariant === 'minimal'
-                                ? 'bg-editor-accent text-editor-bg border-editor-accent shadow-lg'
-                                : 'bg-editor-panel-bg text-editor-text-primary border-editor-border hover:border-editor-accent'
-                                }`}
-                        >
-                            <div className="font-semibold text-sm">Minimal</div>
-                            <div className="text-[10px] opacity-70">Clean</div>
-                        </button>
-                        <button
-                            onClick={() => handleStyleChange('heroVariant', 'bold')}
-                            className={`px-3 py-2.5 rounded-md border transition-all ${currentVariant === 'bold'
-                                ? 'bg-editor-accent text-editor-bg border-editor-accent shadow-lg'
-                                : 'bg-editor-panel-bg text-editor-text-primary border-editor-border hover:border-editor-accent'
-                                }`}
-                        >
-                            <div className="font-semibold text-sm">Bold</div>
-                            <div className="text-[10px] opacity-70">Oversized</div>
-                        </button>
-                        <button
-                            onClick={() => handleStyleChange('heroVariant', 'overlap')}
-                            className={`px-3 py-2.5 rounded-md border transition-all ${currentVariant === 'overlap'
-                                ? 'bg-editor-accent text-editor-bg border-editor-accent shadow-lg'
-                                : 'bg-editor-panel-bg text-editor-text-primary border-editor-border hover:border-editor-accent'
-                                }`}
-                        >
-                            <div className="font-semibold text-sm">Overlap</div>
-                            <div className="text-[10px] opacity-70">Floating Card</div>
-                        </button>
-                        <button
-                            onClick={() => handleStyleChange('heroVariant', 'verticalSplit')}
-                            className={`px-3 py-2.5 rounded-md border transition-all ${currentVariant === 'verticalSplit'
-                                ? 'bg-editor-accent text-editor-bg border-editor-accent shadow-lg'
-                                : 'bg-editor-panel-bg text-editor-text-primary border-editor-border hover:border-editor-accent'
-                                }`}
-                        >
-                            <div className="font-semibold text-sm">V. Split</div>
-                            <div className="text-[10px] opacity-70">50/50</div>
-                        </button>
-                        <button
-                            onClick={() => handleStyleChange('heroVariant', 'glass')}
-                            className={`px-3 py-2.5 rounded-md border transition-all ${currentVariant === 'glass'
-                                ? 'bg-editor-accent text-editor-bg border-editor-accent shadow-lg'
-                                : 'bg-editor-panel-bg text-editor-text-primary border-editor-border hover:border-editor-accent'
-                                }`}
-                        >
-                            <div className="font-semibold text-sm">Glass</div>
-                            <div className="text-[10px] opacity-70">Frosted</div>
-                        </button>
-                        <button
-                            onClick={() => handleStyleChange('heroVariant', 'stacked')}
-                            className={`px-3 py-2.5 rounded-md border transition-all ${currentVariant === 'stacked'
-                                ? 'bg-editor-accent text-editor-bg border-editor-accent shadow-lg'
-                                : 'bg-editor-panel-bg text-editor-text-primary border-editor-border hover:border-editor-accent'
-                                }`}
-                        >
-                            <div className="font-semibold text-sm">Stacked</div>
-                            <div className="text-[10px] opacity-70">Image + Text</div>
-                        </button>
-                    </div>
-                    <p className="text-xs text-editor-text-secondary mt-2">
-                        {currentVariant === 'classic' && '📐 Traditional two-column layout with side-by-side content'}
-                        {currentVariant === 'modern' && '✨ Full-screen hero with image background covering entire area'}
-                        {currentVariant === 'gradient' && '🌈 Animated radial gradient background with "Aurora" effect'}
-                        {currentVariant === 'fitness' && '💪 Bold, brutalist typography and high-impact layout'}
-                        {currentVariant === 'editorial' && '📰 Magazine-style with headline anchored at bottom-left'}
-                        {currentVariant === 'cinematic' && '🎬 Movie poster feel with heavy gradient and uppercase text'}
-                        {currentVariant === 'minimal' && '✦ Ultra-clean, thin typography with maximum whitespace'}
-                        {currentVariant === 'bold' && '🔤 Oversized bold headline with color overlay'}
-                        {currentVariant === 'overlap' && '📋 Content card floating over the image boundary'}
-                        {currentVariant === 'verticalSplit' && '◧ 50/50 vertical split: text panel + image side'}
-                        {currentVariant === 'glass' && '🪟 Glassmorphism card floating over full photo'}
-                        {currentVariant === 'stacked' && '📚 Image on top, text content below on solid background'}
+                    <p className="text-xs text-editor-text-secondary">
+                        📐 Full-width hero with background image, headline overlay, and call-to-action buttons. Use the content tab to change text and image.
                     </p>
                 </div>
 
@@ -407,23 +273,19 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
 
                 <hr className="border-editor-border/50" />
 
-                {/* ========== LAYOUT & SPACING (For Classic and Modern) ========== */}
-                {(currentVariant === 'classic' || currentVariant === 'modern') && (
-                    <>
-                        <div>
-                            <h4 className="font-semibold text-editor-text-primary mb-3 flex items-center gap-2">
-                                <AlignJustify size={14} />
-                                Layout & Spacing
-                            </h4>
-                            <div className="grid grid-cols-2 gap-4">
-                                <PaddingControl label="Vertical Padding" value={heroStyles.paddingY || 'md'} onChange={v => handleStyleChange('paddingY', v)} />
-                                <PaddingControl label="Horizontal Padding" value={heroStyles.paddingX || 'md'} onChange={v => handleStyleChange('paddingX', v)} />
-                            </div>
-                        </div>
+                {/* ========== LAYOUT & SPACING ========== */}
+                <div>
+                    <h4 className="font-semibold text-editor-text-primary mb-3 flex items-center gap-2">
+                        <AlignJustify size={14} />
+                        Layout & Spacing
+                    </h4>
+                    <div className="grid grid-cols-2 gap-4">
+                        <PaddingControl label="Vertical Padding" value={heroStyles.paddingY || 'md'} onChange={v => handleStyleChange('paddingY', v)} />
+                        <PaddingControl label="Horizontal Padding" value={heroStyles.paddingX || 'md'} onChange={v => handleStyleChange('paddingX', v)} />
+                    </div>
+                </div>
 
-                        <hr className="border-editor-border/50" />
-                    </>
-                )}
+                <hr className="border-editor-border/50" />
 
                 {/* ========== COLORS ========== */}
                 <div>
@@ -457,118 +319,6 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                         </div>
                     </div>
                 </div>
-
-                {/* ========== IMAGE STYLING (Only for Classic) ========== */}
-                {currentVariant === 'classic' && (
-                    <>
-                        <hr className="border-editor-border/50" />
-                        <div>
-                            <h4 className="font-semibold text-editor-text-primary mb-3 flex items-center gap-2">
-                                <Image size={14} />
-                                Image Styling
-                            </h4>
-                            <ImageStyleControl value={heroStyles.imageStyle || 'default'} onChange={v => handleStyleChange('imageStyle', v)} />
-                            <ToggleControl label="Drop Shadow" checked={heroStyles.imageDropShadow || false} onChange={v => handleStyleChange('imageDropShadow', v)} />
-
-                            <div className="grid grid-cols-2 gap-4">
-                                <PositionControl value={heroStyles.imagePosition || 'right'} onChange={v => handleStyleChange('imagePosition', v)} />
-                                <JustifyContentControl value={heroStyles.imageJustification || 'center'} onChange={v => handleStyleChange('imageJustification', v)} />
-                            </div>
-
-                            <BorderRadiusControl label="Corner Radius" value={heroStyles.imageBorderRadius || 'md'} onChange={v => handleStyleChange('imageBorderRadius', v)} />
-
-                            <div className="grid grid-cols-2 gap-4">
-                                <BorderSizeControl label="Border Size" value={heroStyles.imageBorderSize || 'none'} onChange={v => handleStyleChange('imageBorderSize', v)} />
-                                <ColorControl label="Border Color" value={heroStyles.imageBorderColor || 'transparent'} onChange={v => handleStyleChange('imageBorderColor', v)} />
-                            </div>
-                        </div>
-
-                        <hr className="border-editor-border/50" />
-
-                        {/* ========== IMAGE SIZING ========== */}
-                        <div>
-                            <h4 className="font-semibold text-editor-text-primary mb-3">Image Sizing</h4>
-                            <div className="space-y-4 bg-editor-bg/50 p-3 rounded-lg">
-                                <div>
-                                    <div className="flex justify-between items-center">
-                                        <Label>Image Width</Label>
-                                        <span className="text-sm font-medium text-editor-text-primary">{heroStyles.imageWidth || 100}%</span>
-                                    </div>
-                                    <input
-                                        type="range" min="25" max="100" step="1"
-                                        value={heroStyles.imageWidth || 100}
-                                        onChange={e => handleStyleChange('imageWidth', parseInt(e.target.value, 10))}
-                                        className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
-                                    />
-                                </div>
-
-                                <ToggleControl
-                                    label="Set Max Height"
-                                    checked={heroStyles.imageHeightEnabled || false}
-                                    onChange={v => handleStyleChange('imageHeightEnabled', v)}
-                                />
-                                {heroStyles.imageHeightEnabled && (
-                                    <div className="animate-fade-in-up">
-                                        <div className="flex justify-between items-center">
-                                            <Label>Max Height</Label>
-                                            <span className="text-sm font-medium text-editor-text-primary">{heroStyles.imageHeight || 500}px</span>
-                                        </div>
-                                        <input
-                                            type="range"
-                                            min="200"
-                                            max="800"
-                                            step="10"
-                                            value={heroStyles.imageHeight || 500}
-                                            onChange={e => handleStyleChange('imageHeight', parseInt(e.target.value, 10))}
-                                            className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
-                                        />
-                                    </div>
-                                )}
-
-                                <AspectRatioControl value={heroStyles.imageAspectRatio || 'auto'} onChange={v => handleStyleChange('imageAspectRatio', v)} />
-                                <ObjectFitControl value={heroStyles.imageObjectFit || 'cover'} onChange={v => handleStyleChange('imageObjectFit', v)} />
-                            </div>
-                        </div>
-                    </>
-                )}
-
-                {/* Gradient Opacity Control for Modern variant */}
-                {currentVariant === 'modern' && (
-                    <>
-                        <hr className="border-editor-border/50" />
-                        <div>
-                            <h4 className="font-semibold text-editor-text-primary mb-3 flex items-center gap-2">
-                                <Palette size={14} />
-                                Gradient Overlay
-                            </h4>
-                            <div className="space-y-4 bg-editor-bg/50 p-3 rounded-lg">
-                                <div>
-                                    <div className="flex justify-between items-center">
-                                        <Label>Overlay Opacity</Label>
-                                        <span className="text-sm font-medium text-editor-text-primary">{heroStyles.gradientOpacity ?? 70}%</span>
-                                    </div>
-                                    <input
-                                        type="range"
-                                        min="0"
-                                        max="100"
-                                        step="5"
-                                        value={heroStyles.gradientOpacity ?? 70}
-                                        onChange={e => handleStyleChange('gradientOpacity', parseInt(e.target.value, 10))}
-                                        className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
-                                    />
-                                    <p className="text-xs text-editor-text-secondary mt-1">
-                                        Controls the darkness of the gradient overlay on the background image
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="bg-editor-bg/50 p-4 rounded-lg border border-dashed border-editor-border">
-                            <p className="text-xs text-editor-text-secondary text-center">
-                                💡 <strong>Modern variant</strong> uses the hero image as a full-screen background. Users set the image via content editor.
-                            </p>
-                        </div>
-                    </>
-                )}
             </div>
         )
     };
@@ -699,11 +449,11 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                     <div>
                         <div className="flex justify-between items-center">
                             <Label>Image Height</Label>
-                            <span className="text-sm font-medium text-editor-text-primary">{s.imageHeight || 200}px</span>
+                            <span className="text-sm font-medium text-editor-text-primary">{s.imageHeight || 430}px</span>
                         </div>
                         <input
                             type="range" min="100" max="600" step="10"
-                            value={s.imageHeight || 200}
+                            value={s.imageHeight || 430}
                             onChange={e => handleStyleChange('imageHeight', parseInt(e.target.value, 10))}
                             className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer"
                         />

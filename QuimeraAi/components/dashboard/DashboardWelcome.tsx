@@ -9,7 +9,7 @@ import { useCreditsUsage } from '../../hooks/useCreditsUsage';
 import { usePersistedBoolean } from '../../hooks/usePersistedState';
 import { SUBSCRIPTION_PLANS } from '../../types/subscription';
 import DashboardStatusCards from './DashboardStatusCards';
-import { Plus, Sparkles, Crown, ChevronUp, ChevronDown } from 'lucide-react';
+import { Sparkles, Crown, ChevronUp, ChevronDown } from 'lucide-react';
 
 interface DashboardWelcomeProps {
     allUserProjectsCount: number;
@@ -24,7 +24,7 @@ interface DashboardWelcomeProps {
 const DashboardWelcome: React.FC<DashboardWelcomeProps> = ({ allUserProjectsCount }) => {
     const { t } = useTranslation();
     const { userDocument, canAccessSuperAdmin } = useAuth();
-    const { setIsOnboardingOpen } = useUI();
+    const { setIsOnboardingOpen, setOnboardingMode } = useUI();
     const tenantContext = useSafeTenant();
     const upgradeContext = useSafeUpgrade();
     const { plansArray, getPlan } = usePlans();
@@ -51,6 +51,12 @@ const DashboardWelcome: React.FC<DashboardWelcomeProps> = ({ allUserProjectsCoun
         if (upgradeContext) {
             upgradeContext.openUpgradeModal('generic');
         }
+    };
+
+    const handleOpenAIStudio = () => {
+        setOnboardingMode('ai-studio');
+        localStorage.setItem('onboardingMode', 'ai-studio');
+        setIsOnboardingOpen(true);
     };
 
     const showUpgradeButton = !canAccessSuperAdmin && nextPlan && currentPlanId !== 'enterprise';
@@ -112,19 +118,19 @@ const DashboardWelcome: React.FC<DashboardWelcomeProps> = ({ allUserProjectsCoun
 
                     {/* Right-side CTA buttons */}
                     <div className="flex flex-col gap-3 flex-shrink-0">
-                        {/* New Project CTA - Opens Onboarding */}
+                        {/* Create with AI CTA - Opens AI Website Studio */}
                         <button
-                            onClick={() => setIsOnboardingOpen(true)}
+                            onClick={handleOpenAIStudio}
                             className="group relative flex items-center gap-3 px-6 py-4 bg-gradient-to-r from-yellow-400 via-orange-500 to-yellow-400 bg-[length:200%_100%] text-white font-bold rounded-2xl shadow-lg shadow-yellow-500/25 hover:shadow-yellow-500/40 transition-all duration-500 hover:scale-105 hover:bg-right"
-                            aria-label={t('dashboard.newProject')}
+                            aria-label={t('dashboard.createWithAI')}
                         >
                             <div className="flex items-center justify-center w-10 h-10 bg-white/30 rounded-xl backdrop-blur-sm group-hover:bg-white/40 transition-colors">
-                                <Plus className="w-6 h-6" aria-hidden="true" />
+                                <Sparkles className="w-6 h-6" aria-hidden="true" />
                             </div>
                             <div className="flex flex-col items-start text-left">
-                                <span className="text-lg leading-tight">{t('dashboard.newProject')}</span>
+                                <span className="text-lg leading-tight">{t('dashboard.createWithAI')}</span>
                                 <span className="text-xs opacity-80 font-medium text-left">
-                                    {t('dashboard.startBuilding')}
+                                    {t('dashboard.createWithAIDesc')}
                                 </span>
                             </div>
                         </button>

@@ -3,6 +3,7 @@ import { GoogleMap, Marker, useJsApiLoader, Libraries } from '@react-google-maps
 import { MapData, BorderRadiusSize, CornerGradientConfig } from '../types';
 import { MapPin, Navigation, Phone, Mail, Clock } from 'lucide-react';
 import { useDesignTokens } from '../hooks/useDesignTokens';
+import { useTranslation } from 'react-i18next';
 import CornerGradient from './ui/CornerGradient';
 
 // Define libraries outside component to prevent re-renders
@@ -72,7 +73,12 @@ const BusinessMap: React.FC<BusinessMapProps> = ({
     height = 400,
     borderRadius = 'none',
     cornerGradient,
+    phone,
+    email,
+    businessHours,
+    buttonText,
 }) => {
+    const { t } = useTranslation();
     // Get design tokens with primary color
     const { getColor } = useDesignTokens();
     const primaryColor = getColor('primary.main', '#4f46e5');
@@ -83,6 +89,13 @@ const BusinessMap: React.FC<BusinessMapProps> = ({
         heading: colors?.heading || primaryColor,
         cardBackground: colors?.cardBackground || primaryColor,
     };
+
+    // Translated strings
+    const directionsText = buttonText || t('components.map.getDirections', 'Get Directions');
+    const loadingText = t('components.map.loading', 'Loading Map...');
+    const locationLabel = t('components.map.locationLabel', 'Location');
+    const navigateText = t('components.map.navigate', 'Navigate');
+    const hoursLabel = t('components.map.hours', 'Hours');
     
     // Only load Google Maps if we have a valid API key (not a placeholder)
     const hasValidApiKey = apiKey && apiKey.trim().length > 20 && !apiKey.includes('your_') && !apiKey.includes('placeholder') && !apiKey.includes('api_key');
@@ -110,7 +123,7 @@ const BusinessMap: React.FC<BusinessMapProps> = ({
     };
 
     const getFontSize = (size: string, type: 'title' | 'desc') => {
-        const baseTitle = 'font-bold mb-4';
+        const baseTitle = 'font-bold mb-4 font-header';
         const baseDesc = 'mb-8 max-w-2xl mx-auto';
         
         switch (size) {
@@ -151,131 +164,179 @@ const BusinessMap: React.FC<BusinessMapProps> = ({
         fullscreenControl: true,
     }), [mapVariant]);
 
-    const renderContent = () => {
-        // Show OpenStreetMap embed if no valid Google API key
-        if (!hasValidApiKey || loadError) {
-            const mapLat = lat || 40.7128;
-            const mapLng = lng || -74.0060;
-            const mapZoom = zoom || 14;
-            return (
-                <div className="relative w-full" style={{ height: `${height}px` }}>
-                    {/* OpenStreetMap Embed */}
-                    <iframe
-                        title={title || 'Location Map'}
-                        width="100%"
-                        height="100%"
-                        style={{ border: 0 }}
-                        loading="lazy"
-                        src={`https://www.openstreetmap.org/export/embed.html?bbox=${mapLng - 0.02},${mapLat - 0.015},${mapLng + 0.02},${mapLat + 0.015}&layer=mapnik&marker=${mapLat},${mapLng}`}
-                    />
-                    
-                    {/* Overlay info card */}
-                    {mapVariant === 'modern' ? null : (
-                        <div className="absolute bottom-4 left-4 bg-white/95 backdrop-blur-sm rounded-xl p-4 max-w-xs shadow-lg border border-gray-200">
-                            <div className="flex items-start gap-3">
-                                <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: (colors?.accent || primaryColor) + '20' }}>
-                                    <MapPin className="w-4 h-4" style={{ color: colors?.accent || primaryColor }} />
-                                </div>
-                                <div>
-                                    <p className="text-sm font-semibold text-gray-900 mb-0.5">{title || 'Location'}</p>
-                                    <p className="text-xs text-gray-600 mb-2">{address}</p>
-                                    <a 
-                                        href={`https://www.google.com/maps/dir/?api=1&destination=${mapLat},${mapLng}`}
-                                        target="_blank"
-                                        rel="noreferrer"
-                                        className="inline-flex items-center gap-1.5 text-xs font-medium transition-all hover:opacity-80"
-                                        style={{ color: colors?.accent || primaryColor }}
-                                    >
-                                        <Navigation className="w-3.5 h-3.5" />
-                                        Get Directions →
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                    )}
+    const mapLat = lat || 40.7128;
+    const mapLng = lng || -74.0060;
+    const directionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${mapLat},${mapLng}`;
+
+    // Reusable OSM iframe for fallback rendering
+    const renderOsmIframe = (iframeHeight?: string) => (
+        <iframe
+            title={title || 'Location Map'}
+            width="100%"
+            height={iframeHeight || '100%'}
+            style={{ border: 0 }}
+            loading="lazy"
+            src={`https://www.openstreetmap.org/export/embed.html?bbox=${mapLng - 0.02},${mapLat - 0.015},${mapLng + 0.02},${mapLat + 0.015}&layer=mapnik&marker=${mapLat},${mapLng}`}
+        />
+    );
+
+    // Reusable Google Map render
+    const renderGoogleMap = () => (
+        <GoogleMap
+            mapContainerStyle={containerStyle}
+            center={center}
+            zoom={zoom}
+            options={options}
+        >
+            <Marker position={center} />
+        </GoogleMap>
+    );
+
+    // Reusable contact info items for info cards
+    const renderContactInfo = (textColor: string, accentColor: string, small = false) => {
+        const iconSize = small ? 'w-4 h-4' : 'w-5 h-5';
+        const textSize = small ? 'text-xs' : 'text-sm';
+        return (
+            <div className={`space-y-${small ? '2' : '3'}`}>
+                {/* Address */}
+                <div className="flex items-start gap-3">
+                    <MapPin className={`${iconSize} mt-0.5 shrink-0`} style={{ color: accentColor }} />
+                    <span className={textSize} style={{ color: textColor }}>{address}</span>
                 </div>
-            );
-        }
-        
+                {/* Phone */}
+                {phone && (
+                    <a href={`tel:${phone}`} className="flex items-center gap-3 group">
+                        <Phone className={`${iconSize} shrink-0`} style={{ color: accentColor }} />
+                        <span className={`${textSize} group-hover:underline`} style={{ color: textColor }}>{phone}</span>
+                    </a>
+                )}
+                {/* Email */}
+                {email && (
+                    <a href={`mailto:${email}`} className="flex items-center gap-3 group">
+                        <Mail className={`${iconSize} shrink-0`} style={{ color: accentColor }} />
+                        <span className={`${textSize} group-hover:underline`} style={{ color: textColor }}>{email}</span>
+                    </a>
+                )}
+                {/* Business Hours */}
+                {businessHours && (
+                    <div className="flex items-center gap-3">
+                        <Clock className={`${iconSize} shrink-0`} style={{ color: accentColor }} />
+                        <span className={textSize} style={{ color: textColor }}>{businessHours}</span>
+                    </div>
+                )}
+            </div>
+        );
+    };
+
+    // Shared map renderer (Google or OSM fallback)
+    const renderMapEmbed = () => {
+        if (!hasValidApiKey || loadError) return renderOsmIframe();
         if (!isLoaded) {
             return (
                 <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
                     <div className="text-center">
-                        <div className="w-12 h-12 border-4 border-gray-300 border-t-blue-500 rounded-full animate-spin mx-auto mb-4"></div>
-                        <p className="text-gray-500">Loading Map...</p>
+                        <div className="w-12 h-12 border-4 border-gray-300 border-t-blue-500 rounded-full animate-spin mx-auto mb-4" />
+                        <p className="text-gray-500">{loadingText}</p>
                     </div>
                 </div>
             );
         }
+        return renderGoogleMap();
+    };
 
-        // ESTILO 1: MODERN - Tarjeta lateral con información completa
+    const renderContent = () => {
+        const accentColor = colors?.accent || primaryColor;
+
+        // ═══════════════════════════════════════════
+        // ESTILO 1: MODERN — Split layout (info + map)
+        // ═══════════════════════════════════════════
         if (mapVariant === 'modern') {
             return (
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-0" style={{ height: `${height}px` }}>
-                    {/* Info Card - Left Side */}
-                    <div className="lg:col-span-1 p-8 flex flex-col justify-center" style={{ backgroundColor: mapColors.cardBackground }}>
-                        <div className="mb-6">
-                            <div className="w-12 h-12 rounded-full flex items-center justify-center mb-4" style={{ backgroundColor: colors?.accent + '20' }}>
-                                <MapPin className="w-6 h-6" style={{ color: colors?.accent }} />
+                <div className="grid grid-cols-1 lg:grid-cols-5 gap-0" style={{ height: `${height}px` }}>
+                    {/* Info Card - Left Side (2/5) */}
+                    <div
+                        className="lg:col-span-2 p-8 lg:p-10 flex flex-col justify-center"
+                        style={{ backgroundColor: mapColors.cardBackground }}
+                    >
+                        <div className="mb-8">
+                            <div
+                                className="w-14 h-14 rounded-2xl flex items-center justify-center mb-5"
+                                style={{ backgroundColor: accentColor + '15' }}
+                            >
+                                <MapPin className="w-7 h-7" style={{ color: accentColor }} />
                             </div>
-                            <h3 className="text-2xl font-bold mb-2" style={{ color: mapColors.heading }}>{title}</h3>
-                            <p className="text-sm mb-6" style={{ color: colors?.text }}>{description}</p>
+                            <h3
+                                className="text-2xl lg:text-3xl font-bold mb-3 font-header"
+                                style={{ color: mapColors.heading }}
+                            >
+                                {title}
+                            </h3>
+                            <p className="text-sm leading-relaxed opacity-80" style={{ color: colors?.text }}>
+                                {description}
+                            </p>
                         </div>
 
-                        <div className="space-y-4">
-                            <div className="flex items-start gap-3">
-                                <MapPin className="w-5 h-5 mt-0.5 shrink-0" style={{ color: colors?.accent }} />
-                                <span className="text-sm" style={{ color: colors?.text }}>{address}</span>
-                            </div>
-                            <a 
-                                href={`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`} 
-                                target="_blank" 
-                                rel="noreferrer"
-                                className="flex items-center gap-3 group"
-                            >
-                                <Navigation className="w-5 h-5 shrink-0" style={{ color: colors?.accent }} />
-                                <span className="text-sm font-medium group-hover:underline" style={{ color: colors?.accent }}>Get Directions →</span>
-                            </a>
+                        {/* Contact details */}
+                        <div className="mb-8">
+                            {renderContactInfo(colors?.text || '#94a3b8', accentColor)}
                         </div>
+
+                        {/* CTA Button */}
+                        <a
+                            href={directionsUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm transition-all duration-300 hover:scale-[1.02] hover:shadow-lg"
+                            style={{ backgroundColor: accentColor, color: '#ffffff' }}
+                        >
+                            <Navigation className="w-4 h-4" />
+                            {directionsText}
+                        </a>
                     </div>
 
-                    {/* Map - Right Side */}
-                    <div className="lg:col-span-2 relative">
-                        <GoogleMap
-                            mapContainerStyle={containerStyle}
-                            center={center}
-                            zoom={zoom}
-                            options={options}
-                        >
-                            <Marker position={center} />
-                        </GoogleMap>
+                    {/* Map - Right Side (3/5) */}
+                    <div className="lg:col-span-3 relative">
+                        {renderMapEmbed()}
                     </div>
                 </div>
             );
         }
 
-        // ESTILO 2: MINIMAL - Mapa limpio con badge flotante
+        // ═══════════════════════════════════════════
+        // ESTILO 2: MINIMAL — Clean map with floating badge
+        // ═══════════════════════════════════════════
         if (mapVariant === 'minimal') {
             return (
-                <div className="relative" style={{ height: `${height}px` }}>
-                    <GoogleMap
-                        mapContainerStyle={containerStyle}
-                        center={center}
-                        zoom={zoom}
-                        options={options}
-                    >
-                        <Marker position={center} />
-                    </GoogleMap>
-                    
-                    {/* Floating Badge */}
-                    <div className="absolute bottom-6 left-6 bg-white rounded-2xl p-4 max-w-xs backdrop-blur-sm border border-gray-200">
-                        <div className="flex items-start gap-3">
-                            <div className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: colors?.accent + '20' }}>
-                                <MapPin className="w-5 h-5" style={{ color: colors?.accent }} />
+                <div className="relative w-full" style={{ height: `${height}px` }}>
+                    {renderMapEmbed()}
+                    {/* Floating Badge - bottom left */}
+                    <div className="absolute bottom-6 left-6 bg-white/95 backdrop-blur-md rounded-2xl p-5 max-w-sm border border-gray-100 shadow-xl">
+                        <div className="flex items-start gap-4">
+                            <div
+                                className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0"
+                                style={{ backgroundColor: accentColor + '15' }}
+                            >
+                                <MapPin className="w-5 h-5" style={{ color: accentColor }} />
                             </div>
-                            <div>
-                                <p className="text-xs font-medium text-gray-900 mb-1">{title}</p>
-                                <p className="text-xs text-gray-600">{address}</p>
+                            <div className="min-w-0">
+                                <p className="text-sm font-bold text-gray-900 mb-1 truncate">{title}</p>
+                                <p className="text-xs text-gray-500 mb-3">{address}</p>
+                                {phone && (
+                                    <p className="text-xs text-gray-500 flex items-center gap-1.5 mb-1">
+                                        <Phone className="w-3 h-3" style={{ color: accentColor }} />
+                                        {phone}
+                                    </p>
+                                )}
+                                <a
+                                    href={directionsUrl}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="inline-flex items-center gap-1.5 text-xs font-semibold mt-1 transition-colors hover:opacity-80"
+                                    style={{ color: accentColor }}
+                                >
+                                    <Navigation className="w-3.5 h-3.5" />
+                                    {directionsText} →
+                                </a>
                             </div>
                         </div>
                     </div>
@@ -283,77 +344,71 @@ const BusinessMap: React.FC<BusinessMapProps> = ({
             );
         }
 
-        // ESTILO 3: DARK-TECH - Estilo tecnológico con overlay
+        // ═══════════════════════════════════════════
+        // ESTILO 3: DARK-TECH — Tech overlay card
+        // ═══════════════════════════════════════════
         if (mapVariant === 'dark-tech') {
             return (
-                <div className="relative" style={{ height: `${height}px` }}>
-                    <GoogleMap
-                        mapContainerStyle={containerStyle}
-                        center={center}
-                        zoom={zoom}
-                        options={options}
-                    >
-                        <Marker position={center} />
-                    </GoogleMap>
-                    
-                    {/* Tech Overlay Card */}
-                    <div className="absolute top-6 right-6 bg-gradient-to-br from-gray-900/95 to-black/95 backdrop-blur-md rounded-xl p-6 max-w-sm border border-gray-700">
-                        <div className="flex items-center gap-3 mb-4">
-                            <div className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: colors?.accent }}></div>
-                            <span className="text-xs font-mono uppercase tracking-wider text-gray-400">Location</span>
+                <div className="relative w-full" style={{ height: `${height}px` }}>
+                    {renderMapEmbed()}
+                    {/* Tech Overlay Card - top right */}
+                    <div className="absolute top-6 right-6 bg-gradient-to-br from-gray-900/95 to-gray-950/95 backdrop-blur-xl rounded-2xl p-6 max-w-sm border border-white/10 shadow-2xl">
+                        <div className="flex items-center gap-3 mb-5">
+                            <div className="w-2.5 h-2.5 rounded-full animate-pulse" style={{ backgroundColor: accentColor }} />
+                            <span className="text-xs font-mono uppercase tracking-widest text-gray-400">
+                                {locationLabel}
+                            </span>
                         </div>
-                        <h3 className="text-lg font-bold text-white mb-2">{title}</h3>
-                        <p className="text-sm text-gray-400 mb-4">{description}</p>
-                        
-                        <div className="space-y-3">
-                            <div className="flex items-start gap-3">
-                                <MapPin className="w-4 h-4 mt-0.5 shrink-0 text-gray-400" />
-                                <span className="text-xs text-gray-300">{address}</span>
-                            </div>
-                            <a 
-                                href={`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`} 
-                                target="_blank" 
-                                rel="noreferrer"
-                                className="inline-flex items-center gap-2 text-xs font-medium px-4 py-2 rounded-lg transition-all hover:translate-x-1"
-                                style={{ backgroundColor: colors?.accent, color: '#ffffff' }}
-                            >
-                                <Navigation className="w-4 h-4" />
-                                Navigate
-                            </a>
-                        </div>
+                        <h3 className="text-lg font-bold text-white mb-2 font-header">{title}</h3>
+                        <p className="text-sm text-gray-400 mb-5 leading-relaxed">{description}</p>
+
+                        {/* Contact info */}
+                        {renderContactInfo('#cbd5e1', accentColor, true)}
+
+                        {/* Navigate button */}
+                        <a
+                            href={directionsUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="mt-5 inline-flex items-center gap-2 text-xs font-semibold px-5 py-2.5 rounded-xl transition-all duration-300 hover:translate-x-1 hover:shadow-lg"
+                            style={{ backgroundColor: accentColor, color: '#ffffff' }}
+                        >
+                            <Navigation className="w-4 h-4" />
+                            {navigateText}
+                        </a>
                     </div>
                 </div>
             );
         }
 
-        // ESTILO 4: RETRO/NIGHT - Mapa completo con barra inferior
+        // ═══════════════════════════════════════════
+        // ESTILO 4: NIGHT (default) — Full map with bottom gradient bar
+        // ═══════════════════════════════════════════
         return (
-            <div className="relative" style={{ height: `${height}px` }}>
-                <GoogleMap
-                    mapContainerStyle={containerStyle}
-                    center={center}
-                    zoom={zoom}
-                    options={options}
-                >
-                    <Marker position={center} />
-                </GoogleMap>
-                
+            <div className="relative w-full" style={{ height: `${height}px` }}>
+                {renderMapEmbed()}
                 {/* Bottom Info Bar */}
-                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-r from-gray-900/95 to-gray-800/95 backdrop-blur-md p-6 border-t border-gray-700">
-                    <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-gray-900/95 via-gray-900/80 to-transparent pt-16 pb-6 px-6">
+                    <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-end md:justify-between gap-4">
                         <div className="flex-1">
-                            <h3 className="text-xl font-bold text-white mb-1">{title}</h3>
-                            <p className="text-sm text-gray-300">{address}</p>
+                            <h3 className="text-xl font-bold text-white mb-1 font-header">{title}</h3>
+                            <p className="text-sm text-gray-300 mb-1">{address}</p>
+                            {phone && (
+                                <p className="text-sm text-gray-400 flex items-center gap-2">
+                                    <Phone className="w-3.5 h-3.5" style={{ color: accentColor }} />
+                                    {phone}
+                                </p>
+                            )}
                         </div>
-                        <a 
-                            href={`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`} 
-                            target="_blank" 
+                        <a
+                            href={directionsUrl}
+                            target="_blank"
                             rel="noreferrer"
-                            className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-medium transition-all hover:scale-105 shrink-0"
-                            style={{ backgroundColor: colors?.accent, color: '#ffffff' }}
+                            className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm transition-all duration-300 hover:scale-105 hover:shadow-lg shrink-0"
+                            style={{ backgroundColor: accentColor, color: '#ffffff' }}
                         >
                             <Navigation className="w-5 h-5" />
-                            Get Directions
+                            {directionsText}
                         </a>
                     </div>
                 </div>

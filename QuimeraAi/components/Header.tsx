@@ -177,6 +177,8 @@ const Header: React.FC<HeaderData & {
   backgroundColor?: string;
   /** Top-level textColor prop from editor */
   textColor?: string;
+  /** Pixel offset to push floating headers below the TopBar */
+  topBarOffset?: number;
   /** Alternative prop names from editor */
   logoImage?: string;
   showLoginButton?: boolean;
@@ -185,7 +187,7 @@ const Header: React.FC<HeaderData & {
   sticky?: boolean;
   transparent?: boolean;
 }> = ({
-  style = 'sticky-solid', layout, isSticky, glassEffect, height,
+  style: rawStyle = 'sticky-solid', layout, isSticky, glassEffect, height,
   logoType, logoText, logoImageUrl, logoWidth,
   links = [], hoverStyle,
   ctaText, showCta, ctaUrl, buttonBorderRadius,
@@ -196,6 +198,7 @@ const Header: React.FC<HeaderData & {
   cartItemCount = 0,
   onCartClick,
   colors = {},
+  gradientFadeSize = 30,
   isPreviewMode = false,
   containerRef,
   linkFontSize = 14,
@@ -204,6 +207,7 @@ const Header: React.FC<HeaderData & {
   onNavigate,
   backgroundColor, // Accept top-level color prop from editor
   textColor, // Accept top-level color prop from editor
+  topBarOffset: topBarOffsetProp, // Pixel offset from TopBar above
   // Alternative prop names from editor
   logoImage,
   showLoginButton,
@@ -218,7 +222,47 @@ const Header: React.FC<HeaderData & {
     const actualShowCta = showCta ?? showRegisterButton;
     const actualCtaText = ctaText || registerText;
     const actualIsSticky = isSticky ?? sticky;
-    const actualStyle = transparent ? 'sticky-transparent' : style;
+    let style = transparent ? 'sticky-transparent' : rawStyle;
+    if (style === 'transparent') style = 'sticky-transparent'; // Map legacy transparent style
+
+    // TopBar offset for floating styles - measure actual TopBar element if present
+    const [measuredTopBarOffset, setMeasuredTopBarOffset] = useState(0);
+    const headerRef = useRef<HTMLElement>(null);
+    useEffect(() => {
+      const measure = () => {
+        // Strategy 1: Look for TopBar wrapper (rendered right before Header in LandingPage)
+        const headerEl = headerRef.current;
+        if (headerEl) {
+          const prevSibling = headerEl.previousElementSibling;
+          if (prevSibling && prevSibling.id === 'topBar-above') {
+            setMeasuredTopBarOffset(prevSibling.getBoundingClientRect().height);
+            return;
+          }
+        }
+        // Strategy 2: Search by ID in the document
+        const topBarEl = document.getElementById('site-topbar');
+        if (topBarEl && topBarEl.offsetHeight > 0) {
+          setMeasuredTopBarOffset(topBarEl.getBoundingClientRect().height);
+          return;
+        }
+        // No TopBar found or not visible
+        setMeasuredTopBarOffset(0);
+      };
+
+      // Measure on mount and after a frame (to let React finish rendering)
+      measure();
+      const raf = requestAnimationFrame(measure);
+
+      // Re-measure periodically to catch visibility toggles
+      const interval = setInterval(measure, 300);
+
+      return () => {
+        cancelAnimationFrame(raf);
+        clearInterval(interval);
+      };
+    }, [style]);
+    // Use prop if provided, else measured value
+    const resolvedTopBarOffset = topBarOffsetProp ?? measuredTopBarOffset;
     // Use safe versions of hooks that work outside ProjectProvider (for public preview)
     const projectContext = useSafeProject();
     const previewRef = containerRef || null;
@@ -324,21 +368,23 @@ const Header: React.FC<HeaderData & {
         case 'edge-solid':
           return 'w-full rounded-none';
         case 'edge-minimal':
-          return 'w-full rounded-none border-b border-transparent';
+          return 'w-full rounded-none border-b';
         case 'edge-bordered':
           return 'w-full rounded-none border-b-2';
 
         // --- FLOTANTES ---
+        // Note: `top` is handled via inline style to account for topBarOffset
         case 'floating':
-          return `${isPreviewMode ? 'absolute' : 'fixed'} top-6 left-6 right-6 rounded-2xl border border-white/10 max-w-7xl mx-auto`;
+          return `${isPreviewMode ? 'absolute' : 'fixed'} left-6 right-6 rounded-2xl border border-white/10 max-w-7xl mx-auto`;
         case 'floating-pill':
-          return `${isPreviewMode ? 'absolute' : 'fixed'} top-4 left-1/2 -translate-x-1/2 rounded-full border border-white/15 shadow-lg`;
+          return `${isPreviewMode ? 'absolute' : 'fixed'} left-1/2 -translate-x-1/2 rounded-full border border-white/15 shadow-lg`;
         case 'floating-glass':
-          return `${isPreviewMode ? 'absolute' : 'fixed'} top-6 left-6 right-6 rounded-xl border border-white/20 max-w-7xl mx-auto`;
+          return `${isPreviewMode ? 'absolute' : 'fixed'} left-6 right-6 rounded-xl border border-white/20 max-w-7xl mx-auto`;
         case 'floating-shadow':
-          return `${isPreviewMode ? 'absolute' : 'fixed'} top-6 left-8 right-8 rounded-none shadow-[0_8px_40px_rgba(0,0,0,0.45)] max-w-6xl mx-auto`;
+          return `${isPreviewMode ? 'absolute' : 'fixed'} left-8 right-8 rounded-none shadow-[0_8px_40px_rgba(0,0,0,0.45)] max-w-6xl mx-auto`;
 
         // --- TRANSPARENTES ---
+        case 'transparent':
         case 'sticky-transparent':
           return 'w-full border-b border-transparent';
         case 'transparent-blur':
@@ -364,7 +410,13 @@ const Header: React.FC<HeaderData & {
         case 'edge-solid':
           return { backgroundColor: actualColors.background };
         case 'edge-minimal':
-          return { backgroundColor: actualColors.background };
+          return { 
+            backgroundColor: `${actualColors.background}E6`, // 90% opacity (E6)
+            backdropFilter: 'blur(12px)',
+            WebkitBackdropFilter: 'blur(12px)',
+            borderBottom: '1px solid rgba(128, 128, 128, 0.15)',
+            boxShadow: '0 4px 30px rgba(0, 0, 0, 0.03)'
+          };
         case 'edge-bordered':
           return {
             backgroundColor: actualColors.background,
@@ -388,6 +440,7 @@ const Header: React.FC<HeaderData & {
           return { backgroundColor: actualColors.background };
 
         // --- TRANSPARENTES ---
+        case 'transparent':
         case 'sticky-transparent':
           return { backgroundColor: isTransparent ? 'transparent' : actualColors.background };
         case 'transparent-blur':
@@ -401,15 +454,19 @@ const Header: React.FC<HeaderData & {
             borderColor: 'rgba(255,255,255,0.2)'
           };
         case 'transparent-gradient': {
-          const edgeColor = colors?.gradientFadeColor || actualColors.text;
+          const fadeSize = typeof gradientFadeSize === 'number' ? gradientFadeSize : 30;
+          const startPercent = Math.max(0, 100 - fadeSize);
+          const edgeColor = colors?.gradientFadeColor || `color-mix(in srgb, ${actualColors.background}, white 30%)`;
           return {
-            background: `linear-gradient(180deg, ${edgeColor} 0%, ${actualColors.background} 30%, ${actualColors.background} 70%, ${edgeColor} 100%)`
+            background: `linear-gradient(180deg, ${actualColors.background} 0%, ${actualColors.background} ${startPercent}%, ${edgeColor} 100%)`
           };
         }
         case 'transparent-gradient-dark': {
-          const edgeColor = colors?.gradientDarkColor || '#000000';
+          const fadeSize = typeof gradientFadeSize === 'number' ? gradientFadeSize : 30;
+          const startPercent = Math.max(0, 100 - fadeSize);
+          const edgeColor = colors?.gradientDarkColor || `color-mix(in srgb, ${actualColors.background}, black 35%)`;
           return {
-            background: `linear-gradient(180deg, ${edgeColor} 0%, ${actualColors.background} 30%, ${actualColors.background} 70%, ${edgeColor} 100%)`
+            background: `linear-gradient(180deg, ${actualColors.background} 0%, ${actualColors.background} ${startPercent}%, ${edgeColor} 100%)`
           };
         }
 
@@ -717,7 +774,7 @@ const Header: React.FC<HeaderData & {
       }
 
       // Edge styles - siempre sticky o relative
-      if (actualStyle.startsWith('edge-')) {
+      if (style.startsWith('edge-')) {
         return actualIsSticky ? 'sticky' : 'relative';
       }
 
@@ -747,15 +804,21 @@ const Header: React.FC<HeaderData & {
     // When forceSolid is true, always take space (the header is solid and visible)
     const shouldNotTakeSpace = !forceSolid && (
       style.startsWith('floating') ||
-      ((style.startsWith('transparent') || style === 'sticky-transparent') && !isScrolled && style !== 'transparent-blur' && style !== 'transparent-bordered' && style !== 'transparent-gradient' && style !== 'transparent-gradient-dark')
+      ((style.startsWith('transparent') || style === 'sticky-transparent' || style === 'transparent') && !isScrolled && style !== 'transparent-blur' && style !== 'transparent-bordered' && style !== 'transparent-gradient' && style !== 'transparent-gradient-dark')
     );
+
+    const activeTopBarOffset = isScrolled ? 0 : resolvedTopBarOffset;
 
     return (
       <>
         <header
-          className={`${positionClass} top-0 z-40 transition-all duration-500 ease-in-out ${style.includes('transparent') || style === 'sticky-transparent' ? 'w-full left-0 right-0' : ''
+          ref={headerRef}
+          className={`${positionClass} z-50 transition-all duration-500 ease-in-out ${style.includes('transparent') || style === 'sticky-transparent' ? 'w-full left-0 right-0' : ''
             }`}
-          style={{ height: shouldNotTakeSpace ? 0 : 'auto' }}
+          style={{ 
+            height: shouldNotTakeSpace ? 0 : 'auto',
+            top: `${activeTopBarOffset}px`
+          }}
         >
           {/* === SCROLL PROGRESS BAR === */}
           <div
@@ -771,6 +834,9 @@ const Header: React.FC<HeaderData & {
               } ${!style.startsWith('floating') && !style.includes('transparent') && !glassEffect ? shadowClasses : ''}`}
             style={{
               ...backgroundStyle,
+              ...(style.startsWith('floating') ? {
+                top: `${(style === 'floating-pill' ? 16 : 24) + resolvedTopBarOffset}px`,
+              } : {}),
               height: style.startsWith('floating') ? 'auto' : computedHeight,
               minHeight: style.startsWith('floating') ? 'auto' : computedMinHeight,
               padding: style.startsWith('floating')

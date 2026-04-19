@@ -1,12 +1,19 @@
 /**
  * Analyze Website Cloud Function
- * Uses Gemini URL Context tool to fetch and analyze websites directly.
- * Google's infrastructure handles the fetching, so CDN/WAF blocking is not an issue.
+ * 
+ * Analyzes a website URL to extract business information for onboarding.
+ * Uses OpenRouter API with Gemini models for AI analysis.
+ * 
+ * NOTE: The original implementation used Gemini's proprietary URL Context tool
+ * which allows the model to actively visit and crawl URLs. OpenRouter does not
+ * support this tool. Instead, we include the URL in the prompt and rely on the
+ * model's training knowledge and any available web grounding capabilities.
+ * 
  * Used in the onboarding flow (Step 0) for all users.
  */
 
 import * as functions from 'firebase-functions';
-import { GEMINI_CONFIG } from '../config';
+import { generateTextViaOpenRouter } from '../openrouterHelper';
 
 // ============================================================================
 // MAIN CLOUD FUNCTION
@@ -33,17 +40,9 @@ export const analyzeWebsite = functions
             normalizedUrl = `https://${normalizedUrl}`;
         }
 
-        functions.logger.info('Analyzing website with URL Context', { url: normalizedUrl, userId });
+        functions.logger.info('Analyzing website with OpenRouter', { url: normalizedUrl, userId });
 
         try {
-            const apiKey = GEMINI_CONFIG.apiKey;
-            if (!apiKey) {
-                throw new functions.https.HttpsError('internal', 'AI configuration error');
-            }
-
-            // Use Gemini 3.1 Flash Live Preview with URL Context tool
-            const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
-
             const prompt = `Visit this website: ${normalizedUrl}
 
 Analyze the website thoroughly and extract ALL available business information. Be very careful to separate address components into individual fields. Look in the footer, contact page, about page, and header for information.
@@ -97,38 +96,16 @@ CRITICAL RULES for accurate extraction:
 8. The description and tagline should be in the SAME LANGUAGE as the website content
 9. Return ONLY the JSON, nothing else`;
 
-            const geminiResponse = await fetch(geminiUrl, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    contents: [{ parts: [{ text: prompt }] }],
-                    tools: [{ url_context: {} }],
-                    generationConfig: {
-                        temperature: 0.2,
-                        maxOutputTokens: 4000,
-                    },
-                }),
+            const aiResult = await generateTextViaOpenRouter(prompt, {
+                model: 'gemini-2.5-flash',
+                temperature: 0.2,
+                maxOutputTokens: 4000,
             });
 
-            if (!geminiResponse.ok) {
-                const errorText = await geminiResponse.text();
-                functions.logger.error('Gemini API error', { status: geminiResponse.status, error: errorText });
-                throw new functions.https.HttpsError('internal', 'AI analysis failed. Please try again.');
-            }
-
-            const geminiData = await geminiResponse.json();
-
-            // Extract text from response (may have multiple parts with URL context)
-            const parts = geminiData?.candidates?.[0]?.content?.parts || [];
-            let responseText = '';
-            for (const part of parts) {
-                if (part.text) {
-                    responseText += part.text;
-                }
-            }
+            const responseText = aiResult.text;
 
             if (!responseText) {
-                functions.logger.error('Empty Gemini response', { geminiData: JSON.stringify(geminiData).slice(0, 500) });
+                functions.logger.error('Empty AI response');
                 throw new functions.https.HttpsError('internal', 'Could not analyze the website. Please try a different URL.');
             }
 
@@ -142,7 +119,7 @@ CRITICAL RULES for accurate extraction:
             try {
                 result = JSON.parse(jsonText);
             } catch (parseError) {
-                functions.logger.error('Failed to parse Gemini response', { responseText: responseText.slice(0, 500) });
+                functions.logger.error('Failed to parse AI response', { responseText: responseText.slice(0, 500) });
                 throw new functions.https.HttpsError('internal', 'Failed to parse analysis results. Please try again.');
             }
 
@@ -153,12 +130,6 @@ CRITICAL RULES for accurate extraction:
                         result.contactInfo[key] = null;
                     }
                 }
-            }
-
-            // Log URL context metadata if available
-            const urlContextMetadata = geminiData?.candidates?.[0]?.urlContextMetadata;
-            if (urlContextMetadata) {
-                functions.logger.info('URL Context metadata', { metadata: JSON.stringify(urlContextMetadata).slice(0, 300) });
             }
 
             functions.logger.info('Website analysis complete', {
@@ -172,6 +143,7 @@ CRITICAL RULES for accurate extraction:
                 hasCity: !!result.contactInfo?.city,
                 hasSocial: !!(result.contactInfo?.facebook || result.contactInfo?.instagram),
                 hasBusinessHours: !!result.contactInfo?.businessHours,
+                provider: aiResult.provider,
             });
 
             return {
@@ -192,4 +164,3 @@ CRITICAL RULES for accurate extraction:
             throw new functions.https.HttpsError('internal', `Analysis failed: ${error.message}`);
         }
     });
-

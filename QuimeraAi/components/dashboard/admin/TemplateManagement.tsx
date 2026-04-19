@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, Suspense } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useToast } from '../../../contexts/ToastContext';
 import { useAuth } from '../../../contexts/core/AuthContext';
@@ -28,7 +28,8 @@ import {
     Settings2,
     ShoppingCart,
     Loader2,
-    Megaphone
+    Megaphone,
+    Sparkles
 } from 'lucide-react';
 import { Project } from '../../../types';
 import ThumbnailEditor from '../../ui/ThumbnailEditor';
@@ -36,6 +37,9 @@ import ConfirmationModal from '../../ui/ConfirmationModal';
 import TemplateEditorModal from './TemplateEditorModal';
 import { INDUSTRIES, INDUSTRY_CATEGORIES } from '../../../data/industries';
 import { db, doc, setDoc } from '../../../firebase';
+
+// Lazy-load the AI Template Generator to avoid bloating this module
+const AITemplateGenerator = React.lazy(() => import('./AITemplateGenerator'));
 
 interface TemplateManagementProps {
     onBack: () => void;
@@ -60,6 +64,9 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
     const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'archived'>('all');
     const [sortBy, setSortBy] = useState<SortOption>('recent');
     const [viewMode, setViewMode] = useState<ViewMode>('grid');
+
+    // AI Generator
+    const [showAIGenerator, setShowAIGenerator] = useState(false);
 
     // Preview and Filters States
     const [previewTemplate, setPreviewTemplate] = useState<Project | null>(null);
@@ -350,6 +357,15 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                         >
                             <Filter className="w-5 h-5 sm:w-4 sm:h-4" />
                             <span className="hidden lg:inline ml-1.5">{t('superadmin.templateManagement.filters', 'Filters')}</span>
+                        </button>
+
+                        <button
+                            onClick={() => setShowAIGenerator(true)}
+                            className="flex items-center justify-center h-10 w-10 sm:h-9 sm:w-auto sm:px-3 rounded-lg text-sm font-medium transition-all bg-gradient-to-r from-yellow-500/10 to-amber-600/10 text-yellow-400 hover:from-yellow-500/20 hover:to-amber-600/20 border border-yellow-500/20"
+                            title="Generar Template con IA"
+                        >
+                            <Sparkles className="w-5 h-5 sm:w-4 sm:h-4" />
+                            <span className="hidden sm:inline ml-1.5">AI Generate</span>
                         </button>
 
                         <button onClick={createNewTemplate} className="flex items-center justify-center h-10 w-10 sm:h-9 sm:w-auto sm:px-3 rounded-lg text-sm font-medium transition-all text-editor-accent hover:bg-editor-accent/10">
@@ -1113,6 +1129,18 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                 confirmText={t('common.delete', 'Eliminar')}
                 cancelText={t('common.cancel', 'Cancelar')}
             />
+
+            {/* AI Template Generator Modal */}
+            {showAIGenerator && (
+                <Suspense fallback={null}>
+                    <AITemplateGenerator
+                        onClose={() => setShowAIGenerator(false)}
+                        onTemplateCreated={(id) => {
+                            console.log('✅ AI Template created:', id);
+                        }}
+                    />
+                </Suspense>
+            )}
         </div>
     );
 };

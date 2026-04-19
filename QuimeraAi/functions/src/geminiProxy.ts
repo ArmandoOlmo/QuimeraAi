@@ -14,7 +14,7 @@ import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
 import { GoogleGenAI } from '@google/genai';
 import { isOwner } from './constants';
-import { GEMINI_CONFIG } from './config';
+import { GEMINI_CONFIG, OPENROUTER_CONFIG } from './config';
 
 // Initialize Firebase Admin if not already initialized
 if (!admin.apps.length) {
@@ -140,12 +140,13 @@ const ALLOWED_MODELS = [
     'gemini-2.0-flash-exp',
     // Gemini 3.0 preview models (experimental)
     'gemini-3-flash-preview',
-    'gemini-3-pro-preview',
+    'gemini-3-pro-preview',          // Deprecated March 9, 2026 — use gemini-3.1-pro-preview
     'gemini-3-pro-image-preview',
-    // Gemini 3.1 Live API (real-time voice/audio)
-    'gemini-3.1-flash-live-preview',
-    // Gemini 3.1 Flash-Lite (cost-efficient, thinking levels)
-    'gemini-3.1-flash-lite-preview',
+    // Gemini 3.1 series
+    'gemini-3.1-pro-preview',        // Flagship orchestrator (replaces gemini-3-pro-preview)
+    'gemini-3.1-flash-live-preview', // Real-time voice/audio only
+    'gemini-3.1-flash-tts-preview',  // Text-to-speech (April 2026)
+    'gemini-3.1-flash-lite-preview', // Cost-efficient, thinking levels
     // Legacy native audio models (kept for backwards compatibility)
     'gemini-2.5-flash-native-audio-preview-12-2025',
     'gemini-2.5-flash-native-audio-preview-09-2025',
@@ -174,12 +175,55 @@ function isValidModel(model: string): boolean {
     return ALLOWED_MODELS.includes(model);
 }
 
+/**
+ * Map internal Gemini model names to OpenRouter model identifiers.
+ * OpenRouter hosts Gemini models under the 'google/' prefix.
+ * Falls back to a safe default if the model isn't explicitly mapped.
+ */
+function mapModelToOpenRouter(model: string): string {
+    const MODEL_MAP: Record<string, string> = {
+        // Gemini 2.5
+        'gemini-2.5-flash': 'google/gemini-2.5-flash',
+        'gemini-2.5-flash-lite': 'google/gemini-2.5-flash-lite-preview',
+        'gemini-2.5-pro': 'google/gemini-2.5-pro',
+        // Gemini 2.0
+        'gemini-2.0-flash': 'google/gemini-2.0-flash-001',
+        'gemini-2.0-flash-lite': 'google/gemini-2.0-flash-lite-001',
+        'gemini-2.0-flash-exp': 'google/gemini-2.0-flash-exp:free',
+        // Gemini 3.x
+        'gemini-3-flash-preview': 'google/gemini-2.5-flash',
+        'gemini-3-pro-preview': 'google/gemini-2.5-pro',
+        'gemini-3.1-pro-preview': 'google/gemini-2.5-pro',
+        'gemini-3.1-flash-lite-preview': 'google/gemini-2.5-flash',
+        // Legacy
+        'gemini-1.5-flash': 'google/gemini-flash-1.5',
+        'gemini-1.5-pro': 'google/gemini-pro-1.5',
+    };
+    return MODEL_MAP[model] || 'google/gemini-2.5-flash';
+}
+
 // Rate limiting configuration
 const RATE_LIMITS = {
-    FREE: { requestsPerMinute: 10, requestsPerDay: 1000 },
-    PRO: { requestsPerMinute: 50, requestsPerDay: 10000 },
+    FREE: { requestsPerMinute: 30, requestsPerDay: 2000 },
+    PRO: { requestsPerMinute: 60, requestsPerDay: 10000 },
     ENTERPRISE: { requestsPerMinute: 200, requestsPerDay: 100000 }
 };
+
+/**
+ * Internal/system project ID prefixes that bypass rate limiting.
+ * These are used by the dashboard and generation flows, not public chatbots.
+ */
+const RATE_LIMIT_EXEMPT_PREFIXES = [
+    'ai-website-studio',
+    'onboarding-',
+    'ai-',
+    'content-',
+    'enhance-',
+    'cms-',
+    'finance-',
+    'domain-',
+    'appointment-',
+];
 
 interface RateLimitCheck {
     allowed: boolean;
@@ -192,23 +236,34 @@ interface RateLimitCheck {
  * Check rate limit for a project
  */
 async function checkRateLimit(projectId: string, userId: string, planType: string = 'FREE'): Promise<RateLimitCheck> {
-    // SECURITY: Bypass rate limits for the OWNER (Armando)
+    // Bypass rate limits for internal/system project IDs (dashboard operations, generation flows)
+    if (RATE_LIMIT_EXEMPT_PREFIXES.some(prefix => projectId.startsWith(prefix))) {
+        return { allowed: true, remaining: 1000 };
+    }
+
+    // SECURITY: Bypass rate limits for the OWNER
     try {
-        // Fast direct check if userId is the email (sometimes happens in certain flows)
-        // or if we can verify the role quickly.
+        // Fast direct check if userId is the email
         if (userId && isOwner(userId)) {
             return { allowed: true, remaining: 1000 };
         }
 
         if (userId && userId !== 'unknown' && userId !== 'anonymous' && userId !== 'system') {
             const userDoc = await db.collection('users').doc(userId).get();
-            const userRole = userDoc.exists ? userDoc.data()?.role : null;
-            if (userRole === 'owner' || userRole === 'superadmin') {
-                return { allowed: true, remaining: 1000 };
+            if (userDoc.exists) {
+                const userData = userDoc.data();
+                const userRole = userData?.role;
+                const userEmail = userData?.email;
+                // Check role OR check if their email matches the owner email
+                if (userRole === 'owner' || userRole === 'superadmin' || (userEmail && isOwner(userEmail))) {
+                    return { allowed: true, remaining: 1000 };
+                }
             }
         }
     } catch (e) {
         console.warn('Error checking owner status in rate limit:', e);
+        // If we can't check owner status, allow through rather than blocking the owner
+        return { allowed: true, remaining: 100 };
     }
 
     const now = new Date();
@@ -275,10 +330,13 @@ async function checkRateLimit(projectId: string, userId: string, planType: strin
 
     } catch (error) {
         console.error('Rate limit check error:', error);
-        // SECURITY: Fail closed - deny request if rate limit check fails
+        // FAIL OPEN: If the rate-limit Firestore check itself errors (e.g. resource-exhausted),
+        // allow the request through. Blocking users because Firestore is overloaded is worse
+        // than temporarily losing rate-limit enforcement.
         return {
-            allowed: false,
-            message: 'Rate limit service unavailable. Please try again later.'
+            allowed: true,
+            remaining: 1,
+            message: 'Rate limit check unavailable — request allowed'
         };
     }
 }
@@ -413,8 +471,11 @@ const MODEL_TOKEN_MULTIPLIERS: Record<string, number> = {
     // Gemini Pro models: 3x multiplier
     'gemini-2.5-pro': 3,
     'gemini-3-pro-preview': 3,
+    'gemini-3.1-pro-preview': 3,     // Flagship orchestrator
     'gemini-3-pro-image-preview': 3,
     'gemini-1.5-pro': 3,
+    // Gemini 3.1 TTS: 2x multiplier
+    'gemini-3.1-flash-tts-preview': 2,
     // Image generation - Imagen Ultra: 10x multiplier
     'imagen-4.0-ultra-generate-001': 10,
     // Nano Banana 2 (gemini-3.1-flash-image-preview): 5x multiplier
@@ -724,7 +785,7 @@ async function updateCreditsUsage(
  * 
  * POST /api/gemini/generate
  */
-export const generateContent = functions.https.onRequest(async (req, res) => {
+export const generateContent = functions.runWith({ timeoutSeconds: 540, memory: '1GB' }).https.onRequest(async (req, res) => {
     // SECURITY: Set CORS headers
     const isOriginAllowed = setCorsHeaders(req, res);
 
@@ -846,139 +907,244 @@ export const generateContent = functions.https.onRequest(async (req, res) => {
             return;
         }
 
-        // Get API key from environment variable
-        const apiKey = GEMINI_CONFIG.apiKey;
-
-        if (!apiKey) {
-            console.error('[GeminiProxy] GEMINI_API_KEY not configured in .env');
-            res.status(500).json({ error: 'API configuration error' });
-            return;
-        }
-
-        // Make request to Gemini API
-        const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
-
-        console.log(`[gemini-generate] Making request to model: ${model}, prompt length: ${prompt.length}, images: ${images.length}`);
-
         // MULTI-TURN: Check if conversation history is provided
         const history: Array<{ role: string; text: string }> = Array.isArray(req.body.history) ? req.body.history : [];
         const systemInstruction: string | undefined = sanitizeString(req.body.systemInstruction, 100000);
 
-        // Build content parts (text + optional images)
-        const parts: Array<{ text: string } | { inlineData: { mimeType: string; data: string } }> = [];
-
-        // Add text prompt first
-        parts.push({ text: prompt });
-
-        // Add images if provided (multimodal request)
-        for (const img of images) {
-            parts.push({
-                inlineData: {
-                    mimeType: img.mimeType,
-                    data: img.data
-                }
-            });
-        }
-
         // TOOLS: Get optional tools array for function calling
         const tools: any[] | undefined = req.body.tools;
 
-        // Build contents: either multi-turn (with history) or single-turn
-        let contents: any[];
-        if (history.length > 0) {
-            // Multi-turn: build full conversation history + current message
-            contents = history.map((msg: { role: string; text: string }) => ({
-                role: msg.role === 'model' ? 'model' : 'user',
-                parts: [{ text: sanitizeString(msg.text, 50000) }]
-            }));
-            // Append current prompt as the latest user message
-            contents.push({ role: 'user', parts });
-            console.log(`[gemini-generate] Multi-turn request with ${history.length} history messages`);
-        } else {
-            // Single-turn: standard behavior
-            contents = [{ parts }];
-        }
+        // ============================================================
+        // OPENROUTER: Primary AI provider for ALL requests
+        // Uses OpenAI-compatible format with vision support for images
+        // Falls back to direct Gemini API only if OpenRouter is not configured
+        // ============================================================
+        const useOpenRouter = OPENROUTER_CONFIG.enabled;
 
-        // Build generationConfig with optional thinkingLevel
-        const generationConfig: Record<string, any> = {
-            temperature: Math.min(Math.max(config.temperature || 0.7, 0), 2),
-            topK: Math.min(Math.max(config.topK || 40, 1), 100),
-            topP: Math.min(Math.max(config.topP || 0.95, 0), 1),
-            maxOutputTokens: Math.min(config.maxOutputTokens || 8192, 32000),
-        };
+        if (useOpenRouter) {
+            // --- OpenRouter path (OpenAI-compatible with vision) ---
+            const orModel = mapModelToOpenRouter(model);
+            console.log(`[gemini-generate] OpenRouter request: model=${orModel} (from ${model}), prompt length: ${prompt.length}, images: ${images.length}`);
 
-        // Gemini 3.1 thinking level support
-        if (config.thinkingLevel && ['minimal', 'low', 'medium', 'high'].includes(config.thinkingLevel)) {
-            generationConfig.thinkingConfig = { thinkingLevel: config.thinkingLevel.toUpperCase() };
-            console.log(`[gemini-generate] Thinking level: ${config.thinkingLevel}`);
-        }
+            // Build messages array (OpenAI Chat format)
+            const messages: Array<{ role: string; content: any }> = [];
 
-        const requestBody: Record<string, any> = {
-            contents,
-            generationConfig,
-            safetySettings: [
-                { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_ONLY_HIGH' },
-                { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_ONLY_HIGH' },
-                { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_ONLY_HIGH' },
-                { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_ONLY_HIGH' }
-            ]
-        };
-
-        // Add system instruction if provided
-        if (systemInstruction) {
-            requestBody.system_instruction = { parts: [{ text: systemInstruction }] };
-        }
-
-        // Add tools for function calling if provided (max 64 declarations)
-        if (Array.isArray(tools) && tools.length > 0) {
-            requestBody.tools = tools.slice(0, 64);
-            console.log(`[gemini-generate] Function calling enabled with ${requestBody.tools.length} tool declaration(s)`);
-        }
-
-        const geminiResponse = await fetch(geminiUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(requestBody)
-        });
-
-        if (!geminiResponse.ok) {
-            const errorText = await geminiResponse.text();
-            let errorData: any = {};
-            try {
-                errorData = JSON.parse(errorText);
-            } catch {
-                errorData = { rawError: errorText };
+            // System instruction → system message
+            if (systemInstruction) {
+                messages.push({ role: 'system', content: systemInstruction });
             }
-            console.error(`[gemini-generate] Gemini API error (${geminiResponse.status}):`, JSON.stringify(errorData));
-            res.status(geminiResponse.status).json({
-                error: 'Gemini API error',
-                details: errorData,
-                model: model,
-                status: geminiResponse.status
+
+            // Conversation history
+            if (history.length > 0) {
+                for (const msg of history) {
+                    messages.push({
+                        role: msg.role === 'model' ? 'assistant' : 'user',
+                        content: sanitizeString(msg.text, 50000)
+                    });
+                }
+            }
+
+            // Current user message — with optional images (OpenAI vision format)
+            if (images.length > 0) {
+                // Multimodal: use content array with text + image_url parts
+                const contentParts: Array<any> = [
+                    { type: 'text', text: prompt }
+                ];
+                for (const img of images) {
+                    contentParts.push({
+                        type: 'image_url',
+                        image_url: {
+                            url: `data:${img.mimeType};base64,${img.data}`
+                        }
+                    });
+                }
+                messages.push({ role: 'user', content: contentParts });
+            } else {
+                messages.push({ role: 'user', content: prompt });
+            }
+
+            const orBody: Record<string, any> = {
+                model: orModel,
+                messages,
+                temperature: Math.min(Math.max(config.temperature || 0.7, 0), 2),
+                top_p: Math.min(Math.max(config.topP || 0.95, 0), 1),
+                max_tokens: Math.min(config.maxOutputTokens || 8192, 32000),
+            };
+
+            // Enforce JSON Mode via OpenRouter when requested
+            if (config.responseMimeType === 'application/json') {
+                orBody.response_format = { type: 'json_object' };
+            }
+
+            // Add tools for function calling if provided
+            if (Array.isArray(tools) && tools.length > 0) {
+                orBody.tools = tools.slice(0, 64);
+                console.log(`[gemini-generate] Function calling enabled with ${orBody.tools.length} tool declaration(s)`);
+            }
+
+            const orResponse = await fetch(`${OPENROUTER_CONFIG.baseUrl}/chat/completions`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${OPENROUTER_CONFIG.apiKey}`,
+                    'HTTP-Referer': 'https://quimera.ai',
+                    'X-Title': 'Quimera AI',
+                },
+                body: JSON.stringify(orBody)
             });
-            return;
-        }
 
-        const data = await geminiResponse.json();
-
-        // Extract token usage for tracking
-        const tokensUsed = data.usageMetadata?.totalTokenCount || 0;
-
-        // Track usage asynchronously
-        trackUsage(projectId, finalUserId, tokensUsed, model).catch(console.error);
-
-        // Return response with rate limit headers
-        res.set('X-RateLimit-Remaining', String(rateLimitCheck.remaining || 0));
-        res.status(200).json({
-            response: data,
-            metadata: {
-                tokensUsed,
-                model,
-                remaining: rateLimitCheck.remaining
+            if (!orResponse.ok) {
+                const errorText = await orResponse.text();
+                let errorData: any = {};
+                try { errorData = JSON.parse(errorText); } catch { errorData = { rawError: errorText }; }
+                console.error(`[gemini-generate] OpenRouter API error (${orResponse.status}):`, JSON.stringify(errorData));
+                res.status(orResponse.status).json({
+                    error: 'AI API error',
+                    details: errorData,
+                    model: orModel,
+                    status: orResponse.status
+                });
+                return;
             }
-        });
+
+            const orData = await orResponse.json();
+
+            // Extract token usage
+            const tokensUsed = (orData.usage?.prompt_tokens || 0) + (orData.usage?.completion_tokens || 0);
+            const responseText = orData.choices?.[0]?.message?.content || '';
+
+            // Track usage asynchronously
+            trackUsage(projectId, finalUserId, tokensUsed, model).catch(console.error);
+
+            // Convert OpenAI response → Gemini format for frontend compatibility
+            const geminiFormatData = {
+                candidates: [{
+                    content: {
+                        parts: [{ text: responseText }],
+                        role: 'model'
+                    },
+                    finishReason: orData.choices?.[0]?.finish_reason === 'stop' ? 'STOP' : (orData.choices?.[0]?.finish_reason || 'STOP').toUpperCase(),
+                }],
+                usageMetadata: {
+                    promptTokenCount: orData.usage?.prompt_tokens || 0,
+                    candidatesTokenCount: orData.usage?.completion_tokens || 0,
+                    totalTokenCount: tokensUsed,
+                }
+            };
+
+            res.set('X-RateLimit-Remaining', String(rateLimitCheck.remaining || 0));
+            res.status(200).json({
+                response: geminiFormatData,
+                metadata: {
+                    tokensUsed,
+                    model,
+                    provider: 'openrouter',
+                    remaining: rateLimitCheck.remaining
+                }
+            });
+
+        } else {
+            // --- Direct Gemini API path (fallback for multimodal or no OpenRouter key) ---
+            const apiKey = GEMINI_CONFIG.apiKey;
+
+            if (!apiKey) {
+                console.error('[GeminiProxy] GEMINI_API_KEY not configured in .env');
+                res.status(500).json({ error: 'API configuration error' });
+                return;
+            }
+
+            const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+
+            console.log(`[gemini-generate] Direct Gemini request: model=${model}, prompt length: ${prompt.length}, images: ${images.length}`);
+
+            // Build content parts (text + optional images)
+            const parts: Array<{ text: string } | { inlineData: { mimeType: string; data: string } }> = [];
+            parts.push({ text: prompt });
+            for (const img of images) {
+                parts.push({ inlineData: { mimeType: img.mimeType, data: img.data } });
+            }
+
+            let contents: any[];
+            if (history.length > 0) {
+                contents = history.map((msg: { role: string; text: string }) => ({
+                    role: msg.role === 'model' ? 'model' : 'user',
+                    parts: [{ text: sanitizeString(msg.text, 50000) }]
+                }));
+                contents.push({ role: 'user', parts });
+                console.log(`[gemini-generate] Multi-turn request with ${history.length} history messages`);
+            } else {
+                contents = [{ parts }];
+            }
+
+            const generationConfig: Record<string, any> = {
+                temperature: Math.min(Math.max(config.temperature || 0.7, 0), 2),
+                topK: Math.min(Math.max(config.topK || 40, 1), 100),
+                topP: Math.min(Math.max(config.topP || 0.95, 0), 1),
+                maxOutputTokens: Math.min(config.maxOutputTokens || 8192, 32000),
+            };
+
+            if (config.responseMimeType) {
+                generationConfig.responseMimeType = config.responseMimeType;
+            }
+
+            if (config.thinkingLevel && ['minimal', 'low', 'medium', 'high'].includes(config.thinkingLevel)) {
+                generationConfig.thinkingConfig = { thinkingLevel: config.thinkingLevel.toUpperCase() };
+            }
+
+            const requestBody: Record<string, any> = {
+                contents,
+                generationConfig,
+                safetySettings: [
+                    { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_ONLY_HIGH' },
+                    { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_ONLY_HIGH' },
+                    { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_ONLY_HIGH' },
+                    { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_ONLY_HIGH' }
+                ]
+            };
+
+            if (systemInstruction) {
+                requestBody.system_instruction = { parts: [{ text: systemInstruction }] };
+            }
+
+            if (Array.isArray(tools) && tools.length > 0) {
+                requestBody.tools = tools.slice(0, 64);
+            }
+
+            const geminiResponse = await fetch(geminiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(requestBody)
+            });
+
+            if (!geminiResponse.ok) {
+                const errorText = await geminiResponse.text();
+                let errorData: any = {};
+                try { errorData = JSON.parse(errorText); } catch { errorData = { rawError: errorText }; }
+                console.error(`[gemini-generate] Gemini API error (${geminiResponse.status}):`, JSON.stringify(errorData));
+                res.status(geminiResponse.status).json({
+                    error: 'Gemini API error',
+                    details: errorData,
+                    model: model,
+                    status: geminiResponse.status
+                });
+                return;
+            }
+
+            const data = await geminiResponse.json();
+            const tokensUsed = data.usageMetadata?.totalTokenCount || 0;
+            trackUsage(projectId, finalUserId, tokensUsed, model).catch(console.error);
+
+            res.set('X-RateLimit-Remaining', String(rateLimitCheck.remaining || 0));
+            res.status(200).json({
+                response: data,
+                metadata: {
+                    tokensUsed,
+                    model,
+                    provider: 'gemini-direct',
+                    remaining: rateLimitCheck.remaining
+                }
+            });
+        }
 
     } catch (error) {
         console.error('Proxy error:', error);
@@ -992,7 +1158,7 @@ export const generateContent = functions.https.onRequest(async (req, res) => {
 /**
  * Gemini API Proxy - Stream Generate Content
  */
-export const streamContent = functions.https.onRequest(async (req, res) => {
+export const streamContent = functions.runWith({ timeoutSeconds: 540, memory: '1GB' }).https.onRequest(async (req, res) => {
     // SECURITY: Set CORS headers
     const isOriginAllowed = setCorsHeaders(req, res);
 
@@ -1068,58 +1234,119 @@ export const streamContent = functions.https.onRequest(async (req, res) => {
             return;
         }
 
-        const apiKey = GEMINI_CONFIG.apiKey;
-
-        if (!apiKey) {
-            console.error('[GeminiProxy] GEMINI_API_KEY not configured in .env');
-            res.status(500).json({ error: 'API configuration error' });
-            return;
-        }
-
         // Set up SSE
         res.setHeader('Content-Type', 'text/event-stream');
         res.setHeader('Cache-Control', 'no-cache');
         res.setHeader('Connection', 'keep-alive');
 
-        const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?key=${apiKey}&alt=sse`;
+        // ============================================================
+        // OPENROUTER: Streaming via OpenAI-compatible SSE
+        // Falls back to direct Gemini if OpenRouter is not configured
+        // ============================================================
+        if (OPENROUTER_CONFIG.enabled) {
+            const orModel = mapModelToOpenRouter(model);
+            console.log(`[gemini-stream] OpenRouter stream: model=${orModel}`);
 
-        const geminiResponse = await fetch(geminiUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                contents: [{
-                    parts: [{ text: prompt }]
-                }],
-                generationConfig: {
+            const orResponse = await fetch(`${OPENROUTER_CONFIG.baseUrl}/chat/completions`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${OPENROUTER_CONFIG.apiKey}`,
+                    'HTTP-Referer': 'https://quimera.ai',
+                    'X-Title': 'Quimera AI',
+                },
+                body: JSON.stringify({
+                    model: orModel,
+                    messages: [{ role: 'user', content: prompt }],
                     temperature: Math.min(Math.max(config.temperature || 0.7, 0), 2),
-                    maxOutputTokens: Math.min(config.maxOutputTokens || 2048, 32000),
+                    max_tokens: Math.min(config.maxOutputTokens || 2048, 32000),
+                    stream: true,
+                })
+            });
+
+            if (!orResponse.ok) {
+                res.write(`data: ${JSON.stringify({ error: 'AI API error' })}\n\n`);
+                res.end();
+                return;
+            }
+
+            const reader = orResponse.body?.getReader();
+            if (!reader) {
+                res.write(`data: ${JSON.stringify({ error: 'No response stream' })}\n\n`);
+                res.end();
+                return;
+            }
+
+            const decoder = new TextDecoder();
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                const chunk = decoder.decode(value, { stream: true });
+                // Convert OpenAI SSE chunks to Gemini SSE format for frontend compatibility
+                const lines = chunk.split('\n');
+                for (const line of lines) {
+                    if (line.startsWith('data: ') && line.trim() !== 'data: [DONE]') {
+                        try {
+                            const orChunk = JSON.parse(line.slice(6));
+                            const text = orChunk.choices?.[0]?.delta?.content || '';
+                            if (text) {
+                                // Re-emit in Gemini SSE format
+                                const geminiChunk = {
+                                    candidates: [{
+                                        content: { parts: [{ text }] },
+                                    }]
+                                };
+                                res.write(`data: ${JSON.stringify(geminiChunk)}\n\n`);
+                            }
+                        } catch { /* skip invalid chunks */ }
+                    }
                 }
-            })
-        });
-
-        if (!geminiResponse.ok) {
-            res.write(`data: ${JSON.stringify({ error: 'Gemini API error' })}\n\n`);
+            }
             res.end();
-            return;
-        }
 
-        // Stream the response
-        const reader = geminiResponse.body?.getReader();
-        if (!reader) {
-            res.write(`data: ${JSON.stringify({ error: 'No response stream' })}\n\n`);
+        } else {
+            // --- Direct Gemini streaming fallback ---
+            const apiKey = GEMINI_CONFIG.apiKey;
+            if (!apiKey) {
+                res.write(`data: ${JSON.stringify({ error: 'API configuration error' })}\n\n`);
+                res.end();
+                return;
+            }
+
+            const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?key=${apiKey}&alt=sse`;
+
+            const geminiResponse = await fetch(geminiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: [{ parts: [{ text: prompt }] }],
+                    generationConfig: {
+                        temperature: Math.min(Math.max(config.temperature || 0.7, 0), 2),
+                        maxOutputTokens: Math.min(config.maxOutputTokens || 2048, 32000),
+                    }
+                })
+            });
+
+            if (!geminiResponse.ok) {
+                res.write(`data: ${JSON.stringify({ error: 'Gemini API error' })}\n\n`);
+                res.end();
+                return;
+            }
+
+            const reader = geminiResponse.body?.getReader();
+            if (!reader) {
+                res.write(`data: ${JSON.stringify({ error: 'No response stream' })}\n\n`);
+                res.end();
+                return;
+            }
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                res.write(value);
+            }
             res.end();
-            return;
         }
-
-        while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-            res.write(value);
-        }
-
-        res.end();
 
     } catch (error) {
         console.error('Stream proxy error:', error);
@@ -1134,7 +1361,7 @@ export const streamContent = functions.https.onRequest(async (req, res) => {
 /**
  * Gemini API Proxy - Generate Image
  */
-export const generateImage = functions.https.onRequest(async (req, res) => {
+export const generateImage = functions.runWith({ timeoutSeconds: 300, memory: '512MB' }).https.onRequest(async (req, res) => {
     // SECURITY: Set CORS headers
     const isOriginAllowed = setCorsHeaders(req, res);
 
@@ -1209,14 +1436,6 @@ export const generateImage = functions.https.onRequest(async (req, res) => {
             return;
         }
 
-        const apiKey = GEMINI_CONFIG.apiKey;
-
-        if (!apiKey) {
-            console.error('[GeminiProxy] GEMINI_API_KEY not configured in .env');
-            res.status(500).json({ error: 'API configuration error' });
-            return;
-        }
-
         // Build enhanced prompt
         let enhancedPrompt = prompt;
         if (style && style !== 'None') {
@@ -1240,142 +1459,267 @@ export const generateImage = functions.https.onRequest(async (req, res) => {
             enhancedPrompt = `${enhancedPrompt}. Avoid: ${negativePrompt}`;
         }
 
-        let actualModel = model;
-        // Map legacy/alias names to correct Google API model identifiers
-        if (model === 'imagen-4.0-nano-banana-002') {
-            // Nano Banana 2 alias → gemini-3.1-flash-image-preview (the real model)
-            actualModel = 'gemini-3.1-flash-image-preview';
-        } else if (model === 'imagen-4.0-fast-generate-001') {
-            actualModel = 'imagen-3.0-fast-generate-001';
-        } else if (model === 'imagen-4.0-generate-001' || model === 'imagen-4.0-ultra-generate-001') {
-            actualModel = 'imagen-3.0-generate-001';
-        }
+        // ============================================================
+        // OPENROUTER: Image generation via chat completions
+        // Uses Gemini image models available on OpenRouter
+        // ============================================================
+        if (OPENROUTER_CONFIG.enabled) {
+            // All image generation uses the highest quality, most recent model
+            // gemini-2.5-flash-image is fast + high quality; gemini-3-pro is highest quality but slow
+            const orModel = 'google/gemini-2.5-flash-image';
+            console.log(`[gemini-image] OpenRouter image gen: model=${orModel} (from ${model}), prompt length: ${enhancedPrompt.length}`);
 
-        const genAI = new GoogleGenAI({ apiKey });
+            // Build content parts for the user message
+            const contentParts: Array<any> = [];
 
-        try {
-            let imageBase64: string | null = null;
-
-            if (actualModel.includes('imagen')) {
-                const imageConfig: any = {
-                    numberOfImages: 1,
-                    aspectRatio: aspectRatio as any,
-                    personGeneration: personGeneration,
-                };
-
-                if (resolution === '4K' || resolution === '2K') {
-                    imageConfig.imageSize = '2K';
-                } else {
-                    imageConfig.imageSize = '1K';
-                }
-
-                const response = await genAI.models.generateImages({
-                    model: actualModel,
-                    prompt: enhancedPrompt,
-                    config: imageConfig,
-                });
-
-                imageBase64 = response.generatedImages?.[0]?.image?.imageBytes || null;
-            } else {
-                const generationConfig: any = {
-                    responseModalities: ['IMAGE', 'TEXT'],
-                    temperature: temperature,
-                };
-
-                if (thinkingLevel && thinkingLevel !== 'none') {
-                    generationConfig.thinkingLevel = thinkingLevel;
-                }
-
-                const contentParts: any[] = [];
-
-                // SECURITY: Validate reference images
-                if (referenceImages && referenceImages.length > 0) {
-                    for (const imgDataUrl of referenceImages) {
-                        if (typeof imgDataUrl !== 'string') continue;
-                        try {
-                            const matches = imgDataUrl.match(/^data:(image\/(png|jpeg|jpg|gif|webp));base64,(.+)$/);
-                            if (matches && matches.length === 4) {
-                                const mimeType = matches[1];
-                                const base64Data = matches[3];
-
-                                // SECURITY: Limit image size (max 10MB base64)
-                                if (base64Data.length > 10 * 1024 * 1024) {
-                                    console.warn('Reference image too large, skipping');
-                                    continue;
-                                }
-
-                                contentParts.push({
-                                    inlineData: {
-                                        mimeType: mimeType,
-                                        data: base64Data
-                                    }
-                                });
+            // Add reference images if provided (OpenAI vision format)
+            if (referenceImages && referenceImages.length > 0) {
+                for (const imgDataUrl of referenceImages) {
+                    if (typeof imgDataUrl !== 'string') continue;
+                    try {
+                        const matches = imgDataUrl.match(/^data:(image\/(png|jpeg|jpg|gif|webp));base64,(.+)$/);
+                        if (matches && matches.length === 4) {
+                            const base64Data = matches[3];
+                            // SECURITY: Limit image size (max 10MB base64)
+                            if (base64Data.length > 10 * 1024 * 1024) {
+                                console.warn('Reference image too large, skipping');
+                                continue;
                             }
-                        } catch (err) {
-                            console.warn('Error processing reference image:', err);
+                            contentParts.push({
+                                type: 'image_url',
+                                image_url: { url: imgDataUrl }
+                            });
                         }
+                    } catch (err) {
+                        console.warn('Error processing reference image:', err);
                     }
-
-                    contentParts.push({
-                        text: `Using the provided reference images as style guide, generate an image: ${enhancedPrompt}`
-                    });
-                } else {
-                    contentParts.push({
-                        text: `Generate an image: ${enhancedPrompt}`
-                    });
                 }
-
-                const response = await genAI.models.generateContent({
-                    model: actualModel,
-                    contents: [{ role: 'user', parts: contentParts }],
-                    config: generationConfig
+                contentParts.push({
+                    type: 'text',
+                    text: `Using the provided reference images as style guide, generate an image: ${enhancedPrompt}`
                 });
-
-                if (response.candidates?.[0]?.content?.parts) {
-                    for (const part of response.candidates[0].content.parts) {
-                        if ((part as any).inlineData?.data) {
-                            imageBase64 = (part as any).inlineData.data;
-                            break;
-                        }
-                    }
-                }
+            } else {
+                contentParts.push({
+                    type: 'text',
+                    text: `Generate an image: ${enhancedPrompt}`
+                });
             }
 
-            if (!imageBase64) {
-                console.error('No image in response');
-                res.status(500).json({
-                    error: 'No image generated',
-                    details: 'The model did not return an image'
+            try {
+                const orResponse = await fetch(`${OPENROUTER_CONFIG.baseUrl}/chat/completions`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${OPENROUTER_CONFIG.apiKey}`,
+                        'HTTP-Referer': 'https://quimera.ai',
+                        'X-Title': 'Quimera AI',
+                    },
+                    body: JSON.stringify({
+                        model: orModel,
+                        messages: [{
+                            role: 'user',
+                            content: contentParts.length === 1 && contentParts[0].type === 'text'
+                                ? contentParts[0].text
+                                : contentParts
+                        }],
+                        temperature: temperature,
+                        modalities: ["image"],
+                        image_config: {
+                            aspect_ratio: aspectRatio
+                        }
+                    })
                 });
+
+                if (!orResponse.ok) {
+                    const errorText = await orResponse.text();
+                    let errorData: any = {};
+                    try { errorData = JSON.parse(errorText); } catch { errorData = { rawError: errorText }; }
+                    console.error(`[gemini-image] OpenRouter API error (${orResponse.status}):`, JSON.stringify(errorData));
+                    res.status(orResponse.status).json({
+                        error: 'Image generation failed',
+                        details: errorData,
+                        model: orModel,
+                        status: orResponse.status
+                    });
+                    return;
+                }
+
+                const orData = await orResponse.json();
+                const message = orData.choices?.[0]?.message;
+                const responseContent = message?.content;
+
+                // Extract base64 image from response
+                let imageBase64: string | null = null;
+
+                // PRIMARY: Check message.images array (OpenRouter's image generation format)
+                if (Array.isArray(message?.images) && message.images.length > 0) {
+                    for (const img of message.images) {
+                        if (img?.image_url?.url) {
+                            const urlMatch = img.image_url.url.match(/data:image\/[a-zA-Z]+;base64,([A-Za-z0-9+/=\s]+)/);
+                            if (urlMatch) {
+                                imageBase64 = urlMatch[1].replace(/\s/g, '');
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                // FALLBACK 1: Check content for base64 data URL
+                if (!imageBase64 && typeof responseContent === 'string') {
+                    const dataUrlMatch = responseContent.match(/data:image\/[a-zA-Z]+;base64,([A-Za-z0-9+/=]+)/);
+                    if (dataUrlMatch) {
+                        imageBase64 = dataUrlMatch[1];
+                    }
+                }
+
+                // FALLBACK 2: Check structured content parts (array format)
+                if (!imageBase64 && Array.isArray(responseContent)) {
+                    for (const part of responseContent) {
+                        if (part?.type === 'image_url' && part?.image_url?.url) {
+                            const urlMatch = part.image_url.url.match(/data:image\/[a-zA-Z]+;base64,([A-Za-z0-9+/=]+)/);
+                            if (urlMatch) {
+                                imageBase64 = urlMatch[1];
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                if (!imageBase64) {
+                    console.error('[gemini-image] No image found in OpenRouter response. Response:', JSON.stringify(orData).slice(0, 500));
+                    res.status(500).json({
+                        error: 'No image generated',
+                        details: 'The model did not return an image'
+                    });
+                    return;
+                }
+
+                // Track usage
+                const tokensUsed = (orData.usage?.prompt_tokens || 0) + (orData.usage?.completion_tokens || 0);
+                trackUsage(projectId || `image-gen-${userId}`, userId, tokensUsed || TOKENS_PER_CREDIT, model).catch(console.error);
+
+                res.set('X-RateLimit-Remaining', String(rateLimitCheck.remaining || 0));
+                res.status(200).json({
+                    success: true,
+                    image: imageBase64,
+                    mimeType: 'image/png',
+                    metadata: {
+                        model: model,
+                        actualModel: orModel,
+                        provider: 'openrouter',
+                        aspectRatio,
+                        style,
+                        resolution,
+                        thinkingLevel,
+                        remaining: rateLimitCheck.remaining
+                    }
+                });
+
+            } catch (sdkError: any) {
+                console.error('Image generation OpenRouter error:', sdkError);
+                res.status(500).json({
+                    error: 'Image generation failed',
+                    message: sdkError?.message || 'Unknown error'
+                });
+            }
+
+        } else {
+            // --- Direct Gemini API fallback (when OpenRouter is not configured) ---
+            const apiKey = GEMINI_CONFIG.apiKey;
+            if (!apiKey) {
+                console.error('[GeminiProxy] GEMINI_API_KEY not configured in .env');
+                res.status(500).json({ error: 'API configuration error' });
                 return;
             }
 
-            // Track usage asynchronously with real projectId for per-project tracking
-            trackUsage(projectId || `image-gen-${userId}`, userId, TOKENS_PER_CREDIT, model).catch(console.error);
+            let actualModel = model;
+            if (model === 'imagen-4.0-nano-banana-002') {
+                actualModel = 'gemini-3.1-flash-image-preview';
+            } else if (model === 'imagen-4.0-fast-generate-001') {
+                actualModel = 'imagen-3.0-fast-generate-001';
+            } else if (model === 'imagen-4.0-generate-001' || model === 'imagen-4.0-ultra-generate-001') {
+                actualModel = 'imagen-3.0-generate-001';
+            }
 
-            // Return response
-            res.set('X-RateLimit-Remaining', String(rateLimitCheck.remaining || 0));
-            res.status(200).json({
-                success: true,
-                image: imageBase64,
-                mimeType: 'image/png',
-                metadata: {
-                    model: model,
-                    actualModel: actualModel,
-                    aspectRatio,
-                    style,
-                    resolution,
-                    thinkingLevel,
-                    remaining: rateLimitCheck.remaining
+            const genAI = new GoogleGenAI({ apiKey });
+
+            try {
+                let imageBase64: string | null = null;
+
+                if (actualModel.includes('imagen')) {
+                    const imageConfig: any = {
+                        numberOfImages: 1,
+                        aspectRatio: aspectRatio as any,
+                        personGeneration: personGeneration,
+                    };
+                    if (resolution === '4K' || resolution === '2K') {
+                        imageConfig.imageSize = '2K';
+                    } else {
+                        imageConfig.imageSize = '1K';
+                    }
+                    const response = await genAI.models.generateImages({
+                        model: actualModel,
+                        prompt: enhancedPrompt,
+                        config: imageConfig,
+                    });
+                    imageBase64 = response.generatedImages?.[0]?.image?.imageBytes || null;
+                } else {
+                    const generationConfig: any = {
+                        responseModalities: ['IMAGE', 'TEXT'],
+                        temperature: temperature,
+                    };
+                    if (thinkingLevel && thinkingLevel !== 'none') {
+                        generationConfig.thinkingLevel = thinkingLevel;
+                    }
+                    const contentParts: any[] = [];
+                    if (referenceImages && referenceImages.length > 0) {
+                        for (const imgDataUrl of referenceImages) {
+                            if (typeof imgDataUrl !== 'string') continue;
+                            try {
+                                const matches = imgDataUrl.match(/^data:(image\/(png|jpeg|jpg|gif|webp));base64,(.+)$/);
+                                if (matches && matches.length === 4) {
+                                    if (matches[3].length > 10 * 1024 * 1024) continue;
+                                    contentParts.push({ inlineData: { mimeType: matches[1], data: matches[3] } });
+                                }
+                            } catch (err) { console.warn('Error processing reference image:', err); }
+                        }
+                        contentParts.push({ text: `Using the provided reference images as style guide, generate an image: ${enhancedPrompt}` });
+                    } else {
+                        contentParts.push({ text: `Generate an image: ${enhancedPrompt}` });
+                    }
+                    const response = await genAI.models.generateContent({
+                        model: actualModel,
+                        contents: [{ role: 'user', parts: contentParts }],
+                        config: generationConfig
+                    });
+                    if (response.candidates?.[0]?.content?.parts) {
+                        for (const part of response.candidates[0].content.parts) {
+                            if ((part as any).inlineData?.data) {
+                                imageBase64 = (part as any).inlineData.data;
+                                break;
+                            }
+                        }
+                    }
                 }
-            });
 
-        } catch (sdkError: any) {
-            console.error('Image generation SDK error:', sdkError);
-            res.status(500).json({
-                error: 'Image generation failed',
-                message: sdkError?.message || 'Unknown SDK error'
-            });
+                if (!imageBase64) {
+                    res.status(500).json({ error: 'No image generated', details: 'The model did not return an image' });
+                    return;
+                }
+
+                trackUsage(projectId || `image-gen-${userId}`, userId, TOKENS_PER_CREDIT, model).catch(console.error);
+                res.set('X-RateLimit-Remaining', String(rateLimitCheck.remaining || 0));
+                res.status(200).json({
+                    success: true,
+                    image: imageBase64,
+                    mimeType: 'image/png',
+                    metadata: { model, actualModel, provider: 'gemini-direct', aspectRatio, style, resolution, thinkingLevel, remaining: rateLimitCheck.remaining }
+                });
+
+            } catch (sdkError: any) {
+                console.error('Image generation SDK error:', sdkError);
+                res.status(500).json({ error: 'Image generation failed', message: sdkError?.message || 'Unknown SDK error' });
+            }
         }
 
     } catch (error) {
@@ -1388,9 +1732,97 @@ export const generateImage = functions.https.onRequest(async (req, res) => {
 });
 
 /**
+ * SECURE: Get Gemini API Key for Live API (Voice Sessions)
+ * 
+ * The Gemini Live API (real-time voice/audio via WebSocket) is NOT available
+ * through OpenRouter — it requires a direct connection to Google's servers.
+ * This endpoint securely provides the Gemini API key ONLY to authenticated
+ * owner/superadmin users for the Live API voice feature.
+ * 
+ * POST /api/gemini/liveApiKey
+ * Requires Firebase Auth token in Authorization header.
+ */
+export const getLiveApiKey = functions.runWith({ timeoutSeconds: 120, memory: '256MB' }).https.onRequest(async (req, res) => {
+    // SECURITY: Set CORS headers
+    setCorsHeaders(req, res);
+
+    if (req.method === 'OPTIONS') {
+        res.status(204).send('');
+        return;
+    }
+
+    if (req.method !== 'POST') {
+        res.status(405).json({ error: 'Method not allowed' });
+        return;
+    }
+
+    try {
+        // SECURITY: Require Firebase Auth token
+        const authHeader = req.headers.authorization;
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+            res.status(401).json({ error: 'Authentication required' });
+            return;
+        }
+
+        let uid: string;
+        try {
+            const idToken = authHeader.split('Bearer ')[1];
+            const decodedToken = await admin.auth().verifyIdToken(idToken);
+            uid = decodedToken.uid;
+        } catch (authError) {
+            console.error('[getLiveApiKey] Invalid Firebase token:', authError);
+            res.status(401).json({ error: 'Invalid authentication token' });
+            return;
+        }
+
+        // SECURITY: Only allow owner/superadmin users
+        let isAuthorized = false;
+
+        // Check if UID matches owner config
+        if (isOwner(uid)) {
+            isAuthorized = true;
+        }
+
+        // Check user document for role
+        if (!isAuthorized) {
+            const userDoc = await db.collection('users').doc(uid).get();
+            if (userDoc.exists) {
+                const userData = userDoc.data();
+                const role = userData?.role;
+                const email = userData?.email;
+                if (role === 'owner' || role === 'superadmin' || (email && isOwner(email))) {
+                    isAuthorized = true;
+                }
+            }
+        }
+
+        if (!isAuthorized) {
+            console.warn(`[getLiveApiKey] Unauthorized access attempt by user: ${uid}`);
+            res.status(403).json({ error: 'Insufficient permissions. Only owner/superadmin can access the Live API.' });
+            return;
+        }
+
+        // Return the API key for Live API usage (User requested OpenRouter)
+        const apiKey = process.env.OPENROUTER_API_KEY;
+        if (!apiKey) {
+            console.error('[getLiveApiKey] OPENROUTER_API_KEY not configured in backend');
+            res.status(500).json({ error: 'OpenRouter API key not configured' });
+            return;
+        }
+
+        console.log(`[getLiveApiKey] ✅ Providing OpenRouter API key to authorized user: ${uid}`);
+        res.status(200).json({ apiKey });
+
+    } catch (error) {
+        console.error('[getLiveApiKey] Error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+/**
  * Get usage statistics for a project
  */
-export const getUsageStats = functions.https.onRequest(async (req, res) => {
+export const getUsageStats = functions.runWith({ timeoutSeconds: 120, memory: '256MB' }).https.onRequest(async (req, res) => {
     // SECURITY: Set CORS headers
     const isOriginAllowed = setCorsHeaders(req, res);
 

@@ -1,7 +1,11 @@
 
 import React from 'react';
 import { HowItWorksData, PaddingSize, BorderRadiusSize, HowItWorksIcon, FontSize, CornerGradientConfig } from '../types';
-import { Upload, Cog, Sparkles, Download, Share2, Search } from 'lucide-react';
+import {
+  Upload, Cog, Sparkles, Download, Share2, Search,
+  Megaphone, Tag, Gift, Truck, Percent, Bell, Info, Star, Zap,
+  Heart, ShieldCheck, Clock, Flame, Award, Crown, MapPin, CheckCircle
+} from 'lucide-react';
 import CornerGradient from './ui/CornerGradient';
 
 const paddingYClasses: Record<PaddingSize, string> = {
@@ -34,13 +38,13 @@ const descriptionSizeClasses: Record<FontSize, string> = {
     xl: 'text-xl',
 };
 
-const howItWorksIcons: Record<HowItWorksIcon, React.ReactNode> = {
-    'upload': <Upload size={32} />,
-    'process': <Cog size={32} />,
-    'magic-wand': <Sparkles size={32} />,
-    'download': <Download size={32} />,
-    'share': <Share2 size={32} />,
-    'search': <Search size={32} />,
+const iconsMap: Record<string, React.FC<any>> = {
+    'upload': Upload, 'process': Cog, 'magic-wand': Sparkles, 'download': Download, 
+    'share': Share2, 'search': Search, 'check': CheckCircle,
+    'megaphone': Megaphone, 'tag': Tag, 'gift': Gift, 'truck': Truck, 'percent': Percent,
+    'sparkles': Sparkles, 'bell': Bell, 'info': Info, 'star': Star, 'zap': Zap,
+    'heart': Heart, 'shield': ShieldCheck, 'clock': Clock, 'flame': Flame,
+    'award': Award, 'crown': Crown, 'pin': MapPin
 };
 
 interface HowItWorksProps extends HowItWorksData {
@@ -84,7 +88,12 @@ const HowItWorks: React.FC<HowItWorksProps> = ({ title, description, steps, item
                             className="w-20 h-20 rounded-full flex items-center justify-center mb-6 relative z-10"
                             style={{ backgroundColor: colors?.accent }}
                         >
-                            <span style={{ color: (colors as any).iconColor || '#ffffff' }}>{howItWorksIcons[item.icon]}</span>
+                            <span style={{ color: (colors as any).iconColor || '#ffffff' }}>
+                                {(() => {
+                                    const IconComponent = iconsMap[item.icon] || Sparkles;
+                                    return <IconComponent size={32} />;
+                                })()}
+                            </span>
                         </div>
                         <h3 className="text-xl font-bold mb-2 font-header" style={{ color: (colors as any).stepTitle || '#ffffff', textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>{item.title}</h3>
                         <p className="font-body" style={{ color: colors?.text }}>{item.description}</p>

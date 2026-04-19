@@ -83,6 +83,7 @@ export interface HeaderData {
     buttonBorderRadius: BorderRadiusSize;
     isPreviewMode?: boolean;
     linkFontSize?: number;
+    gradientFadeSize?: number;
 }
 
 // =============================================================================
@@ -752,7 +753,7 @@ export interface VideoData {
 // =============================================================================
 // HOW IT WORKS
 // =============================================================================
-export type HowItWorksIcon = 'upload' | 'process' | 'magic-wand' | 'download' | 'share' | 'search';
+export type HowItWorksIcon = string;
 
 export interface HowItWorksItem {
     title: string;
@@ -904,6 +905,12 @@ export interface MapData {
     descriptionFontSize?: FontSize;
     height: number;
     borderRadius?: BorderRadiusSize;
+    // Contact info displayed on cards
+    phone?: string;
+    email?: string;
+    businessHours?: string;
+    // CTA button text
+    buttonText?: string;
     // Corner gradient overlay
     cornerGradient?: CornerGradientConfig;
 }
@@ -911,7 +918,7 @@ export interface MapData {
 // =============================================================================
 // MENU (RESTAURANT)
 // =============================================================================
-export type MenuVariant = 'classic' | 'modern-grid' | 'elegant-list' | 'full-image';
+export type MenuVariant = 'classic' | 'modern-grid' | 'elegant-list' | 'full-image' | 'text-only';
 
 export interface MenuItem {
     name: string;

@@ -1486,6 +1486,40 @@
       "hintLeads": "Submissions will be saved as leads in the CRM.",
       "hintAudience": "Submissions will be added to the selected Email Marketing audience.",
       "hintBoth": "Submissions will be saved as leads AND added to the email audience."
+    },
+    "map": {
+      "location": "Location",
+      "address": "Address",
+      "addressPlaceholder": "e.g. 123 Main St, City, Country",
+      "searchLocation": "Search location",
+      "find": "Find",
+      "locationSet": "Location set",
+      "manualCoordinates": "Manual coordinates (advanced)",
+      "latitude": "Latitude",
+      "longitude": "Longitude",
+      "zoomLevel": "Zoom Level",
+      "contactInfo": "Contact Info",
+      "phone": "Phone",
+      "phonePlaceholder": "e.g. +1 (555) 123-4567",
+      "email": "Email",
+      "emailPlaceholder": "e.g. info@business.com",
+      "businessHours": "Business Hours",
+      "hoursPlaceholder": "e.g. Mon-Fri 9:00AM-6:00PM",
+      "buttonText": "Button Text",
+      "mapHeight": "Map Height",
+      "spacing": "Spacing",
+      "vertical": "Vertical",
+      "horizontal": "Horizontal",
+      "colors": "Colors",
+      "textColor": "Text",
+      "accentColor": "Marker/Accent",
+      "cardBackground": "Card Background",
+      "variants": {
+        "modern": "🏢 Modern Split",
+        "minimal": "✨ Minimal",
+        "darkTech": "🌃 Dark Tech",
+        "night": "🌙 Night Bar"
+      }
     }
   },
   "coolorsImporter": {
@@ -2348,6 +2382,8 @@
     "help": "Help",
     "newProject": "New Project",
     "startBuilding": "Start building your dream website",
+    "createWithAI": "Create with AI",
+    "createWithAIDesc": "Let AI build your site from a conversation",
     "heroSubtitlePart1": "You have",
     "heroSubtitlePart2": "projects",
     "heroSubtitlePart3": "created.",
@@ -3698,6 +3734,9 @@
       },
       "features": {
         "sectionStyle": "Section Style",
+        "sectionHeader": "Section Header",
+        "featuresList": "Features List",
+        "styleVariant": "Style Variant",
         "classic": "Classic",
         "bento": "Bento",
         "premium": "Premium",
@@ -4701,11 +4740,104 @@
       "textPlaceholder": "Describe the campaign, audience or automation you need...",
       "resetConversation": "Reset conversation",
       "stopVoice": "Stop voice",
-      "startVoice": "Start voice (Gemini Live)"
+      "startVoice": "Start voice chat"
     },
     "confirmModal": {
       "cancel": "Cancel",
       "delete": "Delete"
+    }
+  },
+  "aiWebsiteStudio": {
+    "title": "AI Website Studio",
+    "poweredBy": "Powered by Quimera AI",
+    "brief": "Brief",
+    "close": "Close",
+    "welcome": {
+      "greeting": "Hi there! 👋 I'm **Quimera AI**, your web design assistant.",
+      "description": "I'll help you create a **complete professional website** through natural conversation. No design skills needed — I'll handle everything.",
+      "whatINeed": "🎯 I just need to learn about your business:",
+      "businessName": "🏢 **Name and type** of business",
+      "services": "📝 **Services** you offer",
+      "style": "🎨 **Visual style** you prefer",
+      "contact": "📞 **Contact information**",
+      "voiceHint": "You can also use **🎤 voice mode** to talk to me directly.",
+      "existingWebsite": "💡 Already have a website? Click the **🌐 Import** button to extract your business info automatically!",
+      "startQuestion": "**Tell me, what kind of business do you have?**"
+    },
+    "chat": {
+      "thinking": "Thinking...",
+      "voicePlaceholder": "🎤 Listening...",
+      "textPlaceholder": "Type your message...",
+      "stopVoice": "Stop voice",
+      "startVoice": "Start voice",
+      "errorMessage": "⚠️ There was an error processing your message. Please try again.",
+      "generatingHint": "Generating your website... See the progress overlay for details."
+    },
+    "extraction": {
+      "buttonLabel": "Import Website",
+      "modalTitle": "Import from Existing Website",
+      "modalDescription": "Enter your website URL and we'll extract business information, social media links, contact details, colors, and more.",
+      "urlPlaceholder": "https://www.example.com",
+      "urlFormatHint": "Include the full URL with https://",
+      "extractButton": "Extract Data",
+      "cancel": "Cancel",
+      "analyzing": "🔍 Analyzing your website... I'm scanning navigation, social links, contact info, colors, services, and more. This may take a moment.",
+      "noData": "I wasn't able to extract specific data from that URL, but you can tell me about your business and I'll help you from scratch.",
+      "error": "⚠️ I couldn't access that website. The site might be blocking external access or the URL may be incorrect. You can still tell me about your business manually!"
+    },
+    "briefPanel": {
+      "title": "Business Brief",
+      "readiness": "Readiness",
+      "missing": "Missing:",
+      "business": "Business",
+      "name": "Name",
+      "industry": "Industry",
+      "tagline": "Tagline",
+      "services": "Services",
+      "contact": "Contact",
+      "email": "Email",
+      "phone": "Phone",
+      "address": "Address",
+      "hours": "Hours",
+      "colors": "Colors",
+      "components": "Components",
+      "pending": "pending...",
+      "generateButton": "🚀 Generate Website",
+      "generating": "Generating...",
+      "keepChatting": "Keep chatting — I need more info to build your site"
+    },
+    "generation": {
+      "creating": "Creating: {{name}}",
+      "websiteCreated": "Website Created!",
+      "yourWebsite": "Your Website",
+      "phases": {
+        "content": "Generating Content",
+        "images": "Creating Images",
+        "finalizing": "Assembling Website",
+        "done": "Complete!"
+      },
+      "stats": {
+        "images": "Images:",
+        "failed": "Failed:",
+        "progress": "Progress:"
+      },
+      "generatedImages": "Generated Images",
+      "events": {
+        "starting": "🚀 Starting website generation for \"{{name}}\"",
+        "generatingContent": "📝 Generating website structure & content with AI...",
+        "contentDone": "✅ Content generated — {{count}} components created",
+        "generatingDescriptions": "🎨 Generating image descriptions...",
+        "descriptionsReady": "🖼️ {{count}} image descriptions ready",
+        "generatingImage": "🎨 Generating: {{key}}...",
+        "imageRetry": "⚠️ Retry {{retry}}/{{max}} for {{key}}: {{error}}",
+        "imageDone": "✅ {{key}}",
+        "imageFailed": "❌ Failed: {{key}} (skipped)",
+        "assembling": "📦 Assembling website — {{completed}} images generated, {{failed}} failed",
+        "saving": "💾 Saving your website...",
+        "done": "🎉 Website created successfully!"
+      },
+      "success": "🎉 **Your website has been created successfully!**\n\nGenerated:\n- 📄 {{sections}} sections\n- 🖼️ {{images}} images\n- 🎨 Custom color palette\n- 🤖 AI assistant configured\n\nYou can close this and find your project in the dashboard.",
+      "error": "⚠️ **Generation error:** {{error}}\n\nYou can try again."
     }
   },
   "financeDashboard": {
@@ -10041,5 +10173,17 @@
     "ctaSubtitle": "Join thousands of creators building their websites with Quimera AI.",
     "ctaButton": "Start for free",
     "ctaNote": "No credit card required"
+  },
+  "components": {
+    "map": {
+      "getDirections": "Get Directions",
+      "loading": "Loading Map...",
+      "locationLabel": "Location",
+      "navigate": "Navigate",
+      "hours": "Hours",
+      "visitUs": "Visit Us",
+      "findUs": "Find Us",
+      "openInMaps": "Open in Google Maps"
+    }
   }
 }

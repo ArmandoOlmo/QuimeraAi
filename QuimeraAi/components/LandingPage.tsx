@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState, useMemo, useCallback } from 'react';
+import React, { useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import Header from './Header';
 import Hero from './Hero';
 import HeroModern from './HeroModern';
@@ -84,7 +84,7 @@ import { useSafeTenant } from '../contexts/tenant';
 const LandingPageContent: React.FC = () => {
   const authContext = useSafeAuth();
   const user = authContext?.user ?? null;
-  const { activeSection, onSectionSelect } = useUI();
+  const { activeSection, onSectionSelect, previewRef } = useUI();
   const tenantContext = useSafeTenant();
   const hasWhiteLabelBranding = !!(tenantContext?.currentTenant?.branding?.companyName || tenantContext?.currentTenant?.branding?.logoUrl);
 
@@ -562,7 +562,7 @@ const LandingPageContent: React.FC = () => {
   // Then derive any missing colors from the template palette
   const mergedHeroColors = {
     ...componentStyles.hero?.colors,  // default colors first
-    ...data.hero.colors               // user color changes override
+    ...data.hero?.colors               // user color changes override
   };
   const mergedHeroData = {
     ...componentStyles.hero,  // defaults first
@@ -630,6 +630,32 @@ const LandingPageContent: React.FC = () => {
   const mergedHeroNovaData = mergeComponentData('heroNova');
   const mergedTopBarData = mergeComponentData('topBar');
   const mergedLogoBannerData = mergeComponentData('logoBanner');
+
+  // ─── TopBar height measurement for Header offset ────────────────────────
+  const topBarAboveRef = useRef<HTMLDivElement>(null);
+  const [topBarHeight, setTopBarHeight] = useState(0);
+  const isTopBarAboveVisible = !!(mergedTopBarData?.aboveHeader && componentStatus['topBar' as PageSection] && effectiveSectionVisibility['topBar' as PageSection]);
+
+  useEffect(() => {
+    if (!isTopBarAboveVisible) {
+      setTopBarHeight(0);
+      return;
+    }
+    const el = topBarAboveRef.current;
+    if (!el) return;
+
+    // Initial measurement
+    setTopBarHeight(el.getBoundingClientRect().height);
+
+    // Watch for size changes
+    const ro = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        setTopBarHeight(entry.contentRect.height);
+      }
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [isTopBarAboveVisible]);
   const mergedProductsData = mergeComponentData('products');
   const mergedCMSFeedData = mergeComponentData('cmsFeed');
 
@@ -726,42 +752,48 @@ const LandingPageContent: React.FC = () => {
     ),
     heroSplit: <SectionBackground backgroundImageUrl={mergedHeroSplitData?.backgroundImageUrl} backgroundColor={mergedHeroSplitData?.colors?.background} backgroundOverlayEnabled={mergedHeroSplitData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedHeroSplitData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedHeroSplitData?.backgroundOverlayColor}><HeroSplit {...mergedHeroSplitData} borderRadius={mergedHeroSplitData?.buttonBorderRadius || theme.buttonBorderRadius} onNavigate={handleLinkNavigation} /></SectionBackground>,
     heroGallery: mergedHeroGalleryData ? (
-      <HeroGallery
-        {...mergedHeroGalleryData}
-        borderRadius={mergedHeroGalleryData?.buttonBorderRadius || theme.buttonBorderRadius}
-        onNavigate={handleLinkNavigation}
-      />
+      <SectionBackground backgroundImageUrl={mergedHeroGalleryData?.backgroundImageUrl} backgroundColor={mergedHeroGalleryData?.colors?.background} backgroundOverlayEnabled={mergedHeroGalleryData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedHeroGalleryData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedHeroGalleryData?.backgroundOverlayColor}>
+        <HeroGallery
+          {...mergedHeroGalleryData}
+          borderRadius={mergedHeroGalleryData?.buttonBorderRadius || theme.buttonBorderRadius}
+          onNavigate={handleLinkNavigation}
+        />
+      </SectionBackground>
     ) : null,
     heroWave: mergedHeroWaveData ? (
-      <HeroWave
-        {...mergedHeroWaveData}
-        borderRadius={mergedHeroWaveData?.buttonBorderRadius || theme.buttonBorderRadius}
-        onNavigate={handleLinkNavigation}
-      />
+      <SectionBackground backgroundImageUrl={mergedHeroWaveData?.backgroundImageUrl} backgroundColor={mergedHeroWaveData?.colors?.background} backgroundOverlayEnabled={mergedHeroWaveData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedHeroWaveData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedHeroWaveData?.backgroundOverlayColor}>
+        <HeroWave
+          {...mergedHeroWaveData}
+          borderRadius={mergedHeroWaveData?.buttonBorderRadius || theme.buttonBorderRadius}
+          onNavigate={handleLinkNavigation}
+        />
+      </SectionBackground>
     ) : null,
     heroNova: mergedHeroNovaData ? (
-      <HeroNova
-        {...mergedHeroNovaData}
-        borderRadius={mergedHeroNovaData?.buttonBorderRadius || theme.buttonBorderRadius}
-        onNavigate={handleLinkNavigation}
-      />
+      <SectionBackground backgroundImageUrl={mergedHeroNovaData?.backgroundImageUrl} backgroundColor={mergedHeroNovaData?.colors?.background} backgroundOverlayEnabled={mergedHeroNovaData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedHeroNovaData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedHeroNovaData?.backgroundOverlayColor}>
+        <HeroNova
+          {...mergedHeroNovaData}
+          borderRadius={mergedHeroNovaData?.buttonBorderRadius || theme.buttonBorderRadius}
+          onNavigate={handleLinkNavigation}
+        />
+      </SectionBackground>
     ) : null,
     features: <SectionBackground backgroundImageUrl={mergedFeaturesData?.backgroundImageUrl} backgroundColor={mergedFeaturesData?.colors?.background} backgroundOverlayEnabled={mergedFeaturesData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedFeaturesData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedFeaturesData?.backgroundOverlayColor}><Features {...mergedFeaturesData} borderRadius={mergedFeaturesData.borderRadius || theme.cardBorderRadius} onNavigate={handleLinkNavigation} /></SectionBackground>,
     testimonials: <SectionBackground backgroundImageUrl={mergedTestimonialsData?.backgroundImageUrl} backgroundColor={mergedTestimonialsData?.colors?.background} backgroundOverlayEnabled={mergedTestimonialsData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedTestimonialsData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedTestimonialsData?.backgroundOverlayColor}><Testimonials {...mergedTestimonialsData} borderRadius={mergedTestimonialsData.borderRadius || theme.cardBorderRadius} cardShadow={mergedTestimonialsData.cardShadow} borderStyle={mergedTestimonialsData.borderStyle} cardPadding={mergedTestimonialsData.cardPadding} testimonialsVariant={mergedTestimonialsData.testimonialsVariant} /></SectionBackground>,
-    slideshow: <SectionBackground backgroundImageUrl={mergedSlideshowData?.backgroundImageUrl} backgroundColor={mergedSlideshowData?.colors?.background} backgroundOverlayEnabled={mergedSlideshowData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedSlideshowData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedSlideshowData?.backgroundOverlayColor}><Slideshow {...mergedSlideshowData} borderRadius={theme.cardBorderRadius} /></SectionBackground>,
-    pricing: <SectionBackground backgroundImageUrl={mergedPricingData?.backgroundImageUrl} backgroundColor={mergedPricingData?.colors?.background} backgroundOverlayEnabled={mergedPricingData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedPricingData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedPricingData?.backgroundOverlayColor}><Pricing {...mergedPricingData} cardBorderRadius={theme.cardBorderRadius} buttonBorderRadius={theme.buttonBorderRadius} /></SectionBackground>,
-    faq: <SectionBackground backgroundImageUrl={mergedFaqData?.backgroundImageUrl} backgroundColor={mergedFaqData?.colors?.background} backgroundOverlayEnabled={mergedFaqData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedFaqData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedFaqData?.backgroundOverlayColor}><Faq {...mergedFaqData} borderRadius={theme.cardBorderRadius} /></SectionBackground>,
-    leads: <SectionBackground backgroundImageUrl={mergedLeadsData?.backgroundImageUrl} backgroundColor={mergedLeadsData?.colors?.background} backgroundOverlayEnabled={mergedLeadsData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedLeadsData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedLeadsData?.backgroundOverlayColor}><Leads {...mergedLeadsData} cardBorderRadius={mergedLeadsData.cardBorderRadius || theme.cardBorderRadius} inputBorderRadius={mergedLeadsData.inputBorderRadius || 'md'} buttonBorderRadius={mergedLeadsData.buttonBorderRadius || theme.buttonBorderRadius} /></SectionBackground>,
-    newsletter: <SectionBackground backgroundImageUrl={mergedNewsletterData?.backgroundImageUrl} backgroundColor={mergedNewsletterData?.colors?.background} backgroundOverlayEnabled={mergedNewsletterData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedNewsletterData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedNewsletterData?.backgroundOverlayColor}><Newsletter {...mergedNewsletterData} cardBorderRadius={theme.cardBorderRadius} buttonBorderRadius={theme.buttonBorderRadius} /></SectionBackground>,
-    cta: <SectionBackground backgroundImageUrl={mergedCtaData?.backgroundImageUrl} backgroundColor={mergedCtaData?.colors?.background} backgroundOverlayEnabled={mergedCtaData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedCtaData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedCtaData?.backgroundOverlayColor}><CTASection {...mergedCtaData} cardBorderRadius={theme.cardBorderRadius} buttonBorderRadius={theme.buttonBorderRadius} onNavigate={handleLinkNavigation} /></SectionBackground>,
-    portfolio: <SectionBackground backgroundImageUrl={mergedPortfolioData?.backgroundImageUrl} backgroundColor={mergedPortfolioData?.colors?.background} backgroundOverlayEnabled={mergedPortfolioData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedPortfolioData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedPortfolioData?.backgroundOverlayColor}><Portfolio {...mergedPortfolioData} borderRadius={theme.cardBorderRadius} /></SectionBackground>,
-    services: <SectionBackground backgroundImageUrl={mergedServicesData?.backgroundImageUrl} backgroundColor={mergedServicesData?.colors?.background} backgroundOverlayEnabled={mergedServicesData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedServicesData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedServicesData?.backgroundOverlayColor}><Services {...mergedServicesData} borderRadius={theme.cardBorderRadius} /></SectionBackground>,
-    team: <SectionBackground backgroundImageUrl={mergedTeamData?.backgroundImageUrl} backgroundColor={mergedTeamData?.colors?.background} backgroundOverlayEnabled={mergedTeamData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedTeamData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedTeamData?.backgroundOverlayColor}><Team {...mergedTeamData} borderRadius={theme.cardBorderRadius} onNavigate={handleLinkNavigation} /></SectionBackground>,
-    video: <SectionBackground backgroundImageUrl={mergedVideoData?.backgroundImageUrl} backgroundColor={mergedVideoData?.colors?.background} backgroundOverlayEnabled={mergedVideoData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedVideoData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedVideoData?.backgroundOverlayColor}><Video {...mergedVideoData} borderRadius={theme.cardBorderRadius} /></SectionBackground>,
-    howItWorks: <SectionBackground backgroundImageUrl={mergedHowItWorksData?.backgroundImageUrl} backgroundColor={mergedHowItWorksData?.colors?.background} backgroundOverlayEnabled={mergedHowItWorksData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedHowItWorksData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedHowItWorksData?.backgroundOverlayColor}><HowItWorks {...mergedHowItWorksData} borderRadius={theme.cardBorderRadius} /></SectionBackground>,
-    map: <SectionBackground backgroundImageUrl={mergedMapData?.backgroundImageUrl} backgroundColor={mergedMapData?.colors?.background} backgroundOverlayEnabled={mergedMapData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedMapData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedMapData?.backgroundOverlayColor}><BusinessMap {...mergedMapData} apiKey={import.meta.env.VITE_GOOGLE_MAPS_KEY || ''} borderRadius={theme.cardBorderRadius} /></SectionBackground>,
-    menu: <SectionBackground backgroundImageUrl={mergedMenuData?.backgroundImageUrl} backgroundColor={mergedMenuData?.colors?.background} backgroundOverlayEnabled={mergedMenuData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedMenuData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedMenuData?.backgroundOverlayColor}><Menu {...mergedMenuData} borderRadius={theme.cardBorderRadius} /></SectionBackground>,
-    banner: <Banner {...mergedBannerData} buttonBorderRadius={theme.buttonBorderRadius} />,
+    slideshow: <SectionBackground backgroundImageUrl={mergedSlideshowData?.backgroundImageUrl} backgroundColor={mergedSlideshowData?.colors?.background} backgroundOverlayEnabled={mergedSlideshowData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedSlideshowData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedSlideshowData?.backgroundOverlayColor}><Slideshow {...mergedSlideshowData} borderRadius={mergedSlideshowData?.borderRadius || theme.cardBorderRadius} /></SectionBackground>,
+    pricing: <SectionBackground backgroundImageUrl={mergedPricingData?.backgroundImageUrl} backgroundColor={mergedPricingData?.colors?.background} backgroundOverlayEnabled={mergedPricingData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedPricingData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedPricingData?.backgroundOverlayColor}><Pricing {...mergedPricingData} cardBorderRadius={mergedPricingData?.cardBorderRadius || theme.cardBorderRadius} buttonBorderRadius={mergedPricingData?.buttonBorderRadius || theme.buttonBorderRadius} /></SectionBackground>,
+    faq: <SectionBackground backgroundImageUrl={mergedFaqData?.backgroundImageUrl} backgroundColor={mergedFaqData?.colors?.background} backgroundOverlayEnabled={mergedFaqData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedFaqData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedFaqData?.backgroundOverlayColor}><Faq {...mergedFaqData} borderRadius={mergedFaqData?.borderRadius || theme.cardBorderRadius} /></SectionBackground>,
+    leads: <SectionBackground backgroundImageUrl={mergedLeadsData?.backgroundImageUrl} backgroundColor={mergedLeadsData?.colors?.background} backgroundOverlayEnabled={mergedLeadsData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedLeadsData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedLeadsData?.backgroundOverlayColor}><Leads {...mergedLeadsData} cardBorderRadius={mergedLeadsData?.cardBorderRadius || theme.cardBorderRadius} inputBorderRadius={mergedLeadsData?.inputBorderRadius || 'md'} buttonBorderRadius={mergedLeadsData?.buttonBorderRadius || theme.buttonBorderRadius} /></SectionBackground>,
+    newsletter: <SectionBackground backgroundImageUrl={mergedNewsletterData?.backgroundImageUrl} backgroundColor={mergedNewsletterData?.colors?.background} backgroundOverlayEnabled={mergedNewsletterData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedNewsletterData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedNewsletterData?.backgroundOverlayColor}><Newsletter {...mergedNewsletterData} cardBorderRadius={mergedNewsletterData?.cardBorderRadius || theme.cardBorderRadius} buttonBorderRadius={mergedNewsletterData?.buttonBorderRadius || theme.buttonBorderRadius} /></SectionBackground>,
+    cta: <SectionBackground backgroundImageUrl={mergedCtaData?.backgroundImageUrl} backgroundColor={mergedCtaData?.colors?.background} backgroundOverlayEnabled={mergedCtaData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedCtaData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedCtaData?.backgroundOverlayColor}><CTASection {...mergedCtaData} cardBorderRadius={mergedCtaData?.cardBorderRadius || theme.cardBorderRadius} buttonBorderRadius={mergedCtaData?.buttonBorderRadius || theme.buttonBorderRadius} onNavigate={handleLinkNavigation} /></SectionBackground>,
+    portfolio: <SectionBackground backgroundImageUrl={mergedPortfolioData?.backgroundImageUrl} backgroundColor={mergedPortfolioData?.colors?.background} backgroundOverlayEnabled={mergedPortfolioData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedPortfolioData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedPortfolioData?.backgroundOverlayColor}><Portfolio {...mergedPortfolioData} borderRadius={mergedPortfolioData?.borderRadius || theme.cardBorderRadius} /></SectionBackground>,
+    services: <SectionBackground backgroundImageUrl={mergedServicesData?.backgroundImageUrl} backgroundColor={mergedServicesData?.colors?.background} backgroundOverlayEnabled={mergedServicesData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedServicesData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedServicesData?.backgroundOverlayColor}><Services {...mergedServicesData} borderRadius={mergedServicesData?.borderRadius || theme.cardBorderRadius} /></SectionBackground>,
+    team: <SectionBackground backgroundImageUrl={mergedTeamData?.backgroundImageUrl} backgroundColor={mergedTeamData?.colors?.background} backgroundOverlayEnabled={mergedTeamData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedTeamData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedTeamData?.backgroundOverlayColor}><Team {...mergedTeamData} borderRadius={mergedTeamData?.borderRadius || theme.cardBorderRadius} onNavigate={handleLinkNavigation} /></SectionBackground>,
+    video: <SectionBackground backgroundImageUrl={mergedVideoData?.backgroundImageUrl} backgroundColor={mergedVideoData?.colors?.background} backgroundOverlayEnabled={mergedVideoData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedVideoData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedVideoData?.backgroundOverlayColor}><Video {...mergedVideoData} borderRadius={mergedVideoData?.borderRadius || theme.cardBorderRadius} /></SectionBackground>,
+    howItWorks: <SectionBackground backgroundImageUrl={mergedHowItWorksData?.backgroundImageUrl} backgroundColor={mergedHowItWorksData?.colors?.background} backgroundOverlayEnabled={mergedHowItWorksData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedHowItWorksData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedHowItWorksData?.backgroundOverlayColor}><HowItWorks {...mergedHowItWorksData} borderRadius={mergedHowItWorksData?.borderRadius || theme.cardBorderRadius} /></SectionBackground>,
+    map: <SectionBackground backgroundImageUrl={mergedMapData?.backgroundImageUrl} backgroundColor={mergedMapData?.colors?.background} backgroundOverlayEnabled={mergedMapData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedMapData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedMapData?.backgroundOverlayColor}><BusinessMap {...mergedMapData} apiKey={import.meta.env.VITE_GOOGLE_MAPS_KEY || ''} borderRadius={mergedMapData?.borderRadius || theme.cardBorderRadius} /></SectionBackground>,
+    menu: <SectionBackground backgroundImageUrl={mergedMenuData?.backgroundImageUrl} backgroundColor={mergedMenuData?.colors?.background} backgroundOverlayEnabled={mergedMenuData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedMenuData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedMenuData?.backgroundOverlayColor}><Menu {...mergedMenuData} borderRadius={mergedMenuData?.borderRadius || theme.cardBorderRadius} /></SectionBackground>,
+    banner: <Banner {...mergedBannerData} buttonBorderRadius={mergedBannerData?.buttonBorderRadius || theme.buttonBorderRadius} />,
     topBar: mergedTopBarData ? (
       <TopBar
         {...mergedTopBarData}
@@ -1133,14 +1165,14 @@ const LandingPageContent: React.FC = () => {
 
     // 3. Fall back to manual links
     return mergedHeaderData.links;
-  }, [mergedHeaderData.menuId, mergedHeaderData.links, menus, pages]);
+  }, [mergedHeaderData?.menuId, mergedHeaderData?.links, menus, pages]);
 
   // Resolve Footer Columns dynamically
   const resolvedFooterData: FooterData = {
-    ...mergedFooterData,
+    ...(mergedFooterData || {}),
     // Auto-hide "Made with Quimera" badge when White Label branding is active
-    hideBranding: mergedFooterData.hideBranding || hasWhiteLabelBranding,
-    linkColumns: mergedFooterData.linkColumns.map(col => {
+    hideBranding: mergedFooterData?.hideBranding || hasWhiteLabelBranding,
+    linkColumns: (mergedFooterData?.linkColumns || []).map(col => {
       if (col.menuId) {
         const menu = menus.find(m => m.id === col.menuId);
         if (menu) {
@@ -1196,6 +1228,7 @@ const LandingPageContent: React.FC = () => {
       {/* TopBar - Above Header position */}
       {mergedTopBarData?.aboveHeader && componentStatus['topBar' as PageSection] && effectiveSectionVisibility['topBar' as PageSection] && (
         <div
+          ref={topBarAboveRef}
           id="topBar-above"
           className={`w-full cursor-pointer transition-all duration-200 ${activeSection === 'topBar' ? 'ring-2 ring-primary ring-offset-2 ring-offset-transparent z-10 relative' : 'hover:ring-2 hover:ring-primary/30 hover:ring-offset-2 hover:ring-offset-transparent'}`}
           onClick={(e) => {
@@ -1216,6 +1249,9 @@ const LandingPageContent: React.FC = () => {
         cartItemCount={cart.itemCount}
         onCartClick={cart.toggleCart}
         onNavigate={handleLinkNavigation}
+        containerRef={previewRef}
+        isPreviewMode={isEditorMode}
+        topBarOffset={topBarHeight}
       />
 
       {/* Cart Drawer - only when store has products AND ecommerce is enabled */}

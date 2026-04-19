@@ -237,7 +237,7 @@ const pageData: PageData = {
       },
     ],
     gridColumns: 3,
-    imageHeight: 200,
+    imageHeight: 430,
     imageObjectFit: 'cover',
     animationType: 'fade-in-up',
     enableCardAnimation: true,

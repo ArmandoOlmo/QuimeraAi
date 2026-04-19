@@ -1226,7 +1226,7 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                             </label>
                             <RangeControl
                                 label={t('landingEditor.imageHeight', 'Altura de imagen')}
-                                value={data.imageHeight || 200}
+                                value={data.imageHeight || 430}
                                 min={100}
                                 max={600}
                                 step={10}

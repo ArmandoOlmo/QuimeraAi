@@ -230,29 +230,59 @@ const Leads: React.FC<LeadsProps> = ({
 
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="grid sm:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-semibold mb-2" style={{ color: leadsColors.heading }}>
+                    {t('leads.nameLabel')}
+                  </label>
+                  <input
+                    type="text"
+                    name="name"
+                    placeholder={namePlaceholder}
+                    value={formData.name}
+                    onChange={handleChange}
+                    required
+                    disabled={isSubmitting}
+                    className={`${inputBaseClasses} ${borderRadiusClasses[inputBorderRadius]} disabled:opacity-50`}
+                    style={{
+                      backgroundColor: leadsColors.inputBackground,
+                      borderColor: leadsColors.inputBorder,
+                      color: leadsColors.inputText,
+                      '--tw-ring-color': leadsColors.accent
+                    } as React.CSSProperties}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold mb-2" style={{ color: leadsColors.heading }}>
+                    {t('leads.emailLabel')}
+                  </label>
+                  <input
+                    type="email"
+                    name="email"
+                    placeholder={emailPlaceholder}
+                    value={formData.email}
+                    onChange={handleChange}
+                    required
+                    disabled={isSubmitting}
+                    className={`${inputBaseClasses} ${borderRadiusClasses[inputBorderRadius]} disabled:opacity-50`}
+                    style={{
+                      backgroundColor: leadsColors.inputBackground,
+                      borderColor: leadsColors.inputBorder,
+                      color: leadsColors.inputText,
+                      '--tw-ring-color': leadsColors.accent
+                    } as React.CSSProperties}
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-semibold mb-2" style={{ color: leadsColors.heading }}>
+                  {t('leads.companyLabel')}
+                </label>
                 <input
                   type="text"
-                  name="name"
-                  placeholder={namePlaceholder}
-                  value={formData.name}
+                  name="company"
+                  placeholder={companyPlaceholder}
+                  value={formData.company}
                   onChange={handleChange}
-                  required
-                  disabled={isSubmitting}
-                  className={`${inputBaseClasses} ${borderRadiusClasses[inputBorderRadius]} disabled:opacity-50`}
-                  style={{
-                    backgroundColor: leadsColors.inputBackground,
-                    borderColor: leadsColors.inputBorder,
-                    color: leadsColors.inputText,
-                    '--tw-ring-color': leadsColors.accent
-                  } as React.CSSProperties}
-                />
-                <input
-                  type="email"
-                  name="email"
-                  placeholder={emailPlaceholder}
-                  value={formData.email}
-                  onChange={handleChange}
-                  required
                   disabled={isSubmitting}
                   className={`${inputBaseClasses} ${borderRadiusClasses[inputBorderRadius]} disabled:opacity-50`}
                   style={{
@@ -263,36 +293,26 @@ const Leads: React.FC<LeadsProps> = ({
                   } as React.CSSProperties}
                 />
               </div>
-              <input
-                type="text"
-                name="company"
-                placeholder={companyPlaceholder}
-                value={formData.company}
-                onChange={handleChange}
-                disabled={isSubmitting}
-                className={`${inputBaseClasses} ${borderRadiusClasses[cardBorderRadius]} disabled:opacity-50`}
-                style={{
-                  backgroundColor: leadsColors.inputBackground,
-                  borderColor: leadsColors.inputBorder,
-                  color: leadsColors.inputText,
-                  '--tw-ring-color': leadsColors.accent
-                } as React.CSSProperties}
-              />
-              <textarea
-                name="message"
-                placeholder={messagePlaceholder}
-                rows={5}
-                value={formData.message}
-                onChange={handleChange}
-                disabled={isSubmitting}
-                className={`${inputBaseClasses} ${borderRadiusClasses[cardBorderRadius]} disabled:opacity-50`}
-                style={{
-                  backgroundColor: leadsColors.inputBackground,
-                  borderColor: leadsColors.inputBorder,
-                  color: leadsColors.inputText,
-                  '--tw-ring-color': leadsColors.accent
-                } as React.CSSProperties}
-              ></textarea>
+              <div>
+                <label className="block text-sm font-semibold mb-2" style={{ color: leadsColors.heading }}>
+                  {t('leads.messageLabel')}
+                </label>
+                <textarea
+                  name="message"
+                  placeholder={messagePlaceholder}
+                  rows={5}
+                  value={formData.message}
+                  onChange={handleChange}
+                  disabled={isSubmitting}
+                  className={`${inputBaseClasses} ${borderRadiusClasses[inputBorderRadius]} disabled:opacity-50`}
+                  style={{
+                    backgroundColor: leadsColors.inputBackground,
+                    borderColor: leadsColors.inputBorder,
+                    color: leadsColors.inputText,
+                    '--tw-ring-color': leadsColors.accent
+                  } as React.CSSProperties}
+                ></textarea>
+              </div>
               <button
                 type="submit"
                 disabled={isSubmitting}
@@ -571,78 +591,98 @@ const Leads: React.FC<LeadsProps> = ({
 
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="grid md:grid-cols-2 gap-6">
-                <div className="relative">
-                  <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 opacity-50" style={{ color: leadsColors.inputPlaceholder }} />
-                  <input
-                    type="text"
-                    name="name"
-                    placeholder={namePlaceholder}
-                    value={formData.name}
-                    onChange={handleChange}
-                    required
-                    disabled={isSubmitting}
-                    className={`${inputBaseClasses} pl-12 backdrop-blur-sm disabled:opacity-50 ${borderRadiusClasses[inputBorderRadius]}`}
-                    style={{
-                      backgroundColor: leadsColors.inputBackground,
-                      borderColor: leadsColors.inputBorder,
-                      color: leadsColors.inputText,
-                      '--tw-ring-color': leadsColors.accent
-                    } as React.CSSProperties}
-                  />
+                <div>
+                  <label className="block text-sm font-semibold mb-2" style={{ color: leadsColors.heading }}>
+                    {t('leads.nameLabel')}
+                  </label>
+                  <div className="relative">
+                    <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 opacity-50" style={{ color: leadsColors.inputPlaceholder }} />
+                    <input
+                      type="text"
+                      name="name"
+                      placeholder={namePlaceholder}
+                      value={formData.name}
+                      onChange={handleChange}
+                      required
+                      disabled={isSubmitting}
+                      className={`${inputBaseClasses} pl-12 backdrop-blur-sm disabled:opacity-50 ${borderRadiusClasses[inputBorderRadius]}`}
+                      style={{
+                        backgroundColor: leadsColors.inputBackground,
+                        borderColor: leadsColors.inputBorder,
+                        color: leadsColors.inputText,
+                        '--tw-ring-color': leadsColors.accent
+                      } as React.CSSProperties}
+                    />
+                  </div>
                 </div>
 
-                <div className="relative">
-                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 opacity-50" style={{ color: leadsColors.inputPlaceholder }} />
-                  <input
-                    type="email"
-                    name="email"
-                    placeholder={emailPlaceholder}
-                    value={formData.email}
-                    onChange={handleChange}
-                    required
-                    disabled={isSubmitting}
-                    className={`${inputBaseClasses} pl-12 backdrop-blur-sm disabled:opacity-50 ${borderRadiusClasses[inputBorderRadius]}`}
-                    style={{
-                      backgroundColor: leadsColors.inputBackground,
-                      borderColor: leadsColors.inputBorder,
-                      color: leadsColors.inputText,
-                      '--tw-ring-color': leadsColors.accent
-                    } as React.CSSProperties}
-                  />
+                <div>
+                  <label className="block text-sm font-semibold mb-2" style={{ color: leadsColors.heading }}>
+                    {t('leads.emailLabel')}
+                  </label>
+                  <div className="relative">
+                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 opacity-50" style={{ color: leadsColors.inputPlaceholder }} />
+                    <input
+                      type="email"
+                      name="email"
+                      placeholder={emailPlaceholder}
+                      value={formData.email}
+                      onChange={handleChange}
+                      required
+                      disabled={isSubmitting}
+                      className={`${inputBaseClasses} pl-12 backdrop-blur-sm disabled:opacity-50 ${borderRadiusClasses[inputBorderRadius]}`}
+                      style={{
+                        backgroundColor: leadsColors.inputBackground,
+                        borderColor: leadsColors.inputBorder,
+                        color: leadsColors.inputText,
+                        '--tw-ring-color': leadsColors.accent
+                      } as React.CSSProperties}
+                    />
+                  </div>
                 </div>
               </div>
 
-              <input
-                type="text"
-                name="company"
-                placeholder={companyPlaceholder}
-                value={formData.company}
-                onChange={handleChange}
-                disabled={isSubmitting}
-                className={`${inputBaseClasses} backdrop-blur-sm disabled:opacity-50 ${borderRadiusClasses[inputBorderRadius]}`}
-                style={{
-                  backgroundColor: leadsColors.inputBackground,
-                  borderColor: leadsColors.inputBorder,
-                  color: leadsColors.inputText,
-                  '--tw-ring-color': leadsColors.accent
-                } as React.CSSProperties}
-              />
+              <div>
+                <label className="block text-sm font-semibold mb-2" style={{ color: leadsColors.heading }}>
+                  {t('leads.companyLabel')}
+                </label>
+                <input
+                  type="text"
+                  name="company"
+                  placeholder={companyPlaceholder}
+                  value={formData.company}
+                  onChange={handleChange}
+                  disabled={isSubmitting}
+                  className={`${inputBaseClasses} backdrop-blur-sm disabled:opacity-50 ${borderRadiusClasses[inputBorderRadius]}`}
+                  style={{
+                    backgroundColor: leadsColors.inputBackground,
+                    borderColor: leadsColors.inputBorder,
+                    color: leadsColors.inputText,
+                    '--tw-ring-color': leadsColors.accent
+                  } as React.CSSProperties}
+                />
+              </div>
 
-              <textarea
-                name="message"
-                placeholder={messagePlaceholder}
-                rows={5}
-                value={formData.message}
-                onChange={handleChange}
-                disabled={isSubmitting}
-                className={`${inputBaseClasses} backdrop-blur-sm disabled:opacity-50 ${borderRadiusClasses[inputBorderRadius]}`}
-                style={{
-                  backgroundColor: leadsColors.inputBackground,
-                  borderColor: leadsColors.inputBorder,
-                  color: leadsColors.inputText,
-                  '--tw-ring-color': leadsColors.accent
-                } as React.CSSProperties}
-              ></textarea>
+              <div>
+                <label className="block text-sm font-semibold mb-2" style={{ color: leadsColors.heading }}>
+                  {t('leads.messageLabel')}
+                </label>
+                <textarea
+                  name="message"
+                  placeholder={messagePlaceholder}
+                  rows={5}
+                  value={formData.message}
+                  onChange={handleChange}
+                  disabled={isSubmitting}
+                  className={`${inputBaseClasses} backdrop-blur-sm disabled:opacity-50 ${borderRadiusClasses[inputBorderRadius]}`}
+                  style={{
+                    backgroundColor: leadsColors.inputBackground,
+                    borderColor: leadsColors.inputBorder,
+                    color: leadsColors.inputText,
+                    '--tw-ring-color': leadsColors.accent
+                  } as React.CSSProperties}
+                ></textarea>
+              </div>
 
               <button
                 type="submit"

@@ -20,6 +20,7 @@ import DashboardHelpGuide from './DashboardHelpGuide';
 import DashboardDraggableSection from './DashboardDraggableSection';
 import FileHistory from './FileHistory';
 import WebsitesView from './WebsitesView';
+import FirstVisitWelcomeBanner from './FirstVisitWelcomeBanner';
 
 // Section Content Components
 import DashboardProjectsSection, { ProjectsViewAllAction } from './DashboardProjectsSection';
@@ -147,6 +148,9 @@ const Dashboard: React.FC = () => {
                             <>
                                 {/* Welcome / Hero Section */}
                                 <DashboardWelcome allUserProjectsCount={filters.allUserProjects.length} />
+
+                                {/* First Visit Welcome Banner */}
+                                <FirstVisitWelcomeBanner hasProjects={filters.allUserProjects.length > 0} />
 
                                 {/* Help Guide / Instructions */}
                                 {showInstructions && (

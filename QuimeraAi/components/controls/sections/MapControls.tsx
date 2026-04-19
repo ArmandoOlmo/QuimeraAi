@@ -118,21 +118,21 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       <TextArea label={t('editor.controls.common.description')} value={data?.map.description} onChange={(e) => setNestedData('map.description', e.target.value)} rows={2} />
       <FontSizeSelector label={t('editor.controls.common.descriptionSize')} value={data?.map.descriptionFontSize || 'md'} onChange={(v) => setNestedData('map.descriptionFontSize', v)} />
 
-
+      {/* ── Location ── */}
       <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
         <MapPin size={14} />
-        Location
+        {t('controls.map.location', 'Location')}
       </label>
 
       {/* Address input with search button */}
       <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
-        <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">Address</label>
+        <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{t('controls.map.address', 'Address')}</label>
         <div className="flex gap-2">
           <input
             type="text"
             value={data?.map.address || ''}
             onChange={(e) => setNestedData('map.address', e.target.value)}
-            placeholder="e.g. 123 Main St, City, Country"
+            placeholder={t('controls.map.addressPlaceholder', 'e.g. 123 Main St, City, Country')}
             className="flex-1 bg-editor-panel-bg border border-editor-border rounded-md px-3 py-2 text-sm text-editor-text-primary focus:outline-none focus:ring-1 focus:ring-editor-accent transition-all placeholder:text-editor-text-secondary/50"
             onKeyDown={(e) => {
               if (e.key === 'Enter') {
@@ -145,14 +145,14 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
             onClick={geocodeAddress}
             disabled={isGeocoding}
             className="px-3 py-2 bg-editor-accent text-white rounded-md hover:bg-editor-accent/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5 shrink-0"
-            title="Search location"
+            title={t('controls.map.searchLocation', 'Search location')}
           >
             {isGeocoding ? (
               <Loader2 size={16} className="animate-spin" />
             ) : (
               <Search size={16} />
             )}
-            <span className="text-xs font-medium">Find</span>
+            <span className="text-xs font-medium">{t('controls.map.find', 'Find')}</span>
           </button>
         </div>
 
@@ -168,7 +168,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         {data?.map.lat && data?.map.lng && !geocodeError && (
           <p className="text-xs text-green-400 mt-1 flex items-center gap-1">
             <MapPin size={12} />
-            Location set: {data.map.lat.toFixed(4)}, {data.map.lng.toFixed(4)}
+            {t('controls.map.locationSet', 'Location set')}: {data.map.lat.toFixed(4)}, {data.map.lng.toFixed(4)}
           </p>
         )}
       </div>
@@ -176,16 +176,16 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       {/* Manual coordinate inputs (collapsible) */}
       <details className="mt-3">
         <summary className="text-xs font-medium text-editor-text-secondary cursor-pointer hover:text-editor-text-primary transition-colors">
-          Manual coordinates (advanced)
+          {t('controls.map.manualCoordinates', 'Manual coordinates (advanced)')}
         </summary>
         <div className="grid grid-cols-2 gap-3 mt-2 pl-2 border-l-2 border-editor-border">
-          <Input label="Latitude" type="number" step="0.0001" value={data?.map.lat} onChange={(e) => setNestedData('map.lat', parseFloat(e.target.value))} />
-          <Input label="Longitude" type="number" step="0.0001" value={data?.map.lng} onChange={(e) => setNestedData('map.lng', parseFloat(e.target.value))} />
+          <Input label={t('controls.map.latitude', 'Latitude')} type="number" step="0.0001" value={data?.map.lat} onChange={(e) => setNestedData('map.lat', parseFloat(e.target.value))} />
+          <Input label={t('controls.map.longitude', 'Longitude')} type="number" step="0.0001" value={data?.map.lng} onChange={(e) => setNestedData('map.lng', parseFloat(e.target.value))} />
         </div>
       </details>
 
       <div className="mt-2">
-        <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">Zoom Level: {data?.map.zoom}</label>
+        <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{t('controls.map.zoomLevel', 'Zoom Level')}: {data?.map.zoom}</label>
         <input
           type="range" min="1" max="20"
           value={data?.map.zoom || 14}
@@ -193,6 +193,20 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
         />
       </div>
+
+      {/* ── Contact Info ── */}
+      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-3">
+        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider flex items-center gap-2">
+          <Phone size={14} />
+          {t('controls.map.contactInfo', 'Contact Info')}
+        </label>
+        <Input label={t('controls.map.phone', 'Phone')} value={data?.map.phone || ''} onChange={(e) => setNestedData('map.phone', e.target.value)} placeholder={t('controls.map.phonePlaceholder', 'e.g. +1 (555) 123-4567')} />
+        <Input label={t('controls.map.email', 'Email')} value={data?.map.email || ''} onChange={(e) => setNestedData('map.email', e.target.value)} placeholder={t('controls.map.emailPlaceholder', 'e.g. info@business.com')} />
+        <Input label={t('controls.map.businessHours', 'Business Hours')} value={data?.map.businessHours || ''} onChange={(e) => setNestedData('map.businessHours', e.target.value)} placeholder={t('controls.map.hoursPlaceholder', 'e.g. Mon-Fri 9:00-18:00')} />
+      </div>
+
+      {/* ── Button Text ── */}
+      <Input label={t('controls.map.buttonText', 'Button Text')} value={data?.map.buttonText || ''} onChange={(e) => setNestedData('map.buttonText', e.target.value)} placeholder={t('components.map.getDirections', 'Get Directions')} />
     </div>
   );
 
@@ -206,10 +220,10 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           value={data?.map.mapVariant || 'modern'}
           onChange={(v) => setNestedData('map.mapVariant', v)}
           options={[
-            { value: 'modern', label: '🏢 Modern Split - Info card + map' },
-            { value: 'minimal', label: '✨ Minimal - Clean with badge' },
-            { value: 'dark-tech', label: '🌃 Dark Tech - Tech overlay' },
-            { value: 'night', label: '🌙 Night Bar - Bottom info bar' }
+            { value: 'modern', label: t('controls.map.variants.modern', '🏢 Modern Split') },
+            { value: 'minimal', label: t('controls.map.variants.minimal', '✨ Minimal') },
+            { value: 'dark-tech', label: t('controls.map.variants.darkTech', '🌃 Dark Tech') },
+            { value: 'night', label: t('controls.map.variants.night', '🌙 Night Bar') }
           ]}
         />
       </div>
@@ -217,7 +231,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       {/* Map Height */}
       <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
         <div className="flex justify-between items-center mb-1">
-          <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Map Height</label>
+          <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('controls.map.mapHeight', 'Map Height')}</label>
           <span className="text-xs text-editor-text-primary">{data?.map.height || 400}px</span>
         </div>
         <input
@@ -232,11 +246,11 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
         <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
           <Settings size={14} />
-          Spacing
+          {t('controls.map.spacing', 'Spacing')}
         </label>
         <div className="space-y-1">
-          <PaddingSelector label="Vertical" value={data?.map.paddingY || 'md'} onChange={(v) => setNestedData('map.paddingY', v)} />
-          <PaddingSelector label="Horizontal" value={data?.map.paddingX || 'md'} onChange={(v) => setNestedData('map.paddingX', v)} />
+          <PaddingSelector label={t('controls.map.vertical', 'Vertical')} value={data?.map.paddingY || 'md'} onChange={(v) => setNestedData('map.paddingY', v)} />
+          <PaddingSelector label={t('controls.map.horizontal', 'Horizontal')} value={data?.map.paddingX || 'md'} onChange={(v) => setNestedData('map.paddingX', v)} />
         </div>
       </div>
 
@@ -244,14 +258,14 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
         <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
           <Palette size={14} />
-          Colors
+          {t('controls.map.colors', 'Colors')}
         </label>
         <ColorControl label={t('editor.controls.common.background')} value={data?.map.colors?.background || '#0f172a'} onChange={(v) => setNestedData('map.colors.background', v)} />
         <ColorControl label={t('editor.controls.common.title')} value={data?.map.colors?.heading || '#F9FAFB'} onChange={(v) => setNestedData('map.colors.heading', v)} />
-        <ColorControl label="Text" value={data?.map.colors?.text || '#94a3b8'} onChange={(v) => setNestedData('map.colors.text', v)} />
-        <ColorControl label="Marker/Accent" value={data?.map.colors?.accent || '#4f46e5'} onChange={(v) => setNestedData('map.colors.accent', v)} />
+        <ColorControl label={t('controls.map.textColor', 'Text')} value={data?.map.colors?.text || '#94a3b8'} onChange={(v) => setNestedData('map.colors.text', v)} />
+        <ColorControl label={t('controls.map.accentColor', 'Marker/Accent')} value={data?.map.colors?.accent || '#4f46e5'} onChange={(v) => setNestedData('map.colors.accent', v)} />
         {(data?.map.mapVariant === 'modern' || data?.map.mapVariant === 'card-overlay') && (
-          <ColorControl label="Card Background" value={data?.map.colors?.cardBackground || '#1e293b'} onChange={(v) => setNestedData('map.colors.cardBackground', v)} />
+          <ColorControl label={t('controls.map.cardBackground', 'Card Background')} value={data?.map.colors?.cardBackground || '#1e293b'} onChange={(v) => setNestedData('map.colors.cardBackground', v)} />
         )}
 
 

@@ -5,7 +5,7 @@
 
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
-import { GEMINI_CONFIG } from '../config';
+import { generateTextViaOpenRouter } from '../openrouterHelper';
 
 // Initialize Firestore if not already initialized
 if (!admin.apps.length) {
@@ -299,22 +299,9 @@ async function processMessageInternal(
     message: any,
     history: any[]
 ): Promise<{ success: boolean; response?: string; error?: string }> {
-    // Import Gemini (lazily to avoid cold start issues)
-    const { GoogleGenerativeAI } = await import('@google/generative-ai');
-    
-    const apiKey = GEMINI_CONFIG.apiKey;
-    if (!apiKey) {
-        console.error('[Facebook Webhook] GEMINI_API_KEY not configured');
-        return { success: false, error: 'AI not configured' };
-    }
-
     try {
-        const genAI = new GoogleGenerativeAI(apiKey);
-        const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
-
         const aiConfig = projectConfig.aiAssistantConfig;
-        
-        // Build prompt
+
         const systemPrompt = `You are ${aiConfig.agentName}, a ${aiConfig.tone?.toLowerCase() || 'professional'} AI assistant.
 
 BUSINESS PROFILE:
@@ -339,17 +326,15 @@ IMPORTANT: Respond in the same language the user is using.`;
             .map(msg => `${msg.direction === 'inbound' ? 'Customer' : 'Assistant'}: ${msg.message}`)
             .join('\n');
 
-        const fullPrompt = `${systemPrompt}
+        const userPrompt = `${conversationContext ? `CONVERSATION HISTORY:\n${conversationContext}\n\n` : ''}CUSTOMER: ${message.message}\n\nYOUR RESPONSE:`;
 
-${conversationContext ? `CONVERSATION HISTORY:\n${conversationContext}\n` : ''}
-CUSTOMER: ${message.message}
+        const result = await generateTextViaOpenRouter(userPrompt, {
+            model: 'gemini-2.0-flash',
+            systemInstruction: systemPrompt,
+            temperature: 0.7,
+        });
 
-YOUR RESPONSE:`;
-
-        const result = await model.generateContent(fullPrompt);
-        const responseText = result.response.text().trim();
-
-        return { success: true, response: responseText };
+        return { success: true, response: result.text.trim() };
 
     } catch (error: any) {
         console.error('AI generation error:', error);

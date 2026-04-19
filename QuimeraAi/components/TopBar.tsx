@@ -159,11 +159,53 @@ const TopBar: React.FC<TopBarProps> = ({
 
   const separatorChar = separatorMap[separator] || '';
 
+  // ─── Marquee ref for animation ───
+  const marqueeRef = useRef<HTMLDivElement>(null);
+
+  // Force-start animation via JS when scroll mode activates
+  useEffect(() => {
+    if (!scrollEnabled || !marqueeRef.current) return;
+    const el = marqueeRef.current;
+    const duration = (scrollSpeed || 30) * 1000; // convert seconds to ms
+
+    // Use Web Animations API for maximum reliability
+    try {
+      // Cancel any existing animations
+      el.getAnimations().forEach(a => a.cancel());
+
+      const anim = el.animate(
+        [
+          { transform: 'translateX(0)' },
+          { transform: 'translateX(-33.333%)' }
+        ],
+        {
+          duration,
+          iterations: Infinity,
+          easing: 'linear',
+        }
+      );
+
+      // Handle pause/unpause
+      if (isPaused) {
+        anim.pause();
+      }
+
+      return () => {
+        anim.cancel();
+      };
+    } catch {
+      // Fallback: CSS animation (already defined in main.css @keyframes topbar-scroll)
+      el.style.animation = `topbar-scroll ${scrollSpeed || 30}s linear infinite`;
+      el.style.animationPlayState = isPaused ? 'paused' : 'running';
+    }
+  }, [scrollEnabled, scrollSpeed, isPaused]);
+
   // ─── Scrolling (Marquee) mode ───
   if (scrollEnabled) {
     return (
       <div
-        className={`relative overflow-hidden z-[60] ${fontSizeMap[fontSize]}`}
+        id="site-topbar"
+        className={`relative overflow-hidden z-30 ${fontSizeMap[fontSize]}`}
         style={{
           ...bgStyle,
           color: textColor,
@@ -174,11 +216,9 @@ const TopBar: React.FC<TopBarProps> = ({
         onMouseLeave={() => pauseOnHover && setIsPaused(false)}
       >
         <div
-          className="flex items-center gap-12 topbar-marquee"
-          style={{
-            animationDuration: `${scrollSpeed}s`,
-            animationPlayState: isPaused ? 'paused' : 'running',
-          }}
+          ref={marqueeRef}
+          className="flex items-center gap-12"
+          style={{ width: 'max-content' }}
         >
           {/* Triple repeat for seamless loop */}
           {[...Array(3)].flatMap((_, rep) =>
@@ -203,17 +243,6 @@ const TopBar: React.FC<TopBarProps> = ({
             <X size={14} style={{ color: textColor }} />
           </button>
         )}
-
-        <style>{`
-          @keyframes topbar-scroll {
-            0% { transform: translateX(0); }
-            100% { transform: translateX(-33.333%); }
-          }
-          .topbar-marquee {
-            animation: topbar-scroll linear infinite;
-            width: max-content;
-          }
-        `}</style>
       </div>
     );
   }
@@ -221,7 +250,8 @@ const TopBar: React.FC<TopBarProps> = ({
   // ─── Static / Rotating mode ───
   return (
     <div
-      className={`relative z-[60] ${fontSizeMap[fontSize]}`}
+      id="site-topbar"
+      className={`relative z-30 ${fontSizeMap[fontSize]}`}
       style={{
         ...bgStyle,
         color: textColor,

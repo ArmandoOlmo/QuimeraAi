@@ -630,12 +630,27 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         }
     }, [user, currentTenantId]);
 
-    // Helper to remove undefined values (Firestore doesn't accept undefined)
-    const removeUndefinedValues = <T extends Record<string, any>>(obj: T): Partial<T> => {
-        const result: Partial<T> = {};
-        for (const key of Object.keys(obj) as (keyof T)[]) {
-            if (obj[key] !== undefined) {
-                result[key] = obj[key];
+    // Helper to deeply remove undefined values (Firestore doesn't accept undefined at any level)
+    const removeUndefinedValues = (obj: any): any => {
+        if (obj === undefined) return undefined;
+        if (obj === null) return null;
+        if (typeof obj !== 'object') return obj;
+
+        // Firestore specific types (Date, Timestamp, GeoPoint, etc) shouldn't be stripped of their prototypes
+        if (obj instanceof Date) return obj;
+        if (obj.toDate && typeof obj.toDate === 'function') return obj; // Firebase Timestamp
+        if (obj.isEqual && typeof obj.isEqual === 'function') return obj; // Firebase GeoPoint/Reference
+
+        if (Array.isArray(obj)) {
+            // Firestore arrays cannot contain undefined, so we map and filter
+            return obj.map(item => removeUndefinedValues(item)).filter(item => item !== undefined);
+        }
+
+        const result: any = {};
+        for (const key of Object.keys(obj)) {
+            const val = removeUndefinedValues(obj[key]);
+            if (val !== undefined) {
+                result[key] = val;
             }
         }
         return result;

@@ -67,12 +67,6 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           >
             {t('editor.controls.features.overlay')}
           </button>
-          <button
-            onClick={() => setNestedData('features.featuresVariant', 'cinematic-gym')}
-            className={`py-1 text-xs font-medium rounded-sm transition-colors ${currentVariant === 'cinematic-gym' ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:bg-editor-border'}`}
-          >
-            Brutalist
-          </button>
         </div>
         <p className="text-xs text-editor-text-secondary mt-2">
           {currentVariant === 'classic'
@@ -135,11 +129,11 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       <div>
         <div className="flex justify-between items-center mb-1">
           <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('editor.controls.features.imageHeight')}</label>
-          <span className="text-xs text-editor-text-primary">{data.features.imageHeight || 200}px</span>
+          <span className="text-xs text-editor-text-primary">{data.features.imageHeight || 430}px</span>
         </div>
         <input
           type="range" min="100" max="600" step="10"
-          value={data.features.imageHeight || 200}
+          value={data.features.imageHeight || 430}
           onChange={(e) => setNestedData('features.imageHeight', parseInt(e.target.value))}
           className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
         />
@@ -234,7 +228,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
         <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
           <FileText size={14} />
-          Section Header
+          {t('editor.controls.features.sectionHeader', 'Section Header')}
         </label>
         <Input label={t('editor.controls.common.title')} value={data.features.title} onChange={(e) => setNestedData('features.title', e.target.value)} />
         <FontSizeSelector label={t('editor.controls.common.titleSize')} value={data.features.titleFontSize || 'md'} onChange={(v) => setNestedData('features.titleFontSize', v)} />
@@ -246,7 +240,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
         <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
           <List size={14} />
-          Features List
+          {t('editor.controls.features.featuresList', 'Features List')}
         </label>
         {(data.features.items || []).map((item, index) => (
           <div
@@ -386,25 +380,27 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           <Select
             label={t('editor.controls.features.styleVariant')}
             value={currentVariant}
-            onChange={(v) => setNestedData('features.featuresVariant', v)}
+            onChange={(v) => {
+              setNestedData('features.featuresVariant', v);
+              if (v === 'image-overlay') {
+                setNestedData('features.gridColumns', 4);
+              }
+            }}
             options={[
               { value: 'classic', label: 'Classic (Grid Uniforme)' },
               { value: 'modern', label: 'Modern (Bento Asimétrico)' },
               { value: 'bento-premium', label: 'Premium (Bento Destacado)' },
-              { value: 'image-overlay', label: 'Overlay (Tarjetas Completas)' },
-              { value: 'cinematic-gym', label: 'Brutalist' }
+              { value: 'image-overlay', label: 'Overlay (Tarjetas Completas)' }
             ]}
           />
           <p className="text-xs text-editor-text-secondary mt-2">
             {currentVariant === 'classic'
-              ? '📦 Layout de cuadrícula tradicional'
+              ? t('editor.controls.features.descClassic', '📦 Layout de cuadrícula tradicional')
               : currentVariant === 'modern'
-                ? '✨ Layout moderno bento asimétrico'
+                ? t('editor.controls.features.descBento', '✨ Layout moderno bento asimétrico')
                 : currentVariant === 'bento-premium'
-                  ? '🎯 Bento premium con primera tarjeta destacada'
-                  : currentVariant === 'cinematic-gym'
-                    ? '⛓️ Texto interactivo y tarjetas con scroll flotante'
-                    : '🖼️ Imágenes completas con texto superpuesto'}
+                  ? t('editor.controls.features.descPremium', '🎯 Bento premium con primera tarjeta destacada')
+                  : t('editor.controls.features.descOverlay', '🖼️ Imágenes completas con texto superpuesto')}
           </p>
         </div>
 
@@ -479,19 +475,20 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       )}
 
       {/* Card Image */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
-          <Image size={14} />
-          Card Image
-        </label>
-        <div className="mb-3">
-          <div className="flex justify-between items-center mb-1">
-            <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Image Height</label>
-            <span className="text-xs text-editor-text-primary">{data.features.imageHeight || 200}px</span>
+      {currentVariant !== 'modern' && currentVariant !== 'bento-premium' && currentVariant !== 'cinematic-gym' && (
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+            <Image size={14} />
+            {t('editor.controls.features.cardImage', 'Card Image')}
+          </label>
+          <div className="mb-3">
+            <div className="flex justify-between items-center mb-1">
+              <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('editor.controls.features.imageHeight', 'Image Height')}</label>
+            <span className="text-xs text-editor-text-primary">{data.features.imageHeight || 430}px</span>
           </div>
           <input
             type="range" min="100" max="600" step="10"
-            value={data.features.imageHeight || 200}
+            value={data.features.imageHeight || 430}
             onChange={(e) => setNestedData('features.imageHeight', parseInt(e.target.value))}
             className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
           />
@@ -513,6 +510,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           </div>
         )}
       </div>
+     )}
 
       {/* Spacing */}
       <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">

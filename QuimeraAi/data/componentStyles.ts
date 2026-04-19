@@ -74,7 +74,7 @@ export const componentStyles: ComponentStyles = {
     titleFontSize: 'lg',
     descriptionFontSize: 'md',
     gridColumns: 3,
-    imageHeight: 200,
+    imageHeight: 430,
     imageObjectFit: 'cover',
     animationType: 'fade-in-up',
     enableCardAnimation: true,

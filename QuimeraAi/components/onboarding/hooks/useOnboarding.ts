@@ -418,11 +418,18 @@ export const useOnboarding = () => {
     // DATA UPDATES
     // =============================================================================
 
+    const lastGenSaveRef = useRef<number>(0);
     const updateProgress = useCallback((updates: Partial<OnboardingProgress>) => {
         if (!progress) return;
         const newProgress = { ...progress, ...updates };
         setProgress(newProgress);
-        // Auto-save after update
+        // Throttle Firestore saves during image generation to avoid resource-exhausted errors.
+        // generationProgress updates fire many times per minute; save max once every 10s.
+        if ('generationProgress' in updates && Object.keys(updates).length === 1) {
+            const now = Date.now();
+            if (now - lastGenSaveRef.current < 10000) return; // Skip if < 10s since last save
+            lastGenSaveRef.current = now;
+        }
         saveProgress(newProgress);
     }, [progress, saveProgress]);
 
@@ -2060,6 +2067,7 @@ TEMPLATE #${t.index}: "${t.name}"
                             resolution: '1K',
                             model: 'gemini-3-pro-image-preview', // Use dedicated image model for reliability
                             personGeneration: 'allow_adult', // Allow people in generated images
+                            skipFirestore: true, // Bulk mode: skip per-image Firestore writes to avoid resource-exhausted
                         });
 
                         if (imageUrl) {
@@ -2246,46 +2254,46 @@ TEMPLATE #${t.index}: "${t.name}"
                 aiAssistantConfig, // Add the generated AI Assistant configuration
             };
 
-            await addNewProject(newProject);
+            // Save project with timeout to prevent hanging on Firestore resource-exhausted
+            try {
+                await Promise.race([
+                    addNewProject(newProject),
+                    new Promise<void>((_, reject) =>
+                        setTimeout(() => reject(new Error('Save timeout')), 30000)
+                    ),
+                ]);
+            } catch (saveErr) {
+                console.warn('[Onboarding] Project save timed out or failed:', saveErr);
+            }
 
             // ============================================================================
-            // REGISTER ONBOARDING IMAGES IN PROJECT LIBRARY
-            // During onboarding, images are generated before the project exists, so they
-            // end up in a user-level fallback path and don't appear in the project's
-            // asset library. Here we register all generated images as project files so
-            // they're available for reuse in the project's media library.
+            // REGISTER ONBOARDING IMAGES IN PROJECT LIBRARY (fire-and-forget)
             // ============================================================================
             if (user?.uid && Object.keys(generatedImages).length > 0) {
-                if (isDev) console.log('📁 Registering onboarding images in project library...');
-                const filesCol = collection(db, `users/${user.uid}/projects/${newProject.id}/files`);
-                let registeredCount = 0;
-
-                for (const [promptKey, imageUrl] of Object.entries(generatedImages)) {
+                const registerImages = async () => {
                     try {
-                        // Find the matching image item to get prompt and metadata
-                        const matchingItem = imageItems.find(item => item.promptKey === promptKey);
-                        const imagePrompt = matchingItem?.prompt || promptKey;
-
-                        await addDoc(filesCol, {
-                            name: `onboarding-${promptKey.replace(/[.\[\]]/g, '-')}`,
-                            storagePath: '', // URL-based, storage path is unknown from here
-                            downloadURL: imageUrl,
-                            size: 0, // Size unknown from URL
-                            type: 'image/jpeg',
-                            createdAt: serverTimestamp(),
-                            notes: imagePrompt,
-                            aiSummary: '',
-                            projectId: newProject.id,
-                            projectName: newProject.name,
-                            source: 'onboarding', // Tag for easy identification
-                        });
-                        registeredCount++;
-                    } catch (regErr) {
-                        console.warn(`⚠️ Failed to register image ${promptKey} in project library:`, regErr);
-                    }
-                }
-
-                if (isDev) console.log(`✅ Registered ${registeredCount}/${Object.keys(generatedImages).length} images in project library`);
+                        const filesCol = collection(db, `users/${user.uid}/projects/${newProject.id}/files`);
+                        for (const [promptKey, imageUrl] of Object.entries(generatedImages)) {
+                            try {
+                                const matchingItem = imageItems.find(item => item.promptKey === promptKey);
+                                await addDoc(filesCol, {
+                                    name: `onboarding-${promptKey.replace(/[.\[\]]/g, '-')}`,
+                                    storagePath: '',
+                                    downloadURL: imageUrl,
+                                    size: 0,
+                                    type: 'image/jpeg',
+                                    createdAt: serverTimestamp(),
+                                    notes: matchingItem?.prompt || promptKey,
+                                    aiSummary: '',
+                                    projectId: newProject.id,
+                                    projectName: newProject.name,
+                                    source: 'onboarding',
+                                });
+                            } catch (_e) { /* skip */ }
+                        }
+                    } catch (_e) { /* skip */ }
+                };
+                registerImages().catch(() => {});
             }
 
             // Setup ecommerce if enabled

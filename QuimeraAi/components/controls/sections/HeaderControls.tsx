@@ -418,11 +418,28 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       <ColorControl label={t('editor.controls.common.background')} value={data.header.colors?.background} onChange={(v) => setNestedData('header.colors.background', v)} />
       <ColorControl label={t('editor.controls.common.text')} value={data.header.colors?.text} onChange={(v) => setNestedData('header.colors.text', v)} />
       <ColorControl label={t('editor.controls.common.accent')} value={data.header.colors?.accent || '#4f46e5'} onChange={(v) => setNestedData('header.colors.accent', v)} />
-      {data.header.style === 'transparent-gradient' && (
-        <ColorControl label="Color Gradiente" value={data.header.colors?.gradientFadeColor || data.header.colors?.text || '#ffffff'} onChange={(v) => setNestedData('header.colors.gradientFadeColor', v)} />
-      )}
-      {data.header.style === 'transparent-gradient-dark' && (
-        <ColorControl label="Color Gradiente" value={data.header.colors?.gradientDarkColor || '#000000'} onChange={(v) => setNestedData('header.colors.gradientDarkColor', v)} />
+      {(data.header.style === 'transparent-gradient' || data.header.style === 'transparent-gradient-dark') && (
+        <>
+          <ColorControl
+            label={data.header.style === 'transparent-gradient-dark' ? "Color Gradiente Oscuro" : "Color Gradiente Fade"}
+            value={data.header.style === 'transparent-gradient-dark' ? (data.header.colors?.gradientDarkColor || '#000000') : (data.header.colors?.gradientFadeColor || data.header.colors?.text || '#ffffff')}
+            onChange={(v) => setNestedData(data.header.style === 'transparent-gradient-dark' ? 'header.colors.gradientDarkColor' : 'header.colors.gradientFadeColor', v)}
+          />
+          <div>
+            <div className="flex justify-between items-center mb-1">
+              <label className="block text-sm font-medium text-editor-text-secondary">Tamaño del Gradiente</label>
+              <span className="text-xs text-editor-text-secondary/70">{data.header.gradientFadeSize ?? 30}%</span>
+            </div>
+            <input
+              type="range"
+              min="0"
+              max="100"
+              value={data.header.gradientFadeSize ?? 30}
+              onChange={(e) => setNestedData('header.gradientFadeSize', parseInt(e.target.value))}
+              className="w-full accent-editor-accent"
+            />
+          </div>
+        </>
       )}
     </div>
   )
@@ -885,11 +902,28 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           <ColorControl label={t('editor.controls.common.background')} value={data.header.colors?.background} onChange={(v) => setNestedData('header.colors.background', v)} />
           <ColorControl label={t('editor.controls.common.text')} value={data.header.colors?.text} onChange={(v) => setNestedData('header.colors.text', v)} />
           <ColorControl label={t('editor.controls.common.accent')} value={data.header.colors?.accent || '#4f46e5'} onChange={(v) => setNestedData('header.colors.accent', v)} />
-          {data.header.style === 'transparent-gradient' && (
-            <ColorControl label="Color Gradiente" value={data.header.colors?.gradientFadeColor || data.header.colors?.text || '#ffffff'} onChange={(v) => setNestedData('header.colors.gradientFadeColor', v)} />
-          )}
-          {data.header.style === 'transparent-gradient-dark' && (
-            <ColorControl label="Color Gradiente" value={data.header.colors?.gradientDarkColor || '#000000'} onChange={(v) => setNestedData('header.colors.gradientDarkColor', v)} />
+          {(data.header.style === 'transparent-gradient' || data.header.style === 'transparent-gradient-dark') && (
+            <>
+              <ColorControl
+                label={data.header.style === 'transparent-gradient-dark' ? "Color Gradiente Oscuro" : "Color Gradiente Fade"}
+                value={data.header.style === 'transparent-gradient-dark' ? (data.header.colors?.gradientDarkColor || '#000000') : (data.header.colors?.gradientFadeColor || data.header.colors?.text || '#ffffff')}
+                onChange={(v) => setNestedData(data.header.style === 'transparent-gradient-dark' ? 'header.colors.gradientDarkColor' : 'header.colors.gradientFadeColor', v)}
+              />
+              <div>
+                <div className="flex justify-between items-center mb-1">
+                  <label className="block text-sm font-medium text-editor-text-secondary">Tamaño del Gradiente</label>
+                  <span className="text-xs text-editor-text-secondary/70">{data.header.gradientFadeSize ?? 30}%</span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  value={data.header.gradientFadeSize ?? 30}
+                  onChange={(e) => setNestedData('header.gradientFadeSize', parseInt(e.target.value))}
+                  className="w-full accent-editor-accent"
+                />
+              </div>
+            </>
           )}
         </div>
       </div>

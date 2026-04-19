@@ -340,36 +340,42 @@ const PageRenderer: React.FC<PageRendererProps> = ({
             case 'heroGallery': {
                 const galleryData = mergedData.heroGallery;
                 return galleryData ? (
-                    <HeroGallery
-                        key={key}
-                        {...galleryData}
-                        borderRadius={galleryData.buttonBorderRadius || buttonBorderRadius}
-                        onNavigate={handleLinkNavigation}
-                    />
+                    <SectionBackground backgroundImageUrl={galleryData?.backgroundImageUrl} backgroundColor={galleryData?.colors?.background} backgroundOverlayEnabled={galleryData?.backgroundOverlayEnabled} backgroundOverlayOpacity={galleryData?.backgroundOverlayOpacity} backgroundOverlayColor={galleryData?.backgroundOverlayColor}>
+                        <HeroGallery
+                            key={key}
+                            {...galleryData}
+                            borderRadius={galleryData.buttonBorderRadius || buttonBorderRadius}
+                            onNavigate={handleLinkNavigation}
+                        />
+                    </SectionBackground>
                 ) : null;
             }
 
             case 'heroWave': {
                 const waveData = mergedData.heroWave;
                 return waveData ? (
-                    <HeroWave
-                        key={key}
-                        {...waveData}
-                        borderRadius={waveData.buttonBorderRadius || buttonBorderRadius}
-                        onNavigate={handleLinkNavigation}
-                    />
+                    <SectionBackground backgroundImageUrl={waveData?.backgroundImageUrl} backgroundColor={waveData?.colors?.background} backgroundOverlayEnabled={waveData?.backgroundOverlayEnabled} backgroundOverlayOpacity={waveData?.backgroundOverlayOpacity} backgroundOverlayColor={waveData?.backgroundOverlayColor}>
+                        <HeroWave
+                            key={key}
+                            {...waveData}
+                            borderRadius={waveData.buttonBorderRadius || buttonBorderRadius}
+                            onNavigate={handleLinkNavigation}
+                        />
+                    </SectionBackground>
                 ) : null;
             }
 
             case 'heroNova': {
                 const novaData = mergedData.heroNova;
                 return novaData ? (
-                    <HeroNova
-                        key={key}
-                        {...novaData}
-                        borderRadius={novaData.buttonBorderRadius || buttonBorderRadius}
-                        onNavigate={handleLinkNavigation}
-                    />
+                    <SectionBackground backgroundImageUrl={novaData?.backgroundImageUrl} backgroundColor={novaData?.colors?.background} backgroundOverlayEnabled={novaData?.backgroundOverlayEnabled} backgroundOverlayOpacity={novaData?.backgroundOverlayOpacity} backgroundOverlayColor={novaData?.backgroundOverlayColor}>
+                        <HeroNova
+                            key={key}
+                            {...novaData}
+                            borderRadius={novaData.buttonBorderRadius || buttonBorderRadius}
+                            onNavigate={handleLinkNavigation}
+                        />
+                    </SectionBackground>
                 ) : null;
             }
 

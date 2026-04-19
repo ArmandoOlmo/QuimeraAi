@@ -6,9 +6,31 @@
   <script>
     (function () {
       try {
+        // Theme initialization
         var savedTheme = localStorage.getItem('themeMode');
         var theme = savedTheme && ['light', 'dark', 'black'].includes(savedTheme) ? savedTheme : 'dark';
         document.documentElement.classList.add(theme);
+
+        // Onboarding mode detection (?onboarding=ai or ?onboarding=classic)
+        var params = new URLSearchParams(window.location.search);
+        var onboardingParam = params.get('onboarding');
+        if (onboardingParam === 'ai') {
+          localStorage.setItem('onboardingMode', 'ai-studio');
+          localStorage.setItem('autoOpenStudio', 'true');
+          params.delete('onboarding');
+          var newUrl = params.toString()
+            ? window.location.pathname + '?' + params.toString()
+            : window.location.pathname;
+          window.history.replaceState({}, '', newUrl);
+        } else if (onboardingParam === 'classic') {
+          localStorage.setItem('onboardingMode', 'classic');
+          localStorage.removeItem('autoOpenStudio');
+          params.delete('onboarding');
+          var newUrl2 = params.toString()
+            ? window.location.pathname + '?' + params.toString()
+            : window.location.pathname;
+          window.history.replaceState({}, '', newUrl2);
+        }
       } catch (e) {
         // If localStorage fails, default to dark
         document.documentElement.classList.add('dark');

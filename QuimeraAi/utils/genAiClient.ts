@@ -60,34 +60,55 @@ export const fetchGoogleApiKey = async (): Promise<string> => {
         return envKey;
     }
 
-    // 2. Try fetching from backend (production/secure mode)
+    // 2. Fetch from secure backend endpoint (production)
+    // The getLiveApiKey endpoint requires Firebase Auth and only allows owner/superadmin
     try {
-        console.log('🔐 Fetching Gemini API Key from secure backend...');
-        const { getFunctionsInstance, httpsCallable } = await import('../firebase');
-        const functions = await getFunctionsInstance();
-        const getApiKey = httpsCallable(functions, 'gemini-getApiKey');
+        console.log('🔐 Fetching Gemini Live API Key from secure backend...');
+        const { auth } = await import('../firebase');
+        const currentUser = auth.currentUser;
 
-        const result = await getApiKey();
-        const data = result.data as { apiKey: string };
+        if (!currentUser) {
+            throw new Error('User not authenticated. Please log in to use the Voice Assistant.');
+        }
 
+        const idToken = await currentUser.getIdToken();
+        const PROXY_BASE_URL = (import.meta as any).env?.VITE_GEMINI_PROXY_URL ||
+            'https://us-central1-quimeraai.cloudfunctions.net/gemini';
+
+        const response = await fetch(`${PROXY_BASE_URL}-liveApiKey`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${idToken}`,
+            },
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.error || `Failed to get Live API key: ${response.status}`);
+        }
+
+        const data = await response.json();
         if (data && data.apiKey) {
-            console.log('✅ Successfully retrieved Gemini API Key from backend');
+            console.log('✅ Successfully retrieved Gemini Live API Key from backend');
             cachedApiKey = data.apiKey;
             return data.apiKey;
         }
     } catch (error) {
-        console.error('❌ Failed to fetch Gemini API Key from backend:', error);
+        console.error('❌ Failed to fetch Gemini Live API Key from backend:', error);
+        throw error;
     }
 
     throw new Error(
-        '🔐 API key not available. Please ensure you are logged in to use the Voice Assistant.'
+        '🔐 API key not available. Please ensure you are logged in and have admin permissions to use the Voice Assistant.'
     );
 };
 
 /**
- * Get GoogleGenAI instance
- * WARNING: This only works in development with VITE_GEMINI_API_KEY set.
- * In production, use generateContent() which uses the secure proxy.
+ * Get GoogleGenAI instance for Live API (voice sessions)
+ * 
+ * In development: uses VITE_GEMINI_API_KEY from environment
+ * In production: securely fetches the API key from the backend
  */
 export const getGoogleGenAI = async () => {
     const apiKey = await fetchGoogleApiKey();

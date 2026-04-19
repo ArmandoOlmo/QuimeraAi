@@ -153,7 +153,7 @@ const HeroGallery: React.FC<HeroGalleryProps> = ({
                         <div
                             className="absolute inset-0 z-[1]"
                             style={{
-                                backgroundColor: `rgba(0, 0, 0, ${overlayOpacity})`,
+                                backgroundColor: `rgba(0, 0, 0, ${overlayOpacity > 1 ? overlayOpacity / 100 : overlayOpacity})`,
                             }}
                         />
 

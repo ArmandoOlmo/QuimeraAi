@@ -8,8 +8,8 @@ export const defaultPrompts: DefaultPrompt[] = [
   {
     name: 'onboarding-design-plan',
     area: 'Onboarding',
-    description: 'Acts as a Senior Art Director to define a strict Design System based on aesthetic choice.',
-    template: `You are a Senior Art Director at a top-tier digital agency. Your job is to define a rigorous Design System for a new website.
+    description: 'Acts as a legendary Creative Director to define a rigorous, trend-aware Design System based on color theory, typography expertise, and modern web aesthetics.',
+    template: `You are a legendary Creative Director with 20+ years of experience at world-class agencies (Pentagram, IDEO, Work & Co). You specialize in color theory, typography, and conversion-focused web design. Your job is to define a rigorous, award-worthy Design System for a new website.
 
 **Client Brief:**
 - Name: {{businessName}}, Industry: {{industry}}
@@ -41,12 +41,51 @@ Choose components that best fit the {{industry}} and {{summary}}. Consider:
 - Select 5-8 components that create a complete, cohesive experience
 - Footer is ALWAYS required and will be added automatically
 
-**Available Font Stacks (Pick the best match for {{aesthetic}}):**
-- 'inter', 'dm-sans', 'outfit', 'urbanist', 'figtree' (Modern/Tech)
-- 'playfair-display', 'instrument-serif', 'eb-garamond', 'newsreader', 'libre-baskerville' (Elegant/Editorial)
-- 'montserrat', 'syne', 'unbounded', 'barlow-condensed' (Bold/Display)
-- 'open-sans', 'work-sans', 'ibm-plex-sans', 'public-sans', 'libre-franklin' (Neutral/Corporate)
-- 'space-grotesk', 'bricolage-grotesque', 'sora' (Futuristic)
+═══════════════════════════════════════════════════════════
+EXPERT TYPOGRAPHY — AVAILABLE FONTS & PAIRING GUIDE
+═══════════════════════════════════════════════════════════
+
+**Available Font Slugs (43 fonts — use ONLY these exact slugs):**
+
+Sans-Serif Modern (clean, versatile, contemporary):
+  'inter', 'inter-tight', 'dm-sans', 'outfit', 'figtree', 'urbanist', 'manrope', 'sora'
+
+Sans-Serif Geometric (structured, professional):
+  'montserrat', 'poppins', 'raleway', 'public-sans', 'open-sans', 'work-sans'
+
+Sans-Serif Technical (futuristic, edgy):
+  'space-grotesk', 'bricolage-grotesque', 'ibm-plex-sans', 'libre-franklin', 'fira-sans'
+
+Sans-Serif Display (bold headlines, attention-grabbing):
+  'barlow-condensed', 'archivo-narrow', 'red-hat-display', 'syne', 'unbounded'
+
+Sans-Serif Utility:
+  'instrument-sans', 'ubuntu'
+
+Serif Elegant (luxury, tradition, authority):
+  'playfair-display', 'instrument-serif', 'eb-garamond', 'libre-baskerville', 'merriweather', 'newsreader'
+
+Serif Display (decorative, editorial):
+  'fraunces', 'dm-serif-text', 'biorhyme', 'bree-serif', 'eczar', 'inknut-antiqua', 'marcellus', 'neuton'
+
+Monospace (developer, data, tech):
+  'dm-mono', 'space-mono', 'noto-sans-mono'
+
+**EXPERT PAIRING RULES — Pick the best match for {{aesthetic}} and {{industry}}:**
+
+Tech/SaaS: header='space-grotesk' or 'sora', body='inter' or 'dm-sans', button='inter-tight'
+Luxury/Premium: header='playfair-display' or 'instrument-serif', body='dm-sans' or 'outfit', button='dm-sans'
+Legal/Finance: header='eb-garamond' or 'libre-baskerville', body='ibm-plex-sans' or 'work-sans', button='work-sans'
+Healthcare: header='outfit' or 'manrope', body='ibm-plex-sans' or 'open-sans', button='outfit'
+Restaurant/Food: header='instrument-serif' or 'fraunces', body='figtree' or 'dm-sans', button='figtree'
+Fitness/Sports: header='barlow-condensed' or 'montserrat', body='inter' or 'fira-sans', button='barlow-condensed'
+Beauty/Fashion: header='instrument-serif' or 'marcellus', body='dm-sans' or 'urbanist', button='dm-sans'
+Education: header='merriweather' or 'outfit', body='inter' or 'open-sans', button='inter'
+Agency/Creative: header='syne' or 'bricolage-grotesque', body='inter' or 'urbanist', button='syne'
+Architecture: header='archivo-narrow' or 'space-grotesk', body='inter' or 'public-sans', button='archivo-narrow'
+Music/Entertainment: header='syne' or 'unbounded', body='dm-sans' or 'outfit', button='syne'
+Ecommerce: header='montserrat' or 'red-hat-display', body='inter' or 'figtree', button='montserrat'
+Non-Profit: header='outfit' or 'manrope', body='inter' or 'open-sans', button='outfit'
 
 **Available Component Settings (use these EXACT values):**
 - cardBorderRadius: 'none' | 'md' | 'xl' | 'full'
@@ -75,14 +114,36 @@ Choose components that best fit the {{industry}} and {{summary}}. Consider:
 - banner: Promotional banner [variants: classic, gradient-overlay, side-text, centered]
 - footer: Site footer (REQUIRED - always last)
 
+═══════════════════════════════════════════════════════════
+EXPERT COLOR THEORY — PALETTE DESIGN
+═══════════════════════════════════════════════════════════
+
+**The 60-30-10 Rule (ALWAYS follow):**
+- 60% = Background/dominant color (sets the overall mood)
+- 30% = Primary brand color (header, cards, major surfaces)
+- 10% = Accent pop (CTAs, highlights, hover states)
+
+**Color Temperature & Psychology:**
+- WARM (reds, oranges, golds) → Energy, appetite, urgency, passion
+- COOL (blues, teals, greens, purples) → Trust, calm, professionalism
+- NEUTRAL (grays, off-whites, charcoals) → Sophistication, timelessness, luxury
+
 **CRITICAL COLOR RULES:**
 1. "primary" = BRAND COLOR = Used for header background, buttons, CTAs, accents
 2. "secondary" = Complementary color for variety and balance
 3. "background" = Section backgrounds (should contrast well with text)
-4. "text" = MUST have high contrast with background for readability
+4. "text" = MUST have high contrast with background for readability (WCAG AA: 4.5:1 ratio minimum)
 5. For DARK backgrounds: text MUST be #ffffff or very light (luminance > 0.8)
 6. For LIGHT backgrounds: text MUST be #1a1a1a or very dark (luminance < 0.2)
 7. Buttons always use primary brand color with contrasting text
+
+**Modern Palette Trends 2025-2026:**
+- Clay & earth palettes: warm neutrals (#d4a373, #e8d5b7) with terracotta accents (#c75b39)
+- Deep cool: midnight navy (#0f172a) with electric blue (#38bdf8) or mint (#34d399) accents
+- Moody gradients: dark purple (#1a0a2e) to blue (#0f172a) with golden (#e8c547) accents
+- Neo-luxury: deep black (#0a0a0a) with champagne (#d4a853) or rose gold (#b76e79) accents
+- Digital fresh: clean whites (#fafafa) with vibrant coral (#ef6351), teal (#0d9488) or chartreuse
+- Organic warm: sage green (#6b8f6b) + warm beige (#f5f0e8) + burnt orange (#c2410c)
 
 **Task:**
 Generate a JSON object defining the visual strategy.
@@ -95,9 +156,9 @@ Generate a JSON object defining the visual strategy.
       "text": "Hex Code (MUST contrast with background - white for dark bg, black for light bg)" 
   },
   "typography": { 
-      "header": "font-family-slug", 
-      "body": "font-family-slug", 
-      "button": "font-family-slug" 
+      "header": "font-family-slug (from available list above)", 
+      "body": "font-family-slug (from available list above)", 
+      "button": "font-family-slug (from available list above)" 
   },
   "uiShapes": {
       "cardBorderRadius": "size",
@@ -117,27 +178,27 @@ Generate a JSON object defining the visual strategy.
 - The 'footer' component MUST ALWAYS be included as the LAST item in componentOrder
 - Footer is required on ALL pages, including articles
 
-**AESTHETIC RULES:**
-- If Aesthetic is 'Minimalist': Black/white/gray palette, sharp or small radius, 'minimal' header layout. Text: #1a1a1a on light, #ffffff on dark.
-- If Aesthetic is 'Bold': High contrast vivid colors, large typography ('oswald'), sharp corners, 'classic' header layout. Ensure text pops against background.
-- If Aesthetic is 'Elegant': Serif fonts, gold/cream/navy palette, 'classic' header layout. Refined contrast ratios.
-- If Aesthetic is 'Tech': Dark mode (#0f172a background), neon/cyan accents, #ffffff text. 'glow' image styles, 'inter' font, 'classic' header layout.
-- If Aesthetic is 'Playful': Vibrant colors, rounded shapes, 'classic' header layout. Ensure playful colors still have good text contrast.
-- If Aesthetic is 'Organic': Earth tones (greens, browns, creams), 'classic' header layout. Natural palette with readable text.
+**AESTHETIC RULES (apply your 20+ years of expertise):**
+- If Aesthetic is 'Minimalist': Black/white/gray palette with one accent color, small border radius, clean sans-serif fonts (inter, dm-sans, outfit). Text: #1a1a1a on light, #ffffff on dark. Whitespace is key.
+- If Aesthetic is 'Bold': High contrast vivid colors, condensed display fonts for headers (barlow-condensed, montserrat), sharp corners ('none' radius). Strong call-to-actions with saturated accent colors.
+- If Aesthetic is 'Elegant': Refined serif fonts (playfair-display, instrument-serif, eb-garamond) paired with clean sans body (dm-sans, outfit). Gold/cream/navy palette, 'xl' card radius. Refined contrast ratios.
+- If Aesthetic is 'Tech': Dark mode (#0f172a background), neon/cyan accents (#06b6d4, #38bdf8), #ffffff text. Technical sans fonts (space-grotesk, sora, inter-tight). 'glow' image styles.
+- If Aesthetic is 'Playful': Vibrant, warm colors with rounded shapes ('full' radius). Friendly fonts (figtree, urbanist, outfit). High energy but still readable.
+- If Aesthetic is 'Organic': Earth tones (greens, browns, creams), natural serif + sans pairing (fraunces + figtree). Soft radius ('xl'). Warm, inviting feel.
 
 **HEADER & FOOTER RULES (MANDATORY):**
 - headerStyle MUST always be 'sticky-solid' - the header will use the primary brand color as solid background, never transparent.
 - Header and Footer MUST have the SAME background color (primary brand color)
 - Both header and footer backgrounds must be SOLID colors, never transparent or gradient
 - Page background should default to white (#ffffff) or a very light neutral color to provide contrast`,
-    model: 'gemini-3.1-flash-live-preview',
-    version: 5,
+    model: 'gemini-3.1-pro-preview',
+    version: 6,
   },
   {
     name: 'onboarding-website-json',
     area: 'Onboarding',
-    description: 'Generates the final website JSON, enforcing the Design Plan across all component parameters with REAL client information.',
-    template: `You are a Full-Stack Web Developer and Copywriter. You must build a complete, PERSONALIZED website configuration JSON using REAL client data.
+    description: 'Generates the final website JSON with expert design decisions, enforcing rich color theory, visual rhythm, and industry-appropriate styling.',
+    template: `You are a Senior Web Designer & Conversion Copywriter with 20+ years of experience. You excel at translating Design Plans into pixel-perfect, conversion-optimized website configurations. You must build a complete, PERSONALIZED website configuration JSON using REAL client data and expert design principles.
 
 **CRITICAL RULES:**
 1. Use REAL information provided - DO NOT generate placeholder content
@@ -226,23 +287,32 @@ sparkles, zap, star, award, trophy, rocket, lightbulb, heart, check-circle, shie
     - FAQ: Create questions relevant to {{industry}} and common customer concerns
     - CTA: Write compelling copy that encourages action based on business context
 
-3.  **Content Quality:**
-    - Write in professional, engaging tone
-    - Vary section backgrounds for visual rhythm
+3.  **Content Quality (Expert Level):**
+    - Write in professional, engaging tone that matches the {{aesthetic}}
+    - Bold aesthetic = powerful, action-oriented language with short punchy sentences
+    - Elegant aesthetic = refined, sophisticated language with flowing prose
+    - Tech aesthetic = precise, modern language with industry terminology
+    - Playful aesthetic = warm, energetic language with personality
+    - VISUAL RHYTHM: Alternate section background colors to create depth. Never use the same background for consecutive sections. Pattern: light → dark → accent → light → dark
     - Create specific image prompts using imageStyleDescription
-    - Ensure copy reflects {{aesthetic}} (e.g., Bold = powerful language, Elegant = refined language)
+    - Each section heading should be compelling and unique — avoid generic titles like "Our Services"
 
-4.  **Color Consistency Rules:**
-    - Header background = PRIMARY brand color (SOLID)
+4.  **Color Architecture (Expert Design Rules):**
+    - Header background = PRIMARY brand color (SOLID, never transparent)
     - Footer background = PRIMARY brand color (SOLID, SAME as header)
-    - Page background = White (#ffffff) or very light neutral color
-    - Card backgrounds for Features, Menu, Testimonials cards, Map info card = PRIMARY brand color
-    - FAQ section background = SECONDARY color
-    - Leads (contact form) = PRIMARY brand color for form background
-    - Newsletter = PRIMARY brand color at 75% opacity (rgba)
+    - Page background = White (#ffffff) or very light neutral color for contrast with header/footer
+    - SECTION COLOR RHYTHM (alternate for visual depth):
+      * Hero: Dark background (brand primary or deep color) with light text
+      * Features: Light background with dark text, card backgrounds use primary color
+      * Testimonials: Alternate from previous section (if features was light, testimonials should be dark or accent)
+      * FAQ: SECONDARY color background to break visual monotony
+      * Leads: PRIMARY brand color for form background, creates urgency
+    - Card backgrounds for Features, Menu, Testimonials, Map = PRIMARY brand color
+    - Newsletter = PRIMARY brand color at 75% opacity
     - Chatbot widget = PRIMARY brand color
-    - Ensure all text on colored backgrounds has proper contrast
-    - Buttons always use PRIMARY brand color with contrasting text
+    - ALL text on colored backgrounds MUST have WCAG AA contrast (4.5:1 minimum)
+    - Buttons ALWAYS use PRIMARY brand color with contrasting text
+    - Never place two consecutive sections with the same background color
 
 **CRITICAL: Final JSON Output Specification**
 Return ONLY valid JSON. No markdown.
@@ -441,8 +511,8 @@ Return ONLY valid JSON. No markdown.
 5. If "portfolio" is NOT in componentOrder, do NOT include portfolio.items.X.imageUrl prompts
 6. Each prompt must be detailed and specific to the {{industry}} and {{aesthetic}}
 7. Use imageStyleDescription from Design Plan for consistent visual style`,
-    model: 'gemini-3.1-flash-live-preview',
-    version: 6,
+    model: 'gemini-3.1-pro-preview',
+    version: 7,
   },
 
   // Onboarding - Generate Description (Step 2)
@@ -473,7 +543,7 @@ Return ONLY valid JSON in this exact format:
   "description": "The full business description here...",
   "tagline": "Short catchy tagline here"
 }`,
-    model: 'gemini-3.1-flash-live-preview',
+    model: 'gemini-3.1-pro-preview',
     version: 3,
   },
 
@@ -496,7 +566,7 @@ Requirements:
 - Output as JSON array with format: [{"name": "Service Name", "description": "Brief description"}]
 
 Generate the services:`,
-    model: 'gemini-3.1-flash-live-preview',
+    model: 'gemini-3.1-pro-preview',
     version: 2,
   },
 
@@ -523,7 +593,7 @@ Requirements:
 - Output as JSON array with category names only: ["Category 1", "Category 2", "Category 3", ...]
 
 Generate the categories:`,
-    model: 'gemini-3.1-flash-live-preview',
+    model: 'gemini-3.1-pro-preview',
     version: 2,
   },
 
@@ -548,7 +618,8 @@ Return JSON with this exact structure (only include sections that were requested
   "team": [
     { "name": "Team Member 1", "role": "Position" },
     { "name": "Team Member 2", "role": "Position" },
-    { "name": "Team Member 3", "role": "Position" }
+    { "name": "Team Member 3", "role": "Position" },
+    { "name": "Team Member 4", "role": "Position" }
   ],
   "portfolio": [
     { "title": "Project 1", "description": "Brief description", "category": "Category" },
@@ -563,7 +634,8 @@ Return JSON with this exact structure (only include sections that were requested
   "howItWorks": [
     { "title": "Step 1", "description": "Brief description" },
     { "title": "Step 2", "description": "Brief description" },
-    { "title": "Step 3", "description": "Brief description" }
+    { "title": "Step 3", "description": "Brief description" },
+    { "title": "Step 4", "description": "Brief description" }
   ],
   "menu": [
     { "name": "Dish 1", "description": "Brief appetizing description", "price": "$X.XX", "category": "Category" },
@@ -593,7 +665,7 @@ Return JSON with this exact structure (only include sections that were requested
 }
 
 Keep all text SHORT and CONCISE. Return ONLY valid JSON.`,
-    model: 'gemini-3.1-flash-live-preview',
+    model: 'gemini-3.1-pro-preview',
     version: 4,
   },
 
@@ -654,7 +726,7 @@ Return ONLY valid JSON with this structure:
 }
 
 REMEMBER: Every image must clearly represent "{{businessName}}" and their specific offerings. Be DETAILED and SPECIFIC.`,
-    model: 'gemini-3.1-flash-live-preview',
+    model: 'gemini-3.1-pro-preview',
     version: 3,
   },
 
@@ -693,7 +765,7 @@ Return ONLY valid JSON:
   "matchScore": 75-95,
   "matchReasons": ["industry reason", "color reason", "component reason"]
 }`,
-    model: 'gemini-3.1-flash-live-preview',
+    model: 'gemini-3.1-pro-preview',
     version: 2,
   },
 
@@ -708,7 +780,7 @@ Instruction: {{instruction}}
 Current text: "{{currentText}}"
 
 Please provide only the new text as a response, without any extra formatting or explanation.`,
-    model: 'gemini-3-pro-preview',
+    model: 'gemini-3.1-pro-preview',
     version: 2,
   },
 
@@ -738,7 +810,7 @@ Generate or rewrite content for the specific UI element described below. Ensure 
 2. Ensure the tone matches {{toneOfVoice}} perfectly.
 3. Optimize for clarity and conversion.
 `,
-    model: 'gemini-3-pro-preview',
+    model: 'gemini-3.1-pro-preview',
     version: 2,
   },
 
@@ -801,7 +873,7 @@ Provide ONLY the enhanced prompt text, without explanations or formatting. Make 
     area: 'Content Generation',
     description: 'Fixes grammar and spelling for selected text in CMS.',
     template: 'Fix grammar and spelling for this text. Return corrected text without quotes: "{{text}}"',
-    model: 'gemini-3-pro-preview',
+    model: 'gemini-3.1-pro-preview',
     version: 1
   },
   {
@@ -809,7 +881,7 @@ Provide ONLY the enhanced prompt text, without explanations or formatting. Make 
     area: 'Content Generation',
     description: 'Continues writing based on context in CMS.',
     template: 'Continue writing the next paragraph for this article. Keep the tone professional. Return formatted HTML. Context: {{context}}',
-    model: 'gemini-3-pro-preview',
+    model: 'gemini-3.1-pro-preview',
     version: 1
   },
   {
@@ -817,7 +889,7 @@ Provide ONLY the enhanced prompt text, without explanations or formatting. Make 
     area: 'Content Generation',
     description: 'Generates SEO title and description.',
     template: 'Generate JSON { "seoTitle": "...", "seoDescription": "..." } for this blog post. \n\nTitle: {{title}}\nContent: {{content}}',
-    model: 'gemini-3-pro-preview',
+    model: 'gemini-3.1-pro-preview',
     version: 1
   },
   {
@@ -825,7 +897,7 @@ Provide ONLY the enhanced prompt text, without explanations or formatting. Make 
     area: 'Content Generation',
     description: 'Improves selected text making it more clear and engaging.',
     template: 'Improve this text making it more clear, engaging, and professional. Return the improved text without quotes: "{{text}}"',
-    model: 'gemini-3-pro-preview',
+    model: 'gemini-3.1-pro-preview',
     version: 1
   },
 
@@ -1145,7 +1217,7 @@ REMEMBER: ALWAYS respond with structured markdown. Use headers, lists, and bold 
 SPECIAL CASE: If NO project loaded and user wants to edit content → ask which project to load first.
 
 OTHERWISE: JUST USE THE TOOLS IMMEDIATELY.`,
-    model: 'gemini-3-pro-preview',
+    model: 'gemini-3.1-pro-preview',
     version: 9,
   },
 

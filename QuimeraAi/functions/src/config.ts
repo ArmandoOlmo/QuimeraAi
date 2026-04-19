@@ -58,6 +58,24 @@ export const GEMINI_CONFIG = {
 };
 
 // =============================================================================
+// OPENROUTER (AI - Primary text generation provider)
+// =============================================================================
+export const OPENROUTER_CONFIG = {
+    get apiKey(): string {
+        const key = process.env.OPENROUTER_API_KEY;
+        if (!key) {
+            console.error('[Config] OPENROUTER_API_KEY not configured');
+        }
+        return key || '';
+    },
+    baseUrl: 'https://openrouter.ai/api/v1',
+    /** Whether to prefer OpenRouter over direct Gemini for text generation */
+    get enabled(): boolean {
+        return !!process.env.OPENROUTER_API_KEY;
+    },
+};
+
+// =============================================================================
 // CLOUDFLARE (DNS & Workers)
 // =============================================================================
 export const CLOUDFLARE_CONFIG = {

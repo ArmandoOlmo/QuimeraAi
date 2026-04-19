@@ -1486,6 +1486,40 @@
       "hintLeads": "Los envíos se guardarán como leads en el CRM.",
       "hintAudience": "Los envíos se agregarán a la audiencia seleccionada en Email Marketing.",
       "hintBoth": "Los envíos se guardarán como leads Y se agregarán a la audiencia de email."
+    },
+    "map": {
+      "location": "Ubicación",
+      "address": "Dirección",
+      "addressPlaceholder": "ej. Calle 123, Ciudad, País",
+      "searchLocation": "Buscar ubicación",
+      "find": "Buscar",
+      "locationSet": "Ubicación establecida",
+      "manualCoordinates": "Coordenadas manuales (avanzado)",
+      "latitude": "Latitud",
+      "longitude": "Longitud",
+      "zoomLevel": "Nivel de Zoom",
+      "contactInfo": "Información de Contacto",
+      "phone": "Teléfono",
+      "phonePlaceholder": "ej. +1 (555) 123-4567",
+      "email": "Email",
+      "emailPlaceholder": "ej. info@negocio.com",
+      "businessHours": "Horario de Atención",
+      "hoursPlaceholder": "ej. Lun-Vie 9:00-18:00",
+      "buttonText": "Texto del Botón",
+      "mapHeight": "Altura del Mapa",
+      "spacing": "Espaciado",
+      "vertical": "Vertical",
+      "horizontal": "Horizontal",
+      "colors": "Colores",
+      "textColor": "Texto",
+      "accentColor": "Marcador/Acento",
+      "cardBackground": "Fondo de Tarjeta",
+      "variants": {
+        "modern": "🏢 Moderno Dividido",
+        "minimal": "✨ Minimalista",
+        "darkTech": "🌃 Dark Tech",
+        "night": "🌙 Barra Nocturna"
+      }
     }
   },
   "coolorsImporter": {
@@ -2338,6 +2372,8 @@
     "help": "Ayuda",
     "newProject": "Nuevo Proyecto",
     "startBuilding": "Comienza a construir el sitio de tus sueños",
+    "createWithAI": "Crear con IA",
+    "createWithAIDesc": "Deja que la IA cree tu sitio desde una conversación",
     "heroSubtitlePart1": "Tienes",
     "heroSubtitlePart2": "proyectos",
     "helpGuide": {
@@ -3698,11 +3734,14 @@
       },
       "features": {
         "sectionStyle": "Estilo de Sección",
+        "sectionHeader": "Encabezado de Sección",
+        "featuresList": "Lista de Características",
+        "styleVariant": "Variante de Estilo",
         "classic": "Clásico",
         "bento": "Bento",
         "premium": "Premium",
         "overlay": "Superposición",
-        "descClassic": "📦 Diseño tradicional de cuadrícula uniforme",
+        "descClassic": "📦 Layout de cuadrícula tradicional",
         "descBento": "✨ Diseño moderno de cuadrícula bento asimétrica",
         "descPremium": "🎯 Bento premium con tarjeta destacada primero",
         "descOverlay": "🖼️ Imágenes de ancho completo con texto superpuesto",
@@ -4701,11 +4740,104 @@
       "textPlaceholder": "Describe la campaña, audiencia o automatización que necesitas...",
       "resetConversation": "Reiniciar conversación",
       "stopVoice": "Detener voz",
-      "startVoice": "Iniciar voz (Gemini Live)"
+      "startVoice": "Iniciar chat de voz"
     },
     "confirmModal": {
       "cancel": "Cancelar",
       "delete": "Eliminar"
+    }
+  },
+  "aiWebsiteStudio": {
+    "title": "AI Website Studio",
+    "poweredBy": "Impulsado por Quimera AI",
+    "brief": "Resumen",
+    "close": "Cerrar",
+    "welcome": {
+      "greeting": "¡Hola! 👋 Soy **Quimera AI**, tu asistente de diseño web.",
+      "description": "Te ayudaré a crear un **sitio web profesional completo** a través de una conversación natural. No necesitas habilidades de diseño — yo me encargo de todo.",
+      "whatINeed": "🎯 Solo necesito conocer tu negocio:",
+      "businessName": "🏢 **Nombre y tipo** de negocio",
+      "services": "📝 **Servicios** que ofreces",
+      "style": "🎨 **Estilo visual** que prefieres",
+      "contact": "📞 **Información de contacto**",
+      "voiceHint": "También puedes usar el **🎤 modo de voz** para hablarme directamente.",
+      "existingWebsite": "💡 ¿Ya tienes un sitio web? Haz clic en el botón **🌐 Importar** para extraer tu información automáticamente.",
+      "startQuestion": "**Cuéntame, ¿qué tipo de negocio tienes?**"
+    },
+    "chat": {
+      "thinking": "Pensando...",
+      "voicePlaceholder": "🎤 Escuchando...",
+      "textPlaceholder": "Escribe tu mensaje...",
+      "stopVoice": "Detener voz",
+      "startVoice": "Iniciar voz",
+      "errorMessage": "⚠️ Hubo un error procesando tu mensaje. Por favor intenta de nuevo.",
+      "generatingHint": "Generando tu sitio web... Mira el progreso en la ventana de detalles."
+    },
+    "extraction": {
+      "buttonLabel": "Importar Web",
+      "modalTitle": "Importar de Sitio Web Existente",
+      "modalDescription": "Ingresa la URL de tu sitio web y extraeremos información del negocio, redes sociales, datos de contacto, colores y más.",
+      "urlPlaceholder": "https://www.ejemplo.com",
+      "urlFormatHint": "Incluye la URL completa con https://",
+      "extractButton": "Extraer Datos",
+      "cancel": "Cancelar",
+      "analyzing": "🔍 Analizando tu sitio web... Estoy escaneando la navegación, redes sociales, información de contacto, colores, servicios y más. Esto puede tomar un momento.",
+      "noData": "No pude extraer datos específicos de esa URL, pero puedes contarme sobre tu negocio y te ayudaré desde cero.",
+      "error": "⚠️ No pude acceder a ese sitio web. El sitio podría estar bloqueando acceso externo o la URL podría ser incorrecta. ¡Aún puedes contarme sobre tu negocio manualmente!"
+    },
+    "briefPanel": {
+      "title": "Resumen del Negocio",
+      "readiness": "Preparación",
+      "missing": "Falta:",
+      "business": "Negocio",
+      "name": "Nombre",
+      "industry": "Industria",
+      "tagline": "Eslogan",
+      "services": "Servicios",
+      "contact": "Contacto",
+      "email": "Email",
+      "phone": "Teléfono",
+      "address": "Dirección",
+      "hours": "Horario",
+      "colors": "Colores",
+      "components": "Componentes",
+      "pending": "pendiente...",
+      "generateButton": "🚀 Generar Website",
+      "generating": "Generando...",
+      "keepChatting": "Sigue conversando — necesito más información para crear tu sitio"
+    },
+    "generation": {
+      "creating": "Creando: {{name}}",
+      "websiteCreated": "¡Website Creado!",
+      "yourWebsite": "Tu Website",
+      "phases": {
+        "content": "Generando Contenido",
+        "images": "Creando Imágenes",
+        "finalizing": "Ensamblando Website",
+        "done": "¡Completo!"
+      },
+      "stats": {
+        "images": "Imágenes:",
+        "failed": "Fallidas:",
+        "progress": "Progreso:"
+      },
+      "generatedImages": "Imágenes Generadas",
+      "events": {
+        "starting": "🚀 Iniciando generación del sitio web para \"{{name}}\"",
+        "generatingContent": "📝 Generando estructura y contenido del sitio web con IA...",
+        "contentDone": "✅ Contenido generado — {{count}} componentes creados",
+        "generatingDescriptions": "🎨 Generando descripciones de imágenes...",
+        "descriptionsReady": "🖼️ {{count}} descripciones de imágenes listas",
+        "generatingImage": "🎨 Generando: {{key}}...",
+        "imageRetry": "⚠️ Reintento {{retry}}/{{max}} para {{key}}: {{error}}",
+        "imageDone": "✅ {{key}}",
+        "imageFailed": "❌ Falló: {{key}} (omitido)",
+        "assembling": "📦 Ensamblando sitio web — {{completed}} imágenes generadas, {{failed}} fallidas",
+        "saving": "💾 Guardando tu sitio web...",
+        "done": "🎉 ¡Sitio web creado exitosamente!"
+      },
+      "success": "🎉 **¡Tu sitio web ha sido creado exitosamente!**\n\nGenerado:\n- 📄 {{sections}} secciones\n- 🖼️ {{images}} imágenes\n- 🎨 Paleta de colores personalizada\n- 🤖 Asistente AI configurado\n\nPuedes cerrar esto y encontrar tu proyecto en el dashboard.",
+      "error": "⚠️ **Error en la generación:** {{error}}\n\nPuedes intentar de nuevo."
     }
   },
   "financeDashboard": {
@@ -10054,5 +10186,17 @@
     "ctaSubtitle": "Únete a miles de creadores que construyen sus sitios web con Quimera AI.",
     "ctaButton": "Comienza gratis",
     "ctaNote": "Sin tarjeta de crédito requerida"
+  },
+  "components": {
+    "map": {
+      "getDirections": "Cómo Llegar",
+      "loading": "Cargando Mapa...",
+      "locationLabel": "Ubicación",
+      "navigate": "Navegar",
+      "hours": "Horario",
+      "visitUs": "Visítanos",
+      "findUs": "Encuéntranos",
+      "openInMaps": "Abrir en Google Maps"
+    }
   }
 }

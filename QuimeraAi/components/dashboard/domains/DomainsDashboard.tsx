@@ -1212,7 +1212,7 @@ const DomainsDashboard: React.FC = () => {
     const [cloudflareNameservers, setCloudflareNameservers] = useState<string[]>([]);
     const [cloudflareError, setCloudflareError] = useState<string | null>(null);
     const [showNameserversModal, setShowNameserversModal] = useState(false);
-    const [showInstructions, setShowInstructions] = useState(true);
+    const [showInstructions, setShowInstructions] = useState(false);
 
 
 

@@ -10,3 +10,4 @@ export { updateSubscriptionAddons, getAddonsPricing, calculateAddonsPrice, check
 export { createOrUpdatePlan, archivePlan, createCheckoutSession, createCustomerPortalSession, } from './billing/stripePlansManagement';
 export { autoProvisionClient, getOnboardingStatus, } from './onboarding/autoProvisionClient';
 export { tenantsApi } from './api/v1/tenants';
+export { backupAllProjects, restoreProjectFromBackup, cleanupOldBackups, } from './backups/projectBackups';

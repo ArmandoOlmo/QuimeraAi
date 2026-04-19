@@ -48,7 +48,7 @@ const ImageGenerationProgress: React.FC<ImageGenerationProgressProps> = ({ progr
     };
 
     return (
-        <div className="space-y-4">
+        <div className="flex flex-col flex-1 min-h-0 space-y-3">
             {/* Header with progress */}
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -98,7 +98,7 @@ const ImageGenerationProgress: React.FC<ImageGenerationProgressProps> = ({ progr
             )}
 
             {/* Image list */}
-            <div className="space-y-2 max-h-48 overflow-y-auto">
+            <div className="flex-1 space-y-2 max-h-[220px] overflow-y-auto pr-2 custom-scrollbar">
                 {progress.allImages.map((img, index) => (
                     <div
                         key={img.id}

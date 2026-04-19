@@ -2681,7 +2681,10 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
         themeColors?: string,
         depthOfField?: string,
         referenceImage?: string,
-        referenceImages?: string[]
+        referenceImages?: string[],
+        // Bulk generation: skip Firestore write to avoid resource-exhausted errors
+        skipFirestore?: boolean,
+        projectId?: string,
     }): Promise<string> => {
         if (!user) throw new Error("Authentication required to generate images.");
 
@@ -2736,14 +2739,16 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
                 const fileName = `generated-ai-${Date.now()}.${proxyResponse.mimeType?.includes('png') ? 'png' : 'jpg'}`;
                 let storagePath = '';
                 let firestoreCol;
+                
+                const targetProjectId = options?.projectId || activeProjectId;
 
                 if (destination === 'global') {
                     storagePath = `global_assets/generated/${fileName}`;
                     firestoreCol = collection(db, 'global_files');
-                } else if (activeProjectId) {
+                } else if (targetProjectId) {
                     // Project-scoped path
-                    storagePath = `users/${user.uid}/projects/${activeProjectId}/files/generated/${fileName}`;
-                    firestoreCol = collection(db, `users/${user.uid}/projects/${activeProjectId}/files`);
+                    storagePath = `users/${user.uid}/projects/${targetProjectId}/files/generated/${fileName}`;
+                    firestoreCol = collection(db, `users/${user.uid}/projects/${targetProjectId}/files`);
                 } else {
                     // Fallback to user-level if no project (legacy)
                     storagePath = `user_uploads/${user.uid}/generated/${fileName}`;
@@ -2754,29 +2759,31 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
                 const snapshot = await uploadBytes(storageRef, blob);
                 const downloadURL = await getDownloadURL(snapshot.ref);
 
-                // Create DB Record with simplified notes (just the prompt)
-                const newFileRecord: Omit<FileRecord, 'id'> = {
-                    name: fileName,
-                    storagePath: snapshot.ref.fullPath,
-                    downloadURL,
-                    size: blob.size,
-                    type: proxyResponse.mimeType || 'image/png',
-                    createdAt: serverTimestamp() as any,
-                    notes: prompt,
-                    aiSummary: '',
-                    // Only include projectId if it exists (Firestore doesn't accept undefined)
-                    ...(activeProjectId ? { projectId: activeProjectId } : {})
-                };
+                // Skip Firestore write during bulk generation to avoid resource-exhausted errors
+                if (!options?.skipFirestore) {
+                    const newFileRecord: Omit<FileRecord, 'id'> = {
+                        name: fileName,
+                        storagePath: snapshot.ref.fullPath,
+                        downloadURL,
+                        size: blob.size,
+                        type: proxyResponse.mimeType || 'image/png',
+                        createdAt: serverTimestamp() as any,
+                        notes: prompt,
+                        aiSummary: '',
+                        // Only include projectId if it exists (Firestore doesn't accept undefined)
+                        ...(targetProjectId ? { projectId: targetProjectId } : {})
+                    };
 
-                const docRef = await addDoc(firestoreCol, newFileRecord);
+                    const docRef = await addDoc(firestoreCol, newFileRecord);
 
-                // Update State
-                const fullRecord = { id: docRef.id, ...newFileRecord, createdAt: { seconds: Date.now() / 1000, nanoseconds: 0 } } as FileRecord;
+                    // Update State
+                    const fullRecord = { id: docRef.id, ...newFileRecord, createdAt: { seconds: Date.now() / 1000, nanoseconds: 0 } } as FileRecord;
 
-                if (destination === 'global') {
-                    setGlobalFiles(prev => [fullRecord, ...prev]);
-                } else {
-                    setFiles(prev => [fullRecord, ...prev]);
+                    if (destination === 'global') {
+                        setGlobalFiles(prev => [fullRecord, ...prev]);
+                    } else {
+                        setFiles(prev => [fullRecord, ...prev]);
+                    }
                 }
 
                 // Log API call

@@ -239,7 +239,7 @@ const Footer: React.FC<FooterData & {
               )}
             </div>
             <div className="flex space-x-3">
-              {socialLinks.map((link, index) => (
+              {Array.isArray(socialLinks) && socialLinks.map((link, index) => (
                 <a
                   key={index}
                   href={link.href}
