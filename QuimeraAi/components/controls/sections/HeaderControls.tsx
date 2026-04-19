@@ -422,19 +422,19 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         <>
           <ColorControl
             label={data.header.style === 'transparent-gradient-dark' ? "Color Gradiente Oscuro" : "Color Gradiente Fade"}
-            value={data.header.style === 'transparent-gradient-dark' ? (data.header.colors?.gradientDarkColor || '#000000') : (data.header.colors?.gradientFadeColor || data.header.colors?.text || '#ffffff')}
+            value={data.header.style === 'transparent-gradient-dark' ? (data.header.colors?.gradientDarkColor || data.header.colors?.background || '#1e1b4b') : (data.header.colors?.gradientFadeColor || data.header.colors?.background || '#c7d2fe')}
             onChange={(v) => setNestedData(data.header.style === 'transparent-gradient-dark' ? 'header.colors.gradientDarkColor' : 'header.colors.gradientFadeColor', v)}
           />
           <div>
             <div className="flex justify-between items-center mb-1">
               <label className="block text-sm font-medium text-editor-text-secondary">Tamaño del Gradiente</label>
-              <span className="text-xs text-editor-text-secondary/70">{data.header.gradientFadeSize ?? 30}%</span>
+              <span className="text-xs text-editor-text-secondary/70">{data.header.gradientFadeSize ?? 15}%</span>
             </div>
             <input
               type="range"
               min="0"
               max="100"
-              value={data.header.gradientFadeSize ?? 30}
+              value={data.header.gradientFadeSize ?? 15}
               onChange={(e) => setNestedData('header.gradientFadeSize', parseInt(e.target.value))}
               className="w-full accent-editor-accent"
             />
@@ -906,19 +906,19 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
             <>
               <ColorControl
                 label={data.header.style === 'transparent-gradient-dark' ? "Color Gradiente Oscuro" : "Color Gradiente Fade"}
-                value={data.header.style === 'transparent-gradient-dark' ? (data.header.colors?.gradientDarkColor || '#000000') : (data.header.colors?.gradientFadeColor || data.header.colors?.text || '#ffffff')}
+                value={data.header.style === 'transparent-gradient-dark' ? (data.header.colors?.gradientDarkColor || data.header.colors?.background || '#1e1b4b') : (data.header.colors?.gradientFadeColor || data.header.colors?.background || '#c7d2fe')}
                 onChange={(v) => setNestedData(data.header.style === 'transparent-gradient-dark' ? 'header.colors.gradientDarkColor' : 'header.colors.gradientFadeColor', v)}
               />
               <div>
                 <div className="flex justify-between items-center mb-1">
                   <label className="block text-sm font-medium text-editor-text-secondary">Tamaño del Gradiente</label>
-                  <span className="text-xs text-editor-text-secondary/70">{data.header.gradientFadeSize ?? 30}%</span>
+                  <span className="text-xs text-editor-text-secondary/70">{data.header.gradientFadeSize ?? 15}%</span>
                 </div>
                 <input
                   type="range"
                   min="0"
                   max="100"
-                  value={data.header.gradientFadeSize ?? 30}
+                  value={data.header.gradientFadeSize ?? 15}
                   onChange={(e) => setNestedData('header.gradientFadeSize', parseInt(e.target.value))}
                   className="w-full accent-editor-accent"
                 />

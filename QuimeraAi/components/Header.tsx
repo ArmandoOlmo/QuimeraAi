@@ -198,7 +198,7 @@ const Header: React.FC<HeaderData & {
   cartItemCount = 0,
   onCartClick,
   colors = {},
-  gradientFadeSize = 30,
+  gradientFadeSize = 15,
   isPreviewMode = false,
   containerRef,
   linkFontSize = 14,
@@ -454,17 +454,19 @@ const Header: React.FC<HeaderData & {
             borderColor: 'rgba(255,255,255,0.2)'
           };
         case 'transparent-gradient': {
-          const fadeSize = typeof gradientFadeSize === 'number' ? gradientFadeSize : 30;
+          const fadeSize = typeof gradientFadeSize === 'number' ? gradientFadeSize : 15;
           const startPercent = Math.max(0, 100 - fadeSize);
-          const edgeColor = colors?.gradientFadeColor || `color-mix(in srgb, ${actualColors.background}, white 30%)`;
+          // Use a lighter tone of the header's own background — never pure white
+          const edgeColor = colors?.gradientFadeColor || `color-mix(in srgb, ${actualColors.background} 70%, transparent)`;
           return {
             background: `linear-gradient(180deg, ${actualColors.background} 0%, ${actualColors.background} ${startPercent}%, ${edgeColor} 100%)`
           };
         }
         case 'transparent-gradient-dark': {
-          const fadeSize = typeof gradientFadeSize === 'number' ? gradientFadeSize : 30;
+          const fadeSize = typeof gradientFadeSize === 'number' ? gradientFadeSize : 15;
           const startPercent = Math.max(0, 100 - fadeSize);
-          const edgeColor = colors?.gradientDarkColor || `color-mix(in srgb, ${actualColors.background}, black 35%)`;
+          // Use a darker tone of the header's own background — never pure black
+          const edgeColor = colors?.gradientDarkColor || `color-mix(in srgb, ${actualColors.background}, #0a0a0a 40%)`;
           return {
             background: `linear-gradient(180deg, ${actualColors.background} 0%, ${actualColors.background} ${startPercent}%, ${edgeColor} 100%)`
           };

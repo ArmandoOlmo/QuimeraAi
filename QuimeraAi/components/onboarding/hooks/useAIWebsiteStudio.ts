@@ -1609,10 +1609,10 @@ function buildContentGenerationPrompt(brief: BusinessBrief, isSpanish: boolean):
       "colors": {
         "buttonBackground": "${brief.colorPalette.accent}",
         "buttonText": "[GENERATE HEX COLOR that strongly contrasts with buttonBackground]",
-        "gradientDarkColor": "[IF style IS 'transparent-gradient-dark' THEN SELECT dark hex color, ELSE omit]",
-        "gradientFadeColor": "[IF style IS 'transparent-gradient' THEN SELECT light hex color, ELSE omit]"
+        "gradientDarkColor": "[IF style IS 'transparent-gradient-dark' THEN generate a DARKER shade of the header background color — NEVER use pure black #000000, ELSE omit]",
+        "gradientFadeColor": "[IF style IS 'transparent-gradient' THEN generate a LIGHTER shade of the header background color — NEVER use pure white #ffffff, ELSE omit]"
       },
-      "gradientFadeSize": "[IF style IS 'transparent-gradient' OR 'transparent-gradient-dark' THEN SELECT number between 10 and 100 for gradient size, ELSE omit]",
+      "gradientFadeSize": "[IF style IS 'transparent-gradient' OR 'transparent-gradient-dark' THEN SELECT number between 10 and 30 for gradient size, default 15, ELSE omit]",
       "links": ${JSON.stringify(headerLinks)}
     },`;
 
