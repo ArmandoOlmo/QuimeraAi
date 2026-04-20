@@ -31,6 +31,24 @@ interface GlobalStylesControlProps {
 }
 
 /**
+ * Calcula la luminancia relativa de un color hex y devuelve el texto que mejor contrasta.
+ * Usado para garantizar legibilidad WCAG AA en botones, cards, y overlays.
+ */
+export const contrastText = (bgHex: string, lightColor = '#ffffff', darkColor = '#1a1a1a'): string => {
+    try {
+        const hex = (bgHex || '#000000').replace('#', '');
+        const r = parseInt(hex.substr(0, 2), 16) / 255;
+        const g = parseInt(hex.substr(2, 2), 16) / 255;
+        const b = parseInt(hex.substr(4, 2), 16) / 255;
+        // sRGB luminance formula
+        const luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+        return luminance > 0.45 ? darkColor : lightColor;
+    } catch {
+        return lightColor;
+    }
+};
+
+/**
  * Genera el mapeo de colores de la paleta global a cada componente
  * Exportado para uso en onboarding y otras partes de la aplicación
  */
@@ -40,12 +58,12 @@ export const generateComponentColorMappings = (colors: GlobalColors): Record<str
             primary: colors?.primary,
             secondary: colors?.secondary,
             background: colors?.background,
-            text: colors?.text,
-            heading: colors?.heading,
+            text: '#ffffff',
+            heading: '#ffffff',
             buttonBackground: colors?.primary,
-            buttonText: '#ffffff',
-            secondaryButtonBackground: colors?.surface,
-            secondaryButtonText: colors?.text,
+            buttonText: contrastText(colors?.primary),
+            secondaryButtonBackground: 'rgba(255,255,255,0.15)',
+            secondaryButtonText: '#ffffff',
         },
         heroSplit: {
             textBackground: colors?.background,
@@ -53,22 +71,22 @@ export const generateComponentColorMappings = (colors: GlobalColors): Record<str
             heading: colors?.heading,
             text: colors?.text,
             buttonBackground: colors?.primary,
-            buttonText: '#ffffff',
+            buttonText: contrastText(colors?.primary),
         },
         banner: {
             background: colors?.surface,
             overlayColor: '#000000',
-            heading: colors?.heading,
-            text: colors?.text,
+            heading: '#ffffff',
+            text: '#ffffff',
             buttonBackground: colors?.primary,
-            buttonText: '#ffffff',
+            buttonText: contrastText(colors?.primary),
         },
         map: {
             background: colors?.background,
             heading: colors?.heading,
             text: colors?.text,
             accent: colors?.accent,
-            cardBackground: colors?.primary,
+            cardBackground: colors?.surface,
             borderColor: colors?.border,
         },
         features: {
@@ -78,9 +96,9 @@ export const generateComponentColorMappings = (colors: GlobalColors): Record<str
             text: colors?.text,
             heading: colors?.heading,
             description: colors?.text,
-            cardBackground: colors?.primary,
-            cardHeading: '#ffffff',
-            cardText: 'rgba(255, 255, 255, 0.9)',
+            cardBackground: colors?.surface,
+            cardHeading: colors?.heading,
+            cardText: colors?.text,
         },
         testimonials: {
             background: colors?.surface,
@@ -90,7 +108,7 @@ export const generateComponentColorMappings = (colors: GlobalColors): Record<str
             heading: colors?.heading,
             description: colors?.text,
             subtitleColor: colors?.textMuted,
-            cardBackground: colors?.primary,
+            cardBackground: colors?.surface,
         },
         cta: {
             background: colors?.background,
@@ -109,9 +127,9 @@ export const generateComponentColorMappings = (colors: GlobalColors): Record<str
             text: colors?.text,
             heading: colors?.heading,
             description: colors?.text,
-            cardBackground: colors?.primary,
-            cardHeading: '#ffffff',
-            cardText: 'rgba(255, 255, 255, 0.9)',
+            cardBackground: colors?.surface,
+            cardHeading: colors?.heading,
+            cardText: colors?.text,
         },
         team: {
             background: colors?.background,
@@ -138,18 +156,18 @@ export const generateComponentColorMappings = (colors: GlobalColors): Record<str
             text: colors?.text,
             heading: colors?.heading,
             buttonBackground: colors?.primary,
-            buttonText: '#ffffff',
+            buttonText: contrastText(colors?.primary),
             gradientStart: colors?.primary,
             gradientEnd: colors?.secondary,
             cardBackground: colors?.surface,
         },
         faq: {
-            background: colors?.secondary,
+            background: colors?.surface,
             accent: colors?.accent,
             borderColor: colors?.border,
-            text: '#ffffff',
-            heading: '#ffffff',
-            cardBackground: colors?.secondary,
+            text: colors?.text,
+            heading: colors?.heading,
+            cardBackground: colors?.surface,
             gradientStart: colors?.primary,
             gradientEnd: colors?.secondary,
         },
@@ -172,8 +190,8 @@ export const generateComponentColorMappings = (colors: GlobalColors): Record<str
             text: colors?.text,
             heading: colors?.heading,
             buttonBackground: colors?.primary,
-            buttonText: '#ffffff',
-            cardBackground: colors?.primary,
+            buttonText: contrastText(colors?.primary),
+            cardBackground: colors?.surface,
             inputBackground: colors?.background,
             inputText: colors?.heading,
             inputBorder: colors?.border,
@@ -184,11 +202,11 @@ export const generateComponentColorMappings = (colors: GlobalColors): Record<str
             background: colors?.surface,
             accent: colors?.accent,
             borderColor: colors?.border,
-            text: '#ffffff',
-            heading: '#ffffff',
+            text: colors?.text,
+            heading: colors?.heading,
             buttonBackground: colors?.primary,
-            buttonText: '#ffffff',
-            cardBackground: hexToRgba(colors?.primary, 0.75), // 75% opacity
+            buttonText: contrastText(colors?.primary),
+            cardBackground: colors?.surface,
             inputBackground: colors?.background,
             inputText: colors?.heading,
             inputBorder: colors?.border,
@@ -223,10 +241,10 @@ export const generateComponentColorMappings = (colors: GlobalColors): Record<str
             borderColor: colors?.border,
             text: colors?.text,
             heading: colors?.heading,
-            cardBackground: colors?.primary,
-            cardTitleColor: '#ffffff',
-            cardText: 'rgba(255, 255, 255, 0.9)',
-            priceColor: colors?.secondary,
+            cardBackground: colors?.surface,
+            cardTitleColor: colors?.heading,
+            cardText: colors?.text,
+            priceColor: colors?.accent,
         },
         chatbot: {
             // Core colors
@@ -256,9 +274,9 @@ export const generateComponentColorMappings = (colors: GlobalColors): Record<str
             cardBackground: colors?.surface,
             cardText: colors?.heading,
             buttonBackground: colors?.primary,
-            buttonText: '#ffffff',
+            buttonText: contrastText(colors?.primary),
             badgeBackground: colors?.primary,
-            badgeText: '#ffffff',
+            badgeText: contrastText(colors?.primary),
             priceColor: colors?.heading,
             salePriceColor: colors?.error,
             overlayStart: 'transparent',
@@ -283,9 +301,9 @@ export const generateComponentColorMappings = (colors: GlobalColors): Record<str
             text: '#ffffff',
             accent: colors?.accent,
             buttonBackground: colors?.primary,
-            buttonText: '#ffffff',
+            buttonText: contrastText(colors?.primary),
             badgeBackground: colors?.error,
-            badgeText: '#ffffff',
+            badgeText: contrastText(colors?.error),
         },
         trustBadges: {
             background: colors?.surface,
@@ -350,9 +368,9 @@ export const generateComponentColorMappings = (colors: GlobalColors): Record<str
             priceColor: colors?.heading,
             savingsColor: colors?.success,
             buttonBackground: colors?.primary,
-            buttonText: '#ffffff',
+            buttonText: contrastText(colors?.primary),
             badgeBackground: colors?.primary,
-            badgeText: '#ffffff',
+            badgeText: contrastText(colors?.primary),
         },
         storeSettings: {
             background: colors?.background,
@@ -362,9 +380,9 @@ export const generateComponentColorMappings = (colors: GlobalColors): Record<str
             cardBackground: colors?.surface,
             cardText: colors?.heading,
             buttonBackground: colors?.primary,
-            buttonText: '#ffffff',
+            buttonText: contrastText(colors?.primary),
             badgeBackground: colors?.error,
-            badgeText: '#ffffff',
+            badgeText: contrastText(colors?.error),
             priceColor: colors?.heading,
             salePriceColor: colors?.error,
             borderColor: colors?.border,
@@ -379,7 +397,7 @@ export const generateComponentColorMappings = (colors: GlobalColors): Record<str
             cardBackground: colors?.surface,
             cardText: colors?.heading,
             buttonBackground: colors?.primary,
-            buttonText: '#ffffff',
+            buttonText: contrastText(colors?.primary),
         },
         productDetailPage: {
             background: colors?.background,
@@ -389,9 +407,9 @@ export const generateComponentColorMappings = (colors: GlobalColors): Record<str
             cardBackground: colors?.surface,
             cardText: colors?.heading,
             buttonBackground: colors?.primary,
-            buttonText: '#ffffff',
+            buttonText: contrastText(colors?.primary),
             badgeBackground: colors?.error,
-            badgeText: '#ffffff',
+            badgeText: contrastText(colors?.error),
             priceColor: colors?.heading,
             salePriceColor: colors?.error,
             borderColor: colors?.border,
@@ -417,10 +435,10 @@ export const generateComponentColorMappings = (colors: GlobalColors): Record<str
         },
         signupFloat: {
             background: colors?.primary,
-            text: '#ffffff',
-            heading: '#ffffff',
+            text: contrastText(colors?.primary),
+            heading: contrastText(colors?.primary),
             buttonBackground: colors?.secondary,
-            buttonText: '#ffffff',
+            buttonText: contrastText(colors?.secondary),
             inputBackground: colors?.background,
             inputText: colors?.text,
             inputBorder: colors?.border,
@@ -441,28 +459,28 @@ export const generateComponentColorMappings = (colors: GlobalColors): Record<str
             primary: colors?.primary,
             secondary: colors?.secondary,
             background: colors?.background,
-            text: colors?.text,
-            heading: colors?.heading,
+            text: '#ffffff',
+            heading: '#ffffff',
             buttonBackground: colors?.primary,
-            buttonText: '#ffffff',
+            buttonText: contrastText(colors?.primary),
         },
         heroWave: {
             primary: colors?.primary,
             secondary: colors?.secondary,
             background: colors?.background,
-            text: colors?.text,
-            heading: colors?.heading,
+            text: '#ffffff',
+            heading: '#ffffff',
             buttonBackground: colors?.primary,
-            buttonText: '#ffffff',
+            buttonText: contrastText(colors?.primary),
         },
         heroNova: {
             primary: colors?.primary,
             secondary: colors?.secondary,
             background: colors?.background,
-            text: colors?.text,
-            heading: colors?.heading,
+            text: '#ffffff',
+            heading: '#ffffff',
             buttonBackground: colors?.primary,
-            buttonText: '#ffffff',
+            buttonText: contrastText(colors?.primary),
             accent: colors?.accent,
         },
         screenshotCarousel: {

@@ -101,6 +101,7 @@ export interface BusinessBrief {
     hasEcommerce: boolean;
     ecommerceType?: string;
     colorPalette: { primary: string; secondary: string; accent: string; background: string; surface: string; text: string; };
+    fontPairing: { header: string; body: string; button: string; };
     suggestedComponents: PageSection[];
     readinessScore: number;
     missingFields: string[];
@@ -134,6 +135,7 @@ const createEmptyBrief = (): BusinessBrief => ({
     contactInfo: {},
     hasEcommerce: false,
     colorPalette: { primary: '#6366f1', secondary: '#8b5cf6', accent: '#f59e0b', background: '#0f0f14', surface: '#1a1a24', text: '#e4e4e7' },
+    fontPairing: { header: 'playfair-display', body: 'inter', button: 'inter' },
     suggestedComponents: [],
     readinessScore: 0,
     missingFields: ['businessName', 'industry', 'description'],
@@ -250,38 +252,43 @@ CRITICAL RULES:
 1. Be conversational, warm, and enthusiastic. This is a creative collaboration, not a form.
 2. Ask 1-2 questions at a time, never overwhelm with many questions.
 3. After EVERY response, include a hidden brief update tag with ALL currently known information:
-   <!--BRIEF:{"businessName":"[GENERATE_TEXT]","industry":"[GENERATE_TEXT]","description":"[GENERATE_TEXT]","tagline":"[GENERATE_TEXT]","services":[{"name":"[GENERATE_TEXT]","description":"[GENERATE_TEXT]"}],"contactInfo":{"email":"[GENERATE_TEXT]","phone":"[GENERATE_TEXT]","address":"[GENERATE_TEXT]","city":"[GENERATE_TEXT]","state":"[GENERATE_TEXT]","country":"[GENERATE_TEXT]","businessHours":"[GENERATE_TEXT]","instagram":"[GENERATE_TEXT]","facebook":"[GENERATE_TEXT]","twitter":"[GENERATE_TEXT]","tiktok":"[GENERATE_TEXT]"},"hasEcommerce":false,"colorPalette":{"primary":"#hex","secondary":"#hex","accent":"#hex","background":"#hex","surface":"#hex","text":"#hex"},"suggestedComponents":["hero","services","features","testimonials","faq","cta","leads","newsletter","map","signupFloat"],"readinessScore":0,"missingFields":["businessName","industry"]}-->
+   <!--BRIEF:{"businessName":"[GENERATE_TEXT]","industry":"[GENERATE_TEXT]","description":"[GENERATE_TEXT]","tagline":"[GENERATE_TEXT]","services":[{"name":"[GENERATE_TEXT]","description":"[GENERATE_TEXT]"}],"contactInfo":{"email":"[GENERATE_TEXT]","phone":"[GENERATE_TEXT]","address":"[GENERATE_TEXT]","city":"[GENERATE_TEXT]","state":"[GENERATE_TEXT]","country":"[GENERATE_TEXT]","businessHours":"[GENERATE_TEXT]","instagram":"[GENERATE_TEXT]","facebook":"[GENERATE_TEXT]","twitter":"[GENERATE_TEXT]","tiktok":"[GENERATE_TEXT]"},"hasEcommerce":false,"colorPalette":{"primary":"#hex","secondary":"#hex","accent":"#hex","background":"#hex","surface":"#hex","text":"#hex"},"fontPairing":{"header":"[FONT_KEY_FROM_GUIDE]","body":"[FONT_KEY_FROM_GUIDE]","button":"[FONT_KEY_FROM_GUIDE]"},"suggestedComponents":["hero","services","features","testimonials","faq","cta","leads","newsletter","map","signupFloat"],"readinessScore":0,"missingFields":["businessName","industry"]}-->
 4. Update readinessScore progressively: 0-20 (just started), 20-40 (basic info), 40-60 (good detail), 60-80 (almost ready), 80-100 (ready to generate)
 5. For suggestedComponents, pick from: hero, heroSplit, heroGallery, heroWave, heroNova, topBar, logoBanner, banner, features, testimonials, pricing, faq, cta, services, video, howItWorks, menu, leads, newsletter, map, signupFloat. NEVER include: slideshow, portfolio, team.
 6. Apply your expert color theory knowledge to choose palettes (see COLOR PALETTES section below)
-7. When readinessScore >= 80, you MUST do the following:
+7. Apply your expert typography knowledge to choose font pairings (see TYPOGRAPHY section below). ALWAYS include fontPairing in the BRIEF tag using the exact font key strings from the available fonts list (e.g. "playfair-display", "space-grotesk", "inter"). Choose fonts that match the industry personality.
+8. When readinessScore >= 80, you MUST do the following:
    a. Summarize all the information gathered in a clear list.
    b. Tell the user that you have everything you need.
    c. Explicitly instruct them to press the **"🚀 Generate Website"** button on the right panel (or on mobile, tap the "Brief" button first).
    d. Warn them that the generation process takes **several minutes** (approximately 3-5 minutes) because the AI needs to generate all the content, create custom images, and assemble everything. Tell them to be patient and NOT close the window.
    e. Example: "¡Tengo todo lo que necesito! Para comenzar, presiona el botón **🚀 Generate Website** en el panel derecho. El proceso toma entre 3-5 minutos porque voy a generar todo el contenido, crear imágenes personalizadas y ensamblar tu sitio completo. ¡No cierres la ventana y verás el progreso en tiempo real!"
-8. ALWAYS respond in ${lang}. The BRIEF tag must always use English field names but values in the user's language.
-9. Use markdown formatting for clear, readable responses. Use **bold** for emphasis, bullet lists for options.
-10. If the user provides a URL or existing website, acknowledge it and extract whatever info you can from the conversation.
+9. ALWAYS respond in ${lang}. The BRIEF tag must always use English field names but values in the user's language.
+10. Use markdown formatting for clear, readable responses. Use **bold** for emphasis, bullet lists for options.
+11. If the user provides a URL or existing website, acknowledge it and extract whatever info you can from the conversation.
 
 ═══════════════════════════════════════════════════════════
 COMPONENT SELECTION GUIDE BY INDUSTRY
 ═══════════════════════════════════════════════════════════
-- Restaurant/Café/Bar: heroGallery, topBar, menu, features, testimonials, howItWorks, faq, leads, newsletter, cta, map, signupFloat
-- Healthcare/Dental/Clinic: hero, topBar, services, features, testimonials, pricing, faq, leads, newsletter, cta, map, signupFloat
-- Fitness/Gym/Wellness: heroWave, topBar, services, features, testimonials, pricing, howItWorks, faq, leads, newsletter, cta, map, signupFloat
-- Agency/Consulting/Marketing: heroSplit, logoBanner, services, features, testimonials, howItWorks, faq, leads, newsletter, cta, signupFloat
-- Photography/Videography: heroGallery, testimonials, services, faq, leads, cta, signupFloat
-- Legal/Accounting/Finance: hero, topBar, services, features, testimonials, faq, leads, newsletter, cta, map
-- Ecommerce/Retail/Online Store: heroNova, topBar, features, testimonials, faq, newsletter, cta, signupFloat
-- Real Estate/Property: heroNova, topBar, features, services, testimonials, faq, leads, map, cta, signupFloat
-- Beauty/Spa/Salon: heroGallery, topBar, services, features, pricing, testimonials, faq, leads, newsletter, map, signupFloat
-- Education/Academy/Coaching: hero, topBar, services, features, howItWorks, testimonials, pricing, faq, leads, newsletter, cta, signupFloat
-- Music/Audio/Entertainment: heroNova, topBar, features, services, testimonials, faq, leads, newsletter, cta, signupFloat
-- Architecture/Interior Design: heroGallery, services, features, testimonials, faq, leads, cta, signupFloat
-- Construction/Home Services: hero, topBar, services, features, howItWorks, testimonials, faq, leads, map, cta, signupFloat
-- Tech/SaaS/Startup: heroWave, logoBanner, features, services, howItWorks, pricing, testimonials, faq, leads, newsletter, cta, signupFloat
-- Non-Profit/NGO/Foundation: hero, topBar, features, howItWorks, testimonials, faq, leads, newsletter, cta, signupFloat
+- Restaurant/Café/Bar: [HERO: heroGallery OR heroNova OR heroSplit], topBar, menu, features, testimonials, howItWorks, faq, leads, newsletter, cta, banner, map, signupFloat
+- Healthcare/Dental/Clinic: [HERO: hero OR heroSplit OR heroWave], topBar, services, features, testimonials, pricing, faq, leads, newsletter, cta, banner, map, signupFloat
+- Fitness/Gym/Wellness: [HERO: heroWave OR heroNova OR hero], topBar, services, features, testimonials, pricing, howItWorks, faq, leads, newsletter, cta, banner, map, signupFloat
+- Agency/Consulting/Marketing: [HERO: heroSplit OR heroWave OR heroNova], logoBanner, services, features, testimonials, howItWorks, faq, leads, newsletter, cta, banner, signupFloat
+- Photography/Videography: [HERO: heroGallery OR heroNova OR heroSplit], testimonials, services, faq, leads, cta, banner, signupFloat
+- Legal/Accounting/Finance: [HERO: hero OR heroSplit OR heroWave], topBar, services, features, testimonials, faq, leads, newsletter, cta, banner, map
+- Ecommerce/Retail/Online Store: [HERO: heroNova OR heroGallery OR heroWave], topBar, features, testimonials, faq, newsletter, cta, banner, signupFloat
+- Real Estate/Property: [HERO: heroNova OR heroGallery OR heroSplit], topBar, features, services, testimonials, faq, leads, map, cta, banner, signupFloat
+- Beauty/Spa/Salon: [HERO: heroGallery OR heroSplit OR heroNova], topBar, services, features, pricing, testimonials, faq, leads, newsletter, map, banner, signupFloat
+- Education/Academy/Coaching: [HERO: hero OR heroWave OR heroSplit], topBar, services, features, howItWorks, testimonials, pricing, faq, leads, newsletter, cta, banner, signupFloat
+- Music/Audio/Entertainment: [HERO: heroNova OR heroWave OR heroGallery], topBar, features, services, testimonials, faq, leads, newsletter, cta, banner, signupFloat
+- Architecture/Interior Design: [HERO: heroGallery OR heroNova OR heroSplit], services, features, testimonials, faq, leads, cta, banner, signupFloat
+- Construction/Home Services: [HERO: hero OR heroSplit OR heroNova], topBar, services, features, howItWorks, testimonials, faq, leads, map, cta, banner, signupFloat
+- Tech/SaaS/Startup: [HERO: heroWave OR heroNova OR heroSplit], logoBanner, features, services, howItWorks, pricing, testimonials, faq, leads, newsletter, cta, banner, signupFloat
+- Non-Profit/NGO/Foundation: [HERO: hero OR heroWave OR heroSplit], topBar, features, howItWorks, testimonials, faq, leads, newsletter, cta, banner, signupFloat
+
+HERO SELECTION RULE: For [HERO: A OR B OR C], you MUST randomly pick ONE from the options listed. Do NOT always default to the first option. Vary your choice across different conversations.
+HEADER SELECTION RULE: NEVER default to the same header style. Vary between sticky-solid, floating-glass, floating-pill, transparent-blur, edge-minimal, edge-bordered, transparent-gradient-dark, etc. Match the style to the industry vibe.
+BANNER: ALWAYS include a banner component in suggestedComponents. It is REQUIRED for every website.
 
 ═══════════════════════════════════════════════════════════
 EXPERT COLOR THEORY — PALETTE DESIGN RULES
@@ -476,188 +483,113 @@ ${t('aiWebsiteStudio.welcome.startQuestion')}`;
         setMessages(prev => [...prev, { role: 'model', text: t('aiWebsiteStudio.extraction.analyzing'), timestamp: Date.now() }]);
 
         try {
-            // 1. Fetch the website HTML via CORS proxy
-            const corsProxy = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
-            const response = await fetch(corsProxy, { signal: AbortSignal.timeout(15000) });
-            if (!response.ok) throw new Error(`HTTP ${response.status}`);
-            const html = await response.text();
+            // 1. Call the server-side analyzeWebsite Cloud Function
+            //    This uses OpenRouter + Gemini to analyze the URL directly
+            const { getFunctions, httpsCallable } = await import('firebase/functions');
+            const functions = getFunctions();
+            const analyzeWebsiteFn = httpsCallable(functions, 'agencyOnboarding-analyzeWebsite', { timeout: 60000 });
 
-            // 2. Parse the HTML deeply on client-side
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(html, 'text/html');
+            const response = await analyzeWebsiteFn({ url });
+            const cfData = response.data as { success: boolean; result: any };
 
-            // Extract metadata
-            const title = doc.querySelector('title')?.textContent?.trim() || '';
-            const metaDescription = doc.querySelector('meta[name="description"]')?.getAttribute('content') || '';
-            const metaKeywords = doc.querySelector('meta[name="keywords"]')?.getAttribute('content') || '';
-            const ogTitle = doc.querySelector('meta[property="og:title"]')?.getAttribute('content') || '';
-            const ogDescription = doc.querySelector('meta[property="og:description"]')?.getAttribute('content') || '';
-            const ogImage = doc.querySelector('meta[property="og:image"]')?.getAttribute('content') || '';
-            const canonical = doc.querySelector('link[rel="canonical"]')?.getAttribute('href') || '';
-            const favicon = doc.querySelector('link[rel="icon"]')?.getAttribute('href') ||
-                            doc.querySelector('link[rel="shortcut icon"]')?.getAttribute('href') || '';
-
-            // Extract navigation links
-            const navLinks: string[] = [];
-            doc.querySelectorAll('nav a, header a, [role="navigation"] a').forEach(a => {
-                const text = a.textContent?.trim();
-                const href = a.getAttribute('href');
-                if (text && text.length < 60 && !text.includes('\n')) {
-                    navLinks.push(`${text} → ${href || '#'}`);
-                }
-            });
-
-            // Extract social media links (deep search)
-            const socialPatterns = [
-                { name: 'facebook', pattern: /facebook\.com/i },
-                { name: 'instagram', pattern: /instagram\.com/i },
-                { name: 'twitter', pattern: /twitter\.com|x\.com/i },
-                { name: 'tiktok', pattern: /tiktok\.com/i },
-                { name: 'linkedin', pattern: /linkedin\.com/i },
-                { name: 'youtube', pattern: /youtube\.com/i },
-                { name: 'pinterest', pattern: /pinterest\.com/i },
-                { name: 'whatsapp', pattern: /wa\.me|whatsapp\.com/i },
-            ];
-            const socialLinks: Record<string, string> = {};
-            doc.querySelectorAll('a[href]').forEach(a => {
-                const href = a.getAttribute('href') || '';
-                for (const { name, pattern } of socialPatterns) {
-                    if (pattern.test(href) && !socialLinks[name]) {
-                        socialLinks[name] = href;
-                    }
-                }
-            });
-
-            // Extract contact information
-            const bodyText = doc.body?.textContent || '';
-            const emailMatches = bodyText.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g) || [];
-            const phoneMatches = bodyText.match(/(?:\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}/g) || [];
-
-            // Extract all headings
-            const headings: string[] = [];
-            doc.querySelectorAll('h1, h2, h3').forEach(h => {
-                const text = h.textContent?.trim();
-                if (text && text.length > 2 && text.length < 200) headings.push(text);
-            });
-
-            // Extract images with alt text
-            const images: { src: string; alt: string }[] = [];
-            doc.querySelectorAll('img[src]').forEach(img => {
-                const src = img.getAttribute('src') || '';
-                const alt = img.getAttribute('alt') || '';
-                if (src && !src.includes('data:image/svg') && !src.includes('pixel') && !src.includes('tracking')) {
-                    images.push({ src: src.startsWith('http') ? src : `${new URL(url).origin}${src}`, alt });
-                }
-            });
-
-            // Extract colors from inline styles and CSS
-            const colorSet = new Set<string>();
-            doc.querySelectorAll('[style]').forEach(el => {
-                const style = el.getAttribute('style') || '';
-                const colors = style.match(/#[0-9a-fA-F]{3,8}|rgb[a]?\([^)]+\)/gi) || [];
-                colors.forEach(c => colorSet.add(c));
-            });
-            doc.querySelectorAll('style').forEach(style => {
-                const colors = (style.textContent || '').match(/#[0-9a-fA-F]{3,8}/g) || [];
-                colors.forEach(c => colorSet.add(c));
-            });
-
-            // Extract structured data (JSON-LD)
-            const jsonLdData: any[] = [];
-            doc.querySelectorAll('script[type="application/ld+json"]').forEach(script => {
-                try { jsonLdData.push(JSON.parse(script.textContent || '')); } catch { /* ignore */ }
-            });
-
-            // Build comprehensive extraction object
-            const extractedData = {
-                url,
-                title,
-                metaDescription,
-                metaKeywords,
-                ogTitle,
-                ogDescription,
-                ogImage,
-                canonical,
-                favicon,
-                navLinks: navLinks.slice(0, 30),
-                socialLinks,
-                emails: [...new Set(emailMatches)].slice(0, 5),
-                phones: [...new Set(phoneMatches)].slice(0, 5),
-                headings: headings.slice(0, 20),
-                imageCount: images.length,
-                topImages: images.slice(0, 10),
-                colorsFound: [...colorSet].slice(0, 15),
-                jsonLdSummary: jsonLdData.length > 0 ? JSON.stringify(jsonLdData[0]).slice(0, 500) : null,
-                bodyTextSample: bodyText.replace(/\s+/g, ' ').trim().slice(0, 3000),
-            };
-
-            // 3. Send to Gemini for comprehensive AI analysis
-            const lang = i18n.language === 'es' ? 'Spanish' : 'English';
-            const analysisPrompt = `You are a website analysis expert. I've scraped the following data from ${url}. Analyze it deeply and respond with a comprehensive summary in ${lang}.
-
-EXTRACTED DATA:
-${JSON.stringify(extractedData, null, 2)}
-
-Provide:
-1. **Business Name & Industry** — What is this business? What industry?
-2. **Value Proposition** — What do they offer? What makes them unique?
-3. **Services/Products** — List all services or products you can identify
-4. **Contact Information** — All contact details found (email, phone, address, business hours)
-5. **Social Media** — All social media profiles found
-6. **Brand Identity** — Colors used, visual style, tone of voice
-7. **Content Structure** — What sections/pages does the site have?
-8. **Target Audience** — Who are they targeting?
-
-After the analysis, include a <!--BRIEF:{...}--> tag with all extracted data mapped to our brief fields. Set readinessScore based on how much data was extracted (aim for 40-70).`;
-
-            const chatHistory: ChatMessage[] = [
-                ...historyRef.current,
-                { role: 'user', text: `[SYSTEM] The user wants to import data from their existing website: ${url}. Here is the extracted data from that website. Analyze it deeply and provide a comprehensive summary. Then continue the conversation asking for any missing info.\n\n${analysisPrompt}` },
-            ];
-
-            const result = await generateChatContentViaProxy(
-                user?.uid || 'anon',
-                chatHistory,
-                'Please analyze the provided website data and extract all relevant business information into a JSON brief.',
-                buildSystemPrompt(),
-                MODEL_CHAT,
-                { temperature: 0.7, maxOutputTokens: 4096 },
-                user?.uid,
-            );
-
-            const aiText = extractTextFromResponse(result) || t('aiWebsiteStudio.extraction.noData');
-
-            // Extract brief from AI response
-            const briefMatch = aiText.match(/<!--BRIEF:(.*?)-->/s);
-            if (briefMatch) {
-                try {
-                    const parsed = JSON.parse(briefMatch[1]);
-                    setBusinessBrief(prev => ({
-                        ...prev,
-                        ...parsed,
-                        services: parsed.services?.length ? parsed.services : prev.services,
-                        contactInfo: { ...prev.contactInfo, ...parsed.contactInfo },
-                        colorPalette: { ...prev.colorPalette, ...parsed.colorPalette },
-                        suggestedComponents: parsed.suggestedComponents?.length ? parsed.suggestedComponents : prev.suggestedComponents,
-                    }));
-                } catch (e) {
-                    if (isDev) console.warn('[AIWebsiteStudio] Failed to parse extraction brief:', e);
-                }
+            if (!cfData.success || !cfData.result) {
+                throw new Error('Analysis returned no data');
             }
 
-            // Clean AI response (remove BRIEF tag) and add to chat
-            const cleanResponse = aiText.replace(/<!--BRIEF:.*?-->/s, '').trim();
+            const result = cfData.result;
+            const pagesScraped = (cfData as any).meta?.pagesScraped || 1;
+
+            // 2. Map Cloud Function result into our BusinessBrief
+            const lang = i18n.language === 'es' ? 'es' : 'en';
+            setBusinessBrief(prev => ({
+                ...prev,
+                businessName: result.businessName || prev.businessName,
+                industry: result.industry || prev.industry,
+                description: result.description || prev.description,
+                tagline: result.tagline || prev.tagline,
+                services: result.services?.length
+                    ? result.services.map((s: any) => ({ name: s.name, description: s.description || '' }))
+                    : prev.services,
+                contactInfo: {
+                    ...prev.contactInfo,
+                    email: result.contactInfo?.email || prev.contactInfo.email,
+                    phone: result.contactInfo?.phone || prev.contactInfo.phone,
+                    address: result.contactInfo?.address || prev.contactInfo.address,
+                    businessHours: result.contactInfo?.businessHours
+                        ? (typeof result.contactInfo.businessHours === 'string'
+                            ? result.contactInfo.businessHours
+                            : JSON.stringify(result.contactInfo.businessHours))
+                        : prev.contactInfo.businessHours,
+                },
+                // Map branding into colorPalette
+                colorPalette: result.branding ? {
+                    ...prev.colorPalette,
+                    primary: result.branding.primaryColor || prev.colorPalette.primary,
+                    secondary: result.branding.secondaryColor || prev.colorPalette.secondary,
+                    accent: result.branding.accentColor || prev.colorPalette.accent,
+                    background: result.branding.backgroundColor || prev.colorPalette.background,
+                } : prev.colorPalette,
+                readinessScore: Math.min(70, (prev.readinessScore || 0) + 30),
+            }));
+
+            // 3. Build a summary message for the chat so the AI has context
+            const socialLinks = [
+                result.contactInfo?.facebook && `Facebook: ${result.contactInfo.facebook}`,
+                result.contactInfo?.instagram && `Instagram: ${result.contactInfo.instagram}`,
+                result.contactInfo?.twitter && `Twitter: ${result.contactInfo.twitter}`,
+                result.contactInfo?.linkedin && `LinkedIn: ${result.contactInfo.linkedin}`,
+                result.contactInfo?.youtube && `YouTube: ${result.contactInfo.youtube}`,
+                result.contactInfo?.tiktok && `TikTok: ${result.contactInfo.tiktok}`,
+            ].filter(Boolean);
+
+            // Build branding summary
+            const brandingInfo = result.branding;
+            const brandingLines = brandingInfo ? [
+                brandingInfo.primaryColor && `🎨 ${lang === 'es' ? 'Color primario' : 'Primary color'}: ${brandingInfo.primaryColor}`,
+                brandingInfo.secondaryColor && `🎨 ${lang === 'es' ? 'Color secundario' : 'Secondary color'}: ${brandingInfo.secondaryColor}`,
+                brandingInfo.accentColor && `🎨 ${lang === 'es' ? 'Color acento' : 'Accent color'}: ${brandingInfo.accentColor}`,
+                brandingInfo.fonts?.length && `🔤 ${lang === 'es' ? 'Fuentes' : 'Fonts'}: ${brandingInfo.fonts.join(', ')}`,
+                brandingInfo.visualStyle && `✨ ${lang === 'es' ? 'Estilo visual' : 'Visual style'}: ${brandingInfo.visualStyle}`,
+                brandingInfo.isDarkTheme != null && `${brandingInfo.isDarkTheme ? '🌙' : '☀️'} ${lang === 'es' ? 'Tema' : 'Theme'}: ${brandingInfo.isDarkTheme ? (lang === 'es' ? 'Oscuro' : 'Dark') : (lang === 'es' ? 'Claro' : 'Light')}`,
+            ].filter(Boolean) : [];
+
+            const summaryText = lang === 'es'
+                ? `✅ **Sitio analizado:** ${url} (${pagesScraped} ${pagesScraped === 1 ? 'página' : 'páginas'} escaneadas)\n\n` +
+                  `**Negocio:** ${result.businessName || 'No detectado'}\n` +
+                  `**Industria:** ${result.industry || 'No detectada'}\n` +
+                  `**Descripción:** ${result.description || 'No disponible'}\n` +
+                  `**Tagline:** ${result.tagline || 'No disponible'}\n` +
+                  (result.services?.length ? `**Servicios:** ${result.services.map((s: any) => s.name).join(', ')}\n` : '') +
+                  (result.contactInfo?.email ? `**Email:** ${result.contactInfo.email}\n` : '') +
+                  (result.contactInfo?.phone ? `**Teléfono:** ${result.contactInfo.phone}\n` : '') +
+                  (result.contactInfo?.address ? `**Dirección:** ${result.contactInfo.address}\n` : '') +
+                  (socialLinks.length ? `**Redes sociales:** ${socialLinks.join(', ')}\n` : '') +
+                  (brandingLines.length ? `\n**Branding detectado:**\n${brandingLines.join('\n')}\n` : '') +
+                  `\nHe importado toda la información disponible. ¿Hay algo que quieras ajustar o agregar antes de generar tu sitio web?`
+                : `✅ **Website analyzed:** ${url} (${pagesScraped} ${pagesScraped === 1 ? 'page' : 'pages'} scraped)\n\n` +
+                  `**Business:** ${result.businessName || 'Not detected'}\n` +
+                  `**Industry:** ${result.industry || 'Not detected'}\n` +
+                  `**Description:** ${result.description || 'Not available'}\n` +
+                  `**Tagline:** ${result.tagline || 'Not available'}\n` +
+                  (result.services?.length ? `**Services:** ${result.services.map((s: any) => s.name).join(', ')}\n` : '') +
+                  (result.contactInfo?.email ? `**Email:** ${result.contactInfo.email}\n` : '') +
+                  (result.contactInfo?.phone ? `**Phone:** ${result.contactInfo.phone}\n` : '') +
+                  (result.contactInfo?.address ? `**Address:** ${result.contactInfo.address}\n` : '') +
+                  (socialLinks.length ? `**Social media:** ${socialLinks.join(', ')}\n` : '') +
+                  (brandingLines.length ? `\n**Branding detected:**\n${brandingLines.join('\n')}\n` : '') +
+                  `\nI've imported all available information. Would you like to adjust or add anything before generating your website?`;
+
+            // 4. Update chat messages
             setMessages(prev => {
-                // Remove the "analyzing" message
                 const filtered = prev.filter(m => m.text !== t('aiWebsiteStudio.extraction.analyzing'));
-                return [...filtered, userMsg, { role: 'model', text: cleanResponse, timestamp: Date.now() }];
+                return [...filtered, userMsg, { role: 'model', text: summaryText, timestamp: Date.now() }];
             });
 
-            // Update history for context
+            // 5. Update history for AI context
             historyRef.current = [
                 ...historyRef.current,
                 { role: 'user', text: `I have an existing website: ${url}` },
-                { role: 'model', text: aiText },
+                { role: 'model', text: `I analyzed the website (${pagesScraped} pages) and extracted: Business name: ${result.businessName}, Industry: ${result.industry}, Services: ${result.services?.map((s: any) => s.name).join(', ') || 'none found'}. Contact: ${result.contactInfo?.email || 'no email'}, ${result.contactInfo?.phone || 'no phone'}. Branding: ${brandingInfo ? `primary=${brandingInfo.primaryColor}, fonts=${brandingInfo.fonts?.join(',')}` : 'not detected'}. The brief has been populated with this data.` },
             ];
 
         } catch (error) {
@@ -673,7 +605,7 @@ After the analysis, include a <!--BRIEF:{...}--> tag with all extracted data map
         } finally {
             setIsExtracting(false);
         }
-    }, [user, t, i18n.language, buildSystemPrompt]);
+    }, [user, t, i18n.language]);
 
     // ═════════════════════════════════════════════════════════════════════════
     // BRIEF EXTRACTION — Parse <!--BRIEF:{...}--> from AI responses
@@ -697,6 +629,7 @@ After the analysis, include a <!--BRIEF:{...}--> tag with all extracted data map
                 if (briefData.hasEcommerce !== undefined) updated.hasEcommerce = briefData.hasEcommerce;
                 if (briefData.ecommerceType) updated.ecommerceType = briefData.ecommerceType;
                 if (briefData.colorPalette) updated.colorPalette = { ...prev.colorPalette, ...briefData.colorPalette };
+                if (briefData.fontPairing) updated.fontPairing = { ...prev.fontPairing, ...briefData.fontPairing };
                 if (briefData.suggestedComponents && Array.isArray(briefData.suggestedComponents)) {
                     updated.suggestedComponents = briefData.suggestedComponents as PageSection[];
                 }
@@ -945,9 +878,9 @@ After the analysis, include a <!--BRIEF:{...}--> tag with all extracted data map
             const theme = {
                 cardBorderRadius: 'md',
                 buttonBorderRadius: 'md',
-                fontFamilyHeader: 'playfair-display',
-                fontFamilyBody: 'inter',
-                fontFamilyButton: 'inter',
+                fontFamilyHeader: brief.fontPairing?.header || 'playfair-display',
+                fontFamilyBody: brief.fontPairing?.body || 'inter',
+                fontFamilyButton: brief.fontPairing?.button || 'inter',
                 fontWeightHeader: 400,
                 headingsAllCaps: false,
                 buttonsAllCaps: true,
@@ -961,7 +894,7 @@ After the analysis, include a <!--BRIEF:{...}--> tag with all extracted data map
                     surface: brief.colorPalette.surface,
                     text: brief.colorPalette.text,
                     textMuted: brief.colorPalette.text + '99',
-                    heading: '#f5efe7',
+                    heading: brief.colorPalette.text,
                     border: brief.colorPalette.surface,
                     success: '#7fb069',
                     error: '#c75c5c',
@@ -1594,10 +1527,47 @@ function buildContentGenerationPrompt(brief: BusinessBrief, isSpanish: boolean):
     }
 
 
+    // Map industry to aesthetically recommended header styles
+    const industryLower = (brief.industry || '').toLowerCase();
+    let recommendedHeaderStyles: string[];
+    
+    if (/restaurant|caf[eé]|bar|food|bakery|pizza/i.test(industryLower)) {
+        recommendedHeaderStyles = ['transparent-gradient-dark', 'edge-solid', 'sticky-solid'];
+    } else if (/tech|saas|startup|software|app/i.test(industryLower)) {
+        recommendedHeaderStyles = ['floating-glass', 'floating-pill', 'transparent-blur'];
+    } else if (/law|legal|financ|account|consult/i.test(industryLower)) {
+        recommendedHeaderStyles = ['edge-minimal', 'sticky-solid', 'edge-bordered'];
+    } else if (/beauty|spa|salon|fashion|luxury/i.test(industryLower)) {
+        recommendedHeaderStyles = ['transparent-blur', 'floating-shadow', 'transparent-bordered'];
+    } else if (/fitness|gym|sport|wellness/i.test(industryLower)) {
+        recommendedHeaderStyles = ['sticky-solid', 'edge-bordered', 'floating-pill'];
+    } else if (/health|medic|dental|clinic|doctor/i.test(industryLower)) {
+        recommendedHeaderStyles = ['edge-minimal', 'sticky-solid', 'floating-glass'];
+    } else if (/real.?estate|property|architect/i.test(industryLower)) {
+        recommendedHeaderStyles = ['transparent-gradient-dark', 'floating-shadow', 'transparent-blur'];
+    } else if (/photo|video|creative|design|art/i.test(industryLower)) {
+        recommendedHeaderStyles = ['transparent-bordered', 'floating-glass', 'transparent-blur'];
+    } else if (/ecommerce|retail|store|shop/i.test(industryLower)) {
+        recommendedHeaderStyles = ['sticky-solid', 'edge-solid', 'floating-pill'];
+    } else if (/music|entertain|event/i.test(industryLower)) {
+        recommendedHeaderStyles = ['transparent-gradient-dark', 'floating-glass', 'transparent-blur'];
+    } else if (/education|academy|coach|school/i.test(industryLower)) {
+        recommendedHeaderStyles = ['edge-minimal', 'sticky-solid', 'floating-glass'];
+    } else if (/construction|home.?service|plumb|electric/i.test(industryLower)) {
+        recommendedHeaderStyles = ['sticky-solid', 'edge-solid', 'edge-bordered'];
+    } else if (/non.?profit|ngo|foundation|church/i.test(industryLower)) {
+        recommendedHeaderStyles = ['edge-minimal', 'sticky-transparent', 'floating-shadow'];
+    } else if (/agenc|market|consult/i.test(industryLower)) {
+        recommendedHeaderStyles = ['floating-glass', 'floating-pill', 'transparent-bordered'];
+    } else {
+        recommendedHeaderStyles = ['floating-glass', 'edge-minimal', 'sticky-solid'];
+    }
+
+    const allHeaderStyles = 'sticky-solid|sticky-transparent|floating|edge-solid|edge-minimal|edge-bordered|floating-pill|floating-glass|floating-shadow|transparent-blur|transparent-bordered|transparent-gradient|transparent-gradient-dark';
 
     componentExamples += `
     "header": {
-      "style": "[SELECT: sticky-solid|sticky-transparent|floating|edge-solid|edge-minimal|edge-bordered|floating-pill|floating-glass|floating-shadow|transparent-blur|transparent-bordered|transparent-gradient|transparent-gradient-dark]",
+      "style": "[SELECT ONE for ${brief.industry || 'this industry'}. RECOMMENDED: ${recommendedHeaderStyles.join(' or ')}. All options: ${allHeaderStyles}]",
       "layout": "[SELECT: minimal|center|stack|classic]",
       "isSticky": true,
       "height": 95,
@@ -1690,7 +1660,7 @@ function buildContentGenerationPrompt(brief: BusinessBrief, isSpanish: boolean):
 
     componentExamples += `
     "features": {
-      "featuresVariant": "[SELECT: classic|modern|bento-premium|image-overlay]",
+      "featuresVariant": "[SELECT: classic|modern|bento-premium|bento-overlay|image-overlay]",
       "gridColumns": "[IF featuresVariant IS 'image-overlay' THEN select 4 ELSE select 2 or 3]",
       "title": "${isSpanish ? 'Características' : 'Features'}",
       "imageHeight": 430,
@@ -1769,9 +1739,9 @@ OUTPUT FORMAT: Return a single JSON object with this EXACT structure:
   "theme": {
     "cardBorderRadius": "md",
     "buttonBorderRadius": "md",
-    "fontFamilyHeader": "playfair-display",
-    "fontFamilyBody": "inter",
-    "fontFamilyButton": "inter",
+    "fontFamilyHeader": "${brief.fontPairing?.header || 'playfair-display'}",
+    "fontFamilyBody": "${brief.fontPairing?.body || 'inter'}",
+    "fontFamilyButton": "${brief.fontPairing?.button || 'inter'}",
     "fontWeightHeader": 400,
     "headingsAllCaps": false,
     "buttonsAllCaps": true,
@@ -1824,6 +1794,38 @@ function ensureComponentCompleteness(data: any, brief: any, isSpanish: boolean):
         if (data.header.navLinks && !data.header.links) {
             data.header.links = data.header.navLinks;
             delete data.header.navLinks;
+        }
+
+        // ── FORCE: Build nav links from actual componentOrder ──
+        // The AI often omits or generates incorrect links.
+        // We deterministically build them from enabled components.
+        const componentOrder: string[] = data.componentOrder || [];
+        const navLinkMap: Record<string, { es: string; en: string; href: string }> = {
+            services:     { es: 'Servicios',       en: 'Services',      href: '/#services' },
+            features:     { es: 'Características',  en: 'Features',      href: '/#features' },
+            menu:         { es: 'Menú',             en: 'Menu',          href: '/#menu' },
+            testimonials: { es: 'Testimonios',      en: 'Testimonials',  href: '/#testimonials' },
+            team:         { es: 'Equipo',           en: 'Team',          href: '/#team' },
+            pricing:      { es: 'Precios',          en: 'Pricing',       href: '/#pricing' },
+            portfolio:    { es: 'Portafolio',       en: 'Portfolio',     href: '/#portfolio' },
+            faq:          { es: 'FAQ',              en: 'FAQ',           href: '/#faq' },
+            leads:        { es: 'Contacto',         en: 'Contact',       href: '/#leads' },
+            map:          { es: 'Ubicación',        en: 'Location',      href: '/#map' },
+            howItWorks:   { es: 'Cómo Funciona',    en: 'How it Works',  href: '/#how-it-works' },
+        };
+        const forcedLinks: Array<{ text: string; href: string }> = [
+            { text: isSpanish ? 'Inicio' : 'Home', href: '/' },
+        ];
+        for (const comp of componentOrder) {
+            const entry = navLinkMap[comp];
+            if (entry) {
+                forcedLinks.push({ text: isSpanish ? entry.es : entry.en, href: entry.href });
+            }
+            if (forcedLinks.length >= 6) break; // Max 6 nav links
+        }
+        // Only override if we built meaningful links (more than just "Home")
+        if (forcedLinks.length > 1) {
+            data.header.links = forcedLinks;
         }
     }
 
@@ -2012,6 +2014,7 @@ function ensureComponentCompleteness(data: any, brief: any, isSpanish: boolean):
         if (!data.signupFloat.headerText) data.signupFloat.headerText = isSpanish ? '¿Te interesa?' : 'Interested?';
         if (!data.signupFloat.descriptionText) data.signupFloat.descriptionText = isSpanish ? 'Déjanos tus datos y te contactamos' : 'Leave your info and we\'ll reach out';
         if (!data.signupFloat.buttonText) data.signupFloat.buttonText = isSpanish ? 'Registrarse' : 'Sign Up';
+        if (!data.signupFloat.position) data.signupFloat.position = 'bottom-left';
         // Map backgroundImage → imageUrl (component uses imageUrl)
         if (data.signupFloat.backgroundImage && !data.signupFloat.imageUrl) {
             data.signupFloat.imageUrl = data.signupFloat.backgroundImage;

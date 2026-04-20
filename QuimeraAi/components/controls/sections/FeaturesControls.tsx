@@ -42,7 +42,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
       <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">{t('editor.controls.features.sectionStyle')}</label>
       <div>
-        <div className="grid grid-cols-4 gap-1 bg-editor-bg p-1 rounded-md border border-editor-border">
+        <div className="grid grid-cols-5 gap-1 bg-editor-bg p-1 rounded-md border border-editor-border">
           <button
             onClick={() => setNestedData('features.featuresVariant', 'classic')}
             className={`py-1 text-xs font-medium rounded-sm transition-colors ${currentVariant === 'classic' ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:bg-editor-border'}`}
@@ -62,6 +62,12 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
             {t('editor.controls.features.premium')}
           </button>
           <button
+            onClick={() => setNestedData('features.featuresVariant', 'bento-overlay')}
+            className={`py-1 text-xs font-medium rounded-sm transition-colors ${currentVariant === 'bento-overlay' ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:bg-editor-border'}`}
+          >
+            B. Overlay
+          </button>
+          <button
             onClick={() => setNestedData('features.featuresVariant', 'image-overlay')}
             className={`py-1 text-xs font-medium rounded-sm transition-colors ${currentVariant === 'image-overlay' ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:bg-editor-border'}`}
           >
@@ -75,7 +81,9 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
               ? t('editor.controls.features.descBento')
               : currentVariant === 'bento-premium'
                 ? t('editor.controls.features.descPremium')
-                : t('editor.controls.features.descOverlay')}
+                : currentVariant === 'bento-overlay'
+                  ? '🎭 Bento layout con imágenes full-bleed y texto overlay'
+                  : t('editor.controls.features.descOverlay')}
         </p>
       </div>
 
@@ -107,6 +115,19 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
             </button>
           </div>
         </>
+      )}
+
+      {/* Bento Overlay numbering toggle */}
+      {currentVariant === 'bento-overlay' && (
+        <div className="flex items-center justify-between">
+          <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Show Numbering</label>
+          <button
+            onClick={() => setNestedData('features.showNumbering', !((data.features as any).showNumbering !== false))}
+            className={`relative w-10 h-5 rounded-full transition-colors ${(data.features as any).showNumbering !== false ? 'bg-editor-accent' : 'bg-editor-border'}`}
+          >
+            <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition-transform ${(data.features as any).showNumbering !== false ? 'left-5' : 'left-0.5'}`} />
+          </button>
+        </div>
       )}
 
       <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">{t('editor.controls.features.gridLayout')}</label>
@@ -390,6 +411,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
               { value: 'classic', label: 'Classic (Grid Uniforme)' },
               { value: 'modern', label: 'Modern (Bento Asimétrico)' },
               { value: 'bento-premium', label: 'Premium (Bento Destacado)' },
+              { value: 'bento-overlay', label: 'Bento Overlay (Imágenes + Texto)' },
               { value: 'image-overlay', label: 'Overlay (Tarjetas Completas)' }
             ]}
           />
@@ -400,7 +422,9 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
                 ? t('editor.controls.features.descBento', '✨ Layout moderno bento asimétrico')
                 : currentVariant === 'bento-premium'
                   ? t('editor.controls.features.descPremium', '🎯 Bento premium con primera tarjeta destacada')
-                  : t('editor.controls.features.descOverlay', '🖼️ Imágenes completas con texto superpuesto')}
+                  : currentVariant === 'bento-overlay'
+                    ? '🎭 Bento layout con imágenes full-bleed y texto overlay'
+                    : t('editor.controls.features.descOverlay', '🖼️ Imágenes completas con texto superpuesto')}
           </p>
         </div>
 
@@ -446,6 +470,25 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
                 className={`relative w-10 h-5 rounded-full transition-colors ${(data.features as any).showSectionHeader !== false ? 'bg-editor-accent' : 'bg-editor-border'}`}
               >
                 <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition-transform ${(data.features as any).showSectionHeader !== false ? 'left-5' : 'left-0.5'}`} />
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Bento Overlay Settings */}
+        {currentVariant === 'bento-overlay' && (
+          <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-3">
+            <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+              <Layers size={14} />
+              Bento Overlay Settings
+            </label>
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Show Numbering</label>
+              <button
+                onClick={() => setNestedData('features.showNumbering', !((data.features as any).showNumbering !== false))}
+                className={`relative w-10 h-5 rounded-full transition-colors ${(data.features as any).showNumbering !== false ? 'bg-editor-accent' : 'bg-editor-border'}`}
+              >
+                <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition-transform ${(data.features as any).showNumbering !== false ? 'left-5' : 'left-0.5'}`} />
               </button>
             </div>
           </div>

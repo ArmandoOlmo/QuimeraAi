@@ -308,6 +308,97 @@ const ImageOverlayCard: React.FC<ImageOverlayCardProps> = ({
   );
 };
 
+// --- NUEVO: Componente para Bento Overlay Style ---
+const BentoOverlayCard = ({ feature, index, colors, borderRadius, showNumbering, onNavigate }: {
+  feature: FeatureItem;
+  index: number;
+  colors: any;
+  borderRadius: string;
+  showNumbering?: boolean;
+  onNavigate?: (href: string) => void;
+}) => {
+  const isWide = index === 0 || index === 3 || index === 6;
+  const isExternal = feature.linkUrl?.startsWith('http');
+
+  return (
+    <div
+      className={`group relative overflow-hidden cursor-pointer ${isWide ? 'md:col-span-2' : 'col-span-1'} ${borderRadius} transition-all duration-500 hover:scale-[1.02]`}
+      style={{ height: isWide ? '360px' : '320px' }}
+    >
+      {/* Full-bleed background image */}
+      {isPendingImage(feature.imageUrl) ? (
+        <ImagePlaceholder
+          aspectRatio="auto"
+          showGenerateButton={false}
+          className="absolute inset-0 w-full h-full"
+        />
+      ) : (
+        <img
+          src={feature.imageUrl}
+          alt={feature.title}
+          className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+        />
+      )}
+
+      {/* Gradient overlay for text readability */}
+      <div
+        className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-black/10 opacity-80 group-hover:opacity-95 transition-opacity duration-300"
+      />
+
+      {/* Large corner numbering */}
+      {showNumbering !== false && (
+        <span
+          className="absolute top-4 left-5 text-5xl md:text-6xl font-black font-header leading-none select-none pointer-events-none"
+          style={{ color: 'rgba(255,255,255,0.12)' }}
+        >
+          {String(index + 1).padStart(2, '0')}
+        </span>
+      )}
+
+      {/* Hover accent glow */}
+      <div
+        className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
+        style={{
+          background: `linear-gradient(135deg, ${hexToRgba(colors?.accent || '#4f46e5', 0.15)}, transparent 60%)`
+        }}
+      />
+
+      {/* Text overlay at bottom */}
+      <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8 z-10 flex flex-col">
+        <h3
+          className={`${isWide ? 'text-2xl md:text-3xl' : 'text-xl md:text-2xl'} font-bold mb-2 font-header text-white drop-shadow-lg group-hover:translate-x-1 transition-transform duration-300`}
+          style={{
+            textTransform: 'var(--headings-transform, none)' as any,
+            letterSpacing: 'var(--headings-spacing, normal)'
+          }}
+        >
+          {feature.title}
+        </h3>
+        <p className="text-sm md:text-base font-body text-white/75 drop-shadow-md max-w-lg line-clamp-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+          {feature.description}
+        </p>
+        {feature.linkUrl && (
+          <a
+            href={feature.linkUrl}
+            target={isExternal ? '_blank' : undefined}
+            rel={isExternal ? 'noopener noreferrer' : undefined}
+            onClick={(e) => {
+              if (onNavigate && feature.linkUrl && !feature.linkUrl.startsWith('http://') && !feature.linkUrl.startsWith('https://')) {
+                e.preventDefault();
+                onNavigate(feature.linkUrl);
+              }
+            }}
+            className="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-white/90 hover:text-white opacity-0 group-hover:opacity-100 transition-all duration-300"
+          >
+            <span>{feature.linkText || 'Learn more'}</span>
+            <ArrowRight className="w-4 h-4" />
+          </a>
+        )}
+      </div>
+    </div>
+  );
+};
+
 interface FeaturesProps extends FeaturesData {
   borderRadius: BorderRadiusSize;
   onNavigate?: (href: string) => void;
@@ -331,6 +422,7 @@ const Features: React.FC<FeaturesProps> = ({
   enableCardAnimation = true,
   overlayTextAlignment = 'left',
   showSectionHeader = true,
+  showNumbering = true,
   layoutAlignment = 'left',
   onNavigate,
   isPreview
@@ -432,6 +524,49 @@ const Features: React.FC<FeaturesProps> = ({
               onNavigate={onNavigate}
             />
           ))}
+        </div>
+      </section>
+    );
+  }
+
+  // --- RENDERIZADO BENTO OVERLAY ---
+  if (featuresVariant === 'bento-overlay') {
+    return (
+      <section id="features" className="w-full" style={{ backgroundColor: actualColors.background }}>
+        <div className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`}>
+          <div className="relative">
+            {/* Section Header — same as bento-premium */}
+            <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-16">
+              <div className="max-w-2xl">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="h-px w-12" style={{ background: `linear-gradient(to right, transparent, ${actualColors.accent}, transparent)` }} />
+                  <span className="text-xs uppercase tracking-[0.3em] font-bold" style={{ color: actualColors.accent }}>Features</span>
+                  <div className="h-px w-12" style={{ background: `linear-gradient(to right, ${actualColors.accent}, transparent)` }} />
+                </div>
+                <h2 className={`${titleSizeClasses[titleFontSize]} font-black tracking-tight leading-[1.1] font-header`} style={{ color: safeColors.heading, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>
+                  {title}
+                </h2>
+              </div>
+              <p className={`${descriptionSizeClasses[descriptionFontSize]} max-w-md font-body`} style={{ color: safeColors.description }}>
+                {description}
+              </p>
+            </div>
+
+            {/* Bento Overlay Grid */}
+            <div className={`grid grid-cols-1 md:grid-cols-2 ${gridColsClasses[gridColumns] || 'lg:grid-cols-3'} gap-4 md:gap-5`}>
+              {(items || []).map((feature, index) => (
+                <BentoOverlayCard
+                  key={index}
+                  feature={feature}
+                  index={index}
+                  colors={actualColors}
+                  borderRadius={borderRadiusClasses[borderRadius]}
+                  showNumbering={showNumbering}
+                  onNavigate={onNavigate}
+                />
+              ))}
+            </div>
+          </div>
         </div>
       </section>
     );

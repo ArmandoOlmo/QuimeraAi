@@ -312,7 +312,7 @@ export interface FeatureItem {
 }
 
 export interface FeaturesData {
-    featuresVariant?: 'classic' | 'modern' | 'bento-premium' | 'image-overlay' | 'cinematic-gym';
+    featuresVariant?: 'classic' | 'modern' | 'bento-premium' | 'image-overlay' | 'bento-overlay' | 'cinematic-gym';
     title: string;
     subtitle?: string;              // Alias for description
     description: string;
@@ -331,6 +331,8 @@ export interface FeaturesData {
     // Properties for image-overlay variant
     overlayTextAlignment?: TextAlignment;
     showSectionHeader?: boolean;
+    // Property for bento-overlay numbering
+    showNumbering?: boolean;
     // Property for asymmetric layouts like Gym
     layoutAlignment?: 'left' | 'right';
 }
