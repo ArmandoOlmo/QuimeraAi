@@ -990,6 +990,13 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
                     // Apply gradient colors to HeroWave sections
                     ...(section.type === 'heroWave' ? { gradientColors } : {}),
                 };
+                
+                // Remove root-level overrides so the newly mapped 'colors' object takes precedence
+                delete mergedData.backgroundColor;
+                delete mergedData.textColor;
+                delete mergedData.accentColor;
+                delete mergedData.errorColor;
+                
                 if (section.type === 'newsletter') {
                     console.log('[applyGlobalColors] Newsletter merged data:', mergedData);
                 }

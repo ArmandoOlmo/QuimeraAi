@@ -647,6 +647,12 @@ const GlobalStylesControl: React.FC<GlobalStylesControlProps> = ({ mode = 'both'
                                 ...componentColors
                             }
                         };
+                        
+                        // Remove root-level overrides so the newly mapped 'colors' object takes precedence
+                        delete (newData[key] as any).backgroundColor;
+                        delete (newData[key] as any).textColor;
+                        delete (newData[key] as any).accentColor;
+                        delete (newData[key] as any).errorColor;
                     } else if (ecommerceComponents.includes(key)) {
                         // Para componentes de ecommerce que pueden no existir,
                         // crearlos con los colores

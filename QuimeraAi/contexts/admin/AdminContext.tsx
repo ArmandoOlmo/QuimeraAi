@@ -642,10 +642,16 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     const updateComponentStyle = async (componentId: string, newStyles: any, isCustom: boolean) => {
         if (isCustom) {
             setCustomComponents(prev => prev.map(c =>
-                c.id === componentId ? { ...c, styles: newStyles } : c
+                c.id === componentId ? { ...c, styles: { ...c.styles, ...newStyles } } : c
             ));
         } else {
-            setComponentStyles(prev => ({ ...prev, [componentId]: newStyles }));
+            setComponentStyles(prev => {
+                const currentStyles = prev[componentId as keyof ComponentStyles] || {};
+                return {
+                    ...prev,
+                    [componentId]: { ...currentStyles, ...newStyles }
+                };
+            });
         }
     };
 
