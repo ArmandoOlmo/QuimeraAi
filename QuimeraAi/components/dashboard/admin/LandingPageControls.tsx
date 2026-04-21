@@ -36,7 +36,7 @@ interface LandingSection {
 
 interface LandingPageControlsProps {
     section: LandingSection;
-    onUpdateSection: (sectionId: string, data: Record<string, any>) => void;
+    onUpdateSection: (sectionId: string, data: any | ((prev: any) => any)) => void;
     onRefreshPreview: () => void;
     // Props para colores globales
     allSections?: LandingSection[];
@@ -390,29 +390,28 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
     // Update handler - use the ACTUAL section.id from props (not a mapped ID)
     // This ensures we update the correct section in the state
     const updateData = (key: string, value: any) => {
-        const newData = { ...data, [key]: value };
         try {
-            // Use the ACTUAL section ID from props - this is the ID in the state array
-            onUpdateSection(section.id, newData);
+            onUpdateSection(section.id, (oldData: any) => ({ ...oldData, [key]: value }));
         } catch (error: any) {
         }
     };
 
     // Helper to update nested data paths like 'colors.background'
     const updateNestedData = (path: string, value: any) => {
-        const keys = path.split('.');
-        const newData = { ...data };
-        let current: any = newData;
-
-        for (let i = 0; i < keys.length - 1; i++) {
-            const key = keys[i];
-            current[key] = { ...(current[key] || {}) };
-            current = current[key];
-        }
-        current[keys[keys.length - 1]] = value;
-
         try {
-            onUpdateSection(section.id, newData);
+            onUpdateSection(section.id, (oldData: any) => {
+                const keys = path.split('.');
+                const newData = { ...oldData };
+                let current: any = newData;
+
+                for (let i = 0; i < keys.length - 1; i++) {
+                    const key = keys[i];
+                    current[key] = { ...(current[key] || {}) };
+                    current = current[key];
+                }
+                current[keys[keys.length - 1]] = value;
+                return newData;
+            });
         } catch (error: any) {
         }
     };

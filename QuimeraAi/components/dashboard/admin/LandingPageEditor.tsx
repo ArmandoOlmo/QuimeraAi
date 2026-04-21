@@ -628,17 +628,16 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
         setShowAddComponent(false);
     };
 
-    // Update section data from controls - FIXED v3
-    const updateSectionData = useCallback((sectionId: string, newData: Record<string, any>) => {
+    // Update section data from controls - FIXED v4 (Functional Iteration)
+    const updateSectionData = useCallback((sectionId: string, newDataOrUpdater: any) => {
         setSections(prev => {
-            const foundSection = prev.find(s => s.id === sectionId);
-            const allIds = prev.map(s => s.id);
-            const allTypesAndIds = prev.map(s => ({ id: s.id, type: s.type }));
-            if (!foundSection) {
-            }
-            return prev.map(s =>
-                s.id === sectionId ? { ...s, data: newData } : s
-            );
+            return prev.map(s => {
+                if (s.id === sectionId) {
+                    const newData = typeof newDataOrUpdater === 'function' ? newDataOrUpdater(s.data || {}) : newDataOrUpdater;
+                    return { ...s, data: newData };
+                }
+                return s;
+            });
         });
         setHasUnsavedChanges(true);
     }, []);
