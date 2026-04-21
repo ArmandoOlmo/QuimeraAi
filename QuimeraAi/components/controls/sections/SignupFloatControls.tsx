@@ -269,7 +269,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           <div />
           <button
             onClick={() => setNestedData('signupFloat.floatPosition', 'center')}
-            className={`p-2 text-xs font-medium rounded transition-colors ${data.signupFloat.floatPosition === 'center' ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:bg-editor-border'}`}
+            className={`p-2 text-xs font-medium rounded transition-colors ${(data.signupFloat.floatPosition || 'center') === 'center' ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:bg-editor-border'}`}
           >⊙ {t('controls.signupFloat.center', 'Center')}</button>
           <div />
           {/* Bottom row */}
@@ -280,7 +280,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           <div />
           <button
             onClick={() => setNestedData('signupFloat.floatPosition', 'bottom-right')}
-            className={`p-2 text-xs font-medium rounded transition-colors ${(data.signupFloat.floatPosition || 'bottom-right') === 'bottom-right' ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:bg-editor-border'}`}
+            className={`p-2 text-xs font-medium rounded transition-colors ${data.signupFloat.floatPosition === 'bottom-right' ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:bg-editor-border'}`}
           >↘ BR</button>
         </div>
       </div>

@@ -932,7 +932,7 @@ const pageData: PageData = {
       { platform: 'facebook' as const, href: '#' },
     ],
     showSocialLinks: true,
-    floatPosition: 'bottom-right' as const,
+    floatPosition: 'center' as const,
     showOnLoad: true,
     showCloseButton: true,
     triggerDelay: 3,

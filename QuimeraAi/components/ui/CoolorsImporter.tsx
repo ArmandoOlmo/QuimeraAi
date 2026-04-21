@@ -71,14 +71,14 @@ Your task is to intelligently map these colors to a complete design system with 
 
 IMPORTANT RULES:
 1. Analyze the brightness of the palette - if most colors are dark, create a dark theme. If light, create a light theme.
-2. For dark themes: background should be the darkest color, text and heading should be light (#ffffff or similar)
-3. For light themes: background should be the lightest color, text and heading should be dark (#1a1a1a or similar)
-4. Primary should be the most vibrant/distinctive color
-5. Text colors MUST have high contrast with background for readability
+2. CRITICAL: For ALL properties except success/error, you MUST use the EXACT hex codes provided in the palette list above. DO NOT invent new colors, and DO NOT use default values like #ffffff or #1a1a1a or #000000.
+3. For dark themes: background should be the darkest palette color, text and heading should be the lightest palette colors available.
+4. For light themes: background should be the lightest palette color, text and heading should be the darkest palette colors available.
+5. Primary should be the most vibrant/distinctive color from the palette
 6. If the palette doesn't have a green, derive success from the closest color or use #22c55e
 7. If the palette doesn't have a red, derive error from the closest color or use #ef4444
-8. Surface should be slightly different from background for depth
-9. Border should be subtle - between background and surface
+8. Surface should be a palette color slightly different from background
+9. Border should be a palette color with intermediate brightness
 
 Respond ONLY with a valid JSON object (no markdown, no explanation):
 {
@@ -94,7 +94,7 @@ Respond ONLY with a valid JSON object (no markdown, no explanation):
   "success": "#hexcolor",
   "error": "#hexcolor",
   "isDarkTheme": true/false,
-  "paletteName": "A creative 2-3 word name for this palette in English (e.g., 'Sunset Glow', 'Mystic Forest', 'Deep Ocean')"
+  "paletteName": "A creative 2-3 word name for this palette in English"
 }`;
 };
 
@@ -224,66 +224,40 @@ const CoolorsImporter: React.FC<CoolorsImporterProps> = ({
 
         // Background y Surface
         const background = isDarkTheme ? darkest : lightest;
-        const surface = sortedByLuminance[isDarkTheme ? 1 : sortedByLuminance.length - 2] ||
-            (isDarkTheme ? adjustLuminance(darkest, 1.3) : adjustLuminance(lightest, 0.95));
+        const surface = isDarkTheme 
+            ? (sortedByLuminance[1] || darkest) 
+            : (sortedByLuminance[sortedByLuminance.length - 2] || lightest);
 
         // ============================================
-        // COLORES DE TEXTO - Derivados de la paleta
+        // COLORES DE TEXTO - Derivados STRICTAMENTE de la paleta
         // ============================================
 
-        // Para dark theme: buscar colores claros de la paleta
-        // Para light theme: buscar colores oscuros de la paleta
         let textColor: string;
         let headingColor: string;
         let textMutedColor: string;
 
         if (isDarkTheme) {
             // Tema oscuro: usar colores claros de la paleta para texto
-            // Heading: el más claro con buen contraste
-            const lightColors = sortedByLuminance.filter(c => getLuminance(c) > 0.6);
-            if (lightColors.length > 0) {
-                headingColor = lightColors[lightColors.length - 1]; // El más claro
-                textColor = lightColors.length > 1 ? lightColors[lightColors.length - 2] : adjustLuminance(headingColor, 0.85);
-            } else {
-                // No hay colores suficientemente claros, aclarar el más claro disponible
-                headingColor = adjustLuminance(lightest, 1.5);
-                textColor = adjustLuminance(lightest, 1.3);
-            }
-            // TextMuted: versión más tenue del texto o color intermedio
-            const midLightColors = sortedByLuminance.filter(c => getLuminance(c) > 0.4 && getLuminance(c) < 0.7);
-            textMutedColor = midLightColors.length > 0 ? midLightColors[0] : adjustLuminance(textColor, 0.7);
+            headingColor = lightest; // El más claro para el título
+            textColor = sortedByLuminance.length > 1 
+                ? sortedByLuminance[sortedByLuminance.length - 2] 
+                : lightest;
+            textMutedColor = sortedByLuminance.length > 2 
+                ? sortedByLuminance[sortedByLuminance.length - 3] 
+                : textColor;
         } else {
             // Tema claro: usar colores oscuros de la paleta para texto
-            // Heading: el más oscuro con buen contraste
-            const darkColors = sortedByLuminance.filter(c => getLuminance(c) < 0.4);
-            if (darkColors.length > 0) {
-                headingColor = darkColors[0]; // El más oscuro
-                textColor = darkColors.length > 1 ? darkColors[1] : adjustLuminance(headingColor, 1.3);
-            } else {
-                // No hay colores suficientemente oscuros, oscurecer el más oscuro disponible
-                headingColor = adjustLuminance(darkest, 0.5);
-                textColor = adjustLuminance(darkest, 0.7);
-            }
-            // TextMuted: versión más tenue del texto o color intermedio
-            const midDarkColors = sortedByLuminance.filter(c => getLuminance(c) > 0.3 && getLuminance(c) < 0.6);
-            textMutedColor = midDarkColors.length > 0 ? midDarkColors[0] : adjustLuminance(textColor, 1.4);
+            headingColor = darkest; // El más oscuro para el título
+            textColor = sortedByLuminance.length > 1 
+                ? sortedByLuminance[1] 
+                : darkest;
+            textMutedColor = sortedByLuminance.length > 2 
+                ? sortedByLuminance[2] 
+                : textColor;
         }
 
-        // Verificar contraste mínimo y ajustar si es necesario
-        if (getContrast(headingColor, background) < 4.5) {
-            headingColor = isDarkTheme ? '#F8FAFC' : '#0F172A';
-        }
-        if (getContrast(textColor, background) < 4.5) {
-            textColor = isDarkTheme ? '#E2E8F0' : '#1E293B';
-        }
-        if (getContrast(textMutedColor, background) < 3) {
-            textMutedColor = isDarkTheme ? '#94A3B8' : '#64748B';
-        }
-
-        // Border: derivar del fondo
-        const borderColor = isDarkTheme
-            ? adjustLuminance(background, 1.8)
-            : adjustLuminance(background, 0.85);
+        // Border: color intermedio
+        const borderColor = sortedByLuminance[Math.floor(sortedByLuminance.length / 2)] || (isDarkTheme ? lightest : darkest);
 
         return {
             primary,
