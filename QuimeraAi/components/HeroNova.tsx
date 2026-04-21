@@ -4,6 +4,7 @@ import { useDesignTokens } from '../hooks/useDesignTokens';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { sanitizeHtml } from '../utils/sanitize';
 import CornerGradient from './ui/CornerGradient';
+import { hexToRgba } from '../utils/colorUtils';
 
 // ─── Types ───
 export interface HeroNovaSlide {
@@ -75,7 +76,7 @@ interface HeroNovaProps extends HeroNovaData {
 }
 
 const HeroNova: React.FC<HeroNovaProps> = ({
-    slides = [],
+  glassEffect, slides = [],
     displayText = '',
     showDisplayText = true,
     autoPlaySpeed = 6000,
@@ -234,7 +235,7 @@ const HeroNova: React.FC<HeroNovaProps> = ({
     const currentSlide = validSlides[currentIndex];
 
     return (
-        <section ref={sectionRef} className="relative w-full overflow-hidden" style={{ backgroundColor: bgColor, minHeight }}>
+        <section ref={sectionRef} className={`relative w-full overflow-hidden ${glassEffect ? ' backdrop-blur-xl border-y border-white/10 z-20 shadow-[0_4px_30px_rgba(0,0,0,0.1)]' : ''}`} style={{ backgroundColor: glassEffect ? hexToRgba(bgColor, 0.4) : bgColor, minHeight }}>
             <CornerGradient config={cornerGradient} />
 
             {/* ─── Background Slides (image / video) ─── */}

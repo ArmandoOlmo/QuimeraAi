@@ -49,7 +49,7 @@ function extractTag(html: string, tag: string): string[] {
     let match;
     while ((match = regex.exec(html)) !== null) {
         const text = match[1].replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
-        if (text && text.length > 1 && text.length < 500) results.push(text);
+        if (text && text.length > 1 && text.length < 2000) results.push(text);
     }
     return results;
 }
@@ -84,40 +84,49 @@ function extractMeta(html: string, nameOrProp: string): string {
 /** Extract internal navigation links from HTML */
 function extractNavLinks(html: string, baseUrl: string): string[] {
     const origin = new URL(baseUrl).origin;
-    // Match <a> tags within <nav>, <header>, <footer>, <aside>, or elements with common navigational classes
+    const hostname = new URL(baseUrl).hostname;
+    const links = new Set<string>();
+    
+    const addLink = (href: string) => {
+        href = href.trim();
+        // Skip empty, anchors, mailto, tel, js, and common media
+        if (!href || href === '/' || href.startsWith('#') || href.startsWith('mailto:') || href.startsWith('tel:') || href.startsWith('javascript:')) return;
+        if (/\\.(jpg|jpeg|png|gif|svg|pdf|zip|mp4|webm|webp)$/i.test(href)) return;
+        
+        const cleanHref = href.split('#')[0];
+        if (cleanHref === '/' || cleanHref === '') return;
+
+        if (cleanHref.startsWith('/') && !cleanHref.startsWith('//')) {
+            links.add(`${origin}${cleanHref}`);
+        } else if (cleanHref.startsWith('http') && cleanHref.includes(hostname)) {
+            // Also ignore if it's identical to the base url without trailing slash
+            if (cleanHref !== origin && cleanHref !== `${origin}/`) {
+                links.add(cleanHref);
+            }
+        } else if (!cleanHref.startsWith('http') && !cleanHref.startsWith('//')) {
+            links.add(`${origin}/${cleanHref}`);
+        }
+    };
+
+    // 1. Prioritize Nav/Header/Footer/Sidebar links to ensure key pages are found first
     const navSections = html.match(/<(?:nav|header|footer|aside)[^>]*>[\s\S]*?<\/(?:nav|header|footer|aside)>/gi) || [];
     const classSections = html.match(/<[^>]+class=["'][^"']*(?:nav|menu|header|footer|sidebar|links)[^"']*["'][^>]*>[\s\S]*?<\/[a-zA-Z]+>/gi) || [];
     const allNavHtml = navSections.join(' ') + ' ' + classSections.join(' ');
     
-    const hrefRegex = /<a[^>]*href=["']([^"'#]+)["'][^>]*>/gi;
-    const links = new Set<string>();
+    const hrefRegex = /<a[^>]*href=["']([^"']+)["'][^>]*>/gi;
     let match;
     
-    // From nav/header sections
     while ((match = hrefRegex.exec(allNavHtml)) !== null) {
-        const href = match[1].trim();
-        if (href.startsWith('/') && href !== '/') {
-            links.add(`${origin}${href}`);
-        } else if (href.startsWith(origin)) {
-            links.add(href);
-        }
+        addLink(match[1]);
     }
     
-    // Also look for common page patterns in the full HTML
-    const commonPaths = ['/about', '/contact', '/services', '/menu', '/pricing', '/team', '/portfolio', '/gallery', '/blog',
-                         '/nosotros', '/contacto', '/servicios', '/carta', '/precios', '/equipo', '/galeria'];
-    const fullHrefRegex = /<a[^>]*href=["']([^"'#]+)["'][^>]*>/gi;
+    // 2. Extract ALL other links from the document
+    const fullHrefRegex = /<a[^>]*href=["']([^"']+)["'][^>]*>/gi;
     while ((match = fullHrefRegex.exec(html)) !== null) {
-        const href = match[1].trim();
-        for (const path of commonPaths) {
-            if (href.includes(path)) {
-                if (href.startsWith('/')) links.add(`${origin}${href}`);
-                else if (href.startsWith('http') && href.includes(new URL(baseUrl).hostname)) links.add(href);
-            }
-        }
+        addLink(match[1]);
     }
     
-    return [...links].slice(0, 15); // Max 15 internal links to check
+    return [...links].slice(0, 40); // Increased: Max 40 internal links to check
 }
 
 /** Extract social media links */
@@ -147,19 +156,47 @@ function extractContactInfo(text: string) {
     return { emails, phones };
 }
 
-/** Extract colors from inline styles and style blocks */
+/** Extract colors from inline styles, variables, classes, and style blocks */
 function extractColors(html: string): string[] {
-    const colorSet = new Set<string>();
-    // From inline styles
-    const inlineColors = html.match(/(?:color|background|background-color|border-color)\s*:\s*(#[0-9a-fA-F]{3,8}|rgb[a]?\([^)]+\))/gi) || [];
-    for (const c of inlineColors) {
-        const val = c.replace(/^[^:]+:\s*/, '').trim();
-        colorSet.add(val);
+    const colorSet = new Map<string, number>();
+    
+    // 1. CSS variables mapping to colors (highest weight)
+    const varColors = html.match(/--[a-zA-Z0-9-]+:\s*(#[0-9a-fA-F]{3,8}|rgba?\([^)]+\))/gi) || [];
+    for (const c of varColors) {
+        const val = (c.split(':')[1] || '').replace(/!important|;/g, '').trim().toLowerCase();
+        if (val) colorSet.set(val, (colorSet.get(val) || 0) + 5);
     }
-    // Standalone hex colors in CSS
-    const hexColors = html.match(/#[0-9a-fA-F]{6}/g) || [];
-    for (const c of hexColors) colorSet.add(c);
-    return [...colorSet].slice(0, 20);
+
+    // 2. Inline styles or CSS rules (medium weight)
+    const inlineColors = html.match(/(?:color|background(?:-color)?|border(?:-color)?|fill|stroke)\s*:\s*(#[0-9a-fA-F]{3,8}|rgba?\([^)]+\))/gi) || [];
+    for (const c of inlineColors) {
+        const val = c.replace(/^[^:]+:\s*/, '').replace(/!important|;/g, '').trim().toLowerCase();
+        colorSet.set(val, (colorSet.get(val) || 0) + 2);
+    }
+    
+    // 3. Tailwind arbitrary color classes (e.g., bg-[#ff0000]) (medium-high weight)
+    const tailwindColors = html.match(/(?:bg|text|border|ring|fill|stroke)-\[(#[0-9a-fA-F]{3,8}|rgba?\([^)]+\))\]/gi) || [];
+    for (const c of tailwindColors) {
+        const match = c.match(/\[(.*?)\]/);
+        if (match && match[1]) {
+            const val = match[1].toLowerCase();
+            colorSet.set(val, (colorSet.get(val) || 0) + 3);
+        }
+    }
+
+    // 4. Standalone generic hex colors (catch-all, lowest weight)
+    const hexColors = html.match(/#[0-9a-fA-F]{8}\b|#[0-9a-fA-F]{6}\b|#[0-9a-fA-F]{4}\b|#[0-9a-fA-F]{3}\b/g) || [];
+    for (const c of hexColors) {
+        const lower = c.toLowerCase();
+        colorSet.set(lower, (colorSet.get(lower) || 0) + 1); 
+    }
+    
+    // Sort by frequency/weight, ensuring the most intentional colors appear first
+    const sorted = Array.from(colorSet.entries())
+        .sort((a, b) => b[1] - a[1])
+        .map(e => e[0]);
+        
+    return sorted.slice(0, 40); // Increased slice to 40
 }
 
 /** Extract font families from CSS, inline styles, and Google Fonts links */
@@ -251,15 +288,15 @@ function scrapePage(html: string, url: string) {
         ogTitle: extractMeta(html, 'og:title'),
         ogDescription: extractMeta(html, 'og:description'),
         ogImage: extractMeta(html, 'og:image'),
-        headings: { h1: h1s.slice(0, 5), h2: h2s.slice(0, 10), h3: h3s.slice(0, 10) },
+        headings: { h1: h1s.slice(0, 10), h2: h2s.slice(0, 30), h3: h3s.slice(0, 30) },
         emails: contact.emails,
         phones: contact.phones,
         socialLinks: social,
         colors: colors,
         fonts: fonts,
-        images: images.slice(0, 15),
-        jsonLd: jsonLd.slice(0, 3),
-        bodyTextSample: bodyText.slice(0, 2000),
+        images: images.slice(0, 40),
+        jsonLd: jsonLd.slice(0, 5),
+        bodyTextSample: bodyText.slice(0, 10000),
     };
 }
 
@@ -307,7 +344,7 @@ export const analyzeWebsite = functions
             functions.logger.info('Internal links discovered', { count: internalLinks.length, links: internalLinks.slice(0, 5) });
 
             const subpageData: ReturnType<typeof scrapePage>[] = [];
-            const MAX_SUBPAGES = 8;
+            const MAX_SUBPAGES = 12;
             const linksToFetch = internalLinks.slice(0, MAX_SUBPAGES);
 
             // Fetch subpages in parallel with individual error handling
@@ -343,17 +380,20 @@ export const analyzeWebsite = functions
             const allColors = [...new Set([...mainData.colors, ...subpageData.flatMap(s => s.colors)])].slice(0, 20);
             const allFonts = [...new Set([...mainData.fonts, ...subpageData.flatMap(s => s.fonts)])].slice(0, 10);
             const allHeadings = {
-                h1: [...new Set([...mainData.headings.h1, ...subpageData.flatMap(s => s.headings.h1)])].slice(0, 10),
-                h2: [...new Set([...mainData.headings.h2, ...subpageData.flatMap(s => s.headings.h2)])].slice(0, 15),
-                h3: [...new Set([...mainData.headings.h3, ...subpageData.flatMap(s => s.headings.h3)])].slice(0, 15),
+                h1: [...new Set([...mainData.headings.h1, ...subpageData.flatMap(s => s.headings.h1)])].slice(0, 20),
+                h2: [...new Set([...mainData.headings.h2, ...subpageData.flatMap(s => s.headings.h2)])].slice(0, 60),
+                h3: [...new Set([...mainData.headings.h3, ...subpageData.flatMap(s => s.headings.h3)])].slice(0, 60),
             };
-            const allJsonLd = [...mainData.jsonLd, ...subpageData.flatMap(s => s.jsonLd)].slice(0, 5);
+            const allJsonLd = [...mainData.jsonLd, ...subpageData.flatMap(s => s.jsonLd)].slice(0, 8);
+            const allImages = [...mainData.images, ...subpageData.flatMap(s => s.images)];
+            // Map to handle image uniqueness based on src
+            const uniqueImages = Array.from(new Map(allImages.map(img => [img.src, img])).values()).slice(0, 40);
 
             // Combine body text from all pages
             const allBodyText = [
                 `[HOME PAGE] ${mainData.bodyTextSample}`,
                 ...subpageData.map(s => `[${s.url}] ${s.bodyTextSample}`),
-            ].join('\n\n').slice(0, 6000);
+            ].join('\n\n').slice(0, 40000);
 
             // Build comprehensive extraction for AI
             const comprehensiveExtraction = {
@@ -374,7 +414,7 @@ export const analyzeWebsite = functions
                 socialLinks: allSocial,
                 colorsFound: allColors,
                 fontsFound: allFonts,
-                images: mainData.images.slice(0, 10),
+                images: uniqueImages,
                 jsonLdSummary: allJsonLd.length > 0 ? JSON.stringify(allJsonLd[0]).slice(0, 800) : null,
                 fullTextContent: allBodyText,
             };
@@ -439,7 +479,10 @@ CRITICAL RULES:
 6. Extract 3-8 services maximum from the content
 7. If a field is not found, use null (not empty string)
 8. The description and tagline should match the website's language
-9. For branding: pick colors from the colorsFound array. The primaryColor should be the dominant brand color (not black/white/gray). Set isDarkTheme to true if the background is dark.
+9. For branding: pick colors from the colorsFound array. 
+   - primaryColor: The dominant brand/base color (never black/white/gray).
+   - accentColor: VERY IMPORTANT. Pick a high-contrast, vibrant color (red, orange, green, bright blue, gold, etc.) from the colorsFound list if available, prioritizing colors often used for buttons. Do not use black/gray as an accent color.
+   - backgroundColor: '#ffffff' for light, or '#0f0f0f' for dark themes. Set isDarkTheme to true if a dark background is detected.
 10. For fonts: use the fontsFound array. List the primary heading font first, body font second.
 11. Return ONLY the JSON, nothing else`;
 

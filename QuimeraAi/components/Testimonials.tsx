@@ -261,6 +261,7 @@ interface TestimonialsProps extends TestimonialsData {
 }
 
 const Testimonials: React.FC<TestimonialsProps> = ({
+  glassEffect,
   title,
   description,
   items = [],
@@ -315,7 +316,7 @@ const Testimonials: React.FC<TestimonialsProps> = ({
   }, [actualColors]);
 
   return (
-    <section id="testimonials" className="w-full relative overflow-hidden" style={{ backgroundColor: actualColors.background }}>
+    <section id="testimonials" className={`w-full relative overflow-hidden ${glassEffect ? ' backdrop-blur-xl border-y border-white/10 z-20 shadow-[0_4px_30px_rgba(0,0,0,0.1)]' : ''}`} style={{ backgroundColor: glassEffect ? hexToRgba(actualColors.background , 0.4) : actualColors.background }}>
       <CornerGradient config={cornerGradient} />
       <div className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]} relative z-10`}>
         <div className="text-center max-w-3xl mx-auto mb-16">

@@ -48,7 +48,8 @@ interface NewsletterProps extends NewsletterData {
   buttonBorderRadius: BorderRadiusSize;
 }
 
-const Newsletter: React.FC<NewsletterProps> = ({ title, description, placeholderText, buttonText, paddingY, paddingX, colors, cardBorderRadius, buttonBorderRadius, titleFontSize = 'md', descriptionFontSize = 'md' }) => {
+const Newsletter: React.FC<NewsletterProps> = ({
+  glassEffect, title, description, placeholderText, buttonText, paddingY, paddingX, colors, cardBorderRadius, buttonBorderRadius, titleFontSize = 'md', descriptionFontSize = 'md' }) => {
   // Use section colors for title/description - cardHeading/cardText are legacy fallbacks
   const headingColor = colors?.heading || colors?.cardHeading || '#ffffff';
   const textColor = colors?.text || colors?.cardText || '#ffffff';
@@ -58,7 +59,7 @@ const Newsletter: React.FC<NewsletterProps> = ({ title, description, placeholder
   console.log('[Newsletter Render]', { incomingColors: colors, headingColor, textColor });
 
   return (
-    <section id="newsletter" className="w-full" style={{ backgroundColor: colors?.background }}>
+    <section id="newsletter" className={`w-full ${glassEffect ? ' backdrop-blur-xl border-y border-white/10 z-20 shadow-[0_4px_30px_rgba(0,0,0,0.1)]' : ''}`} style={{ backgroundColor: glassEffect ? hexToRgba(colors?.background , 0.4) : colors?.background }}>
       <style dangerouslySetInnerHTML={{
         __html: `
         #newsletter-email-input::placeholder {

@@ -405,6 +405,7 @@ interface FeaturesProps extends FeaturesData {
 }
 
 const Features: React.FC<FeaturesProps> = ({
+  glassEffect,
   title,
   description,
   items,
@@ -477,8 +478,8 @@ const Features: React.FC<FeaturesProps> = ({
     return (
       <section
         id="features"
-        className="w-full"
-        style={{ backgroundColor: actualColors.background }}
+        className={`w-full ${glassEffect ? 'backdrop-blur-xl border-y border-white/10 z-20 shadow-[0_4px_30px_rgba(0,0,0,0.1)]' : ''}`}
+        style={{ backgroundColor: glassEffect ? hexToRgba(actualColors.background || '#0f172a', 0.4) : actualColors.background }}
       >
         {/* Optional Section Header */}
         {showSectionHeader && (title || description) && (
@@ -532,7 +533,7 @@ const Features: React.FC<FeaturesProps> = ({
   // --- RENDERIZADO BENTO OVERLAY ---
   if (featuresVariant === 'bento-overlay') {
     return (
-      <section id="features" className="w-full" style={{ backgroundColor: actualColors.background }}>
+      <section id="features" className={`w-full ${glassEffect ? ' backdrop-blur-xl border-y border-white/10 z-20 shadow-[0_4px_30px_rgba(0,0,0,0.1)]' : ''}`} style={{ backgroundColor: glassEffect ? hexToRgba(actualColors.background || "#0f172a", 0.4) : actualColors.background }}>
         <div className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`}>
           <div className="relative">
             {/* Section Header — same as bento-premium */}
@@ -575,7 +576,7 @@ const Features: React.FC<FeaturesProps> = ({
   // --- RENDERIZADO MODERNO ---
   if (featuresVariant === 'modern') {
     return (
-      <section id="features" className="w-full" style={{ backgroundColor: actualColors.background }}>
+      <section id="features" className={`w-full ${glassEffect ? ' backdrop-blur-xl border-y border-white/10 z-20 shadow-[0_4px_30px_rgba(0,0,0,0.1)]' : ''}`} style={{ backgroundColor: glassEffect ? hexToRgba(actualColors.background || "#0f172a", 0.4) : actualColors.background }}>
         <div className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`}>
           <div className="relative z-10">
             <div className="mb-20 max-w-3xl">
@@ -608,7 +609,7 @@ const Features: React.FC<FeaturesProps> = ({
   // --- RENDERIZADO BENTO PREMIUM ---
   if (featuresVariant === 'bento-premium') {
     return (
-      <section id="features" className="w-full" style={{ backgroundColor: actualColors.background }}>
+      <section id="features" className={`w-full ${glassEffect ? ' backdrop-blur-xl border-y border-white/10 z-20 shadow-[0_4px_30px_rgba(0,0,0,0.1)]' : ''}`} style={{ backgroundColor: glassEffect ? hexToRgba(actualColors.background || "#0f172a", 0.4) : actualColors.background }}>
         <div className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`}>
           <div className="relative">
             {/* Section Header con línea decorativa */}
@@ -744,7 +745,7 @@ const Features: React.FC<FeaturesProps> = ({
   }
 
   return (
-    <section id="features" className="w-full" style={{ backgroundColor: actualColors.background }}>
+    <section id="features" className={`w-full ${glassEffect ? ' backdrop-blur-xl border-y border-white/10 z-20 shadow-[0_4px_30px_rgba(0,0,0,0.1)]' : ''}`} style={{ backgroundColor: glassEffect ? hexToRgba(actualColors.background || "#0f172a", 0.4) : actualColors.background }}>
       <div className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`}>
         <div className="text-center max-w-3xl mx-auto mb-16">
           <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold mb-4 font-header`} style={{ color: safeColors.heading, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>{title}</h2>

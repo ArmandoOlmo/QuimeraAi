@@ -375,7 +375,7 @@ const Portfolio: React.FC<PortfolioProps> = ({
 
   // --- RENDERIZADO CLASSIC ---
   return (
-    <section id="portfolio" className="w-full relative overflow-hidden" style={{ backgroundColor: colors?.background }}>
+    <section id="portfolio" className={`w-full relative overflow-hidden ${glassEffect ? ' backdrop-blur-xl border-y border-white/10 z-20 shadow-[0_4px_30px_rgba(0,0,0,0.1)]' : ''}`} style={{ backgroundColor: glassEffect ? hexToRgba(colors?.background , 0.4) : colors?.background }}>
       <CornerGradient config={cornerGradient} />
       {/* Static background particles */}
       {STATIC_PARTICLES.map((p, i) => (

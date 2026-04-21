@@ -7,6 +7,7 @@ import {
   Heart, ShieldCheck, Clock, Flame, Award, Crown, MapPin, CheckCircle
 } from 'lucide-react';
 import CornerGradient from './ui/CornerGradient';
+import { hexToRgba } from '../utils/colorUtils';
 
 const paddingYClasses: Record<PaddingSize, string> = {
   none: 'py-0',
@@ -52,12 +53,13 @@ interface HowItWorksProps extends HowItWorksData {
     cornerGradient?: CornerGradientConfig;
 }
 
-const HowItWorks: React.FC<HowItWorksProps> = ({ title, description, steps, items = [], paddingY, paddingX, colors, borderRadius, titleFontSize = 'md', descriptionFontSize = 'md', cornerGradient }) => {
+const HowItWorks: React.FC<HowItWorksProps> = ({
+  glassEffect, title, description, steps, items = [], paddingY, paddingX, colors, borderRadius, titleFontSize = 'md', descriptionFontSize = 'md', cornerGradient }) => {
     const visibleItems = (items || []).slice(0, steps);
     const gridColsClass = steps === 3 ? 'md:grid-cols-3' : 'md:grid-cols-4';
 
     return (
-        <section id="how-it-works" className="w-full relative overflow-hidden" style={{ backgroundColor: colors?.background }}>
+        <section id="how-it-works" className={`w-full relative overflow-hidden ${glassEffect ? ' backdrop-blur-xl border-y border-white/10 z-20 shadow-[0_4px_30px_rgba(0,0,0,0.1)]' : ''}`} style={{ backgroundColor: glassEffect ? hexToRgba(colors?.background , 0.4) : colors?.background }}>
             <CornerGradient config={cornerGradient} />
             <div className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]} relative z-10`}>
                 <div className="text-center max-w-3xl mx-auto mb-16">

@@ -4,6 +4,7 @@ import { useDesignTokens } from '../hooks/useDesignTokens';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { sanitizeHtml } from '../utils/sanitize';
 import CornerGradient from './ui/CornerGradient';
+import { hexToRgba } from '../utils/colorUtils';
 
 // ─── Size mappings ───
 const headlineSizeClasses: Record<FontSize, string> = {
@@ -33,7 +34,7 @@ interface HeroGalleryProps extends HeroGalleryData {
  * text-link CTAs, slideshow with dots & arrows, subtle grain texture.
  */
 const HeroGallery: React.FC<HeroGalleryProps> = ({
-    slides = [],
+  glassEffect, slides = [],
     autoPlaySpeed = 6000,
     transitionDuration = 800,
     showArrows = true,
@@ -109,8 +110,8 @@ const HeroGallery: React.FC<HeroGalleryProps> = ({
 
     return (
         <section
-            className="relative w-full overflow-hidden"
-            style={{ minHeight, backgroundColor: bgColor }}
+            className={`relative w-full overflow-hidden ${glassEffect ? ' backdrop-blur-xl border-y border-white/10 z-20 shadow-[0_4px_30px_rgba(0,0,0,0.1)]' : ''}`}
+            style={{ minHeight, backgroundColor: glassEffect ? hexToRgba(bgColor , 0.4) : bgColor }}
         >
             <CornerGradient config={cornerGradient} />
 

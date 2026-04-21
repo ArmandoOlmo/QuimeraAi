@@ -6,6 +6,7 @@ import ImagePlaceholder from './ui/ImagePlaceholder';
 import { isPendingImage } from '../utils/imagePlaceholders';
 import { useDesignTokens } from '../hooks/useDesignTokens';
 import CornerGradient from './ui/CornerGradient';
+import { hexToRgba } from '../utils/colorUtils';
 
 // Helper component to render slideshow image or placeholder
 const SlideImage: React.FC<{ imageUrl: string; altText: string; className?: string }> = ({ imageUrl, altText, className = '' }) => {
@@ -54,6 +55,7 @@ interface SlideshowProps extends SlideshowData {
 }
 
 const Slideshow: React.FC<SlideshowProps> = ({ 
+    glassEffect,
     slideshowVariant = 'classic',
     title, 
     showTitle = true,
@@ -505,8 +507,8 @@ const Slideshow: React.FC<SlideshowProps> = ({
 
     return (
         <section 
-            className="w-full relative overflow-hidden" 
-            style={{ backgroundColor: colors?.background }}
+            className={`w-full relative overflow-hidden ${glassEffect ? 'backdrop-blur-xl border-y border-white/10 z-20 shadow-[0_4px_30px_rgba(0,0,0,0.1)]' : ''}`}
+            style={{ backgroundColor: glassEffect ? hexToRgba(colors?.background || '#0f172a', 0.4) : colors?.background }}
         >
             <CornerGradient config={cornerGradient} />
             <div className={`${fullWidth ? '' : 'container mx-auto'} ${paddingYClasses[paddingY]} ${fullWidth ? '' : paddingXClasses[paddingX]} relative z-10`}>

@@ -86,115 +86,115 @@ export async function generateTextViaOpenRouter(
     const maxTokens = Math.min(opts.maxOutputTokens || 8192, 32000);
 
     // ------------------------------------------------------------------ //
-    // OpenRouter path (primary)
+    // Gemini REST API path (primary)
     // ------------------------------------------------------------------ //
-    if (OPENROUTER_CONFIG.enabled) {
-        const orModel = mapModelToOpenRouter(model);
+    const apiKey = GEMINI_CONFIG.apiKey;
+    if (apiKey) {
+        const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
 
-        // Build messages array (OpenAI Chat format)
-        const messages: Array<{ role: string; content: string }> = [];
-
-        if (opts.systemInstruction) {
-            messages.push({ role: 'system', content: opts.systemInstruction });
-        }
+        // Build contents
+        const contents: any[] = [];
 
         if (opts.history && opts.history.length > 0) {
             for (const msg of opts.history) {
-                messages.push({
-                    role: msg.role === 'model' ? 'assistant' : msg.role,
-                    content: msg.text,
+                contents.push({
+                    role: msg.role === 'model' ? 'model' : 'user',
+                    parts: [{ text: msg.text }],
                 });
             }
         }
 
-        messages.push({ role: 'user', content: prompt });
+        contents.push({ role: 'user', parts: [{ text: prompt }] });
 
-        const body = {
-            model: orModel,
-            messages,
-            temperature,
-            max_tokens: maxTokens,
+        const requestBody: Record<string, any> = {
+            contents,
+            generationConfig: { temperature, maxOutputTokens: maxTokens },
         };
 
-        const response = await fetch(`${OPENROUTER_CONFIG.baseUrl}/chat/completions`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${OPENROUTER_CONFIG.apiKey}`,
-                'HTTP-Referer': 'https://quimera.ai',
-                'X-Title': 'Quimera AI',
-            },
-            body: JSON.stringify(body),
-        });
-
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error(`[OpenRouterHelper] API error (${response.status}):`, errorText);
-            throw new Error(`OpenRouter API error: ${response.status}`);
+        if (opts.systemInstruction) {
+            requestBody.system_instruction = { parts: [{ text: opts.systemInstruction }] };
         }
 
-        const data = await response.json();
-        const text = data.choices?.[0]?.message?.content || '';
-        const tokensUsed =
-            (data.usage?.prompt_tokens || 0) + (data.usage?.completion_tokens || 0);
+        const geminiResponse = await fetch(geminiUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(requestBody),
+        });
 
-        return { text, tokensUsed, provider: 'openrouter' };
+        if (!geminiResponse.ok) {
+            const errorText = await geminiResponse.text();
+            console.error('[OpenRouterHelper] Gemini API error:', errorText);
+            throw new Error(`Gemini API error: ${geminiResponse.status}`);
+        }
+
+        const geminiData = await geminiResponse.json();
+        const text =
+            geminiData?.candidates?.[0]?.content?.parts
+                ?.map((p: any) => p.text)
+                .filter(Boolean)
+                .join('') || '';
+        const tokensUsed = geminiData?.usageMetadata?.totalTokenCount || 0;
+
+        return { text, tokensUsed, provider: 'gemini-direct' };
     }
 
     // ------------------------------------------------------------------ //
-    // Gemini REST API fallback (when OpenRouter key is not set)
+    // OpenRouter fallback (when Gemini API key is not set)
     // ------------------------------------------------------------------ //
-    const apiKey = GEMINI_CONFIG.apiKey;
-    if (!apiKey) {
-        throw new Error('Neither OpenRouter nor Gemini API keys are configured');
+    if (!OPENROUTER_CONFIG.enabled) {
+        throw new Error('Neither Gemini nor OpenRouter API keys are configured');
     }
 
-    console.warn('[OpenRouterHelper] OpenRouter not configured, falling back to Gemini REST API');
+    console.warn('[OpenRouterHelper] Gemini API key not configured, falling back to OpenRouter');
 
-    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+    const orModel = mapModelToOpenRouter(model);
 
-    // Build contents
-    const contents: any[] = [];
+    // Build messages array (OpenAI Chat format)
+    const messages: Array<{ role: string; content: string }> = [];
+
+    if (opts.systemInstruction) {
+        messages.push({ role: 'system', content: opts.systemInstruction });
+    }
 
     if (opts.history && opts.history.length > 0) {
         for (const msg of opts.history) {
-            contents.push({
-                role: msg.role === 'model' ? 'model' : 'user',
-                parts: [{ text: msg.text }],
+            messages.push({
+                role: msg.role === 'model' ? 'assistant' : msg.role,
+                content: msg.text,
             });
         }
     }
 
-    contents.push({ role: 'user', parts: [{ text: prompt }] });
+    messages.push({ role: 'user', content: prompt });
 
-    const requestBody: Record<string, any> = {
-        contents,
-        generationConfig: { temperature, maxOutputTokens: maxTokens },
+    const body = {
+        model: orModel,
+        messages,
+        temperature,
+        max_tokens: maxTokens,
     };
 
-    if (opts.systemInstruction) {
-        requestBody.system_instruction = { parts: [{ text: opts.systemInstruction }] };
-    }
-
-    const geminiResponse = await fetch(geminiUrl, {
+    const response = await fetch(`${OPENROUTER_CONFIG.baseUrl}/chat/completions`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(requestBody),
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${OPENROUTER_CONFIG.apiKey}`,
+            'HTTP-Referer': 'https://quimera.ai',
+            'X-Title': 'Quimera AI',
+        },
+        body: JSON.stringify(body),
     });
 
-    if (!geminiResponse.ok) {
-        const errorText = await geminiResponse.text();
-        console.error('[OpenRouterHelper] Gemini API error:', errorText);
-        throw new Error(`Gemini API error: ${geminiResponse.status}`);
+    if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`[OpenRouterHelper] API error (${response.status}):`, errorText);
+        throw new Error(`OpenRouter API error: ${response.status}`);
     }
 
-    const geminiData = await geminiResponse.json();
-    const text =
-        geminiData?.candidates?.[0]?.content?.parts
-            ?.map((p: any) => p.text)
-            .filter(Boolean)
-            .join('') || '';
-    const tokensUsed = geminiData?.usageMetadata?.totalTokenCount || 0;
+    const data = await response.json();
+    const text = data.choices?.[0]?.message?.content || '';
+    const tokensUsed =
+        (data.usage?.prompt_tokens || 0) + (data.usage?.completion_tokens || 0);
 
-    return { text, tokensUsed, provider: 'gemini-direct' };
+    return { text, tokensUsed, provider: 'openrouter' };
 }

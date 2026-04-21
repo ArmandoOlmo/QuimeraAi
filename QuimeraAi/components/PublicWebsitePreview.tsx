@@ -1411,6 +1411,8 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
     const derivedColors = deriveColorsFromPalette(mergedColors, componentKey);
 
     return {
+      paddingY: 'lg',
+      paddingX: 'sm',
       ...styles,
       ...componentData,
       colors: derivedColors

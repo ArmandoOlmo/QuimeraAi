@@ -53,7 +53,8 @@ interface CTASectionProps extends CtaData {
   onNavigate?: (href: string) => void;
 }
 
-const CTASection: React.FC<CTASectionProps> = ({ title, description, buttonText, buttonUrl, paddingY, paddingX, colors, cardBorderRadius, buttonBorderRadius, titleFontSize = 'md', descriptionFontSize = 'md', cornerGradient, onNavigate }) => {
+const CTASection: React.FC<CTASectionProps> = ({
+  glassEffect, title, description, buttonText, buttonUrl, paddingY, paddingX, colors, cardBorderRadius, buttonBorderRadius, titleFontSize = 'md', descriptionFontSize = 'md', cornerGradient, onNavigate }) => {
   // Get design tokens with fallback to component colors
   const { getColor } = useDesignTokens();
 
@@ -70,7 +71,7 @@ const CTASection: React.FC<CTASectionProps> = ({ title, description, buttonText,
   };
 
   return (
-    <section id="cta" className="w-full relative overflow-hidden" style={{ backgroundColor: actualColors.background }}>
+    <section id="cta" className={`w-full relative overflow-hidden ${glassEffect ? ' backdrop-blur-xl border-y border-white/10 z-20 shadow-[0_4px_30px_rgba(0,0,0,0.1)]' : ''}`} style={{ backgroundColor: glassEffect ? hexToRgba(actualColors.background , 0.4) : actualColors.background }}>
       <CornerGradient config={cornerGradient} />
       <div className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]} relative z-10`}>
         <div

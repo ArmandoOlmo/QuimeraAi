@@ -6,6 +6,7 @@ import { CheckCircle2, Mail, Phone, User, Loader2 } from 'lucide-react';
 import { useDesignTokens } from '../hooks/useDesignTokens';
 import { useTranslation } from 'react-i18next';
 import CornerGradient from './ui/CornerGradient';
+import { hexToRgba } from '../utils/colorUtils';
 
 const paddingYClasses: Record<PaddingSize, string> = {
   none: 'py-0',
@@ -56,6 +57,7 @@ interface LeadsProps extends LeadsData {
 }
 
 const Leads: React.FC<LeadsProps> = ({
+  glassEffect,
   title,
   description,
   namePlaceholder,
@@ -189,7 +191,7 @@ const Leads: React.FC<LeadsProps> = ({
 
   // Render Classic Variant
   const renderClassic = () => (
-    <section id="leads" className="w-full relative overflow-hidden" style={{ backgroundColor: leadsColors.background }}>
+    <section id="leads" className={`w-full relative overflow-hidden ${glassEffect ? ' backdrop-blur-xl border-y border-white/10 z-20 shadow-[0_4px_30px_rgba(0,0,0,0.1)]' : ''}`} style={{ backgroundColor: glassEffect ? hexToRgba(leadsColors.background , 0.4) : leadsColors.background }}>
       <CornerGradient config={cornerGradient} />
       <style dangerouslySetInnerHTML={{
         __html: `
@@ -337,8 +339,8 @@ const Leads: React.FC<LeadsProps> = ({
 
   // Render Split Gradient Variant
   const renderSplitGradient = () => (
-    <section id="leads" className="w-full relative overflow-hidden"
-      style={{ backgroundColor: leadsColors.background }}>
+    <section id="leads" className={`w-full relative overflow-hidden ${glassEffect ? 'backdrop-blur-xl border-y border-white/10 z-20 shadow-[0_4px_30px_rgba(0,0,0,0.1)]' : ''}`}
+      style={{ backgroundColor: glassEffect ? hexToRgba(leadsColors.background, 0.4) : leadsColors.background }}>
       <CornerGradient config={cornerGradient} />
       <style dangerouslySetInnerHTML={{
         __html: `
@@ -536,8 +538,8 @@ const Leads: React.FC<LeadsProps> = ({
 
   // Render Floating Glass Variant
   const renderFloatingGlass = () => (
-    <section id="leads" className="w-full relative overflow-hidden"
-      style={{ backgroundColor: leadsColors.background }}>
+    <section id="leads" className={`w-full relative overflow-hidden ${glassEffect ? 'backdrop-blur-xl border-y border-white/10 z-20 shadow-[0_4px_30px_rgba(0,0,0,0.1)]' : ''}`}
+      style={{ backgroundColor: glassEffect ? hexToRgba(leadsColors.background, 0.4) : leadsColors.background }}>
       <CornerGradient config={cornerGradient} />
       <style dangerouslySetInnerHTML={{
         __html: `
@@ -713,8 +715,8 @@ const Leads: React.FC<LeadsProps> = ({
 
   // Render Minimal Border Variant
   const renderMinimalBorder = () => (
-    <section id="leads" className="w-full relative overflow-hidden"
-      style={{ backgroundColor: leadsColors.background }}>
+    <section id="leads" className={`w-full relative overflow-hidden ${glassEffect ? 'backdrop-blur-xl border-y border-white/10 z-20 shadow-[0_4px_30px_rgba(0,0,0,0.1)]' : ''}`}
+      style={{ backgroundColor: glassEffect ? hexToRgba(leadsColors.background, 0.4) : leadsColors.background }}>
       <CornerGradient config={cornerGradient} />
       <style dangerouslySetInnerHTML={{
         __html: `

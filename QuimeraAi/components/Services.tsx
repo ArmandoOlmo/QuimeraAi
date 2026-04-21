@@ -208,7 +208,7 @@ interface ServiceCardProps {
 }
 
 const ServiceCard: React.FC<ServiceCardProps> = ({
-    icon,
+  icon,
     title,
     description,
     accentColor,
@@ -303,6 +303,7 @@ interface ServicesProps extends ServicesData {
 }
 
 const Services: React.FC<ServicesProps> = ({
+    glassEffect,
     title,
     description,
     items = [],
@@ -322,7 +323,7 @@ const Services: React.FC<ServicesProps> = ({
     const sectionBackground = colors?.background || hexToRgba(tokenColors.primary, 0.75);
 
     return (
-        <section id="services" className="w-full relative overflow-hidden" style={{ backgroundColor: sectionBackground }}>
+        <section id="services" className={`w-full relative overflow-hidden ${glassEffect ? ' backdrop-blur-xl border-y border-white/10 z-20 shadow-[0_4px_30px_rgba(0,0,0,0.1)]' : ''}`} style={{ backgroundColor: glassEffect ? hexToRgba(sectionBackground , 0.4) : sectionBackground }}>
             <CornerGradient config={cornerGradient} />
             <div className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]} relative z-10`}>
                 <div className={`max-w-3xl mx-auto mb-16 ${servicesVariant === 'minimal' ? 'text-left md:text-center' : 'text-center'}`}>

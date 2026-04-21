@@ -2,6 +2,7 @@
 import React from 'react';
 import { VideoData, PaddingSize, BorderRadiusSize, FontSize, CornerGradientConfig } from '../types';
 import CornerGradient from './ui/CornerGradient';
+import { hexToRgba } from '../utils/colorUtils';
 
 const paddingYClasses: Record<PaddingSize, string> = {
     none: 'py-0',
@@ -49,7 +50,7 @@ interface VideoProps extends VideoData {
 }
 
 const Video: React.FC<VideoProps> = ({
-    title, description, source, videoId, videoUrl, autoplay, loop, showControls,
+  glassEffect, title, description, source, videoId, videoUrl, autoplay, loop, showControls,
     paddingY, paddingX, colors, borderRadius, titleFontSize = 'md', descriptionFontSize = 'md', cornerGradient
 }) => {
 
@@ -125,7 +126,7 @@ const Video: React.FC<VideoProps> = ({
     }
 
     return (
-        <section id="video" className="w-full relative overflow-hidden" style={{ backgroundColor: colors?.background }}>
+        <section id="video" className={`w-full relative overflow-hidden ${glassEffect ? ' backdrop-blur-xl border-y border-white/10 z-20 shadow-[0_4px_30px_rgba(0,0,0,0.1)]' : ''}`} style={{ backgroundColor: glassEffect ? hexToRgba(colors?.background , 0.4) : colors?.background }}>
             <CornerGradient config={cornerGradient} />
             <div className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]} relative z-10`}>
                 <div className="text-center max-w-3xl mx-auto mb-16">

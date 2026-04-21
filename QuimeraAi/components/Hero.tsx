@@ -38,6 +38,7 @@ interface HeroProps extends HeroData {
 import HeroCinematicGym from './cinematic/HeroCinematicGym';
 
 const Hero: React.FC<HeroProps> = (props) => {
+  const { glassEffect } = props;
   // Preserve the cinematic-gym variant as a special case
   if (props.heroVariant === 'cinematic-gym') {
     return <HeroCinematicGym {...props} headlineFontSize={props.headlineFontSize || 'lg'} subheadlineFontSize={props.subheadlineFontSize || 'lg'} />;
@@ -250,10 +251,10 @@ const Hero: React.FC<HeroProps> = (props) => {
 
   return (
     <section
-      className="relative w-full overflow-hidden flex flex-col"
+      className={`relative w-full overflow-hidden flex flex-col ${glassEffect ? 'backdrop-blur-xl border-y border-white/10 z-20 shadow-[0_4px_30px_rgba(0,0,0,0.1)]' : ''}`}
       style={{
         minHeight: heroHeight ? `${heroHeight}vh` : '80vh',
-        backgroundColor: actualColors.background || '#0f172a',
+        backgroundColor: glassEffect ? hexToRgba(actualColors.background || '#0f172a', 0.4) : (actualColors.background || '#0f172a'),
       }}
     >
       <BackgroundImage />

@@ -94,6 +94,7 @@ export type HeroVariant = 'classic' | 'modern' | 'gradient' | 'fitness' | 'edito
 export type HeroTextLayout = 'left-top' | 'left-bottom' | 'center' | 'center-top' | 'center-bottom' | 'right-top' | 'right-bottom';
 
 export interface HeroData {
+    glassEffect?: boolean;
     heroVariant?: HeroVariant;
     textLayout?: HeroTextLayout;
     headline: string;
@@ -161,6 +162,7 @@ export interface HeroData {
 export type ImageSide = 'left' | 'right';
 
 export interface HeroSplitData {
+    glassEffect?: boolean;
     headline: string;
     subheadline: string;
     buttonText: string;
@@ -206,6 +208,7 @@ export interface HeroGallerySlide {
 }
 
 export interface HeroGalleryData {
+    glassEffect?: boolean;
     slides: HeroGallerySlide[];
     autoPlaySpeed?: number;
     transitionDuration?: number;
@@ -268,6 +271,7 @@ export interface HeroNovaSlide {
 }
 
 export interface HeroNovaData {
+    glassEffect?: boolean;
     slides: HeroNovaSlide[];
     /** Large centered display text (brand name, etc.) */
     displayText?: string;
@@ -312,6 +316,7 @@ export interface FeatureItem {
 }
 
 export interface FeaturesData {
+    glassEffect?: boolean;
     featuresVariant?: 'classic' | 'modern' | 'bento-premium' | 'image-overlay' | 'bento-overlay' | 'cinematic-gym';
     title: string;
     subtitle?: string;              // Alias for description
@@ -350,6 +355,7 @@ export interface TestimonialItem {
 }
 
 export interface TestimonialsData {
+    glassEffect?: boolean;
     testimonialsVariant?: TestimonialsVariant;
     title: string;
     subtitle?: string;              // Alias for description
@@ -385,6 +391,7 @@ export interface SlideItem {
 }
 
 export interface SlideshowData {
+    glassEffect?: boolean;
     slideshowVariant?: SlideshowVariant;
     title: string;
     showTitle?: boolean;
@@ -436,6 +443,7 @@ export interface PricingTier {
 }
 
 export interface PricingData {
+    glassEffect?: boolean;
     pricingVariant?: PricingVariant;
     title: string;
     subtitle?: string;              // Alias for description
@@ -478,6 +486,7 @@ export interface FaqItem {
 }
 
 export interface FaqData {
+    glassEffect?: boolean;
     title: string;
     subtitle?: string;              // Alias for description
     description: string;
@@ -506,6 +515,7 @@ export interface FaqData {
 export type LeadsVariant = 'classic' | 'split-gradient' | 'floating-glass' | 'minimal-border';
 
 export interface LeadsData {
+    glassEffect?: boolean;
     leadsVariant?: LeadsVariant;
     title: string;
     description: string;
@@ -546,6 +556,7 @@ export interface LeadsData {
 // NEWSLETTER
 // =============================================================================
 export interface NewsletterData {
+    glassEffect?: boolean;
     title: string;
     description: string;
     placeholderText: string;
@@ -577,6 +588,7 @@ export interface NewsletterData {
 // CTA
 // =============================================================================
 export interface CtaData {
+    glassEffect?: boolean;
     title: string;
     headline?: string;              // Alias for title
     description: string;
@@ -614,6 +626,7 @@ export interface PortfolioItem {
 }
 
 export interface PortfolioData {
+    glassEffect?: boolean;
     portfolioVariant?: 'classic' | 'image-overlay';
     title: string;
     subtitle?: string;              // Alias for description
@@ -684,6 +697,7 @@ export interface ServiceItem {
 }
 
 export interface ServicesData {
+    glassEffect?: boolean;
     servicesVariant?: 'cards' | 'grid' | 'minimal';
     title: string;
     subtitle?: string;              // Alias for description
@@ -715,6 +729,7 @@ export interface TeamMember {
 }
 
 export interface TeamData {
+    glassEffect?: boolean;
     title: string;
     subtitle?: string;              // Alias for description
     description: string;
@@ -735,6 +750,7 @@ export interface TeamData {
 // VIDEO
 // =============================================================================
 export interface VideoData {
+    glassEffect?: boolean;
     title: string;
     description: string;
     source: 'youtube' | 'vimeo' | 'upload';
@@ -764,6 +780,7 @@ export interface HowItWorksItem {
 }
 
 export interface HowItWorksData {
+    glassEffect?: boolean;
     title: string;
     description: string;
     steps: number;

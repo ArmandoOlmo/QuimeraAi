@@ -63,7 +63,8 @@ interface FaqItemProps {
   gradientEnd?: string;
 }
 
-const FaqItemClassic: React.FC<FaqItemProps> = ({ question, answer, isOpen, onClick, accentColor, textColor, headingColor, borderColor }) => {
+const FaqItemClassic: React.FC<FaqItemProps> = ({
+  question, answer, isOpen, onClick, accentColor, textColor, headingColor, borderColor }) => {
   return (
     <div className="border-b backdrop-blur-lg" style={{ borderColor: borderColor || 'rgba(255, 255, 255, 0.1)' }}>
       <button
@@ -262,6 +263,7 @@ interface FaqProps extends FaqData {
 }
 
 const Faq: React.FC<FaqProps> = ({
+  glassEffect,
   title,
   description,
   items = [],
@@ -335,7 +337,7 @@ const Faq: React.FC<FaqProps> = ({
   };
 
   return (
-    <section id="faq" className="w-full" style={{ backgroundColor: colors?.background || primaryColor }}>
+    <section id="faq" className={`w-full ${glassEffect ? ' backdrop-blur-xl border-y border-white/10 z-20 shadow-[0_4px_30px_rgba(0,0,0,0.1)]' : ''}`} style={{ backgroundColor: glassEffect ? hexToRgba(colors?.background || primaryColor , 0.4) : colors?.background || primaryColor }}>
       <div className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`}>
         <div className="text-center max-w-3xl mx-auto mb-16">
           <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold text-site-heading mb-4 font-header`} style={{ color: safeColors.heading, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>{title}</h2>

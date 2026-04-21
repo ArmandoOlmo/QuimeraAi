@@ -117,7 +117,7 @@ const Pricing: React.FC<PricingProps> = ({
   // Classic Variant (Original Design)
   if (pricingVariant === 'classic') {
     return (
-      <section id="pricing" className={`${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]} relative overflow-hidden`} style={{ backgroundColor: actualColors.background }}>
+      <section id="pricing" className={`${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]} relative overflow-hidden ${glassEffect ? ' backdrop-blur-xl border-y border-white/10 z-20 shadow-[0_4px_30px_rgba(0,0,0,0.1)]' : ''}`} style={{ backgroundColor: glassEffect ? hexToRgba(actualColors.background , 0.4) : actualColors.background }}>
         <CornerGradient config={cornerGradient} />
         <div className="container mx-auto relative z-10">
           <div className="text-center max-w-3xl mx-auto mb-16">
@@ -224,7 +224,7 @@ const Pricing: React.FC<PricingProps> = ({
   // Gradient Variant - Modern with vibrant gradients
   if (pricingVariant === 'gradient') {
     return (
-      <section id="pricing" className={`${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]} relative overflow-hidden`} style={{ backgroundColor: actualColors.background }}>
+      <section id="pricing" className={`${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]} relative overflow-hidden ${glassEffect ? ' backdrop-blur-xl border-y border-white/10 z-20 shadow-[0_4px_30px_rgba(0,0,0,0.1)]' : ''}`} style={{ backgroundColor: glassEffect ? hexToRgba(actualColors.background , 0.4) : actualColors.background }}>
         <CornerGradient config={cornerGradient} />
         {/* Background gradient effects */}
         <div className="absolute inset-0 opacity-30">
@@ -367,7 +367,7 @@ const Pricing: React.FC<PricingProps> = ({
   // Glassmorphism Variant - Frosted glass effect
   if (pricingVariant === 'glassmorphism') {
     return (
-      <section id="pricing" className={`${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]} relative overflow-hidden`} style={{ backgroundColor: actualColors.background }}>
+      <section id="pricing" className={`${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]} relative overflow-hidden ${glassEffect ? ' backdrop-blur-xl border-y border-white/10 z-20 shadow-[0_4px_30px_rgba(0,0,0,0.1)]' : ''}`} style={{ backgroundColor: glassEffect ? hexToRgba(actualColors.background , 0.4) : actualColors.background }}>
         <CornerGradient config={cornerGradient} />
         {/* Animated background blobs */}
         <div className="absolute inset-0">
@@ -488,7 +488,7 @@ const Pricing: React.FC<PricingProps> = ({
   // Minimalist Variant - Clean and simple
   if (pricingVariant === 'minimalist') {
     return (
-      <section id="pricing" className={`${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]} relative overflow-hidden`} style={{ backgroundColor: actualColors.background }}>
+      <section id="pricing" className={`${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]} relative overflow-hidden ${glassEffect ? ' backdrop-blur-xl border-y border-white/10 z-20 shadow-[0_4px_30px_rgba(0,0,0,0.1)]' : ''}`} style={{ backgroundColor: glassEffect ? hexToRgba(actualColors.background , 0.4) : actualColors.background }}>
         <CornerGradient config={cornerGradient} />
         <div className="container mx-auto relative z-10">
           <div className="text-center max-w-3xl mx-auto mb-20">

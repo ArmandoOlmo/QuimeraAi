@@ -253,6 +253,17 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
   const styleTab = (
     <div className="space-y-4">
+      {/* ========== GLASSMORPHISM ========== */}
+      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2 mb-4">
+        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider flex items-center gap-2">
+          <Layers size={14} /> Efecto Cristal
+        </label>
+        <ToggleControl
+          label="Glassmorphism / Transparencia"
+          checked={data?.testimonials?.glassEffect || false}
+          onChange={(v) => setNestedData('testimonials.glassEffect', v)}
+        />
+      </div>
       <BackgroundImageControl sectionKey="testimonials" data={data} setNestedData={setNestedData} />
       {/* Card Styling */}
       <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">

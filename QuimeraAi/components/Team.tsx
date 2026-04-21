@@ -254,6 +254,7 @@ interface TeamProps extends TeamData {
 }
 
 const Team: React.FC<TeamProps> = ({
+  glassEffect,
   title,
   description,
   items = [],
@@ -285,8 +286,8 @@ const Team: React.FC<TeamProps> = ({
   return (
     <section
       id="team"
-      className={`w-full relative overflow-hidden`}
-      style={{ backgroundColor: colors?.background || secondaryColor }}
+      className={`w-full relative overflow-hidden ${glassEffect ? ' backdrop-blur-xl border-y border-white/10 z-20 shadow-[0_4px_30px_rgba(0,0,0,0.1)]' : ''}`}
+      style={{ backgroundColor: glassEffect ? hexToRgba(colors?.background || secondaryColor , 0.4) : colors?.background || secondaryColor }}
     >
       <CornerGradient config={cornerGradient} />
       <div className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]} relative z-10`}>

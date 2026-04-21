@@ -4,6 +4,7 @@ import { useDesignTokens } from '../hooks/useDesignTokens';
 import ImagePlaceholder from './ui/ImagePlaceholder';
 import { isPendingImage } from '../utils/imagePlaceholders';
 import CornerGradient from './ui/CornerGradient';
+import { hexToRgba } from '../utils/colorUtils';
 
 const headlineSizeClasses: Record<FontSize, string> = {
     sm: 'text-2xl md:text-3xl',
@@ -36,7 +37,7 @@ interface HeroSplitProps extends HeroSplitData {
 }
 
 const HeroSplit: React.FC<HeroSplitProps> = ({
-    headline,
+  glassEffect, headline,
     subheadline,
     buttonText,
     buttonUrl = '/#cta',
@@ -114,7 +115,7 @@ const HeroSplit: React.FC<HeroSplitProps> = ({
 
     return (
         <section
-            className="relative w-full overflow-hidden"
+            className={`relative w-full overflow-hidden ${glassEffect ? ' backdrop-blur-xl border-y border-white/10 z-20 shadow-[0_4px_30px_rgba(0,0,0,0.1)]' : ''}`}
             style={{ maxHeight: `${maxHeight}px`, height: `${maxHeight}px` }}
         >
             {/* Container for both sides */}
@@ -123,7 +124,7 @@ const HeroSplit: React.FC<HeroSplitProps> = ({
                 <div
                     className={`absolute inset-0 flex items-center ${imagePosition === 'right' ? 'justify-start' : 'justify-end'}`}
                     style={{
-                        backgroundColor: actualColors.textBackground,
+                        backgroundColor: glassEffect ? hexToRgba(actualColors.textBackground, 0.4) : actualColors.textBackground,
                         clipPath: getClipPath(false),
                         zIndex: 1,
                     }}
