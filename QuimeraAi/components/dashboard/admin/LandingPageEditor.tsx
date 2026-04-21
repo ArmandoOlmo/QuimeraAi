@@ -991,11 +991,13 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
                     ...(section.type === 'heroWave' ? { gradientColors } : {}),
                 };
                 
-                // Remove root-level overrides so the newly mapped 'colors' object takes precedence
-                delete mergedData.backgroundColor;
-                delete mergedData.textColor;
-                delete mergedData.accentColor;
-                delete mergedData.errorColor;
+                // Update root-level colors needed by PublicLandingPage
+                if (sectionColors.colors) {
+                    if (sectionColors.colors.background) mergedData.backgroundColor = sectionColors.colors.background;
+                    if (sectionColors.colors.text) mergedData.textColor = sectionColors.colors.text;
+                    if (sectionColors.colors.primary || sectionColors.colors.accent) mergedData.accentColor = sectionColors.colors.accent || sectionColors.colors.primary;
+                    if (sectionColors.colors.error) mergedData.errorColor = sectionColors.colors.error;
+                }
                 
                 if (section.type === 'newsletter') {
                     console.log('[applyGlobalColors] Newsletter merged data:', mergedData);
