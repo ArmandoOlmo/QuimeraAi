@@ -152,7 +152,7 @@ const Router: React.FC<RouterProps> = ({
 
     // Authenticated user on public routes (login/register) -> dashboard or superadmin
     if (isAuthenticated && isEmailVerified && (path === '/login' || path === '/register')) {
-      if (userRole === 'owner' || userRole === 'superadmin') {
+      if (userRole === 'superadmin') {
         replace(ROUTES.SUPERADMIN);
       } else {
         replace(ROUTES.DASHBOARD);
@@ -180,7 +180,7 @@ const Router: React.FC<RouterProps> = ({
 
     // Default path handling - skip if preview mode
     if (path === '/' && isAuthenticated && isEmailVerified && !isLandingPreviewMode) {
-      if (userRole === 'owner' || userRole === 'superadmin') {
+      if (userRole === 'superadmin') {
         replace(ROUTES.SUPERADMIN);
       } else {
         replace(ROUTES.DASHBOARD);
