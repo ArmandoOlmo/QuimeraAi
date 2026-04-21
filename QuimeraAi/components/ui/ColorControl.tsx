@@ -236,9 +236,27 @@ const variantStyles = {
 
 const ColorControl: React.FC<ColorControlProps> = ({ label, value, onChange, paletteColors: propPaletteColors, recentPalettes, variant = 'editor' }) => {
     const styles = variantStyles[variant];
-    // Obtener los colores de la paleta del tema global si no se pasan como prop
     const project = useSafeProject();
-    const paletteColors = propPaletteColors ?? project?.theme?.paletteColors;
+    
+    // Construir un array completo de colores de la marca para que el usuario pueda reutilizarlos
+    const globalColors = project?.theme?.globalColors;
+    const globalColorsArray = globalColors ? [
+        globalColors.primary,
+        globalColors.secondary,
+        globalColors.accent,
+        globalColors.background,
+        globalColors.surface,
+        globalColors.text,
+        globalColors.heading,
+        globalColors.textMuted,
+        globalColors.border,
+    ].filter(Boolean) : [];
+    
+    // Si no pasan paleta, unificamos los semánticos y los originales (quitando duplicados)
+    const paletteColors = propPaletteColors ?? Array.from(new Set([
+        ...globalColorsArray,
+        ...(project?.theme?.paletteColors || [])
+    ]));
     const [isOpen, setIsOpen] = useState(false);
     const popoverRef = useRef<HTMLDivElement>(null);
     const triggerRef = useRef<HTMLButtonElement>(null);
