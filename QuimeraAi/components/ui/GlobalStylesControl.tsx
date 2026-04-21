@@ -719,12 +719,13 @@ const GlobalStylesControl: React.FC<GlobalStylesControlProps> = ({ mode = 'both'
                     }
                 }
 
-                // Actualizar gradientColors de HeroWave con los colores de la paleta
+                // Actualizar gradientColors y waveColor de HeroWave con los colores de la paleta
                 // Si heroWave no existe en data pero está en componentStyles, inicializarlo
                 if (!newData.heroWave || typeof newData.heroWave !== 'object') {
                     (newData as any).heroWave = {};
                 }
                 (newData.heroWave as any).gradientColors = generateHeroWaveGradientColors(colors);
+                (newData.heroWave as any).waveColor = colors.background || '#ffffff';
 
                 return newData;
             });
