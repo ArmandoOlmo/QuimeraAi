@@ -1298,14 +1298,22 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                             <div className="grid grid-cols-2 gap-3">
                                 <ColorControl portalContainer={portalContainer}
                                     label={t('landingEditor.backgroundColor', 'Fondo')}
-                                    value={data.backgroundColor || data.colors?.background || '#0A0A0A'}
-                                    onChange={(v) => onUpdateSection(section.id, { ...data, backgroundColor: v, colors: { ...data.colors, background: v } })}
+                                    value={data.colors?.background || data.backgroundColor || '#0A0A0A'}
+                                    onChange={(v) => {
+                                        onUpdateSection(section.id, (oldData: any) => ({
+                                            ...oldData,
+                                            backgroundColor: v,
+                                            colors: { ...(oldData.colors || {}), background: v }
+                                        }));
+                                    }}
                                     paletteColors={getSelectedPaletteColors()}
                                 />
                                 <ColorControl portalContainer={portalContainer}
                                     label={t('landingEditor.headingColor', 'Título')}
-                                    value={data.textColor || data.colors?.heading || '#ffffff'}
-                                    onChange={(v) => onUpdateSection(section.id, { ...data, textColor: v, colors: { ...data.colors, heading: v } })}
+                                    value={data.colors?.heading || '#ffffff'}
+                                    onChange={(v) => {
+                                        updateNestedData('colors.heading', v);
+                                    }}
                                     paletteColors={getSelectedPaletteColors()}
                                 />
                             </div>
@@ -1313,13 +1321,19 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                                 <ColorControl portalContainer={portalContainer}
                                     label={t('landingEditor.descriptionColor', 'Descripción')}
                                     value={data.colors?.description || '#94a3b8'}
-                                    onChange={(v) => updateData('colors', { ...data.colors, description: v })}
+                                    onChange={(v) => updateNestedData('colors.description', v)}
                                     paletteColors={getSelectedPaletteColors()}
                                 />
                                 <ColorControl portalContainer={portalContainer}
                                     label={t('landingEditor.accentColor', 'Acento')}
-                                    value={data.accentColor || data.colors?.accent || '#facc15'}
-                                    onChange={(v) => onUpdateSection(section.id, { ...data, accentColor: v, colors: { ...data.colors, accent: v } })}
+                                    value={data.colors?.accent || data.accentColor || '#facc15'}
+                                    onChange={(v) => {
+                                        onUpdateSection(section.id, (oldData: any) => ({
+                                            ...oldData,
+                                            accentColor: v,
+                                            colors: { ...(oldData.colors || {}), accent: v }
+                                        }));
+                                    }}
                                     paletteColors={getSelectedPaletteColors()}
                                 />
                             </div>
@@ -1334,13 +1348,13 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                                 <ColorControl portalContainer={portalContainer}
                                     label={t('landingEditor.cardBackground', 'Fondo')}
                                     value={data.colors?.cardBackground || '#1e293b'}
-                                    onChange={(v) => updateData('colors', { ...data.colors, cardBackground: v })}
+                                    onChange={(v) => updateNestedData('colors.cardBackground', v)}
                                     paletteColors={getSelectedPaletteColors()}
                                 />
                                 <ColorControl portalContainer={portalContainer}
                                     label={t('landingEditor.cardTitle', 'Título')}
                                     value={data.colors?.cardHeading || '#ffffff'}
-                                    onChange={(v) => updateData('colors', { ...data.colors, cardHeading: v })}
+                                    onChange={(v) => updateNestedData('colors.cardHeading', v)}
                                     paletteColors={getSelectedPaletteColors()}
                                 />
                             </div>
@@ -1348,13 +1362,13 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                                 <ColorControl portalContainer={portalContainer}
                                     label={t('landingEditor.cardText', 'Texto')}
                                     value={data.colors?.cardText || '#94a3b8'}
-                                    onChange={(v) => updateData('colors', { ...data.colors, cardText: v })}
+                                    onChange={(v) => updateNestedData('colors.cardText', v)}
                                     paletteColors={getSelectedPaletteColors()}
                                 />
                                 <ColorControl portalContainer={portalContainer}
                                     label={t('landingEditor.borderColor', 'Borde')}
                                     value={data.colors?.borderColor || '#334155'}
-                                    onChange={(v) => updateData('colors', { ...data.colors, borderColor: v })}
+                                    onChange={(v) => updateNestedData('colors.borderColor', v)}
                                     paletteColors={getSelectedPaletteColors()}
                                 />
                             </div>
@@ -1672,13 +1686,13 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                                 <ColorControl portalContainer={portalContainer}
                                     label={t('landingEditor.backgroundColor', 'Fondo')}
                                     value={data.colors?.background || '#1e293b'}
-                                    onChange={(v) => updateData('colors', { ...data.colors, background: v })}
+                                    onChange={(v) => updateNestedData('colors.background', v)}
                                     paletteColors={getSelectedPaletteColors()}
                                 />
                                 <ColorControl portalContainer={portalContainer}
                                     label={t('landingEditor.headingColor', 'Título')}
                                     value={data.colors?.heading || '#f1f5f9'}
-                                    onChange={(v) => updateData('colors', { ...data.colors, heading: v })}
+                                    onChange={(v) => updateNestedData('colors.heading', v)}
                                     paletteColors={getSelectedPaletteColors()}
                                 />
                             </div>
@@ -1686,13 +1700,13 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                                 <ColorControl portalContainer={portalContainer}
                                     label={t('landingEditor.descriptionColor', 'Descripción')}
                                     value={data.colors?.description || '#94a3b8'}
-                                    onChange={(v) => updateData('colors', { ...data.colors, description: v })}
+                                    onChange={(v) => updateNestedData('colors.description', v)}
                                     paletteColors={getSelectedPaletteColors()}
                                 />
                                 <ColorControl portalContainer={portalContainer}
                                     label={t('landingEditor.textColor', 'Texto')}
                                     value={data.colors?.text || '#94a3b8'}
-                                    onChange={(v) => updateData('colors', { ...data.colors, text: v })}
+                                    onChange={(v) => updateNestedData('colors.text', v)}
                                     paletteColors={getSelectedPaletteColors()}
                                 />
                             </div>
@@ -1707,13 +1721,13 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                                 <ColorControl portalContainer={portalContainer}
                                     label={t('landingEditor.cardBackground', 'Fondo')}
                                     value={data.colors?.cardBackground || '#1f2937'}
-                                    onChange={(v) => updateData('colors', { ...data.colors, cardBackground: v })}
+                                    onChange={(v) => updateNestedData('colors.cardBackground', v)}
                                     paletteColors={getSelectedPaletteColors()}
                                 />
                                 <ColorControl portalContainer={portalContainer}
                                     label={t('landingEditor.cardTitle', 'Título de plan')}
                                     value={data.colors?.cardHeading || '#ffffff'}
-                                    onChange={(v) => updateData('colors', { ...data.colors, cardHeading: v })}
+                                    onChange={(v) => updateNestedData('colors.cardHeading', v)}
                                     paletteColors={getSelectedPaletteColors()}
                                 />
                             </div>
@@ -1721,13 +1735,13 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                                 <ColorControl portalContainer={portalContainer}
                                     label={t('landingEditor.cardText', 'Texto de tarjeta')}
                                     value={data.colors?.cardText || '#94a3b8'}
-                                    onChange={(v) => updateData('colors', { ...data.colors, cardText: v })}
+                                    onChange={(v) => updateNestedData('colors.cardText', v)}
                                     paletteColors={getSelectedPaletteColors()}
                                 />
                                 <ColorControl portalContainer={portalContainer}
                                     label={t('landingEditor.priceColor', 'Precio')}
                                     value={data.colors?.priceColor || '#ffffff'}
-                                    onChange={(v) => updateData('colors', { ...data.colors, priceColor: v })}
+                                    onChange={(v) => updateNestedData('colors.priceColor', v)}
                                     paletteColors={getSelectedPaletteColors()}
                                 />
                             </div>
@@ -1735,20 +1749,20 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                                 <ColorControl portalContainer={portalContainer}
                                     label={t('landingEditor.borderColor', 'Borde')}
                                     value={data.colors?.borderColor || '#374151'}
-                                    onChange={(v) => updateData('colors', { ...data.colors, borderColor: v })}
+                                    onChange={(v) => updateNestedData('colors.borderColor', v)}
                                     paletteColors={getSelectedPaletteColors()}
                                 />
                                 <ColorControl portalContainer={portalContainer}
                                     label={t('landingEditor.accentColor', 'Acento')}
                                     value={data.colors?.accent || '#6366f1'}
-                                    onChange={(v) => updateData('colors', { ...data.colors, accent: v })}
+                                    onChange={(v) => updateNestedData('colors.accent', v)}
                                     paletteColors={getSelectedPaletteColors()}
                                 />
                             </div>
                             <ColorControl portalContainer={portalContainer}
                                 label={t('landingEditor.checkmarkColor', 'Color de check ✓')}
                                 value={data.colors?.checkmarkColor || '#10b981'}
-                                onChange={(v) => updateData('colors', { ...data.colors, checkmarkColor: v })}
+                                onChange={(v) => updateNestedData('colors.checkmarkColor', v)}
                                 paletteColors={getSelectedPaletteColors()}
                             />
                         </div>
@@ -1762,13 +1776,13 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                                 <ColorControl portalContainer={portalContainer}
                                     label={t('landingEditor.buttonBackground', 'Fondo')}
                                     value={data.colors?.buttonBackground || '#6366f1'}
-                                    onChange={(v) => updateData('colors', { ...data.colors, buttonBackground: v })}
+                                    onChange={(v) => updateNestedData('colors.buttonBackground', v)}
                                     paletteColors={getSelectedPaletteColors()}
                                 />
                                 <ColorControl portalContainer={portalContainer}
                                     label={t('landingEditor.buttonText', 'Texto')}
                                     value={data.colors?.buttonText || '#ffffff'}
-                                    onChange={(v) => updateData('colors', { ...data.colors, buttonText: v })}
+                                    onChange={(v) => updateNestedData('colors.buttonText', v)}
                                     paletteColors={getSelectedPaletteColors()}
                                 />
                             </div>
@@ -1785,13 +1799,13 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                                     <ColorControl portalContainer={portalContainer}
                                         label={t('landingEditor.gradientStart', 'Inicio')}
                                         value={data.colors?.gradientStart || '#4f46e5'}
-                                        onChange={(v) => updateData('colors', { ...data.colors, gradientStart: v })}
+                                        onChange={(v) => updateNestedData('colors.gradientStart', v)}
                                         paletteColors={getSelectedPaletteColors()}
                                     />
                                     <ColorControl portalContainer={portalContainer}
                                         label={t('landingEditor.gradientEnd', 'Fin')}
                                         value={data.colors?.gradientEnd || '#10b981'}
-                                        onChange={(v) => updateData('colors', { ...data.colors, gradientEnd: v })}
+                                        onChange={(v) => updateNestedData('colors.gradientEnd', v)}
                                         paletteColors={getSelectedPaletteColors()}
                                     />
                                 </div>

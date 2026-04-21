@@ -523,8 +523,8 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
       case 'heroModern':
       case 'heroGradient': {
         const currentSectionData = section.data || {};
-        const heroBackgroundColor = currentSectionData?.backgroundColor || '#0A0A0A';
-        const heroTextColor = currentSectionData?.textColor || '#ffffff';
+        const heroBackgroundColor = currentSectionData?.colors?.background || currentSectionData?.backgroundColor || '#0A0A0A';
+        const heroTextColor = currentSectionData?.colors?.heading || currentSectionData?.colors?.text || currentSectionData?.textColor || '#ffffff';
         const heroPadding = currentSectionData?.padding || 80;
         const heroShowGradient = currentSectionData?.showGradient ?? (sectionType === 'heroGradient' ? true : false);
         const heroLayout = currentSectionData?.layout || 'centered';
@@ -1869,9 +1869,10 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
       case 'features': {
         // Get Features section style values from section data
         const fp = section.data || {};
-        const fBg = fp.backgroundColor || '#0A0A0A';
-        const fText = fp.textColor || '#ffffff';
-        const fAccent = fp.accentColor || '#facc15';
+        const fBg = fp.colors?.background || fp.backgroundColor || '#0A0A0A';
+        const fText = fp.colors?.text || fp.textColor || '#ffffff';
+        const fHeading = fp.colors?.heading || fp.textColor || '#ffffff';
+        const fAccent = fp.colors?.accent || fp.accentColor || '#facc15';
         const fVariant = fp.featuresVariant || 'classic';
         const fCols = fp.columns || fp.gridColumns || 3;
         const fShowIcons = fp.showIcons !== false;
@@ -2037,7 +2038,7 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
             <div className="container mx-auto px-4 sm:px-6 relative z-10">
               {fShowHeader && (
                 <div className="text-center mb-10 sm:mb-16">
-                  <h2 className="font-bold mb-3 sm:mb-4 px-2" style={{ color: fText, fontFamily: `var(--font-heading)`, textTransform: headingsCaps ? 'uppercase' : 'none', fontSize: fTitleSize }}>
+                  <h2 className="font-bold mb-3 sm:mb-4 px-2" style={{ color: fHeading, fontFamily: `var(--font-heading)`, textTransform: headingsCaps ? 'uppercase' : 'none', fontSize: fTitleSize }}>
                     {fp.title || t('landing.featuresTitle')}
                     <span style={{ color: fAccent }}> {fp.title ? '' : t('landing.featuresTitleHighlight')}</span>
                   </h2>
@@ -2283,9 +2284,9 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
       case 'testimonials': {
         // Get Testimonials section style values from section data
         const testimonialsPreview = section.data || {};
-        const testimonialsBackgroundColor = testimonialsPreview?.backgroundColor || '#050505';
-        const testimonialsTextColor = testimonialsPreview?.textColor || '#ffffff';
-        const testimonialsAccentColor = testimonialsPreview?.accentColor || '#facc15';
+        const testimonialsBackgroundColor = testimonialsPreview?.colors?.background || testimonialsPreview?.backgroundColor || '#050505';
+        const testimonialsTextColor = testimonialsPreview?.colors?.heading || testimonialsPreview?.textColor || '#ffffff';
+        const testimonialsAccentColor = testimonialsPreview?.colors?.accent || testimonialsPreview?.accentColor || '#facc15';
         const testimonialsPadding = testimonialsPreview?.padding || 80;
         const testimonialsLayout = testimonialsPreview?.layout || 'grid';
         const testimonials = testimonialsPreview?.testimonials || [];
@@ -2494,8 +2495,8 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
 
       case 'screenshotCarousel': {
         const carouselPreview = section.data || {};
-        const carouselBackgroundColor = carouselPreview?.backgroundColor || '#0A0A0A';
-        const carouselTextColor = carouselPreview?.textColor || '#ffffff';
+        const carouselBackgroundColor = carouselPreview?.colors?.background || carouselPreview?.backgroundColor || '#0A0A0A';
+        const carouselTextColor = carouselPreview?.colors?.text || carouselPreview?.textColor || '#ffffff';
         const carouselPadding = carouselPreview?.padding || 80;
 
         const carouselData = {
