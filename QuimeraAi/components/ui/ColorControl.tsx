@@ -198,6 +198,8 @@ interface ColorControlProps {
     recentPalettes?: RecentPalette[];
     /** Visual variant: 'editor' uses editor-* classes, 'dashboard' uses standard theme classes */
     variant?: 'editor' | 'dashboard';
+    /** Optional portal container to mount the popover into */
+    portalContainer?: HTMLElement | null;
 }
 
 // Style maps per variant
@@ -205,7 +207,7 @@ const variantStyles = {
     editor: {
         input: 'w-full bg-editor-bg text-editor-text-primary p-2 rounded-md border border-editor-border focus:ring-2 focus:ring-editor-accent/50 focus:border-editor-accent focus:outline-none transition-all text-xs font-mono',
         label: 'block text-[10px] font-bold text-editor-text-secondary mb-1.5 uppercase tracking-wider flex items-center gap-1',
-        popover: 'z-[9999] bg-editor-panel-bg border border-editor-border rounded-xl shadow-2xl shadow-black/30 p-3.5 overflow-y-auto max-h-[85vh]',
+        popover: 'z-[999999] bg-editor-panel-bg border border-editor-border rounded-xl shadow-2xl shadow-black/30 p-3.5 overflow-y-auto max-h-[85vh]',
         trigger: 'w-full flex items-center gap-2.5 bg-editor-bg border border-editor-border rounded-lg px-2.5 py-2 text-sm text-editor-text-primary hover:border-editor-accent/60 hover:shadow-sm transition-all group',
         swatch: 'w-7 h-7 rounded-md border border-editor-border/80 shadow-inner flex items-center justify-center overflow-hidden bg-checkered flex-shrink-0',
         hexText: 'flex-1 text-left font-mono text-xs text-editor-text-primary/80',
@@ -220,7 +222,7 @@ const variantStyles = {
     dashboard: {
         input: 'w-full bg-background text-foreground p-2 rounded-md border border-border focus:ring-2 focus:ring-primary/50 focus:border-primary focus:outline-none transition-all text-xs font-mono',
         label: 'block text-[10px] font-bold text-muted-foreground mb-1.5 uppercase tracking-wider flex items-center gap-1',
-        popover: 'z-[9999] bg-card border border-border rounded-xl shadow-2xl shadow-black/30 p-3.5 overflow-y-auto max-h-[85vh]',
+        popover: 'z-[999999] bg-card border border-border rounded-xl shadow-2xl shadow-black/30 p-3.5 overflow-y-auto max-h-[85vh]',
         trigger: 'w-full flex items-center gap-2.5 bg-background border border-border rounded-lg px-2.5 py-2.5 text-sm text-foreground hover:border-primary/60 hover:shadow-sm transition-all group',
         swatch: 'w-7 h-7 rounded-md border border-border/80 shadow-inner flex items-center justify-center overflow-hidden bg-checkered flex-shrink-0',
         hexText: 'flex-1 text-left font-mono text-xs text-foreground/80',
@@ -234,7 +236,7 @@ const variantStyles = {
     },
 };
 
-const ColorControl: React.FC<ColorControlProps> = ({ label, value, onChange, paletteColors: propPaletteColors, recentPalettes, variant = 'editor' }) => {
+const ColorControl: React.FC<ColorControlProps> = ({ label, value, onChange, paletteColors: propPaletteColors, recentPalettes, variant = 'editor', portalContainer: propPortalContainer }) => {
     const styles = variantStyles[variant];
     const project = useSafeProject();
     
@@ -264,7 +266,7 @@ const ColorControl: React.FC<ColorControlProps> = ({ label, value, onChange, pal
 
     // State
     const [popoverStyle, setPopoverStyle] = useState<React.CSSProperties>({});
-    const portalContainer = document.getElementById('portal-root');
+    const portalContainer = propPortalContainer || document.getElementById('portal-root');
     const { hex, alpha } = parseColor(value);
 
     // Derived state for local editing
