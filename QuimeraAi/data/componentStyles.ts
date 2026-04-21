@@ -408,7 +408,7 @@ export const componentStyles: ComponentStyles = {
     style: 'sticky-solid',
     layout: 'minimal',
     isSticky: true,
-    glassEffect: false,
+    glassEffect: true,
     height: 70,
     logoType: 'text',
     logoText: 'Brand',

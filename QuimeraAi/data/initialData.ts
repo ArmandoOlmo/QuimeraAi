@@ -8,7 +8,7 @@ const pageData: PageData = {
     style: 'sticky-solid',
     layout: 'minimal',
     isSticky: true,
-    glassEffect: false,
+    glassEffect: true,
     height: 80,
     logoType: 'text',
     logoText: 'Your Brand',

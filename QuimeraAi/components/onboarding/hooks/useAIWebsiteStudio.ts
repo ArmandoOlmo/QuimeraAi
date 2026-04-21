@@ -1144,6 +1144,32 @@ ${t('aiWebsiteStudio.welcome.startQuestion')}`;
             if (isDev) console.log(`[AIWebsiteStudio] Images: ${completed}/${imageSlots.length} (${failed} failed)`);
 
             // ══════════════════════════════════════════════════════════════════
+            // PHASE 5.5: Propagate hero image as background to glass sections
+            // ══════════════════════════════════════════════════════════════════
+            const heroImageForBg =
+                finalData.hero?.imageUrl
+                || finalData.heroSplit?.imageUrl
+                || finalData.heroGallery?.slides?.[0]?.backgroundImage
+                || finalData.heroWave?.slides?.[0]?.backgroundImage
+                || finalData.heroNova?.slides?.[0]?.backgroundImage
+                || '';
+
+            if (heroImageForBg) {
+                const glassBgSections = [
+                    'features', 'services', 'testimonials', 'pricing', 'faq',
+                    'cta', 'leads', 'newsletter', 'video', 'howItWorks',
+                ];
+                for (const comp of glassBgSections) {
+                    if (finalData[comp] && typeof finalData[comp] === 'object' && finalData[comp].glassEffect) {
+                        finalData[comp].backgroundImageUrl = heroImageForBg;
+                        finalData[comp].backgroundOverlayEnabled = true;
+                        finalData[comp].backgroundOverlayOpacity = 75;
+                    }
+                }
+                if (isDev) console.log(`[AIWebsiteStudio] Glass backgrounds set for sections using hero image`);
+            }
+
+            // ══════════════════════════════════════════════════════════════════
             // PHASE 6: Final project update with images (95-100%)
             // ══════════════════════════════════════════════════════════════════
             addEvent('save', `Saving final website with ${completed} images...`);
@@ -2019,6 +2045,20 @@ function ensureComponentCompleteness(data: any, brief: any, isSpanish: boolean):
         if (data.signupFloat.backgroundImage && !data.signupFloat.imageUrl) {
             data.signupFloat.imageUrl = data.signupFloat.backgroundImage;
             delete data.signupFloat.backgroundImage;
+        }
+    }
+
+    // ── GLASSMORPHISM: Enable by default for all generated websites ──
+    // This gives every AI-generated site an immersive, modern glass effect.
+    const glassComponents = [
+        'hero', 'heroSplit', 'heroGallery', 'heroWave', 'heroNova',
+        'features', 'services', 'testimonials', 'pricing', 'faq',
+        'cta', 'leads', 'newsletter', 'video', 'howItWorks', 'slideshow',
+        'team', 'portfolio',
+    ];
+    for (const comp of glassComponents) {
+        if (data[comp] && typeof data[comp] === 'object') {
+            data[comp].glassEffect = true;
         }
     }
 }
