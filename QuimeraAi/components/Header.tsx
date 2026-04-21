@@ -314,10 +314,10 @@ const Header: React.FC<HeaderData & {
     // colors.background, colors.text, colors.accent come from the editor
     const isAnyTransparentStyle = style === 'sticky-transparent' || style.startsWith('transparent');
 
-    // Use colors directly from props - editor is responsible for providing all colors
+    // Use colors directly from props - colors.X (from controls) takes priority over root-level props (from palette application)
     const actualColors = {
-      background: backgroundColor || colors?.background || (isAnyTransparentStyle ? 'transparent' : colors?.accent),
-      text: textColor || colors?.text,
+      background: colors?.background || backgroundColor || (isAnyTransparentStyle ? 'transparent' : colors?.accent),
+      text: colors?.text || textColor,
       accent: colors?.accent,
     };
 
