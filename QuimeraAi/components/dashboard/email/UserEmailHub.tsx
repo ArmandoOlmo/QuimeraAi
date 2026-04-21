@@ -134,20 +134,6 @@ const UserEmailHub: React.FC<UserEmailHubProps> = ({
     }, [newCampaignForm, handleStartBlank, setShowNewCampaignModal]);
 
     // =====================================================================
-    // RENDER: EMAIL EDITOR (full overlay)
-    // =====================================================================
-
-    if (showEmailEditor && emailDocument) {
-        return (
-            <EmailEditor
-                initialDocument={emailDocument}
-                onSave={handleSaveFromEditor}
-                onClose={handleCloseEditor}
-            />
-        );
-    }
-
-    // =====================================================================
     // RENDER: CAMPAIGNS TAB
     // =====================================================================
 
@@ -515,82 +501,94 @@ const UserEmailHub: React.FC<UserEmailHubProps> = ({
                     <button onClick={onBack} className="hidden md:flex items-center gap-1.5 h-9 px-3 text-sm font-medium text-editor-text-secondary hover:text-editor-text-primary transition-colors"><ArrowLeft className="w-4 h-4" /> Volver</button>
                 </header>
 
-                {/* Tab Navigation */}
-                <div className="bg-editor-bg border-b border-editor-border px-4 sm:px-6 overflow-x-auto flex-shrink-0">
-                    <div className="flex items-center gap-1 min-w-max">
-                        {tabs.map(tab => (
-                            <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${activeTab === tab.id ? 'border-editor-accent text-editor-accent' : 'border-transparent text-editor-text-secondary hover:text-editor-text-primary'}`}>
-                                {tab.icon}
-                                {tab.label}
-                                {tab.count !== undefined && tab.count > 0 && (<span className={`px-1.5 py-0.5 text-[10px] rounded-full font-bold ${activeTab === tab.id ? 'bg-editor-accent/20 text-editor-accent' : 'bg-editor-border/50 text-editor-text-secondary'}`}>{tab.count}</span>)}
-                            </button>
-                        ))}
+                {showEmailEditor && emailDocument ? (
+                    <div className="flex-1 overflow-hidden relative">
+                        <EmailEditor
+                            initialDocument={emailDocument}
+                            onSave={handleSaveFromEditor}
+                            onClose={handleCloseEditor}
+                        />
                     </div>
-                </div>
-
-                {/* Content */}
-                <main className="flex-1 overflow-y-auto p-4 sm:p-6">
-                    {isLoading ? (
-                        <div className="flex items-center justify-center py-24">
-                            <div className="flex flex-col items-center gap-3">
-                                <Loader2 className="w-8 h-8 text-editor-accent animate-spin" />
-                                <span className="text-sm text-editor-text-secondary">Cargando datos...</span>
+                ) : (
+                    <>
+                        {/* Tab Navigation */}
+                        <div className="bg-editor-bg border-b border-editor-border px-4 sm:px-6 overflow-x-auto flex-shrink-0">
+                            <div className="flex items-center gap-1 min-w-max">
+                                {tabs.map(tab => (
+                                    <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${activeTab === tab.id ? 'border-editor-accent text-editor-accent' : 'border-transparent text-editor-text-secondary hover:text-editor-text-primary'}`}>
+                                        {tab.icon}
+                                        {tab.label}
+                                        {tab.count !== undefined && tab.count > 0 && (<span className={`px-1.5 py-0.5 text-[10px] rounded-full font-bold ${activeTab === tab.id ? 'bg-editor-accent/20 text-editor-accent' : 'bg-editor-border/50 text-editor-text-secondary'}`}>{tab.count}</span>)}
+                                    </button>
+                                ))}
                             </div>
                         </div>
-                    ) : (
-                        <>
-                            {activeTab === 'overview' && <OverviewTab stats={stats} campaigns={campaigns} setActiveTab={setActiveTab} />}
-                            {activeTab === 'campaigns' && renderCampaigns()}
-                            {activeTab === 'audiences' && renderAudiences()}
-                            {activeTab === 'analytics' && <AnalyticsTab stats={stats} campaigns={campaigns} monthlyData={monthlyData} />}
-                            {activeTab === 'automations' && (
-                                <AutomationsTab
-                                    automations={automations}
-                                    audiences={audiences as any}
-                                    showCreateAutomation={showCreateAutomation}
-                                    setShowCreateAutomation={setShowCreateAutomation}
-                                    selectedTemplate={selectedTemplate}
-                                    setSelectedTemplate={setSelectedTemplate}
-                                    newAutomation={newAutomation}
-                                    setNewAutomation={setNewAutomation}
-                                    editingAutomationId={editingAutomationId}
-                                    setEditingAutomationId={setEditingAutomationId}
-                                    createAutomation={createAutomation}
-                                    updateAutomation={updateAutomation}
-                                    duplicateAutomation={duplicateAutomation}
-                                    toggleAutomationStatus={toggleAutomationStatus}
-                                    deleteAutomation={deleteAutomation}
-                                    openEditAutomation={openEditAutomation}
-                                    confirmModal={confirmModal}
-                                    setConfirmModal={setConfirmModal}
-                                    onDesignEmail={openEmailEditorForStep}
-                                />
+
+                        {/* Content */}
+                        <main className="flex-1 overflow-y-auto p-4 sm:p-6">
+                            {isLoading ? (
+                                <div className="flex items-center justify-center py-24">
+                                    <div className="flex flex-col items-center gap-3">
+                                        <Loader2 className="w-8 h-8 text-editor-accent animate-spin" />
+                                        <span className="text-sm text-editor-text-secondary">Cargando datos...</span>
+                                    </div>
+                                </div>
+                            ) : (
+                                <>
+                                    {activeTab === 'overview' && <OverviewTab stats={stats} campaigns={campaigns} setActiveTab={setActiveTab} />}
+                                    {activeTab === 'campaigns' && renderCampaigns()}
+                                    {activeTab === 'audiences' && renderAudiences()}
+                                    {activeTab === 'analytics' && <AnalyticsTab stats={stats} campaigns={campaigns} monthlyData={monthlyData} />}
+                                    {activeTab === 'automations' && (
+                                        <AutomationsTab
+                                            automations={automations}
+                                            audiences={audiences as any}
+                                            showCreateAutomation={showCreateAutomation}
+                                            setShowCreateAutomation={setShowCreateAutomation}
+                                            selectedTemplate={selectedTemplate}
+                                            setSelectedTemplate={setSelectedTemplate}
+                                            newAutomation={newAutomation}
+                                            setNewAutomation={setNewAutomation}
+                                            editingAutomationId={editingAutomationId}
+                                            setEditingAutomationId={setEditingAutomationId}
+                                            createAutomation={createAutomation}
+                                            updateAutomation={updateAutomation}
+                                            duplicateAutomation={duplicateAutomation}
+                                            toggleAutomationStatus={toggleAutomationStatus}
+                                            deleteAutomation={deleteAutomation}
+                                            openEditAutomation={openEditAutomation}
+                                            confirmModal={confirmModal}
+                                            setConfirmModal={setConfirmModal}
+                                            onDesignEmail={openEmailEditorForStep}
+                                        />
+                                    )}
+                                    {activeTab === 'ai-studio' && (
+                                        <AIStudioTab
+                                            aiMessages={aiStudio.aiMessages}
+                                            aiInput={aiStudio.aiInput}
+                                            setAiInput={aiStudio.setAiInput}
+                                            aiThinking={aiStudio.aiThinking}
+                                            aiCreating={aiStudio.aiCreating}
+                                            aiCreatedItems={aiStudio.aiCreatedItems}
+                                            aiChatRef={aiStudio.aiChatRef}
+                                            sendAIMessage={aiStudio.sendAIMessage}
+                                            initAIStudio={aiStudio.initAIStudio}
+                                            isVoiceActive={aiStudio.isVoiceActive}
+                                            isVoiceConnecting={aiStudio.isVoiceConnecting}
+                                            liveUserTranscript={aiStudio.liveUserTranscript}
+                                            liveModelTranscript={aiStudio.liveModelTranscript}
+                                            startVoiceSession={aiStudio.startVoiceSession}
+                                            stopVoiceSession={aiStudio.stopVoiceSession}
+                                            aiCreateCampaign={aiStudio.aiCreateCampaign}
+                                            aiCreateAudience={aiStudio.aiCreateAudience}
+                                            aiCreateAutomation={aiStudio.aiCreateAutomation}
+                                        />
+                                    )}
+                                </>
                             )}
-                            {activeTab === 'ai-studio' && (
-                                <AIStudioTab
-                                    aiMessages={aiStudio.aiMessages}
-                                    aiInput={aiStudio.aiInput}
-                                    setAiInput={aiStudio.setAiInput}
-                                    aiThinking={aiStudio.aiThinking}
-                                    aiCreating={aiStudio.aiCreating}
-                                    aiCreatedItems={aiStudio.aiCreatedItems}
-                                    aiChatRef={aiStudio.aiChatRef}
-                                    sendAIMessage={aiStudio.sendAIMessage}
-                                    initAIStudio={aiStudio.initAIStudio}
-                                    isVoiceActive={aiStudio.isVoiceActive}
-                                    isVoiceConnecting={aiStudio.isVoiceConnecting}
-                                    liveUserTranscript={aiStudio.liveUserTranscript}
-                                    liveModelTranscript={aiStudio.liveModelTranscript}
-                                    startVoiceSession={aiStudio.startVoiceSession}
-                                    stopVoiceSession={aiStudio.stopVoiceSession}
-                                    aiCreateCampaign={aiStudio.aiCreateCampaign}
-                                    aiCreateAudience={aiStudio.aiCreateAudience}
-                                    aiCreateAutomation={aiStudio.aiCreateAutomation}
-                                />
-                            )}
-                        </>
-                    )}
-                </main>
+                        </main>
+                    </>
+                )}
             </div>
 
             {/* Global Confirmation Modal */}

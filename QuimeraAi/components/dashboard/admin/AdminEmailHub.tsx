@@ -497,19 +497,7 @@ const AdminEmailHub: React.FC<AdminEmailHubProps> = ({ onBack }) => {
                 <EmailTemplateGallery onSelect={handleSelectTemplate} onClose={() => setShowTemplateGallery(false)} onStartBlank={handleStartBlank} />
             )}
 
-            {/* Visual Email Editor */}
-            {showEmailEditor && emailDocument && (
-                <div className="absolute inset-0 z-40 bg-editor-bg">
-                    <AdminEmailEditorWrapper
-                        initialDocument={emailDocument}
-                        onSave={handleSaveFromEditor}
-                        onClose={handleCloseEditor}
-                        onSendTest={() => { setTestEmail(''); setShowTestEmailModal(true); }}
-                        campaignId={editingCampaignId || undefined}
-                        campaignName={editingCampaignId ? campaigns.find(c => c.id === editingCampaignId)?.name : newCampaignForm.name || undefined}
-                    />
-                </div>
-            )}
+
 
             {/* Test Email Modal */}
             {showTestEmailModal && (
@@ -930,73 +918,77 @@ const AdminEmailHub: React.FC<AdminEmailHubProps> = ({ onBack }) => {
         <div className="flex h-screen bg-editor-bg text-editor-text-primary">
             <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
 
-            <div className="flex-1 flex flex-col overflow-hidden relative">
-                {/* Header */}
-                <header className="h-14 bg-editor-bg border-b border-editor-border flex-shrink-0 flex items-center justify-between px-4 sm:px-6 sticky top-0 z-10">
-                    <div className="flex items-center gap-3">
-                        <button onClick={onBack} className="h-9 w-9 flex items-center justify-center text-editor-text-secondary hover:text-editor-text-primary md:hidden transition-colors"><ArrowLeft className="w-5 h-5" /></button>
-                        <Mail className="text-editor-accent w-5 h-5" />
-                        <h1 className="text-lg font-semibold text-editor-text-primary">{t('adminEmail.hubTitle')}</h1>
-                        <span className="hidden sm:inline-flex px-2 py-0.5 text-xs font-semibold bg-green-500/20 text-green-400 rounded-full">{tenants.length} tenants</span>
+                {showEmailEditor && emailDocument ? (
+                    <div className="flex-1 overflow-hidden relative">
+                        <AdminEmailEditorWrapper
+                            initialDocument={emailDocument}
+                            onSave={handleSaveFromEditor}
+                            onClose={handleCloseEditor}
+                            onSendTest={() => { setTestEmail(''); setShowTestEmailModal(true); }}
+                            campaignId={editingCampaignId || undefined}
+                            campaignName={editingCampaignId ? campaigns.find(c => c.id === editingCampaignId)?.name : newCampaignForm.name || undefined}
+                        />
                     </div>
-                    <button onClick={onBack} className="hidden md:flex items-center gap-1.5 h-9 px-3 text-sm font-medium text-editor-text-secondary hover:text-editor-text-primary transition-colors"><ArrowLeft className="w-4 h-4" /> {t('adminEmail.back')}</button>
-                </header>
-
-                {/* Tab Navigation */}
-                <div className="bg-editor-bg border-b border-editor-border px-4 sm:px-6 overflow-x-auto flex-shrink-0">
-                    <div className="flex items-center gap-1 min-w-max">
-                        {tabs.map(tab => (
-                            <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${activeTab === tab.id ? 'border-editor-accent text-editor-accent' : 'border-transparent text-editor-text-secondary hover:text-editor-text-primary'}`}>
-                                {tab.icon}
-                                {tab.label}
-                                {tab.count !== undefined && tab.count > 0 && (<span className={`px-1.5 py-0.5 text-[10px] rounded-full font-bold ${activeTab === tab.id ? 'bg-editor-accent/20 text-editor-accent' : 'bg-editor-border/50 text-editor-text-secondary'}`}>{tab.count}</span>)}
-                            </button>
-                        ))}
-                    </div>
-                </div>
-
-                {/* Content */}
-                <main className="flex-1 overflow-y-auto p-4 sm:p-6">
-                    {isLoading ? (
-                        <div className="flex items-center justify-center py-24">
-                            <div className="flex flex-col items-center gap-3">
-                                <Loader2 className="w-8 h-8 text-editor-accent animate-spin" />
-                                <span className="text-sm text-editor-text-secondary">{t('adminEmail.loadingData')}</span>
+                ) : (
+                    <>
+                        {/* Tab Navigation */}
+                        <div className="bg-editor-bg border-b border-editor-border px-4 sm:px-6 overflow-x-auto flex-shrink-0">
+                            <div className="flex items-center gap-1 min-w-max">
+                                {tabs.map(tab => (
+                                    <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${activeTab === tab.id ? 'border-editor-accent text-editor-accent' : 'border-transparent text-editor-text-secondary hover:text-editor-text-primary'}`}>
+                                        {tab.icon}
+                                        {tab.label}
+                                        {tab.count !== undefined && tab.count > 0 && (<span className={`px-1.5 py-0.5 text-[10px] rounded-full font-bold ${activeTab === tab.id ? 'bg-editor-accent/20 text-editor-accent' : 'bg-editor-border/50 text-editor-text-secondary'}`}>{tab.count}</span>)}
+                                    </button>
+                                ))}
                             </div>
                         </div>
-                    ) : (
-                        <>
-                            {activeTab === 'overview' && <OverviewTab stats={stats} campaigns={campaigns} tenantPerformance={tenantPerformance} setActiveTab={setActiveTab} setShowAIStudio={setShowAIStudio} />}
-                            {activeTab === 'campaigns' && renderCampaigns()}
-                            {activeTab === 'audiences' && renderAudiences()}
-                            {activeTab === 'analytics' && <AnalyticsTab stats={stats} campaigns={campaigns} monthlyData={monthlyData} tenantPerformance={tenantPerformance} tenants={tenants} />}
-                            {activeTab === 'automations' && (
-                                <AutomationsTab
-                                    automations={automations}
-                                    audiences={audiences}
-                                    showCreateAutomation={showCreateAutomation}
-                                    setShowCreateAutomation={setShowCreateAutomation}
-                                    selectedTemplate={selectedTemplate}
-                                    setSelectedTemplate={setSelectedTemplate}
-                                    newAutomation={newAutomation}
-                                    setNewAutomation={setNewAutomation}
-                                    editingAutomationId={editingAutomationId}
-                                    setEditingAutomationId={setEditingAutomationId}
-                                    createAutomation={createAutomation}
-                                    updateAutomation={updateAutomation}
-                                    duplicateAutomation={duplicateAutomation}
-                                    toggleAutomationStatus={toggleAutomationStatus}
-                                    deleteAutomation={deleteAutomation}
-                                    openEditAutomation={openEditAutomation}
-                                    confirmModal={confirmModal}
-                                    setConfirmModal={setConfirmModal}
-                                    onDesignEmail={openEmailEditorForStep}
-                                />
+
+                        {/* Content */}
+                        <main className="flex-1 overflow-y-auto p-4 sm:p-6">
+                            {isLoading ? (
+                                <div className="flex items-center justify-center py-24">
+                                    <div className="flex flex-col items-center gap-3">
+                                        <Loader2 className="w-8 h-8 text-editor-accent animate-spin" />
+                                        <span className="text-sm text-editor-text-secondary">{t('adminEmail.loadingData')}</span>
+                                    </div>
+                                </div>
+                            ) : (
+                                <>
+                                    {activeTab === 'overview' && <OverviewTab stats={stats} campaigns={campaigns} tenantPerformance={tenantPerformance} setActiveTab={setActiveTab} setShowAIStudio={setShowAIStudio} />}
+                                    {activeTab === 'campaigns' && renderCampaigns()}
+                                    {activeTab === 'audiences' && renderAudiences()}
+                                    {activeTab === 'analytics' && <AnalyticsTab stats={stats} campaigns={campaigns} monthlyData={monthlyData} tenantPerformance={tenantPerformance} tenants={tenants} />}
+                                    {activeTab === 'automations' && (
+                                        <AutomationsTab
+                                            automations={automations}
+                                            audiences={audiences}
+                                            showCreateAutomation={showCreateAutomation}
+                                            setShowCreateAutomation={setShowCreateAutomation}
+                                            selectedTemplate={selectedTemplate}
+                                            setSelectedTemplate={setSelectedTemplate}
+                                            newAutomation={newAutomation}
+                                            setNewAutomation={setNewAutomation}
+                                            editingAutomationId={editingAutomationId}
+                                            setEditingAutomationId={setEditingAutomationId}
+                                            createAutomation={createAutomation}
+                                            updateAutomation={updateAutomation}
+                                            duplicateAutomation={duplicateAutomation}
+                                            toggleAutomationStatus={toggleAutomationStatus}
+                                            deleteAutomation={deleteAutomation}
+                                            openEditAutomation={openEditAutomation}
+                                            confirmModal={confirmModal}
+                                            setConfirmModal={setConfirmModal}
+                                            onDesignEmail={openEmailEditorForStep}
+                                        />
+                                    )}
+                                    {activeTab === 'ai-studio' && renderAIStudio()}
+                                </>
                             )}
-                            {activeTab === 'ai-studio' && renderAIStudio()}
-                        </>
-                    )}
-                </main>
+                        </main>
+                    </>
+                )}
+
             </div>
 
             {/* Global Confirmation Modal */}
