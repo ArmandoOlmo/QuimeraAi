@@ -497,7 +497,19 @@ const AdminEmailHub: React.FC<AdminEmailHubProps> = ({ onBack }) => {
                 <EmailTemplateGallery onSelect={handleSelectTemplate} onClose={() => setShowTemplateGallery(false)} onStartBlank={handleStartBlank} />
             )}
 
-
+            {/* Visual Email Editor */}
+            {showEmailEditor && emailDocument && (
+                <div className="absolute inset-0 z-40 bg-editor-bg">
+                    <AdminEmailEditorWrapper
+                        initialDocument={emailDocument}
+                        onSave={handleSaveFromEditor}
+                        onClose={handleCloseEditor}
+                        onSendTest={() => { setTestEmail(''); setShowTestEmailModal(true); }}
+                        campaignId={editingCampaignId || undefined}
+                        campaignName={editingCampaignId ? campaigns.find(c => c.id === editingCampaignId)?.name : newCampaignForm.name || undefined}
+                    />
+                </div>
+            )}
 
             {/* Test Email Modal */}
             {showTestEmailModal && (
@@ -918,6 +930,18 @@ const AdminEmailHub: React.FC<AdminEmailHubProps> = ({ onBack }) => {
         <div className="flex h-screen bg-editor-bg text-editor-text-primary">
             <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
 
+            <div className="flex-1 flex flex-col overflow-hidden relative">
+                <header className="h-14 bg-editor-bg border-b border-editor-border flex-shrink-0 flex items-center justify-between px-4 sm:px-6 sticky top-0 z-10">
+                    <div className="flex items-center gap-3">
+                        <button onClick={onBack} className="h-9 w-9 flex items-center justify-center text-editor-text-secondary hover:text-editor-text-primary md:hidden transition-colors"><ArrowLeft className="w-5 h-5" /></button>
+                        <Mail className="text-editor-accent w-5 h-5" />
+                        <h1 className="text-lg font-semibold text-editor-text-primary">{t('adminEmail.hubTitle')}</h1>
+                        <span className="hidden sm:inline-flex px-2 py-0.5 text-xs font-semibold bg-green-500/20 text-green-400 rounded-full">{tenants.length} tenants</span>
+                    </div>
+                    <button onClick={onBack} className="hidden md:flex items-center gap-1.5 h-9 px-3 text-sm font-medium text-editor-text-secondary hover:text-editor-text-primary transition-colors"><ArrowLeft className="w-4 h-4" /> {t('adminEmail.back')}</button>
+                </header>
+
+                {/* Conditional Editor */}
                 {showEmailEditor && emailDocument ? (
                     <div className="flex-1 overflow-hidden relative">
                         <AdminEmailEditorWrapper
@@ -988,7 +1012,6 @@ const AdminEmailHub: React.FC<AdminEmailHubProps> = ({ onBack }) => {
                         </main>
                     </>
                 )}
-
             </div>
 
             {/* Global Confirmation Modal */}

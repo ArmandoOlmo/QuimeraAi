@@ -391,7 +391,20 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
     // This ensures we update the correct section in the state
     const updateData = (key: string, value: any) => {
         try {
-            onUpdateSection(section.id, (oldData: any) => ({ ...oldData, [key]: value }));
+            onUpdateSection(section.id, (oldData: any) => {
+                const newData = { ...oldData, [key]: value };
+                
+                // Synchronize global fallback colors with nested colors object
+                // to prevent old Coolors palettes from overriding manual color changes.
+                if (key === 'textColor' || key === 'backgroundColor' || key === 'accentColor') {
+                    newData.colors = { ...(oldData.colors || {}) };
+                    if (key === 'textColor') newData.colors.text = value;
+                    else if (key === 'backgroundColor') newData.colors.background = value;
+                    else if (key === 'accentColor') newData.colors.accent = value;
+                }
+                
+                return newData;
+            });
         } catch (error: any) {
         }
     };
