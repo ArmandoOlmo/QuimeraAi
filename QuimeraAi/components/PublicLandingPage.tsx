@@ -2870,22 +2870,27 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
     }
   };
 
+  // Get Global color values
+  const colorsPreview = getPreviewData('colors');
+  const globalBackgroundColor = colorsPreview?.backgroundColor || '#0A0A0A';
+  const globalTextColor = colorsPreview?.textColor || '#ffffff';
+
   // Get Header color values
-  const headerBackgroundColor = headerPreview?.backgroundColor || '#0A0A0A';
-  const headerTextColor = headerPreview?.textColor || '#ffffff';
+  const headerBackgroundColor = headerPreview?.backgroundColor || globalBackgroundColor;
+  const headerTextColor = headerPreview?.textColor || globalTextColor;
   const headerAccentColor = headerPreview?.accentColor || '#facc15';
 
   // Get Footer color values
-  const footerBackgroundColor = footerPreview?.backgroundColor || '#0A0A0A';
-  const footerTextColor = footerPreview?.textColor || '#ffffff';
+  const footerBackgroundColor = footerPreview?.backgroundColor || globalBackgroundColor;
+  const footerTextColor = footerPreview?.textColor || globalTextColor;
   const footerAccentColor = footerPreview?.accentColor || '#facc15';
 
   return (
     <div
       className="min-h-screen"
       style={{
-        backgroundColor: headerBackgroundColor,
-        color: headerTextColor,
+        backgroundColor: globalBackgroundColor,
+        color: globalTextColor,
         fontFamily: `'${globalBodyFont}', system-ui, sans-serif`,
         // CSS Custom properties for fonts
         ['--font-heading' as any]: `'${globalHeadingFont}', system-ui, sans-serif`,
@@ -2895,6 +2900,8 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
         ['--heading-transform' as any]: headingsCaps ? 'uppercase' : 'none',
         ['--button-transform' as any]: buttonsCaps ? 'uppercase' : 'none',
         ['--nav-transform' as any]: navLinksCaps ? 'uppercase' : 'none',
+        // Global variables for generic usage
+        ['--foreground' as any]: globalTextColor,
       }}
     >
       {/* === HEADER === */}
