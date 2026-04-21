@@ -1949,6 +1949,7 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
           <SignupFloat
             {...mergedData.signupFloat}
             projectId={project.id || storeProjectId || undefined}
+            ownerId={project.userId || undefined}
             isPreviewMode={true}
           />
         </Suspense>

@@ -38,7 +38,8 @@ import DashboardSidebar from '../DashboardSidebar';
 import LandingPageControls from './LandingPageControls';
 import Modal from '../../ui/Modal';
 import { GlobalColors } from '../../../types';
-import { generateHeroWaveGradientColors } from '../../ui/GlobalStylesControl';
+import { generateHeroWaveGradientColors, contrastText } from '../../ui/GlobalStylesControl';
+import { hexToRgba } from '../../../utils/colorUtils';
 import { doc, setDoc, getDoc, collection, getDocs, writeBatch, deleteDoc } from '../../../firebase';
 import { db } from '../../../firebase';
 
@@ -654,7 +655,9 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
                 text: colors.text,
                 heading: colors.heading,
                 buttonBackground: colors.primary,
-                buttonText: '#ffffff',
+                buttonText: contrastText(colors.primary, colors.background, colors.heading),
+                secondaryButtonBackground: colors.surface,
+                secondaryButtonText: colors.heading,
             }
         },
         heroModern: {
@@ -665,7 +668,9 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
                 text: colors.text,
                 heading: colors.heading,
                 buttonBackground: colors.primary,
-                buttonText: '#ffffff',
+                buttonText: contrastText(colors.primary, colors.background, colors.heading),
+                secondaryButtonBackground: colors.surface,
+                secondaryButtonText: colors.heading,
             }
         },
         heroGradient: {
@@ -676,7 +681,57 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
                 text: colors.text,
                 heading: colors.heading,
                 buttonBackground: colors.primary,
-                buttonText: '#ffffff',
+                buttonText: contrastText(colors.primary, colors.background, colors.heading),
+                secondaryButtonBackground: colors.surface,
+                secondaryButtonText: colors.heading,
+            }
+        },
+        heroSplit: {
+            colors: {
+                textBackground: colors.background,
+                imageBackground: colors.surface,
+                heading: colors.heading,
+                text: colors.text,
+                buttonBackground: colors.primary,
+                buttonText: contrastText(colors.primary, colors.background, colors.heading),
+            }
+        },
+        heroGallery: {
+            colors: {
+                primary: colors.primary,
+                secondary: colors.secondary,
+                background: colors.background,
+                text: colors.text,
+                heading: colors.heading,
+                ctaText: colors.heading,
+                buttonBackground: colors.primary,
+                buttonText: contrastText(colors.primary, colors.background, colors.heading),
+                dotActive: colors.heading,
+                dotInactive: hexToRgba(colors.heading, 0.4),
+                arrowColor: colors.heading,
+            }
+        },
+        heroWave: {
+            colors: {
+                primary: colors.primary,
+                secondary: colors.secondary,
+                background: colors.background,
+                text: colors.text,
+                heading: colors.heading,
+                buttonBackground: colors.primary,
+                buttonText: contrastText(colors.primary, colors.background, colors.heading),
+            }
+        },
+        heroNova: {
+            colors: {
+                primary: colors.primary,
+                secondary: colors.secondary,
+                background: colors.background,
+                text: colors.text,
+                heading: colors.heading,
+                buttonBackground: colors.primary,
+                buttonText: contrastText(colors.primary, colors.background, colors.heading),
+                accent: colors.accent,
             }
         },
         features: {
@@ -686,6 +741,10 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
                 borderColor: colors.border,
                 text: colors.text,
                 heading: colors.heading,
+                description: colors.text,
+                cardBackground: colors.surface,
+                cardHeading: colors.heading,
+                cardText: colors.text,
             }
         },
         pricing: {
@@ -695,6 +754,12 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
                 borderColor: colors.border,
                 text: colors.text,
                 heading: colors.heading,
+                buttonBackground: colors.primary,
+                buttonText: contrastText(colors.primary, colors.background, colors.heading),
+                gradientStart: colors.primary,
+                gradientEnd: colors.secondary,
+                cardBackground: colors.surface,
+                checkmarkColor: colors.success,
             }
         },
         testimonials: {
@@ -704,6 +769,9 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
                 borderColor: colors.border,
                 text: colors.text,
                 heading: colors.heading,
+                description: colors.text,
+                subtitleColor: colors.textMuted,
+                cardBackground: colors.surface,
             }
         },
         faq: {
@@ -713,16 +781,21 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
                 borderColor: colors.border,
                 text: colors.text,
                 heading: colors.heading,
+                cardBackground: colors.surface,
+                gradientStart: colors.primary,
+                gradientEnd: colors.secondary,
             }
         },
         cta: {
             colors: {
+                background: colors.background,
                 gradientStart: colors.primary,
                 gradientEnd: colors.secondary,
-                text: '#ffffff',
-                heading: '#ffffff',
-                buttonBackground: '#ffffff',
-                buttonText: colors.primary,
+                text: colors.heading,
+                heading: colors.heading,
+                description: colors.text,
+                buttonBackground: colors.background,
+                buttonText: colors.heading,
             }
         },
         footer: {
@@ -736,10 +809,12 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
         },
         header: {
             colors: {
-                background: colors.background,
-                text: colors.text,
-                accent: colors.primary,
-                border: colors.border,
+                background: colors.primary,
+                text: contrastText(colors.primary, colors.background, colors.heading),
+                accent: contrastText(colors.primary, colors.background, colors.heading),
+                border: 'transparent',
+                buttonBackground: colors.primary,
+                buttonText: contrastText(colors.primary, colors.background, colors.heading),
             }
         },
         screenshotCarousel: {
@@ -751,19 +826,19 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
         },
         newsletter: {
             colors: {
-                background: colors.primary,
-                heading: '#ffffff',
-                text: '#ffffff',
+                background: colors.surface,
+                heading: colors.heading,
+                text: colors.text,
                 cardBackground: colors.surface,
                 cardHeading: colors.heading,
                 cardText: colors.text,
                 borderColor: colors.border,
                 inputBackground: colors.background,
-                inputText: colors.text,
+                inputText: colors.heading,
                 inputPlaceholder: colors.textMuted,
                 inputBorder: colors.border,
-                buttonBackground: colors.secondary,
-                buttonText: '#ffffff',
+                buttonBackground: colors.primary,
+                buttonText: contrastText(colors.primary, colors.background, colors.heading),
                 accent: colors.secondary,
             },
         },
@@ -775,7 +850,13 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
                 text: colors.text,
                 heading: colors.heading,
                 buttonBackground: colors.primary,
-                buttonText: '#ffffff',
+                buttonText: contrastText(colors.primary, colors.background, colors.heading),
+                cardBackground: colors.surface,
+                inputBackground: colors.background,
+                inputText: colors.heading,
+                inputBorder: colors.border,
+                gradientStart: colors.primary,
+                gradientEnd: colors.secondary,
             }
         },
         services: {
@@ -785,6 +866,10 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
                 borderColor: colors.border,
                 text: colors.text,
                 heading: colors.heading,
+                description: colors.text,
+                cardBackground: colors.surface,
+                cardHeading: colors.heading,
+                cardText: colors.text,
             }
         },
         team: {
@@ -794,6 +879,8 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
                 borderColor: colors.border,
                 text: colors.text,
                 heading: colors.heading,
+                cardBackground: colors.surface,
+                photoBorderColor: colors.primary,
             }
         },
         howItWorks: {
@@ -815,15 +902,23 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
         slideshow: {
             colors: {
                 background: colors.background,
-                accent: colors.primary,
-                text: colors.text,
                 heading: colors.heading,
+                arrowBackground: hexToRgba(colors.background, 0.5),
+                arrowText: colors.heading,
+                dotActive: colors.heading,
+                dotInactive: hexToRgba(colors.heading, 0.5),
+                captionBackground: hexToRgba(colors.background, 0.8),
+                captionText: colors.text,
             }
         },
         banner: {
             colors: {
-                background: colors.primary,
-                text: '#ffffff',
+                background: colors.surface,
+                overlayColor: colors.background,
+                heading: colors.heading,
+                text: colors.text,
+                buttonBackground: colors.primary,
+                buttonText: contrastText(colors.primary, colors.background, colors.heading),
                 accent: colors.secondary,
             }
         },
@@ -833,14 +928,21 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
                 accent: colors.primary,
                 text: colors.text,
                 heading: colors.heading,
+                cardBackground: colors.surface,
+                borderColor: colors.border,
             }
         },
         menu: {
             colors: {
                 background: colors.background,
                 accent: colors.primary,
+                borderColor: colors.border,
                 text: colors.text,
                 heading: colors.heading,
+                cardBackground: colors.surface,
+                cardTitleColor: colors.heading,
+                cardText: colors.text,
+                priceColor: colors.accent,
             }
         },
         portfolio: {
@@ -850,9 +952,14 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
                 borderColor: colors.border,
                 text: colors.text,
                 heading: colors.heading,
+                cardBackground: hexToRgba(colors.background, 0.9),
+                cardTitleColor: colors.heading,
+                cardTextColor: hexToRgba(colors.text, 0.9),
+                cardOverlayStart: hexToRgba(colors.background, 0.95),
+                cardOverlayEnd: hexToRgba(colors.background, 0.3),
             }
         },
-        // ── New section mappings (topBar, logoBanner, signupFloat, cmsFeed, heroSplit, hero variants, chatbot, products) ──
+        // ── New section mappings (topBar, logoBanner, signupFloat, cmsFeed, chatbot, products) ──
         topBar: {
             colors: {
                 background: colors.primary,
@@ -874,13 +981,15 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
         signupFloat: {
             colors: {
                 background: colors.primary,
-                text: '#ffffff',
-                heading: '#ffffff',
+                text: contrastText(colors.primary, colors.background, colors.heading),
+                heading: contrastText(colors.primary, colors.background, colors.heading),
                 buttonBackground: colors.secondary,
-                buttonText: '#ffffff',
+                buttonText: contrastText(colors.secondary, colors.background, colors.heading),
                 inputBackground: colors.background,
                 inputText: colors.text,
                 inputBorder: colors.border,
+                overlayBackground: hexToRgba(colors.background, 0.5),
+                cardShadow: `0 25px 50px -12px ${hexToRgba(colors.background, 0.5)}`,
             }
         },
         cmsFeed: {
@@ -894,51 +1003,7 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
                 cardText: colors.text,
                 borderColor: colors.border,
                 buttonBackground: colors.primary,
-                buttonText: '#ffffff',
-            }
-        },
-        heroSplit: {
-            colors: {
-                textBackground: colors.background,
-                imageBackground: colors.surface,
-                heading: colors.heading,
-                text: colors.text,
-                buttonBackground: colors.primary,
-                buttonText: '#ffffff',
-            }
-        },
-        heroGallery: {
-            colors: {
-                primary: colors.primary,
-                secondary: colors.secondary,
-                background: colors.background,
-                text: colors.text,
-                heading: colors.heading,
-                buttonBackground: colors.primary,
-                buttonText: '#ffffff',
-            }
-        },
-        heroWave: {
-            colors: {
-                primary: colors.primary,
-                secondary: colors.secondary,
-                background: colors.background,
-                text: colors.text,
-                heading: colors.heading,
-                buttonBackground: colors.primary,
-                buttonText: '#ffffff',
-            }
-        },
-        heroNova: {
-            colors: {
-                primary: colors.primary,
-                secondary: colors.secondary,
-                background: colors.background,
-                text: colors.text,
-                heading: colors.heading,
-                buttonBackground: colors.primary,
-                buttonText: '#ffffff',
-                accent: colors.accent,
+                buttonText: contrastText(colors.primary, colors.background, colors.heading),
             }
         },
         chatbot: {
@@ -947,7 +1012,7 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
                 secondaryColor: colors.secondary,
                 accentColor: colors.accent,
                 userBubbleColor: colors.primary,
-                userTextColor: '#ffffff',
+                userTextColor: contrastText(colors.primary, colors.background, colors.heading),
                 botBubbleColor: colors.surface,
                 botTextColor: colors.text,
                 backgroundColor: colors.background,
@@ -955,7 +1020,7 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
                 inputBorder: colors.border,
                 inputText: colors.text,
                 headerBackground: colors.primary,
-                headerText: '#ffffff',
+                headerText: contrastText(colors.primary, colors.background, colors.heading),
             }
         },
         products: {
@@ -967,7 +1032,7 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
                 cardBackground: colors.surface,
                 cardText: colors.heading,
                 buttonBackground: colors.primary,
-                buttonText: '#ffffff',
+                buttonText: contrastText(colors.primary, colors.background, colors.heading),
             }
         },
     });
@@ -997,6 +1062,14 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
                     if (sectionColors.colors.text) mergedData.textColor = sectionColors.colors.text;
                     if (sectionColors.colors.primary || sectionColors.colors.accent) mergedData.accentColor = sectionColors.colors.accent || sectionColors.colors.primary;
                     if (sectionColors.colors.error) mergedData.errorColor = sectionColors.colors.error;
+                    // Update overlay color to match new background (for SectionBackground overlays)
+                    if (sectionColors.colors.background && section.data?.backgroundOverlayColor) {
+                        mergedData.backgroundOverlayColor = sectionColors.colors.background;
+                    }
+                    // Update banner/productHero/collectionBanner overlayColor
+                    if (sectionColors.colors.overlayColor) {
+                        mergedData.overlayColor = sectionColors.colors.overlayColor;
+                    }
                 }
                 
                 if (section.type === 'newsletter') {

@@ -98,7 +98,7 @@ const LandingPageContent: React.FC = () => {
   const theme = (isEditorMode ? editorContext!.theme : projectContext.theme) || projectContext.theme;
   const componentOrder = (isEditorMode ? editorContext!.componentOrder : projectContext.componentOrder) || projectContext.componentOrder;
   const sectionVisibility = (isEditorMode ? editorContext!.sectionVisibility : projectContext.sectionVisibility) || projectContext.sectionVisibility;
-  const { activeProjectId, pages, activePage } = projectContext;
+  const { activeProjectId, activeProject, pages, activePage } = projectContext;
 
   const { cmsPosts, isLoadingCMS, menus, categories } = useCMS();
   const { componentStatus, customComponents, componentStyles } = useAdmin();
@@ -1637,6 +1637,7 @@ const LandingPageContent: React.FC = () => {
         <SignupFloat
           {...data.signupFloat}
           projectId={activeProjectId || undefined}
+          ownerId={activeProject?.userId || undefined}
           isPreviewMode={isEditorMode}
         />
       )}

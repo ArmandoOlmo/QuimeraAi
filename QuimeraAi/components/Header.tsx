@@ -411,7 +411,7 @@ const Header: React.FC<HeaderData & {
           return { backgroundColor: actualColors.background };
         case 'edge-minimal':
           return { 
-            backgroundColor: `${actualColors.background}E6`, // 90% opacity (E6)
+            backgroundColor: `color-mix(in srgb, ${actualColors.background} 90%, transparent)`, // 90% opacity (fallback from E6)
             backdropFilter: 'blur(12px)',
             WebkitBackdropFilter: 'blur(12px)',
             borderBottom: '1px solid rgba(128, 128, 128, 0.15)',
@@ -428,12 +428,12 @@ const Header: React.FC<HeaderData & {
           return { backgroundColor: actualColors.background };
         case 'floating-pill':
           return {
-            backgroundColor: `${actualColors.background}f0`,
+            backgroundColor: `color-mix(in srgb, ${actualColors.background} 94%, transparent)`, // 94% opacity (fallback from f0)
             backdropFilter: 'blur(8px)'
           };
         case 'floating-glass':
           return {
-            backgroundColor: `${actualColors.background}40`,
+            backgroundColor: `color-mix(in srgb, ${actualColors.background} 25%, transparent)`, // 25% opacity (fallback from 40)
             backdropFilter: 'blur(20px) saturate(180%)'
           };
         case 'floating-shadow':
@@ -450,7 +450,7 @@ const Header: React.FC<HeaderData & {
           };
         case 'transparent-bordered':
           return {
-            backgroundColor: `${actualColors.background}e0`,
+            backgroundColor: `color-mix(in srgb, ${actualColors.background} 88%, transparent)`, // 88% opacity (fallback from e0)
             borderColor: 'rgba(255,255,255,0.2)'
           };
         case 'transparent-gradient': {

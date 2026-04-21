@@ -709,6 +709,14 @@ const GlobalStylesControl: React.FC<GlobalStylesControlProps> = ({ mode = 'both'
                             if (componentColors.text) (newData[key] as any).textColor = componentColors.text;
                             if (componentColors.primary || componentColors.accent) (newData[key] as any).accentColor = componentColors.accent || componentColors.primary;
                             if (componentColors.error) (newData[key] as any).errorColor = componentColors.error;
+                            // Update overlay colors for SectionBackground (background image overlays)
+                            if (componentColors.background && (newData[key] as any).backgroundOverlayColor) {
+                                (newData[key] as any).backgroundOverlayColor = componentColors.background;
+                            }
+                            // Update banner/productHero/collectionBanner overlayColor
+                            if (componentColors.overlayColor) {
+                                (newData[key] as any).overlayColor = componentColors.overlayColor;
+                            }
                         }
                     } else if (ecommerceComponents.includes(key)) {
                         // Para componentes de ecommerce que pueden no existir,
