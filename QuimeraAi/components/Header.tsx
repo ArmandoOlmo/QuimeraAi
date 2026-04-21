@@ -922,15 +922,29 @@ const Header: React.FC<HeaderData & {
             </>
           )}
 
-          {/* === GRADIENT FADE: black gradient below === */}
+          {/* === GRADIENT FADE / DARK: gradient strips === */}
           {(style === 'transparent-gradient' || style === 'transparent-gradient-dark') && (
-            <div
-              className="absolute left-0 right-0 h-16 pointer-events-none"
-              style={{
-                top: '100%',
-                background: 'linear-gradient(to bottom, rgba(0,0,0,0.6) 0%, transparent 100%)'
-              }}
-            />
+            <>
+              {/* Top separator line */}
+              <div
+                className="absolute left-0 right-0 pointer-events-none"
+                style={{
+                  top: 0,
+                  height: '2.5px',
+                  backgroundColor: actualColors.text
+                }}
+              />
+              {/* Bottom gradient fade — dark variant uses a darker shade of bg, not pure black */}
+              <div
+                className="absolute left-0 right-0 h-16 pointer-events-none"
+                style={{
+                  top: '100%',
+                  background: style === 'transparent-gradient-dark'
+                    ? `linear-gradient(to bottom, color-mix(in srgb, ${actualColors.background}, #000 50%) 0%, transparent 100%)`
+                    : 'linear-gradient(to bottom, rgba(0,0,0,0.6) 0%, transparent 100%)'
+                }}
+              />
+            </>
           )}
 
         </header>
