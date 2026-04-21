@@ -234,6 +234,8 @@ export const generateComponentColorMappings = (colors: GlobalColors): Record<str
             text: contrastText(colors?.primary, colors?.background, colors?.heading),
             accent: contrastText(colors?.primary, colors?.background, colors?.heading),
             border: 'transparent',
+            buttonBackground: colors?.secondary,
+            buttonText: contrastText(colors?.secondary, colors?.background, colors?.heading),
         },
         menu: {
             background: colors?.background,

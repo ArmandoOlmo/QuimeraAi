@@ -813,8 +813,8 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
                 text: contrastText(colors.primary, colors.background, colors.heading),
                 accent: contrastText(colors.primary, colors.background, colors.heading),
                 border: 'transparent',
-                buttonBackground: colors.primary,
-                buttonText: contrastText(colors.primary, colors.background, colors.heading),
+                buttonBackground: colors.secondary,
+                buttonText: contrastText(colors.secondary, colors.background, colors.heading),
             }
         },
         screenshotCarousel: {
