@@ -186,6 +186,16 @@ service firebase.storage {
     }
     
     // ============================================
+    // QUIMERA STATIC ASSETS (preview images, branding, etc.)
+    // Public read, no client writes
+    // ============================================
+    
+    match /quimera/{allPaths=**} {
+      allow read: if true;
+      allow write: if isSuperAdminOrOwner();
+    }
+    
+    // ============================================
     // DEFAULT: Deny all other paths
     // ============================================
     
