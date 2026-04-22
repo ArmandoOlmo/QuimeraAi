@@ -299,17 +299,48 @@ const ColorControl: React.FC<ColorControlProps> = ({ label, value, onChange, pal
         setIsOpen(false);
     }, triggerRef, isOpen);
 
+    // Position the popover so it's always fully visible in the viewport
     useLayoutEffect(() => {
-        if (isOpen && triggerRef.current) {
+        if (!isOpen || !triggerRef.current) return;
+
+        const reposition = () => {
+            if (!triggerRef.current) return;
             const rect = triggerRef.current.getBoundingClientRect();
             const popoverWidth = 256; // w-64
-            const popoverHeight = 500;
+            // Use actual popover height if available, otherwise estimate
+            const popoverHeight = popoverRef.current?.offsetHeight || 500;
             const gap = 8;
-            let top = rect.bottom + gap;
-            let left = rect.left;
-            if (top + popoverHeight > window.innerHeight) top = rect.top - popoverHeight - gap;
-            if (top < gap) top = gap;
-            if (left + popoverWidth > window.innerWidth) left = window.innerWidth - popoverWidth - gap;
+            const viewportH = window.innerHeight;
+            const viewportW = window.innerWidth;
+
+            let top: number;
+            let left: number;
+
+            // Prefer below the trigger
+            const spaceBelow = viewportH - rect.bottom - gap;
+            const spaceAbove = rect.top - gap;
+
+            if (spaceBelow >= popoverHeight) {
+                // Fits below
+                top = rect.bottom + gap;
+            } else if (spaceAbove >= popoverHeight) {
+                // Fits above
+                top = rect.top - popoverHeight - gap;
+            } else {
+                // Doesn't fully fit either way — pick the side with more room and clamp
+                if (spaceBelow >= spaceAbove) {
+                    top = rect.bottom + gap;
+                } else {
+                    top = rect.top - popoverHeight - gap;
+                }
+            }
+
+            // Clamp vertically so it never goes off-screen
+            top = Math.max(gap, Math.min(top, viewportH - popoverHeight - gap));
+
+            // Horizontal: try to align left edge with trigger, clamp to viewport
+            left = rect.left;
+            if (left + popoverWidth > viewportW - gap) left = viewportW - popoverWidth - gap;
             if (left < gap) left = gap;
 
             setPopoverStyle({
@@ -318,7 +349,23 @@ const ColorControl: React.FC<ColorControlProps> = ({ label, value, onChange, pal
                 left: `${left}px`,
                 width: '256px',
             });
-        }
+        };
+
+        // Initial position (estimate height)
+        reposition();
+
+        // Re-position once the popover is painted and we know its real height
+        const raf = requestAnimationFrame(reposition);
+
+        // Keep it in position on scroll / resize
+        window.addEventListener('scroll', reposition, true);
+        window.addEventListener('resize', reposition);
+
+        return () => {
+            cancelAnimationFrame(raf);
+            window.removeEventListener('scroll', reposition, true);
+            window.removeEventListener('resize', reposition);
+        };
     }, [isOpen]);
 
     const safeValue = value || formatColor({ hex, alpha });
