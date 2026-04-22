@@ -10,6 +10,7 @@ import { db, doc, getDoc, collection, getDocs, query, orderBy, where, limit } fr
 import { Project, PageData, ThemeData, PageSection, CMSPost, CMSCategory, Menu, FooterData, FontFamily, SEOConfig, SitePage } from '../types';
 import { fontStacks, getGoogleFontsUrl, resolveFontFamily } from '../utils/fontLoader';
 import { deriveColorsFromPalette } from '../utils/colorUtils';
+import { componentStyles as defaultComponentStyles } from '../data/componentStyles';
 import { AlertTriangle, Loader2 } from 'lucide-react';
 import AdPixelsInjector from './AdPixelsInjector';
 import { getPreviewPrefetch } from '../utils/previewPrefetch';
@@ -1397,8 +1398,14 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
   // Helper to merge component data with styles and derive missing colors from palette
   const mergeComponentData = (componentKey: keyof typeof componentStyles) => {
     const componentData = data?.[componentKey];
-    const styles = componentStyles?.[componentKey];
-    if (!componentData) return componentData;
+    const projectStyles = componentStyles?.[componentKey];
+    const defaultStyles = defaultComponentStyles[componentKey];
+    
+    // Fall back to default styles if project styles are missing
+    const styles = projectStyles || defaultStyles;
+
+    if (!componentData && !styles) return undefined;
+    if (!componentData && styles) return styles as any;
     if (!styles) return componentData;
 
     // First merge the colors

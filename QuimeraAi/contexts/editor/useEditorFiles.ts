@@ -130,7 +130,7 @@ export const useEditorFiles = ({
     const fetchGlobalFiles = async () => {
         setIsGlobalFilesLoading(true);
         try {
-            const filesCol = collection(db, 'global_files');
+            const filesCol = collection(db, 'globalFiles');
             const q = query(filesCol, orderBy('createdAt', 'desc'));
             const filesSnapshot = await getDocs(q);
             const files = filesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as FileRecord));
@@ -146,7 +146,7 @@ export const useEditorFiles = ({
     const uploadGlobalFile = async (file: File) => {
         setIsGlobalFilesLoading(true);
         try {
-            const storageRef = ref(storage, `global_assets/${file.name}`);
+            const storageRef = ref(storage, `global/files/${file.name}`);
             const snapshot = await uploadBytes(storageRef, file);
             const downloadURL = await getDownloadURL(snapshot.ref);
 
@@ -161,7 +161,7 @@ export const useEditorFiles = ({
                 aiSummary: ''
             };
 
-            const filesCol = collection(db, 'global_files');
+            const filesCol = collection(db, 'globalFiles');
             const docRef = await addDoc(filesCol, newFileRecord);
             setGlobalFiles(prev => [{ id: docRef.id, ...newFileRecord, createdAt: { seconds: Date.now() / 1000, nanoseconds: 0 } } as FileRecord, ...prev]);
         } catch (error) {
@@ -175,7 +175,7 @@ export const useEditorFiles = ({
         try {
             const fileRef = ref(storage, storagePath);
             await deleteObject(fileRef);
-            const fileDocRef = doc(db, 'global_files', fileId);
+            const fileDocRef = doc(db, 'globalFiles', fileId);
             await deleteDoc(fileDocRef);
             setGlobalFiles(prev => prev.filter(f => f.id !== fileId));
         } catch (error) {

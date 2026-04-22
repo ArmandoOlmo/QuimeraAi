@@ -72,7 +72,8 @@ const Pricing: React.FC<PricingProps> = ({
   descriptionFontSize = 'md',
   animationType = 'fade-in-up',
   enableCardAnimation = true,
-  cornerGradient
+  cornerGradient,
+  glassEffect = false
 }) => {
   // Get design tokens with fallback to component colors
   const { getColor, colors: tokenColors } = useDesignTokens();
@@ -114,8 +115,13 @@ const Pricing: React.FC<PricingProps> = ({
     };
   }, [actualColors]);
 
+  // Normalize to classic if provided variant is unknown
+  const actualVariant = ['gradient', 'glassmorphism', 'minimalist'].includes(pricingVariant as string)
+    ? pricingVariant
+    : 'classic';
+
   // Classic Variant (Original Design)
-  if (pricingVariant === 'classic') {
+  if (actualVariant === 'classic') {
     return (
       <section id="pricing" className={`${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]} relative overflow-hidden ${glassEffect ? ' backdrop-blur-xl border-y border-white/10 z-20 shadow-[0_4px_30px_rgba(0,0,0,0.1)]' : ''}`} style={{ backgroundColor: glassEffect ? hexToRgba(actualColors.background , 0.4) : actualColors.background }}>
         <CornerGradient config={cornerGradient} />

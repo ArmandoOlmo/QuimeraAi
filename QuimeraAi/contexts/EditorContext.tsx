@@ -2743,8 +2743,10 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
                 const targetProjectId = options?.projectId || activeProjectId;
 
                 if (destination === 'global') {
-                    storagePath = `global_assets/generated/${fileName}`;
-                    firestoreCol = collection(db, 'global_files');
+                    storagePath = `global/files/${fileName}`;
+                    // For global assets, we don't nest them under a project by default.
+                    // Can be customized if needed.
+                    firestoreCol = collection(db, `globalFiles`);
                 } else if (targetProjectId) {
                     // Project-scoped path
                     storagePath = `users/${user.uid}/projects/${targetProjectId}/files/generated/${fileName}`;

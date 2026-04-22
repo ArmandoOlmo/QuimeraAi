@@ -39,7 +39,7 @@ import { INDUSTRIES, INDUSTRY_CATEGORIES } from '../../../data/industries';
 import { db, doc, setDoc } from '../../../firebase';
 
 // Lazy-load the AI Template Generator to avoid bloating this module
-const AITemplateGenerator = React.lazy(() => import('./AITemplateGenerator'));
+const AdminTemplateStudio = React.lazy(() => import('./AdminTemplateStudio'));
 
 interface TemplateManagementProps {
     onBack: () => void;
@@ -1130,17 +1130,13 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                 cancelText={t('common.cancel', 'Cancelar')}
             />
 
-            {/* AI Template Generator Modal */}
-            {showAIGenerator && (
-                <Suspense fallback={null}>
-                    <AITemplateGenerator
-                        onClose={() => setShowAIGenerator(false)}
-                        onTemplateCreated={(id) => {
-                            console.log('✅ AI Template created:', id);
-                        }}
-                    />
-                </Suspense>
-            )}
+            {/* Admin Template Studio Modal */}
+            <Suspense fallback={null}>
+                <AdminTemplateStudio
+                    isOpen={showAIGenerator}
+                    onClose={() => setShowAIGenerator(false)}
+                />
+            </Suspense>
         </div>
     );
 };

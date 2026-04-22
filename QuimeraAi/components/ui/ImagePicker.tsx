@@ -45,7 +45,7 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
     const { activeProjectId, activeProject } = useProject();
     const { success, error: showError } = useToast();
     const [isLibraryOpen, setIsLibraryOpen] = useState(defaultOpen);
-    const [activeTab, setActiveTab] = useState<'library' | 'generate' | 'products'>('library');
+    const [activeTab, setActiveTab] = useState<'library' | 'generate' | 'products' | 'global'>('library');
 
     // Handle closing the modal
     const handleClose = () => {
@@ -57,10 +57,10 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
 
     // Fetch global files when library opens in global mode
     useEffect(() => {
-        if (destination === 'global' && isLibraryOpen) {
+        if ((destination === 'global' || activeTab === 'global') && isLibraryOpen) {
             fetchGlobalFiles();
         }
-    }, [destination, isLibraryOpen]);
+    }, [destination, isLibraryOpen, activeTab, fetchGlobalFiles]);
 
     // Product images - only fetch if storeId is provided
     const { products: storeProducts, isLoading: isLoadingProducts } = usePublicProducts(
@@ -103,13 +103,13 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
 
     // Filter and search image files based on destination
     const imageFiles = useMemo(() => {
-        // Choose source array based on destination
-        const sourceFiles = destination === 'global' ? globalFiles : files;
+        // Choose source array based on destination or active tab
+        const sourceFiles = (destination === 'global' || activeTab === 'global') ? globalFiles : files;
 
-        let result = sourceFiles.filter(f => f.type.startsWith('image/'));
+        let result = sourceFiles.filter(f => f.type?.startsWith('image/') || true); // ensure image
 
-        // Only filter by project if using user destination
-        if (destination === 'user' && activeProjectId) {
+        // Only filter by project if using user destination and not looking at global
+        if (destination === 'user' && activeTab !== 'global' && activeProjectId) {
             result = result.filter(f => f.projectId === activeProjectId);
         }
 
@@ -118,7 +118,7 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
         }
 
         return result;
-    }, [files, globalFiles, searchQuery, activeProjectId, destination]);
+    }, [files, globalFiles, searchQuery, activeProjectId, destination, activeTab]);
 
     return (
         <>
@@ -235,6 +235,14 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
                                 >
                                     {t('dashboard.imagePicker.assetLibrary')}
                                 </button>
+                                {destination === 'user' && (
+                                    <button
+                                        onClick={() => setActiveTab('global')}
+                                        className={`pb-1 border-b-2 text-sm font-bold transition-colors ${activeTab === 'global' ? 'border-editor-accent text-editor-text-primary' : 'border-transparent text-editor-text-secondary hover:text-editor-text-primary'}`}
+                                    >
+                                        Globales
+                                    </button>
+                                )}
                                 {storeId && (
                                     <button
                                         onClick={() => setActiveTab('products')}
@@ -256,19 +264,21 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
                         {/* Content */}
                         <div className={`flex-grow overflow-hidden bg-editor-bg ${activeTab === 'generate' ? '' : 'p-6'}`}>
 
-                            {/* LIBRARY TAB */}
-                            {activeTab === 'library' && (
+                            {/* LIBRARY/GLOBAL TAB */}
+                            {(activeTab === 'library' || activeTab === 'global') && (
                                 <div className="h-full flex flex-col">
                                     {/* Library Controls - Compact */}
                                     <div className="flex items-center gap-3 mb-4">
                                         {/* Project indicator */}
                                         <div className="flex items-center gap-1.5 text-editor-text-secondary">
                                             <FolderOpen size={14} className="text-editor-accent" />
-                                            <span className="text-xs font-medium text-editor-text-primary">{activeProject?.name}</span>
+                                            <span className="text-xs font-medium text-editor-text-primary">
+                                                {activeTab === 'global' ? 'Activos Globales Admin' : activeProject?.name}
+                                            </span>
                                             <span className="text-[10px] px-1.5 py-0.5 bg-editor-panel-bg rounded">
                                                 {imageFiles.length} {imageFiles.length === 1 ? t('dashboard.imagePicker.image') : t('dashboard.imagePicker.images')}
                                             </span>
-                                            {destination === 'global' && (
+                                            {(destination === 'global' || activeTab === 'global') && (
                                                 <span className="text-[10px] px-1.5 py-0.5 bg-blue-500/10 text-blue-500 rounded border border-blue-500/20 ml-2">
                                                     GLOBAL
                                                 </span>
@@ -296,16 +306,18 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
                                         </div>
 
                                         {/* Upload Button */}
-                                        <DragDropZone
-                                            onFileSelect={handleFileUpload}
-                                            accept="image/*"
-                                            maxSizeMB={10}
-                                            variant="compact"
-                                        >
-                                            <button className="flex items-center gap-1.5 bg-editor-accent text-editor-bg px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-editor-accent-hover transition-colors whitespace-nowrap">
-                                                <Upload size={14} /> {t('dashboard.imagePicker.upload')}
-                                            </button>
-                                        </DragDropZone>
+                                        {(activeTab === 'library' || destination === 'global') && (
+                                            <DragDropZone
+                                                onFileSelect={handleFileUpload}
+                                                accept="image/*"
+                                                maxSizeMB={10}
+                                                variant="compact"
+                                            >
+                                                <button className="flex items-center gap-1.5 bg-editor-accent text-editor-bg px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-editor-accent-hover transition-colors whitespace-nowrap">
+                                                    <Upload size={14} /> {t('dashboard.imagePicker.upload')}
+                                                </button>
+                                            </DragDropZone>
+                                        )}
                                     </div>
 
                                     {/* Images Grid */}
@@ -348,14 +360,16 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
                                             <div className="h-full flex flex-col items-center justify-center text-editor-text-secondary border-2 border-dashed border-editor-border rounded-xl">
                                                 <Image size={48} className="mb-4 opacity-50" />
                                                 <p className="mb-2">{t('dashboard.imagePicker.noImagesInLibrary')}</p>
-                                                <DragDropZone
-                                                    onFileSelect={handleFileUpload}
-                                                    accept="image/*"
-                                                    maxSizeMB={10}
-                                                    variant="compact"
-                                                >
-                                                    <button className="mt-4 text-editor-accent hover:underline">{t('dashboard.imagePicker.uploadOneNow')}</button>
-                                                </DragDropZone>
+                                                {(activeTab === 'library' || destination === 'global') && (
+                                                    <DragDropZone
+                                                        onFileSelect={handleFileUpload}
+                                                        accept="image/*"
+                                                        maxSizeMB={10}
+                                                        variant="compact"
+                                                    >
+                                                        <button className="mt-4 text-editor-accent hover:underline">{t('dashboard.imagePicker.uploadOneNow')}</button>
+                                                    </DragDropZone>
+                                                )}
                                             </div>
                                         )}
                                     </div>
