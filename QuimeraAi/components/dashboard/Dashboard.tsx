@@ -36,7 +36,7 @@ const Dashboard: React.FC = () => {
     const { view, setIsOnboardingOpen } = useUI();
     const { domains } = useDomains();
     const { cmsPosts } = useCMS();
-    const { navigate } = useRouter();
+    const { navigate, goBack } = useRouter();
 
     // ─── Custom Hooks ────────────────────────────────────────────────────────
     const filters = useDashboardFilters();
@@ -137,7 +137,7 @@ const Dashboard: React.FC = () => {
                     setSearchQuery={filters.setSearchQuery}
                     showMobileSearch={showMobileSearch}
                     setShowMobileSearch={setShowMobileSearch}
-                    onNavigateBack={() => navigate(ROUTES.DASHBOARD)}
+                    onNavigateBack={() => goBack()}
                 />
 
                 <main id="main-content" className="flex-1 overflow-y-auto p-6 lg:p-8 scroll-smooth" role="main">

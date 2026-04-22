@@ -22,7 +22,7 @@ const SimpleEditorHeader: React.FC<SimpleEditorHeaderProps> = ({
   const { t } = useTranslation();
   const { isSidebarOpen, setIsSidebarOpen, previewDevice, setPreviewDevice } = useUI();
   const { activeProject, renameActiveProject, saveProject, publishProject, isEditingTemplate, exitTemplateEditor } = useProject();
-  const { navigate } = useRouter();
+  const { navigate, goBack } = useRouter();
 
   const [isEditingName, setIsEditingName] = useState(false);
   const [projectName, setProjectName] = useState(activeProject?.name || t('editor.untitledProject'));
@@ -172,7 +172,7 @@ const SimpleEditorHeader: React.FC<SimpleEditorHeaderProps> = ({
       <div className="flex items-center gap-2 flex-shrink-0">
         {/* Back Button - Go to projects/websites */}
         <button
-          onClick={() => navigate(ROUTES.WEBSITES)}
+          onClick={() => goBack()}
           className="flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all text-muted-foreground hover:text-foreground hover:bg-secondary/50"
           aria-label={t('common.back')}
         >

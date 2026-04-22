@@ -228,7 +228,7 @@ const SuperAdminDashboard = () => {
     const { t } = useTranslation();
     const { adminView, setAdminView } = useUI();
     const { userDocument } = useAuth();
-    const { navigate } = useRouter();
+    const { navigate, goBack } = useRouter();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
@@ -240,13 +240,13 @@ const SuperAdminDashboard = () => {
 
     // Navigate back to admin main
     const handleBack = () => {
-        navigate(ROUTES.SUPERADMIN);
+        goBack();
         setAdminView('main');
     };
 
     // Navigate to dashboard
     const handleBackToDashboard = () => {
-        navigate(ROUTES.DASHBOARD);
+        goBack();
     };
 
     // Define all admin features with their allowed roles
