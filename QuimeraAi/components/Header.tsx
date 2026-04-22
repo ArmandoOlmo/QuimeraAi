@@ -159,7 +159,7 @@ const NavLinks: React.FC<NavLinksProps> = ({ links, textColor, accentColor, hove
             href={link.href}
             onClick={(e) => handleClick(e, link.href)}
             className={`
-                  relative transition-all duration-300 font-header font-medium ${showIcons ? 'flex items-center gap-2' : ''}
+                  relative transition-all duration-300 font-header font-medium
                   ${isMobile
                 ? 'text-xl py-4 px-4 -mx-4 block rounded-xl hover:bg-white/5 active:bg-white/10 touch-manipulation'
                 : ''
@@ -173,8 +173,14 @@ const NavLinks: React.FC<NavLinksProps> = ({ links, textColor, accentColor, hove
               letterSpacing: 'var(--navlinks-spacing, normal)'
             }}
           >
-            {showIcons && <span className="flex-shrink-0">{renderIcon(link)}</span>}
-            <span>{getTranslatedLabel(link.text)}</span>
+            {showIcons && link.icon ? (
+              <span className="inline-flex items-center gap-2 align-middle">
+                {renderIcon(link)}
+                <span>{getTranslatedLabel(link.text)}</span>
+              </span>
+            ) : (
+              getTranslatedLabel(link.text)
+            )}
           </a>
         </li>
       ))}
@@ -691,8 +697,8 @@ const Header: React.FC<HeaderData & {
               <div className="flex-shrink-0 mr-4">
                 <Logo logoType={logoType} logoText={logoText} logoImageUrl={actualLogoImageUrl} logoWidth={logoWidth} textColor={finalTextColor} onNavigate={onNavigate} />
               </div>
-              <div className="hidden nav:flex flex-1 justify-center h-full items-end">
-                <NavLinks links={allLinks} textColor={finalTextColor} accentColor={colors?.accent} hoverStyle={hoverStyle} className="flex items-end gap-1 h-full" linkFontSize={linkFontSize} onNavigate={onNavigate} showIcons={isSpecialStyle || allLinks.some(l => l.icon)} />
+              <div className={`hidden nav:flex flex-1 justify-center ${isSpecialStyle ? 'h-full items-end' : 'items-center'}`}>
+                <NavLinks links={allLinks} textColor={finalTextColor} accentColor={colors?.accent} hoverStyle={hoverStyle} className={`flex ${isSpecialStyle ? 'items-end gap-1 h-full' : 'items-center gap-8'}`} linkFontSize={linkFontSize} onNavigate={onNavigate} showIcons={isSpecialStyle || allLinks.some(l => l.icon)} />
               </div>
               <div className="hidden nav:flex flex-shrink-0 ml-4 justify-end items-center gap-4">
                 {showSearch && (
@@ -715,8 +721,8 @@ const Header: React.FC<HeaderData & {
         case 'center':
           return (
             <>
-              <div className="hidden nav:flex flex-1 justify-start h-full items-end">
-                <NavLinks links={allLinks} textColor={finalTextColor} accentColor={colors?.accent} hoverStyle={hoverStyle} className="flex items-end gap-1 h-full" linkFontSize={linkFontSize} onNavigate={onNavigate} showIcons={isSpecialStyle || allLinks.some(l => l.icon)} />
+              <div className={`hidden nav:flex flex-1 justify-start ${isSpecialStyle ? 'h-full items-end' : 'items-center'}`}>
+                <NavLinks links={allLinks} textColor={finalTextColor} accentColor={colors?.accent} hoverStyle={hoverStyle} className={`flex ${isSpecialStyle ? 'items-end gap-1 h-full' : 'items-center gap-8'}`} linkFontSize={linkFontSize} onNavigate={onNavigate} showIcons={isSpecialStyle || allLinks.some(l => l.icon)} />
               </div>
               <div className="flex-shrink-0 nav:mx-auto absolute left-1/2 -translate-x-1/2 nav:static nav:translate-x-0 px-4">
                 <Logo logoType={logoType} logoText={logoText} logoImageUrl={actualLogoImageUrl} logoWidth={logoWidth} textColor={finalTextColor} onNavigate={onNavigate} />
@@ -745,9 +751,9 @@ const Header: React.FC<HeaderData & {
               <div className="flex justify-center mb-4">
                 <Logo logoType={logoType} logoText={logoText} logoImageUrl={actualLogoImageUrl} logoWidth={logoWidth} textColor={finalTextColor} onNavigate={onNavigate} />
               </div>
-              <div className="hidden nav:flex justify-center items-end border-t border-white/10 pt-2 h-full">
-                <NavLinks links={allLinks} textColor={finalTextColor} accentColor={colors?.accent} hoverStyle={hoverStyle} className="flex items-end gap-1 h-full" linkFontSize={linkFontSize} onNavigate={onNavigate} showIcons={isSpecialStyle || allLinks.some(l => l.icon)} />
-                <div className="ml-8 flex items-center gap-4 pb-2">
+              <div className={`hidden nav:flex justify-center border-t border-white/10 pt-2 ${isSpecialStyle ? 'items-end h-full' : 'items-center'}`}>
+                <NavLinks links={allLinks} textColor={finalTextColor} accentColor={colors?.accent} hoverStyle={hoverStyle} className={`flex ${isSpecialStyle ? 'items-end gap-1 h-full' : 'items-center gap-8'}`} linkFontSize={linkFontSize} onNavigate={onNavigate} showIcons={isSpecialStyle || allLinks.some(l => l.icon)} />
+                <div className={`ml-8 flex items-center gap-4 ${isSpecialStyle ? 'pb-2' : ''}`}>
                   {showSearch && (
                     <GlobalSearch
                       storeId={storeId}
@@ -770,9 +776,9 @@ const Header: React.FC<HeaderData & {
           return (
             <>
               <div className="flex-shrink-0 mr-8"><Logo logoType={logoType} logoText={logoText} logoImageUrl={actualLogoImageUrl} logoWidth={logoWidth} textColor={finalTextColor} onNavigate={onNavigate} /></div>
-              <div className="hidden nav:flex flex-1 justify-end h-full items-end gap-8">
-                <NavLinks links={allLinks} textColor={finalTextColor} accentColor={colors?.accent} hoverStyle={hoverStyle} className="flex items-end gap-1 h-full" linkFontSize={linkFontSize} onNavigate={onNavigate} showIcons={isSpecialStyle || allLinks.some(l => l.icon)} />
-                <div className="flex items-center ml-4 gap-4 pb-2">
+              <div className={`hidden nav:flex flex-1 justify-end gap-8 ${isSpecialStyle ? 'h-full items-end' : 'items-center'}`}>
+                <NavLinks links={allLinks} textColor={finalTextColor} accentColor={colors?.accent} hoverStyle={hoverStyle} className={`flex ${isSpecialStyle ? 'items-end gap-1 h-full' : 'items-center gap-8'}`} linkFontSize={linkFontSize} onNavigate={onNavigate} showIcons={isSpecialStyle || allLinks.some(l => l.icon)} />
+                <div className={`flex items-center ml-4 gap-4 ${isSpecialStyle ? 'pb-2' : ''}`}>
                   {showSearch && (
                     <GlobalSearch
                       storeId={storeId}
