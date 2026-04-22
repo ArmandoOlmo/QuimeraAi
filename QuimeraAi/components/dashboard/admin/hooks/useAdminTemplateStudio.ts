@@ -1102,7 +1102,6 @@ ${t('aiWebsiteStudio.welcome.startQuestion')}`;
                             lighting: 'natural golden hour',
                             depthOfField: 'shallow cinematic bokeh',
                             projectId: finalProjectId,
-                            destination: 'global',
                         });
                         if (imageUrl) break;
                     } catch (err: any) {
