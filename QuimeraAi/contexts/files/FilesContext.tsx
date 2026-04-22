@@ -248,7 +248,7 @@ export const FilesProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     const fetchGlobalFiles = async () => {
         setIsGlobalFilesLoading(true);
         try {
-            const filesCol = collection(db, 'globalFiles');
+            const filesCol = collection(db, 'global_files');
             const q = query(filesCol, orderBy('createdAt', 'desc'));
             const snapshot = await getDocs(q);
             const globalFilesList = snapshot.docs.map(docSnapshot => ({
@@ -285,7 +285,7 @@ export const FilesProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                 uploadedBy: user.uid,
             };
 
-            const filesCol = collection(db, 'globalFiles');
+            const filesCol = collection(db, 'global_files');
             const docRef = await addDoc(filesCol, fileRecord);
 
             const newFile = { ...fileRecord, id: docRef.id } as FileRecord;
@@ -305,7 +305,7 @@ export const FilesProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                 console.warn("[FilesContext] Global file not found in storage");
             });
 
-            await deleteDoc(doc(db, 'globalFiles', fileId));
+            await deleteDoc(doc(db, 'global_files', fileId));
             setGlobalFiles(prev => prev.filter(f => f.id !== fileId));
         } catch (error) {
             console.error("[FilesContext] Error deleting global file:", error);

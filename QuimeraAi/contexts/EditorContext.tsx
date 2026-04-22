@@ -2748,7 +2748,7 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
                     storagePath = `global/files/${fileName}`;
                     // For global assets, we don't nest them under a project by default.
                     // Can be customized if needed.
-                    firestoreCol = collection(db, `globalFiles`);
+                    firestoreCol = collection(db, `global_files`);
                 } else if (targetProjectId) {
                     // Project-scoped path
                     storagePath = `users/${user.uid}/projects/${targetProjectId}/files/generated/${fileName}`;
