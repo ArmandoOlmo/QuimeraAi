@@ -251,18 +251,23 @@ const PageRenderer: React.FC<PageRendererProps> = ({
     const navigationLinks = useMemo(() => {
         const menus = project.menus || [];
 
+        // 0. Explicit manual override
+        if (mergedData.header?.menuId === 'manual') {
+            return mergedData.header?.links || [];
+        }
+
         // 1. CMS Menu by ID takes priority if configured
         if (mergedData.header?.menuId) {
             const menu = menus.find(m => m.id === mergedData.header?.menuId);
             if (menu && menu.items?.length > 0) {
-                return menu.items.map((i: any) => ({ text: i.text, href: i.href }));
+                return menu.items.map((i: any) => ({ text: i.text, href: i.href, icon: i.icon }));
             }
         }
 
         // 2. Try main-menu from CMS menus
         const mainMenu = menus.find(m => m.id === 'main' || m.handle === 'main-menu');
         if (mainMenu && mainMenu.items?.length > 0) {
-            return mainMenu.items.map((i: any) => ({ text: i.text, href: i.href }));
+            return mainMenu.items.map((i: any) => ({ text: i.text, href: i.href, icon: i.icon }));
         }
 
         // 3. Generate from pages if available (multi-page architecture)

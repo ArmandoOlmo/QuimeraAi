@@ -12,7 +12,7 @@ import TabbedControls from '../../ui/TabbedControls';
 import AnimationControls from '../../ui/AnimationControls';
 import SocialLinksEditor from '../../ui/SocialLinksEditor';
 import { Input, TextArea, Select, ToggleControl, FontSizeSelector, PaddingSelector, BorderRadiusSelector } from '../../ui/EditorControlPrimitives';
-import { BackgroundImageControl, CornerGradientControl, extractVideoId, ControlsDeps } from '../ControlsShared';
+import { BackgroundImageControl, CornerGradientControl, CardGlowControl, extractVideoId, ControlsDeps } from '../ControlsShared';
 import {
   Trash2, Plus, ChevronDown, ChevronRight, ChevronLeft, ChevronUp, HelpCircle,
   Layout, Image, List, Star, PlaySquare, Users, DollarSign, Eye,
@@ -36,8 +36,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">
           Services Style
         </label>
-        <div className="grid grid-cols-3 gap-2">
-          {['cards', 'grid', 'minimal'].map((variant) => (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+          {['cards', 'grid', 'minimal', 'neon-glow'].map((variant) => (
             <button
               key={variant}
               onClick={() => setNestedData('services.servicesVariant', variant)}
@@ -46,7 +46,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
                 : 'bg-editor-panel-bg text-editor-text-primary border-editor-border hover:border-editor-accent'
                 }`}
             >
-              {variant}
+              {variant === 'neon-glow' ? 'Neon Glow' : variant}
             </button>
           ))}
         </div>
@@ -54,6 +54,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           {(data?.services?.servicesVariant || 'cards') === 'cards' && '✨ Standard centered cards with hover effects.'}
           {(data?.services?.servicesVariant || 'cards') === 'grid' && '🎨 Modern bento-style grid with left alignment.'}
           {(data?.services?.servicesVariant || 'cards') === 'minimal' && '📋 Clean list layout for a professional look.'}
+          {(data?.services?.servicesVariant || 'cards') === 'neon-glow' && '🌟 Deep inner glow effect with customizable colors.'}
         </p>
       </div>
 
@@ -81,6 +82,27 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         />
       </div>
       <BackgroundImageControl sectionKey="services" data={data} setNestedData={setNestedData} />
+
+      {/* Neon Glow Controls */}
+      {(data?.services?.servicesVariant === 'neon-glow') && (
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-3 mb-4">
+          <CardGlowControl
+            enabled={data.services.cardGlow?.enabled !== false}
+            color={data.services.cardGlow?.color || '#144CCD'}
+            intensity={data.services.cardGlow?.intensity ?? 100}
+            borderRadius={data.services.cardGlow?.borderRadius ?? 80}
+            gradientStart={data.services.cardGlow?.gradientStart || '#0A0909'}
+            gradientEnd={data.services.cardGlow?.gradientEnd || '#09101F'}
+            onEnabledChange={(v) => setNestedData('services.cardGlow.enabled', v)}
+            onColorChange={(v) => setNestedData('services.cardGlow.color', v)}
+            onIntensityChange={(v) => setNestedData('services.cardGlow.intensity', v)}
+            onBorderRadiusChange={(v) => setNestedData('services.cardGlow.borderRadius', v)}
+            onGradientStartChange={(v) => setNestedData('services.cardGlow.gradientStart', v)}
+            onGradientEndChange={(v) => setNestedData('services.cardGlow.gradientEnd', v)}
+          />
+        </div>
+      )}
+
       {/* Section Colors */}
       <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
         <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Section Colors</label>

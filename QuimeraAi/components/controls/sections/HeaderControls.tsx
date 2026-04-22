@@ -76,11 +76,45 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
                 { value: 'transparent-gradient', label: 'Gradient Fade' },
                 { value: 'transparent-gradient-dark', label: 'Gradient Dark' },
               ]},
+              { label: 'Special', options: [
+                { value: 'tabbed', label: 'Tabbed Menu' },
+                { value: 'segmented-pill', label: 'Segmented Pill' },
+              ]},
             ]}
             noMargin
           />
         </div>
       </div>
+      {data.header.style === 'segmented-pill' && (
+          <div className="mt-3">
+            <ToggleControl
+              label="Botones en Diagonal"
+              checked={data.header.segmentedPillSlanted === true}
+              onChange={(v) => setNestedData('header.segmentedPillSlanted', v)}
+            />
+            {data.header.segmentedPillSlanted === true && (
+              <div className="animate-fade-in-up">
+                <div className="flex justify-between items-center mb-2">
+                  <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
+                    Inclinación
+                  </label>
+                  <span className="text-xs text-editor-text-primary bg-editor-bg px-2 py-0.5 rounded border border-editor-border">
+                    {data.header.segmentedPillSlantedAngle ?? 15}°
+                  </span>
+                </div>
+                <input
+                  type="range"
+                  min="5"
+                  max="45"
+                  step="1"
+                  value={data.header.segmentedPillSlantedAngle ?? 15}
+                  onChange={(e) => setNestedData('header.segmentedPillSlantedAngle', parseInt(e.target.value))}
+                  className="w-full accent-editor-accent"
+                />
+              </div>
+            )}
+          </div>
+        )}
 
 
       <div>
@@ -242,8 +276,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{t('editor.controls.navigation.source')}</label>
         <div className="flex gap-2 mb-3">
           <Select
-            value={activeMenuId}
-            onChange={(val) => setNestedData('header.menuId', val === '' ? undefined : val)}
+            value={activeMenuId === 'manual' ? '' : activeMenuId}
+            onChange={(val) => setNestedData('header.menuId', val === '' ? 'manual' : val)}
             options={[
               { value: '', label: t('editor.controls.navigation.manual') },
               ...menus.map(menu => ({ value: menu.id, label: menu.title })),
@@ -259,7 +293,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           </button>
         </div>
 
-        {activeMenuId ? (
+        {activeMenuId && activeMenuId !== 'manual' ? (
           <div className="p-3 bg-editor-accent/10 border border-editor-accent/20 rounded text-xs text-editor-text-primary mb-2">
             Links are currently being pulled from the <strong>{menus.find(m => m.id === activeMenuId)?.title || 'selected'}</strong> menu.
           </div>
@@ -267,22 +301,46 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           <>
             <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">{t('editor.controls.navigation.customLinks')}</label>
             {(data.header.links || []).map((link, i) => (
-              <div key={i} className="flex gap-2 mb-2 overflow-hidden">
-                <input className="flex-1 min-w-0 bg-editor-bg border border-editor-border rounded px-2 py-1 text-sm text-editor-text-primary" value={link.text} onChange={(e) => setNestedData(`header.links.${i}.text`, e.target.value)} />
-                <input className="flex-1 min-w-0 bg-editor-bg border border-editor-border rounded px-2 py-1 text-sm text-editor-text-primary" value={link.href} onChange={(e) => setNestedData(`header.links.${i}.href`, e.target.value)} />
+              <div key={i} className="flex gap-2 mb-2 items-center relative">
+                <div className="w-10 flex-shrink-0">
+                  <IconSelector
+                    value={(link.icon as any) || 'home'}
+                    onChange={(icon) => {
+                      setNestedData(`header.links.${i}.icon`, icon);
+                      if (activeMenuId !== 'manual') setNestedData('header.menuId', 'manual');
+                    }}
+                    size="sm"
+                    hideText={true}
+                    hideChevron={true}
+                    fullWidthModal={true}
+                  />
+                </div>
+                <input className="flex-1 min-w-0 bg-editor-bg border border-editor-border rounded px-2 py-1 text-sm text-editor-text-primary" placeholder="Title" value={link.text} onChange={(e) => {
+                  setNestedData(`header.links.${i}.text`, e.target.value);
+                  if (activeMenuId !== 'manual') setNestedData('header.menuId', 'manual');
+                }} />
+                <input className="flex-1 min-w-0 bg-editor-bg border border-editor-border rounded px-2 py-1 text-sm text-editor-text-primary" placeholder="URL" value={link.href} onChange={(e) => {
+                  setNestedData(`header.links.${i}.href`, e.target.value);
+                  if (activeMenuId !== 'manual') setNestedData('header.menuId', 'manual');
+                }} />
                 <button
                   onClick={() => {
                     const newLinks = data.header.links.filter((_, idx) => idx !== i);
                     setNestedData('header.links', newLinks);
+                    if (activeMenuId !== 'manual') setNestedData('header.menuId', 'manual');
                   }}
-                  className="flex-shrink-0 text-editor-text-secondary hover:text-red-400"
+                  className="flex-shrink-0 text-editor-text-secondary hover:text-red-400 p-1"
+                  title="Remove link"
                 >
                   <Trash2 size={14} />
                 </button>
               </div>
             ))}
             <button
-              onClick={() => setNestedData('header.links', [...(data.header.links || []), { text: 'New Link', href: '/' }])}
+              onClick={() => {
+                setNestedData('header.links', [...(data.header.links || []), { text: 'New Link', href: '/' }]);
+                if (activeMenuId !== 'manual') setNestedData('header.menuId', 'manual');
+              }}
               className="text-xs text-editor-accent hover:underline flex items-center mt-1"
             >
               <Plus size={12} className="mr-1" /> {t('editor.controls.navigation.addLink')}
@@ -632,8 +690,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{t('editor.controls.navigation.source')}</label>
           <div className="flex gap-2 mb-3">
             <Select
-              value={activeMenuId}
-              onChange={(val) => setNestedData('header.menuId', val === '' ? undefined : val)}
+              value={activeMenuId === 'manual' ? '' : activeMenuId}
+              onChange={(val) => setNestedData('header.menuId', val === '' ? 'manual' : val)}
               options={[
                 { value: '', label: t('editor.controls.navigation.manual') },
                 ...menus.map(menu => ({ value: menu.id, label: menu.title })),
@@ -649,7 +707,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
             </button>
           </div>
 
-          {activeMenuId ? (
+          {activeMenuId && activeMenuId !== 'manual' ? (
             <div className="p-3 bg-editor-accent/10 border border-editor-accent/20 rounded text-xs text-editor-text-primary mb-2">
               Links are currently being pulled from the <strong>{menus.find(m => m.id === activeMenuId)?.title || 'selected'}</strong> menu.
             </div>
@@ -657,13 +715,33 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
             <>
               <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">{t('editor.controls.navigation.customLinks')}</label>
               {(data.header.links || []).map((link, i) => (
-                <div key={i} className="flex gap-2 mb-2 overflow-hidden">
-                  <input className="flex-1 min-w-0 bg-editor-bg border border-editor-border rounded px-2 py-1 text-sm text-editor-text-primary" value={link.text} onChange={(e) => setNestedData(`header.links.${i}.text`, e.target.value)} />
-                  <input className="flex-1 min-w-0 bg-editor-bg border border-editor-border rounded px-2 py-1 text-sm text-editor-text-primary" value={link.href} onChange={(e) => setNestedData(`header.links.${i}.href`, e.target.value)} />
+                <div key={i} className="flex gap-2 mb-2 items-center relative">
+                  <div className="w-10 flex-shrink-0">
+                    <IconSelector
+                      value={(link.icon as any) || 'home'}
+                      onChange={(icon) => {
+                        setNestedData(`header.links.${i}.icon`, icon);
+                        if (activeMenuId !== 'manual') setNestedData('header.menuId', 'manual');
+                      }}
+                      size="sm"
+                      hideText={true}
+                      hideChevron={true}
+                      fullWidthModal={true}
+                    />
+                  </div>
+                  <input className="flex-1 min-w-0 bg-editor-bg border border-editor-border rounded px-2 py-1 text-sm text-editor-text-primary" value={link.text} onChange={(e) => {
+                    setNestedData(`header.links.${i}.text`, e.target.value);
+                    if (activeMenuId !== 'manual') setNestedData('header.menuId', 'manual');
+                  }} />
+                  <input className="flex-1 min-w-0 bg-editor-bg border border-editor-border rounded px-2 py-1 text-sm text-editor-text-primary" value={link.href} onChange={(e) => {
+                    setNestedData(`header.links.${i}.href`, e.target.value);
+                    if (activeMenuId !== 'manual') setNestedData('header.menuId', 'manual');
+                  }} />
                   <button
                     onClick={() => {
                       const newLinks = data.header.links.filter((_, idx) => idx !== i);
                       setNestedData('header.links', newLinks);
+                      if (activeMenuId !== 'manual') setNestedData('header.menuId', 'manual');
                     }}
                     className="flex-shrink-0 text-editor-text-secondary hover:text-red-400"
                   >
@@ -672,7 +750,10 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
                 </div>
               ))}
               <button
-                onClick={() => setNestedData('header.links', [...(data.header.links || []), { text: 'New Link', href: '/' }])}
+                onClick={() => {
+                  setNestedData('header.links', [...(data.header.links || []), { text: 'New Link', href: '/' }]);
+                  if (activeMenuId !== 'manual') setNestedData('header.menuId', 'manual');
+                }}
                 className="text-xs text-editor-accent hover:underline flex items-center mt-1"
               >
                 <Plus size={12} className="mr-1" /> {t('editor.controls.navigation.addLink')}
@@ -798,12 +879,46 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
                   { value: 'transparent-gradient', label: 'Gradient Fade' },
                   { value: 'transparent-gradient-dark', label: 'Gradient Dark' },
                 ]},
+                { label: 'Special', options: [
+                  { value: 'tabbed', label: 'Tabbed Menu' },
+                  { value: 'segmented-pill', label: 'Segmented Pill' },
+                ]},
               ]}
               noMargin
             />
           </div>
         </div>
-      </div>
+        {data.header.style === 'segmented-pill' && (
+            <div className="mt-3">
+              <ToggleControl
+                label="Botones en Diagonal"
+                checked={data.header.segmentedPillSlanted === true}
+                onChange={(v) => setNestedData('header.segmentedPillSlanted', v)}
+              />
+              {data.header.segmentedPillSlanted === true && (
+                <div className="animate-fade-in-up">
+                  <div className="flex justify-between items-center mb-2">
+                    <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
+                      Inclinación
+                    </label>
+                    <span className="text-xs text-editor-text-primary bg-editor-bg px-2 py-0.5 rounded border border-editor-border">
+                      {data.header.segmentedPillSlantedAngle ?? 15}°
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    min="5"
+                    max="45"
+                    step="1"
+                    value={data.header.segmentedPillSlantedAngle ?? 15}
+                    onChange={(e) => setNestedData('header.segmentedPillSlantedAngle', parseInt(e.target.value))}
+                    className="w-full accent-editor-accent"
+                  />
+                </div>
+              )}
+            </div>
+          )}
+        </div>
 
 
       {/* ========== OPTIONS (Sticky & Glass) ========== */}

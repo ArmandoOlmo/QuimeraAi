@@ -4,7 +4,8 @@ import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { HeaderData, NavLink, BorderRadiusSize, NavbarLayout, NavLinkHoverStyle } from '../types';
 import { useSafeProject } from '../contexts/project';
-import { Menu, X, ArrowRight, ShoppingCart } from 'lucide-react';
+import { getIconComponent } from './ui/IconSelector';
+import { Menu, X, ArrowRight, ShoppingCart, Home, FileText, Briefcase, Lightbulb, Calendar, Mail, Info } from 'lucide-react';
 
 import { GlobalSearch } from './ecommerce/search';
 
@@ -77,10 +78,25 @@ interface NavLinksProps {
   onLinkClick?: () => void;
   onNavigate?: (href: string) => void;
   linkFontSize?: number;
+  showIcons?: boolean;
 }
 
-const NavLinks: React.FC<NavLinksProps> = ({ links, textColor, accentColor, hoverStyle, className, isMobile, onLinkClick, onNavigate, linkFontSize = 14 }) => {
+const NavLinks: React.FC<NavLinksProps> = ({ links, textColor, accentColor, hoverStyle, className, isMobile, onLinkClick, onNavigate, linkFontSize = 14, showIcons = false }) => {
   const { t } = useTranslation();
+
+  const renderIcon = (link: NavLink) => {
+    if (link.icon) {
+      return getIconComponent(link.icon, isMobile ? 20 : 16);
+    }
+    const normalized = link.text.trim().toLowerCase();
+    if (normalized.includes('home')) return <Home size={isMobile ? 20 : 16} strokeWidth={2.5} />;
+    if (normalized.includes('about')) return <FileText size={isMobile ? 20 : 16} strokeWidth={2.5} />;
+    if (normalized.includes('career') || normalized.includes('job') || normalized.includes('work')) return <Briefcase size={isMobile ? 20 : 16} strokeWidth={2.5} />;
+    if (normalized.includes('portfolio') || normalized.includes('project')) return <Lightbulb size={isMobile ? 20 : 16} strokeWidth={2.5} />;
+    if (normalized.includes('news') || normalized.includes('event')) return <Calendar size={isMobile ? 20 : 16} strokeWidth={2.5} />;
+    if (normalized.includes('contact')) return <Mail size={isMobile ? 20 : 16} strokeWidth={2.5} />;
+    return <Info size={isMobile ? 20 : 16} strokeWidth={2.5} />;
+  };
 
   // Helper to translate navigation labels dynamically
   const getTranslatedLabel = (label: string) => {
@@ -143,7 +159,7 @@ const NavLinks: React.FC<NavLinksProps> = ({ links, textColor, accentColor, hove
             href={link.href}
             onClick={(e) => handleClick(e, link.href)}
             className={`
-                  relative transition-all duration-300 font-header font-medium
+                  relative transition-all duration-300 font-header font-medium ${showIcons ? 'flex items-center gap-2' : ''}
                   ${isMobile
                 ? 'text-xl py-4 px-4 -mx-4 block rounded-xl hover:bg-white/5 active:bg-white/10 touch-manipulation'
                 : ''
@@ -157,7 +173,8 @@ const NavLinks: React.FC<NavLinksProps> = ({ links, textColor, accentColor, hove
               letterSpacing: 'var(--navlinks-spacing, normal)'
             }}
           >
-            {getTranslatedLabel(link.text)}
+            {showIcons && <span className="flex-shrink-0">{renderIcon(link)}</span>}
+            <span>{getTranslatedLabel(link.text)}</span>
           </a>
         </li>
       ))}
@@ -199,6 +216,8 @@ const Header: React.FC<HeaderData & {
   onCartClick,
   colors = {},
   gradientFadeSize = 15,
+  segmentedPillSlanted = false,
+  segmentedPillSlantedAngle = 15,
   isPreviewMode = false,
   containerRef,
   linkFontSize = 14,
@@ -380,8 +399,11 @@ const Header: React.FC<HeaderData & {
           return `${isPreviewMode ? 'absolute' : 'fixed'} left-1/2 -translate-x-1/2 rounded-full border border-white/15 shadow-lg`;
         case 'floating-glass':
           return `${isPreviewMode ? 'absolute' : 'fixed'} left-6 right-6 rounded-xl border border-white/20 max-w-7xl mx-auto`;
-        case 'floating-shadow':
-          return `${isPreviewMode ? 'absolute' : 'fixed'} left-8 right-8 rounded-none shadow-[0_8px_40px_rgba(0,0,0,0.45)] max-w-6xl mx-auto`;
+        // --- NUEVOS: Diseños Especiales ---
+        case 'tabbed':
+          return 'w-full tabbed-nav-container';
+        case 'segmented-pill':
+          return `${isPreviewMode ? 'absolute' : 'fixed'} left-6 right-6 max-w-7xl mx-auto rounded-xl border border-gray-200 shadow-sm overflow-hidden segmented-pill-container`;
 
         // --- TRANSPARENTES ---
         case 'transparent':
@@ -437,6 +459,12 @@ const Header: React.FC<HeaderData & {
             backdropFilter: 'blur(20px) saturate(180%)'
           };
         case 'floating-shadow':
+          return { backgroundColor: actualColors.background };
+
+        // --- NUEVOS: Diseños Especiales ---
+        case 'tabbed':
+          return { backgroundColor: 'transparent', borderBottom: '1px solid rgba(128, 128, 128, 0.15)' };
+        case 'segmented-pill':
           return { backgroundColor: actualColors.background };
 
         // --- TRANSPARENTES ---
@@ -653,14 +681,18 @@ const Header: React.FC<HeaderData & {
       window.location.hash = href;
     };
 
+    const isSpecialStyle = style === 'tabbed' || style === 'segmented-pill';
+
     const renderLayout = () => {
       switch (layout) {
         case 'minimal':
           return (
             <>
-              <div className="flex-shrink-0 mr-4"><Logo logoType={logoType} logoText={logoText} logoImageUrl={actualLogoImageUrl} logoWidth={logoWidth} textColor={finalTextColor} onNavigate={onNavigate} /></div>
-              <div className="hidden nav:flex flex-1 justify-center">
-                <NavLinks links={allLinks} textColor={finalTextColor} accentColor={colors?.accent} hoverStyle={hoverStyle} className="flex items-center gap-8" linkFontSize={linkFontSize} onNavigate={onNavigate} />
+              <div className="flex-shrink-0 mr-4">
+                <Logo logoType={logoType} logoText={logoText} logoImageUrl={actualLogoImageUrl} logoWidth={logoWidth} textColor={finalTextColor} onNavigate={onNavigate} />
+              </div>
+              <div className="hidden nav:flex flex-1 justify-center h-full items-end">
+                <NavLinks links={allLinks} textColor={finalTextColor} accentColor={colors?.accent} hoverStyle={hoverStyle} className="flex items-end gap-1 h-full" linkFontSize={linkFontSize} onNavigate={onNavigate} showIcons={isSpecialStyle || allLinks.some(l => l.icon)} />
               </div>
               <div className="hidden nav:flex flex-shrink-0 ml-4 justify-end items-center gap-4">
                 {showSearch && (
@@ -683,8 +715,8 @@ const Header: React.FC<HeaderData & {
         case 'center':
           return (
             <>
-              <div className="hidden nav:flex flex-1 justify-start items-center">
-                <NavLinks links={allLinks} textColor={finalTextColor} accentColor={colors?.accent} hoverStyle={hoverStyle} className="flex items-center gap-8" linkFontSize={linkFontSize} onNavigate={onNavigate} />
+              <div className="hidden nav:flex flex-1 justify-start h-full items-end">
+                <NavLinks links={allLinks} textColor={finalTextColor} accentColor={colors?.accent} hoverStyle={hoverStyle} className="flex items-end gap-1 h-full" linkFontSize={linkFontSize} onNavigate={onNavigate} showIcons={isSpecialStyle || allLinks.some(l => l.icon)} />
               </div>
               <div className="flex-shrink-0 nav:mx-auto absolute left-1/2 -translate-x-1/2 nav:static nav:translate-x-0 px-4">
                 <Logo logoType={logoType} logoText={logoText} logoImageUrl={actualLogoImageUrl} logoWidth={logoWidth} textColor={finalTextColor} onNavigate={onNavigate} />
@@ -709,13 +741,13 @@ const Header: React.FC<HeaderData & {
           );
         case 'stack':
           return (
-            <div className="flex flex-col w-full py-2">
+            <div className="flex flex-col w-full pt-4">
               <div className="flex justify-center mb-4">
                 <Logo logoType={logoType} logoText={logoText} logoImageUrl={actualLogoImageUrl} logoWidth={logoWidth} textColor={finalTextColor} onNavigate={onNavigate} />
               </div>
-              <div className="hidden nav:flex justify-center items-center border-t border-white/10 pt-2">
-                <NavLinks links={allLinks} textColor={finalTextColor} accentColor={colors?.accent} hoverStyle={hoverStyle} className="flex items-center gap-8" linkFontSize={linkFontSize} onNavigate={onNavigate} />
-                <div className="ml-8 flex items-center gap-4">
+              <div className="hidden nav:flex justify-center items-end border-t border-white/10 pt-2 h-full">
+                <NavLinks links={allLinks} textColor={finalTextColor} accentColor={colors?.accent} hoverStyle={hoverStyle} className="flex items-end gap-1 h-full" linkFontSize={linkFontSize} onNavigate={onNavigate} showIcons={isSpecialStyle || allLinks.some(l => l.icon)} />
+                <div className="ml-8 flex items-center gap-4 pb-2">
                   {showSearch && (
                     <GlobalSearch
                       storeId={storeId}
@@ -738,9 +770,9 @@ const Header: React.FC<HeaderData & {
           return (
             <>
               <div className="flex-shrink-0 mr-8"><Logo logoType={logoType} logoText={logoText} logoImageUrl={actualLogoImageUrl} logoWidth={logoWidth} textColor={finalTextColor} onNavigate={onNavigate} /></div>
-              <div className="hidden nav:flex flex-1 justify-end items-center gap-8">
-                <NavLinks links={allLinks} textColor={finalTextColor} accentColor={colors?.accent} hoverStyle={hoverStyle} className="flex items-center gap-8" linkFontSize={linkFontSize} onNavigate={onNavigate} />
-                <div className="flex items-center ml-4 gap-4">
+              <div className="hidden nav:flex flex-1 justify-end h-full items-end gap-8">
+                <NavLinks links={allLinks} textColor={finalTextColor} accentColor={colors?.accent} hoverStyle={hoverStyle} className="flex items-end gap-1 h-full" linkFontSize={linkFontSize} onNavigate={onNavigate} showIcons={isSpecialStyle || allLinks.some(l => l.icon)} />
+                <div className="flex items-center ml-4 gap-4 pb-2">
                   {showSearch && (
                     <GlobalSearch
                       storeId={storeId}
@@ -781,7 +813,7 @@ const Header: React.FC<HeaderData & {
       }
 
       // Floating styles - absolute o fixed
-      if (style.startsWith('floating')) {
+      if (style.startsWith('floating') || style === 'segmented-pill') {
         return isPreviewMode ? 'absolute' : 'fixed';
       }
 
@@ -805,7 +837,7 @@ const Header: React.FC<HeaderData & {
     // Determinar si toma espacio en el flujo del documento
     // When forceSolid is true, always take space (the header is solid and visible)
     const shouldNotTakeSpace = !forceSolid && (
-      style.startsWith('floating') ||
+      style.startsWith('floating') || style === 'segmented-pill' ||
       ((style.startsWith('transparent') || style === 'sticky-transparent' || style === 'transparent') && !isScrolled && style !== 'transparent-blur' && style !== 'transparent-bordered' && style !== 'transparent-gradient' && style !== 'transparent-gradient-dark')
     );
 
@@ -836,17 +868,19 @@ const Header: React.FC<HeaderData & {
               } ${!style.startsWith('floating') && !style.includes('transparent') && !glassEffect ? shadowClasses : ''}`}
             style={{
               ...backgroundStyle,
-              ...(style.startsWith('floating') ? {
+              ...(style.startsWith('floating') || style === 'segmented-pill' ? {
                 top: `${(style === 'floating-pill' ? 16 : 24) + resolvedTopBarOffset}px`,
               } : {}),
               height: style.startsWith('floating') ? 'auto' : computedHeight,
               minHeight: style.startsWith('floating') ? 'auto' : computedMinHeight,
               padding: style.startsWith('floating')
                 ? (style === 'floating-pill' ? '8px 32px' : '12px 24px')
-                : `0 ${isScrolled ? '1.5rem' : '2rem'}`
+                : style === 'segmented-pill'
+                  ? '0 24px'
+                  : `0 ${isScrolled ? '1.5rem' : '2rem'}`
             }}
           >
-            <div className={`container mx-auto h-full flex items-center justify-between relative ${style.startsWith('floating') ? '' : 'px-0'
+            <div className={`container mx-auto h-full flex items-center justify-between relative ${style.startsWith('floating') || style === 'segmented-pill' ? '' : 'px-0'
               }`}>
 
               {/* Desktop Layouts */}
@@ -886,6 +920,114 @@ const Header: React.FC<HeaderData & {
 
             </div>
           </div>
+
+          {/* NUEVOS ESTILOS INYECTADOS */}
+          {style === 'tabbed' && (
+            <style>{`
+              .tabbed-nav-container ul {
+                display: flex;
+                align-items: flex-end;
+                height: 100%;
+              }
+              .tabbed-nav-container ul li {
+                height: 100%;
+                display: flex;
+                align-items: flex-end;
+              }
+              .tabbed-nav-container ul li a {
+                padding: 16px 24px;
+                background-color: transparent;
+                opacity: 0.65;
+                font-weight: 500;
+                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                position: relative;
+              }
+              
+              .tabbed-nav-container ul li a:hover {
+                opacity: 1;
+              }
+
+              /* Efecto activo (moderno, elegante) */
+              .tabbed-nav-container ul li:first-child a,
+              .tabbed-nav-container ul li a:hover {
+                opacity: 1;
+                background: linear-gradient(to top, color-mix(in srgb, ${colors?.accent || '#3b82f6'} 10%, transparent), transparent);
+                color: ${colors?.accent || '#3b82f6'} !important;
+              }
+
+              .tabbed-nav-container ul li:first-child a::after,
+              .tabbed-nav-container ul li a:hover::after {
+                content: '';
+                position: absolute;
+                bottom: -1px; /* Tapa el borde del contenedor */
+                left: 0;
+                right: 0;
+                height: 2px;
+                background-color: ${colors?.accent || '#3b82f6'};
+                box-shadow: 0 -2px 12px color-mix(in srgb, ${colors?.accent || '#3b82f6'} 80%, transparent);
+                border-radius: 2px 2px 0 0;
+              }
+            `}</style>
+          )}
+
+          {style === 'segmented-pill' && (
+            <style>{`
+              .segmented-pill-container > div {
+                align-items: stretch !important;
+              }
+              .segmented-pill-container > div > div:not(nav) {
+                align-self: center;
+              }
+              .segmented-pill-container ul {
+                display: flex;
+                align-items: stretch;
+                height: 100%;
+                gap: 0 !important;
+              }
+              .segmented-pill-container ul li {
+                height: 100%;
+                display: flex;
+                align-items: stretch;
+                ${segmentedPillSlanted ? `transform: skewX(-${segmentedPillSlantedAngle}deg);` : ''}
+              }
+              .segmented-pill-container ul li:not(:last-child) {
+                border-right: 1px solid rgba(0, 0, 0, 0.06);
+              }
+              .segmented-pill-container ul li a {
+                padding: 0 24px;
+                height: 100%;
+                color: ${colors?.accent || '#3b82f6'} !important;
+                font-weight: 700;
+                transition: all 0.2s ease;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+              }
+              ${segmentedPillSlanted ? `
+              .segmented-pill-container ul li a > * {
+                transform: skewX(${segmentedPillSlantedAngle}deg);
+                display: inline-block;
+              }
+              .segmented-pill-container ul li:first-child {
+                padding-left: 12px;
+                margin-left: -12px;
+              }
+              .segmented-pill-container ul li:last-child {
+                padding-right: 12px;
+                margin-right: -12px;
+              }
+              ` : ''}
+              /* Efecto activo o hover */
+              .segmented-pill-container ul li:first-child a,
+              .segmented-pill-container ul li a:hover {
+                background: linear-gradient(180deg, ${actualColors.background} 0%, ${colors?.accent || '#3b82f6'} 15px, color-mix(in srgb, ${colors?.accent || '#3b82f6'} 80%, black) calc(100% - 15px), ${actualColors.background} 100%);
+                color: #ffffff !important;
+              }
+            `}</style>
+          )}
 
 
           {/* === GRADIENT FADE STRIP below transparent-blur === */}

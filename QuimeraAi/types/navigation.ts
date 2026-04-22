@@ -10,6 +10,7 @@ export interface NavigationMenuItem {
     id: string;
     text: string;
     href: string;
+    icon?: string;
     type: 'custom' | 'section' | 'page' | 'category';
 }
 

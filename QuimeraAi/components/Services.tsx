@@ -2,7 +2,7 @@ import React from 'react';
 import { ServicesData, PaddingSize, BorderRadiusSize, ServiceIcon, FontSize, AnimationType, CornerGradientConfig } from '../types';
 import { getAnimationClass, getAnimationDelay } from '../utils/animations';
 import { useDesignTokens } from '../hooks/useDesignTokens';
-import { hexToRgba, toHex } from '../utils/colorUtils';
+import { hexToRgba, toHex, getNeonGlowStyles } from '../utils/colorUtils';
 import CornerGradient from './ui/CornerGradient';
 import {
     // Base icons
@@ -200,11 +200,12 @@ interface ServiceCardProps {
     borderRadius: BorderRadiusSize;
     borderColor: string;
     cardBackground: string;
-    variant: 'cards' | 'grid' | 'minimal';
+    variant: 'cards' | 'grid' | 'minimal' | 'neon-glow';
     index: number;
     animationType?: AnimationType;
     enableAnimation?: boolean;
     delay?: string;
+    cardGlow?: any;
 }
 
 const ServiceCard: React.FC<ServiceCardProps> = ({
@@ -220,7 +221,8 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
     variant,
     animationType = 'fade-in-up',
     enableAnimation = true,
-    delay = '0s'
+    delay = '0s',
+    cardGlow
 }) => {
     const radiusClass = borderRadiusClasses[borderRadius];
     const animationClass = getAnimationClass(animationType, enableAnimation);
@@ -294,6 +296,58 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
         );
     }
 
+    // VARIANT 4: NEON GLOW
+    if (variant === 'neon-glow') {
+        const glowConfig = {
+            enabled: cardGlow?.enabled !== false,
+            color: cardGlow?.color || '#144CCD',
+            intensity: cardGlow?.intensity ?? 100,
+            borderRadius: cardGlow?.borderRadius ?? 24,
+            gradientStart: cardGlow?.gradientStart || '#0A0909',
+            gradientEnd: cardGlow?.gradientEnd || '#09101F'
+        };
+
+        const neonStyles = getNeonGlowStyles(glowConfig);
+
+        return (
+            <div
+                className={`relative flex flex-col p-8 md:p-10 text-center transform transition-all duration-300 hover:-translate-y-2 hover:scale-[1.02] ${animationClass} group h-full`}
+                style={{
+                    ...neonStyles,
+                    animationDelay: delay
+                }}
+            >
+                {/* Outer glow effect under the card if enabled */}
+                {glowConfig.enabled && (
+                    <div 
+                        className="absolute inset-0 -z-10 rounded-full blur-[120px] opacity-20 pointer-events-none transition-opacity group-hover:opacity-40" 
+                        style={{ backgroundColor: glowConfig.color }} 
+                    />
+                )}
+
+                <div className="flex-grow relative z-10 flex flex-col items-center justify-center">
+                    <div
+                        className="mb-6 p-4 inline-flex rounded-2xl relative"
+                        style={{
+                            backgroundColor: hexToRgba(glowConfig.color || accentColor, 0.1),
+                            color: glowConfig.color || accentColor,
+                        }}
+                    >
+                        {/* Inner shadow for the icon container to match the glow */}
+                        <div className="absolute inset-0 rounded-2xl shadow-[inset_0_0_15px_rgba(0,0,0,0.5)] pointer-events-none" />
+                        {React.cloneElement(icon as React.ReactElement<any>, { size: 40 })}
+                    </div>
+                    <h3 className="text-2xl font-bold mb-4 font-header text-white" style={{ textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>
+                        {title}
+                    </h3>
+                    <p className="font-body opacity-80 leading-relaxed text-gray-400">
+                        {description}
+                    </p>
+                </div>
+            </div>
+        );
+    }
+
     return null;
 };
 
@@ -316,6 +370,7 @@ const Services: React.FC<ServicesProps> = ({
     servicesVariant = 'cards', // Default
     animationType = 'fade-in-up',
     enableCardAnimation = true,
+    cardGlow,
     cornerGradient
 }) => {
     // Get design tokens for primary color - use as fallback with 75% opacity
@@ -359,6 +414,7 @@ const Services: React.FC<ServicesProps> = ({
                             animationType={animationType}
                             enableAnimation={enableCardAnimation}
                             delay={getAnimationDelay(index)}
+                            cardGlow={cardGlow}
                         />
                     ))}
                 </div>

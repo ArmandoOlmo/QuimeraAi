@@ -12,7 +12,7 @@ import TabbedControls from '../../ui/TabbedControls';
 import AnimationControls from '../../ui/AnimationControls';
 import SocialLinksEditor from '../../ui/SocialLinksEditor';
 import { Input, TextArea, Select, ToggleControl, FontSizeSelector, PaddingSelector, BorderRadiusSelector } from '../../ui/EditorControlPrimitives';
-import { BackgroundImageControl, CornerGradientControl, extractVideoId, ControlsDeps } from '../ControlsShared';
+import { BackgroundImageControl, CornerGradientControl, CardGlowControl, extractVideoId, ControlsDeps } from '../ControlsShared';
 import {
   Trash2, Plus, ChevronDown, ChevronRight, ChevronLeft, ChevronUp, HelpCircle,
   Layout, Image, List, Star, PlaySquare, Users, DollarSign, Eye,
@@ -43,6 +43,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
             { value: 'gradient', label: `${t('editor.controls.pricing.gradient')} - ${t('editor.controls.pricing.gradientDesc')}` },
             { value: 'glassmorphism', label: `${t('editor.controls.pricing.glassmorphism')} - ${t('editor.controls.pricing.glassmorphismDesc')}` },
             { value: 'minimalist', label: `${t('editor.controls.pricing.minimalist')} - ${t('editor.controls.pricing.minimalistDesc')}` },
+            { value: 'neon-glow', label: `Neon Glow - Deep inner glow effect` },
             { value: 'comparison', label: `Comparison - Detailed` }
           ]}
         />
@@ -103,6 +104,24 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
             <p className="text-xs text-white font-semibold text-center">{t('editor.controls.pricing.gradientPreview')}</p>
           </div>
         </>
+      )}
+
+      {/* Neon Glow Controls */}
+      {currentVariant === 'neon-glow' && (
+        <CardGlowControl
+          enabled={data.pricing.cardGlow?.enabled !== false}
+          color={data.pricing.cardGlow?.color || '#144CCD'}
+          intensity={data.pricing.cardGlow?.intensity ?? 100}
+          borderRadius={data.pricing.cardGlow?.borderRadius ?? 80}
+          gradientStart={data.pricing.cardGlow?.gradientStart || '#0A0909'}
+          gradientEnd={data.pricing.cardGlow?.gradientEnd || '#09101F'}
+          onEnabledChange={(v) => setNestedData('pricing.cardGlow.enabled', v)}
+          onColorChange={(v) => setNestedData('pricing.cardGlow.color', v)}
+          onIntensityChange={(v) => setNestedData('pricing.cardGlow.intensity', v)}
+          onBorderRadiusChange={(v) => setNestedData('pricing.cardGlow.borderRadius', v)}
+          onGradientStartChange={(v) => setNestedData('pricing.cardGlow.gradientStart', v)}
+          onGradientEndChange={(v) => setNestedData('pricing.cardGlow.gradientEnd', v)}
+        />
       )}
 
       <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">{t('editor.controls.pricing.cardColors')}</label>
@@ -222,7 +241,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
             { value: 'classic', label: 'Classic', desc: 'Traditional card layout' },
             { value: 'gradient', label: 'Gradient', desc: 'Vibrant gradients' },
             { value: 'glassmorphism', label: 'Glass', desc: 'Frosted glass effect' },
-            { value: 'minimalist', label: 'Minimal', desc: 'Clean & simple' }
+            { value: 'minimalist', label: 'Minimal', desc: 'Clean & simple' },
+            { value: 'neon-glow', label: 'Neon Glow', desc: 'Deep inner glow' }
           ].map((variant) => (
             <button
               key={variant.value}
@@ -410,6 +430,24 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
             </div>
           </div>
         </>
+      )}
+
+      {/* Neon Glow Controls */}
+      {currentVariant === 'neon-glow' && (
+        <CardGlowControl
+          enabled={data.pricing.cardGlow?.enabled !== false}
+          color={data.pricing.cardGlow?.color || '#144CCD'}
+          intensity={data.pricing.cardGlow?.intensity ?? 100}
+          borderRadius={data.pricing.cardGlow?.borderRadius ?? 80}
+          gradientStart={data.pricing.cardGlow?.gradientStart || '#0A0909'}
+          gradientEnd={data.pricing.cardGlow?.gradientEnd || '#09101F'}
+          onEnabledChange={(v) => setNestedData('pricing.cardGlow.enabled', v)}
+          onColorChange={(v) => setNestedData('pricing.cardGlow.color', v)}
+          onIntensityChange={(v) => setNestedData('pricing.cardGlow.intensity', v)}
+          onBorderRadiusChange={(v) => setNestedData('pricing.cardGlow.borderRadius', v)}
+          onGradientStartChange={(v) => setNestedData('pricing.cardGlow.gradientStart', v)}
+          onGradientEndChange={(v) => setNestedData('pricing.cardGlow.gradientEnd', v)}
+        />
       )}
 
 

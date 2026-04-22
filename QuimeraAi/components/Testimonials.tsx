@@ -2,7 +2,7 @@
 import React, { useMemo } from 'react';
 import { TestimonialsData, PaddingSize, BorderRadiusSize, FontSize, TestimonialsVariant, AnimationType, CornerGradientConfig } from '../types';
 import { useDesignTokens } from '../hooks/useDesignTokens';
-import { hexToRgba } from '../utils/colorUtils';
+import { hexToRgba, getNeonGlowStyles } from '../utils/colorUtils';
 import { getAnimationClass, getAnimationDelay } from '../utils/animations';
 import CornerGradient from './ui/CornerGradient';
 
@@ -28,6 +28,7 @@ interface TestimonialCardProps {
   // Animations
   animationType?: AnimationType;
   enableAnimation?: boolean;
+  cardGlow?: any;
 }
 
 const paddingYClasses: Record<PaddingSize, string> = {
@@ -105,7 +106,8 @@ const TestimonialCard: React.FC<TestimonialCardProps> = ({
   variant,
   // Animations
   animationType = 'fade-in-up',
-  enableAnimation = true
+  enableAnimation = true,
+  cardGlow
 }) => {
   const animationClass = getAnimationClass(animationType, enableAnimation);
   const getBorderClass = () => {
@@ -137,6 +139,8 @@ const TestimonialCard: React.FC<TestimonialCardProps> = ({
         return 'backdrop-blur-xl border border-white/10 card-hover-lift card-shine-sweep';
       case 'gradient-shift':
         return 'backdrop-blur-xl border border-white/10 relative border-0 overflow-hidden card-hover-tilt card-shine-sweep transition-all duration-500 hover:scale-[1.03]';
+      case 'neon-glow':
+        return 'relative transition-all duration-300 hover:-translate-y-2 hover:scale-[1.02]';
       case 'classic':
       default:
         return 'backdrop-blur-xl border border-white/10 card-hover-lift card-shine-sweep card-border-glow';
@@ -189,6 +193,20 @@ const TestimonialCard: React.FC<TestimonialCardProps> = ({
           backgroundSize: '200% 200%',
           animation: 'gradientShift 8s ease infinite',
         };
+      case 'neon-glow':
+        const glowConfig = {
+          enabled: cardGlow?.enabled !== false,
+          color: cardGlow?.color || '#144CCD',
+          intensity: cardGlow?.intensity ?? 100,
+          borderRadius: cardGlow?.borderRadius ?? 80,
+          gradientStart: cardGlow?.gradientStart || '#0A0909',
+          gradientEnd: cardGlow?.gradientEnd || '#09101F'
+        };
+        const neonStyles = getNeonGlowStyles(glowConfig);
+        return {
+          ...baseStyle,
+          ...neonStyles
+        };
       case 'classic':
       default:
         return {
@@ -205,12 +223,21 @@ const TestimonialCard: React.FC<TestimonialCardProps> = ({
   const finalBorderClass = variant === 'classic' ? getBorderClass() : getVariantClasses();
 
   return (
-    <div
-      className={`group flex flex-col justify-between ${animationClass} ${borderRadiusClasses[borderRadius]} ${getShadowClass(cardShadow)} ${finalBorderClass}`}
-      style={getCardStyle()}
-    >
-      {variant === 'gradient-shift' && (
-        <div
+    <div className="relative group h-full">
+      {/* Outer glow effect under the card if enabled for neon-glow variant */}
+      {variant === 'neon-glow' && cardGlow?.enabled && (
+        <div 
+          className="absolute inset-0 -z-10 rounded-full blur-[120px] opacity-20 pointer-events-none transition-opacity group-hover:opacity-40" 
+          style={{ backgroundColor: cardGlow.color || '#144CCD' }} 
+        />
+      )}
+
+      <div
+        className={`flex flex-col justify-between h-full ${animationClass} ${borderRadiusClasses[borderRadius]} ${getShadowClass(cardShadow)} ${finalBorderClass}`}
+        style={getCardStyle()}
+      >
+        {variant === 'gradient-shift' && (
+          <div
           className="absolute inset-0 opacity-50 -z-10"
           style={{
             background: `linear-gradient(45deg, ${cardBackground}55, transparent, ${cardBackground}44)`,
@@ -245,6 +272,7 @@ const TestimonialCard: React.FC<TestimonialCardProps> = ({
           <p className="font-bold font-body transition-colors duration-300 group-hover:text-[var(--hover-accent)]" style={{ color: textColor, '--hover-accent': accentColor } as React.CSSProperties}>{name}</p>
           <p className="text-sm font-body transition-opacity duration-300 group-hover:opacity-100" style={{ color: personTitleColor, opacity: 0.8 }}>{title}</p>
         </div>
+        </div>
       </div>
     </div>
   );
@@ -277,6 +305,7 @@ const Testimonials: React.FC<TestimonialsProps> = ({
   testimonialsVariant = 'classic',
   animationType = 'fade-in-up',
   enableCardAnimation = true,
+  cardGlow,
   cornerGradient
 }) => {
   // Get design tokens with fallback to component colors
@@ -350,6 +379,7 @@ const Testimonials: React.FC<TestimonialsProps> = ({
               // Animations
               animationType={animationType}
               enableAnimation={enableCardAnimation}
+              cardGlow={cardGlow}
             />
           ))}
         </div>

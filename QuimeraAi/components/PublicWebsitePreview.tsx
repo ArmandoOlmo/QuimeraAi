@@ -1504,20 +1504,25 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
   const effectiveMenus = menus.length > 0 ? menus : (project?.menus || []);
 
   const headerLinks = (() => {
+    // 0. Explicit manual override
+    if (mergedData.header?.menuId === 'manual') {
+      return mergedData.header?.links || [];
+    }
+
     // 1. CMS Menu by ID takes priority if configured
     if (mergedData.header?.menuId) {
       const menu = effectiveMenus.find((m: Menu) => m.id === mergedData.header?.menuId);
       if (menu && menu.items?.length > 0) {
-        console.log('[PublicWebsitePreview] HeaderLinks from CMS Menu by ID:', menu.id, menu.items.map((i: any) => ({ text: i.text, href: i.href })));
-        return menu.items.map((i: any) => ({ text: i.text, href: i.href }));
+        console.log('[PublicWebsitePreview] HeaderLinks from CMS Menu by ID:', menu.id, menu.items.map((i: any) => ({ text: i.text, href: i.href, icon: i.icon })));
+        return menu.items.map((i: any) => ({ text: i.text, href: i.href, icon: i.icon }));
       }
     }
 
     // 2. Try main-menu from CMS menus (IMPORTANT: This is what the web editor uses!)
     const mainMenu = effectiveMenus.find((m: Menu) => m.id === 'main' || m.handle === 'main-menu');
     if (mainMenu && mainMenu.items?.length > 0) {
-      console.log('[PublicWebsitePreview] HeaderLinks from main-menu:', mainMenu.items.map((i: any) => ({ text: i.text, href: i.href })));
-      return mainMenu.items.map((i: any) => ({ text: i.text, href: i.href }));
+      console.log('[PublicWebsitePreview] HeaderLinks from main-menu:', mainMenu.items.map((i: any) => ({ text: i.text, href: i.href, icon: i.icon })));
+      return mainMenu.items.map((i: any) => ({ text: i.text, href: i.href, icon: i.icon }));
     }
 
     // 3. Generate from pages if available (multi-page architecture)

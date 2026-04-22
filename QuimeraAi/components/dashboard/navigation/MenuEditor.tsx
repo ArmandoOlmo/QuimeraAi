@@ -9,6 +9,7 @@ import DashboardSidebar from '../DashboardSidebar';
 import { Menu as MenuIcon } from 'lucide-react';
 import { useClickOutside } from '../../../hooks/useClickOutside';
 import { usePublicProducts } from '../../../hooks/usePublicProducts';
+import IconSelector from '../../ui/IconSelector';
 
 interface MenuEditorProps {
     menu: NavigationMenu;
@@ -690,15 +691,25 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onClose, isNew, projectId
                                                     </div>
                                                     <div className="space-y-4 overflow-visible">
                                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 overflow-visible">
-                                                            <div>
-                                                                <label className="block text-xs font-medium text-muted-foreground mb-1">Name</label>
-                                                                <input
-                                                                    autoFocus
-                                                                    type="text"
-                                                                    value={item.text}
-                                                                    onChange={(e) => updateMenuItem(item.id, { text: e.target.value })}
-                                                                    className="w-full px-3 py-2 bg-secondary/30 border border-border rounded-md text-sm focus:ring-1 focus:ring-primary outline-none"
-                                                                />
+                                                            <div className="flex gap-4">
+                                                                <div className="w-12 flex-shrink-0">
+                                                                    <label className="block text-xs font-medium text-muted-foreground mb-1">Icon</label>
+                                                                    <IconSelector
+                                                                        value={(item.icon as any) || 'home'}
+                                                                        onChange={(icon) => updateMenuItem(item.id, { icon })}
+                                                                        size="sm"
+                                                                    />
+                                                                </div>
+                                                                <div className="flex-1">
+                                                                    <label className="block text-xs font-medium text-muted-foreground mb-1">Name</label>
+                                                                    <input
+                                                                        autoFocus
+                                                                        type="text"
+                                                                        value={item.text}
+                                                                        onChange={(e) => updateMenuItem(item.id, { text: e.target.value })}
+                                                                        className="w-full px-3 py-2 bg-secondary/30 border border-border rounded-md text-sm focus:ring-1 focus:ring-primary outline-none"
+                                                                    />
+                                                                </div>
                                                             </div>
                                                             <div className="relative">
                                                                 <label className="block text-xs font-medium text-muted-foreground mb-1">Link</label>

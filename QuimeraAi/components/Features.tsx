@@ -4,7 +4,7 @@ import { useDesignTokens } from '../hooks/useDesignTokens';
 import { getAnimationClass, getAnimationDelay } from '../utils/animations';
 import ImagePlaceholder from './ui/ImagePlaceholder';
 import { isPendingImage } from '../utils/imagePlaceholders';
-import { hexToRgba } from '../utils/colorUtils';
+import { hexToRgba, getNeonGlowStyles } from '../utils/colorUtils';
 import { ArrowRight } from 'lucide-react';
 import FeaturesCinematicGym from './cinematic/FeaturesCinematicGym';
 
@@ -309,13 +309,15 @@ const ImageOverlayCard: React.FC<ImageOverlayCardProps> = ({
 };
 
 // --- NUEVO: Componente para Bento Overlay Style ---
-const BentoOverlayCard = ({ feature, index, colors, borderRadius, showNumbering, onNavigate }: {
+const BentoOverlayCard = ({ feature, index, colors, borderRadius, showNumbering, onNavigate, imageHeight, imageObjectFit }: {
   feature: FeatureItem;
   index: number;
   colors: any;
   borderRadius: string;
   showNumbering?: boolean;
   onNavigate?: (href: string) => void;
+  imageHeight: number;
+  imageObjectFit: ObjectFit;
 }) => {
   const isWide = index === 0 || index === 3 || index === 6;
   const isExternal = feature.linkUrl?.startsWith('http');
@@ -323,7 +325,7 @@ const BentoOverlayCard = ({ feature, index, colors, borderRadius, showNumbering,
   return (
     <div
       className={`group relative overflow-hidden cursor-pointer ${isWide ? 'md:col-span-2' : 'col-span-1'} ${borderRadius} transition-all duration-500 hover:scale-[1.02]`}
-      style={{ height: isWide ? '360px' : '320px' }}
+      style={{ height: `${isWide ? imageHeight + 40 : imageHeight}px` }}
     >
       {/* Full-bleed background image */}
       {isPendingImage(feature.imageUrl) ? (
@@ -336,7 +338,7 @@ const BentoOverlayCard = ({ feature, index, colors, borderRadius, showNumbering,
         <img
           src={feature.imageUrl}
           alt={feature.title}
-          className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+          className={`absolute inset-0 w-full h-full transition-transform duration-700 group-hover:scale-110 ${objectFitClasses[imageObjectFit] || 'object-cover'}`}
         />
       )}
 
@@ -425,6 +427,7 @@ const Features: React.FC<FeaturesProps> = ({
   showSectionHeader = true,
   showNumbering = true,
   layoutAlignment = 'left',
+  cardGlow,
   onNavigate,
   isPreview
 }) => {
@@ -564,7 +567,128 @@ const Features: React.FC<FeaturesProps> = ({
                   borderRadius={borderRadiusClasses[borderRadius]}
                   showNumbering={showNumbering}
                   onNavigate={onNavigate}
+                  imageHeight={imageHeight}
+                  imageObjectFit={imageObjectFit}
                 />
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  // --- RENDERIZADO NEON GLOW ---
+  if (featuresVariant === 'neon-glow') {
+    const glowConfig = {
+      enabled: cardGlow?.enabled !== false,
+      color: cardGlow?.color || '#144CCD',
+      intensity: cardGlow?.intensity ?? 100,
+      borderRadius: cardGlow?.borderRadius ?? 80,
+      gradientStart: cardGlow?.gradientStart || '#0A0909',
+      gradientEnd: cardGlow?.gradientEnd || '#09101F'
+    };
+
+    const neonStyles = getNeonGlowStyles(glowConfig);
+
+    return (
+      <section id="features" className={`w-full bg-black ${glassEffect ? 'backdrop-blur-xl border-y border-white/10 z-20 shadow-[0_4px_30px_rgba(0,0,0,0.1)]' : ''}`}>
+        <div className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`}>
+          <div className="relative z-10">
+            {/* Header section with glow accents */}
+            <div className="mb-20 max-w-3xl">
+              <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold tracking-tight mb-6 text-white font-header`} style={{ textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>
+                {title}
+              </h2>
+              <p className={`${descriptionSizeClasses[descriptionFontSize]} border-l-4 pl-6 text-gray-400 font-body`} style={{ borderColor: glowConfig.color || actualColors.accent }}>
+                {description}
+              </p>
+            </div>
+
+            <div className={`grid grid-cols-1 md:grid-cols-2 ${gridColsClasses[gridColumns] || 'lg:grid-cols-3'} gap-8`}>
+              {(items || []).map((feature, index) => (
+                <div
+                  key={index}
+                  className={`
+                    relative flex flex-col h-full p-8 md:p-10
+                    transform transition-all duration-300 hover:-translate-y-2 hover:scale-[1.02]
+                    ${getAnimationClass(animationType, enableCardAnimation)}
+                  `}
+                  style={{
+                    ...neonStyles,
+                    animationDelay: getAnimationDelay(index)
+                  }}
+                >
+                  {/* Outer glow effect under the card if enabled */}
+                  {glowConfig.enabled && (
+                    <div 
+                      className="absolute inset-0 -z-10 rounded-full blur-[120px] opacity-20 pointer-events-none transition-opacity group-hover:opacity-40" 
+                      style={{ backgroundColor: glowConfig.color }} 
+                    />
+                  )}
+
+                  <div className="flex-grow relative z-10 flex flex-col justify-between">
+                    <div>
+                      {/* Image or Icon container with inner glow */}
+                      <div 
+                        className="mb-8 overflow-hidden relative"
+                        style={{
+                          borderRadius: `${(glowConfig.borderRadius || 24) * 0.5}px`,
+                          height: `${imageHeight}px`
+                        }}
+                      >
+                        {isPendingImage(feature.imageUrl) ? (
+                          <ImagePlaceholder
+                            aspectRatio="video"
+                            showGenerateButton={false}
+                            className="h-full"
+                          />
+                        ) : (
+                          <>
+                            <img
+                              src={feature.imageUrl}
+                              alt={feature.title}
+                              className={`h-full w-full transition-transform duration-700 hover:scale-110 ${objectFitClasses[imageObjectFit] || 'object-cover'}`}
+                            />
+                            {/* Color overlay matching the glow */}
+                            <div 
+                              className="absolute inset-0 opacity-20 mix-blend-color pointer-events-none"
+                              style={{ backgroundColor: glowConfig.color }}
+                            />
+                            {/* Inner shadow for the image */}
+                            <div className="absolute inset-0 shadow-[inset_0_0_20px_rgba(0,0,0,0.5)] pointer-events-none" />
+                          </>
+                        )}
+                      </div>
+                      
+                      <h3 className="text-2xl font-bold mb-4 font-header text-white" style={{ textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>
+                        {feature.title}
+                      </h3>
+                      <p className="leading-relaxed font-light font-body text-gray-400 mb-6">
+                        {feature.description}
+                      </p>
+                    </div>
+
+                    {feature.linkUrl && (
+                      <a
+                        href={feature.linkUrl}
+                        target={feature.linkUrl.startsWith('http') ? '_blank' : undefined}
+                        rel={feature.linkUrl.startsWith('http') ? 'noopener noreferrer' : undefined}
+                        onClick={(e) => {
+                          if (onNavigate && feature.linkUrl && !feature.linkUrl.startsWith('http://') && !feature.linkUrl.startsWith('https://')) {
+                            e.preventDefault();
+                            onNavigate(feature.linkUrl);
+                          }
+                        }}
+                        className="inline-flex items-center gap-2 text-sm font-bold group/link transition-all"
+                        style={{ color: glowConfig.color || actualColors.accent }}
+                      >
+                        <span className="hover:text-white transition-colors">{feature.linkText || 'Learn more'}</span>
+                        <ArrowRight className="w-4 h-4 group-hover/link:translate-x-1 transition-transform" />
+                      </a>
+                    )}
+                  </div>
+                </div>
               ))}
             </div>
           </div>

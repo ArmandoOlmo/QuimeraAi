@@ -180,6 +180,20 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
       <FontSizeSelector label="Font Size" value={data.topBar.fontSize || 'sm'} onChange={(v) => setNestedData('topBar.fontSize', v)} />
 
+      {/* Height Slider */}
+      <div>
+        <div className="flex items-center justify-between mb-1">
+          <span className="text-[10px] font-medium text-editor-text-secondary">Bar Height</span>
+          <span className="text-xs text-editor-text-primary">{data.topBar.height || 40}px</span>
+        </div>
+        <input
+          type="range" min={20} max={120} step={1}
+          value={data.topBar.height || 40}
+          onChange={(e) => setNestedData('topBar.height', parseInt(e.target.value))}
+          className="w-full accent-blue-500"
+        />
+      </div>
+
       {/* Separator */}
       <div>
         <div className="text-[10px] font-medium text-editor-text-secondary mb-1">Separator</div>

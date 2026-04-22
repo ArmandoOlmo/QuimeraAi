@@ -3,7 +3,7 @@ import React, { useMemo } from 'react';
 import { PricingData, PaddingSize, BorderRadiusSize, FontSize, PricingVariant, AnimationType, CornerGradientConfig } from '../types';
 import { CheckCircle, Check, Sparkles, Zap } from 'lucide-react';
 import { useDesignTokens } from '../hooks/useDesignTokens';
-import { hexToRgba } from '../utils/colorUtils';
+import { hexToRgba, getNeonGlowStyles } from '../utils/colorUtils';
 import { getAnimationClass, getAnimationDelay } from '../utils/animations';
 import CornerGradient from './ui/CornerGradient';
 
@@ -73,7 +73,8 @@ const Pricing: React.FC<PricingProps> = ({
   animationType = 'fade-in-up',
   enableCardAnimation = true,
   cornerGradient,
-  glassEffect = false
+  glassEffect = false,
+  cardGlow
 }) => {
   // Get design tokens with fallback to component colors
   const { getColor, colors: tokenColors } = useDesignTokens();
@@ -116,7 +117,7 @@ const Pricing: React.FC<PricingProps> = ({
   }, [actualColors]);
 
   // Normalize to classic if provided variant is unknown
-  const actualVariant = ['gradient', 'glassmorphism', 'minimalist'].includes(pricingVariant as string)
+  const actualVariant = ['gradient', 'glassmorphism', 'minimalist', 'neon-glow'].includes(pricingVariant as string)
     ? pricingVariant
     : 'classic';
 
@@ -580,6 +581,115 @@ const Pricing: React.FC<PricingProps> = ({
                     color: tier.featured ? actualColors.buttonText : safeColors.cardHeading,
                     textTransform: 'var(--buttons-transform, none)' as any,
                     letterSpacing: 'var(--buttons-spacing, normal)'
+                  }}
+                >
+                  {tier.buttonText}
+                </a>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  // Neon Glow Variant - Deep inner glow effect
+  if (actualVariant === 'neon-glow') {
+    // Default neon config if not provided
+    const glowConfig = cardGlow || {
+      enabled: true,
+      color: '#144CCD',
+      intensity: 100,
+      borderRadius: 80,
+      gradientStart: '#0A0909',
+      gradientEnd: '#09101F'
+    };
+
+    const neonStyles = getNeonGlowStyles(glowConfig);
+
+    return (
+      <section id="pricing" className={`${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]} relative overflow-hidden bg-black`}>
+        <CornerGradient config={cornerGradient} />
+        
+        <div className="container mx-auto relative z-10">
+          <div className="text-center max-w-3xl mx-auto mb-16">
+            <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold mb-4 font-header text-white`} style={{ textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>
+              {title}
+            </h2>
+            <p className={`${descriptionSizeClasses[descriptionFontSize]} font-body text-gray-400`}>
+              {description}
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 items-center">
+            {(tiers || []).map((tier, index) => (
+              <div
+                key={index}
+                className={`
+                    p-10 relative flex flex-col h-full
+                    transform transition-all duration-300 hover:scale-[1.02]
+                    ${tier.featured ? 'md:scale-105 z-10' : ''}
+                    ${getAnimationClass(animationType, enableCardAnimation)}
+                  `}
+                style={{
+                  ...neonStyles,
+                  animationDelay: getAnimationDelay(index)
+                }}
+              >
+                {/* Optional drop shadow for outer glow using Beautiful Shadows concept if featured */}
+                {tier.featured && glowConfig.enabled && (
+                  <div className="absolute inset-0 -z-10 rounded-full blur-[100px] opacity-30 pointer-events-none" style={{ backgroundColor: glowConfig.color }} />
+                )}
+
+                <div className="flex-grow relative z-10">
+                  <h3 className="text-2xl font-bold text-center mb-2 font-header text-white">
+                    {tier.name}
+                  </h3>
+
+                  {tier.description && (
+                    <p className="text-center text-sm font-body mb-6 text-gray-400">
+                      {tier.description}
+                    </p>
+                  )}
+
+                  <div className="text-center mb-8">
+                    <span className="text-5xl font-extrabold font-header text-white">
+                      {tier.price}
+                    </span>
+                    <span className="text-lg font-header ml-1 text-gray-400">
+                      {tier.frequency}
+                    </span>
+                  </div>
+
+                  <ul className="space-y-4 mb-8">
+                    {(tier.features || []).map((feature, i) => (
+                      <li key={i} className="flex items-start font-body text-gray-300">
+                        <CheckCircle
+                          size={20}
+                          className="mr-3 flex-shrink-0"
+                          style={{ color: glowConfig.color || actualColors.accent }}
+                        />
+                        <span>{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                <a
+                  href={tier.buttonLink || '#'}
+                  target={tier.buttonLink?.startsWith('http') ? '_blank' : undefined}
+                  rel={tier.buttonLink?.startsWith('http') ? 'noopener noreferrer' : undefined}
+                  className={`
+                      w-full text-center block font-bold py-4 px-8
+                      transition-all duration-300 transform hover:-translate-y-1 font-button relative z-10
+                    `}
+                  style={{
+                    backgroundColor: glowConfig.color || actualColors.buttonBackground,
+                    color: '#ffffff', // Usually white on deep glow colors
+                    borderRadius: `${buttonBorderRadius === 'full' ? 9999 : 12}px`,
+                    textTransform: 'var(--buttons-transform, none)' as any,
+                    letterSpacing: 'var(--buttons-spacing, normal)',
+                    boxShadow: `0 10px 20px -10px ${glowConfig.color || actualColors.buttonBackground}`
                   }}
                 >
                   {tier.buttonText}

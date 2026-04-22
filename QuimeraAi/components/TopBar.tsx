@@ -40,7 +40,7 @@ export interface TopBarData {
   /** Icon color */
   iconColor?: string;
   /** Font size */
-  fontSize?: 'sm' | 'md' | 'lg';
+  fontSize?: 'sm' | 'md' | 'lg' | 'xl';
   /** Separator between messages */
   separator?: 'dot' | 'pipe' | 'star' | 'none';
   /** Top bar height */
@@ -63,7 +63,7 @@ const iconMap: Record<string, React.FC<{ size?: number; className?: string; styl
 export const topBarIconOptions = Object.keys(iconMap);
 
 // ─── Font size map ───
-const fontSizeMap = { sm: 'text-xs', md: 'text-sm', lg: 'text-base' };
+const fontSizeMap = { sm: 'text-xs', md: 'text-sm', lg: 'text-base', xl: 'text-lg' };
 
 // ─── Separator renderers ───
 const separatorMap: Record<string, string> = {
@@ -217,7 +217,7 @@ const TopBar: React.FC<TopBarProps> = ({
       >
         <div
           ref={marqueeRef}
-          className="flex items-center gap-12"
+          className="flex items-center gap-12 h-full"
           style={{ width: 'max-content' }}
         >
           {/* Triple repeat for seamless loop */}
@@ -261,7 +261,7 @@ const TopBar: React.FC<TopBarProps> = ({
       onMouseEnter={() => pauseOnHover && setIsPaused(true)}
       onMouseLeave={() => pauseOnHover && setIsPaused(false)}
     >
-      <div className="max-w-7xl mx-auto flex items-center justify-center gap-3">
+      <div className="max-w-7xl mx-auto flex items-center justify-center gap-3 h-full">
         {/* Left arrow */}
         {hasMultiple && showRotatingArrows && (
           <button

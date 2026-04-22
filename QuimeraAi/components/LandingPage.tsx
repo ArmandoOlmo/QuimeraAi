@@ -1140,11 +1140,16 @@ const LandingPageContent: React.FC = () => {
 
   // Dynamic Menu Resolution - prioritize: CMS Menu > Pages > Manual Links
   const headerLinks = useMemo(() => {
+    // 0. Explicit manual override
+    if (mergedHeaderData.menuId === 'manual') {
+      return mergedHeaderData.links || [];
+    }
+
     // 1. CMS Menu takes priority if configured
     if (mergedHeaderData.menuId) {
       const menu = menus.find(m => m.id === mergedHeaderData.menuId);
-      if (menu) {
-        return menu.items.map(i => ({ text: i.text, href: i.href }));
+      if (menu && menu.items?.length > 0) {
+        return menu.items.map(i => ({ text: i.text, href: i.href, icon: i.icon }));
       }
     }
 

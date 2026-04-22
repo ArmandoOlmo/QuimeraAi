@@ -370,6 +370,103 @@ export const BackgroundImageControl: React.FC<{
   );
 };
 
+// ─── CardGlowControl ────────────────────────────────────────────────────────
+export interface CardGlowControlProps {
+  enabled: boolean;
+  color: string;
+  intensity: number;
+  borderRadius: number;
+  gradientStart: string;
+  gradientEnd: string;
+  onEnabledChange: (enabled: boolean) => void;
+  onColorChange: (color: string) => void;
+  onIntensityChange: (intensity: number) => void;
+  onBorderRadiusChange: (radius: number) => void;
+  onGradientStartChange: (color: string) => void;
+  onGradientEndChange: (color: string) => void;
+}
+
+export const CardGlowControl: React.FC<CardGlowControlProps> = ({
+  enabled, color, intensity, borderRadius, gradientStart, gradientEnd,
+  onEnabledChange, onColorChange, onIntensityChange, onBorderRadiusChange, onGradientStartChange, onGradientEndChange
+}) => {
+  const { t } = useTranslation();
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2 flex items-center gap-2">
+          <Zap size={14} />
+          Neon Inner Glow
+        </label>
+        <ToggleControl checked={enabled} onChange={onEnabledChange} />
+      </div>
+
+      {enabled && (
+        <div className="space-y-5 animate-fade-in-up pt-2">
+          <div className="space-y-3">
+            <label className="block text-[10px] font-bold text-editor-text-secondary uppercase tracking-wider">
+              Glow Effect
+            </label>
+            <ColorControl label="Neon Glow" value={color} onChange={onColorChange} />
+            <div>
+              <div className="flex justify-between items-center mb-1">
+                <label className="text-[10px] font-medium text-editor-text-secondary uppercase tracking-wider">
+                  Intensity
+                </label>
+                <span className="text-xs font-mono text-editor-text-primary">{intensity}%</span>
+              </div>
+              <input type="range" min="0" max="100" step="5" value={intensity}
+                onChange={(e) => onIntensityChange(parseInt(e.target.value))}
+                className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            <label className="block text-[10px] font-bold text-editor-text-secondary uppercase tracking-wider">
+              Background Gradient
+            </label>
+            <ColorControl label="Start Color" value={gradientStart} onChange={onGradientStartChange} />
+            <ColorControl label="End Color" value={gradientEnd} onChange={onGradientEndChange} />
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex justify-between items-center mb-1">
+              <label className="text-[10px] font-bold text-editor-text-secondary uppercase tracking-wider">
+                Border Radius
+              </label>
+              <span className="text-xs font-mono text-editor-text-primary">{borderRadius}px</span>
+            </div>
+            <input type="range" min="0" max="100" step="1" value={borderRadius}
+              onChange={(e) => onBorderRadiusChange(parseInt(e.target.value))}
+              className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-[10px] font-bold text-editor-text-secondary mb-2 uppercase tracking-wider">
+              {t('editor.controls.preview')}
+            </label>
+            <div className="w-full h-24 relative overflow-hidden rounded-xl border border-editor-border shadow-inner">
+               <div className="w-full h-full" style={{
+                  background: `linear-gradient(180deg, ${gradientStart} 0%, ${gradientEnd} 100%)`,
+                  borderRadius: 'inherit',
+                  boxShadow: `
+                    inset 0px ${-80 * (intensity / 100)}px ${60 * (intensity / 100)}px ${-30 * (intensity / 100)}px ${color},
+                    inset 0px ${-40 * (intensity / 100)}px ${30 * (intensity / 100)}px ${-8 * (intensity / 100)}px ${color},
+                    inset 0px ${-20 * (intensity / 100)}px ${20 * (intensity / 100)}px ${-6 * (intensity / 100)}px rgba(255, 255, 255, 0.4),
+                    inset 0px ${6 * (intensity / 100)}px ${6 * (intensity / 100)}px ${-2 * (intensity / 100)}px rgba(255, 255, 255, 0.15)
+                  `
+               }}></div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 // ─── ControlsDeps ───────────────────────────────────────────────────────────
 // Interface capturing the closure variables that section render functions need
 export interface ControlsDeps {

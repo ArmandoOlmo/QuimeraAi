@@ -12,7 +12,7 @@ import TabbedControls from '../../ui/TabbedControls';
 import AnimationControls from '../../ui/AnimationControls';
 import SocialLinksEditor from '../../ui/SocialLinksEditor';
 import { Input, TextArea, Select, ToggleControl, FontSizeSelector, PaddingSelector, BorderRadiusSelector } from '../../ui/EditorControlPrimitives';
-import { BackgroundImageControl, CornerGradientControl, extractVideoId, ControlsDeps } from '../ControlsShared';
+import { BackgroundImageControl, CornerGradientControl, CardGlowControl, extractVideoId, ControlsDeps } from '../ControlsShared';
 import {
   Trash2, Plus, ChevronDown, ChevronRight, ChevronLeft, ChevronUp, HelpCircle,
   Layout, Image, List, Star, PlaySquare, Users, DollarSign, Eye,
@@ -37,6 +37,42 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       <FontSizeSelector label={`${t('editor.controls.common.description')} ${t('editor.controls.common.size')}`} value={data.testimonials.descriptionFontSize || 'md'} onChange={(v) => setNestedData('testimonials.descriptionFontSize', v)} />
 
       <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">{t('editor.controls.testimonials.cardStyling')}</label>
+
+      <div className="mb-4">
+        <Select
+          label="Style Variant"
+          value={(data.testimonials as any).testimonialsVariant || 'classic'}
+          onChange={(v) => setNestedData('testimonials.testimonialsVariant', v)}
+          options={[
+            { value: 'classic', label: 'Classic' },
+            { value: 'minimal-cards', label: 'Minimal Cards' },
+            { value: 'glassmorphism', label: 'Glassmorphism' },
+            { value: 'gradient-glow', label: 'Gradient Glow' },
+            { value: 'neon-border', label: 'Neon Border' },
+            { value: 'floating-cards', label: 'Floating Cards' },
+            { value: 'gradient-shift', label: 'Gradient Shift' },
+            { value: 'neon-glow', label: 'Neon Glow (Resplandor Interior)' }
+          ]}
+        />
+      </div>
+
+      {/* Neon Glow Controls */}
+      {(data.testimonials as any).testimonialsVariant === 'neon-glow' && (
+        <CardGlowControl
+          enabled={data.testimonials.cardGlow?.enabled !== false}
+          color={data.testimonials.cardGlow?.color || '#144CCD'}
+          intensity={data.testimonials.cardGlow?.intensity ?? 100}
+          borderRadius={data.testimonials.cardGlow?.borderRadius ?? 80}
+          gradientStart={data.testimonials.cardGlow?.gradientStart || '#0A0909'}
+          gradientEnd={data.testimonials.cardGlow?.gradientEnd || '#09101F'}
+          onEnabledChange={(v) => setNestedData('testimonials.cardGlow.enabled', v)}
+          onColorChange={(v) => setNestedData('testimonials.cardGlow.color', v)}
+          onIntensityChange={(v) => setNestedData('testimonials.cardGlow.intensity', v)}
+          onBorderRadiusChange={(v) => setNestedData('testimonials.cardGlow.borderRadius', v)}
+          onGradientStartChange={(v) => setNestedData('testimonials.cardGlow.gradientStart', v)}
+          onGradientEndChange={(v) => setNestedData('testimonials.cardGlow.gradientEnd', v)}
+        />
+      )}
 
       <ColorControl label={t('editor.controls.testimonials.cardBackground')} value={data.testimonials.colors?.cardBackground || '#1f2937'} onChange={(v) => setNestedData('testimonials.colors.cardBackground', v)} />
 
@@ -271,6 +307,44 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           <Layout size={14} />
           Card Styling
         </label>
+
+        <div className="mb-4">
+          <Select
+            label="Style Variant"
+            value={(data.testimonials as any).testimonialsVariant || 'classic'}
+            onChange={(v) => setNestedData('testimonials.testimonialsVariant', v)}
+            options={[
+              { value: 'classic', label: 'Classic' },
+              { value: 'minimal-cards', label: 'Minimal Cards' },
+              { value: 'glassmorphism', label: 'Glassmorphism' },
+              { value: 'gradient-glow', label: 'Gradient Glow' },
+              { value: 'neon-border', label: 'Neon Border' },
+              { value: 'floating-cards', label: 'Floating Cards' },
+              { value: 'gradient-shift', label: 'Gradient Shift' },
+              { value: 'neon-glow', label: 'Neon Glow (Resplandor Interior)' }
+            ]}
+          />
+        </div>
+
+        {/* Neon Glow Controls */}
+        {(data.testimonials as any).testimonialsVariant === 'neon-glow' && (
+          <div className="mb-4 bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-3">
+            <CardGlowControl
+              enabled={data.testimonials.cardGlow?.enabled !== false}
+              color={data.testimonials.cardGlow?.color || '#144CCD'}
+              intensity={data.testimonials.cardGlow?.intensity ?? 100}
+              borderRadius={data.testimonials.cardGlow?.borderRadius ?? 80}
+              gradientStart={data.testimonials.cardGlow?.gradientStart || '#0A0909'}
+              gradientEnd={data.testimonials.cardGlow?.gradientEnd || '#09101F'}
+              onEnabledChange={(v) => setNestedData('testimonials.cardGlow.enabled', v)}
+              onColorChange={(v) => setNestedData('testimonials.cardGlow.color', v)}
+              onIntensityChange={(v) => setNestedData('testimonials.cardGlow.intensity', v)}
+              onBorderRadiusChange={(v) => setNestedData('testimonials.cardGlow.borderRadius', v)}
+              onGradientStartChange={(v) => setNestedData('testimonials.cardGlow.gradientStart', v)}
+              onGradientEndChange={(v) => setNestedData('testimonials.cardGlow.gradientEnd', v)}
+            />
+          </div>
+        )}
 
         <ColorControl label="Card Background" value={data.testimonials.colors?.cardBackground || '#1f2937'} onChange={(v) => setNestedData('testimonials.colors.cardBackground', v)} />
 

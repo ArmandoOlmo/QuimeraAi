@@ -12,7 +12,7 @@ import TabbedControls from '../../ui/TabbedControls';
 import AnimationControls from '../../ui/AnimationControls';
 import SocialLinksEditor from '../../ui/SocialLinksEditor';
 import { Input, TextArea, Select, ToggleControl, FontSizeSelector, PaddingSelector, BorderRadiusSelector } from '../../ui/EditorControlPrimitives';
-import { BackgroundImageControl, CornerGradientControl, extractVideoId, ControlsDeps } from '../ControlsShared';
+import { BackgroundImageControl, CornerGradientControl, CardGlowControl, extractVideoId, ControlsDeps } from '../ControlsShared';
 import {
   Trash2, Plus, ChevronDown, ChevronRight, ChevronLeft, ChevronUp, HelpCircle,
   Layout, Image, List, Star, PlaySquare, Users, DollarSign, Eye,
@@ -42,7 +42,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
       <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">{t('editor.controls.features.sectionStyle')}</label>
       <div>
-        <div className="grid grid-cols-5 gap-1 bg-editor-bg p-1 rounded-md border border-editor-border">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-1 bg-editor-bg p-1 rounded-md border border-editor-border">
           <button
             onClick={() => setNestedData('features.featuresVariant', 'classic')}
             className={`py-1 text-xs font-medium rounded-sm transition-colors ${currentVariant === 'classic' ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:bg-editor-border'}`}
@@ -72,6 +72,12 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
             className={`py-1 text-xs font-medium rounded-sm transition-colors ${currentVariant === 'image-overlay' ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:bg-editor-border'}`}
           >
             {t('editor.controls.features.overlay')}
+          </button>
+          <button
+            onClick={() => setNestedData('features.featuresVariant', 'neon-glow')}
+            className={`py-1 text-xs font-medium rounded-sm transition-colors ${currentVariant === 'neon-glow' ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:bg-editor-border'}`}
+          >
+            Neon Glow
           </button>
         </div>
         <p className="text-xs text-editor-text-secondary mt-2">
@@ -128,6 +134,24 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
             <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition-transform ${(data.features as any).showNumbering !== false ? 'left-5' : 'left-0.5'}`} />
           </button>
         </div>
+      )}
+
+      {/* Neon Glow Controls */}
+      {currentVariant === 'neon-glow' && (
+        <CardGlowControl
+          enabled={data.features.cardGlow?.enabled !== false}
+          color={data.features.cardGlow?.color || '#144CCD'}
+          intensity={data.features.cardGlow?.intensity ?? 100}
+          borderRadius={data.features.cardGlow?.borderRadius ?? 80}
+          gradientStart={data.features.cardGlow?.gradientStart || '#0A0909'}
+          gradientEnd={data.features.cardGlow?.gradientEnd || '#09101F'}
+          onEnabledChange={(v) => setNestedData('features.cardGlow.enabled', v)}
+          onColorChange={(v) => setNestedData('features.cardGlow.color', v)}
+          onIntensityChange={(v) => setNestedData('features.cardGlow.intensity', v)}
+          onBorderRadiusChange={(v) => setNestedData('features.cardGlow.borderRadius', v)}
+          onGradientStartChange={(v) => setNestedData('features.cardGlow.gradientStart', v)}
+          onGradientEndChange={(v) => setNestedData('features.cardGlow.gradientEnd', v)}
+        />
       )}
 
       <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">{t('editor.controls.features.gridLayout')}</label>
@@ -423,7 +447,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
               { value: 'modern', label: 'Modern (Bento Asimétrico)' },
               { value: 'bento-premium', label: 'Premium (Bento Destacado)' },
               { value: 'bento-overlay', label: 'Bento Overlay (Imágenes + Texto)' },
-              { value: 'image-overlay', label: 'Overlay (Tarjetas Completas)' }
+              { value: 'image-overlay', label: 'Overlay (Tarjetas Completas)' },
+              { value: 'neon-glow', label: 'Neon Glow (Resplandor Interior)' }
             ]}
           />
           <p className="text-xs text-editor-text-secondary mt-2">
@@ -449,6 +474,26 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
                 { value: 'left', label: 'Texto a la Izquierda, Tarjetas a la Derecha' },
                 { value: 'right', label: 'Texto a la Derecha, Tarjetas a la Izquierda' }
               ]}
+            />
+          </div>
+        )}
+
+        {/* Neon Glow Controls */}
+        {currentVariant === 'neon-glow' && (
+          <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-3">
+            <CardGlowControl
+              enabled={data.features.cardGlow?.enabled !== false}
+              color={data.features.cardGlow?.color || '#144CCD'}
+              intensity={data.features.cardGlow?.intensity ?? 100}
+              borderRadius={data.features.cardGlow?.borderRadius ?? 80}
+              gradientStart={data.features.cardGlow?.gradientStart || '#0A0909'}
+              gradientEnd={data.features.cardGlow?.gradientEnd || '#09101F'}
+              onEnabledChange={(v) => setNestedData('features.cardGlow.enabled', v)}
+              onColorChange={(v) => setNestedData('features.cardGlow.color', v)}
+              onIntensityChange={(v) => setNestedData('features.cardGlow.intensity', v)}
+              onBorderRadiusChange={(v) => setNestedData('features.cardGlow.borderRadius', v)}
+              onGradientStartChange={(v) => setNestedData('features.cardGlow.gradientStart', v)}
+              onGradientEndChange={(v) => setNestedData('features.cardGlow.gradientEnd', v)}
             />
           </div>
         )}

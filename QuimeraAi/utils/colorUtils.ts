@@ -352,3 +352,61 @@ export const deriveColorsFromPalette = (
     return derived;
 };
 
+/**
+ * Generates the CSS style object for the Neon Glow card effect
+ * @param config - The CardGlowConfig object
+ * @returns React.CSSProperties object
+ */
+export const getNeonGlowStyles = (config?: {
+    enabled: boolean;
+    color: string;
+    intensity: number;
+    borderRadius: number;
+    gradientStart: string;
+    gradientEnd: string;
+}): React.CSSProperties => {
+    if (!config || !config.enabled) return {};
+
+    const { color, intensity, borderRadius, gradientStart, gradientEnd } = config;
+
+    // Scale effects based on intensity (0-100)
+    // At 100%, we use the full Figma values. At lower intensities, we reduce the spread and blur.
+    const scale = intensity / 100;
+    
+    // Lighten the base color for the secondary inner glow
+    const lightColor = lightenColor(color, 20);
+    
+    // Background gradient
+    const background = `linear-gradient(180deg, ${gradientStart} 0%, ${gradientEnd} 100%)`;
+
+    // Calculate shadow values based on intensity scale
+    const shadow1Y = -80 * scale;
+    const shadow1Blur = 60 * scale;
+    const shadow1Spread = -30 * scale;
+
+    const shadow2Y = -40 * scale;
+    const shadow2Blur = 30 * scale;
+    const shadow2Spread = -8 * scale;
+
+    const shadow3Y = -20 * scale;
+    const shadow3Blur = 20 * scale;
+    const shadow3Spread = -6 * scale;
+
+    const shadow4Y = 6 * scale;
+    const shadow4Blur = 6 * scale;
+    const shadow4Spread = -2 * scale;
+
+    const boxShadow = `
+        inset 0px ${shadow1Y}px ${shadow1Blur}px ${shadow1Spread}px ${color},
+        inset 0px ${shadow2Y}px ${shadow2Blur}px ${shadow2Spread}px ${lightColor},
+        inset 0px ${shadow3Y}px ${shadow3Blur}px ${shadow3Spread}px rgba(255, 255, 255, 0.4),
+        inset 0px ${shadow4Y}px ${shadow4Blur}px ${shadow4Spread}px rgba(255, 255, 255, 0.15)
+    `;
+
+    return {
+        background,
+        boxShadow,
+        borderRadius: `${borderRadius}px`,
+        overflow: 'hidden'
+    };
+};

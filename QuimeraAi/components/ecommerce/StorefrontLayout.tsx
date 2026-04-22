@@ -102,18 +102,23 @@ const StorefrontLayoutInner: React.FC<StorefrontLayoutProps & { projectData: Pro
         const menus = projectData?.menus || [];
         const header = projectData?.header;
 
+        // 0. Explicit manual override
+        if (header?.menuId === 'manual') {
+            return header?.links || [];
+        }
+
         // 1. CMS Menu by ID takes priority if configured
         if (header?.menuId) {
             const menu = menus.find(m => m.id === header.menuId);
             if (menu && menu.items?.length > 0) {
-                return menu.items.map(i => ({ text: i.text, href: i.href }));
+                return menu.items.map(i => ({ text: i.text, href: i.href, icon: i.icon }));
             }
         }
 
         // 2. Try main-menu from CMS menus
         const mainMenu = menus.find(m => m.id === 'main' || m.handle === 'main-menu');
         if (mainMenu && mainMenu.items?.length > 0) {
-            return mainMenu.items.map(i => ({ text: i.text, href: i.href }));
+            return mainMenu.items.map(i => ({ text: i.text, href: i.href, icon: i.icon }));
         }
 
         // 3. Generate from pages if available (multi-page architecture)

@@ -22,6 +22,18 @@ export interface CornerGradientConfig {
 }
 
 // =============================================================================
+// CARD NEON GLOW CONFIGURATION
+// =============================================================================
+export interface CardGlowConfig {
+    enabled: boolean;
+    color: string;
+    intensity: number; // 0-100, maps to blur and spread
+    borderRadius: number; // For the card corners
+    gradientStart: string; // Background gradient start
+    gradientEnd: string; // Background gradient end
+}
+
+// =============================================================================
 // HEADER
 // =============================================================================
 export type NavbarLayout = 'minimal' | 'center' | 'stack' | 'classic';
@@ -45,11 +57,15 @@ export type NavbarStyle =
     | 'transparent-blur'     // Transparente con blur backdrop
     | 'transparent-bordered' // Transparente con borde sutil
     | 'transparent-gradient'      // Transparente con gradiente inferior
-    | 'transparent-gradient-dark'; // Gradiente oscuro en bordes hacia color principal
+    | 'transparent-gradient-dark' // Gradiente oscuro en bordes hacia color principal
+    // NUEVOS: Diseños Especiales
+    | 'tabbed'               // Pestañas sobre línea gruesa
+    | 'segmented-pill';      // Barra de píldora con bloque activo
 
 export interface NavLink {
     text: string;
     href: string;
+    icon?: string;
 }
 
 export interface HeaderData {
@@ -317,7 +333,7 @@ export interface FeatureItem {
 
 export interface FeaturesData {
     glassEffect?: boolean;
-    featuresVariant?: 'classic' | 'modern' | 'bento-premium' | 'image-overlay' | 'bento-overlay' | 'cinematic-gym';
+    featuresVariant?: 'classic' | 'modern' | 'bento-premium' | 'image-overlay' | 'bento-overlay' | 'cinematic-gym' | 'neon-glow';
     title: string;
     subtitle?: string;              // Alias for description
     description: string;
@@ -340,12 +356,14 @@ export interface FeaturesData {
     showNumbering?: boolean;
     // Property for asymmetric layouts like Gym
     layoutAlignment?: 'left' | 'right';
+    // Configuration for neon-glow variant
+    cardGlow?: CardGlowConfig;
 }
 
 // =============================================================================
 // TESTIMONIALS
 // =============================================================================
-export type TestimonialsVariant = 'classic' | 'minimal-cards' | 'glassmorphism' | 'gradient-glow' | 'neon-border' | 'floating-cards' | 'gradient-shift';
+export type TestimonialsVariant = 'classic' | 'minimal-cards' | 'glassmorphism' | 'gradient-glow' | 'neon-border' | 'floating-cards' | 'gradient-shift' | 'neon-glow';
 
 export interface TestimonialItem {
     quote: string;
@@ -374,6 +392,8 @@ export interface TestimonialsData {
     enableCardAnimation?: boolean;
     // Corner gradient overlay
     cornerGradient?: CornerGradientConfig;
+    // Configuration for neon-glow variant
+    cardGlow?: CardGlowConfig;
 }
 
 // =============================================================================
@@ -429,7 +449,7 @@ export interface SlideshowData {
 // =============================================================================
 // PRICING
 // =============================================================================
-export type PricingVariant = 'classic' | 'gradient' | 'glassmorphism' | 'minimalist';
+export type PricingVariant = 'classic' | 'gradient' | 'glassmorphism' | 'minimalist' | 'neon-glow';
 
 export interface PricingTier {
     name: string;
@@ -475,6 +495,8 @@ export interface PricingData {
     enableCardAnimation?: boolean;
     // Corner gradient overlay
     cornerGradient?: CornerGradientConfig;
+    // Configuration for neon-glow variant
+    cardGlow?: CardGlowConfig;
 }
 
 // =============================================================================
@@ -698,7 +720,7 @@ export interface ServiceItem {
 
 export interface ServicesData {
     glassEffect?: boolean;
-    servicesVariant?: 'cards' | 'grid' | 'minimal';
+    servicesVariant?: 'cards' | 'grid' | 'minimal' | 'neon-glow';
     title: string;
     subtitle?: string;              // Alias for description
     description: string;
@@ -712,6 +734,8 @@ export interface ServicesData {
     enableCardAnimation?: boolean;
     // Corner gradient overlay
     cornerGradient?: CornerGradientConfig;
+    // Configuration for neon-glow variant
+    cardGlow?: CardGlowConfig;
 }
 
 // =============================================================================
@@ -894,6 +918,9 @@ export interface FooterData {
     contactInfo?: FooterContactInfo;
     // Branding settings
     hideBranding?: boolean;
+    // Glow and Variant
+    footerVariant?: 'classic' | 'neon-glow';
+    cardGlow?: CardGlowConfig;
 }
 
 // =============================================================================

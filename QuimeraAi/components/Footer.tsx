@@ -4,6 +4,7 @@ import { FooterData, SocialPlatform, FontSize } from '../types';
 import { Twitter, Github, Facebook, Instagram, Linkedin, MapPin, Phone, Mail, Youtube, Music, Pin, MessageCircle, Send, Ghost, Gamepad2, AtSign } from 'lucide-react';
 import BusinessHours from './BusinessHours';
 import { db, doc, getDoc } from '../firebase';
+import { getNeonGlowStyles } from '../utils/colorUtils';
 
 // Quimera logo URL for the badge
 import { useAppLogo } from '../hooks/useAppLogo';
@@ -51,7 +52,8 @@ const Footer: React.FC<FooterData & {
   title, description, linkColumns = [], socialLinks = [], copyrightText, colors, titleFontSize = 'sm', descriptionFontSize = 'sm',
   logoType = 'text', logoImageUrl, contactInfo, onNavigate, hideBranding,
   backgroundColor, textColor, // Accept top-level color props from editor
-  companyName, tagline, copyright // Accept alternative prop names from editor
+  companyName, tagline, copyright, // Accept alternative prop names from editor
+  footerVariant = 'classic', cardGlow
 }) => {
     // Use alternative prop names if original ones are not provided
     const actualTitle = title || companyName;
@@ -104,9 +106,41 @@ const Footer: React.FC<FooterData & {
     const currentYear = new Date().getFullYear();
     const finalCopyrightText = (actualCopyrightText || '© {YEAR} All rights reserved.').replace('{YEAR}', currentYear.toString());
 
+    let footerStyles: React.CSSProperties = {
+      backgroundColor: actualColors.background,
+      borderColor: actualColors.border
+    };
+    let footerClasses = "border-t relative overflow-hidden";
+
+    if (footerVariant === 'neon-glow') {
+      const glowConfig = {
+        enabled: cardGlow?.enabled !== false,
+        color: cardGlow?.color || '#144CCD',
+        intensity: cardGlow?.intensity ?? 100,
+        borderRadius: 0, // Footers typically don't have border radius on the bottom, or just top radius
+        gradientStart: cardGlow?.gradientStart || '#0A0909',
+        gradientEnd: cardGlow?.gradientEnd || '#09101F'
+      };
+      
+      const neonStyles = getNeonGlowStyles(glowConfig);
+      
+      // Override background and box shadow, remove border
+      footerStyles = {
+        ...footerStyles,
+        background: neonStyles.background,
+        boxShadow: neonStyles.boxShadow,
+        borderTop: 'none'
+      };
+      footerClasses = "relative overflow-hidden";
+    }
+
     return (
-      <footer id="contact" className="border-t" style={{ backgroundColor: actualColors.background, borderColor: actualColors.border }}>
-        <div className="container mx-auto px-6 py-12">
+      <footer id="contact" className={footerClasses} style={footerStyles}>
+        {/* Glow accent under footer top edge */}
+        {footerVariant === 'neon-glow' && cardGlow?.enabled !== false && (
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-4xl h-1 opacity-50 blur-sm pointer-events-none" style={{ backgroundColor: cardGlow?.color || '#144CCD' }} />
+        )}
+        <div className="container mx-auto px-6 py-12 relative z-10">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-8">
 
             <div className="sm:col-span-2 lg:col-span-4">

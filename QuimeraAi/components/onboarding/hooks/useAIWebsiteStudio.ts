@@ -1589,7 +1589,7 @@ function buildContentGenerationPrompt(brief: BusinessBrief, isSpanish: boolean):
         recommendedHeaderStyles = ['floating-glass', 'edge-minimal', 'sticky-solid'];
     }
 
-    const allHeaderStyles = 'sticky-solid|sticky-transparent|floating|edge-solid|edge-minimal|edge-bordered|floating-pill|floating-glass|floating-shadow|transparent-blur|transparent-bordered|transparent-gradient|transparent-gradient-dark';
+    const allHeaderStyles = 'sticky-solid|sticky-transparent|floating|edge-solid|edge-minimal|edge-bordered|floating-pill|floating-glass|floating-shadow|transparent-blur|transparent-bordered|transparent-gradient|transparent-gradient-dark|tabbed|segmented-pill';
 
     componentExamples += `
     "header": {

@@ -12,7 +12,7 @@ import TabbedControls from '../../ui/TabbedControls';
 import AnimationControls from '../../ui/AnimationControls';
 import SocialLinksEditor from '../../ui/SocialLinksEditor';
 import { Input, TextArea, Select, ToggleControl, FontSizeSelector, PaddingSelector, BorderRadiusSelector } from '../../ui/EditorControlPrimitives';
-import { BackgroundImageControl, CornerGradientControl, extractVideoId, ControlsDeps } from '../ControlsShared';
+import { BackgroundImageControl, CornerGradientControl, extractVideoId, ControlsDeps, CardGlowControl } from '../ControlsShared';
 import {
   Trash2, Plus, ChevronDown, ChevronRight, ChevronLeft, ChevronUp, HelpCircle,
   Layout, Image, List, Star, PlaySquare, Users, DollarSign, Eye,
@@ -643,6 +643,43 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
   const styleTab = (
     <div className="space-y-4">
+      {/* ========== VARIANT ========== */}
+      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
+        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
+          <Layout size={14} />
+          Footer Variant
+        </label>
+        <Select
+          value={data.footer.footerVariant || 'classic'}
+          onChange={(val) => setNestedData('footer.footerVariant', val)}
+          options={[
+            { value: 'classic', label: 'Classic' },
+            { value: 'neon-glow', label: 'Neon Glow' }
+          ]}
+          noMargin
+        />
+      </div>
+
+      {/* ========== NEON GLOW ========== */}
+      {data.footer.footerVariant === 'neon-glow' && (
+        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
+          <CardGlowControl
+            enabled={data.footer.cardGlow?.enabled !== false}
+            color={data.footer.cardGlow?.color || '#144CCD'}
+            intensity={data.footer.cardGlow?.intensity ?? 100}
+            borderRadius={data.footer.cardGlow?.borderRadius ?? 0}
+            gradientStart={data.footer.cardGlow?.gradientStart || '#0A0909'}
+            gradientEnd={data.footer.cardGlow?.gradientEnd || '#09101F'}
+            onEnabledChange={(v) => setNestedData('footer.cardGlow.enabled', v)}
+            onColorChange={(v) => setNestedData('footer.cardGlow.color', v)}
+            onIntensityChange={(v) => setNestedData('footer.cardGlow.intensity', v)}
+            onBorderRadiusChange={(v) => setNestedData('footer.cardGlow.borderRadius', v)}
+            onGradientStartChange={(v) => setNestedData('footer.cardGlow.gradientStart', v)}
+            onGradientEndChange={(v) => setNestedData('footer.cardGlow.gradientEnd', v)}
+          />
+        </div>
+      )}
+
       {/* ========== TYPOGRAPHY ========== */}
       <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
         <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
