@@ -160,7 +160,9 @@ interface EditorContextType {
         themeColors?: string,
         depthOfField?: string,
         referenceImage?: string,
-        referenceImages?: string[]
+        referenceImages?: string[],
+        skipFirestore?: boolean,
+        projectId?: string,
     }) => Promise<string>;
     generateProjectImagesWithProgress: (
         project: Project,
