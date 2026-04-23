@@ -53,7 +53,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           <Layers size={14} /> Efecto Cristal
         </label>
         <ToggleControl
-          label="Glassmorphism / Transparencia"
+          label={t('controls.glassmorphismTransparencia')}
           checked={data?.newsletter?.glassEffect || false}
           onChange={(v) => setNestedData('newsletter.glassEffect', v)}
         />
@@ -61,47 +61,66 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       <BackgroundImageControl sectionKey="newsletter" data={data} setNestedData={setNestedData} />
       {/* Spacing */}
       <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Spacing</label>
+        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('controls.spacing')}</label>
         <div className="space-y-1">
-          <PaddingSelector label="Vertical" value={data?.newsletter?.paddingY || 'md'} onChange={(v) => setNestedData('newsletter.paddingY', v)} />
-          <PaddingSelector label="Horizontal" value={data?.newsletter?.paddingX || 'md'} onChange={(v) => setNestedData('newsletter.paddingX', v)} />
+          <PaddingSelector label={t('controls.vertical')} value={data?.newsletter?.paddingY || 'md'} onChange={(v) => setNestedData('newsletter.paddingY', v)} />
+          <PaddingSelector label={t('controls.horizontal')} value={data?.newsletter?.paddingX || 'md'} onChange={(v) => setNestedData('newsletter.paddingX', v)} />
         </div>
       </div>
 
 
       {/* Section Colors */}
       <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Section Colors</label>
+        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('controls.sectionColors')}</label>
         <ColorControl label={t('editor.controls.common.background')} value={data?.newsletter.colors?.background || '#000000'} onChange={(v) => setNestedData('newsletter.colors.background', v)} />
-        <ColorControl label="Section Title" value={data?.newsletter.colors?.heading || '#F9FAFB'} onChange={(v) => setNestedData('newsletter.colors.heading', v)} />
-        <ColorControl label="Section Description" value={data?.newsletter.colors?.text || '#94a3b8'} onChange={(v) => setNestedData('newsletter.colors.text', v)} />
+        <ColorControl label={t('controls.sectionTitle')} value={data?.newsletter.colors?.heading || '#F9FAFB'} onChange={(v) => setNestedData('newsletter.colors.heading', v)} />
+        <ColorControl label={t('controls.sectionDescription')} value={data?.newsletter.colors?.text || '#94a3b8'} onChange={(v) => setNestedData('newsletter.colors.text', v)} />
       </div>
 
 
       {/* Card Box */}
       <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Card Box</label>
-        <ColorControl label="Card Background" value={data?.newsletter.colors?.cardBackground || 'rgba(79, 70, 229, 0.75)'} onChange={(v) => setNestedData('newsletter.colors.cardBackground', v)} />
-        <ColorControl label="Card Border" value={data?.newsletter.colors?.borderColor || '#374151'} onChange={(v) => setNestedData('newsletter.colors.borderColor', v)} />
-        <ColorControl label="Card Heading" value={data?.newsletter.colors?.cardHeading || '#ffffff'} onChange={(v) => setNestedData('newsletter.colors.cardHeading', v)} />
-        <ColorControl label="Card Text" value={data?.newsletter.colors?.cardText || '#ffffff'} onChange={(v) => setNestedData('newsletter.colors.cardText', v)} />
+        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('controls.cardBox')}</label>
+        
+        <div className="mb-3">
+          <ToggleControl
+            label={t('controls.mostrarBorde')}
+            checked={data?.newsletter.showCardBorder !== false}
+            onChange={(v) => setNestedData('newsletter.showCardBorder', v)}
+          />
+        </div>
+
+        <ColorControl label={t('controls.cardBackground')} value={data?.newsletter.colors?.cardBackground || 'rgba(79, 70, 229, 0.75)'} onChange={(v) => setNestedData('newsletter.colors.cardBackground', v)} />
+        <ColorControl label={t('controls.cardBorder')} value={data?.newsletter.colors?.borderColor || '#374151'} onChange={(v) => setNestedData('newsletter.colors.borderColor', v)} />
+        <ColorControl label={t('controls.cardHeading')} value={data?.newsletter.colors?.cardHeading || '#ffffff'} onChange={(v) => setNestedData('newsletter.colors.cardHeading', v)} />
+        <ColorControl label={t('controls.cardText')} value={data?.newsletter.colors?.cardText || '#ffffff'} onChange={(v) => setNestedData('newsletter.colors.cardText', v)} />
+        <div className="pt-2">
+          <label className="block text-xs font-bold text-editor-text-secondary mb-1">Opacidad de Tarjeta: {data?.newsletter.cardOpacity !== undefined ? data?.newsletter.cardOpacity : 100}%</label>
+          <input 
+            type="range" 
+            min="0" max="100" 
+            value={data?.newsletter.cardOpacity !== undefined ? data?.newsletter.cardOpacity : 100} 
+            onChange={(e) => setNestedData('newsletter.cardOpacity', parseInt(e.target.value))}
+            className="w-full accent-editor-accent" 
+          />
+        </div>
       </div>
 
 
       {/* Input Field */}
       <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Input Field</label>
-        <ColorControl label="Input Background" value={data?.newsletter.colors?.inputBackground || '#111827'} onChange={(v) => setNestedData('newsletter.colors.inputBackground', v)} />
-        <ColorControl label="Input Text" value={data?.newsletter.colors?.inputText || '#ffffff'} onChange={(v) => setNestedData('newsletter.colors.inputText', v)} />
-        <ColorControl label="Placeholder" value={data?.newsletter.colors?.inputPlaceholder || '#6b7280'} onChange={(v) => setNestedData('newsletter.colors.inputPlaceholder', v)} />
-        <ColorControl label="Input Border" value={data?.newsletter.colors?.inputBorder || '#374151'} onChange={(v) => setNestedData('newsletter.colors.inputBorder', v)} />
+        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('controls.inputField')}</label>
+        <ColorControl label={t('controls.inputBackground')} value={data?.newsletter.colors?.inputBackground || '#111827'} onChange={(v) => setNestedData('newsletter.colors.inputBackground', v)} />
+        <ColorControl label={t('controls.inputText')} value={data?.newsletter.colors?.inputText || '#ffffff'} onChange={(v) => setNestedData('newsletter.colors.inputText', v)} />
+        <ColorControl label={t('controls.placeholder')} value={data?.newsletter.colors?.inputPlaceholder || '#6b7280'} onChange={(v) => setNestedData('newsletter.colors.inputPlaceholder', v)} />
+        <ColorControl label={t('controls.inputBorder')} value={data?.newsletter.colors?.inputBorder || '#374151'} onChange={(v) => setNestedData('newsletter.colors.inputBorder', v)} />
       </div>
 
 
       {/* Button */}
       <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Button</label>
-        <ColorControl label="Button Background" value={data?.newsletter.colors?.buttonBackground || '#4f46e5'} onChange={(v) => setNestedData('newsletter.colors.buttonBackground', v)} />
+        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('controls.button')}</label>
+        <ColorControl label={t('controls.fondoBotn')} value={data?.newsletter.colors?.buttonBackground || '#4f46e5'} onChange={(v) => setNestedData('newsletter.colors.buttonBackground', v)} />
         <ColorControl label={t('editor.controls.common.buttonText')} value={data?.newsletter.colors?.buttonText || '#ffffff'} onChange={(v) => setNestedData('newsletter.colors.buttonText', v)} />
       </div>
     </div>

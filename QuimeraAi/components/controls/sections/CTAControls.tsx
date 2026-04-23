@@ -38,6 +38,23 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         </label>
         <Input label={t('editor.controls.common.title')} value={data?.cta.title} onChange={(e) => setNestedData('cta.title', e.target.value)} />
         <FontSizeSelector label={t('editor.controls.common.titleSize')} value={data?.cta.titleFontSize || 'md'} onChange={(v) => setNestedData('cta.titleFontSize', v)} />
+        
+        <div className="bg-editor-panel-bg/30 p-3 rounded-lg border border-editor-border/50 my-3">
+          <ToggleControl
+            label={t('controls.mostrarAcento')}
+            checked={data?.cta.showAccent !== false}
+            onChange={(v) => setNestedData('cta.showAccent', v)}
+          />
+          {(data?.cta.showAccent !== false) && (
+            <Input 
+              label={t('controls.textoDeAcento')} 
+              value={data?.cta.accentText || 'Limited Time Offer'} 
+              onChange={(e) => setNestedData('cta.accentText', e.target.value)} 
+              className="mt-3 mb-0"
+            />
+          )}
+        </div>
+
         <TextArea label={t('editor.controls.common.description')} value={data?.cta.description} onChange={(e) => setNestedData('cta.description', e.target.value)} rows={2} />
         <FontSizeSelector label={t('editor.controls.common.descriptionSize')} value={data?.cta.descriptionFontSize || 'md'} onChange={(v) => setNestedData('cta.descriptionFontSize', v)} />
         <Input label={t('editor.controls.common.buttonText')} value={data?.cta.buttonText} onChange={(e) => setNestedData('cta.buttonText', e.target.value)} />
@@ -133,7 +150,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           <Layers size={14} /> Efecto Cristal
         </label>
         <ToggleControl
-          label="Glassmorphism / Transparencia"
+          label={t('controls.glassmorphismTransparencia')}
           checked={data?.cta?.glassEffect || false}
           onChange={(v) => setNestedData('cta.glassEffect', v)}
         />
@@ -141,35 +158,55 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       <BackgroundImageControl sectionKey="cta" data={data} setNestedData={setNestedData} />
       {/* Spacing */}
       <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Spacing</label>
+        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('controls.spacing')}</label>
         <div className="space-y-1">
-          <PaddingSelector label="Vertical" value={data?.cta?.paddingY || 'md'} onChange={(v) => setNestedData('cta.paddingY', v)} />
-          <PaddingSelector label="Horizontal" value={data?.cta?.paddingX || 'md'} onChange={(v) => setNestedData('cta.paddingX', v)} />
+          <PaddingSelector label={t('controls.vertical')} value={data?.cta?.paddingY || 'md'} onChange={(v) => setNestedData('cta.paddingY', v)} />
+          <PaddingSelector label={t('controls.horizontal')} value={data?.cta?.paddingX || 'md'} onChange={(v) => setNestedData('cta.paddingX', v)} />
         </div>
       </div>
 
 
       {/* Colors */}
       <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Colors</label>
-        <ColorControl label="Section Background" value={data?.cta.colors?.background || '#0f172a'} onChange={(v) => setNestedData('cta.colors.background', v)} />
+        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('controls.colors')}</label>
+        <ColorControl label={t('controls.sectionBackground')} value={data?.cta.colors?.background || '#0f172a'} onChange={(v) => setNestedData('cta.colors.background', v)} />
       </div>
 
 
-      {/* Card Gradient */}
+      {/* Card Appearance */}
       <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Card Gradient</label>
-        <ColorControl label="Gradient Start" value={data?.cta.colors?.gradientStart || '#000'} onChange={(v) => setNestedData('cta.colors.gradientStart', v)} />
-        <ColorControl label="Gradient End" value={data?.cta.colors?.gradientEnd || '#000'} onChange={(v) => setNestedData('cta.colors.gradientEnd', v)} />
+        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('controls.cardAppearance')}</label>
+        
+        <div className="mb-3">
+          <ToggleControl
+            label={t('controls.mostrarBorde')}
+            checked={data?.cta.showCardBorder !== false}
+            onChange={(v) => setNestedData('cta.showCardBorder', v)}
+          />
+        </div>
+
+        <ColorControl label={t('controls.cardBorder')} value={data?.cta.colors?.borderColor || 'rgba(255,255,255,0.1)'} onChange={(v) => setNestedData('cta.colors.borderColor', v)} />
+        <ColorControl label={t('controls.gradientStart')} value={data?.cta.colors?.gradientStart || '#000'} onChange={(v) => setNestedData('cta.colors.gradientStart', v)} />
+        <ColorControl label={t('controls.gradientEnd')} value={data?.cta.colors?.gradientEnd || '#000'} onChange={(v) => setNestedData('cta.colors.gradientEnd', v)} />
+        <div className="pt-2">
+          <label className="block text-xs font-bold text-editor-text-secondary mb-1">Opacidad de Tarjeta: {data?.cta.cardOpacity !== undefined ? data?.cta.cardOpacity : 100}%</label>
+          <input 
+            type="range" 
+            min="0" max="100" 
+            value={data?.cta.cardOpacity !== undefined ? data?.cta.cardOpacity : 100} 
+            onChange={(e) => setNestedData('cta.cardOpacity', parseInt(e.target.value))}
+            className="w-full accent-editor-accent" 
+          />
+        </div>
       </div>
 
 
       {/* Text & Button */}
       <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Text & Button</label>
+        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('controls.textButton')}</label>
         <ColorControl label={t('editor.controls.common.title')} value={data?.cta.colors?.heading || '#ffffff'} onChange={(v) => setNestedData('cta.colors.heading', v)} />
         <ColorControl label={t('editor.controls.common.description')} value={data?.cta.colors?.text || '#ffffff'} onChange={(v) => setNestedData('cta.colors.text', v)} />
-        <ColorControl label="Button Background" value={data?.cta.colors?.buttonBackground || '#ffffff'} onChange={(v) => setNestedData('cta.colors.buttonBackground', v)} />
+        <ColorControl label={t('controls.fondoBotn')} value={data?.cta.colors?.buttonBackground || '#ffffff'} onChange={(v) => setNestedData('cta.colors.buttonBackground', v)} />
         <ColorControl label={t('editor.controls.common.buttonText')} value={data?.cta.colors?.buttonText || '#4f46e5'} onChange={(v) => setNestedData('cta.colors.buttonText', v)} />
       </div>
 

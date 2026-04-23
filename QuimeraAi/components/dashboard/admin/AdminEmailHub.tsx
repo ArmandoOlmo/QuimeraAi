@@ -829,7 +829,7 @@ const AdminEmailHub: React.FC<AdminEmailHubProps> = ({ onBack }) => {
                     </div>
                     <div>
                         <h2 className="text-lg font-bold text-editor-text-primary flex items-center gap-2">
-                            AI Email Studio
+                            {t('aiEmailStudio.title')}
                             <span className="text-[10px] font-mono bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded-full">{isVoiceActive ? MODEL_VOICE.split('-').slice(-2).join('-') : MODEL_TEXT.split('-').slice(-2).join('-')}</span>
                         </h2>
                         <p className="text-xs text-editor-text-secondary">{isVoiceActive ? t('adminEmail.aiStudio.voiceActive') : t('adminEmail.aiStudio.planAndCreate')}</p>

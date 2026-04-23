@@ -62,7 +62,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         <div className="space-y-3">
           <div>
             <Select
-              label="Style"
+              label={t('controls.style')}
               value={data?.products?.style || 'modern'}
               onChange={(val) => setNestedData('products.style', val)}
               options={[
@@ -76,7 +76,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           </div>
           <div>
             <Select
-              label="Columns"
+              label={t('controls.columns')}
               value={String(data?.products?.columns || 4)}
               onChange={(val) => setNestedData('products.columns', parseInt(val))}
               options={[
@@ -91,7 +91,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           </div>
           <div>
             <Select
-              label="Products Per Page"
+              label={t('controls.productsPerPage')}
               value={String(data?.products?.productsPerPage || 12)}
               onChange={(val) => setNestedData('products.productsPerPage', parseInt(val))}
               options={[
@@ -129,12 +129,12 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           Colors
         </label>
         <ColorControl label={t('editor.controls.common.background')} value={data?.products?.colors?.background || '#0f172a'} onChange={(v) => setNestedData('products.colors.background', v)} />
-        <ColorControl label="Heading" value={data?.products?.colors?.heading || '#F9FAFB'} onChange={(v) => setNestedData('products.colors.heading', v)} />
-        <ColorControl label="Text" value={data?.products?.colors?.text || '#94a3b8'} onChange={(v) => setNestedData('products.colors.text', v)} />
-        <ColorControl label="Accent" value={data?.products?.colors?.accent || '#4f46e5'} onChange={(v) => setNestedData('products.colors.accent', v)} />
-        <ColorControl label="Card Background" value={data?.products?.colors?.cardBackground || '#1e293b'} onChange={(v) => setNestedData('products.colors.cardBackground', v)} />
-        <ColorControl label="Card Text" value={data?.products?.colors?.cardText || '#F9FAFB'} onChange={(v) => setNestedData('products.colors.cardText', v)} />
-        <ColorControl label="Button Background" value={data?.products?.colors?.buttonBackground || '#4f46e5'} onChange={(v) => setNestedData('products.colors.buttonBackground', v)} />
+        <ColorControl label={t('controls.heading')} value={data?.products?.colors?.heading || '#F9FAFB'} onChange={(v) => setNestedData('products.colors.heading', v)} />
+        <ColorControl label={t('controls.text')} value={data?.products?.colors?.text || '#94a3b8'} onChange={(v) => setNestedData('products.colors.text', v)} />
+        <ColorControl label={t('controls.accent')} value={data?.products?.colors?.accent || '#4f46e5'} onChange={(v) => setNestedData('products.colors.accent', v)} />
+        <ColorControl label={t('controls.cardBackground')} value={data?.products?.colors?.cardBackground || '#1e293b'} onChange={(v) => setNestedData('products.colors.cardBackground', v)} />
+        <ColorControl label={t('controls.cardText')} value={data?.products?.colors?.cardText || '#F9FAFB'} onChange={(v) => setNestedData('products.colors.cardText', v)} />
+        <ColorControl label={t('controls.fondoBotn')} value={data?.products?.colors?.buttonBackground || '#4f46e5'} onChange={(v) => setNestedData('products.colors.buttonBackground', v)} />
         <ColorControl label={t('editor.controls.common.buttonText')} value={data?.products?.colors?.buttonText || '#ffffff'} onChange={(v) => setNestedData('products.colors.buttonText', v)} />
       </div>
     </div>

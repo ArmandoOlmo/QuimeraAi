@@ -52,11 +52,11 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         onChange={(v) => setNestedData('slideshow.borderRadius', v)}
       />
 
-      <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">Animation</label>
+      <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">{t('controls.animation')}</label>
 
       <div>
         <Select
-          label="Transition Effect"
+          label={t('controls.transitionEffect')}
           value={data.slideshow.transitionEffect || 'slide'}
           onChange={(val) => setNestedData('slideshow.transitionEffect', val)}
           options={[
@@ -69,7 +69,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       </div>
 
       <div>
-        <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">Transition Duration (ms)</label>
+        <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{t('controls.transitionDurationMs')}</label>
         <input
           type="number"
           min="200"
@@ -82,7 +82,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       </div>
 
       <div>
-        <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">Autoplay Speed (ms)</label>
+        <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{t('controls.autoplaySpeedMs')}</label>
         <input
           type="number"
           min="1000"
@@ -97,7 +97,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       {(data.slideshow.slideshowVariant === 'kenburns') && (
         <div>
           <Select
-            label="Ken Burns Intensity"
+            label={t('controls.kenBurnsIntensity')}
             value={data.slideshow.kenBurnsIntensity || 'medium'}
             onChange={(val) => setNestedData('slideshow.kenBurnsIntensity', val)}
             options={[
@@ -112,7 +112,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
       {(data.slideshow.slideshowVariant === 'thumbnails') && (
         <div>
-          <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">Thumbnail Height (px)</label>
+          <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{t('controls.thumbnailHeightPx')}</label>
           <input
             type="number"
             min="60"
@@ -125,7 +125,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         </div>
       )}
 
-      <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">Navigation</label>
+      <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">{t('controls.navigation')}</label>
 
       <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
         <ToggleControl label={t('editor.controls.common.showArrows')} checked={data.slideshow.showArrows ?? true} onChange={(v) => setNestedData('slideshow.showArrows', v)} />
@@ -135,7 +135,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
       {(data.slideshow.showArrows ?? true) && (
           <Select
-            label="Arrow Style"
+            label={t('controls.arrowStyle')}
             value={data.slideshow.arrowStyle || 'rounded'}
             onChange={(val) => setNestedData('slideshow.arrowStyle', val)}
             options={[
@@ -150,7 +150,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
       {(data.slideshow.showDots ?? true) && (
           <Select
-            label="Dot Style"
+            label={t('controls.dotStyle')}
             value={data.slideshow.dotStyle || 'circle'}
             onChange={(val) => setNestedData('slideshow.dotStyle', val)}
             options={[
@@ -164,38 +164,38 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       )}
 
       <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Spacing</label>
+        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('controls.spacing')}</label>
         <div className="space-y-1">
-          <PaddingSelector label="Vertical" value={data.slideshow.paddingY || 'md'} onChange={(v) => setNestedData('slideshow.paddingY', v)} />
-          <PaddingSelector label="Horizontal" value={data.slideshow.paddingX || 'md'} onChange={(v) => setNestedData('slideshow.paddingX', v)} />
+          <PaddingSelector label={t('controls.vertical')} value={data.slideshow.paddingY || 'md'} onChange={(v) => setNestedData('slideshow.paddingY', v)} />
+          <PaddingSelector label={t('controls.horizontal')} value={data.slideshow.paddingX || 'md'} onChange={(v) => setNestedData('slideshow.paddingX', v)} />
         </div>
       </div>
 
-      <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">Colors</label>
+      <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">{t('controls.colors')}</label>
       <ColorControl label={t('editor.controls.common.background')} value={data.slideshow.colors?.background} onChange={(v) => setNestedData('slideshow.colors.background', v)} />
       <ColorControl label={t('editor.controls.common.title')} value={data.slideshow.colors?.heading || '#ffffff'} onChange={(v) => setNestedData('slideshow.colors.heading', v)} />
 
       {(data.slideshow.showArrows ?? true) && (
         <>
           <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider mt-3">Arrows</h5>
-          <ColorControl label="Arrow Background" value={data.slideshow.colors?.arrowBackground || 'rgba(0, 0, 0, 0.5)'} onChange={(v) => setNestedData('slideshow.colors.arrowBackground', v)} />
-          <ColorControl label="Arrow Icon" value={data.slideshow.colors?.arrowText || '#ffffff'} onChange={(v) => setNestedData('slideshow.colors.arrowText', v)} />
+          <ColorControl label={t('controls.arrowBackground')} value={data.slideshow.colors?.arrowBackground || 'rgba(0, 0, 0, 0.5)'} onChange={(v) => setNestedData('slideshow.colors.arrowBackground', v)} />
+          <ColorControl label={t('controls.arrowIcon')} value={data.slideshow.colors?.arrowText || '#ffffff'} onChange={(v) => setNestedData('slideshow.colors.arrowText', v)} />
         </>
       )}
 
       {(data.slideshow.showDots ?? true) && (
         <>
           <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider mt-3">Dots</h5>
-          <ColorControl label="Active Dot" value={data.slideshow.colors?.dotActive || '#ffffff'} onChange={(v) => setNestedData('slideshow.colors.dotActive', v)} />
-          <ColorControl label="Inactive Dot" value={data.slideshow.colors?.dotInactive || 'rgba(255, 255, 255, 0.5)'} onChange={(v) => setNestedData('slideshow.colors.dotInactive', v)} />
+          <ColorControl label={t('controls.activeDot')} value={data.slideshow.colors?.dotActive || '#ffffff'} onChange={(v) => setNestedData('slideshow.colors.dotActive', v)} />
+          <ColorControl label={t('controls.inactiveDot')} value={data.slideshow.colors?.dotInactive || 'rgba(255, 255, 255, 0.5)'} onChange={(v) => setNestedData('slideshow.colors.dotInactive', v)} />
         </>
       )}
 
       {(data.slideshow.showCaptions ?? false) && (
         <>
           <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider mt-3">Captions</h5>
-          <ColorControl label="Caption Background" value={data.slideshow.colors?.captionBackground || 'rgba(0, 0, 0, 0.7)'} onChange={(v) => setNestedData('slideshow.colors.captionBackground', v)} />
-          <ColorControl label="Caption Text" value={data.slideshow.colors?.captionText || '#ffffff'} onChange={(v) => setNestedData('slideshow.colors.captionText', v)} />
+          <ColorControl label={t('controls.captionBackground')} value={data.slideshow.colors?.captionBackground || 'rgba(0, 0, 0, 0.7)'} onChange={(v) => setNestedData('slideshow.colors.captionBackground', v)} />
+          <ColorControl label={t('controls.captionText')} value={data.slideshow.colors?.captionText || '#ffffff'} onChange={(v) => setNestedData('slideshow.colors.captionText', v)} />
         </>
       )}
 
@@ -214,7 +214,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         onSizeChange={(v) => setNestedData('slideshow.cornerGradient.size', v)}
       />
 
-      <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">Slides</label>
+      <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">{t('controls.slides')}</label>
       {(data.slideshow.items || []).map((item: any, index: number) => (
         <div key={index} className="bg-editor-bg p-3 rounded-lg border border-editor-border mb-3 group">
           <ImagePicker
@@ -269,7 +269,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
       <div>
         <Select
-          label="Style Variant"
+          label={t('controls.styleVariant')}
           value={data.slideshow.slideshowVariant || 'classic'}
           onChange={(val) => setNestedData('slideshow.slideshowVariant', val)}
           options={[
@@ -284,7 +284,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
 
       {/* Slides */}
-      <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">Slides</label>
+      <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">{t('controls.slides')}</label>
       {(data.slideshow.items || []).map((item: any, index: number) => (
         <div key={index} className="bg-editor-bg p-3 rounded-lg border border-editor-border mb-3 group">
           <ImagePicker
@@ -332,7 +332,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           <Layers size={14} /> Efecto Cristal
         </label>
         <ToggleControl
-          label="Glassmorphism / Transparencia"
+          label={t('controls.glassmorphismTransparencia')}
           checked={data?.slideshow?.glassEffect || false}
           onChange={(v) => setNestedData('slideshow.glassEffect', v)}
         />
@@ -348,11 +348,11 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
       {/* Animation Settings */}
       <div className="space-y-3">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Animation</label>
+        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('controls.animation')}</label>
 
         <div>
           <Select
-            label="Transition Effect"
+            label={t('controls.transitionEffect')}
             value={data.slideshow.transitionEffect || 'slide'}
             onChange={(val) => setNestedData('slideshow.transitionEffect', val)}
             options={[
@@ -365,7 +365,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         </div>
 
         <div>
-          <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">Transition Duration (ms)</label>
+          <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{t('controls.transitionDurationMs')}</label>
           <input
             type="number"
             min="200"
@@ -378,7 +378,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         </div>
 
         <div>
-          <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">Autoplay Speed (ms)</label>
+          <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{t('controls.autoplaySpeedMs')}</label>
           <input
             type="number"
             min="1000"
@@ -393,7 +393,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         {(data.slideshow.slideshowVariant === 'kenburns') && (
           <div>
             <Select
-              label="Ken Burns Intensity"
+              label={t('controls.kenBurnsIntensity')}
               value={data.slideshow.kenBurnsIntensity || 'medium'}
               onChange={(val) => setNestedData('slideshow.kenBurnsIntensity', val)}
               options={[
@@ -408,7 +408,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
         {(data.slideshow.slideshowVariant === 'thumbnails') && (
           <div>
-            <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">Thumbnail Height (px)</label>
+            <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{t('controls.thumbnailHeightPx')}</label>
             <input
               type="number"
               min="60"
@@ -425,7 +425,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
       {/* Navigation */}
       <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Navigation</label>
+        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('controls.navigation')}</label>
         <ToggleControl label={t('editor.controls.common.showArrows')} checked={data.slideshow.showArrows ?? true} onChange={(v) => setNestedData('slideshow.showArrows', v)} />
         <ToggleControl label={t('editor.controls.common.showDots')} checked={data.slideshow.showDots ?? true} onChange={(v) => setNestedData('slideshow.showDots', v)} />
         <ToggleControl label={t('editor.controls.common.showCaptions')} checked={data.slideshow.showCaptions ?? false} onChange={(v) => setNestedData('slideshow.showCaptions', v)} />
@@ -434,7 +434,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       {(data.slideshow.showArrows ?? true) && (
         <div>
           <Select
-            label="Arrow Style"
+            label={t('controls.arrowStyle')}
             value={data.slideshow.arrowStyle || 'rounded'}
             onChange={(val) => setNestedData('slideshow.arrowStyle', val)}
             options={[
@@ -451,7 +451,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       {(data.slideshow.showDots ?? true) && (
         <div>
           <Select
-            label="Dot Style"
+            label={t('controls.dotStyle')}
             value={data.slideshow.dotStyle || 'circle'}
             onChange={(val) => setNestedData('slideshow.dotStyle', val)}
             options={[
@@ -468,42 +468,42 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
       {/* Spacing */}
       <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Spacing</label>
+        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('controls.spacing')}</label>
         <div className="grid grid-cols-2 gap-3">
-          <PaddingSelector label="Vertical" value={data.slideshow.paddingY || 'md'} onChange={(v) => setNestedData('slideshow.paddingY', v)} />
-          <PaddingSelector label="Horizontal" value={data.slideshow.paddingX || 'md'} onChange={(v) => setNestedData('slideshow.paddingX', v)} />
+          <PaddingSelector label={t('controls.vertical')} value={data.slideshow.paddingY || 'md'} onChange={(v) => setNestedData('slideshow.paddingY', v)} />
+          <PaddingSelector label={t('controls.horizontal')} value={data.slideshow.paddingX || 'md'} onChange={(v) => setNestedData('slideshow.paddingX', v)} />
         </div>
       </div>
 
 
       {/* Colors */}
       <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Colors</label>
+        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('controls.colors')}</label>
         <ColorControl label={t('editor.controls.common.background')} value={data.slideshow.colors?.background} onChange={(v) => setNestedData('slideshow.colors.background', v)} />
         <ColorControl label={t('editor.controls.common.title')} value={data.slideshow.colors?.heading || '#ffffff'} onChange={(v) => setNestedData('slideshow.colors.heading', v)} />
       </div>
 
       {(data.slideshow.showArrows ?? true) && (
         <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
-          <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Arrow Colors</label>
-          <ColorControl label="Arrow Background" value={data.slideshow.colors?.arrowBackground || 'rgba(0, 0, 0, 0.5)'} onChange={(v) => setNestedData('slideshow.colors.arrowBackground', v)} />
-          <ColorControl label="Arrow Icon" value={data.slideshow.colors?.arrowText || '#ffffff'} onChange={(v) => setNestedData('slideshow.colors.arrowText', v)} />
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('controls.arrowColors')}</label>
+          <ColorControl label={t('controls.arrowBackground')} value={data.slideshow.colors?.arrowBackground || 'rgba(0, 0, 0, 0.5)'} onChange={(v) => setNestedData('slideshow.colors.arrowBackground', v)} />
+          <ColorControl label={t('controls.arrowIcon')} value={data.slideshow.colors?.arrowText || '#ffffff'} onChange={(v) => setNestedData('slideshow.colors.arrowText', v)} />
         </div>
       )}
 
       {(data.slideshow.showDots ?? true) && (
         <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
-          <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Dot Colors</label>
-          <ColorControl label="Active Dot" value={data.slideshow.colors?.dotActive || '#ffffff'} onChange={(v) => setNestedData('slideshow.colors.dotActive', v)} />
-          <ColorControl label="Inactive Dot" value={data.slideshow.colors?.dotInactive || 'rgba(255, 255, 255, 0.5)'} onChange={(v) => setNestedData('slideshow.colors.dotInactive', v)} />
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('controls.dotColors')}</label>
+          <ColorControl label={t('controls.activeDot')} value={data.slideshow.colors?.dotActive || '#ffffff'} onChange={(v) => setNestedData('slideshow.colors.dotActive', v)} />
+          <ColorControl label={t('controls.inactiveDot')} value={data.slideshow.colors?.dotInactive || 'rgba(255, 255, 255, 0.5)'} onChange={(v) => setNestedData('slideshow.colors.dotInactive', v)} />
         </div>
       )}
 
       {(data.slideshow.showCaptions ?? false) && (
         <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
-          <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Caption Colors</label>
-          <ColorControl label="Caption Background" value={data.slideshow.colors?.captionBackground || 'rgba(0, 0, 0, 0.7)'} onChange={(v) => setNestedData('slideshow.colors.captionBackground', v)} />
-          <ColorControl label="Caption Text" value={data.slideshow.colors?.captionText || '#ffffff'} onChange={(v) => setNestedData('slideshow.colors.captionText', v)} />
+          <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('controls.captionColors')}</label>
+          <ColorControl label={t('controls.captionBackground')} value={data.slideshow.colors?.captionBackground || 'rgba(0, 0, 0, 0.7)'} onChange={(v) => setNestedData('slideshow.colors.captionBackground', v)} />
+          <ColorControl label={t('controls.captionText')} value={data.slideshow.colors?.captionText || '#ffffff'} onChange={(v) => setNestedData('slideshow.colors.captionText', v)} />
         </div>
       )}
 

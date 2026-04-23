@@ -177,8 +177,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
         <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('editor.controls.cmsFeed.spacing')}</label>
         <div className="space-y-1">
-          <PaddingSelector label="Vertical" value={feedData.paddingY || 'md'} onChange={(v) => setNestedData('cmsFeed.paddingY', v)} />
-          <PaddingSelector label="Horizontal" value={feedData.paddingX || 'md'} onChange={(v) => setNestedData('cmsFeed.paddingX', v)} />
+          <PaddingSelector label={t('controls.vertical')} value={feedData.paddingY || 'md'} onChange={(v) => setNestedData('cmsFeed.paddingY', v)} />
+          <PaddingSelector label={t('controls.horizontal')} value={feedData.paddingX || 'md'} onChange={(v) => setNestedData('cmsFeed.paddingX', v)} />
         </div>
       </div>
 

@@ -33,7 +33,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
     <div className="space-y-4">
       {/* Logo Type Selector */}
       <div>
-        <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">Logo Type</label>
+        <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{t('controls.logoType')}</label>
         <div className="flex bg-editor-bg p-1 rounded-md border border-editor-border">
           {['text', 'image'].map(type => (
             <button
@@ -67,7 +67,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
       <Input label={t('editor.controls.common.copyright')} value={data.footer.copyrightText} onChange={(e) => setNestedData('footer.copyrightText', e.target.value)} />
       <div className="space-y-4">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">Link Columns</label>
+        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">{t('controls.linkColumns')}</label>
         {(data.footer.linkColumns || []).map((col, colIndex) => (
           <div key={colIndex} className="bg-editor-bg p-3 rounded border border-editor-border space-y-2">
             <div className="flex items-center gap-2 mb-2">
@@ -285,7 +285,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
         <ColorControl label={t('editor.controls.common.background')} value={data.footer.colors?.background} onChange={(v) => setNestedData('footer.colors.background', v)} />
         <ColorControl label={t('editor.controls.common.title')} value={data.footer.colors?.heading || '#ffffff'} onChange={(v) => setNestedData('footer.colors.heading', v)} />
-        <ColorControl label="Text" value={data.footer.colors?.text} onChange={(v) => setNestedData('footer.colors.text', v)} />
+        <ColorControl label={t('controls.text')} value={data.footer.colors?.text} onChange={(v) => setNestedData('footer.colors.text', v)} />
       </div>
     </div>
   );
@@ -424,7 +424,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           <Image size={14} />
           Logo
         </label>
-        <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">Logo Type</label>
+        <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{t('controls.logoType')}</label>
         <div className="flex bg-editor-bg p-1 rounded-md border border-editor-border">
           {['text', 'image'].map(type => (
             <button
@@ -702,7 +702,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         <div className="space-y-3">
           <ColorControl label={t('editor.controls.common.background')} value={data.footer.colors?.background} onChange={(v) => setNestedData('footer.colors.background', v)} />
           <ColorControl label={t('editor.controls.common.title')} value={data.footer.colors?.heading || '#ffffff'} onChange={(v) => setNestedData('footer.colors.heading', v)} />
-          <ColorControl label="Text" value={data.footer.colors?.text} onChange={(v) => setNestedData('footer.colors.text', v)} />
+          <ColorControl label={t('controls.text')} value={data.footer.colors?.text} onChange={(v) => setNestedData('footer.colors.text', v)} />
         </div>
       </div>
     </div>

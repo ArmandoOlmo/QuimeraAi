@@ -1,4 +1,5 @@
 import { PageData, ThemeData, PageSection } from '../../../../types';
+import { initialData } from '../../../../data/initialData';
 
 export const initialAgencyData = {
     theme: {
@@ -27,6 +28,7 @@ export const initialAgencyData = {
     } as ThemeData,
 
     data: {
+        ...initialData.data,
         header: {
           style: 'glass',
           showGlobalButton: true,

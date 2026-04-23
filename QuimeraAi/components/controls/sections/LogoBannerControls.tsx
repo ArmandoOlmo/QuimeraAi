@@ -33,8 +33,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
   const contentTab = (
     <div className="space-y-3">
-      <Input label="Title" value={data.logoBanner.title || ''} onChange={(e) => setNestedData('logoBanner.title', e.target.value)} placeholder="Trusted by industry leaders" />
-      <Input label="Subtitle" value={data.logoBanner.subtitle || ''} onChange={(e) => setNestedData('logoBanner.subtitle', e.target.value)} placeholder="" />
+      <Input label={t('controls.title')} value={data.logoBanner.title || ''} onChange={(e) => setNestedData('logoBanner.title', e.target.value)} placeholder="Trusted by industry leaders" />
+      <Input label={t('controls.subtitle')} value={data.logoBanner.subtitle || ''} onChange={(e) => setNestedData('logoBanner.subtitle', e.target.value)} placeholder="" />
 
       <div className="text-[10px] font-semibold text-editor-text-secondary uppercase tracking-wider pt-1">Logos</div>
       {logos.map((logo: any, idx: number) => (
@@ -56,12 +56,12 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           </div>
 
           <ImagePicker
-            label="Logo Image"
+            label={t('controls.logoImage')}
             value={logo.imageUrl}
             onChange={(url) => setNestedData(`logoBanner.logos.${idx}.imageUrl`, url)}
           />
-          <Input label="Alt Text" value={logo.alt || ''} onChange={(e) => setNestedData(`logoBanner.logos.${idx}.alt`, e.target.value)} placeholder="Brand Name" />
-          <Input label="Link Text" value={logo.linkText || ''} onChange={(e) => setNestedData(`logoBanner.logos.${idx}.linkText`, e.target.value)} placeholder="Visit Brand" />
+          <Input label={t('controls.altText')} value={logo.alt || ''} onChange={(e) => setNestedData(`logoBanner.logos.${idx}.alt`, e.target.value)} placeholder="Brand Name" />
+          <Input label={t('controls.linkText')} value={logo.linkText || ''} onChange={(e) => setNestedData(`logoBanner.logos.${idx}.linkText`, e.target.value)} placeholder="Visit Brand" />
 
           {/* Link Type Selector */}
           <div>
@@ -84,13 +84,13 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
               ))}
             </div>
             {(logo.linkType === 'manual' || !logo.linkType) && (
-              <Input label="Link URL" value={logo.link || ''} onChange={(e) => setNestedData(`logoBanner.logos.${idx}.link`, e.target.value)} placeholder="https://brand.com" />
+              <Input label={t('controls.linkUrl')} value={logo.link || ''} onChange={(e) => setNestedData(`logoBanner.logos.${idx}.link`, e.target.value)} placeholder="https://brand.com" />
             )}
             {logo.linkType === 'content' && (
               <SingleContentSelector
                 selectedContentPath={logo.link}
                 onSelect={(path) => setNestedData(`logoBanner.logos.${idx}.link`, path || '')}
-                label="Select Content"
+                label={t('controls.selectContent')}
               />
             )}
           </div>
@@ -113,10 +113,10 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
     <div className="space-y-3">
       {/* Scroll */}
       <div className="text-[10px] font-semibold text-editor-text-secondary uppercase tracking-wider pt-1">Behavior</div>
-      <ToggleControl label="Scroll (Marquee)" checked={data.logoBanner.scrollEnabled ?? false} onChange={(v) => setNestedData('logoBanner.scrollEnabled', v)} />
-      <ToggleControl label="Pause on Hover" checked={data.logoBanner.pauseOnHover ?? true} onChange={(v) => setNestedData('logoBanner.pauseOnHover', v)} />
-      <ToggleControl label="Grayscale (Color on Hover)" checked={data.logoBanner.grayscale ?? true} onChange={(v) => setNestedData('logoBanner.grayscale', v)} />
-      <ToggleControl label="Show Divider Lines" checked={data.logoBanner.showDivider ?? false} onChange={(v) => setNestedData('logoBanner.showDivider', v)} />
+      <ToggleControl label={t('controls.scrollMarquee')} checked={data.logoBanner.scrollEnabled ?? false} onChange={(v) => setNestedData('logoBanner.scrollEnabled', v)} />
+      <ToggleControl label={t('controls.pauseOnHover')} checked={data.logoBanner.pauseOnHover ?? true} onChange={(v) => setNestedData('logoBanner.pauseOnHover', v)} />
+      <ToggleControl label={t('controls.grayscaleColorOnHover')} checked={data.logoBanner.grayscale ?? true} onChange={(v) => setNestedData('logoBanner.grayscale', v)} />
+      <ToggleControl label={t('controls.showDividerLines')} checked={data.logoBanner.showDivider ?? false} onChange={(v) => setNestedData('logoBanner.showDivider', v)} />
 
       {data.logoBanner.scrollEnabled && (
         <div>
@@ -155,8 +155,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       </div>
 
       {/* Font sizes */}
-      <FontSizeSelector label="Title Size" value={data.logoBanner.titleFontSize || 'sm'} onChange={(v) => setNestedData('logoBanner.titleFontSize', v)} />
-      <FontSizeSelector label="Subtitle Size" value={data.logoBanner.subtitleFontSize || 'sm'} onChange={(v) => setNestedData('logoBanner.subtitleFontSize', v)} />
+      <FontSizeSelector label={t('controls.titleSize')} value={data.logoBanner.titleFontSize || 'sm'} onChange={(v) => setNestedData('logoBanner.titleFontSize', v)} />
+      <FontSizeSelector label={t('controls.subtitleSize')} value={data.logoBanner.subtitleFontSize || 'sm'} onChange={(v) => setNestedData('logoBanner.subtitleFontSize', v)} />
 
       {/* Padding */}
       <div>
@@ -185,12 +185,12 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
       {/* Background */}
       <div className="text-[10px] font-semibold text-editor-text-secondary uppercase tracking-wider pt-1">Background</div>
-      <ToggleControl label="Use Gradient" checked={data.logoBanner.useGradient ?? false} onChange={(v) => setNestedData('logoBanner.useGradient', v)} />
+      <ToggleControl label={t('controls.useGradient')} checked={data.logoBanner.useGradient ?? false} onChange={(v) => setNestedData('logoBanner.useGradient', v)} />
 
       {data.logoBanner.useGradient ? (
         <div className="space-y-2">
-          <ColorControl label="Gradient From" value={data.logoBanner.gradientFrom || '#0f172a'} onChange={(v) => setNestedData('logoBanner.gradientFrom', v)} />
-          <ColorControl label="Gradient To" value={data.logoBanner.gradientTo || '#1e293b'} onChange={(v) => setNestedData('logoBanner.gradientTo', v)} />
+          <ColorControl label={t('controls.gradientFrom')} value={data.logoBanner.gradientFrom || '#0f172a'} onChange={(v) => setNestedData('logoBanner.gradientFrom', v)} />
+          <ColorControl label={t('controls.gradientTo')} value={data.logoBanner.gradientTo || '#1e293b'} onChange={(v) => setNestedData('logoBanner.gradientTo', v)} />
           <div>
             <div className="flex items-center justify-between mb-1">
               <span className="text-[10px] font-medium text-editor-text-secondary">Gradient Angle</span>
@@ -203,15 +203,15 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           </div>
         </div>
       ) : (
-        <ColorControl label="Background Color" value={data.logoBanner.backgroundColor || '#ffffff'} onChange={(v) => setNestedData('logoBanner.backgroundColor', v)} />
+        <ColorControl label={t('controls.backgroundColor')} value={data.logoBanner.backgroundColor || '#ffffff'} onChange={(v) => setNestedData('logoBanner.backgroundColor', v)} />
       )}
 
       {/* Colors */}
       <div className="text-[10px] font-semibold text-editor-text-secondary uppercase tracking-wider pt-1">Colors</div>
-      <ColorControl label="Title" value={data.logoBanner.titleColor || '#64748b'} onChange={(v) => setNestedData('logoBanner.titleColor', v)} />
-      <ColorControl label="Subtitle" value={data.logoBanner.subtitleColor || '#94a3b8'} onChange={(v) => setNestedData('logoBanner.subtitleColor', v)} />
+      <ColorControl label={t('controls.title')} value={data.logoBanner.titleColor || '#64748b'} onChange={(v) => setNestedData('logoBanner.titleColor', v)} />
+      <ColorControl label={t('controls.subtitle')} value={data.logoBanner.subtitleColor || '#94a3b8'} onChange={(v) => setNestedData('logoBanner.subtitleColor', v)} />
       {data.logoBanner.showDivider && (
-        <ColorControl label="Divider" value={data.logoBanner.dividerColor || '#e2e8f0'} onChange={(v) => setNestedData('logoBanner.dividerColor', v)} />
+        <ColorControl label={t('controls.divider')} value={data.logoBanner.dividerColor || '#e2e8f0'} onChange={(v) => setNestedData('logoBanner.dividerColor', v)} />
       )}
     </div>
   );

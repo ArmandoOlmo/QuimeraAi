@@ -54,7 +54,7 @@ interface CTASectionProps extends CtaData {
 }
 
 const CTASection: React.FC<CTASectionProps> = ({
-  glassEffect, title, description, buttonText, buttonUrl, paddingY, paddingX, colors, cardBorderRadius, buttonBorderRadius, titleFontSize = 'md', descriptionFontSize = 'md', cornerGradient, onNavigate }) => {
+  glassEffect, title, description, buttonText, buttonUrl, paddingY, paddingX, colors, cardBorderRadius, buttonBorderRadius, titleFontSize = 'md', descriptionFontSize = 'md', cornerGradient, onNavigate, showAccent, accentText, cardOpacity, showCardBorder }) => {
   // Get design tokens with fallback to component colors
   const { getColor } = useDesignTokens();
 
@@ -75,18 +75,20 @@ const CTASection: React.FC<CTASectionProps> = ({
       <CornerGradient config={cornerGradient} />
       <div className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]} relative z-10`}>
         <div
-          className={`p-12 md:p-16 lg:p-20 text-center ${borderRadiusClasses[cardBorderRadius]} relative overflow-hidden`}
-          style={{ backgroundImage: `linear-gradient(135deg, ${actualColors.gradientStart}, ${actualColors.gradientEnd})` }}
+          className={`${showCardBorder !== false ? 'border border-white/10' : ''} p-12 md:p-16 lg:p-20 text-center ${borderRadiusClasses[cardBorderRadius]} relative overflow-hidden`}
+          style={{ ...(showCardBorder !== false ? { borderColor: colors?.borderColor || 'rgba(255,255,255,0.1)' } : {}), backgroundImage: `linear-gradient(135deg, ${hexToRgba(actualColors.gradientStart, (cardOpacity !== undefined ? cardOpacity : 100) / 100)}, ${hexToRgba(actualColors.gradientEnd, (cardOpacity !== undefined ? cardOpacity : 100) / 100)})` }}
         >
           <div>
             {/* Urgency Badge */}
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full border border-white/20 mb-6 animate-pulse">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400"></span>
-              </span>
-              <span className="text-white/90 text-sm font-medium">Limited Time Offer</span>
-            </div>
+            {showAccent !== false && (
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full border border-white/20 mb-6 animate-pulse">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400"></span>
+                </span>
+                <span className="text-white/90 text-sm font-medium">{accentText || 'Limited Time Offer'}</span>
+              </div>
+            )}
 
             <h2 className={`${titleSizeClasses[titleFontSize]} font-black text-white mb-4 font-header leading-tight`} style={{ color: actualColors.heading, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>
               {title}

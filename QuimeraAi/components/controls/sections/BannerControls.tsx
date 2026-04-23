@@ -41,12 +41,12 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         <AIFormControl label={t('editor.controls.common.headline')} onAssistClick={() => setAiAssistField({ path: 'banner.headline', value: data?.banner?.headline || '', context: 'Banner Headline' })}>
           <Input value={data?.banner?.headline || ''} onChange={(e) => setNestedData('banner.headline', e.target.value)} />
         </AIFormControl>
-        <FontSizeSelector label="Headline Size" value={data?.banner?.headlineFontSize || 'lg'} onChange={(v) => setNestedData('banner.headlineFontSize', v)} />
+        <FontSizeSelector label={t('controls.headlineSize')} value={data?.banner?.headlineFontSize || 'lg'} onChange={(v) => setNestedData('banner.headlineFontSize', v)} />
 
         <AIFormControl label={t('editor.controls.common.subheadline')} onAssistClick={() => setAiAssistField({ path: 'banner.subheadline', value: data?.banner?.subheadline || '', context: 'Banner Subheadline' })}>
           <TextArea value={data?.banner?.subheadline || ''} onChange={(e) => setNestedData('banner.subheadline', e.target.value)} rows={2} />
         </AIFormControl>
-        <FontSizeSelector label="Subheadline Size" value={data?.banner?.subheadlineFontSize || 'md'} onChange={(v) => setNestedData('banner.subheadlineFontSize', v)} />
+        <FontSizeSelector label={t('controls.subheadlineSize')} value={data?.banner?.subheadlineFontSize || 'md'} onChange={(v) => setNestedData('banner.subheadlineFontSize', v)} />
 
 
         <ToggleControl label={t('editor.controls.common.showButton')} checked={data?.banner?.showButton !== false} onChange={(v) => setNestedData('banner.showButton', v)} />
@@ -58,7 +58,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
             {/* Link Type Selector */}
             <div className="mb-3">
-              <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">Link Type</label>
+              <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{t('controls.linkType')}</label>
               <div className="flex bg-editor-panel-bg rounded-md border border-editor-border p-1">
                 {[
                   { value: 'manual', label: 'Manual URL' },
@@ -165,7 +165,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
         <div className="mb-4">
           <div className="flex justify-between items-center mb-1">
-            <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Banner Height</label>
+            <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('controls.bannerHeight')}</label>
             <span className="text-xs text-editor-text-primary">{data?.banner?.height || 400}px</span>
           </div>
           <input
@@ -177,7 +177,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         </div>
 
         <div className="mb-4">
-          <label className="block text-xs font-bold text-editor-text-secondary mb-2 uppercase tracking-wider">Text Alignment</label>
+          <label className="block text-xs font-bold text-editor-text-secondary mb-2 uppercase tracking-wider">{t('controls.textAlignment')}</label>
           <div className="flex bg-editor-bg p-1 rounded-md border border-editor-border">
             {(['left', 'center', 'right'] as const).map((align) => (
               <button
@@ -195,8 +195,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         </div>
 
         <div className="space-y-1">
-          <PaddingSelector label="Vertical Padding" value={data?.banner?.paddingY || 'md'} onChange={(v) => setNestedData('banner.paddingY', v)} />
-          <PaddingSelector label="Horizontal Padding" value={data?.banner?.paddingX || 'md'} onChange={(v) => setNestedData('banner.paddingX', v)} />
+          <PaddingSelector label={t('controls.verticalPadding')} value={data?.banner?.paddingY || 'md'} onChange={(v) => setNestedData('banner.paddingY', v)} />
+          <PaddingSelector label={t('controls.horizontalPadding')} value={data?.banner?.paddingX || 'md'} onChange={(v) => setNestedData('banner.paddingX', v)} />
         </div>
       </div>
 
@@ -207,7 +207,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           Colors
         </label>
 
-        <ColorControl label="Background Color" value={data?.banner?.colors?.background || '#0f172a'} onChange={(v) => setNestedData('banner.colors.background', v)} />
+        <ColorControl label={t('controls.backgroundColor')} value={data?.banner?.colors?.background || '#0f172a'} onChange={(v) => setNestedData('banner.colors.background', v)} />
 
         <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">Overlay</h5>
         <ToggleControl label={t('editor.controls.common.enableOverlay')} checked={data?.banner?.overlayEnabled !== false} onChange={(v) => setNestedData('banner.overlayEnabled', v)} />
@@ -218,7 +218,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
             <div>
               <div className="flex justify-between items-center mb-1">
-                <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Overlay Opacity</label>
+                <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('controls.overlayOpacity')}</label>
                 <span className="text-xs text-editor-text-primary">{data?.banner?.backgroundOverlayOpacity ?? 50}%</span>
               </div>
               <input
@@ -232,13 +232,13 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         )}
 
         <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">Text</h5>
-        <ColorControl label="Headline Color" value={data?.banner?.colors?.heading || '#ffffff'} onChange={(v) => setNestedData('banner.colors.heading', v)} />
-        <ColorControl label="Subheadline Color" value={data?.banner?.colors?.text || '#ffffff'} onChange={(v) => setNestedData('banner.colors.text', v)} />
+        <ColorControl label={t('controls.headlineColor')} value={data?.banner?.colors?.heading || '#ffffff'} onChange={(v) => setNestedData('banner.colors.heading', v)} />
+        <ColorControl label={t('controls.subheadlineColor')} value={data?.banner?.colors?.text || '#ffffff'} onChange={(v) => setNestedData('banner.colors.text', v)} />
 
         {data?.banner?.showButton !== false && (
           <>
             <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">Button</h5>
-            <ColorControl label="Button Background" value={data?.banner?.colors?.buttonBackground || '#4f46e5'} onChange={(v) => setNestedData('banner.colors.buttonBackground', v)} />
+            <ColorControl label={t('controls.fondoBotn')} value={data?.banner?.colors?.buttonBackground || '#4f46e5'} onChange={(v) => setNestedData('banner.colors.buttonBackground', v)} />
             <ColorControl label={t('editor.controls.common.buttonText')} value={data?.banner?.colors?.buttonText || '#ffffff'} onChange={(v) => setNestedData('banner.colors.buttonText', v)} />
           </>
         )}

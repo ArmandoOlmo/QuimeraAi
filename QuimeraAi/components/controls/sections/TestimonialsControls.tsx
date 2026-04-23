@@ -40,7 +40,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
       <div className="mb-4">
         <Select
-          label="Style Variant"
+          label={t('controls.styleVariant')}
           value={(data.testimonials as any).testimonialsVariant || 'classic'}
           onChange={(v) => setNestedData('testimonials.testimonialsVariant', v)}
           options={[
@@ -117,7 +117,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
       <div>
         <div className="flex justify-between items-center mb-1">
-          <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Card Padding</label>
+          <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('controls.cardPadding')}</label>
           <span className="text-xs text-editor-text-primary">{data.testimonials.cardPadding || 32}px</span>
         </div>
         <input
@@ -129,20 +129,20 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       </div>
 
       <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Spacing</label>
+        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('controls.spacing')}</label>
         <div className="space-y-1">
-          <PaddingSelector label="Vertical" value={data.testimonials.paddingY || 'md'} onChange={(v) => setNestedData('testimonials.paddingY', v)} />
-          <PaddingSelector label="Horizontal" value={data.testimonials.paddingX || 'md'} onChange={(v) => setNestedData('testimonials.paddingX', v)} />
+          <PaddingSelector label={t('controls.vertical')} value={data.testimonials.paddingY || 'md'} onChange={(v) => setNestedData('testimonials.paddingY', v)} />
+          <PaddingSelector label={t('controls.horizontal')} value={data.testimonials.paddingX || 'md'} onChange={(v) => setNestedData('testimonials.paddingX', v)} />
         </div>
       </div>
 
-      <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">Section Colors</label>
+      <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">{t('controls.sectionColors')}</label>
       <ColorControl label={t('editor.controls.common.background')} value={data.testimonials.colors?.background || '#000000'} onChange={(v) => setNestedData('testimonials.colors.background', v)} />
       <ColorControl label={t('editor.controls.common.title')} value={data.testimonials.colors?.heading || '#ffffff'} onChange={(v) => setNestedData('testimonials.colors.heading', v)} />
       <ColorControl label={t('editor.controls.common.description')} value={data.testimonials.colors?.description || '#94a3b8'} onChange={(v) => setNestedData('testimonials.colors.description', v)} />
-      <ColorControl label="Text" value={data.testimonials.colors?.text || '#ffffff'} onChange={(v) => setNestedData('testimonials.colors.text', v)} />
-      <ColorControl label="Person Title" value={data.testimonials.colors?.subtitleColor || data.testimonials.colors?.description || '#94a3b8'} onChange={(v) => setNestedData('testimonials.colors.subtitleColor', v)} />
-      <ColorControl label="Accent" value={data.testimonials.colors?.accent || '#4f46e5'} onChange={(v) => setNestedData('testimonials.colors.accent', v)} />
+      <ColorControl label={t('controls.text')} value={data.testimonials.colors?.text || '#ffffff'} onChange={(v) => setNestedData('testimonials.colors.text', v)} />
+      <ColorControl label={t('controls.personTitle')} value={data.testimonials.colors?.subtitleColor || data.testimonials.colors?.description || '#94a3b8'} onChange={(v) => setNestedData('testimonials.colors.subtitleColor', v)} />
+      <ColorControl label={t('controls.accent')} value={data.testimonials.colors?.accent || '#4f46e5'} onChange={(v) => setNestedData('testimonials.colors.accent', v)} />
 
 
       {/* Corner Gradient */}
@@ -159,7 +159,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         onSizeChange={(v) => setNestedData('testimonials.cornerGradient.size', v)}
       />
 
-      <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">Testimonials</label>
+      <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">{t('controls.testimonials')}</label>
       {(data.testimonials.items || []).map((item: any, index: number) => (
         <div
           key={index}
@@ -295,7 +295,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           <Layers size={14} /> Efecto Cristal
         </label>
         <ToggleControl
-          label="Glassmorphism / Transparencia"
+          label={t('controls.glassmorphismTransparencia')}
           checked={data?.testimonials?.glassEffect || false}
           onChange={(v) => setNestedData('testimonials.glassEffect', v)}
         />
@@ -310,7 +310,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
         <div className="mb-4">
           <Select
-            label="Style Variant"
+            label={t('controls.styleVariant')}
             value={(data.testimonials as any).testimonialsVariant || 'classic'}
             onChange={(v) => setNestedData('testimonials.testimonialsVariant', v)}
             options={[
@@ -346,12 +346,12 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           </div>
         )}
 
-        <ColorControl label="Card Background" value={data.testimonials.colors?.cardBackground || '#1f2937'} onChange={(v) => setNestedData('testimonials.colors.cardBackground', v)} />
+        <ColorControl label={t('controls.cardBackground')} value={data.testimonials.colors?.cardBackground || '#1f2937'} onChange={(v) => setNestedData('testimonials.colors.cardBackground', v)} />
 
-        <BorderRadiusSelector label="Card Corners" value={data.testimonials.borderRadius || 'xl'} onChange={(v) => setNestedData('testimonials.borderRadius', v)} />
+        <BorderRadiusSelector label={t('controls.cardCorners')} value={data.testimonials.borderRadius || 'xl'} onChange={(v) => setNestedData('testimonials.borderRadius', v)} />
 
         <div className="mb-3">
-          <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">Card Shadow</label>
+          <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{t('controls.cardShadow')}</label>
           <div className="flex bg-editor-bg p-1 rounded-md border border-editor-border">
             {['none', 'sm', 'md', 'lg', 'xl'].map((shadow) => (
               <button
@@ -366,7 +366,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         </div>
 
         <div className="mb-3">
-          <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">Border Style</label>
+          <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{t('controls.borderStyle')}</label>
           <div className="grid grid-cols-2 gap-2">
             {[
               { value: 'none', label: 'None' },
@@ -385,11 +385,11 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           </div>
         </div>
 
-        <ColorControl label="Border Color" value={data.testimonials.colors?.borderColor || '#374151'} onChange={(v) => setNestedData('testimonials.colors.borderColor', v)} />
+        <ColorControl label={t('controls.borderColor')} value={data.testimonials.colors?.borderColor || '#374151'} onChange={(v) => setNestedData('testimonials.colors.borderColor', v)} />
 
         <div>
           <div className="flex justify-between items-center mb-1">
-            <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Card Padding</label>
+            <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('controls.cardPadding')}</label>
             <span className="text-xs text-editor-text-primary">{data.testimonials.cardPadding || 32}px</span>
           </div>
           <input
@@ -408,8 +408,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           Spacing
         </label>
         <div className="space-y-1">
-          <PaddingSelector label="Vertical" value={data.testimonials.paddingY || 'md'} onChange={(v) => setNestedData('testimonials.paddingY', v)} />
-          <PaddingSelector label="Horizontal" value={data.testimonials.paddingX || 'md'} onChange={(v) => setNestedData('testimonials.paddingX', v)} />
+          <PaddingSelector label={t('controls.vertical')} value={data.testimonials.paddingY || 'md'} onChange={(v) => setNestedData('testimonials.paddingY', v)} />
+          <PaddingSelector label={t('controls.horizontal')} value={data.testimonials.paddingX || 'md'} onChange={(v) => setNestedData('testimonials.paddingX', v)} />
         </div>
       </div>
 
@@ -422,9 +422,9 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         <ColorControl label={t('editor.controls.common.background')} value={data.testimonials.colors?.background || '#000000'} onChange={(v) => setNestedData('testimonials.colors.background', v)} />
         <ColorControl label={t('editor.controls.common.title')} value={data.testimonials.colors?.heading || '#ffffff'} onChange={(v) => setNestedData('testimonials.colors.heading', v)} />
         <ColorControl label={t('editor.controls.common.description')} value={data.testimonials.colors?.description || '#94a3b8'} onChange={(v) => setNestedData('testimonials.colors.description', v)} />
-        <ColorControl label="Text" value={data.testimonials.colors?.text || '#ffffff'} onChange={(v) => setNestedData('testimonials.colors.text', v)} />
-        <ColorControl label="Person Title" value={data.testimonials.colors?.subtitleColor || data.testimonials.colors?.description || '#94a3b8'} onChange={(v) => setNestedData('testimonials.colors.subtitleColor', v)} />
-        <ColorControl label="Accent" value={data.testimonials.colors?.accent || '#4f46e5'} onChange={(v) => setNestedData('testimonials.colors.accent', v)} />
+        <ColorControl label={t('controls.text')} value={data.testimonials.colors?.text || '#ffffff'} onChange={(v) => setNestedData('testimonials.colors.text', v)} />
+        <ColorControl label={t('controls.personTitle')} value={data.testimonials.colors?.subtitleColor || data.testimonials.colors?.description || '#94a3b8'} onChange={(v) => setNestedData('testimonials.colors.subtitleColor', v)} />
+        <ColorControl label={t('controls.accent')} value={data.testimonials.colors?.accent || '#4f46e5'} onChange={(v) => setNestedData('testimonials.colors.accent', v)} />
 
 
         {/* Corner Gradient */}

@@ -235,7 +235,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
     <div className="space-y-4">
       {/* Variant Selector */}
       <div className="mb-4">
-        <label className="block text-xs font-bold text-editor-text-secondary mb-2 uppercase tracking-wider">Style Variant</label>
+        <label className="block text-xs font-bold text-editor-text-secondary mb-2 uppercase tracking-wider">{t('controls.styleVariant')}</label>
         <div className="grid grid-cols-2 gap-2">
           {[
             { value: 'classic', label: 'Classic', desc: 'Traditional card layout' },
@@ -275,7 +275,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
 
       {/* Pricing Tiers */}
-      <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">Pricing Tiers</label>
+      <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">{t('controls.pricingTiers')}</label>
       {(data.pricing.tiers || []).map((tier: any, index: number) => (
         <div
           key={index}
@@ -307,7 +307,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
             />
 
             <div>
-              <label className="block text-[10px] font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">Features (One per line)</label>
+              <label className="block text-[10px] font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{t('controls.featuresOnePerLine')}</label>
               <textarea
                 value={tier.features.join('\n')}
                 onChange={(e) => setNestedData(`pricing.tiers.${index}.features`, e.target.value.split('\n').filter((f: string) => f.trim()))}
@@ -333,7 +333,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
             </div>
 
             <ToggleControl
-              label="Featured Plan (Highlighted)"
+              label={t('controls.featuredPlanHighlighted')}
               checked={tier.featured}
               onChange={(v) => setNestedData(`pricing.tiers.${index}.featured`, v)}
             />
@@ -361,7 +361,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           <Layers size={14} /> Efecto Cristal
         </label>
         <ToggleControl
-          label="Glassmorphism / Transparencia"
+          label={t('controls.glassmorphismTransparencia')}
           checked={data?.pricing?.glassEffect || false}
           onChange={(v) => setNestedData('pricing.glassEffect', v)}
         />
@@ -369,45 +369,45 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       <BackgroundImageControl sectionKey="pricing" data={data} setNestedData={setNestedData} />
       {/* Spacing */}
       <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Spacing</label>
+        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('controls.spacing')}</label>
         <div className="space-y-1">
-          <PaddingSelector label="Vertical" value={data.pricing.paddingY || 'md'} onChange={(v) => setNestedData('pricing.paddingY', v)} />
-          <PaddingSelector label="Horizontal" value={data.pricing.paddingX || 'md'} onChange={(v) => setNestedData('pricing.paddingX', v)} />
+          <PaddingSelector label={t('controls.vertical')} value={data.pricing.paddingY || 'md'} onChange={(v) => setNestedData('pricing.paddingY', v)} />
+          <PaddingSelector label={t('controls.horizontal')} value={data.pricing.paddingX || 'md'} onChange={(v) => setNestedData('pricing.paddingX', v)} />
         </div>
       </div>
 
-      <BorderRadiusSelector label="Card Corners" value={data.pricing.cardBorderRadius || 'xl'} onChange={(v) => setNestedData('pricing.cardBorderRadius', v)} />
+      <BorderRadiusSelector label={t('controls.cardCorners')} value={data.pricing.cardBorderRadius || 'xl'} onChange={(v) => setNestedData('pricing.cardBorderRadius', v)} />
 
 
       {/* Section Colors */}
       <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Section Colors</label>
+        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('controls.sectionColors')}</label>
         <ColorControl label={t('editor.controls.common.background')} value={data.pricing.colors?.background} onChange={(v) => setNestedData('pricing.colors.background', v)} />
         <ColorControl label={t('editor.controls.common.title')} value={data.pricing.colors?.heading || '#ffffff'} onChange={(v) => setNestedData('pricing.colors.heading', v)} />
         <ColorControl label={t('editor.controls.common.description')} value={data.pricing.colors?.description || data.pricing.colors?.text} onChange={(v) => setNestedData('pricing.colors.description', v)} />
-        <ColorControl label="Text" value={data.pricing.colors?.text} onChange={(v) => setNestedData('pricing.colors.text', v)} />
+        <ColorControl label={t('controls.text')} value={data.pricing.colors?.text} onChange={(v) => setNestedData('pricing.colors.text', v)} />
       </div>
 
 
       {/* Card Colors */}
       <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Card Colors</label>
-        <ColorControl label="Card Background" value={data.pricing.colors?.cardBackground || '#1f2937'} onChange={(v) => setNestedData('pricing.colors.cardBackground', v)} />
-        <ColorControl label="Card Title" value={data.pricing.colors?.cardHeading || '#ffffff'} onChange={(v) => setNestedData('pricing.colors.cardHeading', v)} />
-        <ColorControl label="Card Text" value={data.pricing.colors?.cardText || '#94a3b8'} onChange={(v) => setNestedData('pricing.colors.cardText', v)} />
-        <ColorControl label="Price Color" value={data.pricing.colors?.priceColor || '#ffffff'} onChange={(v) => setNestedData('pricing.colors.priceColor', v)} />
-        <ColorControl label="Border Color" value={data.pricing.colors?.borderColor || '#374151'} onChange={(v) => setNestedData('pricing.colors.borderColor', v)} />
-        <ColorControl label="Featured Accent" value={data.pricing.colors?.accent || '#4f46e5'} onChange={(v) => setNestedData('pricing.colors.accent', v)} />
-        <ColorControl label="Checkmark Icon" value={data.pricing.colors?.checkmarkColor || '#10b981'} onChange={(v) => setNestedData('pricing.colors.checkmarkColor', v)} />
+        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('controls.cardColors')}</label>
+        <ColorControl label={t('controls.cardBackground')} value={data.pricing.colors?.cardBackground || '#1f2937'} onChange={(v) => setNestedData('pricing.colors.cardBackground', v)} />
+        <ColorControl label={t('controls.cardTitle')} value={data.pricing.colors?.cardHeading || '#ffffff'} onChange={(v) => setNestedData('pricing.colors.cardHeading', v)} />
+        <ColorControl label={t('controls.cardText')} value={data.pricing.colors?.cardText || '#94a3b8'} onChange={(v) => setNestedData('pricing.colors.cardText', v)} />
+        <ColorControl label={t('controls.priceColor')} value={data.pricing.colors?.priceColor || '#ffffff'} onChange={(v) => setNestedData('pricing.colors.priceColor', v)} />
+        <ColorControl label={t('controls.borderColor')} value={data.pricing.colors?.borderColor || '#374151'} onChange={(v) => setNestedData('pricing.colors.borderColor', v)} />
+        <ColorControl label={t('controls.featuredAccent')} value={data.pricing.colors?.accent || '#4f46e5'} onChange={(v) => setNestedData('pricing.colors.accent', v)} />
+        <ColorControl label={t('controls.checkmarkIcon')} value={data.pricing.colors?.checkmarkColor || '#10b981'} onChange={(v) => setNestedData('pricing.colors.checkmarkColor', v)} />
       </div>
 
 
       {/* Button Colors */}
       <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Button Colors</label>
+        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('controls.buttonColors')}</label>
         <div className="space-y-1">
           <ColorControl label={t('editor.controls.common.background')} value={data.pricing.colors?.buttonBackground || '#4f46e5'} onChange={(v) => setNestedData('pricing.colors.buttonBackground', v)} />
-          <ColorControl label="Text" value={data.pricing.colors?.buttonText || '#ffffff'} onChange={(v) => setNestedData('pricing.colors.buttonText', v)} />
+          <ColorControl label={t('controls.text')} value={data.pricing.colors?.buttonText || '#ffffff'} onChange={(v) => setNestedData('pricing.colors.buttonText', v)} />
         </div>
       </div>
 
@@ -420,8 +420,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
               Gradient Colors
             </label>
             <div className="space-y-1">
-              <ColorControl label="Start" value={data.pricing.colors?.gradientStart || '#4f46e5'} onChange={(v) => setNestedData('pricing.colors.gradientStart', v)} />
-              <ColorControl label="End" value={data.pricing.colors?.gradientEnd || '#10b981'} onChange={(v) => setNestedData('pricing.colors.gradientEnd', v)} />
+              <ColorControl label={t('controls.start')} value={data.pricing.colors?.gradientStart || '#4f46e5'} onChange={(v) => setNestedData('pricing.colors.gradientStart', v)} />
+              <ColorControl label={t('controls.end')} value={data.pricing.colors?.gradientEnd || '#10b981'} onChange={(v) => setNestedData('pricing.colors.gradientEnd', v)} />
             </div>
             <div className="mt-2 p-3 rounded-lg" style={{
               backgroundImage: `linear-gradient(135deg, ${data.pricing.colors?.gradientStart || '#4f46e5'}, ${data.pricing.colors?.gradientEnd || '#10b981'})`

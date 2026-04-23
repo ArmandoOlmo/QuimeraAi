@@ -75,12 +75,12 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
                 Call to Actions
               </label>
               <div className="grid grid-cols-2 gap-2 mb-2">
-                <Input label="Primary CTA" value={slide.primaryCta || ''} onChange={(e) => setNestedData(`heroWave.slides.${slideIndex}.primaryCta`, e.target.value)} />
-                <Input label="Primary Link" value={slide.primaryCtaLink || ''} onChange={(e) => setNestedData(`heroWave.slides.${slideIndex}.primaryCtaLink`, e.target.value)} />
+                <Input label={t('controls.primaryCta')} value={slide.primaryCta || ''} onChange={(e) => setNestedData(`heroWave.slides.${slideIndex}.primaryCta`, e.target.value)} />
+                <Input label={t('controls.primaryLink')} value={slide.primaryCtaLink || ''} onChange={(e) => setNestedData(`heroWave.slides.${slideIndex}.primaryCtaLink`, e.target.value)} />
               </div>
               <div className="grid grid-cols-2 gap-2">
-                <Input label="Secondary CTA" value={slide.secondaryCta || ''} onChange={(e) => setNestedData(`heroWave.slides.${slideIndex}.secondaryCta`, e.target.value)} />
-                <Input label="Secondary Link" value={slide.secondaryCtaLink || ''} onChange={(e) => setNestedData(`heroWave.slides.${slideIndex}.secondaryCtaLink`, e.target.value)} />
+                <Input label={t('controls.secondaryCta')} value={slide.secondaryCta || ''} onChange={(e) => setNestedData(`heroWave.slides.${slideIndex}.secondaryCta`, e.target.value)} />
+                <Input label={t('controls.secondaryLink')} value={slide.secondaryCtaLink || ''} onChange={(e) => setNestedData(`heroWave.slides.${slideIndex}.secondaryCtaLink`, e.target.value)} />
               </div>
             </div>
 
@@ -91,7 +91,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
                 Background Image (Optional)
               </label>
               <ImagePicker
-                label="Slide Background"
+                label={t('controls.slideBackground')}
                 value={slide.backgroundImage || ''}
                 onChange={(url) => setNestedData(`heroWave.slides.${slideIndex}.backgroundImage`, url)}
                 onRemove={() => setNestedData(`heroWave.slides.${slideIndex}.backgroundImage`, '')}
@@ -131,7 +131,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           <Layers size={14} /> Efecto Cristal
         </label>
         <ToggleControl
-          label="Glassmorphism / Transparencia"
+          label={t('controls.glassmorphismTransparencia')}
           checked={data?.heroWave?.glassEffect || false}
           onChange={(v) => setNestedData('heroWave.glassEffect', v)}
         />
@@ -183,7 +183,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         {/* Gradient Angle */}
         <div className="mt-4">
           <div className="flex justify-between items-center mb-1">
-            <label className="text-xs font-semibold text-editor-text-secondary">Gradient Angle</label>
+            <label className="text-xs font-semibold text-editor-text-secondary">{t('controls.gradientAngle')}</label>
             <span className="text-xs text-editor-text-primary">{data.heroWave.gradientAngle || 135}°</span>
           </div>
           <input
@@ -203,7 +203,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         </label>
 
         <Select
-          label="Wave Style"
+          label={t('controls.waveStyle')}
           value={data.heroWave.waveShape || 'bubbly'}
           onChange={(v) => setNestedData('heroWave.waveShape', v)}
           options={[
@@ -214,7 +214,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           ]}
         />
 
-        <ColorControl label="Wave Color" value={data.heroWave.waveColor || '#ffffff'} onChange={(v) => setNestedData('heroWave.waveColor', v)} />
+        <ColorControl label={t('controls.waveColor')} value={data.heroWave.waveColor || '#ffffff'} onChange={(v) => setNestedData('heroWave.waveColor', v)} />
       </div>
 
       {/* Text Options */}
@@ -225,7 +225,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         </label>
 
         <div className="mb-3">
-          <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">Text Alignment</label>
+          <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{t('controls.textAlignment')}</label>
           <div className="flex bg-editor-bg p-1 rounded-md border border-editor-border">
             {(['left', 'center', 'right'] as const).map(align => (
               <button
@@ -239,7 +239,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           </div>
         </div>
 
-        <ToggleControl label="Text Stroke Effect" checked={data.heroWave.showTextStroke ?? false} onChange={(v) => setNestedData('heroWave.showTextStroke', v)} />
+        <ToggleControl label={t('controls.textStrokeEffect')} checked={data.heroWave.showTextStroke ?? false} onChange={(v) => setNestedData('heroWave.showTextStroke', v)} />
 
         <FontSizeSelector label={t('controls.headlineSize')} value={data.heroWave.headlineFontSize || 'xl'} onChange={(v) => setNestedData('heroWave.headlineFontSize', v)} />
         <FontSizeSelector label={t('controls.subheadlineSize')} value={data.heroWave.subheadlineFontSize || 'md'} onChange={(v) => setNestedData('heroWave.subheadlineFontSize', v)} />
@@ -247,11 +247,11 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
       {/* Overlay & Grain */}
       <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3">Image Overlay</label>
+        <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3">{t('controls.imageOverlay')}</label>
 
         <div className="mb-4">
           <div className="flex justify-between items-center mb-1">
-            <label className="text-xs font-semibold text-editor-text-secondary">Overlay Darkness</label>
+            <label className="text-xs font-semibold text-editor-text-secondary">{t('controls.overlayDarkness')}</label>
             <span className="text-xs text-editor-text-primary">{Math.round((data.heroWave.overlayOpacity ?? 0.15) * 100)}%</span>
           </div>
           <input
@@ -262,16 +262,16 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           />
         </div>
 
-        <ToggleControl label="Grain Texture" checked={data.heroWave.showGrain ?? false} onChange={(v) => setNestedData('heroWave.showGrain', v)} />
+        <ToggleControl label={t('controls.grainTexture')} checked={data.heroWave.showGrain ?? false} onChange={(v) => setNestedData('heroWave.showGrain', v)} />
       </div>
 
       {/* Layout */}
       <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3">Layout</label>
+        <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3">{t('controls.layout')}</label>
 
         <div className="mb-4">
           <div className="flex justify-between items-center mb-1">
-            <label className="text-xs font-semibold text-editor-text-secondary">Hero Height</label>
+            <label className="text-xs font-semibold text-editor-text-secondary">{t('controls.heroHeight')}</label>
             <span className="text-xs text-editor-text-primary">{data.heroWave.heroHeight || 75}vh</span>
           </div>
           <input
@@ -291,7 +291,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         </label>
 
         <div className="mb-3">
-          <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">Autoplay Speed (ms)</label>
+          <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{t('controls.autoplaySpeedMs')}</label>
           <input
             type="number" min="2000" max="15000" step="500"
             value={data.heroWave.autoPlaySpeed || 6000}
@@ -301,7 +301,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         </div>
 
         <div className="mb-3">
-          <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">Transition Duration (ms)</label>
+          <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{t('controls.transitionDurationMs')}</label>
           <input
             type="number" min="300" max="2000" step="100"
             value={data.heroWave.transitionDuration || 800}
@@ -313,13 +313,13 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
       {/* Navigation */}
       <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Navigation</label>
-        <ToggleControl label="Show Arrows" checked={data.heroWave.showArrows ?? true} onChange={(v) => setNestedData('heroWave.showArrows', v)} />
-        <ToggleControl label="Show Dots" checked={data.heroWave.showDots ?? true} onChange={(v) => setNestedData('heroWave.showDots', v)} />
+        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('controls.navigation')}</label>
+        <ToggleControl label={t('controls.showArrows')} checked={data.heroWave.showArrows ?? true} onChange={(v) => setNestedData('heroWave.showArrows', v)} />
+        <ToggleControl label={t('controls.showDots')} checked={data.heroWave.showDots ?? true} onChange={(v) => setNestedData('heroWave.showDots', v)} />
 
         {(data.heroWave.showDots ?? true) && (
           <Select
-            label="Dot Style"
+            label={t('controls.dotStyle')}
             value={data.heroWave.dotStyle || 'circle'}
             onChange={(val) => setNestedData('heroWave.dotStyle', val)}
             options={[
@@ -339,23 +339,23 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         </label>
 
         <div className="space-y-3">
-          <ColorControl label="Headline" value={data.heroWave.colors?.heading || '#ffffff'} onChange={(v) => setNestedData('heroWave.colors.heading', v)} />
-          <ColorControl label="Text" value={data.heroWave.colors?.text || '#ffffff'} onChange={(v) => setNestedData('heroWave.colors.text', v)} />
-          <ColorControl label="CTA Text" value={data.heroWave.colors?.ctaText || '#ffffff'} onChange={(v) => setNestedData('heroWave.colors.ctaText', v)} />
-          <ColorControl label="CTA Background" value={(data.heroWave.colors as any)?.ctaBackground || 'rgba(255,255,255,0.2)'} onChange={(v) => setNestedData('heroWave.colors.ctaBackground', v)} />
+          <ColorControl label={t('controls.headline')} value={data.heroWave.colors?.heading || '#ffffff'} onChange={(v) => setNestedData('heroWave.colors.heading', v)} />
+          <ColorControl label={t('controls.text')} value={data.heroWave.colors?.text || '#ffffff'} onChange={(v) => setNestedData('heroWave.colors.text', v)} />
+          <ColorControl label={t('controls.ctaText')} value={data.heroWave.colors?.ctaText || '#ffffff'} onChange={(v) => setNestedData('heroWave.colors.ctaText', v)} />
+          <ColorControl label={t('controls.ctaBackground')} value={(data.heroWave.colors as any)?.ctaBackground || 'rgba(255,255,255,0.2)'} onChange={(v) => setNestedData('heroWave.colors.ctaBackground', v)} />
 
           {(data.heroWave.showArrows ?? true) && (
             <>
               <p className="text-[10px] text-editor-text-secondary uppercase tracking-wider font-bold mt-2">Arrows</p>
-              <ColorControl label="Arrow Color" value={data.heroWave.colors?.arrowColor || '#ffffff'} onChange={(v) => setNestedData('heroWave.colors.arrowColor', v)} />
+              <ColorControl label={t('controls.arrowColor')} value={data.heroWave.colors?.arrowColor || '#ffffff'} onChange={(v) => setNestedData('heroWave.colors.arrowColor', v)} />
             </>
           )}
 
           {(data.heroWave.showDots ?? true) && (
             <>
               <p className="text-[10px] text-editor-text-secondary uppercase tracking-wider font-bold mt-2">Dots</p>
-              <ColorControl label="Active Dot" value={data.heroWave.colors?.dotActive || '#ffffff'} onChange={(v) => setNestedData('heroWave.colors.dotActive', v)} />
-              <ColorControl label="Inactive Dot" value={data.heroWave.colors?.dotInactive || 'rgba(255,255,255,0.5)'} onChange={(v) => setNestedData('heroWave.colors.dotInactive', v)} />
+              <ColorControl label={t('controls.activeDot')} value={data.heroWave.colors?.dotActive || '#ffffff'} onChange={(v) => setNestedData('heroWave.colors.dotActive', v)} />
+              <ColorControl label={t('controls.inactiveDot')} value={data.heroWave.colors?.dotInactive || 'rgba(255,255,255,0.5)'} onChange={(v) => setNestedData('heroWave.colors.dotInactive', v)} />
             </>
           )}
 

@@ -10,6 +10,7 @@ import {
 import type { AdminEmailTab } from '../types';
 import type { EmailStats, TenantPerformanceData, CrossTenantCampaign } from '../types';
 import { formatDate, getStatusColor, getStatusIcon } from '../helpers';
+import { useTranslation } from 'react-i18next';
 
 interface OverviewTabProps {
     stats: EmailStats;
@@ -21,17 +22,19 @@ interface OverviewTabProps {
 
 const OverviewTab: React.FC<OverviewTabProps> = ({
     stats, campaigns, tenantPerformance, setActiveTab, setShowAIStudio,
-}) => (
+}) => {
+    const { t } = useTranslation();
+    return (
     <div className="space-y-6">
         {/* KPI Grid */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
             {[
-                { label: 'Emails Enviados', value: stats.totalSent.toLocaleString(), icon: <Send size={20} />, color: 'text-blue-400 bg-blue-500/10' },
-                { label: 'Tasa de Apertura', value: `${stats.openRate}%`, icon: <Eye size={20} />, color: 'text-purple-400 bg-purple-500/10' },
-                { label: 'Tasa de Click', value: `${stats.clickRate}%`, icon: <MousePointer size={20} />, color: 'text-amber-400 bg-amber-500/10' },
-                { label: 'Campañas Activas', value: stats.activeCampaigns.toString(), icon: <Target size={20} />, color: 'text-green-400 bg-green-500/10' },
-                { label: 'Total Contactos', value: stats.totalContacts.toLocaleString(), icon: <Users size={20} />, color: 'text-pink-400 bg-pink-500/10' },
-                { label: 'Tasa de Entrega', value: `${stats.deliveryRate}%`, icon: <CheckCircle size={20} />, color: 'text-emerald-400 bg-emerald-500/10' },
+                { label: t('adminEmail.overview.emailsSent'), value: stats.totalSent.toLocaleString(), icon: <Send size={20} />, color: 'text-blue-400 bg-blue-500/10' },
+                { label: t('adminEmail.overview.openRate'), value: `${stats.openRate}%`, icon: <Eye size={20} />, color: 'text-purple-400 bg-purple-500/10' },
+                { label: t('adminEmail.overview.clickRate'), value: `${stats.clickRate}%`, icon: <MousePointer size={20} />, color: 'text-amber-400 bg-amber-500/10' },
+                { label: t('adminEmail.overview.activeCampaigns'), value: stats.activeCampaigns.toString(), icon: <Target size={20} />, color: 'text-green-400 bg-green-500/10' },
+                { label: t('adminEmail.overview.totalContacts'), value: stats.totalContacts.toLocaleString(), icon: <Users size={20} />, color: 'text-pink-400 bg-pink-500/10' },
+                { label: t('adminEmail.overview.deliveryRate'), value: `${stats.deliveryRate}%`, icon: <CheckCircle size={20} />, color: 'text-emerald-400 bg-emerald-500/10' },
             ].map((kpi, i) => (
                 <div key={i} className="bg-editor-panel-bg border border-editor-border rounded-xl p-4 hover:border-editor-accent/30 transition-all">
                     <div className={`p-2 rounded-lg ${kpi.color} w-fit mb-3`}>{kpi.icon}</div>
@@ -46,12 +49,12 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
             {/* Recent Campaigns */}
             <div className="lg:col-span-2 bg-editor-panel-bg border border-editor-border rounded-xl p-6">
                 <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold text-editor-text-primary">Campañas Recientes</h3>
+                    <h3 className="text-lg font-semibold text-editor-text-primary">{t('adminEmail.overview.recentCampaigns')}</h3>
                     <button
                         onClick={() => setActiveTab('campaigns')}
                         className="text-sm text-editor-accent hover:text-editor-accent/80 transition-colors"
                     >
-                        Ver todas →
+                        {t('adminEmail.overview.viewAll')}
                     </button>
                 </div>
                 {campaigns.length > 0 ? (
@@ -69,7 +72,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
                                 </div>
                                 <span className={`px-2 py-0.5 text-xs rounded-full border flex items-center gap-1 ${getStatusColor(campaign.status)}`}>
                                     {getStatusIcon(campaign.status)}
-                                    {campaign.status}
+                                    {t(`adminEmail.campaigns.${campaign.status}`)}
                                 </span>
                             </div>
                         ))}
@@ -77,14 +80,14 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
                 ) : (
                     <div className="text-center py-8 text-editor-text-secondary">
                         <Mail size={32} className="mx-auto mb-2 opacity-50" />
-                        <p className="text-sm">No hay campañas aún</p>
+                        <p className="text-sm">{t('adminEmail.overview.noCampaigns')}</p>
                     </div>
                 )}
             </div>
 
             {/* Quick Actions */}
             <div className="bg-editor-panel-bg border border-editor-border rounded-xl p-6">
-                <h3 className="text-lg font-semibold text-editor-text-primary mb-4">Acciones Rápidas</h3>
+                <h3 className="text-lg font-semibold text-editor-text-primary mb-4">{t('adminEmail.overview.quickActions')}</h3>
                 <div className="space-y-3">
                     <button
                         onClick={() => { setActiveTab('ai-studio'); setShowAIStudio(true); }}
@@ -92,8 +95,8 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
                     >
                         <Sparkles size={20} />
                         <div>
-                            <p className="text-sm font-medium">Crear con AI</p>
-                            <p className="text-xs opacity-70">Genera campañas con IA</p>
+                            <p className="text-sm font-medium">{t('adminEmail.overview.createWithAI')}</p>
+                            <p className="text-xs opacity-70">{t('adminEmail.overview.generateWithAI')}</p>
                         </div>
                     </button>
                     <button
@@ -102,8 +105,8 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
                     >
                         <Zap size={20} className="text-amber-400" />
                         <div>
-                            <p className="text-sm font-medium">Automatizaciones</p>
-                            <p className="text-xs text-editor-text-secondary">Configura flujos automáticos</p>
+                            <p className="text-sm font-medium">{t('adminEmail.overview.automations')}</p>
+                            <p className="text-xs text-editor-text-secondary">{t('adminEmail.overview.configureFlows')}</p>
                         </div>
                     </button>
                     <button
@@ -112,8 +115,8 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
                     >
                         <BarChart3 size={20} className="text-purple-400" />
                         <div>
-                            <p className="text-sm font-medium">Ver Analíticas</p>
-                            <p className="text-xs text-editor-text-secondary">Métricas cross-tenant</p>
+                            <p className="text-sm font-medium">{t('adminEmail.overview.viewAnalytics')}</p>
+                            <p className="text-xs text-editor-text-secondary">{t('adminEmail.overview.crossTenantMetrics')}</p>
                         </div>
                     </button>
                 </div>
@@ -121,7 +124,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
                 {/* Top Tenants */}
                 {tenantPerformance.length > 0 && (
                     <div className="mt-6">
-                        <h4 className="text-sm font-medium text-editor-text-secondary mb-3">Top Tenants por Envíos</h4>
+                        <h4 className="text-sm font-medium text-editor-text-secondary mb-3">{t('adminEmail.overview.topTenantsBySends')}</h4>
                         <div className="space-y-2">
                             {tenantPerformance.slice(0, 3).map((tp, i) => (
                                 <div key={i} className="flex items-center justify-between text-sm">
@@ -135,6 +138,6 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
             </div>
         </div>
     </div>
-);
+)};
 
 export default OverviewTab;

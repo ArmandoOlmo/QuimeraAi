@@ -316,7 +316,7 @@ const HeroWave: React.FC<HeroWaveProps> = ({
                                     key={i}
                                     title={`Go to slide ${i + 1}`}
                                     onClick={() => goToSlide(i)}
-                                    className="transition-all duration-300"
+                                    className="transition-all duration-300 no-min-touch"
                                     style={{
                                         width: dotStyle === 'line'
                                             ? (i === currentIndex ? '28px' : '14px')

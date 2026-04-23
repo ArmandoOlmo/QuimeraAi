@@ -1,6 +1,7 @@
 
 import React, { createContext, useState, useContext, ReactNode, useRef, useEffect } from 'react';
 import { PageData, ThemeData, PageSection, PreviewDevice, PreviewOrientation, View, Project, ThemeMode, UserDocument, UserPreferences, FileRecord, LLMPrompt, ComponentStyles, EditableComponentID, CustomComponent, BrandIdentity, CMSPost, Menu, AdminView, AiAssistantConfig, GlobalAssistantConfig, Lead, LeadStatus, LeadActivity, LeadTask, ActivityType, Domain, DeploymentLog, Tenant, TenantStatus, TenantLimits, UserRole, RolePermissions, SEOConfig, ComponentVariant, ComponentVersion, DesignTokens, LibraryLead } from '../types';
+import { AdminAssetCategory } from './files/FilesContext';
 import { EmailSettings, TransactionalEmailSettings, MarketingEmailSettings } from '../types/email';
 import { useUI } from './core/UIContext';
 import { useSafeProject } from './project/ProjectContext';
@@ -1985,7 +1986,10 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
 
                 const newProject: Project = { ...newProjectData, id: docRef.id };
 
-                setProjects(prev => [newProject, ...prev]);
+                setProjects(prev => {
+                    if (prev.some(p => p.id === newProject.id)) return prev;
+                    return [newProject, ...prev];
+                });
                 loadProject(newProject.id);
 
                 // Trigger Image Auto-Generation
@@ -2050,6 +2054,7 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
                     previousCount: prev.length,
                     newCount: prev.length + 1
                 });
+                if (prev.some(p => p.id === newProjectWithId.id)) return prev;
                 return [newProjectWithId, ...prev];
             });
 
@@ -2668,7 +2673,8 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
     const generateImage = async (prompt: string, options?: {
         aspectRatio?: string,
         style?: string,
-        destination?: 'user' | 'global',
+        destination?: 'user' | 'global' | 'admin',
+        adminCategory?: string,
         resolution?: '1K' | '2K' | '4K',
         // Quimera AI specific options
         model?: string,
@@ -2692,8 +2698,14 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
 
         // FORCE user destination for now to avoid Firebase Storage permission issues
         // Only allow 'global' if explicitly set AND user has proper role
-        let destination: 'user' | 'global' = 'user';
-        if (options?.destination === 'global') {
+        // Allow 'admin' for admin asset library
+        let destination: 'user' | 'global' | 'admin' = 'user';
+        if (options?.destination === 'admin') {
+            const allowedRoles = ['superadmin', 'owner', 'admin'];
+            if (allowedRoles.includes(userDocument?.role || '')) {
+                destination = 'admin';
+            }
+        } else if (options?.destination === 'global') {
             const allowedRoles = ['superadmin', 'owner', 'admin'];
             if (allowedRoles.includes(userDocument?.role || '')) {
                 destination = 'global';
@@ -2744,7 +2756,42 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
                 
                 const targetProjectId = options?.projectId || activeProjectId;
 
-                if (destination === 'global') {
+                if (destination === 'admin') {
+                    // Upload to admin asset library
+                    const adminCategory = (options?.adminCategory || 'ai_generated') as AdminAssetCategory;
+                    storagePath = `admin/assets/${adminCategory}/${fileName}`;
+                    const adminStorageRef = ref(storage, storagePath);
+                    const adminSnapshot = await uploadBytes(adminStorageRef, blob);
+                    const adminDownloadURL = await getDownloadURL(adminSnapshot.ref);
+
+                    const assetRecord = {
+                        name: fileName,
+                        type: proxyResponse.mimeType || 'image/png',
+                        size: blob.size,
+                        downloadURL: adminDownloadURL,
+                        storagePath,
+                        category: adminCategory,
+                        createdAt: new Date().toISOString(),
+                        uploadedBy: user.uid,
+                        description: prompt.substring(0, 200),
+                        tags: ['ai_generated'],
+                        isAiGenerated: true,
+                        aiPrompt: prompt,
+                        usedIn: [],
+                    };
+
+                    await addDoc(collection(db, 'adminAssets'), assetRecord);
+
+                    logApiCall({
+                        userId: user.uid,
+                        projectId: activeProject?.id || 'no-project',
+                        model: 'proxy-image-generation',
+                        feature: 'image-generation-proxy-admin',
+                        success: true
+                    });
+
+                    return adminDownloadURL;
+                } else if (destination === 'global') {
                     storagePath = `global/files/${fileName}`;
                     // For global assets, we don't nest them under a project by default.
                     // Can be customized if needed.
@@ -3122,7 +3169,33 @@ Ir a cualquier sección (Editor, CMS, Leads, Dominios)
             let storagePath = '';
             let firestoreCol;
 
-            if (destination === 'global') {
+            if (destination === 'admin') {
+                // Upload to admin asset library
+                const adminCategory = (options?.adminCategory || 'ai_generated') as AdminAssetCategory;
+                storagePath = `admin/assets/${adminCategory}/${fileName}`;
+                const adminStorageRef = ref(storage, storagePath);
+                const adminSnapshot = await uploadBytes(adminStorageRef, blob);
+                const adminDownloadURL = await getDownloadURL(adminSnapshot.ref);
+
+                const assetRecord = {
+                    name: fileName,
+                    type: 'image/jpeg',
+                    size: blob.size,
+                    downloadURL: adminDownloadURL,
+                    storagePath,
+                    category: adminCategory,
+                    createdAt: new Date().toISOString(),
+                    uploadedBy: user.uid,
+                    description: prompt.substring(0, 200),
+                    tags: ['ai_generated'],
+                    isAiGenerated: true,
+                    aiPrompt: prompt,
+                    usedIn: [],
+                };
+
+                await addDoc(collection(db, 'adminAssets'), assetRecord);
+                return adminDownloadURL;
+            } else if (destination === 'global') {
                 storagePath = `global_assets/generated/${fileName}`;
                 firestoreCol = collection(db, 'global_files');
             } else if (activeProjectId) {

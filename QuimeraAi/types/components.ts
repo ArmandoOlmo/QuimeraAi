@@ -248,6 +248,8 @@ export interface HeroGalleryData {
     };
     buttonBorderRadius?: BorderRadiusSize;
     cornerGradient?: CornerGradientConfig;
+    textHorizontalAlign?: 'left' | 'center' | 'right';
+    textVerticalAlign?: 'top' | 'middle' | 'bottom';
 }
 
 // =============================================================================
@@ -585,6 +587,8 @@ export interface NewsletterData {
     buttonText: string;
     paddingY: PaddingSize;
     paddingX: PaddingSize;
+    cardOpacity?: number; // 0-100
+    showCardBorder?: boolean;
     colors: {
         background: string;
         accent: string;
@@ -613,16 +617,21 @@ export interface CtaData {
     glassEffect?: boolean;
     title: string;
     headline?: string;              // Alias for title
+    showAccent?: boolean;
+    accentText?: string;
     description: string;
     subheadline?: string;           // Alias for description
     buttonText: string;
     buttonUrl?: string;
     paddingY: PaddingSize;
     paddingX: PaddingSize;
+    cardOpacity?: number; // 0-100
+    showCardBorder?: boolean;
     colors: {
         background?: string;
         gradientStart: string;
         gradientEnd: string;
+        borderColor?: string;
         text: string;
         heading: string;
         description?: string;

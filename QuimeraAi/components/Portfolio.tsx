@@ -28,6 +28,10 @@ interface PortfolioCardProps {
   linkUrl?: string;
   linkText?: string;
   onNavigate?: (href: string) => void;
+  imageHeight?: number;
+  showCardGradient?: boolean;
+  showCardBorder?: boolean;
+  cardBorderWidth?: number;
 }
 
 const paddingYClasses: Record<PaddingSize, string> = {
@@ -162,11 +166,6 @@ const PortfolioOverlayCard: React.FC<PortfolioOverlayCardProps> = ({
         )}
       </div>
 
-      {/* Optional accent indicator */}
-      <div
-        className="absolute top-4 right-4 w-2 h-2 rounded-full"
-        style={{ backgroundColor: colors?.accent }}
-      />
     </div>
   );
 };
@@ -189,7 +188,11 @@ const PortfolioCard: React.FC<PortfolioCardProps> = ({
   accentColor,
   linkUrl,
   linkText,
-  onNavigate
+  onNavigate,
+  imageHeight = 400,
+  showCardGradient = true,
+  showCardBorder = true,
+  cardBorderWidth = 1
 }) => {
   const animationClass = getAnimationClass(animationType, enableAnimation);
   const isExternal = linkUrl?.startsWith('http');
@@ -199,8 +202,15 @@ const PortfolioCard: React.FC<PortfolioCardProps> = ({
 
   return (
     <div
-      className={`relative h-[400px] border border-white/10 transform hover:scale-[1.02] transition-all duration-500 overflow-hidden group backdrop-blur-xl ${borderRadiusClasses[borderRadius]} ${animationClass}`}
-      style={{ animationDelay: delay, borderColor: borderColor, backgroundColor: hexToRgba(cardBackground.startsWith('rgba') ? '#000000' : cardBackground, 0.35) }}
+      className={`relative transform hover:scale-[1.02] transition-all duration-500 overflow-hidden group backdrop-blur-xl ${borderRadiusClasses[borderRadius]} ${animationClass}`}
+      style={{ 
+        animationDelay: delay, 
+        borderColor: showCardBorder ? borderColor : 'transparent', 
+        borderWidth: showCardBorder ? `${cardBorderWidth}px` : '0px',
+        borderStyle: showCardBorder ? 'solid' : 'none',
+        backgroundColor: hexToRgba(cardBackground.startsWith('rgba') ? '#000000' : cardBackground, 0.35), 
+        height: `${imageHeight}px` 
+      }}
     >
       {/* Full Background Image */}
       <div className="absolute inset-0">
@@ -217,7 +227,9 @@ const PortfolioCard: React.FC<PortfolioCardProps> = ({
       </div>
 
       {/* Gradient Overlay */}
-      <div className="absolute inset-0" style={{ background: overlayGradient }} />
+      {showCardGradient && (
+        <div className="absolute inset-0" style={{ background: overlayGradient }} />
+      )}
 
       {/* Content at Bottom */}
       <div className="absolute bottom-0 left-0 right-0 p-6 z-10">
@@ -301,7 +313,11 @@ const Portfolio: React.FC<PortfolioProps> = ({
   imageHeight = 300,
   overlayTextAlignment = 'left',
   showSectionHeader = true,
+  showCardGradient = true,
+  showCardBorder = true,
+  cardBorderWidth = 1,
   cornerGradient,
+  glassEffect,
   onNavigate
 }) => {
   // Derive particle color from heading color or fallback
@@ -323,7 +339,7 @@ const Portfolio: React.FC<PortfolioProps> = ({
           }} />
         ))}
         {/* Optional Section Header */}
-        {showSectionHeader && (title || description) && (
+        {showSectionHeader && (title?.trim() || description?.trim()) && (
           <div className={`container mx-auto text-center max-w-3xl ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]} pb-8`}>
             {title && (
               <h2
@@ -385,12 +401,18 @@ const Portfolio: React.FC<PortfolioProps> = ({
         }} />
       ))}
       <div className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]} relative z-10`}>
-        <div className="text-center max-w-3xl mx-auto mb-16">
-          <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold text-site-heading mb-4 font-header`} style={{ color: colors?.heading, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>{title}</h2>
-          <p className={`${descriptionSizeClasses[descriptionFontSize]} font-body`} style={{ color: colors?.text }}>
-            {description}
-          </p>
-        </div>
+        {(title?.trim() || description?.trim()) && (
+          <div className="text-center max-w-3xl mx-auto mb-16">
+            {title && (
+              <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold text-site-heading mb-4 font-header`} style={{ color: colors?.heading, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>{title}</h2>
+            )}
+            {description && (
+              <p className={`${descriptionSizeClasses[descriptionFontSize]} font-body`} style={{ color: colors?.text }}>
+                {description}
+              </p>
+            )}
+          </div>
+        )}
         <div className={`grid grid-cols-1 md:grid-cols-2 ${gridColsClasses[gridColumns] || 'lg:grid-cols-3'} gap-8`}>
           {items.map((item, index) => (
             <PortfolioCard
@@ -413,6 +435,10 @@ const Portfolio: React.FC<PortfolioProps> = ({
               linkUrl={item.linkUrl}
               linkText={item.linkText}
               onNavigate={onNavigate}
+              imageHeight={imageHeight}
+              showCardGradient={showCardGradient}
+              showCardBorder={showCardBorder}
+              cardBorderWidth={cardBorderWidth}
             />
           ))}
         </div>

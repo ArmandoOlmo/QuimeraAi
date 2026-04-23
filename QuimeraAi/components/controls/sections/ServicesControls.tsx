@@ -33,9 +33,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
     <div className="space-y-4">
       {/* Services Variant Selector */}
       <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">
-          Services Style
-        </label>
+        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">{t('controls.servicesStyle')}</label>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
           {['cards', 'grid', 'minimal', 'neon-glow'].map((variant) => (
             <button
@@ -76,7 +74,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           <Layers size={14} /> Efecto Cristal
         </label>
         <ToggleControl
-          label="Glassmorphism / Transparencia"
+          label={t('controls.glassmorphismTransparencia')}
           checked={data?.services?.glassEffect || false}
           onChange={(v) => setNestedData('services.glassEffect', v)}
         />
@@ -105,30 +103,30 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
       {/* Section Colors */}
       <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Section Colors</label>
+        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('controls.sectionColors')}</label>
         <ColorControl label={t('editor.controls.common.background')} value={data?.services?.colors?.background || '#0f172a'} onChange={(v) => setNestedData('services.colors.background', v)} />
-        <ColorControl label="Section Title" value={data?.services?.colors?.heading || '#F9FAFB'} onChange={(v) => setNestedData('services.colors.heading', v)} />
-        <ColorControl label="Section Description" value={data?.services?.colors?.description || '#94a3b8'} onChange={(v) => setNestedData('services.colors.description', v)} />
-        <ColorControl label="Accent" value={data?.services?.colors?.accent || '#4f46e5'} onChange={(v) => setNestedData('services.colors.accent', v)} />
+        <ColorControl label={t('controls.sectionTitle')} value={data?.services?.colors?.heading || '#F9FAFB'} onChange={(v) => setNestedData('services.colors.heading', v)} />
+        <ColorControl label={t('controls.sectionDescription')} value={data?.services?.colors?.description || '#94a3b8'} onChange={(v) => setNestedData('services.colors.description', v)} />
+        <ColorControl label={t('controls.accent')} value={data?.services?.colors?.accent || '#4f46e5'} onChange={(v) => setNestedData('services.colors.accent', v)} />
       </div>
 
 
       {/* Card Colors */}
       <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Card Colors</label>
-        <ColorControl label="Card Background" value={data?.services?.colors?.cardBackground || '#1e293b'} onChange={(v) => setNestedData('services.colors.cardBackground', v)} />
-        <ColorControl label="Card Title" value={data?.services?.colors?.cardHeading || '#ffffff'} onChange={(v) => setNestedData('services.colors.cardHeading', v)} />
-        <ColorControl label="Card Text" value={data?.services?.colors?.cardText || '#94a3b8'} onChange={(v) => setNestedData('services.colors.cardText', v)} />
-        <ColorControl label="Border Color" value={data?.services?.colors?.borderColor || '#334155'} onChange={(v) => setNestedData('services.colors.borderColor', v)} />
+        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('controls.cardColors')}</label>
+        <ColorControl label={t('controls.cardBackground')} value={data?.services?.colors?.cardBackground || '#1e293b'} onChange={(v) => setNestedData('services.colors.cardBackground', v)} />
+        <ColorControl label={t('controls.cardTitle')} value={data?.services?.colors?.cardHeading || '#ffffff'} onChange={(v) => setNestedData('services.colors.cardHeading', v)} />
+        <ColorControl label={t('controls.cardText')} value={data?.services?.colors?.cardText || '#94a3b8'} onChange={(v) => setNestedData('services.colors.cardText', v)} />
+        <ColorControl label={t('controls.borderColor')} value={data?.services?.colors?.borderColor || '#334155'} onChange={(v) => setNestedData('services.colors.borderColor', v)} />
       </div>
 
 
       {/* Spacing */}
       <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Spacing</label>
+        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('controls.spacing')}</label>
         <div className="space-y-1">
-          <PaddingSelector label="Vertical" value={data?.services?.paddingY || 'md'} onChange={(v) => setNestedData('services.paddingY', v)} />
-          <PaddingSelector label="Horizontal" value={data?.services?.paddingX || 'md'} onChange={(v) => setNestedData('services.paddingX', v)} />
+          <PaddingSelector label={t('controls.vertical')} value={data?.services?.paddingY || 'md'} onChange={(v) => setNestedData('services.paddingY', v)} />
+          <PaddingSelector label={t('controls.horizontal')} value={data?.services?.paddingX || 'md'} onChange={(v) => setNestedData('services.paddingX', v)} />
         </div>
       </div>
 

@@ -147,7 +147,10 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
       }
 
       await deleteProject(project.id);
-      // Component will unmount on success as parent list updates via Context
+      // The parent list will update and this component may unmount.
+      // But just in case it doesn't immediately (e.g. state batching), we clean up:
+      setIsDeleting(false);
+      setShowDeleteConfirm(false);
     } catch (err: any) {
       console.error("Deletion failed", err);
       setIsDeleting(false);

@@ -927,7 +927,8 @@ Text to format:
                 <ImageGeneratorModal
                     isOpen={showContentImageGenerator}
                     onClose={() => setShowContentImageGenerator(false)}
-                    destination="global"
+                    destination="admin"
+                    adminCategory="article"
                     onImageGenerated={(imageUrl: string) => {
                         if (editor) {
                             if (contentImagePickerMode === 'replace') {
@@ -1142,7 +1143,7 @@ Text to format:
                                 {/* Featured Image */}
                                 <div>
                                     <label className="block text-xs font-bold text-muted-foreground uppercase mb-2">{t('contentManagement.editor.featuredImage', 'Imagen Destacada')}</label>
-                                    <ImagePicker label="" value={featuredImage} onChange={setFeaturedImage} destination="global" onRemove={() => setFeaturedImage('')} />
+                                    <ImagePicker label="" value={featuredImage} onChange={setFeaturedImage} destination="admin" adminCategory="article" onRemove={() => setFeaturedImage('')} />
                                 </div>
 
                                 {/* Excerpt */}
@@ -1206,7 +1207,8 @@ Text to format:
                                                 setAuthorImage(url);
                                                 setShowAuthorImagePicker(false);
                                             }}
-                                            destination="global"
+                                            destination="admin"
+                                            adminCategory="article"
                                             defaultOpen={true}
                                             onClose={() => setShowAuthorImagePicker(false)}
                                             onRemove={() => {

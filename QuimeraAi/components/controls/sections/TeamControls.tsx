@@ -33,7 +33,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
     <div className="space-y-4">
       {/* Team Variant Selector */}
       <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">Team Style</label>
+        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">{t('controls.teamStyle')}</label>
         <div className="grid grid-cols-2 gap-2">
           {[
             { value: 'classic', label: 'Classic' },
@@ -65,7 +65,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
 
       {/* Team Members */}
-      <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">Team Members</label>
+      <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">{t('controls.teamMembers')}</label>
       {(data?.team?.items || []).map((member: any, index: number) => (
         <div key={index} className="bg-editor-bg p-3 rounded-lg border border-editor-border mb-3">
           <ImagePicker
@@ -78,9 +78,9 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
               setNestedData('team.items', newItems);
             }}
           />
-          <Input label="Name" value={member.name} onChange={(e) => setNestedData(`team.items.${index}.name`, e.target.value)} className="mt-2" />
-          <Input label="Role" value={member.role} onChange={(e) => setNestedData(`team.items.${index}.role`, e.target.value)} />
-          <Input label="Bio (Overlay)" value={member.bio || ''} onChange={(e) => setNestedData(`team.items.${index}.bio`, e.target.value)} placeholder="Short bio shown on hover" />
+          <Input label={t('controls.name')} value={member.name} onChange={(e) => setNestedData(`team.items.${index}.name`, e.target.value)} className="mt-2" />
+          <Input label={t('controls.role')} value={member.role} onChange={(e) => setNestedData(`team.items.${index}.role`, e.target.value)} />
+          <Input label={t('controls.bioOverlay')} value={member.bio || ''} onChange={(e) => setNestedData(`team.items.${index}.bio`, e.target.value)} placeholder="Short bio shown on hover" />
 
           {/* Link Controls */}
           <div className="mt-3 pt-3 border-t border-editor-border/50">
@@ -145,7 +145,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           <Layers size={14} /> Efecto Cristal
         </label>
         <ToggleControl
-          label="Glassmorphism / Transparencia"
+          label={t('controls.glassmorphismTransparencia')}
           checked={data?.team?.glassEffect || false}
           onChange={(v) => setNestedData('team.glassEffect', v)}
         />
@@ -153,30 +153,30 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       <BackgroundImageControl sectionKey="team" data={data} setNestedData={setNestedData} />
       {/* Section Colors */}
       <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Section Colors</label>
+        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('controls.sectionColors')}</label>
         <ColorControl label={t('editor.controls.common.background')} value={data?.team?.colors?.background || '#0f172a'} onChange={(v) => setNestedData('team.colors.background', v)} />
-        <ColorControl label="Section Title" value={data?.team?.colors?.heading || '#F9FAFB'} onChange={(v) => setNestedData('team.colors.heading', v)} />
-        <ColorControl label="Section Description" value={data?.team?.colors?.description || '#94a3b8'} onChange={(v) => setNestedData('team.colors.description', v)} />
-        <ColorControl label="Accent" value={data?.team?.colors?.accent || '#4f46e5'} onChange={(v) => setNestedData('team.colors.accent', v)} />
+        <ColorControl label={t('controls.sectionTitle')} value={data?.team?.colors?.heading || '#F9FAFB'} onChange={(v) => setNestedData('team.colors.heading', v)} />
+        <ColorControl label={t('controls.sectionDescription')} value={data?.team?.colors?.description || '#94a3b8'} onChange={(v) => setNestedData('team.colors.description', v)} />
+        <ColorControl label={t('controls.accent')} value={data?.team?.colors?.accent || '#4f46e5'} onChange={(v) => setNestedData('team.colors.accent', v)} />
       </div>
 
 
       {/* Card Colors */}
       <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Card Colors</label>
-        <ColorControl label="Card Background" value={data?.team?.colors?.cardBackground || 'rgba(30, 41, 59, 0.5)'} onChange={(v) => setNestedData('team.colors.cardBackground', v)} />
-        <ColorControl label="Card Name" value={data?.team?.colors?.cardHeading || '#ffffff'} onChange={(v) => setNestedData('team.colors.cardHeading', v)} />
-        <ColorControl label="Card Role" value={data?.team?.colors?.cardText || '#94a3b8'} onChange={(v) => setNestedData('team.colors.cardText', v)} />
-        <ColorControl label="Photo Border" value={data?.team?.colors?.photoBorderColor || '#4f46e5'} onChange={(v) => setNestedData('team.colors.photoBorderColor', v)} />
+        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('controls.cardColors')}</label>
+        <ColorControl label={t('controls.cardBackground')} value={data?.team?.colors?.cardBackground || 'rgba(30, 41, 59, 0.5)'} onChange={(v) => setNestedData('team.colors.cardBackground', v)} />
+        <ColorControl label={t('controls.cardName')} value={data?.team?.colors?.cardHeading || '#ffffff'} onChange={(v) => setNestedData('team.colors.cardHeading', v)} />
+        <ColorControl label={t('controls.cardRole')} value={data?.team?.colors?.cardText || '#94a3b8'} onChange={(v) => setNestedData('team.colors.cardText', v)} />
+        <ColorControl label={t('controls.photoBorder')} value={data?.team?.colors?.photoBorderColor || '#4f46e5'} onChange={(v) => setNestedData('team.colors.photoBorderColor', v)} />
       </div>
 
 
       {/* Spacing */}
       <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Spacing</label>
+        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('controls.spacing')}</label>
         <div className="space-y-1">
-          <PaddingSelector label="Vertical" value={data?.team?.paddingY || 'md'} onChange={(v) => setNestedData('team.paddingY', v)} />
-          <PaddingSelector label="Horizontal" value={data?.team?.paddingX || 'md'} onChange={(v) => setNestedData('team.paddingX', v)} />
+          <PaddingSelector label={t('controls.vertical')} value={data?.team?.paddingY || 'md'} onChange={(v) => setNestedData('team.paddingY', v)} />
+          <PaddingSelector label={t('controls.horizontal')} value={data?.team?.paddingX || 'md'} onChange={(v) => setNestedData('team.paddingX', v)} />
         </div>
       </div>
 

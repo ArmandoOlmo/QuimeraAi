@@ -52,7 +52,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
         {/* Link Type Selector */}
         <div className="mb-3">
-          <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">Link Type</label>
+          <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{t('controls.linkType')}</label>
           <div className="flex bg-editor-panel-bg rounded-md border border-editor-border p-1">
             {[
               { value: 'manual', label: 'Manual URL' },
@@ -133,7 +133,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           <Layers size={14} /> Efecto Cristal
         </label>
         <ToggleControl
-          label="Glassmorphism / Transparencia"
+          label={t('controls.glassmorphismTransparencia')}
           checked={data?.heroSplit?.glassEffect || false}
           onChange={(v) => setNestedData('heroSplit.glassEffect', v)}
         />
@@ -148,7 +148,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
         {/* Image Position Toggle */}
         <div className="mb-4">
-          <label className="block text-xs font-semibold text-editor-text-secondary mb-2">Image Position</label>
+          <label className="block text-xs font-semibold text-editor-text-secondary mb-2">{t('controls.imagePosition')}</label>
           <div className="flex bg-editor-bg p-1 rounded-md border border-editor-border">
             {['left', 'right'].map(pos => (
               <button
@@ -171,7 +171,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         {/* Max Height */}
         <div className="mb-4">
           <div className="flex justify-between items-center mb-1">
-            <label className="text-xs font-semibold text-editor-text-secondary">Max Height</label>
+            <label className="text-xs font-semibold text-editor-text-secondary">{t('controls.maxHeight')}</label>
             <span className="text-xs text-editor-text-primary">{data.heroSplit.maxHeight || 500}px</span>
           </div>
           <input
@@ -185,7 +185,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         {/* Angle Intensity */}
         <div>
           <div className="flex justify-between items-center mb-1">
-            <label className="text-xs font-semibold text-editor-text-secondary">Angle Intensity</label>
+            <label className="text-xs font-semibold text-editor-text-secondary">{t('controls.angleIntensity')}</label>
             <span className="text-xs text-editor-text-primary">{data.heroSplit.angleIntensity || 15}%</span>
           </div>
           <input
@@ -209,19 +209,19 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         </label>
 
         <div className="space-y-3">
-          <ColorControl label="Text Side Background" value={data.heroSplit.colors?.textBackground || '#ffffff'} onChange={(v) => setNestedData('heroSplit.colors.textBackground', v)} />
-          <ColorControl label="Image Side Background" value={data.heroSplit.colors?.imageBackground || '#000000'} onChange={(v) => setNestedData('heroSplit.colors.imageBackground', v)} />
+          <ColorControl label={t('controls.textSideBackground')} value={data.heroSplit.colors?.textBackground || '#ffffff'} onChange={(v) => setNestedData('heroSplit.colors.textBackground', v)} />
+          <ColorControl label={t('controls.imageSideBackground')} value={data.heroSplit.colors?.imageBackground || '#000000'} onChange={(v) => setNestedData('heroSplit.colors.imageBackground', v)} />
 
 
-          <ColorControl label="Headline Color" value={data.heroSplit.colors?.heading || '#111827'} onChange={(v) => setNestedData('heroSplit.colors.heading', v)} />
-          <ColorControl label="Text Color" value={data.heroSplit.colors?.text || '#4b5563'} onChange={(v) => setNestedData('heroSplit.colors.text', v)} />
+          <ColorControl label={t('controls.headlineColor')} value={data.heroSplit.colors?.heading || '#111827'} onChange={(v) => setNestedData('heroSplit.colors.heading', v)} />
+          <ColorControl label={t('controls.textColor')} value={data.heroSplit.colors?.text || '#4b5563'} onChange={(v) => setNestedData('heroSplit.colors.text', v)} />
 
           <p className="text-[10px] text-editor-text-secondary uppercase tracking-wider font-bold">Button</p>
 
-          <ColorControl label="Button Background" value={data.heroSplit.colors?.buttonBackground || '#4f46e5'} onChange={(v) => setNestedData('heroSplit.colors.buttonBackground', v)} />
+          <ColorControl label={t('controls.fondoBotn')} value={data.heroSplit.colors?.buttonBackground || '#4f46e5'} onChange={(v) => setNestedData('heroSplit.colors.buttonBackground', v)} />
           <ColorControl label={t('editor.controls.common.buttonText')} value={data.heroSplit.colors?.buttonText || '#ffffff'} onChange={(v) => setNestedData('heroSplit.colors.buttonText', v)} />
 
-          <BorderRadiusSelector label="Button Corners" value={data.heroSplit.buttonBorderRadius || 'xl'} onChange={(v) => setNestedData('heroSplit.buttonBorderRadius', v)} />
+          <BorderRadiusSelector label={t('controls.buttonCorners')} value={data.heroSplit.buttonBorderRadius || 'xl'} onChange={(v) => setNestedData('heroSplit.buttonBorderRadius', v)} />
 
 
           {/* Corner Gradient */}

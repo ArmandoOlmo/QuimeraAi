@@ -173,7 +173,7 @@ const NavLinks: React.FC<NavLinksProps> = ({ links, textColor, accentColor, hove
               letterSpacing: 'var(--navlinks-spacing, normal)'
             }}
           >
-            {showIcons && link.icon ? (
+            {showIcons && link.icon && link.icon !== 'none' ? (
               <span className="inline-flex items-center gap-2 align-middle">
                 {renderIcon(link)}
                 <span>{getTranslatedLabel(link.text)}</span>

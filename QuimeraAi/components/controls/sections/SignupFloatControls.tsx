@@ -351,31 +351,27 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           <ColorControl label={t('editor.controls.common.background')} value={data.signupFloat.colors?.background || '#1e293b'} onChange={(v) => setNestedData('signupFloat.colors.background', v)} />
           <ColorControl label={t('editor.controls.common.title')} value={data.signupFloat.colors?.heading || '#F9FAFB'} onChange={(v) => setNestedData('signupFloat.colors.heading', v)} />
           <ColorControl label={t('editor.controls.common.text')} value={data.signupFloat.colors?.text || '#94a3b8'} onChange={(v) => setNestedData('signupFloat.colors.text', v)} />
-          <ColorControl label="Accent" value={data.signupFloat.colors?.accent || '#4f46e5'} onChange={(v) => setNestedData('signupFloat.colors.accent', v)} />
+          <ColorControl label={t('controls.accent')} value={data.signupFloat.colors?.accent || '#4f46e5'} onChange={(v) => setNestedData('signupFloat.colors.accent', v)} />
         </div>
       </div>
 
       {/* ========== BUTTON COLORS ========== */}
       <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-3">
-          Button
-        </label>
+        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-3">{t('controls.button')}</label>
         <div className="space-y-2">
-          <ColorControl label="Button Background" value={data.signupFloat.colors?.buttonBackground || '#4f46e5'} onChange={(v) => setNestedData('signupFloat.colors.buttonBackground', v)} />
+          <ColorControl label={t('controls.fondoBotn')} value={data.signupFloat.colors?.buttonBackground || '#4f46e5'} onChange={(v) => setNestedData('signupFloat.colors.buttonBackground', v)} />
           <ColorControl label={t('editor.controls.common.buttonText')} value={data.signupFloat.colors?.buttonText || '#ffffff'} onChange={(v) => setNestedData('signupFloat.colors.buttonText', v)} />
         </div>
       </div>
 
       {/* ========== INPUT COLORS ========== */}
       <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-3">
-          Input Fields
-        </label>
+        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-3">{t('controls.inputFields')}</label>
         <div className="space-y-2">
-          <ColorControl label="Input Background" value={data.signupFloat.colors?.inputBackground || '#0f172a'} onChange={(v) => setNestedData('signupFloat.colors.inputBackground', v)} />
-          <ColorControl label="Input Text" value={data.signupFloat.colors?.inputText || '#F9FAFB'} onChange={(v) => setNestedData('signupFloat.colors.inputText', v)} />
-          <ColorControl label="Input Border" value={data.signupFloat.colors?.inputBorder || '#334155'} onChange={(v) => setNestedData('signupFloat.colors.inputBorder', v)} />
-          <ColorControl label="Placeholder" value={data.signupFloat.colors?.inputPlaceholder || '#6b7280'} onChange={(v) => setNestedData('signupFloat.colors.inputPlaceholder', v)} />
+          <ColorControl label={t('controls.inputBackground')} value={data.signupFloat.colors?.inputBackground || '#0f172a'} onChange={(v) => setNestedData('signupFloat.colors.inputBackground', v)} />
+          <ColorControl label={t('controls.inputText')} value={data.signupFloat.colors?.inputText || '#F9FAFB'} onChange={(v) => setNestedData('signupFloat.colors.inputText', v)} />
+          <ColorControl label={t('controls.inputBorder')} value={data.signupFloat.colors?.inputBorder || '#334155'} onChange={(v) => setNestedData('signupFloat.colors.inputBorder', v)} />
+          <ColorControl label={t('controls.placeholder')} value={data.signupFloat.colors?.inputPlaceholder || '#6b7280'} onChange={(v) => setNestedData('signupFloat.colors.inputPlaceholder', v)} />
         </div>
       </div>
 
@@ -385,8 +381,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           {t('controls.signupFloat.socialLinks', 'Social Links')} & Overlay
         </label>
         <div className="space-y-2">
-          <ColorControl label="Social Icon Color" value={data.signupFloat.colors?.socialIconColor || '#94a3b8'} onChange={(v) => setNestedData('signupFloat.colors.socialIconColor', v)} />
-          <ColorControl label="Overlay Background" value={data.signupFloat.colors?.overlayBackground || 'rgba(0,0,0,0.4)'} onChange={(v) => setNestedData('signupFloat.colors.overlayBackground', v)} />
+          <ColorControl label={t('controls.socialIconColor')} value={data.signupFloat.colors?.socialIconColor || '#94a3b8'} onChange={(v) => setNestedData('signupFloat.colors.socialIconColor', v)} />
+          <ColorControl label={t('controls.overlayBackground')} value={data.signupFloat.colors?.overlayBackground || 'rgba(0,0,0,0.4)'} onChange={(v) => setNestedData('signupFloat.colors.overlayBackground', v)} />
         </div>
       </div>
     </div>

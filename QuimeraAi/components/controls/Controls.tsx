@@ -29,7 +29,7 @@ import {
   Briefcase, MessageCircle, Mail, Send, Type,
   Settings, AlignJustify, MonitorPlay, Grid, HelpCircle, X, Palette,
   TrendingUp, MapIcon, ShoppingBag, Store, Check, Waves, Bell,
-  FileText, Layers, UserPlus, PanelRightClose, PanelRightOpen,
+  FileText, Layers, UserPlus, PanelRightClose, PanelRightOpen, MessageSquare,
 } from 'lucide-react';
 import { usePublicProducts } from '../../hooks/usePublicProducts';
 import AIContentAssistant from '../ui/AIContentAssistant';
@@ -66,6 +66,7 @@ import {
   renderHowItWorksControlsWithTabs, renderMenuControlsWithTabs,
   renderBannerControlsWithTabs,
   renderProductsControlsWithTabs, renderSignupFloatControlsWithTabs,
+  renderChatbotControlsWithTabs,
 } from './sections';
 
 // ─── Main Component ─────────────────────────────────────────────────────────
@@ -303,27 +304,27 @@ const Controls: React.FC = () => {
     heroNova: { label: 'Hero Nova', icon: MonitorPlay, renderer: () => renderHeroNovaControls(deps) },
     features: { label: 'Features', icon: List, renderer: () => renderFeaturesControls(deps) },
     testimonials: { label: 'Testimonials', icon: Star, renderer: () => renderTestimonialsControls(deps) },
-    services: { label: 'Services', icon: List, renderer: () => null },
-    team: { label: 'Team', icon: Users, renderer: () => null },
+    services: { label: 'Services', icon: List, renderer: () => renderServicesControlsWithTabs(deps) },
+    team: { label: 'Team', icon: Users, renderer: () => renderTeamControlsWithTabs(deps) },
     pricing: { label: 'Pricing', icon: DollarSign, renderer: () => renderPricingControls(deps) },
-    faq: { label: 'FAQ', icon: HelpCircle, renderer: () => null },
-    portfolio: { label: 'Portfolio', icon: Briefcase, renderer: () => null },
-    leads: { label: 'Lead Form', icon: Mail, renderer: () => null },
-    newsletter: { label: 'Newsletter', icon: Send, renderer: () => null },
-    cta: { label: 'Call to Action', icon: MessageCircle, renderer: () => null },
+    faq: { label: 'FAQ', icon: HelpCircle, renderer: () => renderFAQControlsWithTabs(deps) },
+    portfolio: { label: 'Portfolio', icon: Briefcase, renderer: () => renderPortfolioControlsWithTabs(deps) },
+    leads: { label: 'Lead Form', icon: Mail, renderer: () => renderLeadsControlsWithTabs(deps) },
+    newsletter: { label: 'Newsletter', icon: Send, renderer: () => renderNewsletterControlsWithTabs(deps) },
+    cta: { label: 'Call to Action', icon: MessageCircle, renderer: () => renderCTAControlsWithTabs(deps) },
     slideshow: { label: 'Slideshow', icon: PlaySquare, renderer: () => renderSlideshowControls(deps) },
     video: { label: 'Video', icon: MonitorPlay, renderer: () => renderVideoControls(deps) },
-    howItWorks: { label: 'How It Works', icon: Grid, renderer: () => null },
+    howItWorks: { label: 'How It Works', icon: Grid, renderer: () => renderHowItWorksControlsWithTabs(deps) },
     map: { label: 'Map', icon: MapIcon, renderer: () => renderMapControls(deps) },
-    menu: { label: 'Restaurant Menu', icon: AlignJustify, renderer: () => null },
+    menu: { label: 'Restaurant Menu', icon: AlignJustify, renderer: () => renderMenuControlsWithTabs(deps) },
     footer: { label: 'Footer', icon: Type, renderer: () => renderFooterControls(deps) },
     header: { label: 'Navigation Bar', icon: AlignJustify, renderer: () => renderHeaderControls(deps) },
     colors: { label: 'Colores', icon: Palette, renderer: () => <GlobalStylesControl mode="colors" /> },
     typography: { label: 'Tipografía', icon: Type, renderer: () => <GlobalStylesControl mode="typography" /> },
-    banner: { label: 'Banner', icon: Image, renderer: () => null },
+    banner: { label: 'Banner', icon: Image, renderer: () => renderBannerControlsWithTabs(deps) },
     topBar: { label: 'Top Bar', icon: Bell, renderer: () => renderTopBarControls(deps) },
     logoBanner: { label: 'Logo Banner', icon: Layers, renderer: () => renderLogoBannerControls(deps) },
-    products: { label: 'Products', icon: ShoppingBag, renderer: () => null },
+    products: { label: 'Products', icon: ShoppingBag, renderer: () => renderProductsControlsWithTabs(deps) },
     storeSettings: { label: 'Store Settings', icon: Store, renderer: () => null },
     featuredProducts: { label: 'Featured Products', icon: ShoppingBag, renderer: () => null },
     categoryGrid: { label: 'Category Grid', icon: Grid, renderer: () => null },
@@ -335,8 +336,9 @@ const Controls: React.FC = () => {
     collectionBanner: { label: 'Collection Banner', icon: Image, renderer: () => null },
     productBundle: { label: 'Product Bundle', icon: ShoppingBag, renderer: () => null },
     announcementBar: { label: 'Announcement Bar', icon: MessageCircle, renderer: () => null },
-    cmsFeed: { label: 'CMS Feed', icon: FileText, renderer: () => null },
-    signupFloat: { label: 'Sign Up Float', icon: UserPlus, renderer: () => null },
+    cmsFeed: { label: 'CMS Feed', icon: FileText, renderer: () => renderCMSFeedControlsWithTabs(deps) },
+    signupFloat: { label: 'Sign Up Float', icon: UserPlus, renderer: () => renderSignupFloatControlsWithTabs(deps) },
+    chatbot: { label: 'Chatbot', icon: MessageSquare, renderer: () => renderChatbotControlsWithTabs(deps) },
   };
 
   if (!data) return null;
@@ -401,6 +403,7 @@ const Controls: React.FC = () => {
       case 'cmsFeed': return renderCMSFeedControlsWithTabs(deps);
       case 'cta': return renderCTAControlsWithTabs(deps);
       case 'howItWorks': return renderHowItWorksControlsWithTabs(deps);
+      case 'chatbot': return renderChatbotControlsWithTabs(deps);
       case 'menu': return renderMenuControlsWithTabs(deps);
       case 'banner': return renderBannerControlsWithTabs(deps);
       case 'pricing': return renderPricingControlsWithTabs(deps);

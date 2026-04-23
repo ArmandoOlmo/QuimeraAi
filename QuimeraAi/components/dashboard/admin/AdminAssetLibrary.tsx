@@ -11,10 +11,14 @@ import { useFiles, AdminAssetCategory, AdminAssetRecord } from '../../../context
 import { useAI } from '../../../contexts/ai';
 import { useAppContent } from '../../../contexts/appContent';
 import { useToast } from '../../../contexts/ToastContext';
+import { useAuth } from '../../../contexts/core/AuthContext';
+import { db, collection, getDocs, addDoc, query, orderBy, doc, updateDoc, storage } from '../../../firebase';
+import { ref, listAll, getDownloadURL, getMetadata } from 'firebase/storage';
 import DashboardSidebar from '../DashboardSidebar';
 import DashboardWaveRibbons from '../DashboardWaveRibbons';
 import DragDropZone from '../../ui/DragDropZone';
 import Modal from '../../ui/Modal';
+import MobileSearchModal from '../../ui/MobileSearchModal';
 import { formatBytes, formatFileDate } from '../../../utils/fileHelpers';
 import {
     ArrowLeft,
@@ -114,6 +118,7 @@ const CATEGORY_CONFIG: Record<AdminAssetCategory, { label: string; icon: React.R
     'testimonial': { label: 'Testimonios', icon: <User size={16} />, color: 'bg-cyan-500/10 text-cyan-500 border-cyan-500/30' },
     'team': { label: 'Equipo', icon: <User size={16} />, color: 'bg-teal-500/10 text-teal-500 border-teal-500/30' },
     'product': { label: 'Productos', icon: <ShoppingBag size={16} />, color: 'bg-rose-500/10 text-rose-500 border-rose-500/30' },
+    'ai_generated': { label: 'Generadas con IA', icon: <Wand2 size={16} />, color: 'bg-indigo-500/10 text-indigo-500 border-indigo-500/30' },
     'other': { label: 'Otros', icon: <FolderOpen size={16} />, color: 'bg-gray-500/10 text-gray-500 border-gray-500/30' },
 };
 
@@ -246,6 +251,22 @@ const AssetPreviewModal: React.FC<{
                         >
                             {Object.entries(CATEGORY_CONFIG).map(([key, { label }]) => (
                                 <option key={key} value={key}>{label}</option>
+                            ))}
+                        </select>
+                    </div>
+
+                    {/* Category Selector */}
+                    <div className="mb-3">
+                        <label className="block text-xs font-bold text-muted-foreground mb-2 uppercase">Categoría</label>
+                        <select
+                            value={category}
+                            onChange={(e) => setCategory(e.target.value as AdminAssetCategory)}
+                            className="w-full bg-background text-sm text-foreground p-2 rounded-lg border border-border focus:ring-2 focus:ring-primary focus:outline-none"
+                        >
+                            {Object.entries(CATEGORY_CONFIG).map(([key, config]) => (
+                                <option key={key} value={key}>
+                                    {config.label}
+                                </option>
                             ))}
                         </select>
                     </div>
@@ -452,6 +473,7 @@ const AssetItem: React.FC<{
 
 const AdminAssetLibrary: React.FC<AdminAssetLibraryProps> = ({ onBack }) => {
     const { t } = useTranslation();
+    const { user } = useAuth();
     const {
         adminAssets,
         isAdminAssetsLoading,
@@ -558,7 +580,7 @@ const AdminAssetLibrary: React.FC<AdminAssetLibraryProps> = ({ onBack }) => {
     const categoryStats = useMemo(() => {
         const stats: Record<AdminAssetCategory, number> = {
             article: 0, component: 0, template: 0, hero: 0, icon: 0,
-            background: 0, logo: 0, testimonial: 0, team: 0, product: 0, other: 0,
+            background: 0, logo: 0, testimonial: 0, team: 0, product: 0, ai_generated: 0, other: 0,
         };
         adminAssets.forEach(asset => {
             stats[asset.category]++;
@@ -722,6 +744,283 @@ const AdminAssetLibrary: React.FC<AdminAssetLibraryProps> = ({ onBack }) => {
         }
     };
 
+    // Migration function for old AI generated global files
+    const [isMigrating, setIsMigrating] = useState(false);
+    const [isScanning, setIsScanning] = useState(false);
+
+    const scanAndExtractBase64FromArticles = async () => {
+        if (!confirm('Esto escaneará los artículos de Blog y Noticias para recuperar cualquier imagen (Base64 o enlaces perdidos) y añadirla a la librería. ¿Continuar?')) return;
+        setIsScanning(true);
+        let extractedCount = 0;
+        let updatedDocsCount = 0;
+        
+        try {
+            const base64ToFile = (base64: string, filename: string): File => {
+                const arr = base64.split(',');
+                const mimeMatch = arr[0].match(/:(.*?);/);
+                const mime = mimeMatch ? mimeMatch[1] : 'image/png';
+                const bstr = atob(arr[1]);
+                let n = bstr.length;
+                const u8arr = new Uint8Array(n);
+                while (n--) {
+                    u8arr[n] = bstr.charCodeAt(n);
+                }
+                return new File([u8arr], filename, { type: mime });
+            };
+
+            const collectionsToScan = [
+                { path: 'appContent/data/articles', label: 'Blog' },
+                { path: 'news', label: 'Noticias' }
+            ];
+
+            // 1. Scan Firebase Storage (user_uploads) for orphaned files
+            if (user?.uid) {
+                const scanStorageFolder = async (folderPath: string) => {
+                    try {
+                        const folderRef = ref(storage, folderPath);
+                        const result = await listAll(folderRef);
+                        for (const itemRef of result.items) {
+                            const url = await getDownloadURL(itemRef);
+                            // Check if it exists in adminAssets
+                            const exists = adminAssets.some(a => a.downloadURL === url);
+                            if (!exists) {
+                                // Default metadata if fetch fails
+                                let contentType = 'image/jpeg';
+                                let size = 0;
+                                let timeCreated = new Date().toISOString();
+                                
+                                try {
+                                    const metadata = await getMetadata(itemRef);
+                                    contentType = metadata.contentType || contentType;
+                                    size = metadata.size || size;
+                                    timeCreated = metadata.timeCreated || timeCreated;
+                                } catch (e) {
+                                    console.warn("Could not fetch metadata for", itemRef.fullPath);
+                                }
+                                
+                                // Only add if it's an image
+                                if (contentType.startsWith('image/')) {
+                                    const newAsset = {
+                                        name: itemRef.name,
+                                        type: contentType,
+                                        size: size,
+                                        downloadURL: url,
+                                        storagePath: itemRef.fullPath,
+                                        category: 'ai_generated', // Default category for recovered items
+                                        createdAt: timeCreated,
+                                        uploadedBy: user.uid,
+                                        description: `Recuperada del almacenamiento personal`,
+                                        tags: ['recovered', 'storage'],
+                                        isAiGenerated: true,
+                                        aiPrompt: '',
+                                        usedIn: [],
+                                    };
+                                    await addDoc(collection(db, 'adminAssets'), newAsset);
+                                    extractedCount++;
+                                }
+                            }
+                        }
+                        // Recurse into subfolders
+                        for (const prefixRef of result.prefixes) {
+                            await scanStorageFolder(prefixRef.fullPath);
+                        }
+                    } catch (e) {
+                        console.error("Error scanning folder", folderPath, e);
+                    }
+                };
+                
+                await scanStorageFolder(`user_uploads/${user.uid}`);
+            }
+            
+            // 2. Scan Articles and News
+            for (const col of collectionsToScan) {
+                const colName = col.path;
+                const colLabel = col.label;
+                const colRef = collection(db, colName);
+                const snapshot = await getDocs(query(colRef));
+                
+                for (const docSnapshot of snapshot.docs) {
+                    const data = docSnapshot.data();
+                    let needsUpdate = false;
+                    const updates: Record<string, any> = {};
+                    
+                    // 1. Check featuredImage
+                    if (data.featuredImage && typeof data.featuredImage === 'string') {
+                        if (data.featuredImage.startsWith('data:image/')) {
+                            try {
+                                const file = base64ToFile(data.featuredImage, `${colLabel}_${docSnapshot.id}_featured.png`);
+                                const url = await uploadAdminAsset(file, 'ai_generated', {
+                                    description: `Extraída de ${colLabel} (Imagen Principal)`,
+                                    isAiGenerated: true
+                                });
+                                updates.featuredImage = url;
+                                needsUpdate = true;
+                                extractedCount++;
+                            } catch (e) {
+                                console.error('Failed to extract featured image', e);
+                            }
+                        } else if (data.featuredImage.includes('firebasestorage.googleapis.com')) {
+                            const exists = adminAssets.some(a => a.downloadURL === data.featuredImage);
+                            if (!exists) {
+                                const newAsset = {
+                                    name: `Recuperada de ${colName} (Principal)`,
+                                    type: 'image/jpeg',
+                                    size: 0,
+                                    downloadURL: data.featuredImage,
+                                    storagePath: '',
+                                    category: 'ai_generated',
+                                    createdAt: new Date().toISOString(),
+                                    uploadedBy: 'system',
+                                    description: `Extraída de ${colLabel} (Imagen Principal)`,
+                                    tags: ['recovered', colLabel],
+                                    isAiGenerated: true,
+                                    aiPrompt: '',
+                                    usedIn: [],
+                                };
+                                await addDoc(collection(db, 'adminAssets'), newAsset);
+                                extractedCount++;
+                            }
+                        }
+                    }
+                    
+                    // 2. Check content (HTML) for base64
+                    if (data.content && typeof data.content === 'string') {
+                        let newContent = data.content;
+                        let contentUpdated = false;
+                        
+                        // Extract base64
+                        if (data.content.includes('data:image/')) {
+                            const regex = /src=["'](data:image\/[^"']+)["']/g;
+                            let match;
+                            
+                            while ((match = regex.exec(data.content)) !== null) {
+                                const base64Data = match[1];
+                                try {
+                                    const file = base64ToFile(base64Data, `${colLabel}_${docSnapshot.id}_content_${extractedCount}.png`);
+                                    const url = await uploadAdminAsset(file, 'ai_generated', {
+                                        description: `Extraída de ${colLabel} (Contenido)`,
+                                        isAiGenerated: true
+                                    });
+                                    newContent = newContent.replace(base64Data, url);
+                                    contentUpdated = true;
+                                    extractedCount++;
+                                } catch (e) {
+                                    console.error('Failed to extract content image', e);
+                                }
+                            }
+                        }
+                        
+                        // Extract valid firebase URLs that are missing from library
+                        if (data.content.includes('firebasestorage.googleapis.com')) {
+                            const urlRegex = /src=["'](https:\/\/firebasestorage\.googleapis\.com\/[^"']+)["']/g;
+                            let urlMatch;
+                            while ((urlMatch = urlRegex.exec(data.content)) !== null) {
+                                const foundUrl = urlMatch[1];
+                                // Decode URL entities if present (e.g., &amp;)
+                                const cleanUrl = foundUrl.replace(/&amp;/g, '&');
+                                const exists = adminAssets.some(a => a.downloadURL === cleanUrl);
+                                if (!exists) {
+                                    const newAsset = {
+                                        name: `Recuperada de ${colName} (Contenido)`,
+                                        type: 'image/jpeg',
+                                        size: 0,
+                                        downloadURL: cleanUrl,
+                                        storagePath: '',
+                                        category: 'ai_generated',
+                                        createdAt: new Date().toISOString(),
+                                        uploadedBy: 'system',
+                                        description: `Extraída de ${colLabel} (Contenido)`,
+                                        tags: ['recovered', colLabel],
+                                        isAiGenerated: true,
+                                        aiPrompt: '',
+                                        usedIn: [],
+                                    };
+                                    await addDoc(collection(db, 'adminAssets'), newAsset);
+                                    extractedCount++;
+                                }
+                            }
+                        }
+                        
+                        if (contentUpdated) {
+                            updates.content = newContent;
+                            needsUpdate = true;
+                        }
+                    }
+                    
+                    if (needsUpdate) {
+                        await updateDoc(doc(db, colName, docSnapshot.id), updates);
+                        updatedDocsCount++;
+                    }
+                }
+            }
+            
+            if (extractedCount > 0) {
+                success(`Deep Scan completado: Se recuperaron ${extractedCount} imágenes.`);
+                await fetchAdminAssets();
+            } else {
+                success('Deep Scan completado: No se encontraron imágenes perdidas.');
+            }
+            
+        } catch (error) {
+            console.error('Deep scan error:', error);
+            showError('Error durante el escaneo profundo.');
+        } finally {
+            setIsScanning(false);
+        }
+    };
+    const migrateLegacyAIAssets = async () => {
+        if (!confirm('¿Deseas migrar las imágenes globales antiguas a la nueva categoría "Generadas con IA"? Esto copiará los registros y puede tardar unos segundos.')) return;
+        setIsMigrating(true);
+        try {
+            // 1. Fetch old global files
+            const globalFilesCol = collection(db, 'global_files');
+            const q = query(globalFilesCol);
+            const snapshot = await getDocs(q);
+            
+            // 2. Fetch current admin assets to prevent duplicates
+            const existingUrls = new Set(adminAssets.map(a => a.downloadURL));
+            
+            let migratedCount = 0;
+            const assetsCol = collection(db, 'adminAssets');
+            
+            for (const docSnapshot of snapshot.docs) {
+                const data = docSnapshot.data();
+                if (!existingUrls.has(data.downloadURL)) {
+                    // Create new admin asset record
+                    const newAsset = {
+                        name: data.name || 'Legacy AI Image',
+                        type: data.type || 'image/jpeg',
+                        size: data.size || 0,
+                        downloadURL: data.downloadURL,
+                        storagePath: data.storagePath || '',
+                        category: 'ai_generated',
+                        createdAt: data.createdAt || new Date().toISOString(),
+                        uploadedBy: data.uploadedBy || 'system',
+                        description: 'Migrated legacy AI generated image',
+                        tags: ['legacy', 'migrated'],
+                        isAiGenerated: true,
+                        aiPrompt: '',
+                        usedIn: [],
+                    };
+                    await addDoc(assetsCol, newAsset);
+                    migratedCount++;
+                }
+            }
+            
+            if (migratedCount > 0) {
+                success(`¡Éxito! ${migratedCount} imágenes fueron migradas a la nueva categoría.`);
+                await fetchAdminAssets();
+            } else {
+                success('Todas las imágenes antiguas ya habían sido migradas.');
+            }
+        } catch (error) {
+            console.error('Error migrating legacy assets:', error);
+            showError('Error al migrar las imágenes antiguas.');
+        } finally {
+            setIsMigrating(false);
+        }
+    };
+
     return (
         <div className="flex h-screen bg-background text-foreground">
             <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
@@ -750,13 +1049,31 @@ const AdminAssetLibrary: React.FC<AdminAssetLibraryProps> = ({ onBack }) => {
 
                     <div className="flex-1" />
 
-                    <button
-                        onClick={onBack}
-                        className="flex items-center justify-center gap-2 h-9 w-9 sm:w-auto sm:px-3 rounded-lg sm:bg-secondary/50 sm:hover:bg-secondary text-sm font-medium transition-all text-muted-foreground hover:text-foreground"
-                    >
-                        <ArrowLeft className="w-4 h-4" />
-                        <span className="hidden sm:inline">{t('common.back', 'Back')}</span>
-                    </button>
+                    <div className="flex items-center gap-3">
+                        <button
+                            onClick={scanAndExtractBase64FromArticles}
+                            disabled={isMigrating || isScanning}
+                            className="flex items-center gap-2 h-9 px-3 rounded-lg bg-orange-500/10 text-orange-500 hover:bg-orange-500/20 text-xs font-bold transition-colors border border-orange-500/30 disabled:opacity-50"
+                        >
+                            {isScanning ? <Loader2 size={14} className="animate-spin" /> : <Search size={14} />}
+                            {isScanning ? 'Escaneando...' : 'Deep Scan Artículos'}
+                        </button>
+                        <button
+                            onClick={migrateLegacyAIAssets}
+                            disabled={isMigrating || isScanning}
+                            className="flex items-center gap-2 h-9 px-3 rounded-lg bg-indigo-500/10 text-indigo-500 hover:bg-indigo-500/20 text-xs font-bold transition-colors border border-indigo-500/30 disabled:opacity-50"
+                        >
+                            {isMigrating ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
+                            {isMigrating ? 'Migrando...' : 'Recuperar Globales'}
+                        </button>
+                        <button
+                            onClick={onBack}
+                            className="flex items-center justify-center gap-2 h-9 w-9 sm:w-auto sm:px-3 rounded-lg sm:bg-secondary/50 sm:hover:bg-secondary text-sm font-medium transition-all text-muted-foreground hover:text-foreground"
+                        >
+                            <ArrowLeft className="w-4 h-4" />
+                            <span className="hidden sm:inline">{t('common.back', 'Back')}</span>
+                        </button>
+                    </div>
                 </header>
 
                 {/* Asset Preview Modal */}

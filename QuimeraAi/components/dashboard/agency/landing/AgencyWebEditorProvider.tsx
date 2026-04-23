@@ -4,12 +4,14 @@ import { useSafeProject, ProjectContext } from '../../../../contexts/project/Pro
 import { EditorContext, useSafeEditor } from '../../../../contexts/EditorContext';
 import { useTenant } from '../../../../contexts/tenant/TenantContext';
 import { getAgencyLanding, saveAgencyLanding } from '../../../../services/agencyLandingService';
-import { Project, PageData, ThemeData, PageSection, BrandIdentity } from '../../../../types';
+import { Project, PageData, ThemeData, PageSection, BrandIdentity, FileRecord } from '../../../../types';
 import { initialData } from '../../../../data/initialData';
 import { initialAgencyData } from './initialAgencyData';
 import QuimeraLoader from '../../../ui/QuimeraLoader';
 import { toast } from 'react-hot-toast';
 import { AgencyLandingConfig } from '../../../../types/agencyLanding';
+import { FilesContext, useFiles } from '../../../../contexts/files/FilesContext';
+import { ref, uploadBytes, getDownloadURL, storage, db, collection, query, orderBy, onSnapshot, addDoc, deleteDoc, doc, deleteObject } from '../../../../firebase';
 
 interface AgencyWebEditorProviderProps {
     children: ReactNode;
@@ -20,9 +22,14 @@ export const AgencyWebEditorProvider: React.FC<AgencyWebEditorProviderProps> = (
     const parentEditorCtx = useSafeEditor();
     const { user } = useAuth();
     const { currentTenant } = useTenant();
+    const parentFilesCtx = useFiles();
 
     const [isLoading, setIsLoading] = useState(true);
     const [rawConfig, setRawConfig] = useState<AgencyLandingConfig | null>(null);
+
+    // Agency Isolated Image Library State
+    const [agencyFiles, setAgencyFiles] = useState<FileRecord[]>([]);
+    const [isAgencyFilesLoading, setIsAgencyFilesLoading] = useState(true);
 
     // Overridden State for the Web Editor
     const [data, setData] = useState<PageData | null>(null);
@@ -32,6 +39,34 @@ export const AgencyWebEditorProvider: React.FC<AgencyWebEditorProviderProps> = (
     const [sectionVisibility, setSectionVisibility] = useState<Record<PageSection, boolean>>(initialAgencyData.sectionVisibility as Record<PageSection, boolean>);
 
     const tenantId = currentTenant?.id;
+
+    // Fetch and listen to Agency Files
+    useEffect(() => {
+        if (!tenantId) {
+            setAgencyFiles([]);
+            setIsAgencyFilesLoading(false);
+            return;
+        }
+
+        setIsAgencyFilesLoading(true);
+        const filesPath = `agencies/${tenantId}/files`;
+        const q = query(collection(db, filesPath), orderBy('createdAt', 'desc'));
+
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            const filesData = snapshot.docs.map(docSnapshot => ({
+                id: docSnapshot.id,
+                projectId: 'agency-landing-mode', // Mock projectId so ImagePicker displays them
+                ...docSnapshot.data()
+            })) as FileRecord[];
+            setAgencyFiles(filesData);
+            setIsAgencyFilesLoading(false);
+        }, (error) => {
+            console.error("Error fetching agency files:", error);
+            setIsAgencyFilesLoading(false);
+        });
+
+        return () => unsubscribe();
+    }, [tenantId]);
 
     useEffect(() => {
         if (!tenantId) return;
@@ -96,9 +131,11 @@ export const AgencyWebEditorProvider: React.FC<AgencyWebEditorProviderProps> = (
         if (!tenantId || !data) return;
         try {
             // Re-map Web Editor data (PageData + componentOrder) back to AgencyLandingConfig sections array
+            const existingSections = rawConfig?.sections || [];
             const newSections = componentOrder.map((sectionType, index) => {
+                const existing = existingSections.find(s => s.type === sectionType);
                 return {
-                    id: `${sectionType}-${Date.now()}`,
+                    id: existing?.id || `${sectionType}-${Date.now()}`,
                     type: sectionType,
                     order: index,
                     enabled: sectionVisibility[sectionType] !== false,
@@ -177,10 +214,58 @@ export const AgencyWebEditorProvider: React.FC<AgencyWebEditorProviderProps> = (
         saveProject: saveProjectMock
     };
 
+    // Construct the customized Files Context for intercepting image uploads
+    const customFilesCtx: any = {
+        ...parentFilesCtx,
+        files: agencyFiles,
+        isFilesLoading: isAgencyFilesLoading,
+        uploadFile: async (file: File): Promise<string | undefined> => {
+            if (!tenantId) return undefined;
+            const timestamp = Date.now();
+            const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+            const storagePath = `agencies/${tenantId}/landing_images/${timestamp}_${safeFileName}`;
+            const storageRef = ref(storage, storagePath);
+            await uploadBytes(storageRef, file);
+            const downloadURL = await getDownloadURL(storageRef);
+
+            const fileRecord: Omit<FileRecord, 'id'> = {
+                name: file.name,
+                type: file.type,
+                size: file.size,
+                downloadURL,
+                storagePath,
+                projectId: 'agency-landing-mode',
+                createdAt: new Date().toISOString(),
+            };
+
+            const filesPath = `agencies/${tenantId}/files`;
+            await addDoc(collection(db, filesPath), fileRecord);
+            return downloadURL;
+        },
+        deleteFile: async (fileId: string, storagePath: string) => {
+            if (!tenantId) return;
+            const storageRef = ref(storage, storagePath);
+            await deleteObject(storageRef).catch(() => console.warn("File not found in storage"));
+            const filePath = `agencies/${tenantId}/files/${fileId}`;
+            await deleteDoc(doc(db, filePath));
+        },
+        uploadImageAndGetURL: async (file: File, path: string): Promise<string> => {
+            if (!tenantId) throw new Error("No tenant active");
+            const timestamp = Date.now();
+            const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+            const fullPath = `agencies/${tenantId}/landing_images/${timestamp}_${safeFileName}`;
+            const storageRef = ref(storage, fullPath);
+            await uploadBytes(storageRef, file);
+            return await getDownloadURL(storageRef);
+        }
+    };
+
     return (
         <ProjectContext.Provider value={customProjectCtx}>
             <EditorContext.Provider value={customEditorCtx}>
-                {children}
+                <FilesContext.Provider value={customFilesCtx}>
+                    {children}
+                </FilesContext.Provider>
             </EditorContext.Provider>
         </ProjectContext.Provider>
     );

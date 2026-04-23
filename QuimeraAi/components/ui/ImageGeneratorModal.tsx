@@ -5,7 +5,8 @@ import ImageGeneratorPanel from './ImageGeneratorPanel';
 interface ImageGeneratorModalProps {
     isOpen: boolean;
     onClose: () => void;
-    destination: 'user' | 'global';
+    destination: 'user' | 'global' | 'admin';
+    adminCategory?: string;
     onImageGenerated?: (imageUrl: string) => void;
     onUseImage?: (imageUrl: string) => void;
     projectId?: string;
@@ -13,7 +14,7 @@ interface ImageGeneratorModalProps {
     generationContext?: 'background' | 'general';
 }
 
-const ImageGeneratorModal: React.FC<ImageGeneratorModalProps> = ({ isOpen, onClose, destination, onImageGenerated, onUseImage, projectId, generationContext }) => {
+const ImageGeneratorModal: React.FC<ImageGeneratorModalProps> = ({ isOpen, onClose, destination, adminCategory, onImageGenerated, onUseImage, projectId, generationContext }) => {
     return (
         <Modal
             isOpen={isOpen}
@@ -23,6 +24,7 @@ const ImageGeneratorModal: React.FC<ImageGeneratorModalProps> = ({ isOpen, onClo
         >
             <ImageGeneratorPanel
                 destination={destination}
+                adminCategory={adminCategory}
                 onClose={onClose}
                 className="h-[85vh] sm:h-[85vh]"
                 onImageGenerated={onImageGenerated}

@@ -28,3 +28,4 @@ export * from './TeamControls';
 export * from './TestimonialsControls';
 export * from './TopBarControls';
 export * from './VideoControls';
+export * from './ChatbotControls';

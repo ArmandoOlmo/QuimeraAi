@@ -213,7 +213,7 @@ const PublicArticlePage: React.FC<PublicArticlePageProps> = ({
                     className="flex items-center gap-2 px-4 py-2 bg-yellow-400/10 hover:bg-yellow-400/20 border border-yellow-400/20 rounded-full text-sm font-medium transition-colors backdrop-blur-md text-yellow-400 hover:text-yellow-300"
                   >
                     <Globe size={14} />
-                    {linkedTranslation.language === 'en' ? '🇺🇸 Read in English' : '🇪🇸 Leer en Español'}
+                    {linkedTranslation.language === 'en' ? t('blog.readInEnglish', '🇺🇸 Read in English') : t('blog.readInSpanish', '🇪🇸 Leer en Español')}
                   </button>
                 )}
                 <button
@@ -256,7 +256,7 @@ const PublicArticlePage: React.FC<PublicArticlePageProps> = ({
               <div className="max-w-4xl mx-auto w-full text-center sm:text-left drop-shadow-[0_4px_20px_rgba(0,0,0,0.8)]">
                 <div className="flex items-center justify-center sm:justify-start gap-3 text-xs sm:text-sm font-bold text-white mb-6 uppercase tracking-widest">
                   <span className="text-yellow-400 bg-yellow-400/20 px-3 py-1 rounded-full border border-yellow-400/20 backdrop-blur-sm">
-                    {CATEGORY_LABELS[article.category] || article.category}
+                    {t(`blog.categories.${article.category}`, article.category)}
                   </span>
                   {article.showDate !== false && (
                     <span className="flex items-center gap-1.5 opacity-80 decoration-transparent">
@@ -305,7 +305,7 @@ const PublicArticlePage: React.FC<PublicArticlePageProps> = ({
                   {article.readTime && (
                     <div className="flex items-center gap-2 text-gray-400 bg-white/5 py-2 px-4 rounded-full border border-white/5 font-medium">
                       <Clock size={16} />
-                      <span>{article.readTime} min read</span>
+                      <span>{t('blog.minRead', { time: article.readTime })}</span>
                     </div>
                   )}
                 </div>
@@ -407,7 +407,7 @@ const PublicArticlePage: React.FC<PublicArticlePageProps> = ({
 
                       <div className="p-6 flex-1 flex flex-col">
                         <div className="text-xs font-semibold text-yellow-400 uppercase tracking-widest mb-3">
-                          {CATEGORY_LABELS[relatedArticle.category] || relatedArticle.category}
+                          {t(`blog.categories.${relatedArticle.category}`, relatedArticle.category)}
                         </div>
                         <h4 className="text-lg font-bold text-white mb-3 leading-snug group-hover:text-yellow-400 transition-colors">
                           {relatedArticle.title}

@@ -66,9 +66,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         {/* Text Alignment - Only for full-image variant */}
         {data?.menu?.menuVariant === 'full-image' && (
           <div className="mt-4 pt-4 border-t border-editor-border/50 animate-fade-in-up">
-            <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">
-              Text Alignment
-            </label>
+            <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">{t('controls.textAlignment')}</label>
             <div className="flex gap-2">
               {[
                 { value: 'left', icon: '◀', label: 'Left' },
@@ -96,7 +94,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
       {/* Content Controls */}
       <div className="space-y-3">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Content</label>
+        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('controls.content')}</label>
         <Input label={t('editor.controls.common.title')} value={data?.menu?.title || ''} onChange={(e) => setNestedData('menu.title', e.target.value)} />
         <FontSizeSelector label={t('editor.controls.common.titleSize')} value={data?.menu?.titleFontSize || 'md'} onChange={(v) => setNestedData('menu.titleFontSize', v)} />
         <TextArea label={t('editor.controls.common.description')} value={data?.menu?.description || ''} onChange={(e) => setNestedData('menu.description', e.target.value)} rows={2} />
@@ -106,7 +104,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
       {/* Section Icon */}
       <div className="space-y-3">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Section Icon</label>
+        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('controls.sectionIcon')}</label>
         <ToggleControl
           label={t('editor.controls.common.showSectionIcon')}
           checked={data?.menu?.showIcon !== false}
@@ -138,31 +136,31 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       <BackgroundImageControl sectionKey="menu" data={data} setNestedData={setNestedData} />
       {/* Section Colors */}
       <div className="space-y-3">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Section Colors</label>
+        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('controls.sectionColors')}</label>
         <ColorControl label={t('editor.controls.common.background')} value={data?.menu?.colors?.background || '#0f172a'} onChange={(v) => setNestedData('menu.colors.background', v)} />
-        <ColorControl label="Section Title" value={data?.menu?.colors?.heading || '#F9FAFB'} onChange={(v) => setNestedData('menu.colors.heading', v)} />
-        <ColorControl label="Section Text" value={data?.menu?.colors?.text || '#94a3b8'} onChange={(v) => setNestedData('menu.colors.text', v)} />
-        <ColorControl label="Accent" value={data?.menu?.colors?.accent || '#4f46e5'} onChange={(v) => setNestedData('menu.colors.accent', v)} />
+        <ColorControl label={t('controls.sectionTitle')} value={data?.menu?.colors?.heading || '#F9FAFB'} onChange={(v) => setNestedData('menu.colors.heading', v)} />
+        <ColorControl label={t('controls.sectionText')} value={data?.menu?.colors?.text || '#94a3b8'} onChange={(v) => setNestedData('menu.colors.text', v)} />
+        <ColorControl label={t('controls.accent')} value={data?.menu?.colors?.accent || '#4f46e5'} onChange={(v) => setNestedData('menu.colors.accent', v)} />
       </div>
 
 
       {/* Card Colors */}
       <div className="space-y-3">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Card Colors</label>
-        <ColorControl label="Card Background" value={data?.menu?.colors?.cardBackground || '#1e293b'} onChange={(v) => setNestedData('menu.colors.cardBackground', v)} />
-        <ColorControl label="Card Title" value={data?.menu?.colors?.cardTitleColor || '#ffffff'} onChange={(v) => setNestedData('menu.colors.cardTitleColor', v)} />
-        <ColorControl label="Card Text" value={data?.menu?.colors?.cardText || '#94a3b8'} onChange={(v) => setNestedData('menu.colors.cardText', v)} />
-        <ColorControl label="Price Color" value={data?.menu?.colors?.priceColor || '#10b981'} onChange={(v) => setNestedData('menu.colors.priceColor', v)} />
-        <ColorControl label="Border Color" value={data?.menu?.colors?.borderColor || '#334155'} onChange={(v) => setNestedData('menu.colors.borderColor', v)} />
+        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('controls.cardColors')}</label>
+        <ColorControl label={t('controls.cardBackground')} value={data?.menu?.colors?.cardBackground || '#1e293b'} onChange={(v) => setNestedData('menu.colors.cardBackground', v)} />
+        <ColorControl label={t('controls.cardTitle')} value={data?.menu?.colors?.cardTitleColor || '#ffffff'} onChange={(v) => setNestedData('menu.colors.cardTitleColor', v)} />
+        <ColorControl label={t('controls.cardText')} value={data?.menu?.colors?.cardText || '#94a3b8'} onChange={(v) => setNestedData('menu.colors.cardText', v)} />
+        <ColorControl label={t('controls.priceColor')} value={data?.menu?.colors?.priceColor || '#10b981'} onChange={(v) => setNestedData('menu.colors.priceColor', v)} />
+        <ColorControl label={t('controls.borderColor')} value={data?.menu?.colors?.borderColor || '#334155'} onChange={(v) => setNestedData('menu.colors.borderColor', v)} />
       </div>
 
 
       {/* Spacing */}
       <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Spacing</label>
+        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('controls.spacing')}</label>
         <div className="space-y-1">
-          <PaddingSelector label="Vertical" value={data?.menu?.paddingY || 'md'} onChange={(v) => setNestedData('menu.paddingY', v)} />
-          <PaddingSelector label="Horizontal" value={data?.menu?.paddingX || 'md'} onChange={(v) => setNestedData('menu.paddingX', v)} />
+          <PaddingSelector label={t('controls.vertical')} value={data?.menu?.paddingY || 'md'} onChange={(v) => setNestedData('menu.paddingY', v)} />
+          <PaddingSelector label={t('controls.horizontal')} value={data?.menu?.paddingX || 'md'} onChange={(v) => setNestedData('menu.paddingX', v)} />
         </div>
       </div>
 

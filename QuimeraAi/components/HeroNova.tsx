@@ -389,7 +389,7 @@ const HeroNova: React.FC<HeroNovaProps> = ({
                                             key={i}
                                             title={`Slide ${i + 1}`}
                                             onClick={() => goToSlide(i)}
-                                            className="transition-all duration-300"
+                                            className="transition-all duration-300 no-min-touch"
                                             style={{
                                                 width: dotStyle === 'line'
                                                     ? (i === currentIndex ? '24px' : '12px')

@@ -75,12 +75,12 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
                 Call to Actions
               </label>
               <div className="grid grid-cols-2 gap-2 mb-2">
-                <Input label="Primary CTA" value={slide.primaryCta || ''} onChange={(e) => setNestedData(`heroGallery.slides.${slideIndex}.primaryCta`, e.target.value)} />
-                <Input label="Primary Link" value={slide.primaryCtaLink || ''} onChange={(e) => setNestedData(`heroGallery.slides.${slideIndex}.primaryCtaLink`, e.target.value)} />
+                <Input label={t('controls.primaryCta')} value={slide.primaryCta || ''} onChange={(e) => setNestedData(`heroGallery.slides.${slideIndex}.primaryCta`, e.target.value)} />
+                <Input label={t('controls.primaryLink')} value={slide.primaryCtaLink || ''} onChange={(e) => setNestedData(`heroGallery.slides.${slideIndex}.primaryCtaLink`, e.target.value)} />
               </div>
               <div className="grid grid-cols-2 gap-2">
-                <Input label="Secondary CTA" value={slide.secondaryCta || ''} onChange={(e) => setNestedData(`heroGallery.slides.${slideIndex}.secondaryCta`, e.target.value)} />
-                <Input label="Secondary Link" value={slide.secondaryCtaLink || ''} onChange={(e) => setNestedData(`heroGallery.slides.${slideIndex}.secondaryCtaLink`, e.target.value)} />
+                <Input label={t('controls.secondaryCta')} value={slide.secondaryCta || ''} onChange={(e) => setNestedData(`heroGallery.slides.${slideIndex}.secondaryCta`, e.target.value)} />
+                <Input label={t('controls.secondaryLink')} value={slide.secondaryCtaLink || ''} onChange={(e) => setNestedData(`heroGallery.slides.${slideIndex}.secondaryCtaLink`, e.target.value)} />
               </div>
             </div>
 
@@ -91,7 +91,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
                 Background Image
               </label>
               <ImagePicker
-                label="Slide Background"
+                label={t('controls.slideBackground')}
                 value={slide.backgroundImage || ''}
                 onChange={(url) => setNestedData(`heroGallery.slides.${slideIndex}.backgroundImage`, url)}
                 onRemove={() => setNestedData(`heroGallery.slides.${slideIndex}.backgroundImage`, '')}
@@ -100,7 +100,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
             {/* Per-Slide Fallback Background Color */}
             <div className="mt-3">
-              <ColorControl label="Fallback Color" value={slide.backgroundColor || data.heroGallery.colors?.background || '#8B6F5C'} onChange={(v) => setNestedData(`heroGallery.slides.${slideIndex}.backgroundColor`, v)} />
+              <ColorControl label={t('controls.fallbackColor')} value={slide.backgroundColor || data.heroGallery.colors?.background || '#8B6F5C'} onChange={(v) => setNestedData(`heroGallery.slides.${slideIndex}.backgroundColor`, v)} />
             </div>
           </div>
         ))}
@@ -125,6 +125,80 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           <Plus size={16} /> Add Slide
         </button>
       </div>
+
+      {/* ========== TEXT LAYOUT ========== */}
+      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
+        <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+          <Layout size={14} />
+          Ubicación del Texto
+        </label>
+
+        {/* Visual 3x3 position grid */}
+        <div className="relative bg-editor-bg rounded-lg border border-editor-border p-3 mb-4">
+          {/* Preview area with position indicator */}
+          <div className="relative aspect-video bg-gradient-to-br from-editor-panel-bg to-editor-bg rounded-md border border-editor-border/50 overflow-hidden mb-2">
+            {/* Decorative lines representing text */}
+            {(() => {
+              const hAlign = data?.heroGallery?.textHorizontalAlign || 'left';
+              const vAlign = data?.heroGallery?.textVerticalAlign || 'bottom';
+              const isLeft = hAlign === 'left';
+              const isRight = hAlign === 'right';
+              const isTop = vAlign === 'top';
+              const isBottom = vAlign === 'bottom';
+              const hPos = isLeft ? 'left-3' : isRight ? 'right-3' : 'left-1/2 -translate-x-1/2';
+              const vPos = isTop ? 'top-2.5' : isBottom ? 'bottom-2.5' : 'top-1/2 -translate-y-1/2';
+              const textAlign = isLeft ? 'items-start' : isRight ? 'items-end' : 'items-center';
+              return (
+                <div className={`absolute ${hPos} ${vPos} flex flex-col gap-1 ${textAlign} transition-all duration-300 ease-out`}>
+                  <div className="h-1.5 w-14 rounded-full bg-editor-accent/80" />
+                  <div className="h-1 w-10 rounded-full bg-editor-accent/40" />
+                  <div className="h-1 w-8 rounded-full bg-editor-accent/25" />
+                </div>
+              );
+            })()}
+          </div>
+          {/* 3x3 clickable grid */}
+          <div className="grid grid-cols-3 gap-1">
+            {([
+              { h: 'left', v: 'top',      row: 0, col: 0, label: 'Arriba Izquierda' },
+              { h: 'center', v: 'top',    row: 0, col: 1, label: 'Arriba Centro' },
+              { h: 'right', v: 'top',     row: 0, col: 2, label: 'Arriba Derecha' },
+              { h: 'left', v: 'middle',   row: 1, col: 0, label: 'Medio Izquierda' },
+              { h: 'center', v: 'middle', row: 1, col: 1, label: 'Centro' },
+              { h: 'right', v: 'middle',  row: 1, col: 2, label: 'Medio Derecha' },
+              { h: 'left', v: 'bottom',   row: 2, col: 0, label: 'Abajo Izquierda' },
+              { h: 'center', v: 'bottom', row: 2, col: 1, label: 'Abajo Centro' },
+              { h: 'right', v: 'bottom',  row: 2, col: 2, label: 'Abajo Derecha' },
+            ] as const).map(pos => {
+              const currentH = data?.heroGallery?.textHorizontalAlign || 'left';
+              const currentV = data?.heroGallery?.textVerticalAlign || 'bottom';
+              const isSelected = currentH === pos.h && currentV === pos.v;
+              return (
+                <button
+                  key={`${pos.h}-${pos.v}`}
+                  title={pos.label}
+                  onClick={() => {
+                    setNestedData('heroGallery.textHorizontalAlign', pos.h);
+                    setNestedData('heroGallery.textVerticalAlign', pos.v);
+                  }}
+                  className={`flex items-center justify-center h-7 rounded transition-all duration-200 ${
+                    isSelected
+                      ? 'bg-editor-accent/20 border border-editor-accent/50'
+                      : 'bg-editor-panel-bg/50 border border-transparent hover:bg-editor-border/50 hover:border-editor-border'
+                  }`}
+                  style={{ gridRow: pos.row + 1, gridColumn: pos.col + 1 }}
+                >
+                  <div className={`rounded-full transition-all duration-200 ${
+                    isSelected
+                      ? 'w-2.5 h-2.5 bg-editor-accent shadow-[0_0_8px_var(--editor-accent)]'
+                      : 'w-1.5 h-1.5 bg-editor-text-secondary/40'
+                  }`} />
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </div>
     </div>
   );
 
@@ -136,7 +210,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           <Layers size={14} /> Efecto Cristal
         </label>
         <ToggleControl
-          label="Glassmorphism / Transparencia"
+          label={t('controls.glassmorphismTransparencia')}
           checked={data?.heroGallery?.glassEffect || false}
           onChange={(v) => setNestedData('heroGallery.glassEffect', v)}
         />
@@ -151,7 +225,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         {/* Overlay Opacity */}
         <div className="mb-4">
           <div className="flex justify-between items-center mb-1">
-            <label className="text-xs font-semibold text-editor-text-secondary">Overlay Darkness</label>
+            <label className="text-xs font-semibold text-editor-text-secondary">{t('controls.overlayDarkness')}</label>
             <span className="text-xs text-editor-text-primary">{Math.round((data.heroGallery.overlayOpacity ?? 0.35) * 100)}%</span>
           </div>
           <input
@@ -162,10 +236,10 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           />
         </div>
 
-        <ToggleControl label="Grain Texture" checked={data.heroGallery.showGrain ?? true} onChange={(v) => setNestedData('heroGallery.showGrain', v)} />
+        <ToggleControl label={t('controls.grainTexture')} checked={data.heroGallery.showGrain ?? true} onChange={(v) => setNestedData('heroGallery.showGrain', v)} />
       </div>
 
-      {/* Layout */}
+      {/* Hero Height */}
       <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
         <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
           <Layout size={14} />
@@ -175,7 +249,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         {/* Hero Height */}
         <div className="mb-4">
           <div className="flex justify-between items-center mb-1">
-            <label className="text-xs font-semibold text-editor-text-secondary">Hero Height</label>
+            <label className="text-xs font-semibold text-editor-text-secondary">{t('controls.heroHeight')}</label>
             <span className="text-xs text-editor-text-primary">{data.heroGallery.heroHeight || 80}vh</span>
           </div>
           <input
@@ -198,7 +272,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         </label>
 
         <div className="mb-3">
-          <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">Autoplay Speed (ms)</label>
+          <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{t('controls.autoplaySpeedMs')}</label>
           <input
             type="number" min="2000" max="15000" step="500"
             value={data.heroGallery.autoPlaySpeed || 6000}
@@ -208,7 +282,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         </div>
 
         <div className="mb-3">
-          <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">Transition Duration (ms)</label>
+          <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{t('controls.transitionDurationMs')}</label>
           <input
             type="number" min="300" max="2000" step="100"
             value={data.heroGallery.transitionDuration || 800}
@@ -220,13 +294,13 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
       {/* Navigation */}
       <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Navigation</label>
-        <ToggleControl label="Show Arrows" checked={data.heroGallery.showArrows ?? true} onChange={(v) => setNestedData('heroGallery.showArrows', v)} />
-        <ToggleControl label="Show Dots" checked={data.heroGallery.showDots ?? true} onChange={(v) => setNestedData('heroGallery.showDots', v)} />
+        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('controls.navigation')}</label>
+        <ToggleControl label={t('controls.showArrows')} checked={data.heroGallery.showArrows ?? true} onChange={(v) => setNestedData('heroGallery.showArrows', v)} />
+        <ToggleControl label={t('controls.showDots')} checked={data.heroGallery.showDots ?? true} onChange={(v) => setNestedData('heroGallery.showDots', v)} />
 
         {(data.heroGallery.showDots ?? true) && (
           <Select
-            label="Dot Style"
+            label={t('controls.dotStyle')}
             value={data.heroGallery.dotStyle || 'circle'}
             onChange={(val) => setNestedData('heroGallery.dotStyle', val)}
             options={[
@@ -246,23 +320,23 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         </label>
 
         <div className="space-y-3">
-          <ColorControl label="Fallback Background" value={data.heroGallery.colors?.background || '#8B6F5C'} onChange={(v) => setNestedData('heroGallery.colors.background', v)} />
-          <ColorControl label="Headline" value={data.heroGallery.colors?.heading || '#ffffff'} onChange={(v) => setNestedData('heroGallery.colors.heading', v)} />
-          <ColorControl label="Text" value={data.heroGallery.colors?.text || '#ffffff'} onChange={(v) => setNestedData('heroGallery.colors.text', v)} />
-          <ColorControl label="CTA Text" value={data.heroGallery.colors?.ctaText || '#ffffff'} onChange={(v) => setNestedData('heroGallery.colors.ctaText', v)} />
+          <ColorControl label={t('controls.fallbackBackground')} value={data.heroGallery.colors?.background || '#8B6F5C'} onChange={(v) => setNestedData('heroGallery.colors.background', v)} />
+          <ColorControl label={t('controls.headline')} value={data.heroGallery.colors?.heading || '#ffffff'} onChange={(v) => setNestedData('heroGallery.colors.heading', v)} />
+          <ColorControl label={t('controls.text')} value={data.heroGallery.colors?.text || '#ffffff'} onChange={(v) => setNestedData('heroGallery.colors.text', v)} />
+          <ColorControl label={t('controls.ctaText')} value={data.heroGallery.colors?.ctaText || '#ffffff'} onChange={(v) => setNestedData('heroGallery.colors.ctaText', v)} />
 
           {(data.heroGallery.showArrows ?? true) && (
             <>
               <p className="text-[10px] text-editor-text-secondary uppercase tracking-wider font-bold mt-2">Arrows</p>
-              <ColorControl label="Arrow Color" value={data.heroGallery.colors?.arrowColor || '#ffffff'} onChange={(v) => setNestedData('heroGallery.colors.arrowColor', v)} />
+              <ColorControl label={t('controls.arrowColor')} value={data.heroGallery.colors?.arrowColor || '#ffffff'} onChange={(v) => setNestedData('heroGallery.colors.arrowColor', v)} />
             </>
           )}
 
           {(data.heroGallery.showDots ?? true) && (
             <>
               <p className="text-[10px] text-editor-text-secondary uppercase tracking-wider font-bold mt-2">Dots</p>
-              <ColorControl label="Active Dot" value={data.heroGallery.colors?.dotActive || '#ffffff'} onChange={(v) => setNestedData('heroGallery.colors.dotActive', v)} />
-              <ColorControl label="Inactive Dot" value={data.heroGallery.colors?.dotInactive || 'rgba(255,255,255,0.5)'} onChange={(v) => setNestedData('heroGallery.colors.dotInactive', v)} />
+              <ColorControl label={t('controls.activeDot')} value={data.heroGallery.colors?.dotActive || '#ffffff'} onChange={(v) => setNestedData('heroGallery.colors.dotActive', v)} />
+              <ColorControl label={t('controls.inactiveDot')} value={data.heroGallery.colors?.dotInactive || 'rgba(255,255,255,0.5)'} onChange={(v) => setNestedData('heroGallery.colors.dotInactive', v)} />
             </>
           )}
 

@@ -136,7 +136,7 @@ const AIWebsiteStudio: React.FC = () => {
                         <button
                             onClick={() => { studio.stopVoiceSession(); studio.initStudio(); }}
                             className="h-8 w-8 flex items-center justify-center rounded-lg text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40 transition-colors"
-                            title="Reset"
+                            title={t('aiWebsiteStudio.reset')}
                         >
                             <RefreshCcw className="w-4 h-4" />
                         </button>
@@ -324,7 +324,7 @@ const ChatBubble: React.FC<{ message: { role: 'user' | 'model'; text: string; is
                 )}
                 {message.isVoice && (
                     <div className="mt-1 flex items-center gap-1 text-[10px] opacity-50">
-                        <Volume2 size={10} /> Voice
+                        <Volume2 size={10} /> {t('aiWebsiteStudio.voice')}
                     </div>
                 )}
             </div>

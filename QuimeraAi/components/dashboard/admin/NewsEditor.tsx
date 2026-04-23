@@ -662,9 +662,7 @@ Text to format:
             await fetchNews();
 
             showToast(
-                language === 'es'
-                    ? `¡Noticia traducida al ${getNewsLanguageName(targetLang)}! Se abrirá en el editor.`
-                    : `News translated to ${getNewsLanguageName(targetLang)}! Opening in editor.`,
+                t('superadmin.news.aiSuccess') + ` - ${getNewsLanguageName(targetLang)}`,
                 'success'
             );
 
@@ -682,9 +680,7 @@ Text to format:
         } catch (error: any) {
             console.error('[NewsTranslation] Error:', error);
             showToast(
-                language === 'es'
-                    ? `Error al traducir: ${error?.message || 'Error desconocido'}`
-                    : `Translation error: ${error?.message || 'Unknown error'}`,
+                t('superadmin.news.aiError') + `: ${error?.message || 'Error'}`,
                 'error'
             );
         } finally {
@@ -919,7 +915,7 @@ Text to format:
                                         <ImageIcon size={14} />
                                         {t('superadmin.news.featuredImage', 'Imagen Destacada')}
                                     </label>
-                                    <ImagePicker label="" value={imageUrl} onChange={setImageUrl} hideUrlInput={true} destination="global" />
+                                    <ImagePicker label="" value={imageUrl} onChange={setImageUrl} hideUrlInput={true} destination="admin" adminCategory="article" />
                                 </div>
 
                                 {/* Excerpt */}
@@ -1271,12 +1267,12 @@ Text to format:
                             </>, 'text-violet-400')}
 
                             {/* ── Translation Section ── */}
-                            {renderSidebarSection('translation', language === 'es' ? 'Traducción' : 'Translation', <Languages size={16} />, <>
+                            {renderSidebarSection('translation', t('superadmin.news.translateNews'), <Languages size={16} />, <>
                                 {/* Language Selector */}
                                 <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
                                     <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
                                         <Globe size={14} />
-                                        {language === 'es' ? 'Idioma del contenido' : 'Content language'}
+                                        {t('superadmin.news.contentLanguage')}
                                     </label>
                                     <div className="flex gap-2">
                                         <button
@@ -1313,10 +1309,10 @@ Text to format:
                                         {news.translationStatus === 'auto-translated' && '⚡'}
                                         {news.translationStatus === 'reviewed' && '✅'}
                                         {news.translationStatus === 'original'
-                                            ? (language === 'es' ? 'Contenido original' : 'Original content')
+                                            ? t('superadmin.news.originalContent')
                                             : news.translationStatus === 'auto-translated'
-                                            ? (language === 'es' ? 'Auto-traducido (revisar)' : 'Auto-translated (review)')
-                                            : (language === 'es' ? 'Traducción revisada' : 'Reviewed translation')}
+                                            ? t('superadmin.news.autoTranslatedReview')
+                                            : t('superadmin.news.reviewedTranslation')}
                                     </div>
                                 )}
 
@@ -1327,7 +1323,7 @@ Text to format:
                                             if (news) {
                                                 news.translationStatus = 'reviewed';
                                                 showToast(
-                                                    language === 'es' ? 'Marcado como revisado. Guarda para persistir.' : 'Marked as reviewed. Save to persist.',
+                                                    t('superadmin.news.markedAsReviewedMsg'),
                                                     'success'
                                                 );
                                             }
@@ -1335,7 +1331,7 @@ Text to format:
                                         className="w-full px-3 py-2 bg-green-500/10 text-green-400 border border-green-500/20 rounded-lg text-xs font-medium hover:bg-green-500/20 transition-colors flex items-center justify-center gap-2"
                                     >
                                         <Check size={14} />
-                                        {language === 'es' ? 'Marcar como revisado' : 'Mark as reviewed'}
+                                        {t('superadmin.news.markAsReviewed')}
                                     </button>
                                 )}
 
@@ -1343,7 +1339,7 @@ Text to format:
                                 {existingTranslations.length > 0 && (
                                     <div className="space-y-2">
                                         <p className="text-xs text-editor-text-secondary font-medium">
-                                            {language === 'es' ? 'Traducciones vinculadas:' : 'Linked translations:'}
+                                            {t('superadmin.news.linkedTranslations')}
                                         </p>
                                         {existingTranslations.map(tr => (
                                             <div key={tr.id} className="flex items-center justify-between p-2.5 bg-editor-bg border border-editor-border rounded-lg">
@@ -1370,7 +1366,7 @@ Text to format:
                                     <button
                                         onClick={() => {
                                             if (!news?.id && !title) {
-                                                showToast(language === 'es' ? 'Escribe contenido primero' : 'Write content first', 'warning');
+                                                showToast(t('superadmin.news.writeContentFirst'), 'warning');
                                                 return;
                                             }
                                             setTranslationConfirmOpen(true);
@@ -1381,22 +1377,18 @@ Text to format:
                                         {isTranslating ? (
                                             <>
                                                 <Loader2 className="animate-spin" size={16} />
-                                                {language === 'es' ? 'Traduciendo...' : 'Translating...'}
+                                                {t('superadmin.news.translating')}
                                             </>
                                         ) : (
                                             <>
                                                 <Languages size={16} />
-                                                {language === 'es'
-                                                    ? `Traducir a ${getNewsLanguageName(targetLang)}`
-                                                    : `Translate to ${getNewsLanguageName(targetLang)}`}
+                                                {t('superadmin.news.translateTo', { lang: getNewsLanguageName(targetLang) })}
                                             </>
                                         )}
                                     </button>
                                 ) : (
                                     <p className="text-xs text-center text-editor-text-secondary">
-                                        {language === 'es'
-                                            ? `✅ Ya existe traducción en ${getNewsLanguageName(targetLang)}`
-                                            : `✅ Translation in ${getNewsLanguageName(targetLang)} already exists`}
+                                        {t('superadmin.news.translationExists', { lang: getNewsLanguageName(targetLang) })}
                                     </p>
                                 )}
                             </>, 'text-blue-400')}
@@ -1447,13 +1439,10 @@ Text to format:
                 isOpen={translationConfirmOpen}
                 onConfirm={handleTranslateNews}
                 onCancel={() => setTranslationConfirmOpen(false)}
-                title={language === 'es' ? 'Traducir noticia' : 'Translate news'}
-                message={language === 'es'
-                    ? `Se guardará la noticia actual y se creará una traducción automática al ${getNewsLanguageName(targetLang)} usando IA. La traducción se abrirá como borrador para que puedas revisarla.`
-                    : `The current news will be saved and an automatic translation to ${getNewsLanguageName(targetLang)} will be created using AI. The translation will open as a draft for your review.`
-                }
-                confirmText={language === 'es' ? 'Traducir' : 'Translate'}
-                cancelText={language === 'es' ? 'Cancelar' : 'Cancel'}
+                title={t('superadmin.news.translateNews')}
+                message={t('superadmin.news.translateConfirmDesc', { lang: getNewsLanguageName(targetLang) })}
+                confirmText={t('common.translate', 'Translate')}
+                cancelText={t('common.cancel', 'Cancel')}
                 variant="info"
                 icon={<Languages size={24} />}
             />

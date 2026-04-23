@@ -310,7 +310,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
             {(data.hero.secondaryButtonStyle || 'solid') === 'solid' && (
               <div className="mt-3">
                 <div className="flex justify-between items-center mb-2">
-                  <label className="text-xs font-medium text-editor-text-secondary">Opacity</label>
+                  <label className="text-xs font-medium text-editor-text-secondary">{t('controls.opacity')}</label>
                   <span className="text-[10px] text-editor-accent font-mono bg-editor-accent/10 px-2 py-0.5 rounded-full">{data.hero.secondaryButtonOpacity ?? 100}%</span>
                 </div>
                 <input
@@ -369,7 +369,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         </label>
         <p className="text-xs text-editor-text-secondary mb-3">Si subes una imagen, se mostrará en lugar del texto del título.</p>
         <ImagePicker
-          label="Logo del Título"
+          label={t('controls.logoDelTtulo')}
           value={data.hero.headlineImageUrl || ''}
           onChange={(url) => setNestedData('hero.headlineImageUrl', url)}
         />
@@ -495,7 +495,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
                 setNestedData('hero.primaryCtaLink', '');
               }
             }}
-            label="Seleccionar Colección"
+            label={t('controls.seleccionarColeccin')}
           />
         )}
 
@@ -623,7 +623,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
                 setNestedData('hero.secondaryCtaLink', '');
               }
             }}
-            label="Seleccionar Colección"
+            label={t('controls.seleccionarColeccin')}
           />
         )}
 
@@ -650,7 +650,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           <Layers size={14} /> Efecto Cristal
         </label>
         <ToggleControl
-          label="Glassmorphism / Transparencia"
+          label={t('controls.glassmorphismTransparencia')}
           checked={data?.hero?.glassEffect || false}
           onChange={(v) => setNestedData('hero.glassEffect', v)}
         />
@@ -862,10 +862,10 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         </label>
         <div className="space-y-3">
           <ColorControl label={t('editor.controls.common.background')} value={data.hero.colors?.background} onChange={(v) => setNestedData('hero.colors.background', v)} />
-          <ColorControl label="Primary Color" value={data.hero.colors?.primary || '#4f46e5'} onChange={(v) => setNestedData('hero.colors.primary', v)} />
-          <ColorControl label="Secondary Color" value={data.hero.colors?.secondary || '#10b981'} onChange={(v) => setNestedData('hero.colors.secondary', v)} />
-          <ColorControl label="Heading" value={data.hero.colors?.heading} onChange={(v) => setNestedData('hero.colors.heading', v)} />
-          <ColorControl label="Text" value={data.hero.colors?.text} onChange={(v) => setNestedData('hero.colors.text', v)} />
+          <ColorControl label={t('controls.primaryColor')} value={data.hero.colors?.primary || '#4f46e5'} onChange={(v) => setNestedData('hero.colors.primary', v)} />
+          <ColorControl label={t('controls.secondaryColor')} value={data.hero.colors?.secondary || '#10b981'} onChange={(v) => setNestedData('hero.colors.secondary', v)} />
+          <ColorControl label={t('controls.heading')} value={data.hero.colors?.heading} onChange={(v) => setNestedData('hero.colors.heading', v)} />
+          <ColorControl label={t('controls.text')} value={data.hero.colors?.text} onChange={(v) => setNestedData('hero.colors.text', v)} />
         </div>
       </div>
 
@@ -875,15 +875,15 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           Button Colors
         </label>
         <div className="space-y-3">
-          <ColorControl label="Primary Button BG" value={data.hero.colors?.buttonBackground} onChange={(v) => setNestedData('hero.colors.buttonBackground', v)} />
-          <ColorControl label="Primary Button Text" value={data.hero.colors?.buttonText} onChange={(v) => setNestedData('hero.colors.buttonText', v)} />
-          <ColorControl label="Secondary Button BG" value={data.hero.colors?.secondaryButtonBackground} onChange={(v) => setNestedData('hero.colors.secondaryButtonBackground', v)} />
-          <ColorControl label="Secondary Button Text" value={data.hero.colors?.secondaryButtonText} onChange={(v) => setNestedData('hero.colors.secondaryButtonText', v)} />
+          <ColorControl label={t('controls.primaryButtonBg')} value={data.hero.colors?.buttonBackground} onChange={(v) => setNestedData('hero.colors.buttonBackground', v)} />
+          <ColorControl label={t('controls.primaryButtonText')} value={data.hero.colors?.buttonText} onChange={(v) => setNestedData('hero.colors.buttonText', v)} />
+          <ColorControl label={t('controls.secondaryButtonBg')} value={data.hero.colors?.secondaryButtonBackground} onChange={(v) => setNestedData('hero.colors.secondaryButtonBackground', v)} />
+          <ColorControl label={t('controls.secondaryButtonText')} value={data.hero.colors?.secondaryButtonText} onChange={(v) => setNestedData('hero.colors.secondaryButtonText', v)} />
         </div>
 
         {/* Secondary Button Style */}
         <div className="mt-4 pt-3 border-t border-editor-border/50">
-          <label className="block text-xs font-medium text-editor-text-secondary mb-2">Secondary Button Style</label>
+          <label className="block text-xs font-medium text-editor-text-secondary mb-2">{t('controls.secondaryButtonStyle')}</label>
           <div className="flex bg-editor-bg p-1 rounded-md border border-editor-border">
             {['solid', 'outline', 'ghost'].map(style => (
               <button
@@ -904,7 +904,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         {(data.hero.secondaryButtonStyle || 'solid') === 'solid' && (
           <div className="mt-3">
             <div className="flex justify-between items-center mb-2">
-              <label className="text-xs font-medium text-editor-text-secondary">Opacity</label>
+              <label className="text-xs font-medium text-editor-text-secondary">{t('controls.opacity')}</label>
               <span className="text-[10px] text-editor-accent font-mono bg-editor-accent/10 px-2 py-0.5 rounded-full">{data.hero.secondaryButtonOpacity ?? 100}%</span>
             </div>
             <input
@@ -922,7 +922,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           <SlidersHorizontal size={14} />
           Button Style
         </label>
-        <BorderRadiusSelector label="Button Radius" value={data.hero.buttonBorderRadius || 'md'} onChange={(v) => setNestedData('hero.buttonBorderRadius', v)} />
+        <BorderRadiusSelector label={t('controls.buttonRadius')} value={data.hero.buttonBorderRadius || 'md'} onChange={(v) => setNestedData('hero.buttonBorderRadius', v)} />
       </div>
     </div>
   );

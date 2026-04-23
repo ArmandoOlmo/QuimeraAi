@@ -129,7 +129,7 @@ const PublicBlogPage: React.FC<PublicBlogPageProps> = ({
               className="inline-flex items-center gap-2 text-sm text-gray-400 hover:text-white mb-8 px-5 py-2 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-all font-medium backdrop-blur-md hover:scale-105"
             >
               <ArrowLeft size={16} />
-              Return to Quimera
+              {t('blog.returnToQuimera', 'Return to Quimera')}
             </button>
 
             <h1 className="text-5xl sm:text-7xl md:text-8xl font-black mb-6 tracking-tighter drop-shadow-lg leading-none">
@@ -175,7 +175,7 @@ const PublicBlogPage: React.FC<PublicBlogPageProps> = ({
                 className={`px-6 py-4 rounded-2xl border transition-all flex items-center gap-3 font-semibold shadow-2xl backdrop-blur-xl ${showFilters || categoryFilter !== 'all' ? 'bg-yellow-400/10 border-yellow-400/30 text-yellow-400' : 'bg-[#111111]/90 border-white/10 text-gray-300 hover:text-white hover:border-white/20'}`}
               >
                 <Filter size={18} className={showFilters ? 'fill-current' : ''} />
-                <span className="hidden sm:inline">Filters</span>
+                <span className="hidden sm:inline">{t('blog.filters', 'Filters')}</span>
               </button>
             </div>
           </div>
@@ -183,13 +183,13 @@ const PublicBlogPage: React.FC<PublicBlogPageProps> = ({
           {/* Filter Panel */}
           <div className={`transition-all duration-500 overflow-hidden ${showFilters ? 'max-h-[500px] mb-16 opacity-100' : 'max-h-0 mb-0 opacity-0'}`}>
             <div className="p-8 bg-[#111] border border-white/5 rounded-3xl max-w-5xl mx-auto shadow-2xl">
-              <h3 className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-4">Categories</h3>
+              <h3 className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-4">{t('blog.categoriesLabel', 'Categories')}</h3>
               <div className="flex flex-wrap gap-3">
                 <button
                   onClick={() => setCategoryFilter('all')}
                   className={`px-5 py-2.5 rounded-full text-sm font-semibold transition-all ${categoryFilter === 'all' ? 'bg-white text-black shadow-[0_0_20px_rgba(255,255,255,0.3)] scale-105' : 'bg-white/5 text-gray-400 hover:text-white hover:bg-white/10 border border-white/5'}`}
                 >
-                  All Articles
+                  {t('blog.allArticles', 'All Articles')}
                 </button>
                 {availableCategories.map(cat => (
                   <button
@@ -197,7 +197,7 @@ const PublicBlogPage: React.FC<PublicBlogPageProps> = ({
                     onClick={() => setCategoryFilter(cat)}
                     className={`px-5 py-2.5 rounded-full text-sm font-semibold transition-all capitalize ${categoryFilter === cat ? 'bg-white text-black shadow-[0_0_20px_rgba(255,255,255,0.3)] scale-105' : 'bg-white/5 text-gray-400 hover:text-white hover:bg-white/10 border border-white/5'}`}
                   >
-                    {CATEGORY_LABELS[cat] || cat}
+                    {t(`blog.categories.${cat}`, cat)}
                   </button>
                 ))}
               </div>
@@ -224,14 +224,14 @@ const PublicBlogPage: React.FC<PublicBlogPageProps> = ({
                   )}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                   <div className="absolute top-6 left-6 px-4 py-2 bg-yellow-400 text-black text-[10px] sm:text-xs font-black uppercase tracking-widest rounded-full flex items-center gap-1.5 shadow-[0_0_20px_rgba(250,204,21,0.4)] backdrop-blur-md">
-                    <Star size={12} className="fill-current" /> Featured Publication
+                    <Star size={12} className="fill-current" /> {t('blog.featuredPublication', 'Featured Publication')}
                   </div>
                 </div>
 
                 <div className="lg:col-span-5 lg:-ml-16 relative z-20 -mt-10 lg:mt-0 px-4 lg:px-0">
                   <div className="p-8 sm:p-12 bg-[#0d0d0d]/95 backdrop-blur-3xl border border-white/10 rounded-3xl lg:rounded-[2.5rem] shadow-[0_30px_60px_rgba(0,0,0,0.8)] lg:shadow-[-30px_0_60px_rgba(0,0,0,0.8)] group-hover:border-white/20 transition-colors duration-500">
                     <div className="flex flex-wrap items-center gap-3 text-xs font-semibold text-gray-400 mb-6 uppercase tracking-wider">
-                      <span className="text-yellow-400 bg-yellow-400/10 px-3 py-1 rounded-full">{CATEGORY_LABELS[featuredArticle.category] || featuredArticle.category}</span>
+                      <span className="text-yellow-400 bg-yellow-400/10 px-3 py-1 rounded-full">{t(`blog.categories.${featuredArticle.category}`, featuredArticle.category)}</span>
                       {featuredArticle.showDate !== false && (
                         <span className="flex items-center gap-1.5"><Calendar size={14} /> {new Date(featuredArticle.publishedAt || featuredArticle.createdAt).toLocaleDateString()}</span>
                       )}
@@ -259,7 +259,7 @@ const PublicBlogPage: React.FC<PublicBlogPageProps> = ({
                           <div>
                             <p className="font-bold text-white text-sm">{featuredArticle.author}</p>
                             {featuredArticle.readTime && (
-                              <p className="text-xs text-gray-500 font-medium flex items-center gap-1 mt-0.5"><Clock size={12} /> {featuredArticle.readTime} min read</p>
+                              <p className="text-xs text-gray-500 font-medium flex items-center gap-1 mt-0.5"><Clock size={12} /> {t('blog.minRead', { time: featuredArticle.readTime })}</p>
                             )}
                           </div>
                         </div>
@@ -324,7 +324,7 @@ const PublicBlogPage: React.FC<PublicBlogPageProps> = ({
 
                       <div className="absolute top-4 left-4 flex flex-wrap gap-2">
                         <span className="px-3 py-1 bg-black/60 backdrop-blur-md border border-white/10 text-white rounded-full text-[10px] font-bold uppercase tracking-widest">
-                          {CATEGORY_LABELS[article.category] || article.category}
+                          {t(`blog.categories.${article.category}`, article.category)}
                         </span>
                       </div>
                     </div>
@@ -343,7 +343,7 @@ const PublicBlogPage: React.FC<PublicBlogPageProps> = ({
                             <span className="w-1 h-1 rounded-full bg-gray-600" />
                             <span className="flex items-center gap-1.5">
                               <Clock size={12} />
-                              {article.readTime} min
+                              {t('blog.minRead', { time: article.readTime })}
                             </span>
                           </>
                         )}
@@ -369,7 +369,7 @@ const PublicBlogPage: React.FC<PublicBlogPageProps> = ({
                         </div>
 
                         <div className="flex items-center gap-2 text-sm font-bold text-white group-hover:text-yellow-400 transition-colors">
-                          Read
+                          {t('blog.read', 'Read')}
                           <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
                         </div>
                       </div>

@@ -88,8 +88,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
             </div>
           </div>
 
-          <Input label="Text" value={msg.text || ''} onChange={(e) => setNestedData(`topBar.messages.${idx}.text`, e.target.value)} />
-          <Input label="Link Text" value={msg.linkText || ''} onChange={(e) => setNestedData(`topBar.messages.${idx}.linkText`, e.target.value)} placeholder="Shop Now" />
+          <Input label={t('controls.text')} value={msg.text || ''} onChange={(e) => setNestedData(`topBar.messages.${idx}.text`, e.target.value)} />
+          <Input label={t('controls.linkText')} value={msg.linkText || ''} onChange={(e) => setNestedData(`topBar.messages.${idx}.linkText`, e.target.value)} placeholder="Shop Now" />
 
           {/* Link Type Selector */}
           <div>
@@ -112,13 +112,13 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
               ))}
             </div>
             {(msg.linkType === 'manual' || !msg.linkType) && (
-              <Input label="Link URL" value={msg.link || ''} onChange={(e) => setNestedData(`topBar.messages.${idx}.link`, e.target.value)} placeholder="#section or /page or https://..." />
+              <Input label={t('controls.linkUrl')} value={msg.link || ''} onChange={(e) => setNestedData(`topBar.messages.${idx}.link`, e.target.value)} placeholder="#section or /page or https://..." />
             )}
             {msg.linkType === 'content' && (
               <SingleContentSelector
                 selectedContentPath={msg.link}
                 onSelect={(path) => setNestedData(`topBar.messages.${idx}.link`, path || '')}
-                label="Select Content"
+                label={t('controls.selectContent')}
               />
             )}
           </div>
@@ -141,15 +141,15 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
     <div className="space-y-3">
       {/* Position */}
       <div className="text-[10px] font-semibold text-editor-text-secondary uppercase tracking-wider pt-1">Position</div>
-      <ToggleControl label="Above Header" checked={data.topBar.aboveHeader ?? true} onChange={(v) => setNestedData('topBar.aboveHeader', v)} />
+      <ToggleControl label={t('controls.aboveHeader')} checked={data.topBar.aboveHeader ?? true} onChange={(v) => setNestedData('topBar.aboveHeader', v)} />
       <p className="text-[10px] text-editor-text-secondary -mt-1">
         {data.topBar.aboveHeader ? 'Pinned above navigation bar' : 'Placed in content flow'}
       </p>
 
       <div className="text-[10px] font-semibold text-editor-text-secondary uppercase tracking-wider pt-1">Behavior</div>
-      <ToggleControl label="Scroll (Marquee)" checked={data.topBar.scrollEnabled ?? false} onChange={(v) => setNestedData('topBar.scrollEnabled', v)} />
-      <ToggleControl label="Pause on Hover" checked={data.topBar.pauseOnHover ?? true} onChange={(v) => setNestedData('topBar.pauseOnHover', v)} />
-      <ToggleControl label="Dismissible" checked={data.topBar.dismissible ?? true} onChange={(v) => setNestedData('topBar.dismissible', v)} />
+      <ToggleControl label={t('controls.scrollMarquee')} checked={data.topBar.scrollEnabled ?? false} onChange={(v) => setNestedData('topBar.scrollEnabled', v)} />
+      <ToggleControl label={t('controls.pauseOnHover')} checked={data.topBar.pauseOnHover ?? true} onChange={(v) => setNestedData('topBar.pauseOnHover', v)} />
+      <ToggleControl label={t('controls.dismissible')} checked={data.topBar.dismissible ?? true} onChange={(v) => setNestedData('topBar.dismissible', v)} />
 
       {data.topBar.scrollEnabled ? (
         <div>
@@ -164,7 +164,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         </div>
       ) : (
         <>
-          <ToggleControl label="Show Arrows" checked={data.topBar.showRotatingArrows ?? true} onChange={(v) => setNestedData('topBar.showRotatingArrows', v)} />
+          <ToggleControl label={t('controls.showArrows')} checked={data.topBar.showRotatingArrows ?? true} onChange={(v) => setNestedData('topBar.showRotatingArrows', v)} />
           <div>
             <div className="flex items-center justify-between mb-1">
               <span className="text-[10px] font-medium text-editor-text-secondary">Rotate Speed</span>
@@ -178,7 +178,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         </>
       )}
 
-      <FontSizeSelector label="Font Size" value={data.topBar.fontSize || 'sm'} onChange={(v) => setNestedData('topBar.fontSize', v)} />
+      <FontSizeSelector label={t('controls.fontSize')} value={data.topBar.fontSize || 'sm'} onChange={(v) => setNestedData('topBar.fontSize', v)} />
 
       {/* Height Slider */}
       <div>
@@ -221,12 +221,12 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
       {/* Background */}
       <div className="text-[10px] font-semibold text-editor-text-secondary uppercase tracking-wider pt-1">Background</div>
-      <ToggleControl label="Use Gradient" checked={data.topBar.useGradient ?? false} onChange={(v) => setNestedData('topBar.useGradient', v)} />
+      <ToggleControl label={t('controls.useGradient')} checked={data.topBar.useGradient ?? false} onChange={(v) => setNestedData('topBar.useGradient', v)} />
 
       {data.topBar.useGradient ? (
         <div className="space-y-2">
-          <ColorControl label="Gradient From" value={data.topBar.gradientFrom || '#4f46e5'} onChange={(v) => setNestedData('topBar.gradientFrom', v)} />
-          <ColorControl label="Gradient To" value={data.topBar.gradientTo || '#7c3aed'} onChange={(v) => setNestedData('topBar.gradientTo', v)} />
+          <ColorControl label={t('controls.gradientFrom')} value={data.topBar.gradientFrom || '#4f46e5'} onChange={(v) => setNestedData('topBar.gradientFrom', v)} />
+          <ColorControl label={t('controls.gradientTo')} value={data.topBar.gradientTo || '#7c3aed'} onChange={(v) => setNestedData('topBar.gradientTo', v)} />
           <div>
             <div className="flex items-center justify-between mb-1">
               <span className="text-[10px] font-medium text-editor-text-secondary">Gradient Angle</span>
@@ -239,14 +239,14 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           </div>
         </div>
       ) : (
-        <ColorControl label="Background Color" value={data.topBar.backgroundColor || '#1a1a1a'} onChange={(v) => setNestedData('topBar.backgroundColor', v)} />
+        <ColorControl label={t('controls.backgroundColor')} value={data.topBar.backgroundColor || '#1a1a1a'} onChange={(v) => setNestedData('topBar.backgroundColor', v)} />
       )}
 
       {/* Colors */}
       <div className="text-[10px] font-semibold text-editor-text-secondary uppercase tracking-wider pt-1">Colors</div>
-      <ColorControl label="Text" value={data.topBar.textColor || '#ffffff'} onChange={(v) => setNestedData('topBar.textColor', v)} />
-      <ColorControl label="Link" value={data.topBar.linkColor || '#fbbf24'} onChange={(v) => setNestedData('topBar.linkColor', v)} />
-      <ColorControl label="Icon" value={data.topBar.iconColor || '#fbbf24'} onChange={(v) => setNestedData('topBar.iconColor', v)} />
+      <ColorControl label={t('controls.text')} value={data.topBar.textColor || '#ffffff'} onChange={(v) => setNestedData('topBar.textColor', v)} />
+      <ColorControl label={t('controls.link')} value={data.topBar.linkColor || '#fbbf24'} onChange={(v) => setNestedData('topBar.linkColor', v)} />
+      <ColorControl label={t('controls.icon')} value={data.topBar.iconColor || '#fbbf24'} onChange={(v) => setNestedData('topBar.iconColor', v)} />
     </div>
   );
 

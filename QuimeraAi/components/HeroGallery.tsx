@@ -25,6 +25,8 @@ const subheadlineSizeClasses: Record<FontSize, string> = {
 interface HeroGalleryProps extends HeroGalleryData {
     borderRadius?: BorderRadiusSize;
     onNavigate?: (href: string) => void;
+    textHorizontalAlign?: 'left' | 'center' | 'right';
+    textVerticalAlign?: 'top' | 'middle' | 'bottom';
 }
 
 /**
@@ -48,6 +50,8 @@ const HeroGallery: React.FC<HeroGalleryProps> = ({
     colors,
     cornerGradient,
     onNavigate,
+    textHorizontalAlign = 'left',
+    textVerticalAlign = 'bottom',
 }) => {
     const { getColor } = useDesignTokens();
     const [currentIndex, setCurrentIndex] = useState(0);
@@ -163,10 +167,18 @@ const HeroGallery: React.FC<HeroGalleryProps> = ({
 
                         {/* ─── Text content ─── */}
                         <div
-                            className="relative z-[5] w-full flex flex-col justify-end px-5 md:px-12 pb-20 md:pb-24"
+                            className={`relative z-[5] w-full flex flex-col px-5 md:px-12 ${
+                                textVerticalAlign === 'top' ? 'justify-start pt-32 pb-10' :
+                                textVerticalAlign === 'middle' ? 'justify-center py-20' :
+                                'justify-end pb-20 md:pb-24 pt-10'
+                            }`}
                             style={{ minHeight }}
                         >
-                            <div className="max-w-4xl">
+                            <div className={`max-w-4xl w-full ${
+                                textHorizontalAlign === 'center' ? 'mx-auto text-center flex flex-col items-center' : 
+                                textHorizontalAlign === 'right' ? 'ml-auto text-right flex flex-col items-end' : 
+                                'mr-auto text-left flex flex-col items-start'
+                            }`}>
                                 {/* Headline */}
                                 <h1
                                     className={`${headlineSizeClasses[headlineFontSize]} font-light leading-tight mb-3 md:mb-5 font-header gallery-headline`}
@@ -239,7 +251,7 @@ const HeroGallery: React.FC<HeroGalleryProps> = ({
                                     key={i}
                                     title={`Go to slide ${i + 1}`}
                                     onClick={() => goToSlide(i)}
-                                    className="transition-all duration-300"
+                                    className="transition-all duration-300 no-min-touch"
                                     style={{
                                         width: dotStyle === 'line'
                                             ? (i === currentIndex ? '24px' : '12px')

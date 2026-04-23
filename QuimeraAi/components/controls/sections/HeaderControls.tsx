@@ -88,16 +88,14 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       {data.header.style === 'segmented-pill' && (
           <div className="mt-3">
             <ToggleControl
-              label="Botones en Diagonal"
+              label={t('controls.botonesEnDiagonal')}
               checked={data.header.segmentedPillSlanted === true}
               onChange={(v) => setNestedData('header.segmentedPillSlanted', v)}
             />
             {data.header.segmentedPillSlanted === true && (
               <div className="animate-fade-in-up">
                 <div className="flex justify-between items-center mb-2">
-                  <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
-                    Inclinación
-                  </label>
+                  <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('controls.inclinacin')}</label>
                   <span className="text-xs text-editor-text-primary bg-editor-bg px-2 py-0.5 rounded border border-editor-border">
                     {data.header.segmentedPillSlantedAngle ?? 15}°
                   </span>
@@ -118,7 +116,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
 
       <div>
-        <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">Logo Type</label>
+        <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{t('controls.logoType')}</label>
         <div className="flex bg-editor-bg p-1 rounded-md border border-editor-border mb-3">
           {['text', 'image', 'both'].map(type => (
             <button
@@ -349,7 +347,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         )}
       </div>
 
-      <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">Height & Hover</label>
+      <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">{t('controls.heightHover')}</label>
       <div>
         <div className="flex justify-between items-center mb-1">
           <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('editor.controls.navigation.height')}</label>
@@ -420,11 +418,11 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
               ))}
             </div>
           </div>
-          <ColorControl label="Fondo Botón" value={data.header.colors?.buttonBackground || data.header.colors?.accent || '#4f46e5'} onChange={(v) => setNestedData('header.colors.buttonBackground', v)} />
-          <ColorControl label="Texto Botón" value={data.header.colors?.buttonText || '#ffffff'} onChange={(v) => setNestedData('header.colors.buttonText', v)} />
+          <ColorControl label={t('controls.fondoBotn')} value={data.header.colors?.buttonBackground || data.header.colors?.accent || '#4f46e5'} onChange={(v) => setNestedData('header.colors.buttonBackground', v)} />
+          <ColorControl label={t('controls.textoBotn')} value={data.header.colors?.buttonText || '#ffffff'} onChange={(v) => setNestedData('header.colors.buttonText', v)} />
 
           <div>
-            <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">Enlace del Botón</label>
+            <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{t('controls.enlaceDelBotn')}</label>
             <div className="grid grid-cols-4 gap-1 bg-editor-bg p-1 rounded-md border border-editor-border">
               {[{ value: 'manual', label: 'URL' }, { value: 'product', label: 'Producto' }, { value: 'collection', label: 'Colección' }, { value: 'content', label: 'Contenido' }].map((type) => (
                 <button
@@ -443,7 +441,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           </div>
 
           {(data.header.ctaLinkType === 'manual' || !data.header.ctaLinkType) && (
-            <Input label="URL" value={data.header.ctaUrl || ''} onChange={(e) => setNestedData('header.ctaUrl', e.target.value)} placeholder="https://example.com o #seccion" />
+            <Input label={t('controls.url')} value={data.header.ctaUrl || ''} onChange={(e) => setNestedData('header.ctaUrl', e.target.value)} placeholder="https://example.com o #seccion" />
           )}
           {data.header.ctaLinkType === 'product' && (
             <SingleProductSelector
@@ -485,7 +483,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           />
           <div>
             <div className="flex justify-between items-center mb-1">
-              <label className="block text-sm font-medium text-editor-text-secondary">Tamaño del Gradiente</label>
+              <label className="block text-sm font-medium text-editor-text-secondary">{t('controls.tamaoDelGradiente')}</label>
               <span className="text-xs text-editor-text-secondary/70">{data.header.gradientFadeSize ?? 15}%</span>
             </div>
             <input
@@ -519,7 +517,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           Logo
         </label>
 
-        <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">Logo Type</label>
+        <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{t('controls.logoType')}</label>
         <div className="flex bg-editor-bg p-1 rounded-md border border-editor-border mb-3">
           {['text', 'image', 'both'].map(type => (
             <button
@@ -778,7 +776,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
             <Input label={t('editor.controls.navigation.buttonText')} value={data.header.ctaText || 'Get Started'} onChange={(e) => setNestedData('header.ctaText', e.target.value)} />
 
             <div>
-              <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">Enlace del Botón</label>
+              <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{t('controls.enlaceDelBotn')}</label>
               <div className="grid grid-cols-4 gap-1 bg-editor-bg p-1 rounded-md border border-editor-border">
                 {[{ value: 'manual', label: 'URL' }, { value: 'product', label: 'Producto' }, { value: 'collection', label: 'Colección' }, { value: 'content', label: 'Contenido' }].map((type) => (
                   <button
@@ -797,7 +795,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
             </div>
 
             {(data.header.ctaLinkType === 'manual' || !data.header.ctaLinkType) && (
-              <Input label="URL" value={data.header.ctaUrl || ''} onChange={(e) => setNestedData('header.ctaUrl', e.target.value)} placeholder="https://example.com o #seccion" />
+              <Input label={t('controls.url')} value={data.header.ctaUrl || ''} onChange={(e) => setNestedData('header.ctaUrl', e.target.value)} placeholder="https://example.com o #seccion" />
             )}
             {data.header.ctaLinkType === 'product' && (
               <SingleProductSelector
@@ -891,16 +889,14 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         {data.header.style === 'segmented-pill' && (
             <div className="mt-3">
               <ToggleControl
-                label="Botones en Diagonal"
+                label={t('controls.botonesEnDiagonal')}
                 checked={data.header.segmentedPillSlanted === true}
                 onChange={(v) => setNestedData('header.segmentedPillSlanted', v)}
               />
               {data.header.segmentedPillSlanted === true && (
                 <div className="animate-fade-in-up">
                   <div className="flex justify-between items-center mb-2">
-                    <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
-                      Inclinación
-                    </label>
+                    <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('controls.inclinacin')}</label>
                     <span className="text-xs text-editor-text-primary bg-editor-bg px-2 py-0.5 rounded border border-editor-border">
                       {data.header.segmentedPillSlantedAngle ?? 15}°
                     </span>
@@ -1000,8 +996,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
             ))}
           </div>
           <div className="space-y-2 mt-3">
-            <ColorControl label="Fondo Botón" value={data.header.colors?.buttonBackground || data.header.colors?.accent || '#4f46e5'} onChange={(v) => setNestedData('header.colors.buttonBackground', v)} />
-            <ColorControl label="Texto Botón" value={data.header.colors?.buttonText || '#ffffff'} onChange={(v) => setNestedData('header.colors.buttonText', v)} />
+            <ColorControl label={t('controls.fondoBotn')} value={data.header.colors?.buttonBackground || data.header.colors?.accent || '#4f46e5'} onChange={(v) => setNestedData('header.colors.buttonBackground', v)} />
+            <ColorControl label={t('controls.textoBotn')} value={data.header.colors?.buttonText || '#ffffff'} onChange={(v) => setNestedData('header.colors.buttonText', v)} />
           </div>
         </div>
       )}
@@ -1026,7 +1022,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
               />
               <div>
                 <div className="flex justify-between items-center mb-1">
-                  <label className="block text-sm font-medium text-editor-text-secondary">Tamaño del Gradiente</label>
+                  <label className="block text-sm font-medium text-editor-text-secondary">{t('controls.tamaoDelGradiente')}</label>
                   <span className="text-xs text-editor-text-secondary/70">{data.header.gradientFadeSize ?? 15}%</span>
                 </div>
                 <input

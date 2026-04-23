@@ -127,7 +127,7 @@ const TemplateEditorModal: React.FC<TemplateEditorModalProps> = ({
     const { t } = useTranslation();
     const { user } = useAuth();
     const { hasApiKey, promptForKeySelection, handleApiError, generateImage, enhancePrompt } = useAI();
-    const { uploadFile, files } = useFiles();
+    const { uploadFile, files, uploadAdminAsset } = useFiles();
     const { getPrompt } = useAdmin();
     const [isLoading, setIsLoading] = useState(false);
     const [isAiSuggesting, setIsAiSuggesting] = useState(false);
@@ -332,7 +332,8 @@ Return ONLY the prompt text, nothing else. Make it 1-2 sentences maximum.`;
             const url = await generateImage(enhancedPrompt, {
                 aspectRatio: '16:9',
                 style: thumbnailStyle,
-                destination: 'user',
+                destination: 'admin',
+                adminCategory: 'template',
                 resolution: '2K',
             });
             setGeneratedThumbnail(url);
@@ -363,16 +364,15 @@ Return ONLY the prompt text, nothing else. Make it 1-2 sentences maximum.`;
         if (!file) return;
 
         try {
-            await uploadFile(file);
-            // Get the most recently uploaded file
-            const latestFile = files[0];
-            if (latestFile) {
-                setFormData(prev => ({
-                    ...prev,
-                    thumbnailUrl: latestFile.downloadURL,
-                    heroImageUrl: latestFile.downloadURL // Also set for hero
-                }));
-            }
+            const downloadURL = await uploadAdminAsset(file, 'template', {
+                description: `Template thumbnail: ${formData.name}`,
+                isAiGenerated: false,
+            });
+            setFormData(prev => ({
+                ...prev,
+                thumbnailUrl: downloadURL,
+                heroImageUrl: downloadURL // Also set for hero
+            }));
         } catch (error) {
             console.error('Error uploading thumbnail:', error);
         }

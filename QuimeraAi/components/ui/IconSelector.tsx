@@ -40,8 +40,8 @@ const getCategoryKey = (category: string) => {
 };
 
 interface IconSelectorProps {
-    value: ServiceIcon;
-    onChange: (icon: ServiceIcon) => void;
+    value: string;
+    onChange: (icon: string) => void;
     label?: string;
     size?: 'sm' | 'md' | 'lg';
     hideText?: boolean;
@@ -51,6 +51,7 @@ interface IconSelectorProps {
 
 // Helper to get Lucide component by name
 export const getIconComponent = (iconName: string, size: number | string = 20) => {
+    if (!iconName || iconName === 'none') return null;
     const iconMap: Record<string, any> = {
         'code': LucideIcons.Code,
         'code2': LucideIcons.CodeSquare,
@@ -164,7 +165,9 @@ const IconSelector: React.FC<IconSelectorProps> = ({ value, onChange, label, siz
     const [isOpen, setIsOpen] = useState(false);
     const [selectedCategory, setSelectedCategory] = useState<string>('Development');
 
-    const CurrentIcon = getIconComponent(value, size === 'sm' ? 16 : size === 'lg' ? 24 : 20);
+    const CurrentIcon = (!value || value === 'none')
+        ? <LucideIcons.Ban size={size === 'sm' ? 16 : size === 'lg' ? 24 : 20} className="text-editor-text-secondary opacity-50" />
+        : getIconComponent(value, size === 'sm' ? 16 : size === 'lg' ? 24 : 20);
 
     // Size classes
     const sizeClasses = {
@@ -187,7 +190,7 @@ const IconSelector: React.FC<IconSelectorProps> = ({ value, onChange, label, siz
             >
                 <div className="flex items-center gap-2">
                     {CurrentIcon}
-                    {!hideText && <span>{value}</span>}
+                    {!hideText && <span>{!value || value === 'none' ? 'Ninguno' : value}</span>}
                 </div>
                 {!hideChevron && <ChevronDown className="w-4 h-4" />}
             </button>
@@ -202,6 +205,20 @@ const IconSelector: React.FC<IconSelectorProps> = ({ value, onChange, label, siz
 
                     {/* Panel de selección de iconos */}
                     <div className={`absolute z-[9999] mt-1 ${fullWidthModal ? 'w-full left-0 right-0 top-full' : (hideText ? 'w-72 -left-2' : 'w-full')} bg-editor-panel-bg border border-editor-border rounded-lg shadow-xl max-h-96 overflow-visible flex flex-col`}>
+                        {/* Remove Icon Control */}
+                        <div className="p-2 border-b border-editor-border bg-editor-panel-bg flex justify-between items-center">
+                            <span className="text-xs font-bold text-editor-text-secondary uppercase">Estado del Icono</span>
+                            <button
+                                onClick={() => {
+                                    onChange('none');
+                                    setIsOpen(false);
+                                }}
+                                className={`px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider transition-colors ${!value || value === 'none' ? 'bg-red-500/10 text-red-500 border border-red-500/20' : 'bg-editor-bg text-editor-text-secondary border border-editor-border hover:text-red-400'}`}
+                            >
+                                {!value || value === 'none' ? 'Apagado' : 'Apagar'}
+                            </button>
+                        </div>
+
                         {/* Category tabs */}
                         <div className="flex overflow-x-auto border-b border-editor-border bg-editor-bg">
                             {Object.keys(serviceIconCategories).map((category) => (

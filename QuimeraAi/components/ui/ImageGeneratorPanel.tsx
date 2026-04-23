@@ -14,7 +14,8 @@ import ProgressBar3D from './ProgressBar3D';
 import { searchFiles } from '../../utils/fileHelpers';
 
 interface ImageGeneratorPanelProps {
-    destination: 'user' | 'global';
+    destination: 'user' | 'global' | 'admin';
+    adminCategory?: string;
     className?: string;
     onClose?: () => void;
     onCollapse?: () => void;
@@ -28,9 +29,9 @@ interface ImageGeneratorPanelProps {
     generationContext?: 'background' | 'general';
 }
 
-const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, className = '', onClose, onCollapse, hidePreview = false, hideHeader = false, onImageGenerated, onUseImage, projectId, generationContext = 'general' }) => {
+const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, adminCategory, className = '', onClose, onCollapse, hidePreview = false, hideHeader = false, onImageGenerated, onUseImage, projectId, generationContext = 'general' }) => {
     const { generateImage, enhancePrompt } = useAI();
-    const { uploadGlobalFile, uploadFile, hasActiveProject, files, globalFiles } = useFiles();
+    const { uploadGlobalFile, uploadFile, uploadAdminAsset, hasActiveProject, files, globalFiles, adminAssets } = useFiles();
     const { activeProjectId } = useProject();
     const { t } = useTranslation();
 
@@ -194,8 +195,17 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
     // Filter project images for the library browser
     const effectiveProjectId = activeProjectId || projectId;
     const libraryImages = useMemo(() => {
-        const sourceFiles = destination === 'global' ? globalFiles : files;
-        let result = sourceFiles.filter(f => f.type.startsWith('image/'));
+        let sourceFiles = files;
+        if (destination === 'admin') {
+            sourceFiles = adminAssets;
+            if (adminCategory) {
+                sourceFiles = sourceFiles.filter(f => f.category === adminCategory);
+            }
+        } else if (destination === 'global') {
+            sourceFiles = globalFiles;
+        }
+        
+        let result = sourceFiles.filter(f => f.type?.startsWith('image/') || true);
         if (destination === 'user' && effectiveProjectId) {
             result = result.filter(f => f.projectId === effectiveProjectId);
         }
@@ -203,7 +213,7 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
             result = searchFiles(result, librarySearchQuery);
         }
         return result;
-    }, [files, globalFiles, librarySearchQuery, effectiveProjectId, destination]);
+    }, [files, globalFiles, adminAssets, adminCategory, librarySearchQuery, effectiveProjectId, destination]);
 
     // Add a library image as a reference (converts to base64 via img+canvas to avoid CORS)
     const handleAddLibraryImage = async (downloadURL: string) => {
@@ -280,7 +290,17 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
 
             let savedUrl: string | undefined;
 
-            if (destination === 'global') {
+            if (destination === 'admin') {
+                await uploadAdminAsset(file, (adminCategory as any) || 'ai_generated', {
+                    description: `Generated AI image: ${generationPrompt.substring(0, 50)}...`,
+                    isAiGenerated: true,
+                    aiPrompt: generationPrompt,
+                    aiModel: selectedModel,
+                    aiProvider: 'quimera'
+                });
+                console.log('✅ [ImageGeneratorPanel] Saved to admin library');
+                setSavedToLibrary(true);
+            } else if (destination === 'global') {
                 // Save to global files library (Super Admin)
                 await uploadGlobalFile(file);
                 // uploadGlobalFile doesn't return URL, but the file is saved

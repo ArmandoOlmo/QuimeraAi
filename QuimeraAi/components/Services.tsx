@@ -236,14 +236,16 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
             >
                 <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
-                <div className="relative z-10 flex justify-center mb-6">
-                    <div
-                        className="p-4 inline-flex rounded-2xl card-icon-bounce"
-                        style={{ backgroundColor: hexToRgba(accentColor, 0.125), color: accentColor }}
-                    >
-                        {icon}
+                {icon && (
+                    <div className="relative z-10 flex justify-center mb-6">
+                        <div
+                            className="p-4 inline-flex rounded-2xl card-icon-bounce"
+                            style={{ backgroundColor: hexToRgba(accentColor, 0.125), color: accentColor }}
+                        >
+                            {icon}
+                        </div>
                     </div>
-                </div>
+                )}
                 <h3 className="relative z-10 text-2xl font-bold mb-3 font-header group-hover:text-[var(--accent)] transition-colors duration-300" style={{ color: headingColor, '--accent': accentColor, textTransform: 'var(--headings-transform, none)', letterSpacing: 'var(--headings-spacing, normal)' } as any}>
                     {title}
                 </h3>
@@ -264,9 +266,11 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
                     '--card-accent': `${accentColor}66`,
                 } as React.CSSProperties}
             >
-                <div className="mb-6 p-3 rounded-lg bg-white/5 text-white card-icon-bounce group-hover:bg-[var(--accent)] group-hover:text-white transition-colors duration-300" style={{ '--accent': accentColor } as any}>
-                    {React.cloneElement(icon as React.ReactElement<any>, { size: 24 })}
-                </div>
+                {icon && (
+                    <div className="mb-6 p-3 rounded-lg bg-white/5 text-white card-icon-bounce group-hover:bg-[var(--accent)] group-hover:text-white transition-colors duration-300" style={{ '--accent': accentColor } as any}>
+                        {React.cloneElement(icon as React.ReactElement<any>, { size: 24 })}
+                    </div>
+                )}
                 <h3 className="text-xl font-bold mb-3 font-header transition-colors duration-300 group-hover:text-[var(--accent)]" style={{ color: headingColor, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)', '--accent': accentColor } as any}>{title}</h3>
                 <p className="font-body text-sm opacity-70 mb-6 flex-grow transition-opacity duration-300 group-hover:opacity-100" style={{ color: textColor }}>{description}</p>
 
@@ -281,11 +285,13 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
     if (variant === 'minimal') {
         return (
             <div className={`group flex gap-6 p-6 card-hover-tilt card-shine-sweep backdrop-blur-lg border border-white/10 ${radiusClass} ${animationClass}`} style={{ backgroundColor: hexToRgba(cardBackground, 0.25), animationDelay: delay, '--card-accent': `${accentColor}66` } as React.CSSProperties}>
-                <div className="flex-shrink-0 mt-1">
-                    <div className="w-12 h-12 flex items-center justify-center rounded-full card-icon-bounce" style={{ backgroundColor: hexToRgba(accentColor, 0.08), color: accentColor }}>
-                        {React.cloneElement(icon as React.ReactElement<any>, { size: 20 })}
+                {icon && (
+                    <div className="flex-shrink-0 mt-1">
+                        <div className="w-12 h-12 flex items-center justify-center rounded-full card-icon-bounce" style={{ backgroundColor: hexToRgba(accentColor, 0.08), color: accentColor }}>
+                            {React.cloneElement(icon as React.ReactElement<any>, { size: 20 })}
+                        </div>
                     </div>
-                </div>
+                )}
                 <div>
                     <h3 className="text-xl font-bold mb-2 font-header flex items-center gap-2 transition-colors duration-300 group-hover:text-[var(--accent)]" style={{ color: headingColor, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)', '--accent': accentColor } as any}>
                         {title}
@@ -326,17 +332,19 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
                 )}
 
                 <div className="flex-grow relative z-10 flex flex-col items-center justify-center">
-                    <div
-                        className="mb-6 p-4 inline-flex rounded-2xl relative"
-                        style={{
-                            backgroundColor: hexToRgba(glowConfig.color || accentColor, 0.1),
-                            color: glowConfig.color || accentColor,
-                        }}
-                    >
-                        {/* Inner shadow for the icon container to match the glow */}
-                        <div className="absolute inset-0 rounded-2xl shadow-[inset_0_0_15px_rgba(0,0,0,0.5)] pointer-events-none" />
-                        {React.cloneElement(icon as React.ReactElement<any>, { size: 40 })}
-                    </div>
+                    {icon && (
+                        <div
+                            className="mb-6 p-4 inline-flex rounded-2xl relative"
+                            style={{
+                                backgroundColor: hexToRgba(glowConfig.color || accentColor, 0.1),
+                                color: glowConfig.color || accentColor,
+                            }}
+                        >
+                            {/* Inner shadow for the icon container to match the glow */}
+                            <div className="absolute inset-0 rounded-2xl shadow-[inset_0_0_15px_rgba(0,0,0,0.5)] pointer-events-none" />
+                            {React.cloneElement(icon as React.ReactElement<any>, { size: 40 })}
+                        </div>
+                    )}
                     <h3 className="text-2xl font-bold mb-4 font-header text-white" style={{ textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>
                         {title}
                     </h3>
@@ -401,7 +409,7 @@ const Services: React.FC<ServicesProps> = ({
                         <ServiceCard
                             key={index}
                             index={index}
-                            icon={serviceIcons[service.icon] || serviceIcons['sparkles'] || <Sparkles size={32} />}
+                            icon={service.icon === 'none' ? null : (serviceIcons[service.icon] || serviceIcons['sparkles'] || <Sparkles size={32} />)}
                             title={service.title}
                             description={service.description}
                             accentColor={colors?.accent}

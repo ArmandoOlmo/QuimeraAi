@@ -85,12 +85,12 @@ export const AdminTemplateStudio: React.FC<{ isOpen: boolean; onClose: () => voi
                         </div>
                         <div>
                             <h2 className="text-lg font-bold text-editor-text-primary flex items-center gap-2">
-                                Admin AI Template Studio
+                                {t('aiTemplateStudio.title')}
                                 <span className="text-[10px] font-mono bg-primary/15 text-editor-accent px-2 py-0.5 rounded-full">
                                     Quimera AI
                                 </span>
                             </h2>
-                            <p className="text-xs text-editor-text-secondary">{t('aiWebsiteStudio.poweredBy')}</p>
+                            <p className="text-xs text-editor-text-secondary">{t('aiTemplateStudio.poweredBy')}</p>
                         </div>
                     </div>
                     <div className="flex items-center gap-2">
@@ -100,7 +100,7 @@ export const AdminTemplateStudio: React.FC<{ isOpen: boolean; onClose: () => voi
                             className="lg:hidden h-8 px-3 rounded-lg bg-editor-border/40 text-editor-text-secondary text-xs hover:bg-editor-border/60 transition-colors flex items-center gap-1.5"
                         >
                             <LayoutTemplate size={14} />
-                            {t('aiWebsiteStudio.brief')}
+                            {t('aiTemplateStudio.brief')}
                             {studio.businessBrief.readinessScore > 0 && (
                                 <span className="ml-0.5 px-1.5 py-0.5 rounded-full bg-primary/15 text-editor-accent text-[10px] font-bold">
                                     {studio.businessBrief.readinessScore}%
@@ -112,16 +112,16 @@ export const AdminTemplateStudio: React.FC<{ isOpen: boolean; onClose: () => voi
                             onClick={() => studio.setShowUrlModal(true)}
                             disabled={studio.isExtracting || studio.isGenerating}
                             className="h-8 px-3 flex items-center gap-1.5 rounded-lg bg-primary/10 text-editor-accent text-xs font-medium hover:bg-primary/20 transition-colors disabled:opacity-40"
-                            title={t('aiWebsiteStudio.extraction.buttonLabel')}
+                            title={t('aiTemplateStudio.extraction.buttonLabel')}
                         >
                             {studio.isExtracting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Globe className="w-3.5 h-3.5" />}
-                            <span className="hidden sm:inline">{t('aiWebsiteStudio.extraction.buttonLabel')}</span>
+                            <span className="hidden sm:inline">{t('aiTemplateStudio.extraction.buttonLabel')}</span>
                         </button>
                         {/* Reset */}
                         <button
                             onClick={() => { studio.stopVoiceSession(); studio.initStudio(); }}
                             className="h-8 w-8 flex items-center justify-center rounded-lg text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40 transition-colors"
-                            title="Reset"
+                            title={t('aiTemplateStudio.reset')}
                         >
                             <RefreshCcw className="w-4 h-4" />
                         </button>
@@ -150,7 +150,7 @@ export const AdminTemplateStudio: React.FC<{ isOpen: boolean; onClose: () => voi
                                 <div className="flex justify-end animate-pulse">
                                     <div className="max-w-[85%] rounded-2xl rounded-br-md px-4 py-3 text-sm leading-relaxed bg-primary/15 border border-primary/30 text-editor-text-primary">
                                         <span className="inline-flex items-center gap-1.5 text-[10px] text-editor-accent mb-1">
-                                            <Mic className="w-3 h-3" /> {t('aiWebsiteStudio.chat.stopVoice')}
+                                            <Mic className="w-3 h-3" /> {t('aiTemplateStudio.chat.stopVoice')}
                                         </span>
                                         <p className="text-editor-text-primary">{studio.liveUserTranscript}</p>
                                     </div>
@@ -171,7 +171,7 @@ export const AdminTemplateStudio: React.FC<{ isOpen: boolean; onClose: () => voi
                                 <div className="flex justify-start">
                                     <div className="bg-editor-panel-bg border border-editor-border rounded-2xl rounded-bl-md px-4 py-3 flex items-center gap-2 text-sm text-editor-text-secondary">
                                         <Loader2 className="w-4 h-4 animate-spin text-editor-accent" />
-                                        {t('aiWebsiteStudio.chat.thinking')}
+                                        {t('aiTemplateStudio.chat.thinking')}
                                     </div>
                                 </div>
                             )}
@@ -179,7 +179,7 @@ export const AdminTemplateStudio: React.FC<{ isOpen: boolean; onClose: () => voi
                             {studio.generationPhase && studio.generationPhase.phase !== 'done' && (
                                 <div className="mx-auto max-w-md bg-primary/10 border border-primary/20 rounded-xl p-3 text-center text-xs text-editor-text-secondary">
                                     <Loader2 size={14} className="animate-spin inline mr-1 text-editor-accent" />
-                                    {t('aiWebsiteStudio.chat.generatingHint')}
+                                    {t('aiTemplateStudio.chat.generatingHint')}
                                 </div>
                             )}
                         </div>
@@ -192,7 +192,7 @@ export const AdminTemplateStudio: React.FC<{ isOpen: boolean; onClose: () => voi
                                     <button
                                         onClick={studio.stopVoiceSession}
                                         className="h-10 w-10 flex-shrink-0 flex items-center justify-center rounded-xl bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-all"
-                                        title={t('aiWebsiteStudio.chat.stopVoice')}
+                                        title={t('aiTemplateStudio.chat.stopVoice')}
                                     >
                                         <MicOff className="w-4 h-4" />
                                     </button>
@@ -201,7 +201,7 @@ export const AdminTemplateStudio: React.FC<{ isOpen: boolean; onClose: () => voi
                                         onClick={studio.startVoiceSession}
                                         disabled={studio.isVoiceConnecting || studio.isGenerating}
                                         className="h-10 w-10 flex-shrink-0 flex items-center justify-center rounded-xl bg-editor-border/40 text-editor-text-secondary hover:text-editor-accent hover:bg-primary/10 transition-all disabled:opacity-50"
-                                        title={t('aiWebsiteStudio.chat.startVoice')}
+                                        title={t('aiTemplateStudio.chat.startVoice')}
                                     >
                                         {studio.isVoiceConnecting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Mic className="w-4 h-4" />}
                                     </button>
@@ -211,7 +211,7 @@ export const AdminTemplateStudio: React.FC<{ isOpen: boolean; onClose: () => voi
                                     value={studio.input}
                                     onChange={e => studio.setInput(e.target.value)}
                                     onKeyDown={handleKeyDown}
-                                    placeholder={studio.isVoiceActive ? t('aiWebsiteStudio.chat.voicePlaceholder') : t('aiWebsiteStudio.chat.textPlaceholder')}
+                                    placeholder={studio.isVoiceActive ? t('aiTemplateStudio.chat.voicePlaceholder') : t('aiTemplateStudio.chat.textPlaceholder')}
                                     disabled={studio.isVoiceActive || studio.isGenerating}
                                     rows={1}
                                     className="flex-1 bg-editor-bg border border-editor-border rounded-xl px-4 py-2.5 text-sm text-editor-text-primary placeholder:text-editor-text-secondary/50 resize-none focus:outline-none focus:ring-2 focus:ring-primary/50 min-h-[40px] max-h-[120px] transition-all disabled:opacity-40"
@@ -230,7 +230,7 @@ export const AdminTemplateStudio: React.FC<{ isOpen: boolean; onClose: () => voi
                                 <div className="mt-2 flex items-center justify-center gap-2 text-xs text-green-400">
                                     <span className="flex items-center gap-1.5">
                                         <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-                                        {t('aiWebsiteStudio.chat.voicePlaceholder')}
+                                        {t('aiTemplateStudio.chat.voicePlaceholder')}
                                     </span>
                                 </div>
                             )}
@@ -248,7 +248,7 @@ export const AdminTemplateStudio: React.FC<{ isOpen: boolean; onClose: () => voi
                             <div className="absolute inset-0 bg-black/50" onClick={() => setIsMobileBriefOpen(false)} />
                             <div className="ml-auto relative w-[85%] max-w-[380px] bg-editor-panel-bg border-l border-editor-border flex flex-col overflow-y-auto" style={{ animation: 'aws-slideInRight 0.3s ease' }}>
                                 <div className="flex items-center justify-between px-4 py-3 border-b border-editor-border">
-                                    <span className="text-sm font-semibold text-editor-text-primary">{t('aiWebsiteStudio.briefPanel.title')}</span>
+                                    <span className="text-sm font-semibold text-editor-text-primary">{t('aiTemplateStudio.briefPanel.title')}</span>
                                     <button onClick={() => setIsMobileBriefOpen(false)} className="p-1 text-editor-text-secondary hover:text-editor-text-primary"><X size={16} /></button>
                                 </div>
                                 <BriefPanel brief={studio.businessBrief} canGenerate={studio.canGenerate} isGenerating={studio.isGenerating} onGenerate={studio.startGeneration} />
@@ -309,7 +309,7 @@ const ChatBubble: React.FC<{ message: { role: 'user' | 'model'; text: string; is
                 )}
                 {message.isVoice && (
                     <div className="mt-1 flex items-center gap-1 text-[10px] opacity-50">
-                        <Volume2 size={10} /> Voice
+                        <Volume2 size={10} /> {t('aiTemplateStudio.voice')}
                     </div>
                 )}
             </div>
@@ -337,14 +337,14 @@ const BriefPanel: React.FC<{
             <div className="flex items-center justify-between">
                 <h3 className="text-sm font-semibold text-editor-text-primary flex items-center gap-2">
                     <MessageSquare size={14} className="text-editor-accent" />
-                    {t('aiWebsiteStudio.briefPanel.title')}
+                    {t('aiTemplateStudio.briefPanel.title')}
                 </h3>
             </div>
 
             {/* Readiness Score */}
             <div className="bg-editor-bg rounded-xl p-3 border border-editor-border">
                 <div className="flex items-center justify-between mb-2">
-                    <span className="text-editor-text-secondary">{t('aiWebsiteStudio.briefPanel.readiness')}</span>
+                    <span className="text-editor-text-secondary">{t('aiTemplateStudio.briefPanel.readiness')}</span>
                     <span className="font-bold" style={{ color: readinessColor }}>{readiness}%</span>
                 </div>
                 <div className="w-full h-2 bg-editor-border rounded-full overflow-hidden">
@@ -355,16 +355,16 @@ const BriefPanel: React.FC<{
                 </div>
                 {brief.missingFields.length > 0 && readiness < 80 && (
                     <p className="mt-2 text-[10px] text-editor-text-secondary/60">
-                        {t('aiWebsiteStudio.briefPanel.missing')} {brief.missingFields.join(', ')}
+                        {t('aiTemplateStudio.briefPanel.missing')} {brief.missingFields.join(', ')}
                     </p>
                 )}
             </div>
 
             {/* Business Info */}
-            <BriefSection title={t('aiWebsiteStudio.briefPanel.business')} icon={<Building2 size={13} />}>
-                <BriefField label={t('aiWebsiteStudio.briefPanel.name')} value={brief.businessName} />
-                <BriefField label={t('aiWebsiteStudio.briefPanel.industry')} value={brief.industry} />
-                <BriefField label={t('aiWebsiteStudio.briefPanel.tagline')} value={brief.tagline} />
+            <BriefSection title={t('aiTemplateStudio.briefPanel.business')} icon={<Building2 size={13} />}>
+                <BriefField label={t('aiTemplateStudio.briefPanel.name')} value={brief.businessName} />
+                <BriefField label={t('aiTemplateStudio.briefPanel.industry')} value={brief.industry} />
+                <BriefField label={t('aiTemplateStudio.briefPanel.tagline')} value={brief.tagline} />
                 {brief.description && (
                     <p className="text-editor-text-secondary/60 line-clamp-2 mt-1">{brief.description}</p>
                 )}
@@ -372,7 +372,7 @@ const BriefPanel: React.FC<{
 
             {/* Services */}
             {brief.services.length > 0 && (
-                <BriefSection title={`${t('aiWebsiteStudio.briefPanel.services')} (${brief.services.length})`} icon={<Zap size={13} />}>
+                <BriefSection title={`${t('aiTemplateStudio.briefPanel.services')} (${brief.services.length})`} icon={<Zap size={13} />}>
                     {brief.services.map((s, i) => (
                         <div key={i} className="flex items-start gap-1.5 text-editor-text-secondary">
                             <CheckCircle2 size={11} className="text-green-400/60 mt-0.5 flex-shrink-0" />
@@ -384,16 +384,16 @@ const BriefPanel: React.FC<{
 
             {/* Contact */}
             {(brief.contactInfo.email || brief.contactInfo.phone || brief.contactInfo.address) && (
-                <BriefSection title={t('aiWebsiteStudio.briefPanel.contact')} icon={<Phone size={13} />}>
-                    {brief.contactInfo.email && <BriefField label={t('aiWebsiteStudio.briefPanel.email')} value={brief.contactInfo.email} />}
-                    {brief.contactInfo.phone && <BriefField label={t('aiWebsiteStudio.briefPanel.phone')} value={brief.contactInfo.phone} />}
-                    {brief.contactInfo.address && <BriefField label={t('aiWebsiteStudio.briefPanel.address')} value={brief.contactInfo.address} />}
-                    {brief.contactInfo.businessHours && <BriefField label={t('aiWebsiteStudio.briefPanel.hours')} value={brief.contactInfo.businessHours} />}
+                <BriefSection title={t('aiTemplateStudio.briefPanel.contact')} icon={<Phone size={13} />}>
+                    {brief.contactInfo.email && <BriefField label={t('aiTemplateStudio.briefPanel.email')} value={brief.contactInfo.email} />}
+                    {brief.contactInfo.phone && <BriefField label={t('aiTemplateStudio.briefPanel.phone')} value={brief.contactInfo.phone} />}
+                    {brief.contactInfo.address && <BriefField label={t('aiTemplateStudio.briefPanel.address')} value={brief.contactInfo.address} />}
+                    {brief.contactInfo.businessHours && <BriefField label={t('aiTemplateStudio.briefPanel.hours')} value={brief.contactInfo.businessHours} />}
                 </BriefSection>
             )}
 
             {/* Color Palette */}
-            <BriefSection title={t('aiWebsiteStudio.briefPanel.colors')} icon={<Palette size={13} />}>
+            <BriefSection title={t('aiTemplateStudio.briefPanel.colors')} icon={<Palette size={13} />}>
                 <div className="flex flex-wrap gap-1.5">
                     {Object.entries(brief.colorPalette).filter(([k]) => ['primary', 'secondary', 'accent'].includes(k)).map(([key, color]) => (
                         <div key={key} className="flex items-center gap-1.5 bg-editor-bg rounded-lg px-2 py-1 border border-editor-border">
@@ -406,7 +406,7 @@ const BriefPanel: React.FC<{
 
             {/* Components */}
             {brief.suggestedComponents.length > 0 && (
-                <BriefSection title={`${t('aiWebsiteStudio.briefPanel.components')} (${brief.suggestedComponents.length})`} icon={<LayoutTemplate size={13} />}>
+                <BriefSection title={`${t('aiTemplateStudio.briefPanel.components')} (${brief.suggestedComponents.length})`} icon={<LayoutTemplate size={13} />}>
                     <div className="flex flex-wrap gap-1">
                         {brief.suggestedComponents.map(comp => (
                             <span key={comp} className="px-2 py-0.5 rounded-md bg-primary/10 text-editor-accent/70 text-[10px] border border-primary/10">
@@ -431,18 +431,18 @@ const BriefPanel: React.FC<{
                     {isGenerating ? (
                         <>
                             <Loader2 size={16} className="animate-spin" />
-                            {t('aiWebsiteStudio.briefPanel.generating')}
+                            {t('aiTemplateStudio.briefPanel.generating')}
                         </>
                     ) : (
                         <>
                             <Sparkles size={16} />
-                            {t('aiWebsiteStudio.briefPanel.generateButton')}
+                            {t('aiTemplateStudio.briefPanel.generateButton')}
                         </>
                     )}
                 </button>
                 {!canGenerate && !isGenerating && (
                     <p className="text-center text-[10px] text-editor-text-secondary/50 mt-2">
-                        {t('aiWebsiteStudio.briefPanel.keepChatting')}
+                        {t('aiTemplateStudio.briefPanel.keepChatting')}
                     </p>
                 )}
             </div>
@@ -475,10 +475,10 @@ const BriefField: React.FC<{ label: string; value?: string }> = ({ label, value 
 // ═══════════════════════════════════════════════════════════════════════════
 
 const PHASE_LABELS_KEY: Record<string, string> = {
-    content: 'aiWebsiteStudio.generation.phases.content',
-    images: 'aiWebsiteStudio.generation.phases.images',
-    finalizing: 'aiWebsiteStudio.generation.phases.finalizing',
-    done: 'aiWebsiteStudio.generation.phases.done',
+    content: 'aiTemplateStudio.generation.phases.content',
+    images: 'aiTemplateStudio.generation.phases.images',
+    finalizing: 'aiTemplateStudio.generation.phases.finalizing',
+    done: 'aiTemplateStudio.generation.phases.done',
 };
 
 const GenerationOverlay: React.FC<{ phase: GenerationPhase; businessName: string }> = ({ phase, businessName }) => {
@@ -520,7 +520,7 @@ const GenerationOverlay: React.FC<{ phase: GenerationPhase; businessName: string
                         </div>
                         <div className="flex-1 min-w-0">
                             <h2 className="text-lg font-bold text-editor-text-primary truncate">
-                                {isDone ? t('aiWebsiteStudio.generation.websiteCreated') : t('aiWebsiteStudio.generation.creating', { name: businessName || t('aiWebsiteStudio.generation.yourWebsite') })}
+                                {isDone ? t('aiTemplateStudio.generation.websiteCreated') : t('aiTemplateStudio.generation.creating', { name: businessName || t('aiTemplateStudio.generation.yourWebsite') })}
                             </h2>
                             <p className="text-sm text-editor-text-secondary mt-0.5">{phase.currentStep}</p>
                              {/* Phase steps indicator */}
@@ -554,18 +554,18 @@ const GenerationOverlay: React.FC<{ phase: GenerationPhase; businessName: string
                     <div className="px-6 py-3 bg-editor-bg border-b border-editor-border flex items-center gap-6 text-xs">
                         <div className="flex items-center gap-1.5">
                             <Image size={13} className="text-editor-accent" />
-                            <span className="text-editor-text-secondary">{t('aiWebsiteStudio.generation.stats.images')}</span>
+                            <span className="text-editor-text-secondary">{t('aiTemplateStudio.generation.stats.images')}</span>
                             <span className="font-mono font-bold text-editor-text-primary">{phase.imagesCompleted}</span>
                             <span className="text-editor-text-secondary/50">/ {phase.imagesTotal}</span>
                         </div>
                         {phase.imagesFailed > 0 && (
                             <div className="flex items-center gap-1.5">
                                 <X size={13} className="text-red-400" />
-                                <span className="text-red-400/60">{t('aiWebsiteStudio.generation.stats.failed')} {phase.imagesFailed}</span>
+                                <span className="text-red-400/60">{t('aiTemplateStudio.generation.stats.failed')} {phase.imagesFailed}</span>
                             </div>
                         )}
                         <div className="ml-auto flex items-center gap-1.5">
-                            <span className="text-editor-text-secondary/50">{t('aiWebsiteStudio.generation.stats.progress')}</span>
+                            <span className="text-editor-text-secondary/50">{t('aiTemplateStudio.generation.stats.progress')}</span>
                             <div className="w-24 h-1.5 bg-editor-border rounded-full overflow-hidden">
                                 <div className="h-full rounded-full bg-gradient-to-r from-editor-accent to-primary transition-all duration-500"
                                     style={{ width: `${phase.progress}%` }} />
@@ -589,7 +589,7 @@ const GenerationOverlay: React.FC<{ phase: GenerationPhase; businessName: string
                     {/* Right: Image Gallery */}
                     {phase.generatedImages.length > 0 && (
                         <div className="hidden sm:flex w-[200px] flex-col border-l border-editor-border bg-editor-bg overflow-y-auto p-3 gap-2 custom-scrollbar">
-                            <span className="text-[10px] font-semibold text-editor-text-secondary uppercase tracking-wider">{t('aiWebsiteStudio.generation.generatedImages')}</span>
+                            <span className="text-[10px] font-semibold text-editor-text-secondary uppercase tracking-wider">{t('aiTemplateStudio.generation.generatedImages')}</span>
                             {phase.generatedImages.map((img, i) => (
                                 <div key={i} className="rounded-lg overflow-hidden border border-editor-border bg-editor-panel-bg" style={{ animation: 'aws-fadeIn 0.5s ease' }}>
                                     <img src={img.url} alt={img.key} className="w-full h-24 object-cover" loading="lazy" />
@@ -683,7 +683,7 @@ const UrlInputModal: React.FC<{ onSubmit: (url: string) => void; onClose: () => 
             setError('');
             onSubmit(normalizedUrl);
         } catch {
-            setError(t('aiWebsiteStudio.extraction.urlFormatHint'));
+            setError(t('aiTemplateStudio.extraction.urlFormatHint'));
         }
     };
 
@@ -697,8 +697,8 @@ const UrlInputModal: React.FC<{ onSubmit: (url: string) => void; onClose: () => 
                             <Globe className="text-primary-foreground w-5 h-5" />
                         </div>
                         <div>
-                            <h3 className="text-base font-bold text-editor-text-primary">{t('aiWebsiteStudio.extraction.modalTitle')}</h3>
-                            <p className="text-xs text-editor-text-secondary mt-0.5">{t('aiWebsiteStudio.extraction.modalDescription')}</p>
+                            <h3 className="text-base font-bold text-editor-text-primary">{t('aiTemplateStudio.extraction.modalTitle')}</h3>
+                            <p className="text-xs text-editor-text-secondary mt-0.5">{t('aiTemplateStudio.extraction.modalDescription')}</p>
                         </div>
                     </div>
                 </div>
@@ -714,12 +714,12 @@ const UrlInputModal: React.FC<{ onSubmit: (url: string) => void; onClose: () => 
                                 value={url}
                                 onChange={e => { setUrl(e.target.value); setError(''); }}
                                 onKeyDown={e => { if (e.key === 'Enter') handleSubmit(); }}
-                                placeholder={t('aiWebsiteStudio.extraction.urlPlaceholder')}
+                                placeholder={t('aiTemplateStudio.extraction.urlPlaceholder')}
                                 className="w-full bg-editor-bg border border-editor-border rounded-xl pl-10 pr-4 py-3 text-sm text-editor-text-primary placeholder:text-editor-text-secondary/40 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
                             />
                         </div>
                         {error && <p className="text-xs text-red-400 px-1">{error}</p>}
-                        <p className="text-[10px] text-editor-text-secondary/50 px-1">{t('aiWebsiteStudio.extraction.urlFormatHint')}</p>
+                        <p className="text-[10px] text-editor-text-secondary/50 px-1">{t('aiTemplateStudio.extraction.urlFormatHint')}</p>
                     </div>
                 </div>
 
@@ -729,7 +729,7 @@ const UrlInputModal: React.FC<{ onSubmit: (url: string) => void; onClose: () => 
                         onClick={onClose}
                         className="flex-1 py-2.5 rounded-xl border border-editor-border text-editor-text-secondary text-sm font-medium hover:bg-editor-border/30 transition-colors"
                     >
-                        {t('aiWebsiteStudio.extraction.cancel')}
+                        {t('aiTemplateStudio.extraction.cancel')}
                     </button>
                     <button
                         onClick={handleSubmit}
@@ -737,7 +737,7 @@ const UrlInputModal: React.FC<{ onSubmit: (url: string) => void; onClose: () => 
                         className="flex-1 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-all disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg shadow-primary/20"
                     >
                         <Globe size={14} />
-                        {t('aiWebsiteStudio.extraction.extractButton')}
+                        {t('aiTemplateStudio.extraction.extractButton')}
                     </button>
                 </div>
             </div>

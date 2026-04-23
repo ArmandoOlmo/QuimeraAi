@@ -25,8 +25,10 @@ interface ImagePickerProps {
     onClose?: () => void;
     /** Optional callback to remove/clear the image or item (shows trash icon) */
     onRemove?: () => void;
-    /** Destination for uploads and generation. Defaults to 'user' (project files). 'global' uses Super Admin library. */
-    destination?: 'user' | 'global';
+    /** Destination for uploads and generation. Defaults to 'user' (project files). 'global' uses Super Admin library. 'admin' uses Admin Asset Library. */
+    destination?: 'user' | 'global' | 'admin';
+    /** Admin category for filtering and uploading when destination is 'admin' */
+    adminCategory?: string;
     /** Optional flag to hide the raw URL text input */
     hideUrlInput?: boolean;
     /** Generation context hint for AI image generator. 'background' optimizes for website section backgrounds. */
@@ -35,11 +37,12 @@ interface ImagePickerProps {
     portalContainer?: HTMLElement | null;
 }
 
-const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, storeId, defaultOpen = false, onClose, onRemove, destination = 'user', hideUrlInput = true, generationContext = 'general', portalContainer }) => {
+const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, storeId, defaultOpen = false, onClose, onRemove, destination = 'user', adminCategory, hideUrlInput = true, generationContext = 'general', portalContainer }) => {
     const { t } = useTranslation();
     const {
         files, uploadFile,
         globalFiles, uploadGlobalFile, fetchGlobalFiles,
+        adminAssets, fetchAdminAssets, uploadAdminAsset,
         isFilesLoading, isGlobalFilesLoading
     } = useFiles();
     const { activeProjectId, activeProject } = useProject();
@@ -60,7 +63,10 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
         if ((destination === 'global' || activeTab === 'global') && isLibraryOpen) {
             fetchGlobalFiles();
         }
-    }, [destination, isLibraryOpen, activeTab, fetchGlobalFiles]);
+        if (destination === 'admin' && isLibraryOpen) {
+            fetchAdminAssets();
+        }
+    }, [destination, isLibraryOpen, activeTab, fetchGlobalFiles, fetchAdminAssets]);
 
     // Product images - only fetch if storeId is provided
     const { products: storeProducts, isLoading: isLoadingProducts } = usePublicProducts(
@@ -85,9 +91,21 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
     // Detailed preview state
     const [previewFile, setPreviewFile] = useState<FileRecord | null>(null);
 
+    // Selected Category for Admin Uploads
+    const [selectedAdminCategory, setSelectedAdminCategory] = useState<string>(adminCategory || 'other');
+
+    useEffect(() => {
+        if (adminCategory) setSelectedAdminCategory(adminCategory);
+    }, [adminCategory]);
+
     const handleFileUpload = async (file: File) => {
         try {
-            if (destination === 'global') {
+            if (destination === 'admin') {
+                await uploadAdminAsset(file, (selectedAdminCategory as any) || 'other', {
+                    description: 'Uploaded via ImagePicker'
+                });
+                success(t('dashboard.imagePicker.uploadSuccess', { name: file.name }));
+            } else if (destination === 'global') {
                 await uploadGlobalFile(file);
                 success(t('dashboard.imagePicker.uploadGlobalSuccess', { name: file.name, defaultValue: t('imageGeneration.uploadedToLibrary') }));
             } else {
@@ -104,7 +122,18 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
     // Filter and search image files based on destination
     const imageFiles = useMemo(() => {
         // Choose source array based on destination or active tab
-        const sourceFiles = (destination === 'global' || activeTab === 'global') ? globalFiles : files;
+        let sourceFiles = files;
+        if (destination === 'admin') {
+            sourceFiles = adminAssets;
+            // Optionally filter by selected category if we want strict filtering,
+            // but usually in library view we want to see what's uploaded.
+            // If the parent forced a category (adminCategory prop), filter by it:
+            if (adminCategory) {
+                sourceFiles = sourceFiles.filter(f => f.category === adminCategory);
+            }
+        } else if (destination === 'global' || activeTab === 'global') {
+            sourceFiles = globalFiles;
+        }
 
         let result = sourceFiles.filter(f => f.type?.startsWith('image/') || true); // ensure image
 
@@ -305,18 +334,40 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
                                             )}
                                         </div>
 
-                                        {/* Upload Button */}
-                                        {(activeTab === 'library' || destination === 'global') && (
-                                            <DragDropZone
-                                                onFileSelect={handleFileUpload}
-                                                accept="image/*"
-                                                maxSizeMB={10}
-                                                variant="compact"
-                                            >
-                                                <button className="flex items-center gap-1.5 bg-editor-accent text-editor-bg px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-editor-accent-hover transition-colors whitespace-nowrap">
-                                                    <Upload size={14} /> {t('dashboard.imagePicker.upload')}
-                                                </button>
-                                            </DragDropZone>
+                                        {/* Upload Button & Admin Category Selector */}
+                                        {(activeTab === 'library' || destination === 'global' || destination === 'admin') && (
+                                            <div className="flex items-center gap-2">
+                                                {destination === 'admin' && (
+                                                    <select
+                                                        value={selectedAdminCategory}
+                                                        onChange={(e) => setSelectedAdminCategory(e.target.value)}
+                                                        className="h-8 px-2 py-1 bg-editor-panel-bg border border-editor-border rounded text-xs font-medium focus:outline-none focus:border-editor-accent"
+                                                    >
+                                                        <option value="article">Artículos</option>
+                                                        <option value="hero">Hero</option>
+                                                        <option value="component">Componentes</option>
+                                                        <option value="template">Plantillas</option>
+                                                        <option value="background">Fondos</option>
+                                                        <option value="logo">Logos</option>
+                                                        <option value="testimonial">Testimonios</option>
+                                                        <option value="team">Equipo</option>
+                                                        <option value="product">Productos</option>
+                                                        <option value="ai_generated">Generadas con IA</option>
+                                                        <option value="icon">Íconos</option>
+                                                        <option value="other">Otros</option>
+                                                    </select>
+                                                )}
+                                                <DragDropZone
+                                                    onFileSelect={handleFileUpload}
+                                                    accept="image/*"
+                                                    maxSizeMB={10}
+                                                    variant="compact"
+                                                >
+                                                    <button className="flex items-center gap-1.5 bg-editor-accent text-editor-bg px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-editor-accent-hover transition-colors whitespace-nowrap">
+                                                        <Upload size={14} /> {t('dashboard.imagePicker.upload')}
+                                                    </button>
+                                                </DragDropZone>
+                                            </div>
                                         )}
                                     </div>
 
@@ -360,15 +411,37 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
                                             <div className="h-full flex flex-col items-center justify-center text-editor-text-secondary border-2 border-dashed border-editor-border rounded-xl">
                                                 <Image size={48} className="mb-4 opacity-50" />
                                                 <p className="mb-2">{t('dashboard.imagePicker.noImagesInLibrary')}</p>
-                                                {(activeTab === 'library' || destination === 'global') && (
-                                                    <DragDropZone
-                                                        onFileSelect={handleFileUpload}
-                                                        accept="image/*"
-                                                        maxSizeMB={10}
-                                                        variant="compact"
-                                                    >
-                                                        <button className="mt-4 text-editor-accent hover:underline">{t('dashboard.imagePicker.uploadOneNow')}</button>
-                                                    </DragDropZone>
+                                                {(activeTab === 'library' || destination === 'global' || destination === 'admin') && (
+                                                    <div className="flex flex-col items-center gap-3 mt-2">
+                                                        {destination === 'admin' && (
+                                                            <select
+                                                                value={selectedAdminCategory}
+                                                                onChange={(e) => setSelectedAdminCategory(e.target.value)}
+                                                                className="h-8 px-2 py-1 bg-editor-panel-bg border border-editor-border rounded text-xs font-medium focus:outline-none focus:border-editor-accent"
+                                                            >
+                                                                <option value="article">Artículos</option>
+                                                                <option value="hero">Hero</option>
+                                                                <option value="component">Componentes</option>
+                                                                <option value="template">Plantillas</option>
+                                                                <option value="background">Fondos</option>
+                                                                <option value="logo">Logos</option>
+                                                                <option value="testimonial">Testimonios</option>
+                                                                <option value="team">Equipo</option>
+                                                                <option value="product">Productos</option>
+                                                                <option value="ai_generated">Generadas con IA</option>
+                                                                <option value="icon">Íconos</option>
+                                                                <option value="other">Otros</option>
+                                                            </select>
+                                                        )}
+                                                        <DragDropZone
+                                                            onFileSelect={handleFileUpload}
+                                                            accept="image/*"
+                                                            maxSizeMB={10}
+                                                            variant="compact"
+                                                        >
+                                                            <button className="text-editor-accent hover:underline">{t('dashboard.imagePicker.uploadOneNow')}</button>
+                                                        </DragDropZone>
+                                                    </div>
                                                 )}
                                             </div>
                                         )}

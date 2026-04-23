@@ -563,7 +563,10 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         // If using projectOverride, add it to projects list if not already there
         if (projectOverride && !projectsRef.current.find(p => p.id === projectId)) {
             console.log('[ProjectContext] Adding projectOverride to projects list');
-            setProjects(prev => [projectOverride, ...prev]);
+            setProjects(prev => {
+                if (prev.some(p => p.id === projectOverride.id)) return prev;
+                return [projectOverride, ...prev];
+            });
         }
 
         console.log('[ProjectContext] Loading project:', project.name);
@@ -1022,7 +1025,10 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         }
 
         const newProject = { ...project, id: finalId };
-        setProjects(prev => [newProject, ...prev]);
+        setProjects(prev => {
+            if (prev.some(p => p.id === newProject.id)) return prev;
+            return [newProject, ...prev];
+        });
         
         // NOTE: We do NOT call loadProject here. The callers (useOnboarding,
         // GlobalAiAssistant, etc.) handle loading the project at the appropriate
@@ -1183,7 +1189,10 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
             const docRef = await addDoc(projectsCol, newProject);
 
             const createdProject = { ...newProject, id: docRef.id } as Project;
-            setProjects(prev => [createdProject, ...prev]);
+            setProjects(prev => {
+                if (prev.some(p => p.id === createdProject.id)) return prev;
+                return [createdProject, ...prev];
+            });
             loadProject(docRef.id, false, true, createdProject);
         } catch (error: any) {
             console.error("Error creating project from template:", error);

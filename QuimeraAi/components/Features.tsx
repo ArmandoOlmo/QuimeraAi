@@ -299,11 +299,6 @@ const ImageOverlayCard: React.FC<ImageOverlayCardProps> = ({
         )}
       </div>
 
-      {/* Optional accent indicator */}
-      <div
-        className="absolute top-4 right-4 w-2 h-2 rounded-full"
-        style={{ backgroundColor: colors?.accent }}
-      />
     </div>
   );
 };
@@ -346,16 +341,6 @@ const BentoOverlayCard = ({ feature, index, colors, borderRadius, showNumbering,
       <div
         className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-black/10 opacity-80 group-hover:opacity-95 transition-opacity duration-300"
       />
-
-      {/* Large corner numbering */}
-      {showNumbering !== false && (
-        <span
-          className="absolute top-4 left-5 text-5xl md:text-6xl font-black font-header leading-none select-none pointer-events-none"
-          style={{ color: 'rgba(255,255,255,0.12)' }}
-        >
-          {String(index + 1).padStart(2, '0')}
-        </span>
-      )}
 
       {/* Hover accent glow */}
       <div
@@ -481,11 +466,11 @@ const Features: React.FC<FeaturesProps> = ({
     return (
       <section
         id="features"
-        className={`w-full ${glassEffect ? 'backdrop-blur-xl border-y border-white/10 z-20 shadow-[0_4px_30px_rgba(0,0,0,0.1)]' : ''}`}
-        style={{ backgroundColor: glassEffect ? hexToRgba(actualColors.background || '#0f172a', 0.4) : actualColors.background }}
+        className="w-full relative overflow-hidden"
+        style={{ backgroundColor: actualColors.background }}
       >
         {/* Optional Section Header */}
-        {showSectionHeader && (title || description) && (
+        {showSectionHeader && (title?.trim() || description?.trim()) && (
           <div className={`container mx-auto text-center max-w-3xl ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]} pb-8`}>
             {title && (
               <h2
@@ -539,22 +524,22 @@ const Features: React.FC<FeaturesProps> = ({
       <section id="features" className={`w-full ${glassEffect ? ' backdrop-blur-xl border-y border-white/10 z-20 shadow-[0_4px_30px_rgba(0,0,0,0.1)]' : ''}`} style={{ backgroundColor: glassEffect ? hexToRgba(actualColors.background || "#0f172a", 0.4) : actualColors.background }}>
         <div className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`}>
           <div className="relative">
-            {/* Section Header — same as bento-premium */}
-            <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-16">
-              <div className="max-w-2xl">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="h-px w-12" style={{ background: `linear-gradient(to right, transparent, ${actualColors.accent}, transparent)` }} />
-                  <span className="text-xs uppercase tracking-[0.3em] font-bold" style={{ color: actualColors.accent }}>Features</span>
-                  <div className="h-px w-12" style={{ background: `linear-gradient(to right, ${actualColors.accent}, transparent)` }} />
+            {(title?.trim() || description?.trim()) && (
+              <div className="mb-16 md:mb-24 flex flex-col md:flex-row md:items-end justify-between gap-8">
+                <div className="max-w-2xl">
+                  {title && (
+                    <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold tracking-tight mb-4 font-header`} style={{ color: safeColors.heading, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>
+                      {title}
+                    </h2>
+                  )}
+                  {description && (
+                    <p className={`${descriptionSizeClasses[descriptionFontSize]} font-body`} style={{ color: safeColors.description }}>
+                      {description}
+                    </p>
+                  )}
                 </div>
-                <h2 className={`${titleSizeClasses[titleFontSize]} font-black tracking-tight leading-[1.1] font-header`} style={{ color: safeColors.heading, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>
-                  {title}
-                </h2>
               </div>
-              <p className={`${descriptionSizeClasses[descriptionFontSize]} max-w-md font-body`} style={{ color: safeColors.description }}>
-                {description}
-              </p>
-            </div>
+            )}
 
             {/* Bento Overlay Grid */}
             <div className={`grid grid-cols-1 md:grid-cols-2 ${gridColsClasses[gridColumns] || 'lg:grid-cols-3'} gap-4 md:gap-5`}>
@@ -596,14 +581,20 @@ const Features: React.FC<FeaturesProps> = ({
         <div className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`}>
           <div className="relative z-10">
             {/* Header section with glow accents */}
-            <div className="mb-20 max-w-3xl">
-              <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold tracking-tight mb-6 text-white font-header`} style={{ textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>
-                {title}
-              </h2>
-              <p className={`${descriptionSizeClasses[descriptionFontSize]} border-l-4 pl-6 text-gray-400 font-body`} style={{ borderColor: glowConfig.color || actualColors.accent }}>
-                {description}
-              </p>
-            </div>
+            {(title?.trim() || description?.trim()) && (
+              <div className="mb-20 max-w-3xl">
+                {title && (
+                  <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold tracking-tight mb-6 text-white font-header`} style={{ textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>
+                    {title}
+                  </h2>
+                )}
+                {description && (
+                  <p className={`${descriptionSizeClasses[descriptionFontSize]} border-l-4 pl-6 text-gray-400 font-body`} style={{ borderColor: glowConfig.color || actualColors.accent }}>
+                    {description}
+                  </p>
+                )}
+              </div>
+            )}
 
             <div className={`grid grid-cols-1 md:grid-cols-2 ${gridColsClasses[gridColumns] || 'lg:grid-cols-3'} gap-8`}>
               {(items || []).map((feature, index) => (
@@ -703,14 +694,20 @@ const Features: React.FC<FeaturesProps> = ({
       <section id="features" className={`w-full ${glassEffect ? ' backdrop-blur-xl border-y border-white/10 z-20 shadow-[0_4px_30px_rgba(0,0,0,0.1)]' : ''}`} style={{ backgroundColor: glassEffect ? hexToRgba(actualColors.background || "#0f172a", 0.4) : actualColors.background }}>
         <div className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`}>
           <div className="relative z-10">
-            <div className="mb-20 max-w-3xl">
-              <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold tracking-tight mb-6`} style={{ color: safeColors.heading }}>
-                {title}
-              </h2>
-              <p className={`${descriptionSizeClasses[descriptionFontSize]} border-l-4 pl-6`} style={{ color: safeColors.description, borderColor: actualColors.accent }}>
-                {description}
-              </p>
-            </div>
+            {(title?.trim() || description?.trim()) && (
+              <div className="mb-20 max-w-3xl">
+                {title && (
+                  <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold tracking-tight mb-6`} style={{ color: safeColors.heading }}>
+                    {title}
+                  </h2>
+                )}
+                {description && (
+                  <p className={`${descriptionSizeClasses[descriptionFontSize]} border-l-4 pl-6`} style={{ color: safeColors.description, borderColor: actualColors.accent }}>
+                    {description}
+                  </p>
+                )}
+              </div>
+            )}
 
             <div className={`grid grid-cols-1 md:grid-cols-2 ${gridColsClasses[gridColumns] || 'lg:grid-cols-3'} gap-6`}>
               {(items || []).map((feature, index) => (
@@ -737,21 +734,29 @@ const Features: React.FC<FeaturesProps> = ({
         <div className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`}>
           <div className="relative">
             {/* Section Header con línea decorativa */}
-            <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-16">
-              <div className="max-w-2xl">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="h-px w-12" style={{ background: `linear-gradient(to right, transparent, ${actualColors.accent}, transparent)` }} />
-                  <span className="text-xs uppercase tracking-[0.3em] font-bold" style={{ color: actualColors.accent }}>Features</span>
-                  <div className="h-px w-12" style={{ background: `linear-gradient(to right, ${actualColors.accent}, transparent)` }} />
+            {(title?.trim() || description?.trim()) && (
+              <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-16">
+                <div className="max-w-2xl">
+                  {title && (
+                    <>
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="h-px w-12" style={{ background: `linear-gradient(to right, transparent, ${actualColors.accent}, transparent)` }} />
+                        <span className="text-xs uppercase tracking-[0.3em] font-bold" style={{ color: actualColors.accent }}>Features</span>
+                        <div className="h-px w-12" style={{ background: `linear-gradient(to right, ${actualColors.accent}, transparent)` }} />
+                      </div>
+                      <h2 className={`${titleSizeClasses[titleFontSize]} font-black tracking-tight leading-[1.1] font-header`} style={{ color: safeColors.heading, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>
+                        {title}
+                      </h2>
+                    </>
+                  )}
                 </div>
-                <h2 className={`${titleSizeClasses[titleFontSize]} font-black tracking-tight leading-[1.1] font-header`} style={{ color: safeColors.heading, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>
-                  {title}
-                </h2>
+                {description && (
+                  <p className={`${descriptionSizeClasses[descriptionFontSize]} max-w-md font-body`} style={{ color: safeColors.description }}>
+                    {description}
+                  </p>
+                )}
               </div>
-              <p className={`${descriptionSizeClasses[descriptionFontSize]} max-w-md font-body`} style={{ color: safeColors.description }}>
-                {description}
-              </p>
-            </div>
+            )}
 
             {/* Bento Grid Premium */}
             <div className={`grid grid-cols-1 md:grid-cols-2 ${gridColsClasses[gridColumns] || 'lg:grid-cols-3'} gap-4 md:gap-6`}>
@@ -871,12 +876,18 @@ const Features: React.FC<FeaturesProps> = ({
   return (
     <section id="features" className={`w-full ${glassEffect ? ' backdrop-blur-xl border-y border-white/10 z-20 shadow-[0_4px_30px_rgba(0,0,0,0.1)]' : ''}`} style={{ backgroundColor: glassEffect ? hexToRgba(actualColors.background || "#0f172a", 0.4) : actualColors.background }}>
       <div className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`}>
-        <div className="text-center max-w-3xl mx-auto mb-16">
-          <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold mb-4 font-header`} style={{ color: safeColors.heading, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>{title}</h2>
-          <p className={`${descriptionSizeClasses[descriptionFontSize]} font-body`} style={{ color: safeColors.description }}>
-            {description}
-          </p>
-        </div>
+        {(title?.trim() || description?.trim()) && (
+          <div className="text-center max-w-3xl mx-auto mb-16">
+            {title && (
+              <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold text-site-heading mb-4 font-header`} style={{ color: safeColors.heading, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>{title}</h2>
+            )}
+            {description && (
+              <p className={`${descriptionSizeClasses[descriptionFontSize]} font-body`} style={{ color: safeColors.description }}>
+                {description}
+              </p>
+            )}
+          </div>
+        )}
         <div className={`grid grid-cols-1 md:grid-cols-2 ${gridColsClasses[gridColumns] || 'lg:grid-cols-3'} gap-8`}>
           {(items || []).map((feature, index) => (
             <FeatureCard

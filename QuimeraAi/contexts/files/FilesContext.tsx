@@ -38,8 +38,8 @@ export type AdminAssetCategory =
     | 'background' 
     | 'logo' 
     | 'testimonial'
-    | 'team'
     | 'product'
+    | 'ai_generated'
     | 'other';
 
 export interface AdminAssetRecord extends FileRecord {
@@ -84,7 +84,7 @@ interface FilesContextType {
     unlinkAssetFromArticle: (assetId: string, articleId: string) => Promise<void>;
 }
 
-const FilesContext = createContext<FilesContextType | undefined>(undefined);
+export const FilesContext = createContext<FilesContextType | undefined>(undefined);
 
 export const FilesProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const { user, userDocument } = useAuth();

@@ -149,7 +149,7 @@ const Slideshow: React.FC<SlideshowProps> = ({
             pill: isActive ? 'w-8 h-3 rounded-full' : 'w-3 h-3 rounded-full'
         };
         
-        return `${shapes[dotStyle]} transition-all duration-300 ${isActive ? 'opacity-100' : 'opacity-50 hover:opacity-75'}`;
+        return `${shapes[dotStyle]} transition-all duration-300 ${isActive ? 'opacity-100' : 'opacity-50 hover:opacity-75'} no-min-touch`;
     };
 
     // Ken Burns animation intensity

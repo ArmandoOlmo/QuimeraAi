@@ -45,7 +45,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           onChange={(e) => setNestedData('heroNova.displayText', e.target.value)}
         />
         <ToggleControl
-          label="Show Display Text"
+          label={t('controls.showDisplayText')}
           checked={data.heroNova.showDisplayText ?? true}
           onChange={(v) => setNestedData('heroNova.showDisplayText', v)}
         />
@@ -95,16 +95,14 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
                   Call to Action
                 </label>
                 <div className="grid grid-cols-2 gap-2">
-                  <Input label="Button Text" value={slide.primaryCta || ''} onChange={(e) => setNestedData(`heroNova.slides.${slideIndex}.primaryCta`, e.target.value)} />
-                  <Input label="Button Link" value={slide.primaryCtaLink || ''} onChange={(e) => setNestedData(`heroNova.slides.${slideIndex}.primaryCtaLink`, e.target.value)} />
+                  <Input label={t('controls.textoBotn')} value={slide.primaryCta || ''} onChange={(e) => setNestedData(`heroNova.slides.${slideIndex}.primaryCta`, e.target.value)} />
+                  <Input label={t('controls.enlaceDelBotn')} value={slide.primaryCtaLink || ''} onChange={(e) => setNestedData(`heroNova.slides.${slideIndex}.primaryCtaLink`, e.target.value)} />
                 </div>
               </div>
 
               {/* Media Type Toggle */}
               <div className="mt-3">
-                <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">
-                  Media Type
-                </label>
+                <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">{t('controls.mediaType')}</label>
                 <div className="flex bg-editor-panel-bg p-1 rounded-md border border-editor-border">
                   {(['image', 'video'] as const).map((type) => (
                     <button
@@ -127,7 +125,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
                       Background Image
                     </label>
                     <ImagePicker
-                      label="Slide Image"
+                      label={t('controls.slideImage')}
                       value={slide.backgroundImage || ''}
                       onChange={(url) => setNestedData(`heroNova.slides.${slideIndex}.backgroundImage`, url)}
                       onRemove={() => setNestedData(`heroNova.slides.${slideIndex}.backgroundImage`, '')}
@@ -152,7 +150,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
               {/* Fallback Color */}
               <div className="mt-3">
                 <ColorControl
-                  label="Fallback Color"
+                  label={t('controls.fallbackColor')}
                   value={slide.backgroundColor || '#1a1a1a'}
                   onChange={(v) => setNestedData(`heroNova.slides.${slideIndex}.backgroundColor`, v)}
                 />
@@ -192,7 +190,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           <Layers size={14} /> Efecto Cristal
         </label>
         <ToggleControl
-          label="Glassmorphism / Transparencia"
+          label={t('controls.glassmorphismTransparencia')}
           checked={data?.heroNova?.glassEffect || false}
           onChange={(v) => setNestedData('heroNova.glassEffect', v)}
         />
@@ -204,11 +202,11 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           Display Text Style
         </label>
 
-        <FontSizeSelector label="Display Size" value={data.heroNova.headlineFontSize || 'md'} onChange={(v) => setNestedData('heroNova.headlineFontSize', v)} />
+        <FontSizeSelector label={t('controls.displaySize')} value={data.heroNova.headlineFontSize || 'md'} onChange={(v) => setNestedData('heroNova.headlineFontSize', v)} />
 
         <div className="mt-3">
           <div className="flex justify-between items-center mb-1">
-            <label className="text-xs font-semibold text-editor-text-secondary">Letter Spacing</label>
+            <label className="text-xs font-semibold text-editor-text-secondary">{t('controls.letterSpacing')}</label>
             <span className="text-xs text-editor-text-primary">{(data.heroNova.displayLetterSpacing ?? 0).toFixed(2)}em</span>
           </div>
           <input
@@ -222,11 +220,11 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
       {/* Overlay */}
       <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3">Overlay</label>
+        <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3">{t('controls.overlay')}</label>
 
         <div className="mb-4">
           <div className="flex justify-between items-center mb-1">
-            <label className="text-xs font-semibold text-editor-text-secondary">Overlay Darkness</label>
+            <label className="text-xs font-semibold text-editor-text-secondary">{t('controls.overlayDarkness')}</label>
             <span className="text-xs text-editor-text-primary">{Math.round((data.heroNova.overlayOpacity ?? 0.35) * 100)}%</span>
           </div>
           <input
@@ -240,11 +238,11 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
       {/* Layout */}
       <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3">Layout</label>
+        <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3">{t('controls.layout')}</label>
 
         <div className="mb-4">
           <div className="flex justify-between items-center mb-1">
-            <label className="text-xs font-semibold text-editor-text-secondary">Hero Height</label>
+            <label className="text-xs font-semibold text-editor-text-secondary">{t('controls.heroHeight')}</label>
             <span className="text-xs text-editor-text-primary">{data.heroNova.heroHeight || 90}vh</span>
           </div>
           <input
@@ -264,7 +262,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         </label>
 
         <div className="mb-3">
-          <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">Autoplay Speed (ms)</label>
+          <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{t('controls.autoplaySpeedMs')}</label>
           <input
             type="number" min="2000" max="15000" step="500"
             value={data.heroNova.autoPlaySpeed || 6000}
@@ -274,7 +272,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         </div>
 
         <div className="mb-3">
-          <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">Transition Duration (ms)</label>
+          <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{t('controls.transitionDurationMs')}</label>
           <input
             type="number" min="300" max="2000" step="100"
             value={data.heroNova.transitionDuration || 700}
@@ -286,13 +284,13 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
       {/* Navigation */}
       <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Navigation</label>
-        <ToggleControl label="Show Arrows" checked={data.heroNova.showArrows ?? true} onChange={(v) => setNestedData('heroNova.showArrows', v)} />
-        <ToggleControl label="Show Dots" checked={data.heroNova.showDots ?? true} onChange={(v) => setNestedData('heroNova.showDots', v)} />
+        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('controls.navigation')}</label>
+        <ToggleControl label={t('controls.showArrows')} checked={data.heroNova.showArrows ?? true} onChange={(v) => setNestedData('heroNova.showArrows', v)} />
+        <ToggleControl label={t('controls.showDots')} checked={data.heroNova.showDots ?? true} onChange={(v) => setNestedData('heroNova.showDots', v)} />
 
         {(data.heroNova.showDots ?? true) && (
           <Select
-            label="Dot Style"
+            label={t('controls.dotStyle')}
             value={data.heroNova.dotStyle || 'circle'}
             onChange={(val) => setNestedData('heroNova.dotStyle', val)}
             options={[
@@ -312,20 +310,20 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         </label>
 
         <div className="space-y-3">
-          <ColorControl label="Background" value={data.heroNova.colors?.background || '#1a1a1a'} onChange={(v) => setNestedData('heroNova.colors.background', v)} />
-          <ColorControl label="Display Text" value={data.heroNova.colors?.displayText || 'rgba(255,255,255,0.85)'} onChange={(v) => setNestedData('heroNova.colors.displayText', v)} />
-          <ColorControl label="Headline" value={data.heroNova.colors?.heading || '#ffffff'} onChange={(v) => setNestedData('heroNova.colors.heading', v)} />
-          <ColorControl label="Text" value={data.heroNova.colors?.text || '#ffffff'} onChange={(v) => setNestedData('heroNova.colors.text', v)} />
-          <ColorControl label="CTA Text" value={data.heroNova.colors?.ctaText || '#1a1a1a'} onChange={(v) => setNestedData('heroNova.colors.ctaText', v)} />
-          <ColorControl label="CTA Background" value={data.heroNova.colors?.ctaBackground || '#ffffff'} onChange={(v) => setNestedData('heroNova.colors.ctaBackground', v)} />
+          <ColorControl label={t('controls.background')} value={data.heroNova.colors?.background || '#1a1a1a'} onChange={(v) => setNestedData('heroNova.colors.background', v)} />
+          <ColorControl label={t('controls.displayText')} value={data.heroNova.colors?.displayText || 'rgba(255,255,255,0.85)'} onChange={(v) => setNestedData('heroNova.colors.displayText', v)} />
+          <ColorControl label={t('controls.headline')} value={data.heroNova.colors?.heading || '#ffffff'} onChange={(v) => setNestedData('heroNova.colors.heading', v)} />
+          <ColorControl label={t('controls.text')} value={data.heroNova.colors?.text || '#ffffff'} onChange={(v) => setNestedData('heroNova.colors.text', v)} />
+          <ColorControl label={t('controls.ctaText')} value={data.heroNova.colors?.ctaText || '#1a1a1a'} onChange={(v) => setNestedData('heroNova.colors.ctaText', v)} />
+          <ColorControl label={t('controls.ctaBackground')} value={data.heroNova.colors?.ctaBackground || '#ffffff'} onChange={(v) => setNestedData('heroNova.colors.ctaBackground', v)} />
 
           {(data.heroNova.showArrows ?? true) && (
-            <ColorControl label="Arrow Color" value={data.heroNova.colors?.arrowColor || '#ffffff'} onChange={(v) => setNestedData('heroNova.colors.arrowColor', v)} />
+            <ColorControl label={t('controls.arrowColor')} value={data.heroNova.colors?.arrowColor || '#ffffff'} onChange={(v) => setNestedData('heroNova.colors.arrowColor', v)} />
           )}
           {(data.heroNova.showDots ?? true) && (
             <>
-              <ColorControl label="Active Dot" value={data.heroNova.colors?.dotActive || '#ffffff'} onChange={(v) => setNestedData('heroNova.colors.dotActive', v)} />
-              <ColorControl label="Inactive Dot" value={data.heroNova.colors?.dotInactive || 'rgba(255,255,255,0.4)'} onChange={(v) => setNestedData('heroNova.colors.dotInactive', v)} />
+              <ColorControl label={t('controls.activeDot')} value={data.heroNova.colors?.dotActive || '#ffffff'} onChange={(v) => setNestedData('heroNova.colors.dotActive', v)} />
+              <ColorControl label={t('controls.inactiveDot')} value={data.heroNova.colors?.dotInactive || 'rgba(255,255,255,0.4)'} onChange={(v) => setNestedData('heroNova.colors.dotInactive', v)} />
             </>
           )}
 

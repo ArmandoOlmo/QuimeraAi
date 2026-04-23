@@ -179,7 +179,8 @@ export const AIProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const generateImage = async (prompt: string, options?: {
         aspectRatio?: string;
         style?: string;
-        destination?: 'user' | 'global';
+        destination?: 'user' | 'global' | 'admin';
+        adminCategory?: string;
         resolution?: '1K' | '2K' | '4K';
         lighting?: string;
         cameraAngle?: string;

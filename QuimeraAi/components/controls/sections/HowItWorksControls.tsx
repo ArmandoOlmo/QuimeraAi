@@ -52,7 +52,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         {/* Steps Count */}
         <div className="mb-3">
           <Select
-            label="Steps Count"
+            label={t('controls.stepsCount')}
             value={String(data?.howItWorks?.steps || 3)}
             onChange={(val) => setNestedData('howItWorks.steps', parseInt(val))}
             options={[
@@ -118,7 +118,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           <Layers size={14} /> Efecto Cristal
         </label>
         <ToggleControl
-          label="Glassmorphism / Transparencia"
+          label={t('controls.glassmorphismTransparencia')}
           checked={data?.howItWorks?.glassEffect || false}
           onChange={(v) => setNestedData('howItWorks.glassEffect', v)}
         />
@@ -126,29 +126,29 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       <BackgroundImageControl sectionKey="howItWorks" data={data} setNestedData={setNestedData} />
       {/* Section Colors */}
       <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Section Colors</label>
+        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('controls.sectionColors')}</label>
         <ColorControl label={t('editor.controls.common.background')} value={data?.howItWorks?.colors?.background || '#0f172a'} onChange={(v) => setNestedData('howItWorks.colors.background', v)} />
-        <ColorControl label="Section Title" value={data?.howItWorks?.colors?.heading || '#ffffff'} onChange={(v) => setNestedData('howItWorks.colors.heading', v)} />
-        <ColorControl label="Section Description" value={data?.howItWorks?.colors?.description || '#94a3b8'} onChange={(v) => setNestedData('howItWorks.colors.description', v)} />
+        <ColorControl label={t('controls.sectionTitle')} value={data?.howItWorks?.colors?.heading || '#ffffff'} onChange={(v) => setNestedData('howItWorks.colors.heading', v)} />
+        <ColorControl label={t('controls.sectionDescription')} value={data?.howItWorks?.colors?.description || '#94a3b8'} onChange={(v) => setNestedData('howItWorks.colors.description', v)} />
       </div>
 
 
       {/* Step Colors */}
       <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Step Colors</label>
-        <ColorControl label="Circle Background" value={data?.howItWorks?.colors?.accent || '#4f46e5'} onChange={(v) => setNestedData('howItWorks.colors.accent', v)} />
-        <ColorControl label="Icon Color" value={data?.howItWorks?.colors?.iconColor || '#ffffff'} onChange={(v) => setNestedData('howItWorks.colors.iconColor', v)} />
-        <ColorControl label="Step Title" value={data?.howItWorks?.colors?.stepTitle || '#ffffff'} onChange={(v) => setNestedData('howItWorks.colors.stepTitle', v)} />
-        <ColorControl label="Step Description" value={data?.howItWorks?.colors?.text || '#94a3b8'} onChange={(v) => setNestedData('howItWorks.colors.text', v)} />
+        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('controls.stepColors')}</label>
+        <ColorControl label={t('controls.circleBackground')} value={data?.howItWorks?.colors?.accent || '#4f46e5'} onChange={(v) => setNestedData('howItWorks.colors.accent', v)} />
+        <ColorControl label={t('controls.iconColor')} value={data?.howItWorks?.colors?.iconColor || '#ffffff'} onChange={(v) => setNestedData('howItWorks.colors.iconColor', v)} />
+        <ColorControl label={t('controls.stepTitle')} value={data?.howItWorks?.colors?.stepTitle || '#ffffff'} onChange={(v) => setNestedData('howItWorks.colors.stepTitle', v)} />
+        <ColorControl label={t('controls.stepDescription')} value={data?.howItWorks?.colors?.text || '#94a3b8'} onChange={(v) => setNestedData('howItWorks.colors.text', v)} />
       </div>
 
 
       {/* Spacing */}
       <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Spacing</label>
+        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('controls.spacing')}</label>
         <div className="space-y-1">
-          <PaddingSelector label="Vertical" value={data?.howItWorks?.paddingY || 'md'} onChange={(v) => setNestedData('howItWorks.paddingY', v)} />
-          <PaddingSelector label="Horizontal" value={data?.howItWorks?.paddingX || 'md'} onChange={(v) => setNestedData('howItWorks.paddingX', v)} />
+          <PaddingSelector label={t('controls.vertical')} value={data?.howItWorks?.paddingY || 'md'} onChange={(v) => setNestedData('howItWorks.paddingY', v)} />
+          <PaddingSelector label={t('controls.horizontal')} value={data?.howItWorks?.paddingX || 'md'} onChange={(v) => setNestedData('howItWorks.paddingX', v)} />
         </div>
       </div>
 

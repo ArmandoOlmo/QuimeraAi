@@ -530,7 +530,8 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                         value={data.bgImageUrl || ''}
                         onChange={(url) => updateData('bgImageUrl', url)}
                         onRemove={() => updateData('bgImageUrl', '')}
-                        destination="global"
+                        destination="admin"
+                        adminCategory="background"
                         generationContext="background"
                         hideUrlInput={true}
                         portalContainer={portalContainer}
@@ -652,7 +653,8 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                                 label="Hero Image"
                                 value={data.heroImage || data.imageUrl || ''}
                                 onChange={(url) => updateData('heroImage', url)}
-                                destination="global"
+                                destination="admin"
+                                adminCategory="hero"
                                 generationContext="background"
                                 portalContainer={portalContainer}
                             />
@@ -778,7 +780,8 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                                     value={data.heroBgImageUrl || ''}
                                     onChange={(url) => updateData('heroBgImageUrl', url)}
                                     onRemove={() => updateData('heroBgImageUrl', '')}
-                                    destination="global"
+                                    destination="admin"
+                                    adminCategory="background"
                                     generationContext="background"
                                     hideUrlInput={true}
                                     portalContainer={portalContainer}
@@ -3613,7 +3616,8 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                 <ImageGeneratorModal
                     isOpen={isAIGeneratorOpen}
                     onClose={() => setIsAIGeneratorOpen(false)}
-                    destination="global"
+                    destination="admin"
+                    adminCategory="other"
                 />
             )}
 

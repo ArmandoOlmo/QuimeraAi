@@ -81,7 +81,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           <Layers size={14} /> Efecto Cristal
         </label>
         <ToggleControl
-          label="Glassmorphism / Transparencia"
+          label={t('controls.glassmorphismTransparencia')}
           checked={data?.leads?.glassEffect || false}
           onChange={(v) => setNestedData('leads.glassEffect', v)}
         />
@@ -89,30 +89,30 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       <BackgroundImageControl sectionKey="leads" data={data} setNestedData={setNestedData} />
       {/* Border Radius Controls */}
       <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Border Radius</label>
-        <BorderRadiusSelector label="Card Radius" value={data?.leads?.cardBorderRadius || 'xl'} onChange={(v) => setNestedData('leads.cardBorderRadius', v)} />
-        <BorderRadiusSelector label="Input Radius" value={data?.leads?.inputBorderRadius || 'md'} onChange={(v) => setNestedData('leads.inputBorderRadius', v)} />
-        <BorderRadiusSelector label="Button Radius" value={data?.leads?.buttonBorderRadius || 'md'} onChange={(v) => setNestedData('leads.buttonBorderRadius', v)} />
+        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('controls.borderRadius')}</label>
+        <BorderRadiusSelector label={t('controls.cardRadius')} value={data?.leads?.cardBorderRadius || 'xl'} onChange={(v) => setNestedData('leads.cardBorderRadius', v)} />
+        <BorderRadiusSelector label={t('controls.inputRadius')} value={data?.leads?.inputBorderRadius || 'md'} onChange={(v) => setNestedData('leads.inputBorderRadius', v)} />
+        <BorderRadiusSelector label={t('controls.buttonRadius')} value={data?.leads?.buttonBorderRadius || 'md'} onChange={(v) => setNestedData('leads.buttonBorderRadius', v)} />
       </div>
 
 
       {/* Spacing */}
       <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Spacing</label>
+        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('controls.spacing')}</label>
         <div className="space-y-1">
-          <PaddingSelector label="Vertical" value={data?.leads?.paddingY || 'md'} onChange={(v) => setNestedData('leads.paddingY', v)} />
-          <PaddingSelector label="Horizontal" value={data?.leads?.paddingX || 'md'} onChange={(v) => setNestedData('leads.paddingX', v)} />
+          <PaddingSelector label={t('controls.vertical')} value={data?.leads?.paddingY || 'md'} onChange={(v) => setNestedData('leads.paddingY', v)} />
+          <PaddingSelector label={t('controls.horizontal')} value={data?.leads?.paddingX || 'md'} onChange={(v) => setNestedData('leads.paddingX', v)} />
         </div>
       </div>
 
 
       {/* Section Colors */}
       <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Section Colors</label>
+        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('controls.sectionColors')}</label>
         <ColorControl label={t('editor.controls.common.background')} value={data?.leads.colors?.background || '#0f172a'} onChange={(v) => setNestedData('leads.colors.background', v)} />
         <ColorControl label={t('editor.controls.common.title')} value={data?.leads.colors?.heading || '#F9FAFB'} onChange={(v) => setNestedData('leads.colors.heading', v)} />
         <ColorControl label={t('editor.controls.common.subtitle')} value={data?.leads.colors?.description || '#94a3b8'} onChange={(v) => setNestedData('leads.colors.description', v)} />
-        <ColorControl label="Accent" value={data?.leads.colors?.accent || '#4f46e5'} onChange={(v) => setNestedData('leads.colors.accent', v)} />
+        <ColorControl label={t('controls.accent')} value={data?.leads.colors?.accent || '#4f46e5'} onChange={(v) => setNestedData('leads.colors.accent', v)} />
 
 
         {/* Corner Gradient */}
@@ -133,30 +133,30 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
       {/* Card Colors */}
       <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Card Colors</label>
-        <ColorControl label="Card Background" value={data?.leads.colors?.cardBackground || '#1e293b'} onChange={(v) => setNestedData('leads.colors.cardBackground', v)} />
-        <ColorControl label="Label Text" value={data?.leads.colors?.text || '#94a3b8'} onChange={(v) => setNestedData('leads.colors.text', v)} />
-        <ColorControl label="Border Color" value={data?.leads.colors?.borderColor || '#334155'} onChange={(v) => setNestedData('leads.colors.borderColor', v)} />
+        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('controls.cardColors')}</label>
+        <ColorControl label={t('controls.cardBackground')} value={data?.leads.colors?.cardBackground || '#1e293b'} onChange={(v) => setNestedData('leads.colors.cardBackground', v)} />
+        <ColorControl label={t('controls.labelText')} value={data?.leads.colors?.text || '#94a3b8'} onChange={(v) => setNestedData('leads.colors.text', v)} />
+        <ColorControl label={t('controls.borderColor')} value={data?.leads.colors?.borderColor || '#334155'} onChange={(v) => setNestedData('leads.colors.borderColor', v)} />
       </div>
 
 
       {/* Input Colors */}
       <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Input Colors</label>
-        <ColorControl label="Input Background" value={data?.leads.colors?.inputBackground || '#0f172a'} onChange={(v) => setNestedData('leads.colors.inputBackground', v)} />
-        <ColorControl label="Input Text" value={data?.leads.colors?.inputText || '#F9FAFB'} onChange={(v) => setNestedData('leads.colors.inputText', v)} />
-        <ColorControl label="Placeholder" value={data?.leads.colors?.inputPlaceholder || '#6b7280'} onChange={(v) => setNestedData('leads.colors.inputPlaceholder', v)} />
-        <ColorControl label="Input Border" value={data?.leads.colors?.inputBorder || '#334155'} onChange={(v) => setNestedData('leads.colors.inputBorder', v)} />
+        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('controls.inputColors')}</label>
+        <ColorControl label={t('controls.inputBackground')} value={data?.leads.colors?.inputBackground || '#0f172a'} onChange={(v) => setNestedData('leads.colors.inputBackground', v)} />
+        <ColorControl label={t('controls.inputText')} value={data?.leads.colors?.inputText || '#F9FAFB'} onChange={(v) => setNestedData('leads.colors.inputText', v)} />
+        <ColorControl label={t('controls.placeholder')} value={data?.leads.colors?.inputPlaceholder || '#6b7280'} onChange={(v) => setNestedData('leads.colors.inputPlaceholder', v)} />
+        <ColorControl label={t('controls.inputBorder')} value={data?.leads.colors?.inputBorder || '#334155'} onChange={(v) => setNestedData('leads.colors.inputBorder', v)} />
       </div>
 
 
       {/* Button & Gradient Colors */}
       <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Button & Gradient</label>
-        <ColorControl label="Button Background" value={data?.leads.colors?.buttonBackground || '#4f46e5'} onChange={(v) => setNestedData('leads.colors.buttonBackground', v)} />
+        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('controls.buttonGradient')}</label>
+        <ColorControl label={t('controls.fondoBotn')} value={data?.leads.colors?.buttonBackground || '#4f46e5'} onChange={(v) => setNestedData('leads.colors.buttonBackground', v)} />
         <ColorControl label={t('editor.controls.common.buttonText')} value={data?.leads.colors?.buttonText || '#ffffff'} onChange={(v) => setNestedData('leads.colors.buttonText', v)} />
-        <ColorControl label="Gradient Start" value={data?.leads.colors?.gradientStart || '#4f46e5'} onChange={(v) => setNestedData('leads.colors.gradientStart', v)} />
-        <ColorControl label="Gradient End" value={data?.leads.colors?.gradientEnd || '#10b981'} onChange={(v) => setNestedData('leads.colors.gradientEnd', v)} />
+        <ColorControl label={t('controls.gradientStart')} value={data?.leads.colors?.gradientStart || '#4f46e5'} onChange={(v) => setNestedData('leads.colors.gradientStart', v)} />
+        <ColorControl label={t('controls.gradientEnd')} value={data?.leads.colors?.gradientEnd || '#10b981'} onChange={(v) => setNestedData('leads.colors.gradientEnd', v)} />
       </div>
     </div>
   );

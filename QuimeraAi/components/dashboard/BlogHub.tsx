@@ -256,7 +256,7 @@ const BlogHub: React.FC = () => {
                 <span
                   className={`px-3 py-1 text-xs font-bold uppercase tracking-wider rounded-full ${catColors.bg} ${catColors.text} border ${catColors.border}`}
                 >
-                  {CATEGORY_LABELS[selectedArticle.category] || selectedArticle.category}
+                  {t(`blog.categories.${selectedArticle.category}`, selectedArticle.category)}
                 </span>
                 {selectedArticle.showDate !== false && (
                   <span className="flex items-center gap-1.5 text-xs text-muted-foreground bg-background/80 backdrop-blur-sm px-3 py-1 rounded-full">
@@ -302,7 +302,7 @@ const BlogHub: React.FC = () => {
                 {selectedArticle.readTime && (
                   <div className="flex items-center gap-2 text-sm text-muted-foreground bg-secondary/50 px-3 py-1.5 rounded-lg">
                     <Clock size={14} />
-                    <span>{selectedArticle.readTime} min read</span>
+                    <span>{t('blog.minRead', { time: selectedArticle.readTime })}</span>
                   </div>
                 )}
               </div>
@@ -397,7 +397,7 @@ const BlogHub: React.FC = () => {
               </h1>
             </div>
             <span className="hidden sm:inline-flex px-2 py-0.5 text-xs font-medium bg-primary/10 text-primary rounded-full">
-              {publishedArticles.length} {publishedArticles.length === 1 ? 'artículo' : 'artículos'}
+              {publishedArticles.length} {publishedArticles.length === 1 ? t('blog.article', 'artículo') : t('blog.articles', 'artículos')}
             </span>
           </div>
 
@@ -500,7 +500,7 @@ const BlogHub: React.FC = () => {
                         : 'bg-secondary/50 text-muted-foreground hover:text-foreground hover:bg-secondary border border-border'
                     }`}
                   >
-                    {CATEGORY_LABELS[cat] || cat}
+                    {t(`blog.categories.${cat}`, cat)}
                   </button>
                 );
               })}
@@ -611,6 +611,7 @@ interface FeaturedArticleHeroProps {
 }
 
 const FeaturedArticleHero: React.FC<FeaturedArticleHeroProps> = ({ article, lang, onClick }) => {
+  const { t } = useTranslation();
   const catColors = CATEGORY_COLORS[article.category] || CATEGORY_COLORS.blog;
 
   return (
@@ -637,7 +638,7 @@ const FeaturedArticleHero: React.FC<FeaturedArticleHeroProps> = ({ article, lang
           {/* Featured badge */}
           <div className="absolute top-4 left-4 flex items-center gap-1.5 px-3 py-1.5 bg-primary text-primary-foreground text-[10px] font-bold uppercase tracking-widest rounded-full shadow-sm">
             <Star size={12} className="fill-current" />
-            Destacado
+            {t('blog.featured', 'Destacado')}
           </div>
         </div>
 
@@ -645,7 +646,7 @@ const FeaturedArticleHero: React.FC<FeaturedArticleHeroProps> = ({ article, lang
         <div className="p-6 sm:p-8 flex flex-col justify-center bg-card">
           <div className="flex items-center gap-3 mb-4">
             <span className={`px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-full ${catColors.bg} ${catColors.text} border ${catColors.border}`}>
-              {CATEGORY_LABELS[article.category] || article.category}
+              {t(`blog.categories.${article.category}`, article.category)}
             </span>
             {article.showDate !== false && (
               <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
@@ -685,7 +686,7 @@ const FeaturedArticleHero: React.FC<FeaturedArticleHeroProps> = ({ article, lang
             )}
 
             <div className="flex items-center gap-2 text-sm font-semibold text-primary group-hover:gap-3 transition-all duration-300">
-              Leer artículo
+              {t('blog.readArticle', 'Leer artículo')}
               <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
             </div>
           </div>
@@ -705,6 +706,7 @@ interface ArticleCardProps {
 }
 
 const ArticleCard: React.FC<ArticleCardProps> = ({ article, lang, compact = false, onClick }) => {
+  const { t } = useTranslation();
   const catColors = CATEGORY_COLORS[article.category] || CATEGORY_COLORS.blog;
 
   return (
@@ -730,7 +732,7 @@ const ArticleCard: React.FC<ArticleCardProps> = ({ article, lang, compact = fals
         {/* Category badge */}
         <div className="absolute top-3 left-3">
           <span className={`px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-full ${catColors.bg} ${catColors.text} border ${catColors.border} backdrop-blur-sm`}>
-            {CATEGORY_LABELS[article.category] || article.category}
+            {t(`blog.categories.${article.category}`, article.category)}
           </span>
         </div>
 
@@ -756,7 +758,7 @@ const ArticleCard: React.FC<ArticleCardProps> = ({ article, lang, compact = fals
               <span className="w-1 h-1 rounded-full bg-border" />
               <span className="flex items-center gap-1">
                 <Clock size={11} />
-                {article.readTime} min
+                {t('blog.minRead', { time: article.readTime })}
               </span>
             </>
           )}
@@ -789,7 +791,7 @@ const ArticleCard: React.FC<ArticleCardProps> = ({ article, lang, compact = fals
           )}
 
           <div className="flex items-center gap-1 text-xs font-semibold text-primary opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-            Leer
+            {t('blog.read', 'Leer')}
             <ArrowRight size={12} className="group-hover:translate-x-0.5 transition-transform" />
           </div>
         </div>

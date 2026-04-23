@@ -184,9 +184,7 @@ const AINewsStudio: React.FC<AINewsStudioProps> = ({ onClose, onNewsCreated }) =
             const ctx = await loadDynamicPlatformContext(existingTitles);
             setPlatformContext(ctx);
 
-            const welcomeText = language === 'es'
-                ? `¡Hola! 👋 Soy tu **Estratega de Noticias AI** para ${ctx.appName}.\n\nConozco al detalle cada feature y capacidad de la plataforma. Puedo ayudarte a:\n\n- 📰 **Planificar** noticias, anuncios y novedades\n- 🎯 **Definir** audiencia objetivo y categoría\n- 💡 **Sugerir** temas de actualización relevantes\n- ✍️ **Generar** noticias completas para el dashboard\n\n¿Qué noticia o anuncio necesitas crear hoy?`
-                : `Hello! 👋 I'm your **AI News Strategist** for ${ctx.appName}.\n\nI know every feature and capability of the platform in detail. I can help you:\n\n- 📰 **Plan** news, announcements, and updates\n- 🎯 **Define** target audience and category\n- 💡 **Suggest** relevant update topics\n- ✍️ **Generate** complete dashboard news items\n\nWhat news or announcement do you need to create today?`;
+            const welcomeText = t('superadmin.news.aiStudio.welcomeText', { appName: ctx.appName });
 
             const welcomeMsg: DisplayMessage = {
                 role: 'model',
@@ -265,9 +263,7 @@ const AINewsStudio: React.FC<AINewsStudioProps> = ({ onClose, onNewsCreated }) =
             console.error('[AINewsStudio] Chat error:', error);
             const errorMsg: DisplayMessage = {
                 role: 'model',
-                text: language === 'es'
-                    ? '⚠️ Hubo un error al procesar tu mensaje. Por favor intenta de nuevo.'
-                    : '⚠️ There was an error processing your message. Please try again.',
+                text: '⚠️ ' + t('superadmin.news.aiStudio.error'),
                 timestamp: Date.now(),
             };
             setMessages(prev => [...prev, errorMsg]);
@@ -453,10 +449,8 @@ const AINewsStudio: React.FC<AINewsStudioProps> = ({ onClose, onNewsCreated }) =
                 stopVoiceSession();
                 setErrorModal({
                     open: true,
-                    title: language === 'es' ? 'Error de micrófono' : 'Microphone Error',
-                    message: language === 'es'
-                        ? 'No se pudo acceder al micrófono. Permite el acceso y recarga la página.'
-                        : 'Could not access microphone. Please allow access and reload.',
+                    title: t('superadmin.news.aiError'),
+                    message: t('superadmin.news.aiError'),
                 });
             }
         } catch (error) {
@@ -464,8 +458,8 @@ const AINewsStudio: React.FC<AINewsStudioProps> = ({ onClose, onNewsCreated }) =
             setIsVoiceConnecting(false);
             setErrorModal({
                 open: true,
-                title: language === 'es' ? 'Error de voz' : 'Voice Error',
-                message: language === 'es' ? 'Error al iniciar sesión de voz.' : 'Error starting voice session.',
+                title: t('superadmin.news.aiError'),
+                message: t('superadmin.news.aiError'),
             });
         }
     };
@@ -511,7 +505,7 @@ const AINewsStudio: React.FC<AINewsStudioProps> = ({ onClose, onNewsCreated }) =
             const generationPrompt = buildNewsGenerationPrompt({
                 conversationSummary,
                 category,
-                audience: audience || (language === 'es' ? 'Todos los usuarios' : 'All users'),
+                audience: audience || t('superadmin.news.targetAll'),
                 tone,
                 language,
             });
@@ -554,10 +548,8 @@ const AINewsStudio: React.FC<AINewsStudioProps> = ({ onClose, onNewsCreated }) =
             console.error('[AINewsStudio] Generation error:', error);
             setErrorModal({
                 open: true,
-                title: language === 'es' ? 'Error de generación' : 'Generation Error',
-                message: language === 'es'
-                    ? 'Error al generar la noticia. Por favor intenta de nuevo.'
-                    : 'Error generating news. Please try again.',
+                title: t('superadmin.news.aiError'),
+                message: t('superadmin.news.aiError'),
             });
             setPhase('conversation');
 
@@ -615,10 +607,8 @@ const AINewsStudio: React.FC<AINewsStudioProps> = ({ onClose, onNewsCreated }) =
             setIsSavingNews(false);
             setErrorModal({
                 open: true,
-                title: language === 'es' ? 'Error al guardar' : 'Save Error',
-                message: language === 'es'
-                    ? 'No se pudo guardar la noticia: ' + (error instanceof Error ? error.message : 'Error desconocido')
-                    : 'Could not save the news: ' + (error instanceof Error ? error.message : 'Unknown error'),
+                title: t('superadmin.news.saveError'),
+                message: t('superadmin.news.saveError') + ': ' + (error instanceof Error ? error.message : 'Unknown error'),
             });
         }
     };
@@ -652,8 +642,8 @@ const AINewsStudio: React.FC<AINewsStudioProps> = ({ onClose, onNewsCreated }) =
                             </h2>
                             <p className="text-xs text-editor-text-secondary">
                                 {isVoiceActive
-                                    ? (language === 'es' ? '🎤 Sesión de voz activa — habla naturalmente' : '🎤 Voice session active — speak naturally')
-                                    : (language === 'es' ? 'Planifica y genera noticias con IA' : 'Plan and generate news with AI')}
+                                    ? t('superadmin.news.aiStudio.voiceActive')
+                                    : t('superadmin.news.aiStudio.placeholder')}
                             </p>
                         </div>
                     </div>
@@ -690,7 +680,7 @@ const AINewsStudio: React.FC<AINewsStudioProps> = ({ onClose, onNewsCreated }) =
                                         }`}>
                                         {msg.isVoice && (
                                             <span className="inline-flex items-center gap-1 text-[10px] opacity-60 mb-1">
-                                                <Volume2 className="w-3 h-3" /> {language === 'es' ? 'Voz' : 'Voice'}
+                                                <Volume2 className="w-3 h-3" /> {t('chatbot.liveVoice', 'Voice')}
                                             </span>
                                         )}
                                         <ReactMarkdown
@@ -712,7 +702,7 @@ const AINewsStudio: React.FC<AINewsStudioProps> = ({ onClose, onNewsCreated }) =
                                 <div className="flex justify-start">
                                     <div className="bg-editor-panel-bg border border-editor-border rounded-2xl rounded-bl-md px-4 py-3 flex items-center gap-2 text-sm text-editor-text-secondary">
                                         <Loader2 className="w-4 h-4 animate-spin text-blue-400" />
-                                        {language === 'es' ? 'Pensando...' : 'Thinking...'}
+                                        {t('superadmin.news.aiStudio.analyzing')}
                                     </div>
                                 </div>
                             )}
@@ -722,7 +712,7 @@ const AINewsStudio: React.FC<AINewsStudioProps> = ({ onClose, onNewsCreated }) =
                                 <div className="flex justify-end animate-pulse">
                                     <div className="max-w-[85%] rounded-2xl rounded-br-md px-4 py-3 text-sm leading-relaxed bg-blue-500/20 border border-blue-500/30 text-blue-200">
                                         <span className="inline-flex items-center gap-1.5 text-[10px] text-blue-400 mb-1">
-                                            <Mic className="w-3 h-3" /> {language === 'es' ? 'Hablando...' : 'Speaking...'}
+                                            <Mic className="w-3 h-3" /> {t('chatbot.liveVoice', 'Speaking...')}
                                         </span>
                                         <p className="text-gray-100">{liveUserTranscript}</p>
                                     </div>
@@ -732,7 +722,7 @@ const AINewsStudio: React.FC<AINewsStudioProps> = ({ onClose, onNewsCreated }) =
                                 <div className="flex justify-start">
                                     <div className="max-w-[85%] rounded-2xl rounded-bl-md px-4 py-3 text-sm leading-relaxed bg-[#1b1e2e] border border-cyan-500/20 text-gray-100">
                                         <span className="inline-flex items-center gap-1.5 text-[10px] text-cyan-400 mb-1">
-                                            <Volume2 className="w-3 h-3" /> {language === 'es' ? 'Respondiendo...' : 'Responding...'}
+                                            <Volume2 className="w-3 h-3" /> {t('chatbot.liveVoice', 'Responding...')}
                                         </span>
                                         <p className="text-gray-100">{liveModelTranscript}</p>
                                     </div>
@@ -749,12 +739,10 @@ const AINewsStudio: React.FC<AINewsStudioProps> = ({ onClose, onNewsCreated }) =
                                         </div>
                                         <div>
                                             <p className="font-bold text-editor-text-primary">
-                                                {language === 'es' ? 'Generando noticia...' : 'Generating news...'}
+                                                {t('superadmin.news.aiStudio.generating')}
                                             </p>
                                             <p className="text-xs text-editor-text-secondary mt-1">
-                                                {language === 'es'
-                                                    ? 'Usando pensamiento profundo (thinkingLevel: high)'
-                                                    : 'Using deep thinking (thinkingLevel: high)'}
+                                                {t('superadmin.news.aiStudio.analyzing')}
                                             </p>
                                         </div>
                                     </div>
@@ -768,10 +756,10 @@ const AINewsStudio: React.FC<AINewsStudioProps> = ({ onClose, onNewsCreated }) =
                                         <CheckCircle className="text-green-400 shrink-0 mt-0.5" size={20} />
                                         <div>
                                             <p className="font-bold text-green-400">
-                                                {language === 'es' ? '¡Noticia generada con éxito!' : 'News generated successfully!'}
+                                                {t('superadmin.news.aiSuccess')}
                                             </p>
                                             <p className="text-xs text-green-400/70">
-                                                {language === 'es' ? 'Revisa antes de abrir en el editor.' : 'Review before opening in editor.'}
+                                                {t('superadmin.news.aiCreated')}
                                             </p>
                                         </div>
                                     </div>
@@ -794,7 +782,7 @@ const AINewsStudio: React.FC<AINewsStudioProps> = ({ onClose, onNewsCreated }) =
 
                                         <div>
                                             <span className="text-[10px] font-bold text-editor-text-secondary uppercase tracking-wider">
-                                                {language === 'es' ? 'Extracto' : 'Excerpt'}
+                                                {t('superadmin.news.excerpt')}
                                             </span>
                                             <p className="text-editor-text-secondary text-sm mt-1">
                                                 {generatedNews.excerpt || '—'}
@@ -816,7 +804,7 @@ const AINewsStudio: React.FC<AINewsStudioProps> = ({ onClose, onNewsCreated }) =
 
                                         <div>
                                             <span className="text-[10px] font-bold text-editor-text-secondary uppercase tracking-wider">
-                                                {language === 'es' ? 'Vista previa' : 'Preview'}
+                                                {t('superadmin.news.preview')}
                                             </span>
                                             <div className="prose prose-sm dark:prose-invert max-w-none line-clamp-6 bg-editor-bg/50 p-4 rounded-lg border border-editor-border/50 mt-1 overflow-hidden text-sm">
                                                 {generatedNews.body ? (
@@ -833,7 +821,7 @@ const AINewsStudio: React.FC<AINewsStudioProps> = ({ onClose, onNewsCreated }) =
                                             onClick={() => setPhase('conversation')}
                                             className="text-editor-text-secondary hover:text-editor-text-primary font-medium px-4 py-2 transition-colors text-sm"
                                         >
-                                            {language === 'es' ? '← Seguir conversando' : '← Continue conversation'}
+                                            {t('superadmin.news.aiStudio.continueChat', '← Continue')}
                                         </button>
                                         <button
                                             onClick={handleConfirmNews}
@@ -841,9 +829,9 @@ const AINewsStudio: React.FC<AINewsStudioProps> = ({ onClose, onNewsCreated }) =
                                             className="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-6 py-2.5 rounded-xl font-bold flex items-center gap-2 hover:shadow-lg hover:shadow-green-500/20 transition-all text-sm disabled:opacity-50 disabled:cursor-wait"
                                         >
                                             {isSavingNews ? (
-                                                <><Loader2 size={16} className="animate-spin" /> {language === 'es' ? 'Guardando...' : 'Saving...'}</>
+                                                <><Loader2 size={16} className="animate-spin" /> {t('common.saving', 'Saving...')}</>
                                             ) : (
-                                                <>{language === 'es' ? 'Abrir en Editor' : 'Open in Editor'} <ArrowRight size={16} /></>
+                                                <>{t('superadmin.news.editTitle')} <ArrowRight size={16} /></>
                                             )}
                                         </button>
                                     </div>
@@ -860,7 +848,7 @@ const AINewsStudio: React.FC<AINewsStudioProps> = ({ onClose, onNewsCreated }) =
                                         <button
                                             onClick={stopVoiceSession}
                                             className="h-10 w-10 flex-shrink-0 flex items-center justify-center rounded-xl bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-all"
-                                            title={language === 'es' ? 'Detener voz' : 'Stop voice'}
+                                            title={t('chatbot.liveVoice')}
                                         >
                                             <PhoneOff className="w-4 h-4" />
                                         </button>
@@ -869,7 +857,7 @@ const AINewsStudio: React.FC<AINewsStudioProps> = ({ onClose, onNewsCreated }) =
                                             onClick={startVoiceSession}
                                             disabled={isVoiceConnecting}
                                             className="h-10 w-10 flex-shrink-0 flex items-center justify-center rounded-xl bg-editor-border/40 text-editor-text-secondary hover:text-blue-400 hover:bg-blue-500/10 transition-all disabled:opacity-50"
-                                            title={language === 'es' ? 'Iniciar voz (Gemini Live)' : 'Start voice (Gemini Live)'}
+                                            title={t('chatbot.liveVoice')}
                                         >
                                             {isVoiceConnecting ? (
                                                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -886,8 +874,8 @@ const AINewsStudio: React.FC<AINewsStudioProps> = ({ onClose, onNewsCreated }) =
                                         onChange={(e) => setInputText(e.target.value)}
                                         onKeyDown={handleKeyDown}
                                         placeholder={isVoiceActive
-                                            ? (language === 'es' ? 'Sesión de voz activa — habla o escribe...' : 'Voice session active — speak or type...')
-                                            : (language === 'es' ? 'Describe la noticia que quieres crear...' : 'Describe the news you want to create...')}
+                                            ? t('superadmin.news.aiStudio.voiceActive')
+                                            : t('superadmin.news.aiStudio.placeholder')}
                                         className="flex-1 bg-editor-bg border border-editor-border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 resize-none min-h-[40px] max-h-[120px] text-editor-text-primary placeholder:text-editor-text-secondary/50"
                                         rows={1}
                                         disabled={phase !== 'conversation'}
@@ -908,7 +896,7 @@ const AINewsStudio: React.FC<AINewsStudioProps> = ({ onClose, onNewsCreated }) =
                                     <div className="mt-2 flex items-center justify-center gap-2 text-xs text-green-400">
                                         <span className="flex items-center gap-1.5">
                                             <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-                                            {language === 'es' ? 'Escuchando...' : 'Listening...'}
+                                            {t('chatbot.liveVoice', 'Listening...')}
                                         </span>
                                         <span className="text-editor-text-secondary">•</span>
                                         <span className="text-editor-text-secondary font-mono">
@@ -928,14 +916,14 @@ const AINewsStudio: React.FC<AINewsStudioProps> = ({ onClose, onNewsCreated }) =
                             <div className="flex items-center gap-2 mb-1">
                                 <Newspaper className="w-4 h-4 text-blue-400" />
                                 <h3 className="text-sm font-bold text-editor-text-primary">
-                                    {language === 'es' ? 'Plan de Noticia' : 'News Plan'}
+                                    {t('superadmin.news.aiStudio.configuration')}
                                 </h3>
                             </div>
 
                             {/* Category */}
                             <div>
                                 <label className="text-[10px] font-bold text-editor-text-secondary uppercase tracking-wider mb-1.5 block">
-                                    {language === 'es' ? 'Categoría' : 'Category'}
+                                    {t('superadmin.news.aiStudio.category')}
                                 </label>
                                 <div className="grid grid-cols-2 gap-1.5">
                                     {NEWS_CATEGORY_OPTIONS.map((cat) => (
@@ -947,7 +935,7 @@ const AINewsStudio: React.FC<AINewsStudioProps> = ({ onClose, onNewsCreated }) =
                                                 : 'bg-editor-bg/50 text-editor-text-secondary border border-editor-border/50 hover:border-blue-500/30'
                                                 }`}
                                         >
-                                            {cat.label}
+                                            {t(`superadmin.news.category.${cat.value}`, cat.label)}
                                         </button>
                                     ))}
                                 </div>
@@ -956,7 +944,7 @@ const AINewsStudio: React.FC<AINewsStudioProps> = ({ onClose, onNewsCreated }) =
                             {/* Language */}
                             <div>
                                 <label className="text-[10px] font-bold text-editor-text-secondary uppercase tracking-wider mb-1.5 block">
-                                    {language === 'es' ? 'Idioma' : 'Language'}
+                                    {t('superadmin.news.aiStudio.language')}
                                 </label>
                                 <div className="flex gap-1.5">
                                     <button
@@ -983,13 +971,13 @@ const AINewsStudio: React.FC<AINewsStudioProps> = ({ onClose, onNewsCreated }) =
                             {/* Audience */}
                             <div>
                                 <label className="text-[10px] font-bold text-editor-text-secondary uppercase tracking-wider mb-1.5 block">
-                                    {language === 'es' ? 'Audiencia' : 'Audience'}
+                                    {t('superadmin.news.tabTargeting')}
                                 </label>
                                 <input
                                     type="text"
                                     value={audience}
                                     onChange={(e) => setAudience(e.target.value)}
-                                    placeholder={language === 'es' ? 'Todos, Pro users...' : 'All, Pro users...'}
+                                    placeholder={t('superadmin.news.targetAll')}
                                     className="w-full px-3 py-2 bg-editor-bg border border-editor-border rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-blue-500/50 text-editor-text-primary placeholder:text-editor-text-secondary/50"
                                 />
                             </div>
@@ -997,19 +985,19 @@ const AINewsStudio: React.FC<AINewsStudioProps> = ({ onClose, onNewsCreated }) =
                             {/* Tone */}
                             <div>
                                 <label className="text-[10px] font-bold text-editor-text-secondary uppercase tracking-wider mb-1.5 block">
-                                    {language === 'es' ? 'Tono' : 'Tone'}
+                                    {t('superadmin.news.aiStudio.tone')}
                                 </label>
                                 <div className="grid grid-cols-2 gap-1.5">
-                                    {TONE_OPTIONS.map((t) => (
+                                    {TONE_OPTIONS.map((t_option) => (
                                         <button
-                                            key={t}
-                                            onClick={() => setTone(t)}
-                                            className={`px-2 py-1.5 rounded-lg text-xs font-medium transition-all ${tone === t
+                                            key={t_option}
+                                            onClick={() => setTone(t_option)}
+                                            className={`px-2 py-1.5 rounded-lg text-xs font-medium transition-all ${tone === t_option
                                                 ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
                                                 : 'bg-editor-bg/50 text-editor-text-secondary border border-editor-border/50 hover:border-blue-500/30'
                                                 }`}
                                         >
-                                            {t}
+                                            {t(`superadmin.news.aiStudio.tones.${t_option.toLowerCase()}`, t_option)}
                                         </button>
                                     ))}
                                 </div>
@@ -1024,7 +1012,7 @@ const AINewsStudio: React.FC<AINewsStudioProps> = ({ onClose, onNewsCreated }) =
                             <div className="flex items-center gap-2">
                                 <Zap className="w-3.5 h-3.5 text-yellow-400" />
                                 <span className="text-[10px] font-bold text-editor-text-secondary uppercase tracking-wider">
-                                    {language === 'es' ? 'Modelos' : 'Models'}
+                                    {t('superadmin.settings.models', 'Models')}
                                 </span>
                             </div>
                             <div className="space-y-1.5 text-[11px]">
@@ -1047,13 +1035,13 @@ const AINewsStudio: React.FC<AINewsStudioProps> = ({ onClose, onNewsCreated }) =
                         <div className="bg-editor-bg/50 rounded-xl p-3 space-y-1.5 text-[11px]">
                             <div className="flex items-center justify-between">
                                 <span className="text-editor-text-secondary">
-                                    {language === 'es' ? 'Mensajes:' : 'Messages:'}
+                                    {t('chatbot.chats', 'Messages')}:
                                 </span>
                                 <span className="font-mono text-editor-text-primary">{messages.length}</span>
                             </div>
                             <div className="flex items-center justify-between">
                                 <span className="text-editor-text-secondary">
-                                    {language === 'es' ? 'Contexto:' : 'Context:'}
+                                    {t('superadmin.news.aiStudio.context', 'Context:')}
                                 </span>
                                 <span className="font-mono text-editor-text-primary">
                                     {historyRef.current.reduce((acc, m) => acc + m.text.length, 0).toLocaleString()} chars
@@ -1069,13 +1057,11 @@ const AINewsStudio: React.FC<AINewsStudioProps> = ({ onClose, onNewsCreated }) =
                                 className="w-full bg-gradient-to-r from-blue-500 to-cyan-500 text-white px-4 py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:shadow-lg hover:shadow-blue-500/20 transition-all disabled:opacity-40 disabled:hover:shadow-none text-sm"
                             >
                                 <Sparkles className="w-4 h-4" />
-                                {language === 'es' ? 'Generar Noticia' : 'Generate News'}
+                                {t('superadmin.news.aiStudio.generateContent')}
                             </button>
                             {messages.length < 2 && (
                                 <p className="text-[10px] text-editor-text-secondary text-center mt-2">
-                                    {language === 'es'
-                                        ? 'Conversa primero para refinar tu idea'
-                                        : 'Chat first to refine your idea'}
+                                    {t('superadmin.news.writeContentFirst')}
                                 </p>
                             )}
                         </div>
