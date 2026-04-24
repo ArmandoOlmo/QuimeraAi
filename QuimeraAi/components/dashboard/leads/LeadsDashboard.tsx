@@ -330,7 +330,7 @@ const LeadsDashboard: React.FC = () => {
     const LEAD_STAGES = React.useMemo(() => getLeadStages(t), [t]);
     const { user } = useAuth();
     const { setView } = useUI();
-    const { navigate } = useRouter();
+    const { navigate, query, setQueryParam } = useRouter();
     const { leads, updateLeadStatus, deleteLead, addLead, updateLead, addLeadActivity, getLeadActivities, addLeadTask, updateLeadTask, deleteLeadTask, getLeadTasks, hasActiveProject, isLoadingLeads } = useCRM();
     const { hasApiKey, promptForKeySelection, handleApiError } = useAI();
     const { activeProject } = useProject();
@@ -389,6 +389,19 @@ const LeadsDashboard: React.FC = () => {
             setEmailDraft('');
         }
     }, [selectedLead?.id]); // Only run when switching leads
+
+    // URL Query Param Effect: Auto-select lead if 'leadId' is in the URL
+    useEffect(() => {
+        const leadIdParam = query.get('leadId');
+        if (leadIdParam && leads.length > 0) {
+            const targetLead = leads.find(l => l.id === leadIdParam);
+            if (targetLead && selectedLead?.id !== targetLead.id) {
+                setSelectedLead(targetLead);
+                // Optionally clear the query param after picking it up to clean the URL
+                setQueryParam('leadId', null);
+            }
+        }
+    }, [query, leads, selectedLead?.id, setQueryParam]);
 
     // Calculate derived state
 

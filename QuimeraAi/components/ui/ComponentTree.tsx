@@ -8,7 +8,7 @@ import {
     MonitorPlay, Grid, MessageSquare, Type, AlignJustify,
     HelpCircle, ChevronDown, Eye, EyeOff, FileText,
     GripVertical, Plus, Search, X, MapPin, Trash2, UtensilsCrossed, Palette, Columns,
-    ShoppingBag, Clock, Shield, Package, Megaphone, Store, Waves, Bell, Layers
+    ShoppingBag, Clock, Shield, Package, Megaphone, Store, Waves, Bell, Layers, Minus
 } from 'lucide-react';
 import {
     DndContext,
@@ -49,6 +49,7 @@ const sectionIcons: Record<PageSection, React.ElementType> = {
     heroGallery: Image,
     heroWave: Waves,
     heroNova: MonitorPlay,
+    heroLead: Mail,
     features: List,
     testimonials: Star,
     services: Layout,
@@ -87,6 +88,11 @@ const sectionIcons: Record<PageSection, React.ElementType> = {
     productBundle: Package,
     announcementBar: Megaphone,
     signupFloat: Mail,
+    separator1: Minus,
+    separator2: Minus,
+    separator3: Minus,
+    separator4: Minus,
+    separator5: Minus,
 };
 
 // Fixed sections that cannot be reordered
@@ -295,6 +301,7 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
         heroGallery: 'Hero Gallery',
         heroWave: 'Hero Wave',
         heroNova: 'Hero Nova',
+        heroLead: t('sections.heroLead', 'Hero Lead (Form)'),
         features: t('editor.featuresSection'),
         testimonials: t('editor.testimonialsSection'),
         services: t('editor.servicesSection'),
@@ -333,6 +340,11 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
         productBundle: 'Product Bundle',
         announcementBar: 'Announcement Bar',
         signupFloat: t('editor.signupFloatSection', 'Sign Up Float'),
+        separator1: t('editor.separatorSection', 'Separador 1'),
+        separator2: t('editor.separatorSection', 'Separador 2'),
+        separator3: t('editor.separatorSection', 'Separador 3'),
+        separator4: t('editor.separatorSection', 'Separador 4'),
+        separator5: t('editor.separatorSection', 'Separador 5'),
     };
 
     // Group sections by category

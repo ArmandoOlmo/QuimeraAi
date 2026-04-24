@@ -33,7 +33,7 @@ const ThumbnailEditor: React.FC<ThumbnailEditorProps> = ({ project, onClose, onU
 
     const { user } = useAuth();
     const { generateImage, enhancePrompt, hasApiKey, promptForKeySelection, handleApiError } = useAI();
-    const { files, globalFiles, fetchGlobalFiles } = useFiles();
+    const { files, globalFiles, fetchGlobalFiles, adminAssets, fetchAdminAssets } = useFiles();
     const { updateProjectThumbnail, activeProject } = useProject();
     const { success: showSuccess, error: showError } = useToast();
     const [isUploading, setIsUploading] = useState(false);
@@ -58,16 +58,20 @@ const ThumbnailEditor: React.FC<ThumbnailEditorProps> = ({ project, onClose, onU
     const referenceFileInputRef = useRef<HTMLInputElement>(null);
 
     // Library state
-    const [librarySource, setLibrarySource] = useState<'user' | 'global'>('global');
+    const [librarySource, setLibrarySource] = useState<'user' | 'global' | 'admin'>('admin');
     const [searchQuery, setSearchQuery] = useState('');
     const [selectingImageId, setSelectingImageId] = useState<string | null>(null);
 
     // Fetch global files when tab and source are selected
     useEffect(() => {
-        if (activeTab === 'library' && librarySource === 'global') {
-            fetchGlobalFiles();
+        if (activeTab === 'library') {
+            if (librarySource === 'global') {
+                fetchGlobalFiles();
+            } else if (librarySource === 'admin') {
+                fetchAdminAssets();
+            }
         }
-    }, [activeTab, librarySource, fetchGlobalFiles]);
+    }, [activeTab, librarySource, fetchGlobalFiles, fetchAdminAssets]);
 
     // Reset image loaded state when preview URL changes
     useEffect(() => {
@@ -123,7 +127,7 @@ const ThumbnailEditor: React.FC<ThumbnailEditorProps> = ({ project, onClose, onU
     }, [project.theme?.globalColors, project.data?.hero?.colors, project.data?.header?.colors]);
 
     // Filter and search image files for library
-    const sourceFiles = librarySource === 'user' ? files : globalFiles;
+    const sourceFiles = librarySource === 'user' ? files : librarySource === 'admin' ? adminAssets : globalFiles;
     const imageFiles = useMemo(() => {
         let result = sourceFiles.filter(f => f.type.startsWith('image/'));
 
@@ -667,6 +671,12 @@ Return ONLY the prompt text, nothing else. Make it 1-2 sentences maximum.`;
                             {/* Source Toggle & Search */}
                             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                                 <div className="flex space-x-2 bg-secondary p-1 rounded-lg">
+                                    <button
+                                        onClick={() => setLibrarySource('admin')}
+                                        className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors flex items-center gap-1.5 ${librarySource === 'admin' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+                                    >
+                                        <Globe size={12} /> Admin Assets
+                                    </button>
                                     <button
                                         onClick={() => setLibrarySource('global')}
                                         className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors flex items-center gap-1.5 ${librarySource === 'global' ? 'bg-blue-500 text-white' : 'text-muted-foreground hover:text-foreground'}`}

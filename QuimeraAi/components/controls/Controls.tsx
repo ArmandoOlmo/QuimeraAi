@@ -29,7 +29,7 @@ import {
   Briefcase, MessageCircle, Mail, Send, Type,
   Settings, AlignJustify, MonitorPlay, Grid, HelpCircle, X, Palette,
   TrendingUp, MapIcon, ShoppingBag, Store, Check, Waves, Bell,
-  FileText, Layers, UserPlus, PanelRightClose, PanelRightOpen, MessageSquare,
+  FileText, Layers, UserPlus, PanelRightClose, PanelRightOpen, MessageSquare, Minus,
 } from 'lucide-react';
 import { usePublicProducts } from '../../hooks/usePublicProducts';
 import AIContentAssistant from '../ui/AIContentAssistant';
@@ -49,6 +49,7 @@ import {
   renderHeroControls, renderHeroControlsWithTabs,
   renderHeroSplitControls, renderHeroGalleryControls,
   renderHeroWaveControls, renderHeroNovaControls,
+  renderHeroLeadControls,
   renderHeaderControls, renderHeaderControlsWithTabs,
   renderFeaturesControls, renderFeaturesControlsWithTabs,
   renderListSectionControls as _renderListSectionControls,
@@ -67,6 +68,7 @@ import {
   renderBannerControlsWithTabs,
   renderProductsControlsWithTabs, renderSignupFloatControlsWithTabs,
   renderChatbotControlsWithTabs,
+  renderSeparatorControlsWithTabs,
 } from './sections';
 
 // ─── Main Component ─────────────────────────────────────────────────────────
@@ -302,6 +304,7 @@ const Controls: React.FC = () => {
     heroGallery: { label: 'Hero Gallery', icon: Image, renderer: () => renderHeroGalleryControls(deps) },
     heroWave: { label: 'Hero Wave', icon: Waves, renderer: () => renderHeroWaveControls(deps) },
     heroNova: { label: 'Hero Nova', icon: MonitorPlay, renderer: () => renderHeroNovaControls(deps) },
+    heroLead: { label: 'Hero Lead', icon: Mail, renderer: () => renderHeroLeadControls(deps) },
     features: { label: 'Features', icon: List, renderer: () => renderFeaturesControls(deps) },
     testimonials: { label: 'Testimonials', icon: Star, renderer: () => renderTestimonialsControls(deps) },
     services: { label: 'Services', icon: List, renderer: () => renderServicesControlsWithTabs(deps) },
@@ -315,6 +318,11 @@ const Controls: React.FC = () => {
     slideshow: { label: 'Slideshow', icon: PlaySquare, renderer: () => renderSlideshowControls(deps) },
     video: { label: 'Video', icon: MonitorPlay, renderer: () => renderVideoControls(deps) },
     howItWorks: { label: 'How It Works', icon: Grid, renderer: () => renderHowItWorksControlsWithTabs(deps) },
+    separator1: { label: 'Separador 1', icon: Minus, renderer: () => renderSeparatorControlsWithTabs(deps, 'separator1') },
+    separator2: { label: 'Separador 2', icon: Minus, renderer: () => renderSeparatorControlsWithTabs(deps, 'separator2') },
+    separator3: { label: 'Separador 3', icon: Minus, renderer: () => renderSeparatorControlsWithTabs(deps, 'separator3') },
+    separator4: { label: 'Separador 4', icon: Minus, renderer: () => renderSeparatorControlsWithTabs(deps, 'separator4') },
+    separator5: { label: 'Separador 5', icon: Minus, renderer: () => renderSeparatorControlsWithTabs(deps, 'separator5') },
     map: { label: 'Map', icon: MapIcon, renderer: () => renderMapControls(deps) },
     menu: { label: 'Restaurant Menu', icon: AlignJustify, renderer: () => renderMenuControlsWithTabs(deps) },
     footer: { label: 'Footer', icon: Type, renderer: () => renderFooterControls(deps) },
@@ -403,6 +411,11 @@ const Controls: React.FC = () => {
       case 'cmsFeed': return renderCMSFeedControlsWithTabs(deps);
       case 'cta': return renderCTAControlsWithTabs(deps);
       case 'howItWorks': return renderHowItWorksControlsWithTabs(deps);
+      case 'separator1': return renderSeparatorControlsWithTabs(deps, 'separator1');
+      case 'separator2': return renderSeparatorControlsWithTabs(deps, 'separator2');
+      case 'separator3': return renderSeparatorControlsWithTabs(deps, 'separator3');
+      case 'separator4': return renderSeparatorControlsWithTabs(deps, 'separator4');
+      case 'separator5': return renderSeparatorControlsWithTabs(deps, 'separator5');
       case 'chatbot': return renderChatbotControlsWithTabs(deps);
       case 'menu': return renderMenuControlsWithTabs(deps);
       case 'banner': return renderBannerControlsWithTabs(deps);
@@ -416,6 +429,7 @@ const Controls: React.FC = () => {
       case 'heroGallery': return renderHeroGalleryControls(deps);
       case 'heroWave': return renderHeroWaveControls(deps);
       case 'heroNova': return renderHeroNovaControls(deps);
+      case 'heroLead': return renderHeroLeadControls(deps);
       case 'topBar': return renderTopBarControls(deps);
       case 'logoBanner': return renderLogoBannerControls(deps);
       case 'map': return renderMapControls(deps);

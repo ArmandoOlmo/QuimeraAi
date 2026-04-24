@@ -10,6 +10,7 @@ import HeroSplit from './HeroSplit';
 import HeroGallery from './HeroGallery';
 import HeroWave from './HeroWave';
 import HeroNova from './HeroNova';
+import HeroLead from './HeroLead';
 import Features from './Features';
 import Testimonials from './Testimonials';
 import Slideshow from './Slideshow';
@@ -35,6 +36,7 @@ import LogoBanner from './LogoBanner';
 import SignupFloat from './SignupFloat';
 import SectionBackground from './ui/SectionBackground';
 import Products from './Products';
+import Separator from './Separator';
 import { PageSection, FontFamily, CMSPost, CMSCategory, FooterData } from '../types';
 import { fontStacks, loadGoogleFonts, loadGoogleFontsSync, resolveFontFamily } from '../utils/fontLoader';
 import { useSafeAuth } from '../contexts/core/AuthContext';
@@ -628,6 +630,7 @@ const LandingPageContent: React.FC = () => {
   const mergedHeroGalleryData = mergeComponentData('heroGallery');
   const mergedHeroWaveData = mergeComponentData('heroWave');
   const mergedHeroNovaData = mergeComponentData('heroNova');
+  const mergedHeroLeadData = mergeComponentData('heroLead');
   const mergedTopBarData = mergeComponentData('topBar');
   const mergedLogoBannerData = mergeComponentData('logoBanner');
 
@@ -670,6 +673,12 @@ const LandingPageContent: React.FC = () => {
   const mergedCollectionBannerData = mergeComponentData('collectionBanner');
   const mergedProductBundleData = mergeComponentData('productBundle');
   const mergedAnnouncementBarData = mergeComponentData('announcementBar');
+  
+  const mergedSeparator1Data = mergeComponentData('separator1');
+  const mergedSeparator2Data = mergeComponentData('separator2');
+  const mergedSeparator3Data = mergeComponentData('separator3');
+  const mergedSeparator4Data = mergeComponentData('separator4');
+  const mergedSeparator5Data = mergeComponentData('separator5');
 
   // Merge storefront products with component data
   const productsWithData = useMemo(() => {
@@ -775,6 +784,16 @@ const LandingPageContent: React.FC = () => {
           {...mergedHeroNovaData}
           borderRadius={mergedHeroNovaData?.buttonBorderRadius || theme.buttonBorderRadius}
           onNavigate={handleLinkNavigation}
+        />
+      </SectionBackground>
+    ) : null,
+    heroLead: mergedHeroLeadData ? (
+      <SectionBackground backgroundImageUrl={mergedHeroLeadData?.backgroundImageUrl} backgroundColor={mergedHeroLeadData?.colors?.background} backgroundOverlayEnabled={mergedHeroLeadData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedHeroLeadData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedHeroLeadData?.backgroundOverlayColor}>
+        <HeroLead
+          {...mergedHeroLeadData}
+          cardBorderRadius={mergedHeroLeadData?.cardBorderRadius || theme.cardBorderRadius}
+          inputBorderRadius={mergedHeroLeadData?.inputBorderRadius || 'md'}
+          buttonBorderRadius={mergedHeroLeadData?.buttonBorderRadius || theme.buttonBorderRadius}
         />
       </SectionBackground>
     ) : null,
@@ -1133,6 +1152,11 @@ const LandingPageContent: React.FC = () => {
     })(),
     // SignupFloat is a floating overlay, rendered separately below
     signupFloat: null,
+    separator1: mergedSeparator1Data ? <Separator data={mergedSeparator1Data} /> : null,
+    separator2: mergedSeparator2Data ? <Separator data={mergedSeparator2Data} /> : null,
+    separator3: mergedSeparator3Data ? <Separator data={mergedSeparator3Data} /> : null,
+    separator4: mergedSeparator4Data ? <Separator data={mergedSeparator4Data} /> : null,
+    separator5: mergedSeparator5Data ? <Separator data={mergedSeparator5Data} /> : null,
   };
 
   // Font variables are now injected directly into :root via useEffect above

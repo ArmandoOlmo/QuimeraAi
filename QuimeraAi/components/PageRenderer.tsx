@@ -25,6 +25,7 @@ import HeroSplit from './HeroSplit';
 import HeroGallery from './HeroGallery';
 import HeroWave from './HeroWave';
 import HeroNova from './HeroNova';
+import HeroLead from './HeroLead';
 import Features from './Features';
 import Testimonials from './Testimonials';
 import Pricing from './Pricing';
@@ -155,6 +156,7 @@ const PageRenderer: React.FC<PageRendererProps> = ({
             heroGallery: mergeComponentData('heroGallery') || baseData.heroGallery,
             heroWave: mergeComponentData('heroWave') || baseData.heroWave,
             heroNova: mergeComponentData('heroNova') || baseData.heroNova,
+            heroLead: mergeComponentData('heroLead') || baseData.heroLead,
             topBar: mergeComponentData('topBar') || baseData.topBar,
             features: mergeComponentData('features') || baseData.features,
             testimonials: mergeComponentData('testimonials') || baseData.testimonials,
@@ -188,6 +190,11 @@ const PageRenderer: React.FC<PageRendererProps> = ({
             cmsFeed: mergeComponentData('cmsFeed') || (baseData as any).cmsFeed,
             logoBanner: mergeComponentData('logoBanner') || (baseData as any).logoBanner,
             signupFloat: mergeComponentData('signupFloat') || (baseData as any).signupFloat,
+            separator1: mergeComponentData('separator1') || (baseData as any).separator1,
+            separator2: mergeComponentData('separator2') || (baseData as any).separator2,
+            separator3: mergeComponentData('separator3') || (baseData as any).separator3,
+            separator4: mergeComponentData('separator4') || (baseData as any).separator4,
+            separator5: mergeComponentData('separator5') || (baseData as any).separator5,
         } as PageData;
     }, [baseData, mergeComponentData]);
 
@@ -379,6 +386,21 @@ const PageRenderer: React.FC<PageRendererProps> = ({
                             {...novaData}
                             borderRadius={novaData.buttonBorderRadius || buttonBorderRadius}
                             onNavigate={handleLinkNavigation}
+                        />
+                    </SectionBackground>
+                ) : null;
+            }
+
+            case 'heroLead': {
+                const leadData = mergedData.heroLead;
+                return leadData ? (
+                    <SectionBackground backgroundImageUrl={leadData?.backgroundImageUrl} backgroundColor={leadData?.colors?.background} backgroundOverlayEnabled={leadData?.backgroundOverlayEnabled} backgroundOverlayOpacity={leadData?.backgroundOverlayOpacity} backgroundOverlayColor={leadData?.backgroundOverlayColor}>
+                        <HeroLead
+                            key={key}
+                            {...leadData}
+                            cardBorderRadius={leadData.cardBorderRadius || cardBorderRadius}
+                            inputBorderRadius={leadData.inputBorderRadius || 'md'}
+                            buttonBorderRadius={leadData.buttonBorderRadius || buttonBorderRadius}
                         />
                     </SectionBackground>
                 ) : null;
@@ -687,6 +709,14 @@ const PageRenderer: React.FC<PageRendererProps> = ({
                         data={mergedData.announcementBar}
                     />
                 );
+
+            case 'separator1':
+            case 'separator2':
+            case 'separator3':
+            case 'separator4':
+            case 'separator5':
+                const separatorData = (mergedData as any)[section];
+                return separatorData ? <Separator key={key} data={separatorData} /> : null;
 
             // Dynamic page sections
             case 'productDetail':

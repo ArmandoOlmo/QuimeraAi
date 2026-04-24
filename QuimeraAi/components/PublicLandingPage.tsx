@@ -33,6 +33,7 @@ import {
 } from 'lucide-react';
 import LanguageSelector from './ui/LanguageSelector';
 import ImageCarousel from './ImageCarousel';
+import Separator from './Separator';
 import { useSafeAppContent } from '../contexts/appContent';
 import { AppArticle, AppNavItem, DEFAULT_APP_NAVIGATION } from '../types/appContent';
 import { useLandingPlans } from '../hooks/useLandingPlans';
@@ -2864,6 +2865,15 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
             </div>
           </section>
         );
+      }
+
+      case 'separator1':
+      case 'separator2':
+      case 'separator3':
+      case 'separator4':
+      case 'separator5': {
+        const separatorData = section.data || {};
+        return separatorData ? <Separator key={section.id} data={separatorData} /> : null;
       }
 
       default:

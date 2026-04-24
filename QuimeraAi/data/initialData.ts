@@ -213,6 +213,43 @@ const pageData: PageData = {
     },
     buttonBorderRadius: 'full',
   },
+  heroLead: {
+    headline: 'Transform Your Business Today',
+    subheadline: 'Get started with our premium services and take your company to the next level.',
+    badgeText: 'Limited Offer',
+    formTitle: 'Request a Consultation',
+    formDescription: 'Fill out the form below and our team will get back to you within 24 hours.',
+    namePlaceholder: 'Your Name',
+    emailPlaceholder: 'your@email.com',
+    companyPlaceholder: 'Your Company',
+    phonePlaceholder: 'Your Phone',
+    messagePlaceholder: 'How can we help you?',
+    buttonText: 'Submit Request',
+    successMessage: 'Thank you! We will be in touch shortly.',
+    showCompanyField: true,
+    showPhoneField: false,
+    showMessageField: false,
+    formPosition: 'right',
+    paddingY: 'lg',
+    imageUrl: 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=2670&ixlib=rb-4.0.3',
+    overlayOpacity: 40,
+    glassEffect: true,
+    borderRadius: 'xl',
+    colors: {
+      background: '#0f172a',
+      text: '#e2e8f0',
+      heading: '#ffffff',
+      badgeBackground: '#4f46e5',
+      badgeText: '#ffffff',
+      formBackground: 'rgba(30, 41, 59, 0.7)',
+      formText: '#f8fafc',
+      inputBackground: '#0f172a',
+      inputText: '#f8fafc',
+      inputBorder: '#334155',
+      buttonBackground: '#4f46e5',
+      buttonText: '#ffffff',
+    },
+  },
   features: {
     featuresVariant: 'bento-premium',
     paddingY: 'lg',
@@ -1425,6 +1462,26 @@ const pageData: PageData = {
       inputBorder: '#334155',
     },
   },
+  separator1: {
+    height: 100,
+    color: 'transparent',
+  },
+  separator2: {
+    height: 100,
+    color: 'transparent',
+  },
+  separator3: {
+    height: 100,
+    color: 'transparent',
+  },
+  separator4: {
+    height: 100,
+    color: 'transparent',
+  },
+  separator5: {
+    height: 100,
+    color: 'transparent',
+  },
 };
 
 const theme: ThemeData = {
@@ -1465,7 +1522,8 @@ const componentOrder: PageSection[] = [
     // Structure
     'colors', 'typography', 'header',
     // Content
-    'hero', 'heroSplit', 'heroGallery', 'heroWave', 'heroNova', 'topBar', 'logoBanner', 'banner', 'features', 'testimonials', 'slideshow',
+    'hero', 'heroSplit', 'heroGallery', 'heroWave', 'heroNova', 'heroLead', 'topBar', 'logoBanner', 'banner', 'features', 'testimonials', 'slideshow',
+    'separator1', 'separator2', 'separator3', 'separator4', 'separator5',
     'pricing', 'faq', 'portfolio', 'cta', 'services', 'team', 'video', 'howItWorks', 'menu',
     // Ecommerce
     'storeSettings', 'products', 'featuredProducts', 'categoryGrid', 'productHero', 'saleCountdown',

@@ -34,6 +34,7 @@ import TopBar from '../TopBar';
 import LogoBanner from '../LogoBanner';
 import SectionBackground from '../ui/SectionBackground';
 import Products from '../Products';
+import Separator from '../Separator';
 import { PageSection, FontFamily, CMSPost, CMSCategory, FooterData } from '../../types';
 import { fontStacks, loadGoogleFonts, loadGoogleFontsSync, resolveFontFamily } from '../../utils/fontLoader';
 import { useSafeAuth } from '../../contexts/core/AuthContext';
@@ -620,6 +621,12 @@ const AgencyLandingPageContent: React.FC = () => {
   const mergedLogoBannerData = mergeComponentData('logoBanner');
   const mergedProductsData = mergeComponentData('products');
 
+  const mergedSeparator1Data = mergeComponentData('separator1');
+  const mergedSeparator2Data = mergeComponentData('separator2');
+  const mergedSeparator3Data = mergeComponentData('separator3');
+  const mergedSeparator4Data = mergeComponentData('separator4');
+  const mergedSeparator5Data = mergeComponentData('separator5');
+
   // Ecommerce section components
   const mergedFeaturedProductsData = mergeComponentData('featuredProducts');
   const mergedCategoryGridData = mergeComponentData('categoryGrid');
@@ -773,6 +780,11 @@ const AgencyLandingPageContent: React.FC = () => {
     header: null,
     typography: null,
     colors: null, // Global colors are managed via theme settings
+    separator1: mergedSeparator1Data ? <Separator data={mergedSeparator1Data} /> : null,
+    separator2: mergedSeparator2Data ? <Separator data={mergedSeparator2Data} /> : null,
+    separator3: mergedSeparator3Data ? <Separator data={mergedSeparator3Data} /> : null,
+    separator4: mergedSeparator4Data ? <Separator data={mergedSeparator4Data} /> : null,
+    separator5: mergedSeparator5Data ? <Separator data={mergedSeparator5Data} /> : null,
     // Ecommerce section components
     featuredProducts: mergedFeaturedProductsData ? (
       <FeaturedProducts

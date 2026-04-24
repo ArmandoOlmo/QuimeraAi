@@ -402,9 +402,11 @@ const Header: React.FC<HeaderData & {
         case 'floating':
           return `${isPreviewMode ? 'absolute' : 'fixed'} left-6 right-6 rounded-2xl border border-white/10 max-w-7xl mx-auto`;
         case 'floating-pill':
-          return `${isPreviewMode ? 'absolute' : 'fixed'} left-1/2 -translate-x-1/2 rounded-full border border-white/15 shadow-lg`;
+          return `${isPreviewMode ? 'absolute' : 'fixed'} left-6 right-6 max-w-5xl mx-auto rounded-full border border-white/15 shadow-lg`;
         case 'floating-glass':
           return `${isPreviewMode ? 'absolute' : 'fixed'} left-6 right-6 rounded-xl border border-white/20 max-w-7xl mx-auto`;
+        case 'floating-shadow':
+          return `${isPreviewMode ? 'absolute' : 'fixed'} left-6 right-6 rounded-2xl max-w-7xl mx-auto shadow-[0_4px_20px_rgba(0,0,0,0.12)] overflow-hidden`;
         // --- NUEVOS: Diseños Especiales ---
         case 'tabbed':
           return 'w-full tabbed-nav-container';
@@ -469,7 +471,7 @@ const Header: React.FC<HeaderData & {
 
         // --- NUEVOS: Diseños Especiales ---
         case 'tabbed':
-          return { backgroundColor: 'transparent', borderBottom: '1px solid rgba(128, 128, 128, 0.15)' };
+          return { backgroundColor: actualColors.background, borderBottom: `1px solid ${colors?.tabBorderColor || 'rgba(128, 128, 128, 0.15)'}` };
         case 'segmented-pill':
           return { backgroundColor: actualColors.background };
 
@@ -880,7 +882,7 @@ const Header: React.FC<HeaderData & {
               height: style.startsWith('floating') ? 'auto' : computedHeight,
               minHeight: style.startsWith('floating') ? 'auto' : computedMinHeight,
               padding: style.startsWith('floating')
-                ? (style === 'floating-pill' ? '8px 32px' : '12px 24px')
+                ? (style === 'floating-pill' ? '10px 48px' : '12px 24px')
                 : style === 'segmented-pill'
                   ? '0 24px'
                   : `0 ${isScrolled ? '1.5rem' : '2rem'}`
@@ -960,8 +962,8 @@ const Header: React.FC<HeaderData & {
               .tabbed-nav-container ul li:first-child a,
               .tabbed-nav-container ul li a:hover {
                 opacity: 1;
-                background: linear-gradient(to top, color-mix(in srgb, ${colors?.accent || '#3b82f6'} 10%, transparent), transparent);
-                color: ${colors?.accent || '#3b82f6'} !important;
+                background: linear-gradient(to top, color-mix(in srgb, ${colors?.tabActiveColor || colors?.accent || '#3b82f6'} 10%, transparent), transparent);
+                color: ${colors?.tabActiveColor || colors?.accent || '#3b82f6'} !important;
               }
 
               .tabbed-nav-container ul li:first-child a::after,
@@ -972,8 +974,8 @@ const Header: React.FC<HeaderData & {
                 left: 0;
                 right: 0;
                 height: 2px;
-                background-color: ${colors?.accent || '#3b82f6'};
-                box-shadow: 0 -2px 12px color-mix(in srgb, ${colors?.accent || '#3b82f6'} 80%, transparent);
+                background-color: ${colors?.tabActiveColor || colors?.accent || '#3b82f6'};
+                box-shadow: 0 -2px 12px color-mix(in srgb, ${colors?.tabActiveColor || colors?.accent || '#3b82f6'} 80%, transparent);
                 border-radius: 2px 2px 0 0;
               }
             `}</style>

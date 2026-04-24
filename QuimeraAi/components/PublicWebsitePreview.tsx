@@ -20,6 +20,7 @@ import SectionBackground from './ui/SectionBackground';
 import Header from './Header';
 import Hero from './Hero';
 import Features from './Features';
+import Separator from './Separator';
 import Footer from './Footer';
 
 // Lazy-loaded components — loaded on demand to reduce initial chunk
@@ -1456,6 +1457,11 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
     footer: mergeComponentData('footer'),
     header: mergeComponentData('header'),
     products: mergeComponentData('products'),
+    separator1: mergeComponentData('separator1'),
+    separator2: mergeComponentData('separator2'),
+    separator3: mergeComponentData('separator3'),
+    separator4: mergeComponentData('separator4'),
+    separator5: mergeComponentData('separator5'),
     // Ecommerce section components
     featuredProducts: mergeComponentData('featuredProducts'),
     categoryGrid: mergeComponentData('categoryGrid'),
@@ -1691,6 +1697,12 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
         ) : null;
       case 'announcementBar':
         return compData ? <AnnouncementBar data={compData} /> : null;
+      case 'separator1':
+      case 'separator2':
+      case 'separator3':
+      case 'separator4':
+      case 'separator5':
+        return compData ? <Separator data={compData} /> : null;
       default:
         return null;
     }

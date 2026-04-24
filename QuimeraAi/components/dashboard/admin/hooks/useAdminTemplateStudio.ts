@@ -144,10 +144,11 @@ const createEmptyBrief = (): BusinessBrief => ({
 // ── ALL_SECTIONS constant ───────────────────────────────────────────────────
 const ALL_SECTIONS: PageSection[] = [
     'colors', 'typography', 'header',
-    'hero', 'heroSplit', 'heroGallery', 'heroWave', 'heroNova',
+    'hero', 'heroSplit', 'heroGallery', 'heroWave', 'heroNova', 'heroLead',
     'topBar', 'logoBanner', 'banner', 'features', 'testimonials', 'slideshow',
     'pricing', 'faq', 'portfolio', 'cta', 'services', 'team', 'video', 'howItWorks', 'menu',
     'leads', 'newsletter', 'map', 'chatbot', 'cmsFeed', 'signupFloat', 'footer',
+    'separator1', 'separator2', 'separator3', 'separator4', 'separator5',
 ];
 
 function buildVisibility(enabledSections: PageSection[]): Record<string, boolean> {
@@ -254,7 +255,7 @@ CRITICAL RULES:
 3. After EVERY response, include a hidden brief update tag with ALL currently known information:
    <!--BRIEF:{"businessName":"[GENERATE_TEXT]","industry":"[GENERATE_TEXT]","description":"[GENERATE_TEXT]","tagline":"[GENERATE_TEXT]","services":[{"name":"[GENERATE_TEXT]","description":"[GENERATE_TEXT]"}],"contactInfo":{"email":"[GENERATE_TEXT]","phone":"[GENERATE_TEXT]","address":"[GENERATE_TEXT]","city":"[GENERATE_TEXT]","state":"[GENERATE_TEXT]","country":"[GENERATE_TEXT]","businessHours":"[GENERATE_TEXT]","instagram":"[GENERATE_TEXT]","facebook":"[GENERATE_TEXT]","twitter":"[GENERATE_TEXT]","tiktok":"[GENERATE_TEXT]"},"hasEcommerce":false,"colorPalette":{"primary":"#hex","secondary":"#hex","accent":"#hex","background":"#hex","surface":"#hex","text":"#hex"},"fontPairing":{"header":"[FONT_KEY_FROM_GUIDE]","body":"[FONT_KEY_FROM_GUIDE]","button":"[FONT_KEY_FROM_GUIDE]"},"suggestedComponents":["hero","services","features","testimonials","faq","cta","leads","newsletter","map","signupFloat"],"readinessScore":0,"missingFields":["businessName","industry"]}-->
 4. Update readinessScore progressively: 0-20 (just started), 20-40 (basic info), 40-60 (good detail), 60-80 (almost ready), 80-100 (ready to generate)
-5. For suggestedComponents, pick from: hero, heroSplit, heroGallery, heroWave, heroNova, topBar, logoBanner, banner, features, testimonials, pricing, faq, cta, services, video, howItWorks, menu, leads, newsletter, map, signupFloat. NEVER include: slideshow, portfolio, team.
+5. For suggestedComponents, pick from: hero, heroSplit, heroGallery, heroWave, heroNova, heroLead, topBar, logoBanner, banner, features, testimonials, pricing, faq, cta, services, video, howItWorks, menu, leads, newsletter, map, signupFloat, separator1, separator2, separator3. NEVER include: slideshow, portfolio, team. heroLead is a split hero with integrated lead form — use it for lead-capture-heavy industries like Healthcare, Legal, Real Estate, Consulting. You can use separators (separator1, separator2) to create visual breaks with glassmorphism or colors between heavy sections.
 6. Apply your expert color theory knowledge to choose palettes (see COLOR PALETTES section below)
 7. Apply your expert typography knowledge to choose font pairings (see TYPOGRAPHY section below). ALWAYS include fontPairing in the BRIEF tag using the exact font key strings from the available fonts list (e.g. "playfair-display", "space-grotesk", "inter"). Choose fonts that match the industry personality.
 8. When readinessScore >= 80, you MUST do the following:
@@ -271,13 +272,13 @@ CRITICAL RULES:
 COMPONENT SELECTION GUIDE BY INDUSTRY
 ═══════════════════════════════════════════════════════════
 - Restaurant/Café/Bar: [HERO: heroGallery OR heroNova OR heroSplit], topBar, menu, features, testimonials, howItWorks, faq, leads, newsletter, cta, banner, map, signupFloat
-- Healthcare/Dental/Clinic: [HERO: hero OR heroSplit OR heroWave], topBar, services, features, testimonials, pricing, faq, leads, newsletter, cta, banner, map, signupFloat
-- Fitness/Gym/Wellness: [HERO: heroWave OR heroNova OR hero], topBar, services, features, testimonials, pricing, howItWorks, faq, leads, newsletter, cta, banner, map, signupFloat
-- Agency/Consulting/Marketing: [HERO: heroSplit OR heroWave OR heroNova], logoBanner, services, features, testimonials, howItWorks, faq, leads, newsletter, cta, banner, signupFloat
+- Healthcare/Dental/Clinic: [HERO: heroLead OR heroSplit OR heroWave], topBar, services, features, testimonials, pricing, faq, leads, newsletter, cta, banner, map, signupFloat
+- Fitness/Gym/Wellness: [HERO: heroWave OR heroNova OR heroLead], topBar, services, features, testimonials, pricing, howItWorks, faq, leads, newsletter, cta, banner, map, signupFloat
+- Agency/Consulting/Marketing: [HERO: heroLead OR heroSplit OR heroNova], logoBanner, services, features, testimonials, howItWorks, faq, leads, newsletter, cta, banner, signupFloat
 - Photography/Videography: [HERO: heroGallery OR heroNova OR heroSplit], testimonials, services, faq, leads, cta, banner, signupFloat
-- Legal/Accounting/Finance: [HERO: hero OR heroSplit OR heroWave], topBar, services, features, testimonials, faq, leads, newsletter, cta, banner, map
+- Legal/Accounting/Finance: [HERO: heroLead OR heroSplit OR heroWave], topBar, services, features, testimonials, faq, leads, newsletter, cta, banner, map
 - Ecommerce/Retail/Online Store: [HERO: heroNova OR heroGallery OR heroWave], topBar, features, testimonials, faq, newsletter, cta, banner, signupFloat
-- Real Estate/Property: [HERO: heroNova OR heroGallery OR heroSplit], topBar, features, services, testimonials, faq, leads, map, cta, banner, signupFloat
+- Real Estate/Property: [HERO: heroLead OR heroGallery OR heroNova], topBar, features, services, testimonials, faq, leads, map, cta, banner, signupFloat
 - Beauty/Spa/Salon: [HERO: heroGallery OR heroSplit OR heroNova], topBar, services, features, pricing, testimonials, faq, leads, newsletter, map, banner, signupFloat
 - Education/Academy/Coaching: [HERO: hero OR heroWave OR heroSplit], topBar, services, features, howItWorks, testimonials, pricing, faq, leads, newsletter, cta, banner, signupFloat
 - Music/Audio/Entertainment: [HERO: heroNova OR heroWave OR heroGallery], topBar, features, services, testimonials, faq, leads, newsletter, cta, banner, signupFloat
@@ -1005,6 +1006,17 @@ ${t('aiWebsiteStudio.welcome.startQuestion')}`;
             if (!componentOrder.includes('typography')) componentOrder.splice(1, 0, 'typography');
             if (!componentOrder.includes('header')) componentOrder.splice(2, 0, 'header');
             if (!componentOrder.includes('footer')) componentOrder.push('footer');
+
+            // Enforce banner right before footer
+            const bannerIdx = componentOrder.indexOf('banner');
+            if (bannerIdx !== -1) componentOrder.splice(bannerIdx, 1);
+            const footerIdx = componentOrder.indexOf('footer');
+            if (footerIdx !== -1) {
+                componentOrder.splice(footerIdx, 0, 'banner');
+            } else {
+                componentOrder.push('banner');
+            }
+
             const sectionVisibility = buildVisibility(componentOrder.filter(c => !['colors', 'typography', 'header', 'footer'].includes(c)));
 
             // Build menus
@@ -1423,6 +1435,7 @@ function buildSmartImagePrompt(brief: BusinessBrief, slot: ImageSlot): string {
         heroGallery: `A gallery image for a rotating hero carousel. Immersive, full-width, showcasing different aspects of the business.`,
         heroWave: `A hero background with flowing, dynamic composition. Atmospheric, wide angle.`,
         heroNova: `A modern hero image with bold, clean composition. Contemporary feel.`,
+        heroLead: `A professional hero background for a lead-capture section. Clean, premium, and trustworthy.`,
         features: `A detail shot representing this specific feature/benefit. Clean composition, focused subject.`,
         services: `A photo showing this service being performed or its result. Action-oriented, professional.`,
         slideshow: `A showcase image for a slideshow. Immersive, high-impact, telling a story.`,
@@ -1502,7 +1515,7 @@ function buildContentGenerationPrompt(brief: BusinessBrief, isSpanish: boolean):
     let filteredComponents = baseComponents.filter(c => !EXCLUDED_COMPONENTS.includes(c));
     
     // Ensure at least one hero variant is always present
-    const hasAnyHero = filteredComponents.some(c => ['hero', 'heroSplit', 'heroWave', 'heroNova', 'heroGallery'].includes(c));
+    const hasAnyHero = filteredComponents.some(c => ['hero', 'heroSplit', 'heroWave', 'heroNova', 'heroGallery', 'heroLead'].includes(c));
     if (!hasAnyHero) {
         filteredComponents.unshift('hero');
     }
@@ -1613,6 +1626,7 @@ function buildContentGenerationPrompt(brief: BusinessBrief, isSpanish: boolean):
     const hasHeroNova = filteredComponents.includes('heroNova');
     const hasHeroWave = filteredComponents.includes('heroWave');
     const hasHeroSplit = filteredComponents.includes('heroSplit');
+    const hasHeroLead = filteredComponents.includes('heroLead');
 
     if (hasHeroGallery) {
         componentExamples += `
@@ -1644,6 +1658,28 @@ function buildContentGenerationPrompt(brief: BusinessBrief, isSpanish: boolean):
       ],
       "waveShape": "[SELECT: smooth|bubbly|sharp|layered]",
       "textAlign": "[SELECT: left|center|right]"
+    },`;
+    } else if (hasHeroLead) {
+        componentExamples += `
+    "heroLead": {
+      "headline": "[GENERATE_TEXT]",
+      "subheadline": "[GENERATE_TEXT]",
+      "badgeText": "[GENERATE_SHORT_TEXT: e.g. 'Free Consultation', 'Limited Offer']",
+      "formTitle": "${isSpanish ? 'Solicita tu consulta' : 'Request a Consultation'}",
+      "formDescription": "[GENERATE_TEXT: Short description encouraging form submission]",
+      "namePlaceholder": "${isSpanish ? 'Tu nombre' : 'Your name'}",
+      "emailPlaceholder": "${isSpanish ? 'Tu email' : 'Your email'}",
+      "companyPlaceholder": "${isSpanish ? 'Tu empresa' : 'Your company'}",
+      "phonePlaceholder": "${isSpanish ? 'Tu teléfono' : 'Your phone'}",
+      "messagePlaceholder": "${isSpanish ? '¿Cómo podemos ayudarte?' : 'How can we help you?'}",
+      "buttonText": "${isSpanish ? 'Enviar solicitud' : 'Submit Request'}",
+      "successMessage": "${isSpanish ? 'Nos pondremos en contacto pronto' : 'We will get back to you soon'}",
+      "showCompanyField": true,
+      "showPhoneField": true,
+      "showMessageField": true,
+      "formPosition": "[SELECT: left|right]",
+      "overlayOpacity": 60,
+      "imageUrl": ""
     },`;
     } else if (hasHeroSplit) {
         componentExamples += `
@@ -1759,7 +1795,7 @@ LANGUAGE: All content MUST be in ${lang}.
 
 OUTPUT FORMAT: Return a single JSON object with this EXACT structure:
 {
-  "componentOrder": ["colors", "typography", "header", ${filteredComponents.filter(c => !['colors', 'typography', 'header', 'footer'].includes(c)).map(c => `"${c}"`).join(', ')}, "footer"],
+  "componentOrder": ["colors", "typography", "header", ${filteredComponents.filter(c => !['colors', 'typography', 'header', 'footer', 'banner'].includes(c)).map(c => `"${c}"`).join(', ')}, "banner", "footer"],
   "theme": {
     "cardBorderRadius": "md",
     "buttonBorderRadius": "md",
@@ -1862,7 +1898,7 @@ function ensureComponentCompleteness(data: any, brief: any, isSpanish: boolean):
 
     // Hero defaults
     // Standard hero variants: use headline/subheadline/primaryCta (matching HeroData)
-    for (const heroKey of ['hero', 'heroSplit', 'heroWave', 'heroNova']) {
+    for (const heroKey of ['hero', 'heroSplit', 'heroWave', 'heroNova', 'heroLead']) {
         const hero = data[heroKey];
         if (hero && typeof hero === 'object') {
             // Normalize: if AI used title/subtitle, convert to headline/subheadline
@@ -2046,10 +2082,20 @@ function ensureComponentCompleteness(data: any, brief: any, isSpanish: boolean):
         }
     }
 
+    // Separator defaults
+    for (let i = 1; i <= 5; i++) {
+        const sepKey = `separator${i}`;
+        if (data[sepKey] && typeof data[sepKey] === 'object') {
+            if (!data[sepKey].type) data[sepKey].type = 'invisible';
+            if (data[sepKey].height === undefined) data[sepKey].height = 64;
+            if (data[sepKey].glassEffect === undefined) data[sepKey].glassEffect = true;
+        }
+    }
+
     // ── GLASSMORPHISM: Enable by default for all generated websites ──
     // This gives every AI-generated site an immersive, modern glass effect.
     const glassComponents = [
-        'hero', 'heroSplit', 'heroGallery', 'heroWave', 'heroNova',
+        'hero', 'heroSplit', 'heroGallery', 'heroWave', 'heroNova', 'heroLead',
         'features', 'services', 'testimonials', 'pricing', 'faq',
         'cta', 'leads', 'newsletter', 'video', 'howItWorks', 'slideshow',
         'team', 'portfolio',
@@ -2084,11 +2130,12 @@ function applyFontsToComponents(data: any, theme: any): void {
 
     // Propagate to each component's typography field
     const componentsToApplyFonts = [
-        'hero', 'heroSplit', 'heroGallery', 'heroWave', 'heroNova',
+        'hero', 'heroSplit', 'heroGallery', 'heroWave', 'heroNova', 'heroLead',
         'header', 'footer', 'services', 'features', 'testimonials',
         'team', 'pricing', 'faq', 'portfolio', 'cta', 'howItWorks',
         'leads', 'newsletter', 'banner', 'video', 'slideshow', 'menu',
         'map', 'topBar', 'signupFloat', 'cmsFeed',
+        'separator1', 'separator2', 'separator3', 'separator4', 'separator5',
     ];
 
     for (const compId of componentsToApplyFonts) {

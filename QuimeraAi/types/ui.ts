@@ -43,10 +43,11 @@ export type AdminView = 'main' | 'admins' | 'tenants' | 'languages' | 'prompts' 
 // Page Section Types
 export type PageSection =
     // Original sections
-    | 'hero' | 'heroSplit' | 'heroGallery' | 'heroWave' | 'heroNova' | 'features' | 'testimonials' | 'pricing' | 'faq' | 'cta'
+    | 'hero' | 'heroSplit' | 'heroGallery' | 'heroWave' | 'heroNova' | 'heroLead' | 'features' | 'testimonials' | 'pricing' | 'faq' | 'cta'
     | 'services' | 'team' | 'video' | 'slideshow' | 'portfolio' | 'leads' | 'newsletter'
     | 'howItWorks' | 'chatbot' | 'footer' | 'header' | 'typography' | 'colors' | 'map'
     | 'menu' | 'banner' | 'topBar' | 'logoBanner' | 'products' | 'cmsFeed' | 'signupFloat'
+    | 'separator1' | 'separator2' | 'separator3' | 'separator4' | 'separator5'
     // Store settings
     | 'storeSettings'
     // Ecommerce sections (for landing/store pages)

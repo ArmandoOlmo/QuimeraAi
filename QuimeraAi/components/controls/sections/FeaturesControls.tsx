@@ -79,6 +79,12 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           >
             Neon Glow
           </button>
+          <button
+            onClick={() => setNestedData('features.featuresVariant', 'press-release')}
+            className={`py-1 text-xs font-medium rounded-sm transition-colors ${currentVariant === 'press-release' ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:bg-editor-border'}`}
+          >
+            Press Release
+          </button>
         </div>
         <p className="text-xs text-editor-text-secondary mt-2">
           {currentVariant === 'classic'
@@ -219,6 +225,30 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       <ColorControl label={`${t('editor.controls.features.cardImage')} ${t('editor.controls.common.title')}`} value={(data.features.colors as any)?.cardHeading || '#ffffff'} onChange={(v) => setNestedData('features.colors.cardHeading', v)} />
       <ColorControl label={`${t('editor.controls.features.cardImage')} ${t('editor.controls.common.text')}`} value={(data.features.colors as any)?.cardText || '#94a3b8'} onChange={(v) => setNestedData('features.colors.cardText', v)} />
       <ColorControl label={t('editor.controls.hero.borderColor')} value={data.features.colors?.borderColor || 'transparent'} onChange={(v) => setNestedData('features.colors.borderColor', v)} />
+      <div className="mb-3 mt-3">
+        <div className="flex justify-between items-center mb-1">
+          <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Border Thickness</label>
+          <span className="text-xs text-editor-text-primary">{data.features.cardBorderSize || 0}px</span>
+        </div>
+        <input
+          type="range" min="0" max="20" step="1"
+          value={data.features.cardBorderSize || 0}
+          onChange={(e) => setNestedData('features.cardBorderSize', parseInt(e.target.value))}
+          className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
+        />
+      </div>
+      <div className="mb-3">
+        <div className="flex justify-between items-center mb-1">
+          <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Border Opacity</label>
+          <span className="text-xs text-editor-text-primary">{data.features.cardBorderOpacity !== undefined ? data.features.cardBorderOpacity : 100}%</span>
+        </div>
+        <input
+          type="range" min="0" max="100" step="1"
+          value={data.features.cardBorderOpacity !== undefined ? data.features.cardBorderOpacity : 100}
+          onChange={(e) => setNestedData('features.cardBorderOpacity', parseInt(e.target.value))}
+          className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
+        />
+      </div>
 
       <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">{t('editor.controls.features.featureList')}</label>
       {(data.features.items || []).map((item, index) => (
@@ -448,7 +478,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
               { value: 'bento-premium', label: 'Premium (Bento Destacado)' },
               { value: 'bento-overlay', label: 'Bento Overlay (Imágenes + Texto)' },
               { value: 'image-overlay', label: 'Overlay (Tarjetas Completas)' },
-              { value: 'neon-glow', label: 'Neon Glow (Resplandor Interior)' }
+              { value: 'neon-glow', label: 'Neon Glow (Resplandor Interior)' },
+              { value: 'press-release', label: 'Press Release (Curvas Dinámicas)' }
             ]}
           />
           <p className="text-xs text-editor-text-secondary mt-2">
@@ -460,7 +491,9 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
                   ? t('editor.controls.features.descPremium', '🎯 Bento premium con primera tarjeta destacada')
                   : currentVariant === 'bento-overlay'
                     ? '🎭 Bento layout con imágenes full-bleed y texto overlay'
-                    : t('editor.controls.features.descOverlay', '🖼️ Imágenes completas con texto superpuesto')}
+                    : currentVariant === 'press-release'
+                      ? '📰 Tarjetas de prensa con bordes curvos dinámicos'
+                      : t('editor.controls.features.descOverlay', '🖼️ Imágenes completas con texto superpuesto')}
           </p>
         </div>
 
@@ -640,6 +673,30 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         <ColorControl label={t('controls.cardTitle')} value={data.features.colors?.cardHeading || '#ffffff'} onChange={(v) => setNestedData('features.colors.cardHeading', v)} />
         <ColorControl label={t('controls.cardText')} value={data.features.colors?.cardText || '#94a3b8'} onChange={(v) => setNestedData('features.colors.cardText', v)} />
         <ColorControl label={t('controls.border')} value={data.features.colors?.borderColor || 'transparent'} onChange={(v) => setNestedData('features.colors.borderColor', v)} />
+        <div className="mt-3">
+          <div className="flex justify-between items-center mb-1">
+            <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Border Thickness</label>
+            <span className="text-xs text-editor-text-primary">{data.features.cardBorderSize || 0}px</span>
+          </div>
+          <input
+            type="range" min="0" max="20" step="1"
+            value={data.features.cardBorderSize || 0}
+            onChange={(e) => setNestedData('features.cardBorderSize', parseInt(e.target.value))}
+            className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
+          />
+        </div>
+        <div className="mt-3">
+          <div className="flex justify-between items-center mb-1">
+            <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Border Opacity</label>
+            <span className="text-xs text-editor-text-primary">{data.features.cardBorderOpacity !== undefined ? data.features.cardBorderOpacity : 100}%</span>
+          </div>
+          <input
+            type="range" min="0" max="100" step="1"
+            value={data.features.cardBorderOpacity !== undefined ? data.features.cardBorderOpacity : 100}
+            onChange={(e) => setNestedData('features.cardBorderOpacity', parseInt(e.target.value))}
+            className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
+          />
+        </div>
       </div>
 
       {/* Animations */}

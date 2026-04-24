@@ -386,6 +386,83 @@ const BentoOverlayCard = ({ feature, index, colors, borderRadius, showNumbering,
   );
 };
 
+// --- NUEVO: Componente para Press Release Style ---
+const PressReleaseCard = ({ feature, index, colors, borderRadius, onNavigate, imageHeight, imageObjectFit, cardBorderSize = 0, cardBorderOpacity = 100 }: {
+  feature: FeatureItem;
+  index: number;
+  colors: any;
+  borderRadius: string;
+  onNavigate?: (href: string) => void;
+  imageHeight: number;
+  imageObjectFit: ObjectFit;
+  cardBorderSize?: number;
+  cardBorderOpacity?: number;
+}) => {
+  const isWide = index === 0 || index === 3 || index === 4;
+  const isExternal = feature.linkUrl?.startsWith('http');
+  const hasBorder = cardBorderSize > 0;
+  
+  // Calculate border color with opacity
+  const borderColor = colors?.borderColor ? hexToRgba(colors.borderColor, cardBorderOpacity / 100) : 'transparent';
+
+  return (
+    <div
+      className={`group relative overflow-hidden cursor-pointer ${isWide ? 'md:col-span-2' : 'col-span-1'} transition-all duration-500 rounded-tl-none rounded-tr-[3rem] rounded-bl-[3rem] rounded-br-[3rem] hover:rounded-none`}
+      style={{ height: `${isWide ? imageHeight + 40 : imageHeight}px`, backgroundColor: colors?.cardBackground || '#fef08a', borderWidth: hasBorder ? `${cardBorderSize}px` : '0px', borderStyle: hasBorder ? 'solid' : 'none', borderColor }}
+    >
+      {/* Full-bleed background image or gradient */}
+      {isPendingImage(feature.imageUrl) ? (
+        <div className="absolute inset-0 w-full h-full mix-blend-multiply opacity-50 bg-gradient-to-br from-yellow-100 to-yellow-300" />
+      ) : (
+        <img
+          src={feature.imageUrl}
+          alt={feature.title}
+          className={`absolute inset-0 w-full h-full transition-transform duration-700 group-hover:scale-105 ${objectFitClasses[imageObjectFit] || 'object-cover'}`}
+        />
+      )}
+
+      {/* Content overlay */}
+      <div className="absolute inset-0 p-8 md:p-10 flex flex-col justify-between z-10">
+        <div className="flex flex-col mt-auto">
+          <p className="text-[10px] font-bold uppercase tracking-[0.2em] mb-4 opacity-80" style={{ color: colors?.cardText || '#000' }}>
+            {feature.description?.substring(0, 25) || 'LATEST NEWS'}
+          </p>
+          <h3
+            className={`${isWide ? 'text-3xl md:text-4xl' : 'text-2xl md:text-3xl'} font-light mb-6 font-header`}
+            style={{
+              color: colors?.cardHeading || '#000',
+              textTransform: 'var(--headings-transform, none)' as any,
+              letterSpacing: 'var(--headings-spacing, normal)'
+            }}
+          >
+            {feature.title}
+          </h3>
+          
+          <div className="mt-auto">
+            {feature.linkUrl && (
+              <a
+                href={feature.linkUrl}
+                target={isExternal ? '_blank' : undefined}
+                rel={isExternal ? 'noopener noreferrer' : undefined}
+                onClick={(e) => {
+                  if (onNavigate && feature.linkUrl && !feature.linkUrl.startsWith('http://') && !feature.linkUrl.startsWith('https://')) {
+                    e.preventDefault();
+                    onNavigate(feature.linkUrl);
+                  }
+                }}
+                className="inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest px-6 py-2 border rounded-full transition-colors hover:bg-black/5"
+                style={{ borderColor: colors?.cardText || '#000', color: colors?.cardText || '#000' }}
+              >
+                <span>{feature.linkText || 'Learn More'}</span>
+              </a>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 interface FeaturesProps extends FeaturesData {
   borderRadius: BorderRadiusSize;
   onNavigate?: (href: string) => void;
@@ -413,6 +490,8 @@ const Features: React.FC<FeaturesProps> = ({
   showNumbering = true,
   layoutAlignment = 'left',
   cardGlow,
+  cardBorderSize = 0,
+  cardBorderOpacity = 100,
   onNavigate,
   isPreview
 }) => {
@@ -680,6 +759,49 @@ const Features: React.FC<FeaturesProps> = ({
                     )}
                   </div>
                 </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  // --- RENDERIZADO PRESS RELEASE ---
+  if (featuresVariant === 'press-release') {
+    return (
+      <section id="features" className={`w-full ${glassEffect ? ' backdrop-blur-xl border-y border-white/10 z-20 shadow-[0_4px_30px_rgba(0,0,0,0.1)]' : ''}`} style={{ backgroundColor: glassEffect ? hexToRgba(actualColors.background || "#0f172a", 0.4) : actualColors.background }}>
+        <div className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`}>
+          <div className="relative z-10">
+            {(title?.trim() || description?.trim()) && (
+              <div className="mb-20 max-w-3xl text-center mx-auto">
+                {title && (
+                  <h2 className={`${titleSizeClasses[titleFontSize]} font-black tracking-[0.2em] uppercase mb-4 font-header`} style={{ color: safeColors.heading }}>
+                    {title}
+                  </h2>
+                )}
+                {description && (
+                  <p className={`${descriptionSizeClasses[descriptionFontSize]} font-body opacity-80`} style={{ color: safeColors.description }}>
+                    {description}
+                  </p>
+                )}
+              </div>
+            )}
+
+            <div className={`grid grid-cols-1 md:grid-cols-2 ${gridColsClasses[gridColumns] || 'lg:grid-cols-3'} gap-4 md:gap-5`}>
+              {(items || []).map((feature, index) => (
+                <PressReleaseCard
+                  key={index}
+                  feature={feature}
+                  index={index}
+                  colors={{ ...actualColors, heading: safeColors.cardHeading, text: safeColors.cardText }}
+                  borderRadius={borderRadiusClasses[borderRadius]}
+                  onNavigate={onNavigate}
+                  imageHeight={imageHeight}
+                  imageObjectFit={imageObjectFit}
+                  cardBorderSize={cardBorderSize}
+                  cardBorderOpacity={cardBorderOpacity}
+                />
               ))}
             </div>
           </div>

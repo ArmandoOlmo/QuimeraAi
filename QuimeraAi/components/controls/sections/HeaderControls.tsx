@@ -497,6 +497,20 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           </div>
         </>
       )}
+      {data.header.style === 'tabbed' && (
+        <>
+          <ColorControl
+            label="Color Tab Activo"
+            value={data.header.colors?.tabActiveColor || data.header.colors?.accent || '#3b82f6'}
+            onChange={(v) => setNestedData('header.colors.tabActiveColor', v)}
+          />
+          <ColorControl
+            label="Color Borde Inferior"
+            value={data.header.colors?.tabBorderColor || 'rgba(128,128,128,0.15)'}
+            onChange={(v) => setNestedData('header.colors.tabBorderColor', v)}
+          />
+        </>
+      )}
     </div>
   )
 }
@@ -1034,6 +1048,20 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
                   className="w-full accent-editor-accent"
                 />
               </div>
+            </>
+          )}
+          {data.header.style === 'tabbed' && (
+            <>
+              <ColorControl
+                label="Color Tab Activo"
+                value={data.header.colors?.tabActiveColor || data.header.colors?.accent || '#3b82f6'}
+                onChange={(v) => setNestedData('header.colors.tabActiveColor', v)}
+              />
+              <ColorControl
+                label="Color Borde Inferior"
+                value={data.header.colors?.tabBorderColor || 'rgba(128,128,128,0.15)'}
+                onChange={(v) => setNestedData('header.colors.tabBorderColor', v)}
+              />
             </>
           )}
         </div>

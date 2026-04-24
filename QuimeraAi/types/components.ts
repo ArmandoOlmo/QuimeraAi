@@ -322,6 +322,75 @@ export interface HeroNovaData {
 }
 
 // =============================================================================
+// HERO LEAD (Split hero with integrated lead form)
+// =============================================================================
+export interface HeroLeadData {
+    // Layout
+    formPosition: 'left' | 'right';  // Which side the form is on
+
+    // Hero content (info side)
+    headline: string;
+    subheadline: string;
+    badgeText?: string;             // Optional accent badge above headline
+    imageUrl?: string;              // Background image for info side
+    overlayOpacity?: number;        // 0-100, darkens the info side bg
+    heroHeight?: number;            // vh units
+
+    // Lead form content
+    formTitle?: string;             // Title above form
+    formDescription?: string;       // Description below form title
+    namePlaceholder: string;
+    emailPlaceholder: string;
+    companyPlaceholder?: string;
+    phonePlaceholder?: string;
+    messagePlaceholder: string;
+    buttonText: string;
+    successMessage?: string;
+
+    // Form field visibility
+    showCompanyField?: boolean;
+    showPhoneField?: boolean;
+    showMessageField?: boolean;
+
+    // Styling
+    glassEffect?: boolean;
+    paddingY: PaddingSize;
+    paddingX: PaddingSize;
+    cardBorderRadius?: BorderRadiusSize;
+    inputBorderRadius?: BorderRadiusSize;
+    buttonBorderRadius?: BorderRadiusSize;
+    formCardOpacity?: number;       // 0-100, transparency of form card
+
+    // Font sizes
+    headlineFontSize?: FontSize;
+    subheadlineFontSize?: FontSize;
+
+    // Colors
+    colors: {
+        background: string;         // Section background
+        infoBackground?: string;    // Info side background
+        formBackground?: string;    // Form side/card background
+        heading: string;
+        text: string;
+        accent?: string;
+        buttonBackground?: string;
+        buttonText?: string;
+        inputBackground?: string;
+        inputText?: string;
+        inputBorder?: string;
+        inputPlaceholder?: string;
+        badgeBackground?: string;
+        badgeText?: string;
+        formHeading?: string;
+        formText?: string;
+        borderColor?: string;
+    };
+
+    // Corner gradient
+    cornerGradient?: CornerGradientConfig;
+}
+
+// =============================================================================
 // FEATURES
 // =============================================================================
 export interface FeatureItem {
@@ -335,7 +404,7 @@ export interface FeatureItem {
 
 export interface FeaturesData {
     glassEffect?: boolean;
-    featuresVariant?: 'classic' | 'modern' | 'bento-premium' | 'image-overlay' | 'bento-overlay' | 'cinematic-gym' | 'neon-glow';
+    featuresVariant?: 'classic' | 'modern' | 'bento-premium' | 'image-overlay' | 'bento-overlay' | 'cinematic-gym' | 'neon-glow' | 'press-release';
     title: string;
     subtitle?: string;              // Alias for description
     description: string;
@@ -351,6 +420,8 @@ export interface FeaturesData {
     animationType?: AnimationType;
     enableCardAnimation?: boolean;
     borderRadius?: BorderRadiusSize;
+    cardBorderSize?: number;
+    cardBorderOpacity?: number;
     // Properties for image-overlay variant
     overlayTextAlignment?: TextAlignment;
     showSectionHeader?: boolean;
@@ -2116,16 +2187,36 @@ export interface SignupFloatData {
 }
 
 // =============================================================================
+// SEPARATOR
+// =============================================================================
+export interface SeparatorData {
+    height: number; // In pixels
+    color?: string; // Legacy fallback
+    colors?: ComponentColors; // Coolors.co support
+    glassEffect?: boolean;
+    backgroundImageUrl?: string;
+    backgroundOverlayEnabled?: boolean;
+    backgroundOverlayOpacity?: number;
+    backgroundOverlayColor?: string;
+}
+
+// =============================================================================
 // PAGE DATA (AGGREGATED)
 // =============================================================================
 
 export interface PageData {
+    separator1?: SeparatorData;
+    separator2?: SeparatorData;
+    separator3?: SeparatorData;
+    separator4?: SeparatorData;
+    separator5?: SeparatorData;
     header: HeaderData;
     hero: HeroData;
     heroSplit: HeroSplitData;
     heroGallery?: HeroGalleryData;
     heroWave?: HeroWaveData;
     heroNova?: HeroNovaData;
+    heroLead?: HeroLeadData;
     features: FeaturesData;
     testimonials: TestimonialsData;
     slideshow: SlideshowData;

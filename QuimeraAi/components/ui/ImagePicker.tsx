@@ -37,15 +37,19 @@ interface ImagePickerProps {
     portalContainer?: HTMLElement | null;
 }
 
-const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, storeId, defaultOpen = false, onClose, onRemove, destination = 'user', adminCategory, hideUrlInput = true, generationContext = 'general', portalContainer }) => {
+const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, storeId, defaultOpen = false, onClose, onRemove, destination: propDestination, adminCategory, hideUrlInput = true, generationContext = 'general', portalContainer }) => {
     const { t } = useTranslation();
+    const { activeProjectId, activeProject } = useProject();
+
+    // Determine the actual destination. If not explicitly provided, use 'admin' for Templates, else default to 'user'.
+    const destination = propDestination || (activeProject?.status === 'Template' ? 'admin' : 'user');
+
     const {
         files, uploadFile,
         globalFiles, uploadGlobalFile, fetchGlobalFiles,
         adminAssets, fetchAdminAssets, uploadAdminAsset,
         isFilesLoading, isGlobalFilesLoading
     } = useFiles();
-    const { activeProjectId, activeProject } = useProject();
     const { success, error: showError } = useToast();
     const [isLibraryOpen, setIsLibraryOpen] = useState(defaultOpen);
     const [activeTab, setActiveTab] = useState<'library' | 'generate' | 'products' | 'global'>('library');

@@ -136,12 +136,9 @@ const RecentLeads: React.FC<RecentLeadsProps> = ({ maxItems = 6 }) => {
     }, [user, userProjects, maxItems]);
 
     // Navigate to leads view for a specific project
-    const handleOpenLeads = (projectId: string) => {
-        loadProject(projectId);
-        // Small delay to let the project load, then navigate
-        setTimeout(() => {
-            navigate(ROUTES.LEADS);
-        }, 100);
+    const handleOpenLeads = async (projectId: string, leadId: string) => {
+        await loadProject(projectId, false, false);
+        navigate(`${ROUTES.LEADS}?leadId=${leadId}`);
     };
 
     // Format date
@@ -224,7 +221,7 @@ const RecentLeads: React.FC<RecentLeadsProps> = ({ maxItems = 6 }) => {
                 return (
                     <div
                         key={`${lead.projectId}-${lead.id}`}
-                        onClick={() => handleOpenLeads(lead.projectId)}
+                        onClick={() => handleOpenLeads(lead.projectId, lead.id)}
                         className="group relative bg-card/60 hover:bg-card border border-border/50 hover:border-primary/30 rounded-xl p-4 cursor-pointer transition-all duration-300 hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-0.5"
                     >
                         {/* Top row: Name + Time */}

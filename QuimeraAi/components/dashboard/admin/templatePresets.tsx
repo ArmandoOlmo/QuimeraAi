@@ -45,10 +45,11 @@ export interface TemplatePreset {
 // ═══════════════════════════════════════════════════════════════════
 const ALL_SECTIONS: PageSection[] = [
     'colors', 'typography', 'header',
-    'hero', 'heroSplit', 'heroGallery', 'heroWave', 'heroNova',
+    'hero', 'heroSplit', 'heroGallery', 'heroWave', 'heroNova', 'heroLead',
     'topBar', 'logoBanner', 'banner', 'features', 'testimonials', 'slideshow',
     'pricing', 'faq', 'portfolio', 'cta', 'services', 'team', 'video', 'howItWorks', 'menu',
     'leads', 'newsletter', 'map', 'chatbot', 'cmsFeed', 'signupFloat', 'footer',
+    'separator1', 'separator2', 'separator3', 'separator4', 'separator5',
 ];
 
 function buildVisibility(enabledSections: PageSection[]): Record<string, boolean> {

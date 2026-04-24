@@ -59,13 +59,14 @@ export const extractHeroImage = (data: Partial<PageData> | null, componentOrder:
     if (!data) return null;
     
     // Find the first hero-like component in the order
-    const heroSection = componentOrder?.find((s) => ['hero', 'heroSplit', 'heroGallery', 'heroWave', 'heroNova'].includes(s));
+    const heroSection = componentOrder?.find((s) => ['hero', 'heroSplit', 'heroGallery', 'heroWave', 'heroNova', 'heroLead'].includes(s));
     
     if (heroSection === 'hero') return data.hero?.imageUrl || data.hero?.backgroundImage || null;
     if (heroSection === 'heroSplit') return data.heroSplit?.imageUrl || null;
     if (heroSection === 'heroGallery') return data.heroGallery?.slides?.[0]?.backgroundImage || null;
     if (heroSection === 'heroWave') return data.heroWave?.slides?.[0]?.backgroundImage || null;
     if (heroSection === 'heroNova') return data.heroNova?.slides?.[0]?.backgroundImage || data.heroNova?.slides?.[0]?.imageUrl || null;
+    if (heroSection === 'heroLead') return data.heroLead?.imageUrl || null;
     
     // Fallback if no hero in componentOrder
     return data.hero?.imageUrl || data.hero?.backgroundImage ||
@@ -73,7 +74,9 @@ export const extractHeroImage = (data: Partial<PageData> | null, componentOrder:
            data.heroGallery?.slides?.[0]?.backgroundImage ||
            data.heroWave?.slides?.[0]?.backgroundImage ||
            data.heroNova?.slides?.[0]?.backgroundImage ||
-           data.heroNova?.slides?.[0]?.imageUrl || null;
+           data.heroNova?.slides?.[0]?.backgroundImage ||
+           data.heroNova?.slides?.[0]?.imageUrl ||
+           data.heroLead?.imageUrl || null;
 };
 
 // Helper to generate HTML export
