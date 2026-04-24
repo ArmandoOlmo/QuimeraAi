@@ -653,19 +653,39 @@ const AdminAssetLibrary: React.FC<AdminAssetLibraryProps> = ({ onBack }) => {
         }
     };
 
-    const handleUseAsReference = (url: string) => {
+    const handleUseAsReference = async (url: string) => {
         if (referenceImages.length >= 14) {
             showError(t('adminAssets.maxReferences', 'Maximum 14 reference images'));
             return;
         }
-        if (referenceImages.includes(url)) {
-            showError(t('adminAssets.alreadyReference', 'Image is already in references'));
-            return;
-        }
-        setReferenceImages(prev => [...prev, url]);
-        success(t('adminAssets.addedReference', 'Added to reference images'));
         
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        try {
+            // Convert URL to base64 if needed since proxy expects base64 data URLs
+            let finalUrl = url;
+            if (url.startsWith('http')) {
+                const response = await fetch(url);
+                const blob = await response.blob();
+                finalUrl = await new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onloadend = () => resolve(reader.result as string);
+                    reader.onerror = reject;
+                    reader.readAsDataURL(blob);
+                });
+            }
+
+            if (referenceImages.includes(finalUrl)) {
+                showError(t('adminAssets.alreadyReference', 'Image is already in references'));
+                return;
+            }
+            
+            setReferenceImages(prev => [...prev, finalUrl]);
+            success(t('adminAssets.addedReference', 'Added to reference images'));
+            
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        } catch (error) {
+            console.error('Error preparing reference image:', error);
+            showError(t('adminAssets.referenceError', 'Failed to prepare reference image'));
+        }
     };
 
     const handleGenerate = async () => {
@@ -688,10 +708,21 @@ const AdminAssetLibrary: React.FC<AdminAssetLibraryProps> = ({ onBack }) => {
 
             // If we get a URL back, also save to admin assets with the prompt
             if (result && typeof result === 'string') {
-                await uploadAdminAssetFromURL(result, `AI_${Date.now()}.png`, selectedCategory, {
+                const optionsWithMetadata = {
                     description: prompt,
                     tags: [style, aspectRatio].filter(s => s !== 'None'),
-                });
+                    isAiGenerated: true,
+                    aiPrompt: prompt
+                };
+                
+                if (result.startsWith('data:image/')) {
+                    const response = await fetch(result);
+                    const blob = await response.blob();
+                    const file = new File([blob], `AI_${Date.now()}.png`, { type: blob.type });
+                    await uploadAdminAsset(file, selectedCategory, optionsWithMetadata);
+                } else {
+                    await uploadAdminAssetFromURL(result, `AI_${Date.now()}.png`, selectedCategory, optionsWithMetadata);
+                }
             }
 
             success(t('adminAssets.generated', 'Image generated and saved!'));
