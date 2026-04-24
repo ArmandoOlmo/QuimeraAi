@@ -73,4 +73,7 @@ export const QUIMERA_DEFAULT_LOGO = DEFAULT_LOGO_URL;
 /** Full logo with integrated text — for sidebar use */
 export const QUIMERA_FULL_LOGO = FULL_LOGO_URL;
 
+/** Full logo in black for light mode */
+export const QUIMERA_FULL_LOGO_LIGHT = 'https://firebasestorage.googleapis.com/v0/b/quimeraai.firebasestorage.app/o/quimera%2Flogo_quimera_app_black.png?alt=media&token=2143653e-230d-4c96-80d8-01c89ae790c9';
+
 export default useAppLogo;
